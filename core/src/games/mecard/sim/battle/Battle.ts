@@ -12,6 +12,9 @@ import { Heart } from "../heart/Heart"
 import type { Item } from "../item/Item"
 import type { Process } from "../process/Process"
 import type { Status, StatusType } from "../status/Status"
+import { battleStateOf, saveBattle } from "../save/battleSave"
+import type { BattleSave, SaveOptions } from "../save/battleSave"
+import { planFor } from "../ai/Bot"
 import { Fleeting } from "../status/subs/Fleeting"
 
 import type { Action, ActionRun, PlugContext, Pose } from "./Action"
@@ -24,26 +27,15 @@ import type { BattleEvent, MoveEvent, Nature } from "./events"
 import { BattleSignals } from "./signals"
 import type { Effect } from "./signals"
 import type { Team } from "./Team"
+import { COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, TICKS_PER_SECOND, UNBLOCK_DAMAGE } from "./rules"
 import { SUMMON_COLORS, Unit, UNIT_RADIUS } from "./Unit"
-import type { StatBases, SummonLook, UnitSpec, UnitStats } from "./Unit"
+import type { Controller, StatBases, SummonLook, UnitSpec, UnitStats } from "./Unit"
 import { DECK } from "../base/keywords"
 
-/** How many hearts a unit pushed into something before the whole distance takes. */
-export const PUSH_BLOCKED_DAMAGE = 1
-
-/** How many hearts a unit loses each time it is found where it has no room, and thrown aside. */
-export const UNBLOCK_DAMAGE = 1
-
-/** The eight ways around a unit, a meter long: where it may be thrown, or wander. */
-export const EIGHT_WAYS: readonly Vector2[] = [
-    Vector2.UP, Vector2.UP.eighth(1), Vector2.RIGHT, Vector2.RIGHT.eighth(1),
-    Vector2.DOWN, Vector2.DOWN.eighth(1), Vector2.LEFT, Vector2.LEFT.eighth(1),
-]
-
-/** The colors of the units of the side of the players, in the order they enter. */
+/** The colors of the units of the first team, in the order they enter. */
 const HERO_COLORS: readonly Rgba[] = [rgba(0.35, 0.6, 1), rgba(0.4, 0.85, 0.45), rgba(0.75, 0.5, 1)]
 
-/** The colors of the units of the other sides, in the order they enter. */
+/** The colors of the units of the other teams, in the order they enter. */
 const MONSTER_COLORS: readonly Rgba[] = [
     rgba(0.95, 0.35, 0.3), rgba(1, 0.6, 0.25), rgba(0.85, 0.3, 0.6), rgba(0.75, 0.75, 0.3),
 ]
@@ -53,6 +45,12 @@ const MONSTER_COLORS: readonly Rgba[] = [
  * end.
  */
 export type Phase = "draw"|"preparation"|"execution"|"over"
+
+/** What a battle waits for from the players. */
+export interface BattleAwaited {
+    /** The units of the players with no chain committed yet. */
+    readonly units: readonly Unit[]
+}
 
 /**
  * Where a clone may appear, in meters ahead and to the right of its maker: ahead, then the sides, never
@@ -69,17 +67,8 @@ const CLONE_SPOTS: readonly (readonly [number, number])[] = [
  */
 const TRAVEL_STEP = 0.05
 
-/**
- * How much smaller the pillars and the bodies are taken to be when testing what blocks a move, in meters:
- * enough to brush past them, too little to be seen going through them.
- */
-export const COLLISION_SLACK = 0.08
-
 /** How finely a body already in contact backs out of it, in meters. */
 const BACK_OUT_STEP = 0.01
-
-/** How many ticks the simulation plays in a second: what the actions count their time in. */
-export const TICKS_PER_SECOND = 60
 
 /** How many ticks a round plays at most, so a broken action never freezes the game. */
 const MAX_ROUND_TICKS = 600 * TICKS_PER_SECOND
@@ -178,6 +167,9 @@ export class Battle {
      */
     public readonly preparationEnding: Observable<Battle>
 
+    /** A save was loaded: everything it held before is gone, and nothing else was told of it. */
+    public readonly loaded: Observable<Battle>
+
 
     //// State ////
 
@@ -213,7 +205,7 @@ export class Battle {
     public effectDepth = 0
 
     constructor(
-        public readonly arena: Arena,
+        public arena: Arena,
         seed: number,
     ){
         this.rng = new Rng(seed)
@@ -227,7 +219,8 @@ export class Battle {
         this.unitStepping = new Observable(this.report)
         this.phaseChanged = new Observable(this.report)
         this.preparationEnding = new Observable(this.report)
-        this.signals = new BattleSignals(this.report, () => this.#tellGlide())
+        this.loaded = new Observable(this.report)
+        this.signals =new BattleSignals(this.report, () => this.#tellGlide())
     }
 
 
@@ -239,16 +232,28 @@ export class Battle {
      */
     public static restore(state: BattleState): Battle {
         const battle = new Battle(state.arena, state.rng)
-        const units = state.units.map(unit => battle.#restoreUnit(unit))
-        battle.round = state.round
-        battle.phase = state.phase
-        battle.winner = state.winner
-        battle.initiative = state.initiative.map(index => units[index])
-        for(const [index, chain] of state.plans) battle.#plans.set(units[index], chain)
-        for(const [index, cards] of state.played) battle.#played.set(units[index], [...cards])
-        for(const [index, used] of state.activated) battle.#activated.set(units[index], [...used])
-        for(const [index, owner] of state.owners) units[index].owner = units[owner]
+        battle.#stand(state)
         return battle
+    }
+
+    /** Written down, to read back with {@link Battle.load}: see {@link saveBattle}. */
+    public save(options: SaveOptions = {}): BattleSave {
+        return saveBattle(this, options)
+    }
+
+    /**
+     * Become the battle a save writes down, in place: what listens to it stays, what it held is gone, and
+     * only {@link Battle.loaded} is told.
+     *
+     * @throws {@link Error} When the save is of another version, or names what the catalog does not have.
+     */
+    public load(save: BattleSave): void {
+        const state = battleStateOf(save)
+        this.#empty()
+        this.arena = state.arena
+        this.rng.state = state.rng
+        this.#stand(state)
+        this.loaded.notify(this)
     }
 
     /** Is a round being played, its state not yet at rest? */
@@ -310,6 +315,14 @@ export class Battle {
         if(at < 0) return
         const [plug] = plugs.splice(at, 1)
         this.#unplug(plug)
+    }
+
+    /**
+     * Change who gives the chain of a unit, from its next round on: a chain it already committed stands. The
+     * unit stays what it is: only {@link Battle.awaited} and the bots planning read this.
+     */
+    public control(unit: Unit, controller: Controller): void {
+        unit.controller = controller
     }
 
     /** The units still standing. */
@@ -408,25 +421,38 @@ export class Battle {
      * @throws {@link Error} When the battle is over, or a round is not over yet.
      */
     public startRound(): void {
-        if(this.phase === "over") throw new Error("The battle is over. Start a new one.")
-        if(this.phase !== "draw") throw new Error("A round is going on. Play it out first.")
-        this.round++
-        this.signals.phase.notify("draw")
-        this.#plans.clear()
-        this.#activated.clear()
-        for(const unit of this.units) unit.takeChain(new CardChain())
-        this.initiative = this.#initiativeOf(this.round)
-        for(const unit of this.initiative) this.#draw(unit)
-        this.phase = "preparation"
-        this.events.push({ type: "round", round: this.round })
-        this.roundStarted.notify(this.round)
-        this.signals.phase.notify(this.phase)
-        this.phaseChanged.notify(this.phase)
+        this.#startRound(false)
     }
 
     /** Is it waiting for its next round to start, the one before over? */
     public get waiting(): boolean {
         return this.phase === "draw"
+    }
+
+    /** What it waits for from the players: the units they play with no chain committed yet. */
+    public get awaited(): BattleAwaited {
+        if(this.phase !== "preparation") return { units: [] }
+        return { units: this.initiative.filter(unit => unit.controller === "player" && !this.#plans.has(unit)) }
+    }
+
+    /** Does it only wait to be told to go on, the players having nothing left to give? */
+    public get canAdvance(): boolean {
+        return this.phase !== "over" && this.awaited.units.length === 0
+    }
+
+    /**
+     * Go on to what comes next: the next round, its bots planned; or the round planned, played out at once.
+     *
+     * @throws {@link Error} When the players still owe a chain, or the battle is over.
+     */
+    public advance(): void {
+        if(!this.canAdvance) throw new Error(`The battle cannot go on from its ${this.phase} yet.`)
+        if(this.phase === "draw"){
+            this.#startRound(true)
+            return
+        }
+        if(this.phase === "preparation") this.endPreparation()
+        this.playRound()
     }
 
     /**
@@ -1167,12 +1193,12 @@ export class Battle {
     }
 
     /**
-     * Put a unit in the battle, in the next color of the palette of its side among those of its team: the
-     * side of the players is any team with a unit they play, its bots included.
+     * Put a unit in the battle, in the next color of the palette of its team: read from the order the teams
+     * entered, never from who gives the chains, so a battle loaded has the colors of the one saved.
      */
     #enter(unit: Unit): void {
-        const players = [unit, ...this.units].some(other => other.team === unit.team && other.controller === "player")
-        const palette = players ? HERO_COLORS : MONSTER_COLORS
+        const first = this.units.length === 0 || this.units[0].team === unit.team
+        const palette = first ? HERO_COLORS : MONSTER_COLORS
         const rank = this.units.filter(other => other.team === unit.team && other.character).length
         unit.color = unit.summoned ? SUMMON_COLORS[unit.summoned] : palette[rank % palette.length]
         this.units.push(unit)
@@ -1214,6 +1240,71 @@ export class Battle {
         unit.onCardInvalid.add(event => signals.cardInvalid.notify(event))
         unit.onChainChange.add(event => signals.chainChanged.notify(event))
         unit.onPrep.add(prepared => this.unitPrepared.notify(prepared))
+    }
+
+    /** Stand where a state has it, nothing in it yet. */
+    #stand(state: BattleState): void {
+        const units = state.units.map(unit => this.#restoreUnit(unit))
+        this.round = state.round
+        this.phase = state.phase
+        this.winner = state.winner
+        this.initiative = state.initiative.map(index => units[index])
+        for(const [index, chain] of state.plans) this.#plans.set(units[index], chain)
+        for(const [index, cards] of state.played) this.#played.set(units[index], [...cards])
+        for(const [index, used] of state.activated) this.#activated.set(units[index], [...used])
+        for(const [index, owner] of state.owners) units[index].owner = units[owner]
+    }
+
+    /**
+     * Start the next round.
+     *
+     * @param planned - Do the bots commit their chains before the preparation is told, so what hears of it
+     * reads them?
+     */
+    #startRound(planned: boolean): void {
+        if(this.phase === "over") throw new Error("The battle is over. Start a new one.")
+        if(this.phase !== "draw") throw new Error("A round is going on. Play it out first.")
+        this.round++
+        this.signals.phase.notify("draw")
+        this.#plans.clear()
+        this.#activated.clear()
+        for(const unit of this.units) unit.takeChain(new CardChain())
+        this.initiative = this.#initiativeOf(this.round)
+        for(const unit of this.initiative) this.#draw(unit)
+        this.phase = "preparation"
+        this.events.push({ type: "round", round: this.round })
+        this.roundStarted.notify(this.round)
+        if(planned) this.#planBots()
+        this.signals.phase.notify(this.phase)
+        this.phaseChanged.notify(this.phase)
+    }
+
+    /** Commit the chain of each bot of the round. */
+    #planBots(): void {
+        for(const unit of this.initiative) if(unit.controller === "bot") this.commit(unit, planFor(unit))
+    }
+
+    /** Take everything out, each thing plugged taken back, so only what listens from outside stays. */
+    #empty(): void {
+        for(const unit of this.units){
+            this.endProcesses(unit)
+            unit.hearts.unplug()
+            for(const status of unit.statuses.values()) status.remove({ battle: this, unit })
+        }
+        this.#unplugItems()
+        this.units.length = 0
+        this.events.length = 0
+        this.initiative = []
+        this.#plans.clear()
+        this.#played.clear()
+        this.#activated.clear()
+        this.#cursor = 0
+        this.#pass = 0
+        this.#running = null
+        this.#glide = null
+        this.clock = 0
+        this.actor = null
+        this.effectDepth = 0
     }
 
     /** Bring a unit back from its state: its items plugged, then its stats, cards and statuses set. */

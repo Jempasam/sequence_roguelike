@@ -1,7 +1,7 @@
 import { rgba } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
-import { EIGHT_WAYS } from "../../battle/Battle"
+import { EIGHT_WAYS } from "../../battle/rules"
 import type { Unit } from "../../battle/Unit"
 import { meters } from "../../battle/words"
 import { placeWhirlwind } from "../../hazard/subs/Whirling"

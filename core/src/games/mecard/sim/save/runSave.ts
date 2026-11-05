@@ -10,7 +10,7 @@ import { Carried } from "../usable/Usable"
 import { cardLoader, savedCard } from "./battleSave"
 import type { SavedCard } from "./battleSave"
 import { HEART_NAMES, ITEM_NAMES, USABLE_NAMES } from "./catalogNames"
-import { loadTravel, saveTravel } from "./travelSave"
+import { saveTravel } from "./travelSave"
 import type { TravelSave } from "./travelSave"
 
 /** The version of the shape of a run saved, raised whenever it changes, so an old one is refused clearly. */
@@ -70,17 +70,22 @@ export function saveRun(run: Run): RunSave {
  * @throws {@link Error} When the save is of another version, or names something the catalog does not have.
  */
 export function loadRun(save: RunSave, report?: ErrorSink): Run {
+    const run = new Run(save.rng, report)
+    run.load(save)
+    return run
+}
+
+/**
+ * The party a save writes down.
+ *
+ * @throws {@link Error} When the save is of another version, or names something the catalog does not have.
+ */
+export function heroesOf(save: RunSave): Hero[] {
     if(save.version !== RUN_SAVE_VERSION){
         throw new Error(`A run save of version ${save.version} cannot be loaded by version ${RUN_SAVE_VERSION}.`)
     }
-    const run = new Run(save.rng, report)
     const card = cardLoader()
-    run.heroes.splice(0, run.heroes.length, ...save.heroes.map(each => loadedHero(each, card)))
-    run.gold = save.gold
-    loadTravel(save.travel, run)
-    // Last: making the run and its first map drew numbers.
-    run.rng.state = save.rng
-    return run
+    return save.heroes.map(each => loadedHero(each, card))
 }
 
 

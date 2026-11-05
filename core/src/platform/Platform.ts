@@ -22,6 +22,16 @@ export interface Platform {
     /** The network, none in an environment without one. */
     readonly net?: NetPort
 
+    /** The address of the signaling server, none in an environment without a network. */
+    readonly signaling?: string
+
     /** The channel to the other clients of the game, none when it is played alone. */
     readonly sync?: SyncPort
+
+    /**
+     * Start over on the game a room holds, this one left.
+     *
+     * @param guest - Does the player come to play, rather than to watch?
+     */
+    connect?(code: string, guest: boolean): void
 }

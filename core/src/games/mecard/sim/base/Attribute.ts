@@ -127,6 +127,9 @@ export const MULTIPLY_ORDER = 200
 /** When a {@link Clamp} applies, last. */
 export const CLAMP_ORDER = 300
 
+/** When a {@link Forced} applies, after everything else. */
+export const FORCED_ORDER = 400
+
 /** A number added to the value. */
 export class Add implements Modifier<number> {
 
@@ -175,5 +178,25 @@ export class Clamp implements Modifier<number> {
 
     public apply(value: number): number {
         return Math.min(this.max, Math.max(this.min, value))
+    }
+}
+
+
+//// The modifiers of any value ////
+
+/** The value replaced, whatever it was. */
+export class Forced<T> implements Modifier<T> {
+
+
+    public readonly order = FORCED_ORDER
+
+    constructor(
+        /** What the value becomes. */
+        public readonly forced: T,
+    ){}
+
+
+    public apply(): T {
+        return this.forced
     }
 }

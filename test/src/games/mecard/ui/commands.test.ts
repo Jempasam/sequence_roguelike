@@ -4,6 +4,8 @@ import { BURN, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
 import type { Battle, PlaceKind, Unit } from "@game/core/mecard"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
+import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core/mecard/sync"
+import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
 
 // --- Fixture builders ---
 
@@ -19,6 +21,12 @@ interface Game {
 
     /** The transitions played, in order: their painting, duration in seconds, and whether in reverse. */
     readonly transitions: (readonly [string, number, boolean])[]
+
+    /** What the game was hosted with, in order. */
+    readonly hostings: (readonly [SeatMode|null, SeatPolicy])[]
+
+    /** The games connected to, in order: their code, and whether to play. */
+    readonly connections: (readonly [string, boolean])[]
 }
 
 /** A console over a run, its first battle started. */
@@ -28,6 +36,8 @@ function game(): Game {
     const changed: Unit[] = []
     const visited: PlaceKind[] = []
     const transitions: (readonly [string, number, boolean])[] = []
+    const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
+    const connections: (readonly [string, boolean])[] = []
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
         run, battle,
         print: text => made.print(text),
@@ -41,9 +51,11 @@ function game(): Game {
         showPnj: () => {},
         showArm: () => {},
         playTransition: (path, duration, reverse) => transitions.push([path, duration, reverse]),
+        hostGame: (mode, policy) => hostings.push([mode, policy]),
+        connect: (code, guest) => connections.push([code, guest]),
     })))
     registerCommands(made)
-    return { console: made, run, battle: () => battle, changed, visited, transitions }
+    return { console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections }
 }
 
 /** The unit of the first hero. */
@@ -289,5 +301,42 @@ describe("Mecard commands", () => {
         console.submit("run unusable Lancier Potion_de_soin")
         expect(run.heroes[0].usables).toEqual([])
         expect(errors(console)).toEqual([])
+    })
+
+    test("host spectate → hosted with nothing to give, the first free by default", () => {
+        const { console, hostings } = game()
+        console.submit("host spectate")
+        expect(hostings).toEqual([[null, FIXED_SEATS]])
+        expect(errors(console)).toEqual([])
+    })
+
+    test("host coop fixed, host enemy random → their modes, the second drawing", () => {
+        const { console, hostings } = game()
+        console.submit("host coop fixed")
+        console.submit("host enemy random")
+        expect(hostings[0]).toEqual([COOP_SEATS, FIXED_SEATS])
+        expect(hostings[1][0]).toBe(ENEMY_SEATS)
+        expect(hostings[1][1]).not.toBe(FIXED_SEATS)
+    })
+
+    test("host with an unknown mode → an error, nothing hosted", () => {
+        const { console, hostings } = game()
+        console.submit("host duel")
+        expect(hostings).toEqual([])
+        expect(errors(console)).toHaveLength(1)
+    })
+
+    test("connect → the code, and whether the player comes to play", () => {
+        const { console, connections } = game()
+        console.submit("connect K7QX2M spectate")
+        console.submit("connect K7QX2M play")
+        expect(connections).toEqual([["K7QX2M", false], ["K7QX2M", true]])
+    })
+
+    test("connect without saying why → an error, nothing connected", () => {
+        const { console, connections } = game()
+        console.submit("connect K7QX2M")
+        expect(connections).toEqual([])
+        expect(errors(console)).toHaveLength(1)
     })
 })

@@ -4,7 +4,7 @@ import type { Unit } from "../../sim/battle/Unit"
 import type { Heart } from "../../sim/heart/Heart"
 import type { Process } from "../../sim/process/Process"
 import type { UnitSprites } from "../look/UnitSprites"
-import type { BattleScene } from "../replay/BattleScene"
+import type { BattleScene } from "../battle/BattleScene"
 
 import { heartsRow } from "./HeartView"
 import { processRow } from "./ProcessView"

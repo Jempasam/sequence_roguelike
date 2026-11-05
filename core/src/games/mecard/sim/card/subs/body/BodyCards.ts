@@ -1,5 +1,5 @@
 import { rgba } from "../../../base/Rgba"
-import { EIGHT_WAYS } from "../../../battle/Battle"
+import { EIGHT_WAYS } from "../../../battle/rules"
 import type { Area } from "../../../battle/Area"
 import { fading, polygonOf } from "../../../battle/effects"
 import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"

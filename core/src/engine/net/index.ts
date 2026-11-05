@@ -7,7 +7,7 @@
  * Players meet in a {@link Room} of the signaling server, through a {@link SignalingClient}: a
  * {@link PTPHostSocket} owns a star room and each {@link PTPClientSocket} links to it, while a
  * {@link PTPSymSocket} links to every member of a mesh room. {@link NetSync} carries the messages of a game
- * from its main client to its viewers through such a room.
+ * from its main client to its viewers through such a room, and those of a guest back to the main client.
  */
 
 export * from "./ClientSocket"

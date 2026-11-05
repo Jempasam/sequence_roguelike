@@ -1,4 +1,5 @@
 import { NetSync } from "@game/core"
+import type { SyncPeer } from "@game/core"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
 import { nextMessage, nodeNet, startNetServer } from "../../fixtures/netServer"
@@ -27,21 +28,22 @@ afterEach(async() => {
 // --- Tests ---
 
 describe("NetSync", () => {
-    test("viewer joining after messages retained → hears the last one of the name at once", async() => {
+    test("viewer joining → hears its first message as it stands then, at once", async() => {
         const main = sync(() => NetSync.host(nodeNet(), server.url, "battle"))
         const code = await main.ready
-        main.send("first", "battle")
-        main.send("second", "battle")
+        let first = "first"
+        main.onPeer(() => first)
+        first = "second"
         const viewer = sync(() => NetSync.view(nodeNet(), server.url, code))
         expect(await nextMessage(viewer)).toBe("second")
     })
 
-    test("viewer joining after two names → hears the last of each, the latest last, not what was not kept", async() => {
+    test("viewer joining → hears the first messages in the order asked, not those with nothing to tell", async() => {
         const main = sync(() => NetSync.host(nodeNet(), server.url, "battle"))
         const code = await main.ready
-        main.send("old travel", "travel")
-        main.send("battle", "battle")
-        main.send("travel", "travel")
+        main.onPeer(() => "battle")
+        main.onPeer(() => null)
+        main.onPeer(() => "travel")
         main.send("a move")
         const viewer = sync(() => NetSync.view(nodeNet(), server.url, code))
         const heard: string[] = []
@@ -72,7 +74,62 @@ describe("NetSync", () => {
         await viewer.ready.catch(() => {})
         expect(() => viewer.send("hi")).toThrow()
     })
+
+    test("viewer only watching → no way to the main client", () => {
+        const viewer = sync(() => NetSync.view(nodeNet(), server.url, "NOPE22"))
+        expect(viewer.link).toBe(null)
+        expect(viewer.room).toBe(null)
+        void viewer.ready.catch(() => {})
+    })
+
+    test("guest saying something before it connects → heard by the main client once connected", async() => {
+        const main = sync(() => NetSync.host(nodeNet(), server.url, "battle"))
+        const code = await main.ready
+        main.onPeer(() => "where the game is")
+        const joined = joinedOf(main)
+        const guest = sync(() => NetSync.view(nodeNet(), server.url, code, true))
+        guest.link?.send("I came to play")
+        const peer = await joined
+        expect(await nextMessage(peer)).toBe("I came to play")
+    })
+
+    test("main client answering a guest → heard by that guest alone", async() => {
+        const main = sync(() => NetSync.host(nodeNet(), server.url, "battle"))
+        const code = await main.ready
+        main.onPeer(() => "where the game is")
+        const joined = joinedOf(main)
+        const guest = sync(() => NetSync.view(nodeNet(), server.url, code, true))
+        const first = nextMessage(guest)
+        const peer = await joined
+        expect(await first).toBe("where the game is")
+        const other = sync(() => NetSync.view(nodeNet(), server.url, code))
+        const heard: string[] = []
+        other.listen(message => heard.push(message))
+        await other.ready
+        while(heard.length < 1) await new Promise(resolve => setTimeout(resolve, 10))
+        const answer = nextMessage(guest)
+        peer.send("you play the Lancier")
+        expect(await answer).toBe("you play the Lancier")
+        expect(heard).toEqual(["where the game is"])
+    })
+
+    test("guest leaving → told to the main client, with its id", async() => {
+        const main = sync(() => NetSync.host(nodeNet(), server.url, "battle"))
+        const code = await main.ready
+        const joined = joinedOf(main)
+        const left = new Promise<SyncPeer>(resolve => main.room?.onLeave(resolve))
+        const guest = NetSync.view(nodeNet(), server.url, code, true)
+        await guest.ready
+        const peer = await joined
+        guest.close()
+        expect((await left).id).toBe(peer.id)
+    })
 })
+
+/** The next client connecting to the main client. */
+function joinedOf(main: NetSync): Promise<SyncPeer> {
+    return new Promise(resolve => main.room?.onJoin(resolve))
+}
 
 /** Wait until the main client has this many viewers connected. */
 async function waitForViewers(main: NetSync, count: number): Promise<void> {

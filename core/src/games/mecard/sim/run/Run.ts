@@ -31,6 +31,10 @@ import { SHIELD_HEART } from "../heart/subs/ShieldHeartKind"
 import { THORN_HEART } from "../heart/subs/ThornHeartKind"
 import { VITAL_HEART } from "../heart/subs/VitalHeartKind"
 import type { Item } from "../item/Item"
+import { loadBattle } from "../save/battleSave"
+import type { BattleSave } from "../save/battleSave"
+import { heroesOf, saveRun } from "../save/runSave"
+import type { RunSave } from "../save/runSave"
 import { Travel } from "../travel/Travel"
 import { Carried } from "../usable/Usable"
 import type { Usable } from "../usable/Usable"
@@ -51,6 +55,12 @@ export type Reward =
 export interface HeartLoot {
     readonly heart: HeartKind
     readonly count: number
+}
+
+/** What a run waits for from the players. */
+export interface RunAwaited {
+    /** The rewards to choose from, none out of the rewards. */
+    readonly rewards: readonly Reward[]
 }
 
 /** Something a character of the party was given. */
@@ -184,6 +194,9 @@ export class Run {
     /** A character was given a heart. */
     public readonly heartGained: Observable<Gain<HeartKind>>
 
+    /** A save was loaded: the party stands on the map it holds, and nothing else was told of it. */
+    public readonly loaded: Observable<Run>
+
 
     //// State ////
 
@@ -221,6 +234,7 @@ export class Run {
         this.itemGained = new Observable(report)
         this.usableGained = new Observable(report)
         this.heartGained = new Observable(report)
+        this.loaded = new Observable(report)
         this.rng = new Rng(seed)
         this.heroes = STARTING_KITS.map(kit => heroOf(kit))
         this.travel = new Travel(this, FIRST_FLOOR.create(1))
@@ -243,6 +257,53 @@ export class Run {
         this.goldChanged.notify(gold)
     }
 
+    /** What it waits for from the players: a reward to take. Its journey and its battle tell their own. */
+    public get awaited(): RunAwaited {
+        return { rewards: this.#rewards }
+    }
+
+    /** Does it only wait to be told to go on: a fight reached, or the battle being fought over? */
+    public get canAdvance(): boolean {
+        return this.#fightReached || this.#battle?.phase === "over"
+    }
+
+    /**
+     * Go on to what comes next: into the fight reached, or out of the battle over.
+     *
+     * @throws {@link Error} When it waits for neither.
+     */
+    public advance(): void {
+        if(this.#fightReached) this.startBattle()
+        else this.endBattle()
+    }
+
+
+    //// Saving ////
+
+    /** Written down, to read back with {@link Run.load}: see {@link saveRun}. */
+    public save(): RunSave {
+        return saveRun(this)
+    }
+
+    /**
+     * Stand where a save has it, on the map, in place: what listens to it stays, and only {@link Run.loaded}
+     * and {@link Travel.loaded} are told.
+     *
+     * @throws {@link Error} When the save is of another version, or names what the catalog does not have.
+     */
+    public load(save: RunSave): void {
+        this.heroes.splice(0, this.heroes.length, ...heroesOf(save))
+        this.#gold = save.gold
+        this.#phase = "travel"
+        this.#battle = null
+        this.#rewards = []
+        this.#units.clear()
+        this.travel.load(save.travel)
+        // Last: laying the map out drew numbers.
+        this.rng.state = save.rng
+        this.loaded.notify(this)
+    }
+
 
     //// Fights ////
 
@@ -260,6 +321,19 @@ export class Run {
     public startBattle(): void {
         if(this.#phase !== "travel") throw new Error(`A battle starts from the journey, not during ${this.#phase}.`)
         const battle = this.newBattle()
+        this.#battle = battle
+        this.#enterPhase("battle")
+        this.battleStarted.notify(battle)
+    }
+
+    /**
+     * Watch a battle fought elsewhere: it becomes the one being fought, read from its save. The party stays
+     * out of it, since nobody here calls {@link Run.endBattle}.
+     *
+     * @throws {@link Error} When the save is of another version, or names what the catalog does not have.
+     */
+    public joinBattle(save: BattleSave): void {
+        const battle = loadBattle(save)
         this.#battle = battle
         this.#enterPhase("battle")
         this.battleStarted.notify(battle)
@@ -485,6 +559,11 @@ export class Run {
 
     /** The unit of each character in the battle being fought. */
     readonly #units = new Map<Hero, Unit>()
+
+    /** Did the journey come to a fight no battle was started for yet? */
+    get #fightReached(): boolean {
+        return this.#phase === "travel" && this.travel.phase === "fight"
+    }
 
     #enterPhase(phase: RunPhase): void {
         if(phase === this.#phase) return

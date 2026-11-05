@@ -1,4 +1,4 @@
-import { PUSH_BLOCKED_DAMAGE } from "../../../battle/Battle"
+import { PUSH_BLOCKED_DAMAGE } from "../../../battle/rules"
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { damage, meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"

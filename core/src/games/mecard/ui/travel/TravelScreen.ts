@@ -1,11 +1,13 @@
 import { AssetError } from "../../../../engine/assets"
-import type { Assets } from "../../../../engine/assets"
+import type { Assets, LayeredImagePath } from "../../../../engine/assets"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import {
-    Box, Bubble, Button, Choice, Label, NineSlice, Panel, Paragraph, Scroll, Stack, Tabs,
+    AnimationChain, Box, Bubble, Button, Choice, FrameClock, instant, Label, NineSlice, Panel, Paragraph,
+    Scroll, Stack, Tabs,
 } from "../../../../engine/ui"
 import type { ChoiceStep, Component, Layer, ParagraphOptions, Theme, UiRoot } from "../../../../engine/ui"
+import type { Painter } from "../../../../engine/gpu"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { infoOf } from "../../sim/catalog/places"
@@ -17,7 +19,7 @@ import type { Shown } from "../../sim/halt/HaltContext"
 import type { HaltMoment } from "../../sim/halt/SceneLook"
 import { cardText, deckLine, described, usableText } from "../../sim/halt/subs/shown"
 import type { Hero } from "../../sim/run/Hero"
-import type { Place, PlaceKind } from "../../sim/run/Journey"
+import type { Place } from "../../sim/run/Journey"
 import type { Run } from "../../sim/run/Run"
 import type {
     CardsDialog, ConfirmDialog, Dialog, HeroDialog, OfferDialog, TellDialog,
@@ -42,7 +44,6 @@ import type { MapArt } from "./JourneyView"
 import { PointingArm } from "./PointingArm"
 import { ShownParty } from "./ShownParty"
 import { CUE_ANIMATIONS } from "./travelLooks"
-import { TravelReplayer } from "./TravelReplayer"
 import { TravelScenes } from "./TravelScenes"
 import type { TravelScene } from "./TravelScenes"
 
@@ -90,15 +91,36 @@ const RETURN_HINT = `${MAP_HINT} Clique le lieu où se tient l'équipe pour y re
 /** What it says under the cards of a dialog while none is hovered. */
 const CARD_HINT = "Survole une carte pour lire ce qu'elle fait."
 
-/** What the screen hears from the game: the run, and how a place is entered. */
-export interface TravelHost {
-    readonly run: Run
+/** What it says on the map while the players may not choose where the party goes. */
+const WAITING_HINT = "En attente..."
 
-    /**
-     * Play the transition entering a kind of place over the screen, and have the party arrive at its
-     * middle, behind it: at once when it cannot be played.
-     */
-    enter(kind: PlaceKind, arrive: () => void): void
+/** How long the party takes to slide from a place to another, in seconds, however far it is. */
+export const WALK_TIME = 0.5
+
+/** What the players may not do on the screen, the rest being theirs. */
+export interface TravelLocks {
+    /** May they not choose where the party goes? */
+    readonly map: boolean
+}
+
+/** Nothing locked: the players play the journey. */
+export const NO_TRAVEL_LOCKS: TravelLocks = { map: false }
+
+/** What a screen is built with, besides what it shows. */
+export interface TravelScreenOptions {
+    readonly theme: Theme
+
+    /** Where the pictures of the scenes come from. */
+    readonly assets: Assets
+
+    /** The pictures of the units: by each character, and where the party stands on the map. */
+    readonly sprites: UnitSprites
+
+    /** What the players may not do, nothing by default. */
+    readonly locks?: TravelLocks
+
+    /** Play a transition into a place over the screen, done at its middle, at once when it cannot be. */
+    enter(path: LayeredImagePath): Promise<void>
 
     /** Tell the players something went wrong. */
     report(text: string): void
@@ -141,8 +163,9 @@ interface Next {
  *
  * It decides nothing: what it shows comes from the observables of the travel it follows, and what the
  * players do goes to the methods of that travel. Only what they have not answered yet is its own: the cards
- * picked in a dialog before they validate. The way to a place is played back by a {@link TravelReplayer},
- * the map following the party it shows.
+ * picked in a dialog before they validate. What the travel tells goes on its {@link AnimationChain}, one
+ * thing after the other, the map following the party it shows: the party slides to a place it moved to, the
+ * journey goes in, and what it tells of the visit plays the way in, the halt shown at its middle.
  *
  * The character of a halt plays what its look says at the moments of the visit: one moment, the last, per
  * click, so a pick ending the visit plays only what came of it. A moment told while its scene loads plays
@@ -151,27 +174,50 @@ interface Next {
 export class TravelScreen {
 
 
-    public get run(): Run { return this.host.run }
+    public readonly theme: Theme
 
-    public get travel(): Travel { return this.run.travel }
+    /** The pictures of the units: by each character, and where the party stands on the map. */
+    public readonly sprites: UnitSprites
+
+    /** What it plays what the travel tells on, one thing after the other. */
+    public readonly animations: AnimationChain
+
+    public get run(): Run { return this.engine.run }
+
+    /** The travel shown. */
+    public get engine(): Travel { return this.#engine }
+
+    /** Show another travel in place of this one, what was going on dropped. */
+    public set engine(travel: Travel){
+        this.#unregisterObservers()
+        this.#stopAnimations()
+        this.#engine = travel
+        this.#registerObservers()
+        this.animations.add(instant(() => this.#fill()))
+    }
+
+    /** What the players may not do. */
+    public get locks(): TravelLocks { return this.#locks }
+
+    public set locks(locks: TravelLocks){
+        this.#locks = locks
+        this.refresh()
+    }
 
     constructor(
-        public readonly theme: Theme,
-
         /** The interface the screen lays its panels in. */
         public readonly ui: UiRoot,
 
-        public readonly host: TravelHost,
+        engine: Travel,
 
-        /** Where the pictures of the scenes come from. */
-        assets: Assets,
-
-        /** The pictures of the units: by each character, and where the party stands on the map. */
-        public readonly sprites: UnitSprites,
-
-        /** Does it only watch a journey played elsewhere? Then the map takes no click, and offers no way. */
-        public readonly watching = false,
+        public readonly options: TravelScreenOptions,
     ){
+        const { theme, assets, sprites } = options
+        this.theme = theme
+        this.sprites = sprites
+        this.animations = new AnimationChain(error => options.report(String(error)))
+        this.#engine = engine
+        this.#locks = options.locks ?? NO_TRAVEL_LOCKS
         this.#layer = ui.addLayer("travel")
         this.#scenes = new TravelScenes(ui.gpu, assets, ui)
         this.#scroll = new Scroll(theme, { width: MARGIN, height: MARGIN })
@@ -182,10 +228,6 @@ export class TravelScreen {
         this.#told = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
         this.#veil = NineSlice.flat(theme.white, new Color())
         this.#arm = new PointingArm(ui)
-        this.#replayer.onEnter = place => this.#enter(place)
-        this.#replayer.onDrained = () => {
-            if(this.travel.phase === "map") this.refresh()
-        }
         void this.#loadArm(assets)
         void this.#loadMapArt(assets)
         this.#detailTabs = new Tabs(theme, [
@@ -193,6 +235,8 @@ export class TravelScreen {
             { title: "Stats", build: () => this.#detailed(this.#statsScroll, this.#heroStats()) },
         ])
         sprites.whenLoaded(() => this.refresh())
+        this.#registerObservers()
+        this.animations.add(instant(() => this.#fill()))
     }
 
 
@@ -203,32 +247,20 @@ export class TravelScreen {
         this.#layer.content.visible = visible
     }
 
-    /** Has it shown all the journey told, the party standing where it is? */
-    public get drained(): boolean { return this.#replayer.drained }
-
-    /** Show what a travel asks and tells, in place of the one followed. */
-    public follow(travel: Travel): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#replayer.watch(travel)
-        this.#observers = [
-            travel.offerAsked.add(dialog => this.#showOffer(dialog)),
-            travel.heroAsked.add(dialog => this.#showHero(dialog)),
-            travel.cardsAsked.add(dialog => this.#showCards(dialog)),
-            travel.confirmAsked.add(dialog => this.#showConfirm(dialog)),
-            travel.told.add(dialog => this.#showTold(dialog)),
-            travel.reacted.add(moment => this.#react(moment)),
-            travel.visitStarted.add(() => this.#arm.appear()),
-            travel.visitEnded.add(() => this.showMap()),
-        ]
-    }
-
-    /** Show the map, the party to go on from where it stands. */
+    /** Show the map, what was being walked over at once, the party to go on from where it stands. */
     public showMap(): void {
-        this.#replayer.finish()
+        this.#clock.finish()
+        this.#arriving = false
         this.#arm.disappear()
         this.#queued = null
         this.#dialog = null
-        this.refresh()
+        this.#fill()
+    }
+
+    /** Stop showing the travel. */
+    public dispose(): void {
+        this.#unregisterObservers()
+        this.#stopAnimations()
     }
 
     /**
@@ -236,11 +268,12 @@ export class TravelScreen {
      * of the halt point at the head of its character, as it moves, and the box of what is hovered read the
      * input.
      *
+     * @param _world - Where a screen draws in the world: this one draws only in the interface.
      * @param dt - The time since the frame before, in seconds.
      */
-    public frame(input: InputFrame, dt: number): void {
+    public frame(input: InputFrame, _world: Painter, dt: number): void {
         const walked = this.#shownParty.walk !== null
-        this.#replayer.frame(dt)
+        this.#clock.advance(dt)
         if(walked || this.#shownParty.walk) this.#mapView?.invalidate()
         const size = `${this.ui.width}×${this.ui.height}`
         if(size !== this.#size){
@@ -257,12 +290,12 @@ export class TravelScreen {
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
         const visiting = this.#visiting
-        const look = visiting?.look ?? this.travel.floor.type.look
+        const look = visiting?.look ?? this.engine.floor.type.look
         const { r, g, b } = look.color
         this.#veil = NineSlice.flat(this.theme.white, new Color(r, g, b, VEIL_ALPHA))
         const failed = (error: AssetError): void => {
-            const place = visiting?.title ?? this.travel.floor.type.name
-            this.host.report(`Le décor de ${place} n'a pas pu être chargé : ${error.message}`)
+            const place = visiting?.title ?? this.engine.floor.type.name
+            this.options.report(`Le décor de ${place} n'a pas pu être chargé : ${error.message}`)
         }
         const scene = visiting
             ? this.#scenes.haltScene(look, () => this.refresh(), failed)
@@ -274,9 +307,10 @@ export class TravelScreen {
         }
         this.#scene = scene
         this.#bubble = null
-        this.#hint = this.#dialog || this.watching ? "" : this.travel.returnable ? RETURN_HINT : MAP_HINT
+        this.#hint = this.#mapHint
         this.#mapView = null
-        const middle = this.#dialog ? this.#dialog() : this.#map()
+        const dialog = this.#shownDialog
+        const middle = dialog ? dialog() : this.#map()
         const right = new Box("column", { gap: MARGIN, align: "stretch" })
         right.add(middle, { grow: 1 })
         right.add(this.#toldPanel())
@@ -301,11 +335,18 @@ export class TravelScreen {
      * @throws {@link Error} When the party cannot go there.
      */
     public go(place: Place): void {
-        if(this.travel.phase !== "entering") this.travel.go(place)
+        if(this.engine.phase !== "entering") this.engine.go(place)
     }
 
 
     readonly #layer: Layer
+
+    #engine: Travel
+
+    #locks: TravelLocks
+
+    /** The time of what it plays, told by its frames. */
+    readonly #clock = new FrameClock()
 
     /** What it listens to on the travel it follows. */
     #observers: Observer[] = []
@@ -340,9 +381,6 @@ export class TravelScreen {
 
     /** Where the map shows the party, behind the travel while its way is played. */
     readonly #shownParty = new ShownParty()
-
-    /** What plays the way to a place. */
-    readonly #replayer = new TravelReplayer(this.#shownParty)
 
     /** The scroll of the map, which the players do not move: it follows where the party stands. */
     readonly #mapScroll: Scroll
@@ -386,14 +424,108 @@ export class TravelScreen {
     /** The step asked while a pick was taken in, none when none was. */
     #pending: StepOfChoice|null = null
 
+    /** Is the transition into a visit going on? The map stays shown until its middle, whatever is asked. */
+    #arriving = false
+
     /** The halt being visited, none while the map is shown. */
     get #visiting(): Halt|null {
-        return this.travel.halt
+        return this.#arriving ? null : this.engine.halt
+    }
+
+    /** What builds the dialog shown, none while the map is. */
+    get #shownDialog(): (() => Component)|null {
+        return this.#arriving ? null : this.#dialog
     }
 
     /** How wide the column of the party is. */
     get #sideWidth(): number {
         return Math.floor(this.ui.width * SIDE_SHARE)
+    }
+
+    /** What it says while nothing is hovered, before a dialog says otherwise. */
+    get #mapHint(): Text {
+        if(this.#shownDialog) return ""
+        if(this.#locks.map) return WAITING_HINT
+        return this.engine.returnable ? RETURN_HINT : MAP_HINT
+    }
+
+
+    //// The travel, shown ////
+
+    /** Read the whole of the travel, the party standing where it has it. */
+    #fill(): void {
+        this.#shownParty.resync(this.engine)
+        this.refresh()
+    }
+
+    /** Add what the travel asks and tells to what the screen plays, as it comes. */
+    #registerObservers(): void {
+        const travel = this.engine
+        this.#observers = [
+            travel.moved.add(({ to }) => this.animations.add(() => this.#walk(travel, to))),
+            travel.phaseChanged.add(phase => {
+                if(phase === "entering") this.animations.add(instant(() => this.#enter(travel)))
+            }),
+            travel.mapDrawn.add(() => this.animations.add(instant(() => this.#fill()))),
+            travel.loaded.add(() => {
+                // A map that stands makes what was on its way to it pointless.
+                this.#stopAnimations()
+                this.animations.add(instant(() => this.#fill()))
+            }),
+            travel.offerAsked.add(dialog => this.#showOffer(dialog)),
+            travel.heroAsked.add(dialog => this.#showHero(dialog)),
+            travel.cardsAsked.add(dialog => this.#showCards(dialog)),
+            travel.confirmAsked.add(dialog => this.#showConfirm(dialog)),
+            travel.told.add(dialog => this.#showTold(dialog)),
+            travel.reacted.add(moment => this.#react(moment)),
+            travel.visitStarted.add(halt => {
+                this.#arriving = true
+                this.animations.add(() => this.#arrive(halt))
+            }),
+            travel.visitEnded.add(() => this.showMap()),
+        ]
+    }
+
+    #unregisterObservers(): void {
+        for(const observer of this.#observers) observer.remove()
+        this.#observers = []
+    }
+
+    /** Drop what waits to be played, and end what is going on. */
+    #stopAnimations(): void {
+        this.animations.cancel()
+        this.#clock.finish()
+        this.#arriving = false
+    }
+
+    /** Have the party slide to a place, the map opening again once there. */
+    async #walk(travel: Travel, to: Place): Promise<void> {
+        const party = this.#shownParty
+        party.leave(to)
+        await this.#clock.tween(WALK_TIME, share => {
+            if(party.walk) party.walk.share = share
+        })
+        party.land()
+        if(travel === this.engine && travel.phase === "map") this.refresh()
+    }
+
+    /** The party was shown going to its place: the journey goes in, which tells what comes of it. */
+    #enter(travel: Travel): void {
+        if(travel.canAdvance) travel.advance()
+    }
+
+    /** Play the transition into a visit, the halt shown at its middle. */
+    async #arrive(halt: Halt): Promise<void> {
+        await this.options.enter(halt.type.transition)
+        if(this.engine.halt !== halt) return
+        this.#arriving = false
+        this.#arm.appear()
+        this.refresh()
+    }
+
+    /** Tie the map to what the players do: going to the place they click. */
+    #connectInputs(view: JourneyView): void {
+        view.onPick = place => this.go(place)
     }
 
 
@@ -409,7 +541,7 @@ export class TravelScreen {
         })
         this.#choose({
             step: { title: this.#title(dialog.title), options },
-            pick: index => this.travel.takeOffer(dialog, index),
+            pick: index => this.engine.takeOffer(dialog, index),
             tell: index => dialog.offers[index].text ?? null,
         }, dialog, false)
     }
@@ -419,7 +551,7 @@ export class TravelScreen {
         const options = heroes.map(each => heroOption(this.theme, each, this.sprites))
         this.#choose({
             step: { title: this.#title(dialog.title), options },
-            pick: index => this.travel.takeHero(dialog, heroes[index]),
+            pick: index => this.engine.takeHero(dialog, heroes[index]),
             tell: index => concat(heroes[index], " : ", `${allCards(heroes[index]).length} cartes.`),
             show: index => this.#select(heroes[index]),
         }, dialog, dialog.follows)
@@ -457,14 +589,14 @@ export class TravelScreen {
             const color = ready ? CHOSEN_TEXT : DIM_TEXT
             column.add(new Label(this.theme, told, { color, outline: TEXT_OUTLINE }))
             return this.#haltFrame(dialog.title, this.#scrolled(column), dialog, {
-                label: "Valider", enabled: ready, action: () => this.travel.takeCards(dialog, picked),
+                label: "Valider", enabled: ready, action: () => this.engine.takeCards(dialog, picked),
             })
         }
         this.#open(build)
     }
 
     #showConfirm(dialog: ConfirmDialog): void {
-        const next = { label: dialog.action, action: () => this.travel.accept(dialog) }
+        const next = { label: dialog.action, action: () => this.engine.accept(dialog) }
         this.#open(() => {
             const body = this.#scrolled(this.#shown(dialog.shown))
             return this.#haltFrame(dialog.title, body, dialog, next, "Annuler")
@@ -476,16 +608,8 @@ export class TravelScreen {
         this.#open(() => {
             const body = shown ? this.#scrolled(this.#shown(shown)) : new Box("column")
             return this.#haltFrame(dialog.title, body, null, {
-                label: "Continuer", action: () => this.travel.leave(),
+                label: "Continuer", action: () => this.engine.leave(),
             })
-        })
-    }
-
-    /** Play the transition into a place, the party entering it at its middle. */
-    #enter(place: Place): void {
-        const { travel } = this
-        this.host.enter(place.kind, () => {
-            if(travel.phase === "entering") travel.enter()
         })
     }
 
@@ -502,7 +626,7 @@ export class TravelScreen {
             this.#arm.sprite = await PointingArm.loadSprite(this.ui.gpu, assets)
         } catch(error){
             if(!(error instanceof AssetError)) throw error
-            this.host.report(`Le bras n'a pas pu être chargé : ${error.message}`)
+            this.options.report(`Le bras n'a pas pu être chargé : ${error.message}`)
         }
     }
 
@@ -512,7 +636,7 @@ export class TravelScreen {
             this.#mapArt = await JourneyView.loadArt(this.ui.gpu, assets)
         } catch(error){
             if(!(error instanceof AssetError)) throw error
-            this.host.report(`Les images de la carte n'ont pas pu être chargées : ${error.message}`)
+            this.options.report(`Les images de la carte n'ont pas pu être chargées : ${error.message}`)
             return
         }
         if(this.#mapView) this.refresh()
@@ -624,7 +748,7 @@ export class TravelScreen {
 
     /** Where the party stands: the halt visited or the floor, its level, the depth and the gold. */
     #where(): Component {
-        const { floor, depth } = this.travel
+        const { floor, depth } = this.engine
         const column = new Box("column", { gap: 1 })
         const place = this.#visiting?.title ?? floor.type.name
         column.add(this.#label(place, CHOSEN_TEXT))
@@ -731,12 +855,12 @@ export class TravelScreen {
 
     /** The map of the floor, the paths to the places the party may go to lit. */
     #map(): Component {
-        const { travel } = this
+        const travel = this.engine
         const shown = this.#shownParty
         const back = travel.returnable
         const next = travel.journey.nextOf(shown.here)
         const ways = back ? [...next, back] : next
-        const open = this.watching ? [] : ways
+        const open = this.#locks.map ? [] : ways
         const { decorations } = travel.floor.type
         const view = new JourneyView(this.theme, travel.journey, shown, open, decorations)
         view.art = this.#mapArt
@@ -745,7 +869,7 @@ export class TravelScreen {
             return sprite ? [sprite] : []
         })
         this.#mapView = view
-        view.onPick = place => this.go(place)
+        this.#connectInputs(view)
         view.onHover = place => {
             const info = place && infoOf(place)
             this.#tell(info ? concat(info.name, " : ", info.description) : null)
@@ -815,7 +939,7 @@ export class TravelScreen {
         if(dialog || next){
             const foot = new Box("row", { gap: MARGIN, align: "end" })
             if(dialog){
-                const leave = dialog.back ? () => this.travel.goBack(dialog) : () => this.travel.leave()
+                const leave = dialog.back ? () => this.engine.goBack(dialog) : () => this.engine.leave()
                 foot.add(this.#button(dialog.back ? backLabel : "Partir", leave, WARNING_TEXT))
             }
             foot.add(new Box("row"), { grow: 1 })

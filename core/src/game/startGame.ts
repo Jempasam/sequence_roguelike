@@ -2,8 +2,10 @@ import { Assets } from "../engine/assets"
 import { Gpu, Painter, RenderTexture, ScreenSurface, TextureSurface } from "../engine/gpu"
 import { InputSystem } from "../engine/input"
 import { Color } from "../engine/math"
+import { NetSync } from "../engine/net"
 import { UiRoot } from "../engine/ui"
 import { MecardGame, MecardViewer, mecardTheme } from "../games/mecard/ui"
+import type { MecardNetwork } from "../games/mecard/ui"
 import type { Platform } from "../platform"
 
 /** The size of the world as drawn, in pixels, before its integer upscale to the screen. */
@@ -16,10 +18,14 @@ const BACKGROUND = new Color(0.05, 0.04, 0.08)
 /** The seed of the first run. Each new run takes the next one. */
 const FIRST_SEED = 1
 
+/** The name of the rooms of the game, which clients are told. */
+const ROOM_NAME = "Dungeon of the Mecard"
+
 /**
  * Runs the game on `platform` until the returned handle is disposed: Dungeon of the Mecard, the first
- * game of the repository. Played, and sent to the viewers when the platform has a channel to them; or only
- * watched, when the platform is a viewer of another client.
+ * game of the repository. Played, and sent to the viewers when the platform has a channel to them, or to a
+ * room its console opens; or watched, its units played when the host gives some, when the platform is a
+ * viewer of another client.
  */
 export function startGame(platform: Platform): { dispose(): void } {
     const { gfx, loop } = platform
@@ -43,8 +49,11 @@ export function startGame(platform: Platform): { dispose(): void } {
     const theme = mecardTheme(gpu)
     const sync = platform.sync
     const game = sync?.role === "viewer"
-        ? new MecardViewer(theme, ui, sync, new Assets(platform.assets), toWorld, toUi)
-        : new MecardGame(theme, ui, new Assets(platform.assets), FIRST_SEED, toWorld, toUi, sync ?? null)
+        ? new MecardViewer(theme, ui, sync, new Assets(platform.assets), toWorld, toUi, sync.link)
+        : new MecardGame(
+            theme, ui, new Assets(platform.assets), FIRST_SEED, toWorld, toUi, sync ?? null,
+            networkOf(platform),
+        )
 
     loop.start(dtMs => {
         const dt = dtMs / 1000
@@ -76,4 +85,10 @@ export function startGame(platform: Platform): { dispose(): void } {
             gpu.dispose()
         },
     }
+}
+
+/** How the game reaches the others, none on a platform missing a part of it. */
+function networkOf({ net, signaling, connect }: Platform): MecardNetwork|null {
+    if(!net || signaling === undefined || !connect) return null
+    return { open: () => NetSync.host(net, signaling, ROOM_NAME), connect }
 }

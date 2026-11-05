@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Add, Attribute, CLAMP_ORDER, Clamp, ModifierKey, Multiply } from "@game/core/mecard"
+import { Add, Attribute, CLAMP_ORDER, Clamp, Forced, ModifierKey, Multiply } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -19,6 +19,22 @@ describe("Attribute.value", () => {
         attribute.add(key, new Add(4))
         attribute.remove(key)
         expect(attribute.value).toBe(1)
+    })
+})
+
+describe("Forced", () => {
+    test("with other modifiers → the value it forces, whatever they do", () => {
+        const stat = new Attribute(2)
+        stat.add(new ModifierKey("forced"), new Forced(7))
+        stat.add(new ModifierKey("added"), new Add(3))
+        expect(stat.value).toBe(7)
+    })
+
+    test("on a yes or no → the value it forces, the base left alone", () => {
+        const stat = new Attribute(true)
+        stat.add(new ModifierKey("forced"), new Forced(false))
+        expect(stat.value).toBe(false)
+        expect(stat.base).toBe(true)
     })
 })
 

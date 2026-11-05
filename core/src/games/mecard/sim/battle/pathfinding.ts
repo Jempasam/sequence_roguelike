@@ -1,6 +1,6 @@
 import { Vector2 } from "../base/Vector2"
 
-import { COLLISION_SLACK } from "./Battle"
+import { COLLISION_SLACK } from "./rules"
 import type { Battle } from "./Battle"
 import type { Unit } from "./Unit"
 

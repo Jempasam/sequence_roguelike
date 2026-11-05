@@ -200,6 +200,15 @@ export function saveBattle(battle: Battle, options: SaveOptions = {}): BattleSav
  * @throws {@link Error} When the save is of another version, or names something the catalog does not have.
  */
 export function loadBattle(save: BattleSave): Battle {
+    return Battle.restore(battleStateOf(save))
+}
+
+/**
+ * What a save writes down, as a battle reads it.
+ *
+ * @throws {@link Error} When the save is of another version, or names something the catalog does not have.
+ */
+export function battleStateOf(save: BattleSave): BattleState {
     if(save.version !== BATTLE_SAVE_VERSION){
         throw new Error(`A battle save of version ${save.version} cannot be loaded by version ${BATTLE_SAVE_VERSION}.`)
     }
@@ -207,7 +216,7 @@ export function loadBattle(save: BattleSave): Battle {
     const card = cardLoader()
     const pillars = save.arena.pillars.map(([x, y, radius]) => ({ center: new Vector2(x, y), radius }))
     const units = save.units.map(unit => loadedUnit(unit, teams, card))
-    const state: BattleState = {
+    return {
         arena: new Arena(save.arena.width, save.arena.height, pillars),
         rng: save.rng, round: save.round, phase: save.phase,
         winner: save.winner === null ? null : teams[save.winner],
@@ -221,7 +230,6 @@ export function loadBattle(save: BattleSave): Battle {
         })),
         owners: new Map(save.owners),
     }
-    return Battle.restore(state)
 }
 
 
@@ -273,6 +281,23 @@ export function savedCard(card: Card): SavedCard {
     if(card instanceof MergedCard) return { merged: card.contents.map(savedCard) }
     if(card instanceof RandomCard) return { random: card.contents.map(savedCard) }
     throw new Error(`${card.name} is not in the catalog: it cannot be saved.`)
+}
+
+/**
+ * The cards of a hand that cards written down stand for, each card of the hand taken once. They are looked
+ * for rather than loaded: a card holding cards loaded anew is another card than the one in the hand.
+ *
+ * @throws {@link Error} For a card the hand does not hold.
+ */
+export function cardsInHand(hand: readonly Card[], saved: readonly SavedCard[]): Card[] {
+    const left = [...hand]
+    const texts = left.map(card => JSON.stringify(savedCard(card)))
+    return saved.map(each => {
+        const index = texts.indexOf(JSON.stringify(each))
+        if(index < 0) throw new Error(`The hand holds no ${JSON.stringify(each)}.`)
+        texts.splice(index, 1)
+        return left.splice(index, 1)[0]
+    })
 }
 
 /**

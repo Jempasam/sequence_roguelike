@@ -6,7 +6,7 @@ import type { Battle } from "../../../battle/Battle"
 import { ticks } from "./playing"
 import { polygon } from "./previews"
 import { still } from "../../../battle/effects"
-import { TICKS_PER_SECOND } from "../../../battle/Battle"
+import { TICKS_PER_SECOND } from "../../../battle/rules"
 
 /** How wide a bolt is, in meters: a thin line, which touches the body it stops on. */
 export const BOLT_WIDTH = 0.1

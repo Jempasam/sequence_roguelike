@@ -19,9 +19,12 @@
         "./mecard/arm": "./src/games/mecard/ui/travel/PointingArm.ts",
         "./mecard/travel-looks": "./src/games/mecard/ui/travel/travelLooks.ts",
         "./mecard/scatter": "./src/games/mecard/ui/travel/scatter.ts",
-        "./mecard/replay": "./src/games/mecard/ui/replay/index.ts",
+        "./mecard/battle-ui": "./src/games/mecard/ui/battle/index.ts",
         "./mecard/sync": "./src/games/mecard/sync/index.ts",
-        "./mecard/viewer": "./src/games/mecard/ui/MecardViewer.ts"
+        "./mecard/run-screen": "./src/games/mecard/ui/run/RunScreen.ts",
+        "./mecard/battle-screen": "./src/games/mecard/ui/battle/BattleScreen.ts",
+        "./mecard/viewer": "./src/games/mecard/ui/MecardViewer.ts",
+        "./mecard/game": "./src/games/mecard/ui/MecardGame.ts"
     },
     "scripts": {
         "typecheck": "tsc -p . && tsc -p build"

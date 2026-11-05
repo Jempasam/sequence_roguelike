@@ -11,6 +11,8 @@ import type { Hero } from "../run/Hero"
 import { isHalt, Journey } from "../run/Journey"
 import type { HaltKind, Place } from "../run/Journey"
 import type { Run } from "../run/Run"
+import { loadTravel, saveTravel } from "../save/travelSave"
+import type { TravelSave } from "../save/travelSave"
 
 import { CardsDialog, ConfirmDialog, HeroDialog, OfferDialog, TellDialog } from "./dialogs"
 import type { Dialog } from "./dialogs"
@@ -38,6 +40,15 @@ export interface TravelState {
     readonly journey: Journey
     readonly place: Place|null
     readonly depth: number
+}
+
+/** What a journey waits for from the players. */
+export interface TravelAwaited {
+    /** The places they may go to, none out of the map. */
+    readonly places: readonly Place[]
+
+    /** The dialogs open, none out of a visit. */
+    readonly dialogs: readonly Dialog[]
 }
 
 /** A dialog open, and what its answers do, in the indices of what it offers. */
@@ -106,6 +117,9 @@ export class Travel {
     /** The character of the halt visited reacts to a moment of the visit. */
     public readonly reacted: Observable<HaltMoment>
 
+    /** A save was loaded: the party stands on the map it holds, and nothing else was told of it. */
+    public readonly loaded: Observable<Travel>
+
 
     //// State ////
 
@@ -138,6 +152,7 @@ export class Travel {
         this.confirmAsked = new Observable(report)
         this.told = new Observable(report)
         this.reacted = new Observable(report)
+        this.loaded = new Observable(report)
         this.floor = floor
         this.journey = this.#newJourney()
     }
@@ -159,6 +174,28 @@ export class Travel {
     /** The places the party may go to next. */
     public get next(): readonly Place[] {
         return this.journey.nextOf(this.#place)
+    }
+
+    /** What it waits for from the players: a place to go to on the map, or the answers of a visit. */
+    public get awaited(): TravelAwaited {
+        const { returnable } = this
+        const onMap = this.#phase === "map"
+        const places = onMap ? [...this.next, ...returnable ? [returnable] : []] : []
+        return { places, dialogs: this.dialogs }
+    }
+
+    /** Does it only wait to be told to go on: the party on its way into a place? */
+    public get canAdvance(): boolean {
+        return this.#phase === "entering"
+    }
+
+    /**
+     * Go on to what comes next: into the place the party is entering.
+     *
+     * @throws {@link Error} When the party is not entering a place.
+     */
+    public advance(): void {
+        this.enter()
     }
 
     /**
@@ -209,6 +246,24 @@ export class Travel {
         this.depth = depth
         this.#place = place
         this.#halts.clear()
+        this.#phase = "map"
+        this.#halt = null
+        this.#steps.length = 0
+    }
+
+    /** Written down, to read back with {@link Travel.load}: see {@link saveTravel}. */
+    public save(): TravelSave {
+        return saveTravel(this)
+    }
+
+    /**
+     * Stand where a save has it, in place: what listens to it stays, and only {@link Travel.loaded} is told.
+     *
+     * @throws {@link Error} When the save is of another version, or names what the catalog does not have.
+     */
+    public load(save: TravelSave): void {
+        loadTravel(save, this.run)
+        this.loaded.notify(this)
     }
 
 

@@ -254,7 +254,10 @@ export class Unit {
     public readonly sprite: string|null
 
     public readonly team: Team
-    public readonly controller: Controller
+
+    /** Who gives its chain: changed by {@link Battle.control}. */
+    public controller: Controller
+
     /** Its items: those it entered with, and those given during the battle, plugged in as given. */
     public readonly items: Item[]
 

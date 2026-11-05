@@ -17,9 +17,12 @@
  */
 
 export type { NavigationAxis } from "./Component"
+export { AnimationChain, instant } from "./AnimationChain"
+export type { Animation } from "./AnimationChain"
 export { Component } from "./Component"
 export { Container, ContentContainer } from "./Container"
 export { DirtyRegion, MAX_DIRTY_RECTS } from "./DirtyRegion"
+export { FrameClock } from "./FrameClock"
 export { UI_BINDINGS, uiActions } from "./input/UiAction"
 export type { UiAction } from "./input/UiAction"
 export type { UiEvent, UiEventType } from "./input/UiEvent"

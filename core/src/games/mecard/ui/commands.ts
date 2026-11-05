@@ -41,6 +41,9 @@ import type { HaltKind, Place, PlaceInfo, PlaceKind } from "../sim/run/Journey"
 import type { FloorType } from "../sim/floor/Floor"
 import type { Run } from "../sim/run/Run"
 import type { Status, StatusType } from "../sim/status/Status"
+import { Rng } from "../sim/base/Rng"
+import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, randomSeats } from "../sync/run/Seats"
+import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 
 import { chainText, heartsText } from "./describe"
 import { PLACE_TRANSITIONS } from "./travel/placeLooks"
@@ -82,6 +85,22 @@ export interface MecardContext extends CommandContext {
 
     /** Play a transition over the screen, for a try, telling its middle and its end. */
     playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void
+
+    /**
+     * Open the game to others, printing the code they connect with.
+     *
+     * @param mode - What they are given to play, none for others that only watch.
+     * @throws {@link Error} When the game cannot be hosted now.
+     */
+    hostGame(mode: SeatMode|null, policy: SeatPolicy): void
+
+    /**
+     * Leave this game for the one hosted under a code.
+     *
+     * @param guest - Does the player come to play, rather than to watch?
+     * @throws {@link Error} With no network.
+     */
+    connect(code: string, guest: boolean): void
 }
 
 /** What the game gives the context of the commands, read at each command. */
@@ -118,6 +137,8 @@ export class LiveContext implements MecardContext {
     public playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void {
         this.host().playTransition(path, duration, reverse)
     }
+    public hostGame(mode: SeatMode|null, policy: SeatPolicy): void { this.host().hostGame(mode, policy) }
+    public connect(code: string, guest: boolean): void { this.host().connect(code, guest) }
 }
 
 
@@ -236,6 +257,32 @@ const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => USABLES, 
 /** Who plays a character: the players, or a bot. */
 const CONTROLLER: Arg<MecardContext, Controller> = named("le contrôle", () => ["player", "bot"] as const,
     controller => controller === "player" ? "joueur" : "bot")
+
+/** What the others are given to play in a game hosted, none when they only watch. */
+const HOST_MODE = named("le mode", () => [
+    { word: "spectate", seats: null },
+    { word: "coop", seats: COOP_SEATS },
+    { word: "enemy", seats: ENEMY_SEATS },
+] as const, mode => mode.word)
+
+/** How what the others are given is picked: the first free, or any, the numbers of the run left alone. */
+const FIXED_SEATING = { word: "fixed", policy: (): SeatPolicy => FIXED_SEATS }
+const RANDOM_SEATING = {
+    word: "random", policy: (run: Run): SeatPolicy => randomSeats(new Rng(run.rng.state)),
+}
+const SEATING = named("la répartition", () => [FIXED_SEATING, RANDOM_SEATING], seating => seating.word)
+
+/** The code of a game hosted, as its host printed it. */
+const ROOM_CODE: Arg<MecardContext, string> = {
+    complete: () => [],
+    read: (_, word) => word ?? new Error("Il manque le code de la partie."),
+}
+
+/** Why a player connects to a game. */
+const INTENT = named("l'intention", () => [
+    { word: "spectate", guest: false },
+    { word: "play", guest: true },
+] as const, intent => intent.word)
 
 /** A character of the party other than the one read first. */
 const OTHER_HERO: Arg<MecardContext, Hero> = named("le héros", (ctx, [first]) => {
@@ -682,6 +729,19 @@ function runCommands(): Record<string, Command<MecardContext, unknown>> {
     }
 }
 
+/** The commands playing with others. */
+function networkCommands(): Readonly<Record<string, Command<MecardContext, unknown>>> {
+    return {
+        host: command("host <spectate|coop|enemy> [fixed|random] : héberge la partie, et donne son code.",
+            [HOST_MODE, optional(SEATING, FIXED_SEATING)], (ctx, mode, seating) => {
+                ctx.hostGame(mode.seats, seating.policy(ctx.run))
+                ctx.print("Ouverture de la partie...")
+            }),
+        connect: command("connect <code> <spectate|play> : rejoint une partie hébergée.",
+            [ROOM_CODE, INTENT], (ctx, code, intent) => ctx.connect(code, intent.guest)),
+    }
+}
+
 /** The floor of a run, as the console tells it. */
 function floorText(run: Run): string {
     return `${run.travel.floor.type.name} niveau ${run.travel.floor.level}`
@@ -800,6 +860,7 @@ export function registerCommands(console: Console<MecardContext>): void {
     console.register("clear", command("clear : vide la console.", [], () => console.clear()))
     const all = {
         ...catalogCommands(), ...battleCommands(), ...runCommands(), ...travelCommands(), ...toolCommands(),
+        ...networkCommands(),
     }
     for(const [name, each] of Object.entries(all)) console.register(name, each)
 }

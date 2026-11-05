@@ -38,6 +38,7 @@ import { BURN, Burn } from "../status/subs/Burn"
 import { Coated, COATED } from "../status/subs/Coated"
 import { CONFUSED, Confusion } from "../status/subs/Confusion"
 import { Dodge, DODGE } from "../status/subs/Dodge"
+import { Possessed, POSSESSED } from "../status/subs/Possessed"
 import { Fleeting, FLEETING } from "../status/subs/Fleeting"
 import { FRENZIED, Frenzy } from "../status/subs/Frenzy"
 import { GRAND_RITUAL, GrandRitual } from "../status/subs/GrandRitual"
@@ -117,6 +118,7 @@ export const STATUS_CODECS: readonly StatusCodec[] = [
     { type: ROOTED, save: status => (status as Rooted).steps, load: steps => new Rooted(numberOf(steps)) },
     { type: DODGE, save: () => 0, load: () => new Dodge() },
     { type: FLEETING, save: () => 0, load: () => new Fleeting() },
+    { type: POSSESSED, save: () => 0, load: () => new Possessed() },
     {
         type: HEALING, save: status => (status as Healing).halves,
         load: halves => new Healing(numberOf(halves)),

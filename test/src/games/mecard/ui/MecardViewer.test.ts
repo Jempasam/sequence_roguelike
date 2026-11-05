@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import { AssetError } from "@game/core"
 import type { Assets } from "@game/core"
 import { Run } from "@game/core/mecard"
-import { LocalSync, TRAVEL_TOPIC, TravelBroadcaster } from "@game/core/mecard/sync"
+import { LocalSync, RunBroadcaster } from "@game/core/mecard/sync"
 import { MecardViewer } from "@game/core/mecard/viewer"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
@@ -37,7 +37,7 @@ describe("MecardViewer", () => {
         const { channel, viewer } = watching()
         const run = new Run(5)
         run.gold = 321
-        new TravelBroadcaster(TRAVEL_TOPIC.sender(channel)).follow(run.travel)
+        new RunBroadcaster(run, channel)
         expect(viewer.run.gold).toBe(321)
         run.travel.jump(run.travel.next[0])
         expect(viewer.run.travel.place?.kind).toBe(run.travel.place?.kind)

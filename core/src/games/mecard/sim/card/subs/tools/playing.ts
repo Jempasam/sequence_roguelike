@@ -1,5 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { TICKS_PER_SECOND } from "../../../battle/Battle"
+import { TICKS_PER_SECOND } from "../../../battle/rules"
 import { still } from "../../../battle/effects"
 import type { ActionRun, Indicator, UnitContext } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"

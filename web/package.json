@@ -1,0 +1,21 @@
+{
+    "name": "@game/web",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "node ../scripts/compileWasm.ts && tsc -p . && tsc -p tsconfig.node.json && vite build",
+        "preview": "vite preview",
+        "typecheck": "tsc -p . && tsc -p tsconfig.node.json"
+    },
+    "dependencies": {
+        "@game/core": "*"
+    },
+    "devDependencies": {
+        "@game/test": "*",
+        "@types/node": "^24.19.2",
+        "fake-indexeddb": "^6.2.7",
+        "vite": "^8.3.5"
+    }
+}

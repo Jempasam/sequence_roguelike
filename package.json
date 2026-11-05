@@ -1,0 +1,40 @@
+{
+    "name": "roguelike",
+    "private": true,
+    "workspaces": [
+        "core",
+        "web",
+        "desktop",
+        "server",
+        "test"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
+    "scripts": {
+        "web": "npm run dev -w @game/web",
+        "web:build": "npm run build -w @game/web",
+        "desktop": "npm run dev -w @game/desktop",
+        "desktop:build": "npm run build -w @game/desktop",
+        "desktop:build:node": "npm run build:node -w @game/desktop",
+        "desktop:start": "npm run start -w @game/desktop",
+        "desktop:start:node": "npm run start:node -w @game/desktop",
+        "server": "npm run dev -w @game/server",
+        "server:build": "npm run build -w @game/server",
+        "test": "vitest run",
+        "typecheck": "npm run wasm && npm run typecheck --workspaces",
+        "lint": "eslint .",
+        "assets": "node scripts/indexAssets.ts",
+        "art": "node scripts/renderArt.ts",
+        "wasm": "node scripts/compileWasm.ts"
+    },
+    "devDependencies": {
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "eslint": "^10.14.0",
+        "globals": "^17.13.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.72.1",
+        "vitest": "^5.0.5"
+    },
+    "type": "module"
+}

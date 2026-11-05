@@ -1,0 +1,39 @@
+{
+    "name": "@game/core",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts",
+        "./mecard": "./src/games/mecard/sim/index.ts",
+        "./mecard/commands": "./src/games/mecard/ui/commands.ts",
+        "./mecard/travel-screen": "./src/games/mecard/ui/travel/TravelScreen.ts",
+        "./mecard/choice-options": "./src/games/mecard/ui/hud/ChoiceOptions.ts",
+        "./mecard/deck-view": "./src/games/mecard/ui/hud/DeckView.ts",
+        "./mecard/battle-grid": "./src/games/mecard/ui/hud/BattleGrid.ts",
+        "./mecard/detail-box": "./src/games/mecard/ui/hud/DetailBox.ts",
+        "./mecard/explanations": "./src/games/mecard/ui/look/explanations.ts",
+        "./mecard/text-display": "./src/games/mecard/ui/look/textDisplay.ts",
+        "./mecard/pnj": "./src/games/mecard/ui/pnj/index.ts",
+        "./mecard/pixel-font": "./src/games/mecard/ui/look/pixelFont.ts",
+        "./mecard/arm": "./src/games/mecard/ui/travel/PointingArm.ts",
+        "./mecard/travel-looks": "./src/games/mecard/ui/travel/travelLooks.ts",
+        "./mecard/scatter": "./src/games/mecard/ui/travel/scatter.ts",
+        "./mecard/replay": "./src/games/mecard/ui/replay/index.ts",
+        "./mecard/sync": "./src/games/mecard/sync/index.ts",
+        "./mecard/viewer": "./src/games/mecard/ui/MecardViewer.ts"
+    },
+    "scripts": {
+        "typecheck": "tsc -p . && tsc -p build"
+    },
+    "dependencies": {
+        "@game/server": "*",
+        "fast-png": "^8.0.0",
+        "fflate": "^0.8.2"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "vite": "^8.3.5",
+        "@yowasp/clang": "^22.0.0-git20542-10"
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "name": "@game/test",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./storageContract": "./src/fixtures/storageContract.ts"
+    },
+    "scripts": {
+        "test": "vitest run --root .",
+        "typecheck": "tsc -p ."
+    },
+    "dependencies": {
+        "@game/server": "*",
+        "@game/core": "*",
+        "fflate": "^0.8.2",
+        "node-datachannel": "^0.33.6"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "vite": "^8.3.5"
+    }
+}

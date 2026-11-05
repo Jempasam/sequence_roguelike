@@ -1,0 +1,26 @@
+{
+    "name": "@game/desktop",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "node build/dev.mjs",
+        "build": "node build/build.mjs",
+        "build:node": "node build/build.mjs --no-sea",
+        "start": "node build/start.mjs",
+        "start:node": "node build/start.mjs --node",
+        "typecheck": "tsc -p ."
+    },
+    "dependencies": {
+        "@game/core": "*",
+        "@kmamal/gl": "^9.1.0",
+        "@kmamal/sdl": "^0.11.13",
+        "node-datachannel": "^0.33.6"
+    },
+    "devDependencies": {
+        "@game/test": "*",
+        "@types/node": "^24.19.2",
+        "postject": "^1.0.0-alpha.6",
+        "vite": "^8.3.5"
+    }
+}

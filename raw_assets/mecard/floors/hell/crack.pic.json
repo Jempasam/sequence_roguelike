@@ -1,0 +1,26 @@
+{
+  "palette": [
+    {
+      "color": "#ff5a1e",
+      "light": 0.8
+    },
+    "#2a0e0e"
+  ],
+  "pixels": {
+    "materials": [
+      "...1...",
+      "..10...",
+      ".100.1.",
+      "..1001.",
+      "...100.",
+      "....1.."
+    ]
+  },
+  "filters": [
+    "auto_depth"
+  ],
+  "render": {
+    "preset": "shaded",
+    "light": 135
+  }
+}

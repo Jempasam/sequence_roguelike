@@ -1,0 +1,26 @@
+{
+    "name": "@game/server",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./protocol": "./src/protocol/index.ts",
+        "./signaling": "./src/signaling/index.ts",
+        "./stun": "./src/stun/index.ts",
+        "./turn": "./src/turn/index.ts"
+    },
+    "scripts": {
+        "dev": "node build/dev.mjs",
+        "build": "vite build",
+        "start": "node dist/main.js",
+        "typecheck": "tsc -p ."
+    },
+    "dependencies": {
+        "ws": "^8.22.1"
+    },
+    "devDependencies": {
+        "@types/node": "^24.19.2",
+        "@types/ws": "^8.18.2",
+        "vite": "^8.3.5"
+    }
+}

@@ -1,0 +1,100 @@
+/**
+ * @packageDocumentation
+ * What a run is made of, beyond the cards, the usables and the items themselves: the monsters and the
+ * kits of the heroes. Each is a value, collected here into the pools the loot, the shops and the decks draw
+ * from, with the cards of `card/subs`, the usables of `usable/subs` and the items of `item/subs`.
+ */
+
+import type { Card } from "../card"
+import { Rarity } from "../card/Rarity"
+import {
+    ANTIDOTE, ASSASSIN_BLOW, ASSASSIN_STEP, ASSASSINATION, BACK_DASH, BANDAGE, BARREL, BIG_BOTTLE, BLINK,
+    BODY_CARDS, BOMB, BOTTLE, CHARGE,
+    CHARM,
+    CLONE, COATED_BLADE, COIN, CONFUSION, CURSED_FLURRY, DAGGER, DISTILLATION, DOUBLE_DIAGONAL, DRAW,
+    DrawnCard, EXPLOSIVE_DASH, FAR_AIM, FEAR, FIRE, FLAMETHROWER, FLASH_GRENADE, FOCUS, FRENZY, GAMBLE,
+    GRAPPLE, HORSE, HYPNOSIS, INSTINCT, LASSO, PATH_AIM, PLANT, POISON, POTION_POUCH, POTION_RAIN, PRAYER,
+    PUDDLE, PUSH,
+    RAGE, RAGE_FIT, RANDOM_AIM, RECOVERY, REPEAT_2, REPEAT_3, REPETITION, RICOCHET, SHOT, SHOTGUN, SLASH,
+    SLOWNESS, SPELL, STONE, STONE_WALL, STRENGTH_CARD, STUNNING_DASH, STURDY_AIM, SUBSTITUTION,
+    SUPER_REPETITION, SWAP,
+    SWEEP, TASER, THORN_SHIELD, THROWN_POTION, THRUST, TORNADO, TOTEM, UNSTABLE_ELEMENT, UNSTABLE_THRUST,
+    UNSURE_BLOW, VINE,
+    VULNERABILITY, WATER, WEAK_AIM, WEAKNESS, weighted,
+    BLOOD_AXE, BLOODLUST_CARD, BOUNCE_DASH, BOUNCING_BOW, CROSSBOW, HARPOON, HEAD_JUMP, HUNT, KNIGHT_MOVE,
+    LEAP,
+    MEGA_SLASH, MINE, SCYTHE, SHADOW, SHADOW_STEP, SKULL_BREAK, TACKLE,
+    AURA, BLAST_MODULE, BOW_MODULE, BULL_MODULE, COMPOUND_CARDS, CONJURATION, CROSSED_SPELL, ECHO,
+    GRAND_RITUAL_CARD,
+    IMPROVISED_ROBOT, IMPROVISED_WEAPON, LIGHTNING, MISSILE, RAM, REACTION, RITUAL, SMALL_SPELL, TANK_ROBOT,
+    WIND,
+    DIVISION, DRIZZLE, FLEE, MEGA_LASER, PURSUIT, RETREAT_SHOT, SHADOW_AIM, SHADOW_WAY, SIDESTEP, SPARK, SPIT,
+} from "../card/subs"
+import type { Usable } from "../usable"
+import {
+    ENERGIZER, FIRE_FLASK, GLUE_FLASK, HASTE_ELIXIR, HEALING_POTION, MIXER, PLANT_BAG, SHIELD_FLASK,
+    STRENGTH_ELIXIR, THRUST_BOTTLE,
+} from "../usable/subs"
+import type { Item } from "../item"
+import {
+    ALEMBIC, AMULET, BAG, BOOTS, BOTTLE_BAG, DODGE_SCEPTER, DOLL, ELEMENT_BAG, FANG, GRIMOIRE, MED_KIT,
+    POTION_BAG, SATCHEL, SCOPE, SLING, SPYGLASS, TACTICS_BOOK, WHETSTONE,
+} from "../item/subs"
+
+import { KITS } from "./kits"
+import { CARTE } from "../base/keywords"
+
+export * from "./kits"
+export * from "./monsters"
+
+/**
+ * Any card of the game that fits its place, drawn at the end of the preparation, the commoner more often:
+ * named here, where every card is known.
+ */
+export const CHAOS: Card = new DrawnCard("Chaos", [
+    "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
+], Rarity.EPIC, () => weighted(ALL_CARDS))
+
+/** The potions and what pours them, found as loot. */
+const POTION_CARDS: readonly Card[] = [
+    POISON, SLOWNESS, WEAKNESS, RAGE, CONFUSION, VULNERABILITY, FRENZY, ANTIDOTE, DISTILLATION, BOTTLE,
+    BIG_BOTTLE, THROWN_POTION, POTION_RAIN, BARREL, COATED_BLADE, PUDDLE, POTION_POUCH, RAGE_FIT,
+]
+
+/** The cards found as loot, the rare ones less often. */
+export const LOOT_CARDS: readonly Card[] = [
+    SHOT, SLASH, THRUST, SWEEP, STUNNING_DASH, BACK_DASH, BLINK, BOMB, FLAMETHROWER, TASER, PUSH, CHARM, FEAR,
+    CLONE, DOUBLE_DIAGONAL, REPEAT_2, REPEAT_3, HYPNOSIS, SPELL, FIRE, WATER, PLANT, STONE, FOCUS, PRAYER,
+    UNSTABLE_THRUST, CURSED_FLURRY, CHARGE, UNSTABLE_ELEMENT, UNSURE_BLOW,
+    RANDOM_AIM, FAR_AIM, STURDY_AIM, WEAK_AIM, PATH_AIM, LASSO, GRAPPLE, VINE, ASSASSIN_STEP, SWAP,
+    EXPLOSIVE_DASH,
+    DAGGER, SHOTGUN, RICOCHET, FLASH_GRENADE, BANDAGE, COIN, SUBSTITUTION, STONE_WALL, THORN_SHIELD, TOTEM,
+    TORNADO, REPETITION, SUPER_REPETITION, INSTINCT, CHAOS, RECOVERY, DRAW, STRENGTH_CARD, HORSE,
+    KNIGHT_MOVE, LEAP, BOUNCE_DASH, SKULL_BREAK, HEAD_JUMP, MEGA_SLASH, ASSASSINATION, HARPOON, SCYTHE,
+    BLOOD_AXE,
+    BOUNCING_BOW, CROSSBOW, MINE, SHADOW_STEP, TACKLE, BLOODLUST_CARD, SHADOW, HUNT, ASSASSIN_BLOW,
+    WIND, LIGHTNING, AURA, SMALL_SPELL, CONJURATION, CROSSED_SPELL, REACTION, RITUAL, GRAND_RITUAL_CARD, ECHO,
+    BOW_MODULE, BULL_MODULE, BLAST_MODULE, MISSILE, IMPROVISED_ROBOT, TANK_ROBOT, IMPROVISED_WEAPON, RAM,
+    MEGA_LASER, SIDESTEP, FLEE, SPIT, DIVISION, PURSUIT, SHADOW_WAY, SPARK, DRIZZLE, RETREAT_SHOT,
+    ...POTION_CARDS,
+]
+
+/** Every item, for the loot. */
+export const ITEMS: readonly Item[] = [
+    WHETSTONE, BOOTS, FANG, SPYGLASS, BAG, SATCHEL, GRIMOIRE, AMULET, SCOPE, SLING, MED_KIT, DOLL, ALEMBIC,
+    BOTTLE_BAG, DODGE_SCEPTER, POTION_BAG, ELEMENT_BAG, TACTICS_BOOK,
+]
+
+/** Every usable, for the loot and the shops. */
+export const USABLES: readonly Usable[] = [
+    HEALING_POTION, SHIELD_FLASK, STRENGTH_ELIXIR, HASTE_ELIXIR, FIRE_FLASK, GLUE_FLASK, PLANT_BAG, ENERGIZER,
+    THRUST_BOTTLE, MIXER,
+]
+
+/** Every card of the game, each once: what the console gives by name. */
+export const ALL_CARDS: readonly Card[] = [
+    ...new Set([
+        ...KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
+        ...COMPOUND_CARDS,
+    ]),
+]

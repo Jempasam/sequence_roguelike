@@ -1,6 +1,7 @@
 import { Atlas } from "../../../../engine/atlas"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import type { Gpu, Sprite } from "../../../../engine/gpu"
+import { ITEMS, USABLES } from "../../sim/catalog"
 
 /** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
 const SPRITE_PATHS: Readonly<Record<string, ImagePath>> = {
@@ -33,6 +34,12 @@ const SPRITE_PATHS: Readonly<Record<string, ImagePath>> = {
     elf_archer: "mecard/units/elf_archer.png",
     ice_mage: "mecard/units/ice_mage.png",
     imp: "mecard/units/imp.png",
+    wolf: "mecard/units/wolf.png",
+    bear: "mecard/units/bear.png",
+    hawk: "mecard/units/hawk.png",
+    salamander: "mecard/units/salamander.png",
+    otter: "mecard/units/otter.png",
+    boar: "mecard/units/boar.png",
     robot: "mecard/units/robot.png",
     tornado: "mecard/units/tornado.png",
     wave: "mecard/units/wave.png",
@@ -88,6 +95,11 @@ export class UnitSprites {
         return this.#icons.get(name) ?? null
     }
 
+    /** The picture of an item or a usable, by the path it gives, none before it is loaded. */
+    public thing(icon: ImagePath): Sprite|null {
+        return this.#things.get(icon) ?? null
+    }
+
     /** The back of the cards of a deck, by its place among the decks, none before it is loaded. */
     public cardBack(deck: number): Sprite|null {
         return this.#cardBacks[deck % CARD_BACK_PATHS.length] ?? null
@@ -114,20 +126,25 @@ export class UnitSprites {
         const icons = Object.entries(ICON_PATHS)
         const paths = [...named, ...icons].map(([, path]) => path)
         const others = [...CARD_BACK_PATHS, INVALID_CARD_PATH]
-        const pictures = await Promise.all([...paths, ...others].map(path => assets.image(path)))
+        const things = [...new Set([...ITEMS, ...USABLES].map(thing => thing.icon))]
+        const pictures = await Promise.all([...paths, ...others, ...things].map(path => assets.image(path)))
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
+        things.forEach((path, index) => {
+            this.#things.set(path, atlas.sprite(entries[paths.length + others.length + index]))
+        })
         named.forEach(([name], index) => this.#sprites.set(name, atlas.sprite(entries[index])))
         icons.forEach(([name], index) => this.#icons.set(name, atlas.sprite(entries[named.length + index])))
-        const backs = entries.slice(paths.length, -1)
+        const backs = entries.slice(paths.length, paths.length + CARD_BACK_PATHS.length)
         this.#cardBacks = backs.map(entry => atlas.sprite(entry))
-        this.#invalidCard = atlas.sprite(entries[entries.length - 1])
+        this.#invalidCard = atlas.sprite(entries[paths.length + CARD_BACK_PATHS.length])
         for(const listener of this.#listeners.splice(0)) listener()
     }
 
 
     readonly #sprites = new Map<string, Sprite>()
     readonly #icons = new Map<string, Sprite>()
+    readonly #things = new Map<ImagePath, Sprite>()
     readonly #listeners: (() => void)[] = []
     #cardBacks: readonly Sprite[] = []
     #invalidCard: Sprite|null = null

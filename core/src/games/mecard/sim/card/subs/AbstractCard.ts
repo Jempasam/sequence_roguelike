@@ -1,8 +1,6 @@
 import type { Text } from "../../../../../semantic"
 import type { Card } from "../Card"
 import type { CardType } from "../CardType"
-import { familyOfTypes } from "../Family"
-import type { Family } from "../Family"
 import type { Rarity } from "../Rarity"
 
 /**
@@ -25,11 +23,6 @@ export abstract class AbstractCard<T, U = undefined> implements Card<T, U> {
         public readonly rarity: Rarity,
     ){}
 
-
-    /** Its family, by what it takes and gives. */
-    public get family(): Family {
-        return familyOfTypes(this.output, this.input)
-    }
 
     public abstract get(input: U): T
 

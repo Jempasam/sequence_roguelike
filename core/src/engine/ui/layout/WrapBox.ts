@@ -9,6 +9,9 @@ import type { SizeHint } from "../SizeHint"
 export interface WrapBoxOptions {
     /** The space between two children of a line, and between two lines, in virtual pixels, none by default. */
     readonly gap?: number
+
+    /** Where each line lies in the width of the box, `"center"` by default. */
+    readonly align?: "start"|"center"
 }
 
 /** A line of a wrapping box: the children it holds, and the room they take. */
@@ -33,6 +36,7 @@ export class WrapBox extends Container<object> {
     constructor(options: WrapBoxOptions = {}){
         super()
         this.#gap = options.gap ?? 0
+        this.#align = options.align ?? "center"
     }
 
 
@@ -73,7 +77,7 @@ export class WrapBox extends Container<object> {
         const rect = this.#rect
         let top = 0
         for(const line of lines){
-            let left = Math.floor((width - line.width) / 2)
+            let left = this.#align === "start" ? 0 : Math.floor((width - line.width) / 2)
             line.children.forEach((child, index) => {
                 const childWidth = line.widths[index]
                 const childHeight = child.measure(childWidth).preferredHeight
@@ -87,6 +91,7 @@ export class WrapBox extends Container<object> {
 
 
     #gap: number
+    readonly #align: "start"|"center"
     readonly #rect = new Rect()
 
     #shown(): Component[] {

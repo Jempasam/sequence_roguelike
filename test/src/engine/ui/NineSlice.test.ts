@@ -32,6 +32,26 @@ function topEdgeUs(nine: NineSlice, width: number, height: number): number[] {
 
 // --- Tests ---
 
+describe("NineSlice.withPeriod", () => {
+    const margins = { left: 2, top: 2, right: 2, bottom: 2 }
+
+    test("a period of 16 over a center of 8 → borders twice the margins, tiles of 16", () => {
+        const { theme } = uiSetup()
+        const sprite = new Sprite(theme.white.texture, 100, 16, 12, 12)
+        const nine = NineSlice.withPeriod(sprite, margins, 16)
+        expect(nine.border).toEqual({ left: 4, top: 4, right: 4, bottom: 4 })
+        expect(nine.tiling).not.toBeNull()
+        const us = topEdgeUs(nine, 4 + 48 + 4, 4 + 48 + 4)
+        expect(us).toHaveLength(3)
+    })
+
+    test("a period that is not more than 0 → throws", () => {
+        const { theme } = uiSetup()
+        const sprite = new Sprite(theme.white.texture, 100, 16, 12, 12)
+        expect(() => NineSlice.withPeriod(sprite, margins, 0)).toThrow()
+    })
+})
+
 describe("NineSlice.draw", () => {
     test("no tiling → one draw of nine quads", () => {
         const { painter, quads } = recordingPainter()

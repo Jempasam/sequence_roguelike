@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../../engine/assets/Assets"
 import type { UnitContext } from "../../../battle/Action"
 import type { Card } from "../../../card/Card"
 import { DODGE_CARD } from "../../../card/subs/combat/DodgeCard"
@@ -9,12 +10,12 @@ export class CardScepter extends DrawnItem {
 
 
     constructor(
-        name: string,
+        name: string, icon: ImagePath,
 
         /** The card it gives. */
         public readonly card: Card,
     ){
-        super(name, ["Après la pioche, sans ", card, " en main, en donne un exemplaire."])
+        super(name, icon, ["Après la pioche, sans ", card, " en main, en donne un exemplaire."])
     }
 
 
@@ -24,4 +25,4 @@ export class CardScepter extends DrawnItem {
     }
 }
 
-export const DODGE_SCEPTER = new CardScepter("Sceptre d'esquive", DODGE_CARD)
+export const DODGE_SCEPTER = new CardScepter("Sceptre d'esquive", "mecard/items/dodge_scepter.png", DODGE_CARD)

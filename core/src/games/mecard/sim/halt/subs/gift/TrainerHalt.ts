@@ -2,6 +2,7 @@ import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import { COMMON_MONSTERS } from "../../../catalog/monsters"
 import type { Monster } from "../../../catalog/monsters"
+import { PETS } from "../../../catalog/pets"
 import { distinct, OFFER_SIZE } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
@@ -12,7 +13,7 @@ import { AbstractHalt } from "../AbstractHalt"
 import { CARTE, DECK } from "../../../base/keywords"
 
 /** What the trainer says of itself. */
-const LINE = "Un de mes trois monstres te suivra, et se battra seul."
+const LINE = "Un de mes deux pets, ou d'un monstre croisé en chemin, te suivra, et se battra seul."
 
 /** How the trainer looks. */
 const LOOK = sceneLook(23, 28, 15, [
@@ -22,7 +23,7 @@ const LOOK = sceneLook(23, 28, 15, [
 
 /** The monsters a trainer offers as allies. */
 export function trainerMonsters(rng: Rng): Monster[] {
-    return distinct(rng, COMMON_MONSTERS, OFFER_SIZE)
+    return [...distinct(rng, PETS, OFFER_SIZE - 1), ...distinct(rng, COMMON_MONSTERS, 1)]
 }
 
 /** The trainer: a monster among some joins the party, played by a bot. */
@@ -37,7 +38,7 @@ export class TrainerHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Quel allié ?", this.#monsters, monster => ({
-            cards: [...new Set(monster.cards)],
+            cards: [...new Set(monster.cards)], sprite: monster.sprite,
             text: [monster, " : ", monster.hearts, " cœurs, ", monster.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu."],
         }), monster => {
             this.impact()
@@ -53,7 +54,7 @@ export class TrainerHalt extends AbstractHalt {
 /** The sort of the trainer. */
 export const TRAINER_HALT: HaltType = {
     name: "Dresseur",
-    description: "Un monstre allié parmi trois, joué par un bot.",
+    description: "Un allié parmi deux pets et un monstre, joué par un bot.",
     code: "DR",
     icon: "mecard/travel/trainer/logo.png",
     transition: DOOR_TRANSITION,

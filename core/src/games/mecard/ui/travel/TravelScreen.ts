@@ -1,5 +1,5 @@
 import { AssetError } from "../../../../engine/assets"
-import type { Assets, LayeredImagePath } from "../../../../engine/assets"
+import type { Assets, ImagePath, LayeredImagePath } from "../../../../engine/assets"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import {
@@ -32,6 +32,8 @@ import type { CardPlace } from "../hud/CardView"
 import { DeckView } from "../hud/DeckView"
 import { DetailBox } from "../hud/DetailBox"
 import { cardsOption, heroOption, unitHead } from "../hud/ChoiceOptions"
+import { BagView } from "../hud/BagView"
+import { ThingView, usesText } from "../hud/ThingView"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
 import { heartsRow, heartText } from "../hud/HeartView"
@@ -230,6 +232,7 @@ export class TravelScreen {
         this.#arm = new PointingArm(ui)
         void this.#loadArm(assets)
         void this.#loadMapArt(assets)
+        void this.#loadBag(assets)
         this.#detailTabs = new Tabs(theme, [
             { title: "Stuff", build: () => this.#detailed(this.#stuffScroll, this.#stuff()) },
             { title: "Stats", build: () => this.#detailed(this.#statsScroll, this.#heroStats()) },
@@ -375,6 +378,7 @@ export class TravelScreen {
 
     /** What the map is drawn with, none before it is loaded: the panels and the codes show meanwhile. */
     #mapArt: MapArt|null = null
+    #bagFrame: NineSlice|null = null
 
     /** The map shown, none while a dialog is. */
     #mapView: JourneyView|null = null
@@ -536,7 +540,7 @@ export class TravelScreen {
             const head = shown.unit ? unitHead(this.theme, shown.unit, this.sprites) : null
             const under = this.#stuffShown(shown, "mini", OFFERED_DECK_ROOM, {})
             return cardsOption(this.theme, shown.cards, shown.text ?? null, {
-                head, under, deck: this.#placeOf(shown.from),
+                head, under, deck: this.#placeOf(shown.from), sprite: shown.sprite, sprites: this.sprites,
             })
         })
         this.#choose({
@@ -815,18 +819,17 @@ export class TravelScreen {
         if(!hero) return column
         const room = this.#sideWidth - 2 * this.theme.panel.padding - this.theme.scrollbar.width - 1
         for(const deck of hero.decks) column.add(this.#deckView(deck, "mini", room, { color: DIM_TEXT }))
-        const lists: [string, readonly { readonly name: Text, readonly description: Text }[]][] = [
-            ["Objets", hero.items.map(item => ({ name: concat(item), description: item.description }))],
+        const lists: [string, readonly Component[]][] = [
+            ["Objets", hero.items.map(item => this.#thingView(item.icon, null, described(item, item)))],
             ["Utilisables", hero.usables.map(carried => {
-                return { name: concat(carried), description: carried.usable.description }
+                const { usable } = carried
+                return this.#thingView(usable.icon, usesText(usable, carried.charges), usableText(usable))
             })],
         ]
         for(const [name, things] of lists){
             if(things.length === 0) continue
             column.add(this.#label(name, DIM_TEXT))
-            for(const { name: thing, description } of things){
-                column.add(this.#thingLine(thing, described({ description }, thing), {}))
-            }
+            column.add(this.#bag(things), { align: "start" })
         }
         return column
     }
@@ -1004,9 +1007,29 @@ export class TravelScreen {
         if(decks.length + items.length + usables.length === 0) return null
         const column = new Box("column", { gap: MARGIN })
         for(const deck of decks) column.add(this.#deckView(deck, size, room, look))
-        for(const item of items) column.add(this.#thingLine(concat(item), described(item, item), look))
-        for(const usable of usables) column.add(this.#thingLine(concat(usable), usableText(usable), look))
+        const things = [
+            ...items.map(item => this.#thingView(item.icon, null, described(item, item))),
+            ...usables.map(usable => this.#thingView(usable.icon, usesText(usable), usableText(usable))),
+        ]
+        if(things.length > 0) column.add(this.#bag(things), { align: "start" })
         return column
+    }
+
+    /** Things in a bag, to add to a column aligned at its start so the bag wraps at the width of the column. */
+    #bag(things: readonly Component[]): BagView {
+        return new BagView(this.theme, things, this.#bagFrame)
+    }
+
+    /** Give the bags their frame once loaded, telling when it could not be. */
+    async #loadBag(assets: Assets): Promise<void> {
+        try {
+            this.#bagFrame = await BagView.loadFrame(this.ui.gpu, assets)
+        } catch(error){
+            if(!(error instanceof AssetError)) throw error
+            this.options.report(`Le sac n'a pas pu être chargé : ${error.message}`)
+            return
+        }
+        this.refresh()
     }
 
     /** A deck of the party with its cards, named and colored by its place among those of its character. */
@@ -1021,12 +1044,11 @@ export class TravelScreen {
         })
     }
 
-    /** An item or a usable, on its line, told on hover. */
-    #thingLine(name: Text, told: Text, look: ParagraphOptions): Component {
-        const line = new HoverPanel(this.theme, { background: null, padding: 0 })
-        line.content = new Paragraph(this.theme, name, look)
-        line.onHover = over => this.#tell(over ? told : null)
-        return line
+    /** An item or a usable, as its picture with its uses left, lit and told on hover. */
+    #thingView(icon: ImagePath, uses: string|null, told: Text): ThingView {
+        const view = new ThingView(this.theme, this.sprites, icon, uses)
+        view.onHover = over => this.#tell(over ? told : null)
+        return view
     }
 
     /** The character of the party holding a deck, none when none does. */

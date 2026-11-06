@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../../engine/assets/Assets"
 import type { UnitContext } from "../../../battle/Action"
 import type { Card } from "../../../card/Card"
 import { THRUST } from "../../../card/subs/attack/Thrust"
@@ -12,14 +13,14 @@ export class CardBottle extends AbstractUsable {
 
 
     constructor(
-        name: string,
+        name: string, icon: ImagePath,
 
         /** The card it gives. */
         public readonly card: Card,
 
         charges: number,
     ){
-        super(name, ["Donne un exemplaire de ", card, `. ${charges} utilisations.`], { charges })
+        super(name, icon, ["Donne un exemplaire de ", card, `. ${charges} utilisations.`], { charges })
     }
 
 
@@ -28,4 +29,4 @@ export class CardBottle extends AbstractUsable {
     }
 }
 
-export const THRUST_BOTTLE = new CardBottle("Bouteille d'estoc", THRUST, CARD_BOTTLE_CHARGES)
+export const THRUST_BOTTLE = new CardBottle("Bouteille d'estoc", "mecard/usables/thrust_bottle.png", THRUST, CARD_BOTTLE_CHARGES)

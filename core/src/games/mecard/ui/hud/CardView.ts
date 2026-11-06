@@ -3,8 +3,9 @@ import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import { Component, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
-import { HIDDEN_FAMILY } from "../../sim/card/Family"
-import { cardCount } from "../../sim/card/subs/composite/CompositeCard"
+import { typeColorOf } from "../look/colors"
+import { joinGlyph } from "../look/joinGlyph"
+import { CompositeCard, cardCount } from "../../sim/card/subs/composite/CompositeCard"
 import type { Card } from "../../sim/card/Card"
 
 /** Where a card is shown, which sets its size: the hand, the chain being put together, the other chains. */
@@ -54,6 +55,19 @@ const PICKED_EDGE = new Color(1, 0.85, 0.35)
 const NAME = new Color(0.95, 0.92, 0.86)
 const FOOT = new Color(0.6, 0.58, 0.68)
 
+/** The color of the frame of a card the viewer may not see. */
+const HIDDEN = new Color(0.4, 0.38, 0.48)
+
+/** The glyph over the limit between two held cards: white, outlined in black. */
+const GLYPH = new Color(1, 1, 1)
+const GLYPH_OUTLINE = new Color(0, 0, 0)
+
+/** How many times larger than the text the glyph over a limit is drawn. */
+const GLYPH_SCALE = 2
+
+/** How wide the strip of the color of what a card takes is, on its right, in virtual pixels. */
+const INPUT_STRIP = 3
+
 /** The veil over a card that cannot be picked. */
 const VEIL = new Color(0.05, 0.04, 0.08, 0.6)
 
@@ -64,11 +78,13 @@ const FULL_HELD = 3
 const NARROW_SHARE = 0.6
 
 /**
- * A card, drawn as one: a band of the color of its family, its name, and the family at its foot when there
- * is room. A card holding cards is drawn in a frame of the color of its family, its band and its name on
- * top, the cards it holds side by side under them, each drawn the same way: narrower when there are many,
- * and alone in the frame for a bare family, as a fusion. A card the viewer may not see is drawn from its
- * back, a "?" on it. A click on it is told, and so is its hover, so its preview and its text can be shown.
+ * A card, drawn as one: a band of the color of its output, its name, the output at its foot when there is
+ * room, and a strip of the color of its input down its right side. A card holding cards is drawn in a frame
+ * of the color of its output, its band and its name on top, the cards it holds side by side under them, each
+ * drawn the same way: narrower when there are many, and alone in the frame when it has no name of its own.
+ * Over each limit between two of them is a glyph telling how they are held. A card the viewer may not see is
+ * drawn from its back, a "?" on it. A click on it is told, and so is its hover, so its preview and its text
+ * can be shown.
  */
 export class CardView extends Component {
 
@@ -114,6 +130,7 @@ export class CardView extends Component {
     ){
         super()
         this.#text = new TextLayout(theme.font, theme.textScale)
+        this.#glyphText = new TextLayout(theme.font, theme.textScale * GLYPH_SCALE)
     }
 
 
@@ -159,8 +176,8 @@ export class CardView extends Component {
 
     readonly #text: TextLayout
 
-    /** The color of the family of the card being drawn. */
-    readonly #familyColor = new Color()
+    readonly #glyphText: TextLayout
+
 
     #dimmed = false
 
@@ -186,19 +203,28 @@ export class CardView extends Component {
         x: number, y: number, width: number, height: number, picked: boolean,
     ): void {
         const look = CARD_LOOKS[this.place]
-        const family = card ? card.family : HIDDEN_FAMILY
+        // A card is read as its output, the back as a hidden one.
+        const word = card ? card.output.name : ""
         const contents = card?.contents
-        const { r, g, b } = family.color
-        const color = this.#familyColor.set(r, g, b)
+        const color = card ? typeColorOf(card.output) : HIDDEN
+        // A card holding cards without a name of its own is drawn as them alone, in its frame.
+        const bare = card instanceof CompositeCard && !card.named
         painter.setTint(picked ? PICKED_EDGE : contents ? color : EDGE)
         painter.rect(x, y, width, height)
         let top = y + 1
-        if(!contents || !family.bare){
+        if(!contents || !bare){
             const faces = this.hovered ? FACES_HOVERED : FACES
             painter.setTint(card ? faces[(this.deck ?? 0) % faces.length] : BACK)
             painter.rect(x + 1, y + 1, width - 2, height - 2)
             painter.setTint(color)
             painter.rect(x + 1, y + 1, width - 2, look.band)
+            // What a card takes is the strip down its right side. A card holding cards has none: they fill it.
+            const input = !contents && card?.input ? card.input : null
+            if(input){
+                painter.setTint(typeColorOf(input))
+                painter.rect(x + width - 1 - INPUT_STRIP, y + 1 + look.band, INPUT_STRIP, height - 2 - look.band)
+            }
+            const textWidth = width - (input ? INPUT_STRIP : 0)
             // A card holding cards keeps one line for its name when the cards it holds keep one for theirs
             // under it, its band alone otherwise. A card held is shorter: it keeps the lines it has room for,
             // none when it has none, and its foot when one line is left beside it.
@@ -209,21 +235,38 @@ export class CardView extends Component {
             const named = free - text.lineHeight >= 2 + look.band + 2 * look.padding + text.lineHeight
             const lines = contents ? (named ? 1 : 0) : Math.max(0, Math.min(look.lines, room))
             top = lines > 0
-                ? this.#paintName(painter, card ? card.name : "?", x, y + 1 + look.band, width, lines)
+                ? this.#paintName(painter, card ? card.name : "?", x, y + 1 + look.band, textWidth, lines)
                 : y + 1 + look.band
             if(foot){
                 painter.setTint(FOOT)
-                const foot = text.fit(family.word, width - 2 * look.padding)
+                const foot = text.fit(word, textWidth - 2 * look.padding)
                 text.draw(painter, foot, x + look.padding, y + height - look.padding - text.lineHeight)
             }
         }
         if(!contents) return
         let left = x + 1
+        const limits: number[] = []
         for(const each of contents){
             const eachWidth = this.#widthOf(each)
             this.#paintCard(painter, each, left, top, eachWidth, y + height - 1 - top, false)
             left += eachWidth
+            if(each !== contents[contents.length - 1]) limits.push(left)
         }
+        const glyph = joinGlyph(card!)
+        if(glyph) for(const at of limits) this.#paintGlyph(painter, glyph, at, top + (y + height - 1 - top) / 2)
+    }
+
+    /** Draw a glyph centered on a point: white, over a black outline. */
+    #paintGlyph(painter: Painter, glyph: string, cx: number, cy: number): void {
+        const text = this.place === "mini" ? this.#text : this.#glyphText
+        const x = Math.round(cx - text.widthOf(glyph) / 2)
+        const y = Math.round(cy - text.lineHeight / 2)
+        painter.setTint(GLYPH_OUTLINE)
+        for(const dx of [-1, 0, 1]) for(const dy of [-1, 0, 1]){
+            if(dx !== 0 || dy !== 0) text.draw(painter, glyph, x + dx, y + dy)
+        }
+        painter.setTint(GLYPH)
+        text.draw(painter, glyph, x, y)
     }
 
     /**

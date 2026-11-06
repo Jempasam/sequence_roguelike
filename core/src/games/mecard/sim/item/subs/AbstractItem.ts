@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../engine/assets/Assets"
 import type { Text } from "../../../../../semantic"
 import { colored, rgba } from "../../base/Rgba"
 import type { PlugContext } from "../../battle/Action"
@@ -12,6 +13,9 @@ export abstract class AbstractItem implements Item {
 
     constructor(
         public readonly name: string,
+
+        /** Its picture. */
+        public readonly icon: ImagePath,
 
         /** What it does, in one sentence, for the player. */
         public readonly description: Text,

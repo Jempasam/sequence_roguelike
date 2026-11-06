@@ -2,8 +2,6 @@ import type { Card } from "../../Card"
 import { signatureOf } from "../../CardChain"
 import { PREPARATION } from "../../CardType"
 import type { Preparation } from "../../CardType"
-import { RANDOM_FAMILY } from "../../Family"
-import type { Family } from "../../Family"
 import { Rarity } from "../../Rarity"
 
 import { SWEEP } from "../attack/Sweep"
@@ -24,10 +22,6 @@ export class RandomCard extends CompositeCard<Preparation> {
 
     public readonly output = PREPARATION
     public readonly input = null
-
-    public override get family(): Family {
-        return RANDOM_FAMILY
-    }
 
     /** @throws {@link Error} When the two cards do not take and give the same. */
     constructor(first: Card, second: Card, look: CompositeLook = {}){

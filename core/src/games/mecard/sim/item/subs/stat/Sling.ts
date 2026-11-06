@@ -15,7 +15,7 @@ export class Sling extends StatItem {
         /** How much farther it takes what is thrown, added to the reach factor. */
         reach: number,
     ){
-        super("Fronde", ["Tout ce que tu lances ou tires va ", frenchNumber(reach * 100), " % plus loin."], reach)
+        super("Fronde", "mecard/items/sling.png", ["Tout ce que tu lances ou tires va ", frenchNumber(reach * 100), " % plus loin."], reach)
     }
 
 

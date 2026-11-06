@@ -7,7 +7,7 @@ export class Energizer extends AbstractUsable {
 
 
     constructor(){
-        super("Énergisant", "La chaîne de ce round est jouée deux fois.")
+        super("Énergisant", "mecard/usables/energizer.png", "La chaîne de ce round est jouée deux fois.")
     }
 
 

@@ -1,8 +1,6 @@
 import type { Action, ActionRun, Indicator, Pose, Preview, PreviewContext, UnitContext } from "../../../battle/Action"
 import type { Card } from "../../Card"
 import { ACTION } from "../../CardType"
-import { MERGED_FAMILY } from "../../Family"
-import type { Family } from "../../Family"
 import { Rarity } from "../../Rarity"
 
 import { THRUST } from "../attack/Thrust"
@@ -23,10 +21,6 @@ export class MergedCard extends CompositeCard<readonly Action[]> {
 
     public readonly output = ACTION
     public readonly input = null
-
-    public override get family(): Family {
-        return MERGED_FAMILY
-    }
 
     /** @throws {@link Error} When a card does not give actions, or takes something. */
     constructor(first: Card, second: Card, look: CompositeLook = {}){

@@ -15,7 +15,7 @@ export class HasteElixir extends RoundElixir {
         /** How much farther it takes every move, added to the move factor. */
         public readonly move: number,
     ){
-        super("Élixir de hâte", ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce round."])
+        super("Élixir de hâte", "mecard/usables/haste_elixir.png", ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce round."])
     }
 
 

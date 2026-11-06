@@ -1,5 +1,5 @@
 import { Color } from "../../../../engine/math"
-import { Box, Label, NineSlice, Panel, Paragraph } from "../../../../engine/ui"
+import { Box, Image, Label, NineSlice, Panel, Paragraph } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
@@ -39,6 +39,10 @@ export interface OptionExtras {
     /** What the pointer coming over a card or leaving it does, nothing when none. */
     readonly onCardHover?: (card: Card, over: boolean) => void
 
+    /** The sprite shown left of the text, by its name among these sprites, nothing when none. */
+    readonly sprite?: string
+    readonly sprites?: UnitSprites
+
     /** How many cards at most lie in a row, the others going on rows under it. All in one row when none. */
     readonly perRow?: number
 }
@@ -69,8 +73,35 @@ export function cardsOption(
         column.add(rows)
     }
     if(extras.under) column.add(extras.under)
-    if(text !== null) column.add(new Paragraph(theme, text), { align: "stretch" })
+    if(text !== null){
+        const paragraph = new Paragraph(theme, text)
+        const { sprites, sprite } = extras
+        column.add(sprites && sprite ? pictured(theme, sprites, sprite, paragraph) : paragraph, { align: "stretch" })
+    }
     return framed(theme, column, OPTION_WIDTH)
+}
+
+/**
+ * A wrapping paragraph with a sprite on its left, at the size it needs in an option of the least width: a
+ * row measures its children unwrapped, so it would be too low for the lines the paragraph wraps to.
+ */
+function pictured(theme: Theme, sprites: UnitSprites, sprite: string, paragraph: Paragraph): Component {
+    const picture = sprites.of(sprite)
+    if(!picture) return paragraph
+    const image = new Image(picture)
+    const gap = 2
+    const imageSize = image.measure(Infinity)
+    const margin = 2 * theme.panel.padding + 2
+    const width = Math.max(
+        OPTION_WIDTH - margin, imageSize.preferredWidth + gap + paragraph.measure(Infinity).minWidth,
+    )
+    const room = width - imageSize.preferredWidth - gap
+    const height = Math.max(imageSize.preferredHeight, paragraph.measure(room).preferredHeight)
+    const row = new Box("row", { gap, align: "center" })
+    row.add(image)
+    row.add(paragraph, { grow: 1 })
+    row.fixedSize = { width, height }
+    return row
 }
 
 /** Who a character offered is, on one row, to head its option: its sprite, its name and its hearts. */

@@ -18,7 +18,7 @@ export class GlueFlask extends ThrownFlask {
         public readonly root: number,
     ){
         super(
-            "Flasque de glu",
+            "Flasque de glu", "mecard/usables/glue_flask.png",
             ["L'ennemi le plus proche, à ", meters(range), " au plus, est ", new Rooted(root), "."],
             range,
         )

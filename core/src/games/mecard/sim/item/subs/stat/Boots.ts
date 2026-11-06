@@ -15,7 +15,7 @@ export class Boots extends StatItem {
         /** How much farther it takes every move, added to the move factor. */
         move: number,
     ){
-        super("Bottes de sept lieues", ["Tous tes déplacements vont ", frenchNumber(move * 100), " % plus loin."], move)
+        super("Bottes de sept lieues", "mecard/items/boots.png", ["Tous tes déplacements vont ", frenchNumber(move * 100), " % plus loin."], move)
     }
 
 

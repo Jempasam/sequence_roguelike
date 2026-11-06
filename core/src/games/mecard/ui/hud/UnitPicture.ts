@@ -1,6 +1,5 @@
 import { Box, Image } from "../../../../engine/ui"
 import type { Component } from "../../../../engine/ui"
-
 import type { UnitSprites } from "../look/UnitSprites"
 
 /**

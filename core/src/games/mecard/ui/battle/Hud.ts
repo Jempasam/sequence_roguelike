@@ -26,13 +26,13 @@ import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { DetailBox } from "../hud/DetailBox"
 import { processRow, processText } from "../hud/ProcessView"
 import { heartsRow, heartText } from "../hud/HeartView"
-import { HoverButton } from "../hud/HoverButton"
 import { HoverPanel } from "../hud/HoverPanel"
 import { TurnArrow } from "../hud/TurnArrow"
 import { colorOf } from "../look/colors"
 import { CHOSEN_TEXT, DIM_TEXT, STAT_DOWN, STAT_UP, WARNING_TEXT } from "../look/theme"
 import { decksOf } from "./BattleScene"
 import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
+import { ThingView, usesText } from "../hud/ThingView"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
 
@@ -428,11 +428,13 @@ export class Hud {
         draft.unit.usables.forEach((carried, index) => {
             const { usable } = carried
             const used = draft.used.has(index)
-            const name = this.#label(`${carried}`, used ? CHOSEN_TEXT : carried.spent ? DIM_TEXT : undefined)
-            const button = new HoverButton(this.theme, name)
-            button.onActivate = () => this.actions.toggleUsable(index)
-            button.onHover = over => this.showInfo(over ? concat(usable, " : ", usable.description) : null)
-            row.add(button)
+            const uses = usesText(usable, carried.charges)
+            const view = new ThingView(this.theme, this.host.sprites, usable.icon, uses)
+            view.lit = used
+            view.spent = carried.spent
+            view.onPick = () => this.actions.toggleUsable(index)
+            view.onHover = over => this.showInfo(over ? concat(usable, " : ", usable.description) : null)
+            row.add(view)
         })
         column.add(row)
         return column

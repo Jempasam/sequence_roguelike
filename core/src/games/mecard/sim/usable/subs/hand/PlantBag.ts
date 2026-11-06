@@ -23,7 +23,7 @@ export class PlantBag extends AbstractUsable {
 
         charges: number,
     ){
-        super("Sac de plantes", [
+        super("Sac de plantes", "mecard/usables/plant_bag.png", [
             "Donne une potion, parmi quelques potions de base et celles encore dans le ", DECK, " ou la main. ",
             `${charges} charges, rechargées à chaque combat.`,
         ], { charges, refill: "battle" })

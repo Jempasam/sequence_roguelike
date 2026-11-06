@@ -4,6 +4,7 @@ import { FLOOR_TYPES } from "../catalog/floors"
 import { ALL_CARDS, USABLES, ITEMS } from "../catalog/index"
 import { MONSTERS } from "../catalog/monsters"
 import type { Monster } from "../catalog/monsters"
+import { PETS } from "../catalog/pets"
 import type { Element } from "../element/Element"
 import type { FloorType } from "../floor/Floor"
 import { BASE_ELEMENTS, COMPOUNDS } from "../element/reactions"
@@ -214,7 +215,7 @@ export const ITEM_NAMES = new Names<Item>("item", ITEMS)
 export const ELEMENT_NAMES = new Names<Element>("element", [...BASE_ELEMENTS, ...COMPOUNDS])
 export const USABLE_NAMES = new Names<Usable>("usable", USABLES)
 export const HEART_NAMES = new Names<HeartKind>("heart", HEART_KINDS)
-export const MONSTER_NAMES = new Names<Monster>("monster", MONSTERS)
+export const MONSTER_NAMES = new Names<Monster>("monster", [...MONSTERS, ...PETS])
 export const FLOOR_NAMES = new Names<FloorType>("floor", FLOOR_TYPES)
 
 /** The codecs of the statuses, by the name of their kind. */

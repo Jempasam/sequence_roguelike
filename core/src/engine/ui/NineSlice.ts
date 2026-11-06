@@ -125,6 +125,34 @@ export class NineSlice {
     }
 
     /**
+     * A tiled nine-slice whose center repeats every `period` pixels, along both axes.
+     *
+     * @remarks
+     * The tiles of the center take the scale of the edges around it, so the border is the margins times
+     * `period` over the width of the center in texels, rounded to whole pixels. The period is exact when that
+     * scale is whole, and the center is square: pick a period that is a multiple of the center's texels.
+     *
+     * @param period - How long a repetition of the center is, in pixels, more than 0.
+     * @throws {@link Error} When the period is not more than 0, or the margins leave no center to repeat.
+     */
+    public static withPeriod(
+        sprite: Sprite, margins: NineSliceMargins, period: number, options: NineSliceOptions = {},
+    ): NineSlice {
+        const center = sprite.width - margins.left - margins.right
+        if(!(period > 0) || center <= 0){
+            throw new Error(`A period of ${period} cannot repeat a center of ${center} texels.`)
+        }
+        const scale = period / center
+        const border = {
+            left: Math.round(margins.left * scale),
+            top: Math.round(margins.top * scale),
+            right: Math.round(margins.right * scale),
+            bottom: Math.round(margins.bottom * scale),
+        }
+        return new NineSlice(sprite, margins, { tiling: {}, ...options, border })
+    }
+
+    /**
      * A frame of a flat color, cut from a white texel: the frames of a debug theme, which needs no art.
      *
      * @param white - A white region, as `Painter.setWhitePixel` takes, in the atlas of the interface.

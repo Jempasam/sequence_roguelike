@@ -15,7 +15,7 @@ export class Scope extends StatItem {
         /** How many hearts it adds to each shot. */
         bonus: number,
     ){
-        super("Viseur", ["+", damage(bonus, "physical"), " de précision : à chaque tir."], bonus)
+        super("Viseur", "mecard/items/scope.png", ["+", damage(bonus, "physical"), " de précision : à chaque tir."], bonus)
     }
 
 

@@ -14,7 +14,7 @@ export class Amulet extends AbstractItem {
         /** How many hearts it heals at the end of each round. */
         public readonly heal: number,
     ){
-        super("Amulette de vigueur", ["Soigne ", new HeartCount(heal), " à la fin de chaque round."])
+        super("Amulette de vigueur", "mecard/items/amulet.png", ["Soigne ", new HeartCount(heal), " à la fin de chaque round."])
     }
 
 

@@ -14,7 +14,7 @@ export class HealingPotion extends AbstractUsable {
         /** How many hearts it gives back. */
         public readonly heal: number,
     ){
-        super("Potion de soin", ["Soigne ", new HeartCount(heal), " + soin."])
+        super("Potion de soin", "mecard/usables/healing_potion.png", ["Soigne ", new HeartCount(heal), " + soin."])
     }
 
 

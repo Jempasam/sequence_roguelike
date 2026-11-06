@@ -18,7 +18,7 @@ export class FireFlask extends ThrownFlask {
         public readonly burn: number,
     ){
         super(
-            "Flasque de feu",
+            "Flasque de feu", "mecard/usables/fire_flask.png",
             ["L'ennemi le plus proche, à ", meters(range), " au plus, prend ", new Burn(burn), "."],
             range,
         )

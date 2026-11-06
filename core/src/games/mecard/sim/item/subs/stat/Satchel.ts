@@ -16,7 +16,7 @@ export class Satchel extends StatItem {
         /** How many more cards it draws at the start of a battle. */
         draw: number,
     ){
-        super("Besace", ["Tu pioches ", frenchNumber(draw), " ", CARTE.as("cartes"), " de plus au début d'un combat."], draw)
+        super("Besace", "mecard/items/satchel.png", ["Tu pioches ", frenchNumber(draw), " ", CARTE.as("cartes"), " de plus au début d'un combat."], draw)
     }
 
 

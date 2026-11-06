@@ -12,7 +12,7 @@ export class BottleBag extends DrawnItem {
         /** The bottle it gives. */
         public readonly bottle: Card,
     ){
-        super("Sac à bouteilles", ["Après la pioche, sans bouteille en main, en donne une : ", bottle, "."])
+        super("Sac à bouteilles", "mecard/items/bottle_bag.png", ["Après la pioche, sans bouteille en main, en donne une : ", bottle, "."])
     }
 
 

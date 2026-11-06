@@ -14,7 +14,7 @@ export class Fang extends AbstractItem {
         /** How many hearts it heals on each hit. */
         public readonly heal: number,
     ){
-        super("Croc vampirique", ["Chaque coup qui touche soigne ", new HeartCount(heal), "."])
+        super("Croc vampirique", "mecard/items/fang.png", ["Chaque coup qui touche soigne ", new HeartCount(heal), "."])
     }
 
 

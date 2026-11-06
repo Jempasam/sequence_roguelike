@@ -16,7 +16,7 @@ export class Grimoire extends StatItem {
         /** How many more cards it lets the chain hold. */
         room: number,
     ){
-        super("Grimoire", ["Ta chaîne tient ", frenchNumber(room), " ", CARTE, " de plus."], room)
+        super("Grimoire", "mecard/items/grimoire.png", ["Ta chaîne tient ", frenchNumber(room), " ", CARTE, " de plus."], room)
     }
 
 

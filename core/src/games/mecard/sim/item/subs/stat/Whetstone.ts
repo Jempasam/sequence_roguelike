@@ -23,7 +23,7 @@ export class Whetstone extends StatItem {
         bonus: number,
     ){
         super(
-            "Pierre à aiguiser",
+            "Pierre à aiguiser", "mecard/items/whetstone.png",
             ["+", damage(bonus, "physical"), " de force : à chaque coup, ", ...joinText(BLOWS, ", "), "."], bonus,
         )
     }

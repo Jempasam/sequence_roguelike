@@ -15,7 +15,7 @@ export class Alembic extends StatItem {
         /** How many levels it adds to each potion. */
         bonus: number,
     ){
-        super("Alambic", ["+", counted(bonus, "niveau"), " à chaque potion que tu appliques."], bonus)
+        super("Alambic", "mecard/items/alembic.png", ["+", counted(bonus, "niveau"), " à chaque potion que tu appliques."], bonus)
     }
 
 

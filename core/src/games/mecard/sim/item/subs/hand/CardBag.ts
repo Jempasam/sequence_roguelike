@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../../engine/assets/Assets"
 import type { UnitContext } from "../../../battle/Action"
 import { gives } from "../../../card/Card"
 import { ELEMENT, POTION } from "../../../card/CardType"
@@ -14,12 +15,12 @@ export class CardBag extends DrawnItem {
 
 
     constructor(
-        name: string,
+        name: string, icon: ImagePath,
 
         /** The type of the cards it fetches: what they give. */
         public readonly type: CardType<unknown>,
     ){
-        super(name, [
+        super(name, icon, [
             "Après la pioche, sans ", CARTE, " de type ", type.name, " en main, en tire une au hasard du ", DECK, ".",
         ])
     }
@@ -39,5 +40,5 @@ export class CardBag extends DrawnItem {
     }
 }
 
-export const POTION_BAG = new CardBag("Sac de potions", POTION)
-export const ELEMENT_BAG = new CardBag("Sac d'éléments", ELEMENT)
+export const POTION_BAG = new CardBag("Sac de potions", "mecard/items/potion_bag.png", POTION)
+export const ELEMENT_BAG = new CardBag("Sac d'éléments", "mecard/items/element_bag.png", ELEMENT)

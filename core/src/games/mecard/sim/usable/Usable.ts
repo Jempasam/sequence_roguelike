@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../engine/assets/Assets"
 import type { Text } from "../../../../semantic"
 import type { UnitContext } from "../battle/Action"
 import type { Unit } from "../battle/Unit"
@@ -13,6 +14,9 @@ import type { Unit } from "../battle/Unit"
  */
 export interface Usable {
     readonly name: string
+
+    /** Its picture. */
+    readonly icon: ImagePath
 
     /** What it does, in one sentence, for the player. */
     readonly description: Text

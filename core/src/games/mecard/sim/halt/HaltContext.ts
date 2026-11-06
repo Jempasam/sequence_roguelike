@@ -22,6 +22,9 @@ export interface Shown {
     readonly items?: readonly Item[]
     readonly usables?: readonly Usable[]
 
+    /** The sprite of what it shows, by its name among the sprites of the units, shown left of its text. */
+    readonly sprite?: string
+
     /** What it says under the rest, nothing when the rest is enough. */
     readonly text?: Text
 }

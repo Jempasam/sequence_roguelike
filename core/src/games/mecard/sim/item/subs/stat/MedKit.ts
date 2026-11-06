@@ -16,7 +16,7 @@ export class MedKit extends StatItem {
         /** How many hearts it adds to each heart given. */
         bonus: number,
     ){
-        super("Trousse de soin", ["+", new HeartCount(bonus), " à chaque soin et cœur que donnent tes ", CARTE.as("cartes"), "."], bonus)
+        super("Trousse de soin", "mecard/items/med_kit.png", ["+", new HeartCount(bonus), " à chaque soin et cœur que donnent tes ", CARTE.as("cartes"), "."], bonus)
     }
 
 

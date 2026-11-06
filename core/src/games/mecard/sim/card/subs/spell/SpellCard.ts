@@ -35,9 +35,9 @@ export class SpellCard extends AbstractCard<readonly Action[], Element> {
         /** How many hearts it takes. */
         public readonly damage: number,
     ){
-        super("Projectile", [
+        super("Grand sort", [
             ["Tire l'élément jusqu'à ", meters(range), " devant : ", damageText(damage, "elemental"),
-                " à la première ", UNIT, ", puis son négatif :"],
+                " à la première ", UNIT, ", puis son négatif sur elle :"],
             ...ELEMENT_CARDS.map(card => concat(card, " : ", card.element.negativeText)),
         ], Rarity.RARE)
     }

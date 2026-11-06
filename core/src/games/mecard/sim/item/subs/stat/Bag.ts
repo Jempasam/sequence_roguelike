@@ -16,7 +16,7 @@ export class Bag extends StatItem {
         /** How many more cards it lets the hand hold. */
         room: number,
     ){
-        super("Sac sans fond", ["Ta main tient ", frenchNumber(room), " ", CARTE.as("cartes"), " de plus."], room)
+        super("Sac sans fond", "mecard/items/bag.png", ["Ta main tient ", frenchNumber(room), " ", CARTE.as("cartes"), " de plus."], room)
     }
 
 

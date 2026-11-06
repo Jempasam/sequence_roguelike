@@ -9,7 +9,7 @@ export class Mixer extends AbstractUsable {
 
     constructor(){
         super(
-            "Mélangeur", ["Remet la main et la défausse dans le ", DECK, ", rebat, puis repioche. Une fois par combat."],
+            "Mélangeur", "mecard/usables/mixer.png", ["Remet la main et la défausse dans le ", DECK, ", rebat, puis repioche. Une fois par combat."],
             { charges: 1, refill: "battle" },
         )
     }

@@ -16,7 +16,7 @@ export class TacticsBook extends StatItem {
         /** How many more cards it draws at each round. */
         draw: number,
     ){
-        super("Carnet de tactiques", ["Tu pioches ", frenchNumber(draw), " ", CARTE, " de plus à chaque round."], draw)
+        super("Carnet de tactiques", "mecard/items/tactics_book.png", ["Tu pioches ", frenchNumber(draw), " ", CARTE, " de plus à chaque round."], draw)
     }
 
 

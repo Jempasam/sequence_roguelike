@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../../engine/assets/Assets"
 import type { Text } from "../../../../../../semantic"
 import { Add, ModifierKey } from "../../../base/Attribute"
 import type { Attribute } from "../../../base/Attribute"
@@ -11,12 +12,12 @@ export abstract class StatItem extends AbstractItem {
 
 
     constructor(
-        name: string, description: Text,
+        name: string, icon: ImagePath, description: Text,
 
         /** What it adds to the stat. */
         public readonly bonus: number,
     ){
-        super(name, description)
+        super(name, icon, description)
     }
 
 

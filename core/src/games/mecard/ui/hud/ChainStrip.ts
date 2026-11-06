@@ -2,7 +2,7 @@ import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { Box, Component, EMPTY_HINT, Label, Stack } from "../../../../engine/ui"
 import type { SizeHint, Theme } from "../../../../engine/ui"
-import { ELEMENT, MODULE, POTION } from "../../sim/card/CardType"
+import { typeColorOf } from "../look/colors"
 import type { CardType } from "../../sim/card/CardType"
 import type { Card } from "../../sim/card/Card"
 import type { CardNode } from "../../sim/card/CardNode"
@@ -18,25 +18,12 @@ export const LINK_ROOM = 6
 /** How far below the cards a link runs, in virtual pixels. */
 const LINK_DROP = 3
 
-/** The color of a link carrying actions. */
-const ACTION_LINK = new Color(0.35, 0.6, 1)
-
-/** The color of a link carrying an element. */
-const ELEMENT_LINK = new Color(0.4, 0.85, 0.45)
-
-/** The color of a link carrying a potion. */
-const POTION_LINK = new Color(0.6, 0.9, 0.2)
-
-/** The color of a link carrying a module. */
-const MODULE_LINK = new Color(0.6, 0.7, 0.75)
-
 /** The color of a link the viewer cannot know the type of, under a hidden card. */
 const HIDDEN_LINK = new Color(0.4, 0.38, 0.48)
 
 /** The color of a link carrying a type. */
 function linkOf(type: CardType<unknown>): Color {
-    if(type === MODULE) return MODULE_LINK
-    return type === ELEMENT ? ELEMENT_LINK : type === POTION ? POTION_LINK : ACTION_LINK
+    return typeColorOf(type)
 }
 
 /**

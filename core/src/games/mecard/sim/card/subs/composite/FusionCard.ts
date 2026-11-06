@@ -2,8 +2,6 @@ import { joinText } from "../../../../../../semantic"
 import type { Card } from "../../Card"
 import { PREPARATION } from "../../CardType"
 import type { Preparation } from "../../CardType"
-import { FUSION_FAMILY, NAMED_FUSION_FAMILY } from "../../Family"
-import type { Family } from "../../Family"
 import { Rarity } from "../../Rarity"
 
 import { GAMBLE } from "../modifier/GambleCard"
@@ -38,10 +36,6 @@ export class FusionCard extends CompositeCard<Preparation> {
         this.#preparation = { rewrite: () => ({ cards: this.contents, consumed: 0, acting: false }) }
     }
 
-
-    public override get family(): Family {
-        return this.named ? NAMED_FUSION_FAMILY : FUSION_FAMILY
-    }
 
     public get(): Preparation {
         return this.#preparation

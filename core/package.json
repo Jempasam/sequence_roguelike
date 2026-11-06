@@ -15,6 +15,8 @@
         "./mecard/explanations": "./src/games/mecard/ui/look/explanations.ts",
         "./mecard/text-display": "./src/games/mecard/ui/look/textDisplay.ts",
         "./mecard/pnj": "./src/games/mecard/ui/pnj/index.ts",
+        "./mecard/colors": "./src/games/mecard/ui/look/colors.ts",
+        "./mecard/joinGlyph": "./src/games/mecard/ui/look/joinGlyph.ts",
         "./mecard/pixel-font": "./src/games/mecard/ui/look/pixelFont.ts",
         "./mecard/library": "./src/games/mecard/ui/library/LibraryScreen.ts",
         "./mecard/arm":"./src/games/mecard/ui/travel/PointingArm.ts",

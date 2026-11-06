@@ -1,3 +1,4 @@
+import type { ImagePath } from "../../../../../engine/assets/Assets"
 import type { UnitContext } from "../../battle/Action"
 import { HeartCount } from "../../battle/words"
 import { Heart } from "../../heart/Heart"
@@ -14,7 +15,7 @@ export class HeartFlask extends AbstractUsable {
 
 
     constructor(
-        name: string,
+        name: string, icon: ImagePath,
 
         /** The kind of the hearts it gives. */
         public readonly kind: HeartKind,
@@ -22,7 +23,7 @@ export class HeartFlask extends AbstractUsable {
         /** How many it gives. */
         public readonly count = FLASK_HEARTS,
     ){
-        super(name, ["Donne ", new HeartCount(count), " ", kind, "."])
+        super(name, icon, ["Donne ", new HeartCount(count), " ", kind, "."])
     }
 
 
@@ -31,4 +32,4 @@ export class HeartFlask extends AbstractUsable {
     }
 }
 
-export const SHIELD_FLASK = new HeartFlask("Fiole de garde", SHIELD_HEART)
+export const SHIELD_FLASK = new HeartFlask("Fiole de garde", "mecard/usables/shield_flask.png", SHIELD_HEART)

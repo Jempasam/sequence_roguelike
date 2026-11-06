@@ -46,6 +46,7 @@ import { CARTE } from "../base/keywords"
 
 export * from "./kits"
 export * from "./monsters"
+export * from "./pets"
 
 /**
  * Any card of the game that fits its place, drawn at the end of the preparation, the commoner more often:

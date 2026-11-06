@@ -16,7 +16,7 @@ export class Spyglass extends StatItem {
         /** How much farther it lets the aim look, in meters. */
         range: number,
     ){
-        super("Longue-vue", [AIM, " porte ", meters(range), " plus loin."], range)
+        super("Longue-vue", "mecard/items/spyglass.png", [AIM, " porte ", meters(range), " plus loin."], range)
     }
 
 

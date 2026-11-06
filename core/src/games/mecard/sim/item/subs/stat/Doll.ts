@@ -15,7 +15,7 @@ export class Doll extends StatItem {
         /** How many hearts it adds to each summon. */
         bonus: number,
     ){
-        super("Poupée de chiffon", ["+", new HeartCount(bonus), " de vie à chacune de tes invocations."], bonus)
+        super("Poupée de chiffon", "mecard/items/doll.png", ["+", new HeartCount(bonus), " de vie à chacune de tes invocations."], bonus)
     }
 
 

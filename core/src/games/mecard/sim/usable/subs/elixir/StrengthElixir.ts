@@ -15,7 +15,7 @@ export class StrengthElixir extends RoundElixir {
         /** How many hearts it adds to each attack. */
         public readonly bonus: number,
     ){
-        super("Élixir de force", ["+", damage(bonus, "physical"), " à tes coups ce round."])
+        super("Élixir de force", "mecard/usables/strength_elixir.png", ["+", damage(bonus, "physical"), " à tes coups ce round."])
     }
 
 

@@ -79,7 +79,7 @@ export interface Monster {
 const MONSTER_COLOR = rgba(0.95, 0.35, 0.3)
 
 /** A kind of monster, telling itself by its name. */
-function monster(spec: Omit<Monster, "toString"|"toSemString">): Monster {
+export function monster(spec: Omit<Monster, "toString"|"toSemString">): Monster {
     return { ...spec, toString: () => spec.name, toSemString: () => colored(MONSTER_COLOR, spec.name) }
 }
 

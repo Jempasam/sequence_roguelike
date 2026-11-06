@@ -1,7 +1,6 @@
 import type { Text } from "../../../../semantic"
 
 import type { CardType } from "./CardType"
-import type { Family } from "./Family"
 import type { Rarity } from "./Rarity"
 
 /** What a card rewriting the chain is rewritten with: the chance it may draw. */
@@ -53,9 +52,6 @@ export interface Card<T = unknown, U = unknown> {
     readonly description: Text
 
     readonly rarity: Rarity
-
-    /** What the player reads it as: its color and the word at its foot. */
-    readonly family: Family
 
     /** What it gives to the card on its left. */
     readonly output: CardType<T>

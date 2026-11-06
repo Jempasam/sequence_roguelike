@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
 import { distinct } from "../../../run/offers"
@@ -5,7 +6,7 @@ import { heartLootText, KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../../run
 import type { HeartLoot, Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 
@@ -25,10 +26,13 @@ export class NecromancerHalt extends AbstractHalt {
         super(NECROMANCER_HALT, run,
             "Les cœurs des morts battent encore. Un qui revient, un qui s'use : à toi de choisir.",
             // Waiting for its own art: the scene of the altar.
-            sceneLook(36, 13, 18, [
-                "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
-                "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
-            ], "mecard/travel/altar/border.png", haltPnj("necromancer", [0.2, 0.15, 0.3], null)),
+            sceneLook(36, 13, 18, "mecard/travel/altar"),
+            {
+                hat: "skullHood",
+                clothes: rgba(0.5, 0.45, 0.6),
+                hatColor: rgba(0.5, 0.45, 0.6),
+                mask: "skeleton"
+            },
         )
         this.#kept = distinct(run.rng, KEPT_LOOT_HEARTS, NECROMANCER_OFFER_SIZE)
         this.#spent = distinct(run.rng, SPENT_LOOT_HEARTS, NECROMANCER_OFFER_SIZE)

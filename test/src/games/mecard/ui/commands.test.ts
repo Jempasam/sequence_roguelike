@@ -258,6 +258,20 @@ describe("Mecard commands", () => {
         expect(errors(console)).toHaveLength(1)
     })
 
+    test("travel put → a halt in that layer, led to by the layer before and leading to the one after; out of the map → an error", () => {
+        const { console, run } = game()
+        const { journey } = run.travel
+        const before = journey.layers[2].length
+        console.submit("travel put Forge 3")
+        const halt = journey.layers[2].find(place => place.kind === "forge")
+        expect(journey.layers[2]).toHaveLength(before + 1)
+        expect(journey.layers[1].every(place => place.next.includes(halt!))).toBe(true)
+        expect(halt?.next).toEqual(journey.layers[3])
+        console.submit("travel put Forge 99")
+        console.submit("travel put Sortie 1")
+        expect(errors(console)).toHaveLength(2)
+    })
+
     test("travel floor → that floor, before its first layer; travel reroll → a new map", () => {
         const { console, run } = game()
         console.submit("travel jump 2 1")

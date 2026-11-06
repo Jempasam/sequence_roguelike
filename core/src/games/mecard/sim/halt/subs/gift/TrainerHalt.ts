@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import { COMMON_MONSTERS } from "../../../catalog/monsters"
@@ -7,7 +8,7 @@ import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { CARTE, DECK } from "../../../base/keywords"
@@ -23,11 +24,14 @@ export class TrainerHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(TRAINER_HALT, run,
-            "Un de mes deux pets, ou d'un monstre croisé en chemin, te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, [
-                "mecard/travel/trainer/1.png", "mecard/travel/trainer/2.png", "mecard/travel/trainer/3.png",
-                "mecard/travel/trainer/4.png", "mecard/travel/trainer/5.png",
-            ], "mecard/travel/trainer/border.png", haltPnj("trainer", [0.55, 0.75, 0.3], [0.3, 0.55, 0.2])),
+            "Une de mes trois bêtes, te suivra, et se battra seul.",
+            sceneLook(23, 28, 15, "mecard/travel/trainer"),
+            {
+                hat: "huntingHat",
+                clothes: rgba(0.55, 0.75, 0.3),
+                hatColor: rgba(0.3, 0.55, 0.2),
+                item: "whip"
+            },
         )
         this.#monsters = trainerMonsters(run.rng)
     }

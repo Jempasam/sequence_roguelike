@@ -12,6 +12,8 @@ const LAYOUT: PnjLayout = {
     skin: { x: 20, y: 80, width: 60, height: 40 },
     head: { x: 30, y: 0, width: 40, height: 40 },
     hatPlace: { x: 40, y: 0, width: 20, height: 5 },
+    maskPlace: { x: 50, y: 10, width: 20, height: 30 },
+    itemPlace: { x: 10, y: 100, width: 60, height: 6 },
 }
 
 function pointOf(run: (out: { x: number, y: number }) => void): { x: number, y: number } {
@@ -97,6 +99,58 @@ describe("PnjPose.hat", () => {
         pose.onHatMove(hat => heard.push(hat))
         pose.lean = 0
         expect(heard).toHaveLength(0)
+    })
+})
+
+describe("PnjPose.mask", () => {
+    test("rest → the middle of the mask place, straight", () => {
+        const mask = new PnjPose(LAYOUT).mask
+        expect(mask).toMatchObject({ scaleX: 1, width: 20, height: 30 })
+        expect(mask.angle).toBeCloseTo(0)
+        expect(mask.x).toBeCloseTo(10)
+        expect(mask.y).toBeCloseTo(-175)
+    })
+
+    test("head up → turned as the hat is", () => {
+        const pose = new PnjPose(LAYOUT)
+        pose.head = 1
+        expect(pose.mask.angle).toBeCloseTo(pose.hat.angle)
+    })
+
+    test("pose changed → listeners told", () => {
+        const pose = new PnjPose(LAYOUT)
+        const heard: object[] = []
+        pose.onMaskMove(mask => heard.push(mask))
+        pose.head = 0.5
+        expect(heard).toHaveLength(1)
+    })
+})
+
+describe("PnjPose.item", () => {
+    test("rest → the middle of its line, as long as it, level", () => {
+        const item = new PnjPose(LAYOUT).item
+        expect(item.scaleX).toBe(1)
+        expect(item.width).toBeCloseTo(60)
+        expect(item.angle).toBeCloseTo(0)
+        expect(item.x).toBeCloseTo(-10)
+        expect(item.y).toBeCloseTo(-97)
+    })
+
+    test("facing left → mirrored, never upside down, on the other side", () => {
+        const pose = new PnjPose(LAYOUT)
+        pose.orientation = -1
+        expect(pose.item.scaleX).toBe(-1)
+        expect(pose.item.angle).toBeCloseTo(0)
+        expect(pose.item.x).toBeCloseTo(10)
+    })
+
+    test("squash → the line moves down, still as long", () => {
+        const pose = new PnjPose(LAYOUT)
+        const heard: object[] = []
+        pose.onItemMove(item => heard.push(item))
+        pose.squash = 1
+        expect(heard).toHaveLength(1)
+        expect(pose.item.y).toBeGreaterThan(-97)
     })
 })
 

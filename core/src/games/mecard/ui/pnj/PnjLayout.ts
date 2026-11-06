@@ -28,6 +28,12 @@ export interface PnjLayout {
 
     /** The top of the head, which a hat barely covers. */
     readonly hatPlace: PnjRect
+
+    /** The face, where a mask is worn, turning with the head. */
+    readonly maskPlace: PnjRect
+
+    /** Where an object is carried, moving with the body. */
+    readonly itemPlace: PnjRect
 }
 
 /**
@@ -39,6 +45,8 @@ export const PNJ_LAYERS = {
     skin: "body_skin",
     head: "head",
     hatPlace: "hat_place",
+    maskPlace: "mask",
+    itemPlace: "item",
 } as const
 
 /**
@@ -63,5 +71,7 @@ export function pnjLayoutOf(image: OraImage): PnjLayout {
         skin: rectOf(PNJ_LAYERS.skin),
         head: rectOf(PNJ_LAYERS.head),
         hatPlace: rectOf(PNJ_LAYERS.hatPlace),
+        maskPlace: rectOf(PNJ_LAYERS.maskPlace),
+        itemPlace: rectOf(PNJ_LAYERS.itemPlace),
     }
 }

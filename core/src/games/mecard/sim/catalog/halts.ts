@@ -15,6 +15,7 @@ import { INVENTOR_HALT } from "../halt/subs/gift/InventorHalt"
 import { MAGICIAN_HALT } from "../halt/subs/gift/MagicianHalt"
 import { MERCHANT_HALT } from "../halt/subs/gift/MerchantHalt"
 import { TAVERN_HALT } from "../halt/subs/gift/TavernHalt"
+import { MASTER_TRAINER_HALT } from "../halt/subs/master/MasterTrainerHalt"
 import { TRAINER_HALT } from "../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
@@ -23,8 +24,9 @@ import { NECROMANCER_HALT } from "../halt/subs/party/NecromancerHalt"
 import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
 import type { HaltKind } from "../run/Journey"
 
-/** The sort of halt of each kind of place holding one. */
-export const HALT_TYPES: Readonly<Record<HaltKind, HaltType>> = {
+
+/** The sorts of halt of each kind of place holding one. */
+export const SIMPLE_HALTS = {
     hospital: HOSPITAL_HALT,
     shop: SHOP_HALT,
     chest: CHEST_HALT,
@@ -47,4 +49,13 @@ export const HALT_TYPES: Readonly<Record<HaltKind, HaltType>> = {
     strategist: STRATEGIST_HALT,
     necromancer: NECROMANCER_HALT,
     exit: EXIT_HALT,
+}
+
+export const MASTER_HALTS = {
+    masterTrainer: MASTER_TRAINER_HALT,
+}
+
+/** The sort of halt of each kind of place holding one. */
+export const HALTS = {
+    ...SIMPLE_HALTS,
 }

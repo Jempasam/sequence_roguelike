@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    AIM, canUpgrade, FIRE, isFusion, LOOT_CARDS, readsWhole, Rng, SLASH, SPELL, upgradeOf,
+    AIM, FIRE, isFusion, LOOT_CARDS, readsWhole, Rng, SLASH, SPELL, upgradeOf, upgradesFor,
 } from "@game/core/mecard"
 
 // --- Tests ---
@@ -19,9 +19,9 @@ describe("upgradeOf", () => {
         }
     })
 
-    test("an aim → none; every upgrade of the loot reads whole", () => {
-        expect(canUpgrade(AIM)).toBe(false)
-        expect(upgradeOf(AIM, new Rng(1))).toBeNull()
+    test("an aim → upgradable, as the catalog says; every upgrade of the loot reads whole", () => {
+        expect(upgradesFor(AIM).length).toBeGreaterThan(0)
+        expect(upgradeOf(AIM, new Rng(1))?.contents).toContain(AIM)
         for(const card of LOOT_CARDS){
             const upgrade = upgradeOf(card, new Rng(2))
             if(upgrade?.contents) expect(readsWhole(upgrade.contents)).toBe(true)

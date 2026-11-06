@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat, joinText } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
 import type { Card } from "../../../card/Card"
@@ -8,7 +9,7 @@ import type { Run } from "../../../run/Run"
 import { joinDecks, MAX_SWAPPED, splitDeck, swapCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { decksShown } from "../shown"
@@ -50,10 +51,13 @@ export class StrategistHalt extends AbstractHalt {
         super(STRATEGIST_HALT, run,
             ["Deux ", DECK.as("decks"), " valent mieux qu'un. Je divise, je trie, je fusionne, ou je t'apprends à piocher."],
             // Waiting for its own art: the scene of the antiquarian.
-            sceneLook(31, 26, 23, [
-                "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
-                "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
-            ], "mecard/travel/antiquarian/border.png", haltPnj("strategist", [0.2, 0.3, 0.6], [0.8, 0.65, 0.25])),
+            sceneLook(31, 26, 23, "mecard/travel/antiquarian"),
+            {
+                hat: "bicorne",
+                clothes: rgba(0.9, 0.75, 0.2),
+                hatColor: rgba(0.9, 0.75, 0.2),
+                item: "sword"
+            },
         )
     }
 

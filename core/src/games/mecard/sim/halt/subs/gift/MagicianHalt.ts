@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import { BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
@@ -5,7 +6,7 @@ import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
@@ -23,10 +24,14 @@ export class MagicianHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MAGICIAN_HALT, run,
             ["Trois boosters, et chacun tient des ", CARTE.as("cartes"), " assorties."],
-            sceneLook(26, 13, 41, [
-                "mecard/travel/magician/1.png", "mecard/travel/magician/2.png", "mecard/travel/magician/3.png",
-                "mecard/travel/magician/4.png", "mecard/travel/magician/5.png",
-            ], "mecard/travel/magician/border.png", haltPnj("magician", [0.6, 0.3, 1], [0.2, 0.15, 0.4], { done: "spin" })),
+            sceneLook(26, 13, 41, "mecard/travel/magician"),
+            {
+                hat: "topHat",
+                clothes: rgba(0.6, 0.3, 1),
+                hatColor: rgba(0.2, 0.15, 0.4),
+                cues: { done: "spin" },
+                item: "magicianWand"
+            },
         )
         this.#boosters = distinct(run.rng, BOOSTERS, INVENTED_COUNTS)
     }

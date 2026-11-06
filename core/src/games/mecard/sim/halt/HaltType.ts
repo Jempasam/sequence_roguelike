@@ -1,4 +1,5 @@
 import type { ImagePath, LayeredImagePath } from "../../../../engine/assets"
+import type { Rgba } from "../base/Rgba"
 import type { PlaceInfo } from "../run/Journey"
 import type { Run } from "../run/Run"
 
@@ -17,6 +18,9 @@ export interface HaltType extends PlaceInfo {
 
     /** The picture of its token on the map. */
     readonly icon: ImagePath
+
+    /** The color of a glow around its token on the map, none for no glow. */
+    readonly glow?: Rgba
 
     /** The painting of the transition entering it, read as `Transition` reads it. */
     readonly transition: LayeredImagePath

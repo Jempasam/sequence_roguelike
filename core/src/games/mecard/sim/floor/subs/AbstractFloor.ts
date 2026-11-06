@@ -43,7 +43,7 @@ export type PlaceWeights = Readonly<Partial<Record<LaidKind, number>>>
 /** How often each kind of place turns up on a floor that says nothing else. */
 const WEIGHTS: PlaceWeights = {
     battle: 28, elite: 7, hospital: 5, shop: 5, chest: 6, removal: 4, altar: 3, forge: 4, butcher: 2,
-    enchanter: 4, alchemist: 3, merchant: 4, witch: 3, inventor: 3, tavern: 2, trainer: 2, demon: 1,
+    enchanter: 4, alchemist: 3, merchant: 4, witch: 3, inventor: 3, tavern: 2, trainer: 2, masterTrainer: 1, demon: 1,
     antiquarian: 3, magician: 3, madDoctor: 1, weaver: 2, strategist: 3, necromancer: 2,
 }
 

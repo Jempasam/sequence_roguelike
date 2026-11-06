@@ -134,7 +134,7 @@ describe("Painter vertices", () => {
 })
 
 describe("Painter state", () => {
-    test("modulate, colorize, hue → uColorMode 0, 1, 2", () => {
+    test("modulate, colorize, hue, mask → uColorMode 0, 1, 2, 3", () => {
         const { fake, gpu, painter, texture } = setup()
         for(const mode of ["modulate", "colorize", "hue", "mask"] as const){
             painter.setColorMode(mode)
@@ -144,7 +144,7 @@ describe("Painter state", () => {
         const values = fake.callsOf("uniform1f")
             .filter(call => (call.args[0] as { uniform: string } | null)?.uniform === "uColorMode")
             .map(call => call.args[1])
-        expect(values).toEqual([0, 1, 2])
+        expect(values).toEqual([0, 1, 2, 3])
     })
 
     test("push without pop → flush throws", () => {

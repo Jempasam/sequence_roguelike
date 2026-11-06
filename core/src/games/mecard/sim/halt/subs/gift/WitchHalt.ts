@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import { USABLES } from "../../../catalog/index"
@@ -6,7 +7,7 @@ import type { Run } from "../../../run/Run"
 import type { Usable } from "../../../usable/Usable"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { usableText } from "../shown"
@@ -23,10 +24,14 @@ export class WitchHalt extends AbstractHalt {
     constructor(run: Run){
         super(WITCH_HALT, run,
             "Trois utilisables mijotent ici. Prends-en un.",
-            sceneLook(20, 31, 15, [
-                "mecard/travel/witch/1.png", "mecard/travel/witch/2.png", "mecard/travel/witch/3.png",
-                "mecard/travel/witch/4.png", "mecard/travel/witch/5.png",
-            ], "mecard/travel/witch/border.png", haltPnj("witch", [0.45, 0.85, 0.3], [0.5, 0.25, 0.7], { done: "spin" })),
+            sceneLook(20, 31, 15, "mecard/travel/witch"),
+            {
+                hat: "witchHat",
+                clothes: rgba(0.6, 0.3, 0.8),
+                hatColor: rgba(0.5, 0.25, 0.7),
+                cues: { done: "spin" },
+                item: "witchWand"
+            },
         )
         this.#usables = witchUsables(run.rng)
     }

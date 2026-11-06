@@ -2,7 +2,7 @@ import type { Text } from "../../../../semantic"
 import { Observable } from "../base/Observable"
 import type { Card } from "../card/Card"
 import { exitsOf } from "../catalog/floors"
-import { HALT_TYPES } from "../catalog/halts"
+import { HALTS } from "../catalog/halts"
 import type { Floor } from "../floor/Floor"
 import type { Halt } from "../halt/Halt"
 import type { CardChoosing, Choosing, Count, HaltContext, Shown, Way } from "../halt/HaltContext"
@@ -218,7 +218,7 @@ export class Travel {
         if(!isHalt(kind)) throw new Error(`A place of kind ${kind} holds a fight, not a halt.`)
         const kept = this.#halts.get(place)
         if(kept) return kept
-        const halt = HALT_TYPES[kind].create(this.run)
+        const halt = HALTS[kind].create(this.run)
         this.#halts.set(place, halt)
         return halt
     }
@@ -310,7 +310,7 @@ export class Travel {
      */
     public visit(kind: HaltKind): void {
         if(this.#phase !== "map") throw new Error(`The party visits from the map, not during ${this.#phase}.`)
-        this.#open(HALT_TYPES[kind].create(this.run))
+        this.#open(HALTS[kind].create(this.run))
     }
 
     /**
@@ -331,6 +331,18 @@ export class Travel {
     /** Stand the party on any place, without entering it. */
     public jump(place: Place): void {
         this.#standOn(place)
+    }
+
+    /**
+     * Lay a halt in a row of the map, where the party may reach it: the map is told drawn again.
+     *
+     * @param layer - The row, from 0.
+     * @throws {@link Error} When the row is not one a halt may be laid in.
+     */
+    public layHalt(kind: Exclude<HaltKind, "exit">, layer: number): Place {
+        const place = this.journey.insertHalt(kind, layer)
+        this.mapDrawn.notify(this.journey)
+        return place
     }
 
     /** Go into a floor, its map new, the party standing before its first layer. */

@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
@@ -11,7 +12,7 @@ import type { Run } from "../../../run/Run"
 import { removeCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { cardShown, fusionShown } from "../shown"
@@ -73,10 +74,13 @@ export class EnchanterHalt extends AbstractHalt {
     constructor(run: Run){
         super(ENCHANTER_HALT, run,
             ["Je ", FUSION.as("colle"), " à ta ", CARTE, " l'un de mes trois enchantements."],
-            sceneLook(15, 23, 43, [
-                "mecard/travel/enchanter/1.png", "mecard/travel/enchanter/2.png", "mecard/travel/enchanter/3.png",
-                "mecard/travel/enchanter/4.png", "mecard/travel/enchanter/5.png",
-            ], "mecard/travel/enchanter/border.png", haltPnj("enchanter", [0.3, 0.45, 1], [0.75, 0.35, 1])),
+            sceneLook(15, 23, 43, "mecard/travel/enchanter"),
+            {
+                hat: "starCone",
+                clothes: rgba(0.3, 0.45, 1),
+                hatColor: rgba(0.75, 0.35, 1),
+                item: "scepter"
+            },
         )
         this.#offered = enchantments(run.rng, run.heroes)
     }

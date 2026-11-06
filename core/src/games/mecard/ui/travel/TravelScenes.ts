@@ -3,15 +3,16 @@ import type { Assets } from "../../../../engine/assets"
 import { Sprite, Texture } from "../../../../engine/gpu"
 import type { Gpu } from "../../../../engine/gpu"
 import { NineSlice, Parallax } from "../../../../engine/ui"
-import { PNJ_HATS } from "../../sim/halt/PnjHats"
-import type { HaltPnj, SceneLook } from "../../sim/halt/SceneLook"
+import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "../../sim/halt/PnjHats"
+import type { PnjHatLook } from "../../sim/halt/PnjHats"
+import type { ScenePnj, SceneLook } from "../../sim/halt/SceneLook"
 
 import { engineColor } from "../look/colors"
 import { Pnj } from "../pnj/Pnj"
 import { PnjActor } from "../pnj/PnjActor"
 import { PNJ_SHRINK, PnjRig } from "../pnj/PnjRig"
 import { PnjView } from "../pnj/PnjView"
-import type { PnjPointer } from "../pnj/PnjView"
+import type { PnjAccessory, PnjPointer } from "../pnj/PnjView"
 
 /** How far the farthest and the nearest layers of a scene follow the pointer, in virtual pixels. */
 const FAR_DEPTH = 5
@@ -30,6 +31,22 @@ export interface TravelScene {
 
     /** The character standing there, none where nobody stands. */
     readonly pnj: PnjView|null
+}
+
+/** Something worn or carried, its picture loaded, and how its look says to draw it. */
+interface Worn {
+    readonly texture: Texture
+    readonly look: PnjHatLook
+}
+
+/** What a character wears and carries, in the order of its hat, its mask and its object, none for the missing. */
+function wornLooks(pnj: ScenePnj|undefined): readonly (PnjHatLook|null)[] {
+    if(!pnj) return [null, null, null]
+    return [
+        pnj.hat ? PNJ_HATS[pnj.hat] : null,
+        pnj.mask ? PNJ_MASKS[pnj.mask] : null,
+        pnj.item ? PNJ_ITEMS[pnj.item] : null,
+    ]
 }
 
 /** A scene asked for: none while it loads, or when it could not be. */
@@ -103,8 +120,8 @@ export class TravelScenes {
     async #load(kept: Kept, loaded: () => void, failed: (error: AssetError) => void): Promise<void> {
         const { look } = kept
         const paths = [look.border, ...look.layers]
-        const hat = look.pnj?.hat ? PNJ_HATS[look.pnj.hat] : null
-        if(hat) paths.push(hat.path)
+        const worn = wornLooks(look.pnj)
+        for(const piece of worn) if(piece) paths.push(piece.path)
         let pictures
         let rig: PnjRig|null
         try {
@@ -123,7 +140,9 @@ export class TravelScenes {
         }
         kept.rig = rig
         kept.textures = pictures.map(picture => Texture.fromPixels(this.gpu, picture))
-        const hatTexture = hat ? kept.textures.pop() ?? null : null
+        // What the character wears came last, in the order of `worn`: taken off the scene's own pictures.
+        const wornTextures = kept.textures.splice(kept.textures.length - worn.filter(Boolean).length)
+        const accessories = worn.map(piece => piece ? { texture: wornTextures.shift()!, look: piece } : null)
         const [border, ...layers] = kept.textures
         const count = layers.length
         const side = Math.floor(border.width / 3)
@@ -138,21 +157,34 @@ export class TravelScenes {
             border: new NineSlice(Sprite.whole(border), { left: side, right: side, top: end, bottom: end }, {
                 border: { left: across, right: across, top: down, bottom: down },
             }),
-            pnj: rig && look.pnj ? this.#pnjView(rig, look.pnj, hatTexture, hat?.size ?? 1) : null,
+            pnj: rig && look.pnj ? this.#pnjView(rig, look.pnj, accessories) : null,
         }
-        if(hatTexture) kept.textures.push(hatTexture)
+        for(const accessory of accessories) if(accessory) kept.textures.push(accessory.texture)
         loaded()
     }
 
-    /** The view of the character of a halt, a little left of the middle, wearing what it says. */
-    #pnjView(rig: PnjRig, look: HaltPnj, hat: Texture|null, size: number): PnjView {
+    /**
+     * The view of the character of a halt, a little left of the middle, wearing what it says.
+     *
+     * @param accessories - Its hat, its mask and its object, as {@link wornLooks} lists them, none for one it
+     * does not wear.
+     */
+    #pnjView(rig: PnjRig, look: ScenePnj, accessories: readonly (Worn|null)[]): PnjView {
         const pnj = new Pnj(rig)
         pnj.clothes = look.clothes && engineColor(look.clothes)
         const view = new PnjView(new PnjActor(pnj), {
             centerShare: PNJ_CENTER, pointer: this.pointer, depth: NEAR_DEPTH, interactive: false,
         })
-        if(hat) view.hat = { sprite: Sprite.whole(hat), size }
+        const [hat, mask, item] = accessories
+        const accessoryOf = (worn: Worn|null): PnjAccessory|null => worn && {
+            sprite: Sprite.whole(worn.texture), size: worn.look.size, anchor: worn.look.anchor,
+        }
+        view.hat = accessoryOf(hat)
         view.hatColor = look.hatColor && engineColor(look.hatColor)
+        view.mask = accessoryOf(mask)
+        view.maskColor = look.maskColor && engineColor(look.maskColor)
+        view.item = accessoryOf(item)
+        view.itemColor = look.itemColor && engineColor(look.itemColor)
         return view
     }
 

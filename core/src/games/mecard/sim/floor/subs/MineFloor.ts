@@ -34,10 +34,7 @@ export const MINE_FLOOR: FloorType = {
     name: "Mine",
     description: "Des robots et de la pierre, et un robot megalaser au bout. Plus de forges, de coffres et d'élites.",
     icon: "mecard/floors/mine/logo.png",
-    look: sceneLook(34, 26, 20, [
-        "mecard/floors/mine/1.png", "mecard/floors/mine/2.png", "mecard/floors/mine/3.png",
-        "mecard/floors/mine/4.png", "mecard/floors/mine/5.png",
-    ], "mecard/floors/mine/border.png"),
+    look: sceneLook(34, 26, 20, "mecard/floors/mine"),
     decorations: [
         { picture: "mecard/floors/mine/mountain.png", size: 2 },
         { picture: "mecard/floors/mine/cart.png", size: 2 },

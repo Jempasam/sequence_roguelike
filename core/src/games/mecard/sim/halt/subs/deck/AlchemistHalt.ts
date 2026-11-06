@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
 import { upgraded, upgradesFor } from "../../../catalog/upgrades"
@@ -5,7 +6,7 @@ import type { Run } from "../../../run/Run"
 import { transmute } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
@@ -33,10 +34,13 @@ export class AlchemistHalt extends DeckHalt {
     constructor(run: Run){
         super(ALCHEMIST_HALT, run,
             ["Deux copies d'une ", CARTE, " ? J'en fais une seule, améliorée."],
-            sceneLook(15, 33, 23, [
-                "mecard/travel/alchemist/1.png", "mecard/travel/alchemist/2.png", "mecard/travel/alchemist/3.png",
-                "mecard/travel/alchemist/4.png", "mecard/travel/alchemist/5.png",
-            ], "mecard/travel/alchemist/border.png", haltPnj("alchemist", [0.35, 0.9, 0.45], [1, 0.8, 0.3])),
+            sceneLook(15, 33, 23, "mecard/travel/alchemist"),
+            {
+                hat: "turban",
+                clothes: rgba(0.35, 0.9, 0.45),
+                hatColor: rgba(0.35, 0.8, 0.3),
+                item: "potion"
+            },
         )
     }
 

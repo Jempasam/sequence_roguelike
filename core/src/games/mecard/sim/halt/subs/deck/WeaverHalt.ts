@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import type { Text } from "../../../../../../semantic"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
@@ -6,7 +7,7 @@ import { canWeave, weavable, weave, woven } from "../../../run/visits"
 import type { WeaveMode } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { cardShown } from "../shown"
@@ -34,10 +35,12 @@ export class WeaverHalt extends DeckHalt {
         super(WEAVER_HALT, run,
             ["Je lie deux ", CARTE.as("cartes"), " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
             // Waiting for its own art: the scene of the forge.
-            sceneLook(41, 18, 10, [
-                "mecard/travel/forge/1.png", "mecard/travel/forge/2.png", "mecard/travel/forge/3.png",
-                "mecard/travel/forge/4.png", "mecard/travel/forge/5.png",
-            ], "mecard/travel/forge/border.png", haltPnj("weaver", [0.3, 0.85, 0.9], [0.35, 0.25, 0.4])),
+            sceneLook(41, 18, 10, "mecard/travel/forge"),
+            {
+                hat: "skullcap",
+                clothes: rgba(0.3, 0.85, 0.9),
+                hatColor: rgba(0.3, 0.85, 0.9)
+            },
         )
     }
 

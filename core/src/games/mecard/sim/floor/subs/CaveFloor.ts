@@ -28,10 +28,7 @@ export const CAVE_FLOOR: FloorType = {
     name: "Grotte",
     description: "Des gobelins et leurs amis, gardés par un golem runique. Un peu de tout sur le chemin.",
     icon: "mecard/floors/cave/logo.png",
-    look: sceneLook(20, 18, 31, [
-        "mecard/travel/map/1.png", "mecard/travel/map/2.png", "mecard/travel/map/3.png",
-        "mecard/travel/map/4.png", "mecard/travel/map/5.png",
-    ], "mecard/travel/map/border.png"),
+    look: sceneLook(20, 18, 31, "mecard/travel/map"),
     decorations: [
         { picture: "mecard/floors/cave/mouth.png", size: 2 },
         { picture: "mecard/floors/cave/stalagmite.png", size: 2 },

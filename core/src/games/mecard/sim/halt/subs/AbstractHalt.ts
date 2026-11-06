@@ -6,7 +6,8 @@ import type { Run } from "../../run/Run"
 import type { Halt } from "../Halt"
 import type { Choosing, HaltContext, Shown } from "../HaltContext"
 import type { HaltType } from "../HaltType"
-import type { SceneLook } from "../SceneLook"
+import { scenePnj } from "../SceneLook"
+import type { SceneLook, ScenePnj } from "../SceneLook"
 import { deckShown } from "./shown"
 
 /**
@@ -16,6 +17,10 @@ import { deckShown } from "./shown"
 export abstract class AbstractHalt implements Halt {
 
 
+    /**
+     * @param look - The scene it is visited over.
+     * @param pnj - Its character as far as it differs from the default, none where nobody stands.
+     */
     constructor(
         public readonly type: HaltType,
 
@@ -23,8 +28,14 @@ export abstract class AbstractHalt implements Halt {
         protected readonly run: Run,
 
         public readonly line: Text,
-        public readonly look: SceneLook,
-    ){}
+        look: SceneLook,
+        pnj?: Partial<ScenePnj>,
+    ){
+        this.look = pnj ? { ...look, pnj: scenePnj(pnj) } : look
+    }
+
+
+    public readonly look: SceneLook
 
 
     public get title(): string { return this.type.name }

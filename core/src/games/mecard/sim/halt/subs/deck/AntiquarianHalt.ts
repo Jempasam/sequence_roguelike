@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import type { Card } from "../../../card/Card"
 import { heldCards } from "../../../card/subs/composite/CompositeCard"
 import type { Hero } from "../../../run/Hero"
@@ -5,7 +6,7 @@ import type { Run } from "../../../run/Run"
 import { removeCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE } from "../../../base/keywords"
@@ -42,10 +43,12 @@ export class AntiquarianHalt extends DeckHalt {
     constructor(run: Run){
         super(ANTIQUARIAN_HALT, run,
             ["Vends-moi une ", CARTE, " : plus elle en tient, plus je paie."],
-            sceneLook(31, 26, 23, [
-                "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
-                "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
-            ], "mecard/travel/antiquarian/border.png", haltPnj("antiquarian", [0.7, 0.6, 0.5], [0.45, 0.2, 0.5])),
+            sceneLook(31, 26, 23, "mecard/travel/antiquarian"),
+            {
+                hat: "velvetToque",
+                clothes: rgba(0.7, 0.6, 0.5),
+                hatColor: rgba(0.45, 0.2, 0.5)
+            },
         )
     }
 

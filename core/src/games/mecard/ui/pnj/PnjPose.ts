@@ -49,11 +49,12 @@ export interface Gaze {
 }
 
 /**
- * Where a hat sits, in the coordinates of the character: its point at the middle of the bottom edge of the
- * place of the hat, and how that place is turned. A hat is drawn there by translating to `x, y`, scaling
- * by `scaleX` on `x` only, turning by `angle`, then drawing it bottom-centered, about `width` wide.
+ * Where something worn or carried sits, in the coordinates of the character: its point (the middle of the
+ * bottom edge for a hat, the middle for a mask and an object), and how its place is turned. It is drawn there
+ * by translating to `x, y`, scaling by `scaleX` on `x` only, turning by `angle`, then drawing it anchored on
+ * that point, about `width` wide.
  */
-export interface HatPlace {
+export interface PartPlace {
     readonly x: number
     readonly y: number
 
@@ -70,6 +71,9 @@ export interface HatPlace {
     readonly width: number
     readonly height: number
 }
+
+/** Where a hat sits. */
+export type HatPlace = PartPlace
 
 /**
  * The pose of a character painted flat, as a cut-out puppet: the side it faces, the direction of its head,
@@ -102,6 +106,8 @@ export class PnjPose {
         this.#neckX = layout.head.x + layout.head.width / 2
         this.#neckY = layout.head.y + layout.head.height * NECK_SHARE
         this.#hat = this.#placeHat()
+        this.#mask = this.#placeMask()
+        this.#item = this.#placeItem()
     }
 
 
@@ -223,6 +229,32 @@ export class PnjPose {
     }
 
 
+    //// Mask ////
+
+    /** Where a mask sits now: the middle of its place on the face, turning with the head. */
+    public get mask(): Readonly<PartPlace> { return this.#mask }
+
+    /** Hear each move of the place of the mask, as {@link onHatMove} does the hat's. */
+    public onMaskMove(listener: (mask: Readonly<PartPlace>) => void): { dispose(): void } {
+        const own = { listener }
+        this.#maskListeners.add(own)
+        return { dispose: () => this.#maskListeners.delete(own) }
+    }
+
+
+    //// Item ////
+
+    /** Where a carried object sits now: the middle of its place, moving with the body. */
+    public get item(): Readonly<PartPlace> { return this.#item }
+
+    /** Hear each move of the place of the object, as {@link onHatMove} does the hat's. */
+    public onItemMove(listener: (item: Readonly<PartPlace>) => void): { dispose(): void } {
+        const own = { listener }
+        this.#itemListeners.add(own)
+        return { dispose: () => this.#itemListeners.delete(own) }
+    }
+
+
     //// Shape ////
 
     /**
@@ -292,9 +324,14 @@ export class PnjPose {
 
     #hat: Readonly<HatPlace>
     readonly #hatListeners = new Set<{ listener: (hat: Readonly<HatPlace>) => void }>()
+    #mask: Readonly<PartPlace>
+    readonly #maskListeners = new Set<{ listener: (mask: Readonly<PartPlace>) => void }>()
+    #item: Readonly<PartPlace>
+    readonly #itemListeners = new Set<{ listener: (item: Readonly<PartPlace>) => void }>()
 
     /** A point to compute in, so placing the hat allocates nothing but the place. */
     readonly #point = { x: 0, y: 0 }
+    readonly #itemEnd = { x: 0, y: 0 }
 
     /** How far the top of the body is turned, in radians, clockwise: forward is toward the gaze. */
     get #tilt(): number {
@@ -309,12 +346,52 @@ export class PnjPose {
     /** Place the hat again after a change of pose, and tell it when it moved. */
     #moved(): void {
         const hat = this.#placeHat()
-        const old = this.#hat
-        const isMoved = hat.x !== old.x || hat.y !== old.y
-        const isTurned = hat.angle !== old.angle || hat.scaleX !== old.scaleX
-        if(!isMoved && !isTurned) return
-        this.#hat = hat
-        for(const { listener } of [...this.#hatListeners]) listener(hat)
+        if(differs(hat, this.#hat)){
+            this.#hat = hat
+            for(const { listener } of [...this.#hatListeners]) listener(hat)
+        }
+        const mask = this.#placeMask()
+        if(differs(mask, this.#mask)){
+            this.#mask = mask
+            for(const { listener } of [...this.#maskListeners]) listener(mask)
+        }
+        const item = this.#placeItem()
+        if(differs(item, this.#item)){
+            this.#item = item
+            for(const { listener } of [...this.#itemListeners]) listener(item)
+        }
+    }
+
+    /** The middle of the place of the mask, on the face. */
+    #placeMask(): Readonly<PartPlace> {
+        const { x, y, width, height } = this.layout.maskPlace
+        const point = this.#point
+        this.headPointInto(x + width / 2, y + height / 2, point)
+        const scaleX = widthOf(this.headOrientation, sideOf(this.#orientation))
+        return { x: point.x, y: point.y, angle: this.#headAngle, scaleX, width, height }
+    }
+
+    /**
+     * The place of the object: the line painted for it, along the length of its place, through its middle,
+     * with both ends moved by the body. The object lies along that line, its tip toward the second end, the
+     * held part on its middle, so its width is the length of the line as the pose shows it.
+     */
+    #placeItem(): Readonly<PartPlace> {
+        const { x, y, width, height } = this.layout.itemPlace
+        const middle = y + height / 2
+        const first = this.#point
+        const last = this.#itemEnd
+        this.bodyPointInto(x, middle, first)
+        this.bodyPointInto(x + width, middle, last)
+        // The object is drawn from its first end to its second one. When the body is flipped, the line points
+        // left: the object is mirrored, so it is never upside down and its tip is toward where it faces.
+        const dx = last.x - first.x
+        const dy = last.y - first.y
+        const isFlipped = dx < 0
+        return {
+            x: (first.x + last.x) / 2, y: (first.y + last.y) / 2,
+            angle: Math.atan2(dy, isFlipped ? -dx : dx), scaleX: isFlipped ? -1 : 1, width: Math.hypot(dx, dy), height,
+        }
     }
 
     #placeHat(): Readonly<HatPlace> {
@@ -324,6 +401,11 @@ export class PnjPose {
         const scaleX = widthOf(this.headOrientation, sideOf(this.#orientation))
         return { x: point.x, y: point.y, angle: this.#headAngle, scaleX, width, height }
     }
+}
+
+/** Is a place moved or turned from another? */
+function differs(place: Readonly<PartPlace>, old: Readonly<PartPlace>): boolean {
+    return place.x !== old.x || place.y !== old.y || place.angle !== old.angle || place.scaleX !== old.scaleX
 }
 
 /** The side an orientation faces: -1 for the left, 1 for the right, which 0 faces as painted. */

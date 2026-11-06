@@ -248,6 +248,9 @@ const NEXT_PLACE: Arg<MecardContext, Place> = {
 /** The halts, as `travel visit` opens them. */
 const VISIT_KINDS = (Object.keys(PLACE_INFOS) as PlaceKind[]).filter(isHalt)
 
+/** The halts a command lays on the map: all but the exits, which come with the map. */
+const LAYABLE_KINDS = VISIT_KINDS.filter((kind): kind is Exclude<HaltKind, "exit"> => kind !== "exit")
+
 /** The word a kind of place is typed as: its name. */
 function kindWord(kind: PlaceKind): string {
     return wordOf(PLACE_INFOS[kind].name)
@@ -786,6 +789,13 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                 [VISIT], (ctx, kind) => {
                     ctx.print(`L'équipe visite ${PLACE_INFOS[kind].name}.`)
                     ctx.visit(kind)
+                }),
+            put: command("travel put <halte> <couche> : pose une halte sur la carte, dans la couche, reliée à celles d'avant et d'après.",
+                [named("la halte", () => LAYABLE_KINDS, kindWord), whole("la couche", 1)],
+                (ctx, kind, layer) => {
+                    ctx.run.travel.layHalt(kind, layer - 1)
+                    ctx.print(`${PLACE_INFOS[kind].name} posé en couche ${layer}.`)
+                    ctx.showMap()
                 }),
             jump: command("travel jump <couche> <rang> : pose l'équipe sur un lieu de la carte, sans y entrer.",
                 [whole("la couche", 1), whole("le rang", 1)], (ctx, layer, rank) => {

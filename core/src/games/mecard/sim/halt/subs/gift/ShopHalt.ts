@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
@@ -10,7 +11,7 @@ import { removeCards } from "../../../run/visits"
 import type { Usable } from "../../../usable/Usable"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described, usableText } from "../shown"
@@ -68,10 +69,12 @@ export class ShopHalt extends AbstractHalt {
     constructor(run: Run){
         super(SHOP_HALT, run,
             [CARTE.as("Cartes"), ", objets, utilisables. Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"],
-            sceneLook(36, 28, 15, [
-                "mecard/travel/shop/1.png", "mecard/travel/shop/2.png", "mecard/travel/shop/3.png",
-                "mecard/travel/shop/4.png", "mecard/travel/shop/5.png",
-            ], "mecard/travel/shop/border.png", haltPnj("shop", [0.35, 0.55, 1], [1, 0.8, 0.3])),
+            sceneLook(36, 28, 15, "mecard/travel/shop"),
+            {
+                hat: "furToque",
+                clothes: rgba(0.35, 0.55, 1),
+                hatColor: rgba(1, 0.8, 0.3)
+            },
         )
         this.#goods = shopGoods(run.rng)
     }

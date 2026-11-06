@@ -4,6 +4,7 @@ import { Component, EMPTY_HINT } from "../../../../engine/ui"
 import type { SizeHint, UiEvent } from "../../../../engine/ui"
 
 import type { PnjActor } from "./PnjActor"
+import type { PartPlace } from "./PnjPose"
 
 /** How much of the height of the view the character takes when standing straight. */
 const HEIGHT_SHARE = 0.8
@@ -14,16 +15,38 @@ const FEET_MARGIN = 0.05
 /** How much wider a hat of size 1 is than its place on the head, which it barely covers. */
 const HAT_COVER = 1.15
 
-/** A hat, and how large it is worn. */
-export interface PnjHat {
+/**
+ * How many pixels of the painting a pixel of the picture of a mask or an object takes at size 1: about that
+ * of the hats, whose pictures cover the place of the hat at 128 pixels over 69, times their size.
+ */
+const ACCESSORY_PIXEL = 2.5
+
+/** The middle of a picture. */
+const CENTER: readonly [x: number, y: number] = [0.5, 0.5]
+
+/** The middle of the bottom edge of a picture, where a hat stands. */
+const BOTTOM: readonly [x: number, y: number] = [0.5, 1]
+
+/** Something worn or carried, and how large. */
+export interface PnjAccessory {
     readonly sprite: Sprite
 
     /**
-     * How large it is, 1 barely covering its place on the head, more for a hat larger than the head, such as
-     * the wide brim of a witch hat. It grows from the middle of its bottom edge.
+     * How large it is. A hat at 1 barely covers its place, more for one larger than it, such as the wide
+     * brim of a witch hat. A mask or an object keeps pixels of {@link ACCESSORY_PIXEL} at 1, as the hats
+     * have about, so its picture is drawn to the scale of the place it is made for.
      */
     readonly size: number
+
+    /**
+     * The point of the picture set on its place, as shares of its width and height: the middle of the bottom
+     * edge for a hat, the held part for an object, the middle by default.
+     */
+    readonly anchor?: readonly [x: number, y: number]
 }
+
+/** A hat, and how large it is worn. */
+export type PnjHat = PnjAccessory
 
 /** Where the pointer is, in virtual pixels of the interface: the interface itself. */
 export interface PnjPointer {
@@ -54,7 +77,7 @@ export interface PnjViewOptions {
 
 /**
  * A character standing in its bounds, scaled to them, brought to life by its actor at each frame, a hat on
- * its head. While it follows the pointer, it looks at it over the whole view, or over the whole interface
+ * its head, a mask on its face and an object in its hands. While it follows the pointer, it looks at it over the whole view, or over the whole interface
  * when it is given where to read it.
  *
  * @remarks
@@ -101,6 +124,43 @@ export class PnjView extends Component {
 
     public set hatColor(color: Color|null){
         this.#hatColor = color?.clone() ?? null
+        this.invalidate()
+    }
+
+    /** The mask on its face, none unmasked. It turns with the head, over the face and under the hat. */
+    public get mask(): PnjAccessory|null { return this.#mask }
+
+    public set mask(mask: PnjAccessory|null){
+        if(mask === this.#mask) return
+        this.#mask = mask
+        this.invalidate()
+    }
+
+    /** The color of the mask, none to keep the one painted, as {@link hatColor}. */
+    public get maskColor(): Color|null { return this.#maskColor }
+
+    public set maskColor(color: Color|null){
+        this.#maskColor = color?.clone() ?? null
+        this.invalidate()
+    }
+
+    /**
+     * The object it carries, none empty-handed. It lies along the line painted for it, as long as the line
+     * at size 1, drawn lengthwise (its width is its length), moving with the body, under its hands.
+     */
+    public get item(): PnjAccessory|null { return this.#item }
+
+    public set item(item: PnjAccessory|null){
+        if(item === this.#item) return
+        this.#item = item
+        this.invalidate()
+    }
+
+    /** The color of the object, none to keep the one painted, as {@link hatColor}. */
+    public get itemColor(): Color|null { return this.#itemColor }
+
+    public set itemColor(color: Color|null){
+        this.#itemColor = color?.clone() ?? null
         this.invalidate()
     }
 
@@ -158,22 +218,45 @@ export class PnjView extends Component {
         painter.setBlend("alpha")
         painter.translate(feetX + this.#shiftX, feetY + this.#shiftY)
         painter.scale(scale)
-        pnj.draw(painter)
-        const hat = this.#hat
+        const { layout } = pnj
+        const { hat, mask, item } = this
+        pnj.draw(painter, () => {
+            if(!item) return
+            // The object keeps its pixels, shrunk as the line painted for it is when the body turns.
+            const shown = pnj.item.width / layout.itemPlace.width
+            this.#drawAccessory(painter, item, pnj.item, this.#itemColor, ACCESSORY_PIXEL * item.size * shown)
+        })
+        if(mask) this.#drawAccessory(painter, mask, pnj.mask, this.#maskColor, ACCESSORY_PIXEL * mask.size)
         if(hat){
-            const { sprite } = hat
-            const place = pnj.hat
-            const color = this.#hatColor
-            if(color){
-                painter.setColorMode("hue")
-                painter.setTint(color)
-            }
-            painter.translate(place.x, place.y)
-            painter.scale(place.scaleX, 1)
-            painter.rotate(place.angle)
-            painter.scale(place.width * HAT_COVER * hat.size / sprite.width)
-            painter.sprite(sprite, -sprite.width / 2, -sprite.height)
+            const hatScale = pnj.hat.width * HAT_COVER * hat.size / hat.sprite.width
+            this.#drawAccessory(painter, hat, pnj.hat, this.#hatColor, hatScale, BOTTOM)
         }
+        painter.pop()
+    }
+
+    /**
+     * Draw something worn or carried where the pose places it, recolored when given a color, its anchor on
+     * its place.
+     *
+     * @param scale - How many pixels of the painting a pixel of its picture takes.
+     * @param anchor - The anchor when the accessory gives none.
+     */
+    #drawAccessory(
+        painter: Painter, accessory: PnjAccessory, place: Readonly<PartPlace>, color: Color|null, scale: number,
+        anchor: readonly [x: number, y: number] = CENTER,
+    ): void {
+        const { sprite } = accessory
+        const [anchorX, anchorY] = accessory.anchor ?? anchor
+        painter.push()
+        if(color){
+            painter.setColorMode("hue")
+            painter.setTint(color)
+        }
+        painter.translate(place.x, place.y)
+        painter.scale(place.scaleX, 1)
+        painter.rotate(place.angle)
+        painter.scale(scale)
+        painter.sprite(sprite, -sprite.width * anchorX, -sprite.height * anchorY)
         painter.pop()
     }
 
@@ -184,6 +267,10 @@ export class PnjView extends Component {
     readonly #interactive: boolean
     #hat: PnjHat|null = null
     #hatColor: Color|null = null
+    #mask: PnjAccessory|null = null
+    #maskColor: Color|null = null
+    #item: PnjAccessory|null = null
+    #itemColor: Color|null = null
 
     /** How far the character is moved against the pointer now, in virtual pixels. */
     #shiftX = 0

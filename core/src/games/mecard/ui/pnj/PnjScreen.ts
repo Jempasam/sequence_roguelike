@@ -5,22 +5,25 @@ import { Color } from "../../../../engine/math"
 import { Box, Button, Label, Panel, Scroll, Slider } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
 
-import { PNJ_HATS } from "../../sim/halt/PnjHats"
+import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "../../sim/halt/PnjHats"
 import type { PnjHatLook } from "../../sim/halt/PnjHats"
 
 import { DIM_TEXT } from "../look/theme"
 import { Pnj } from "./Pnj"
 import { PnjActor } from "./PnjActor"
+import type { PartPlace } from "./PnjPose"
 import { PNJ_ANIMATIONS } from "./PnjAnimation"
 import { PNJ_SHRINK, PnjRig } from "./PnjRig"
 import { PnjView } from "./PnjView"
-import type { PnjHat } from "./PnjView"
+import type { PnjAccessory, PnjHat } from "./PnjView"
 
 /** The character shown on the bench. */
 const PNJ_PATH: LayeredImagePath = "mecard/pnj/merchant.ora"
 
 /** The hats tried on, by their name on the buttons, and how large each is worn. */
 const HATS: readonly PnjHatLook[] = Object.values(PNJ_HATS)
+const MASKS: readonly PnjHatLook[] = Object.values(PNJ_MASKS)
+const ITEMS: readonly PnjHatLook[] = Object.values(PNJ_ITEMS)
 
 /** The colors of clothes and of hats tried on, by their name on the buttons, none for those painted. */
 const CLOTHES: readonly { readonly label: string, readonly color: Color|null }[] = [
@@ -101,6 +104,8 @@ export class PnjScreen {
         this.#layer = ui.addLayer("pnj")
         this.#layer.content.visible = false
         this.#hatLabel = new Label(theme, "", { color: DIM_TEXT })
+        this.#maskLabel = new Label(theme, "", { color: DIM_TEXT })
+        this.#itemLabel = new Label(theme, "", { color: DIM_TEXT })
         this.#modeButton = new Button(theme, "")
     }
 
@@ -124,31 +129,51 @@ export class PnjScreen {
 
     readonly #layer: Layer
     readonly #hatLabel: Label
+    readonly #maskLabel: Label
+    readonly #itemLabel: Label
     readonly #modeButton: Button
     #loading: Promise<void>|null = null
     #view: PnjView|null = null
     #hats: PnjHat[] = []
+    #masks: PnjAccessory[] = []
+    #items: PnjAccessory[] = []
     #sliders: Slider[] = []
     #size = ""
 
     async #load(): Promise<void> {
         let rig: PnjRig
-        let hats: Texture[]
+        let hats: PnjAccessory[]
+        let masks: PnjAccessory[]
+        let items: PnjAccessory[]
+        const loadAll = async (looks: readonly PnjHatLook[]): Promise<PnjAccessory[]> => {
+            const pictures = await Promise.all(looks.map(look => this.assets.image(look.path)))
+            return pictures.map((picture, index) => ({
+                sprite: Sprite.whole(Texture.fromPixels(this.ui.gpu, picture)),
+                size: looks[index].size,
+                anchor: looks[index].anchor,
+            }))
+        }
         try {
             rig = await PnjRig.load(this.ui.gpu, this.assets, PNJ_PATH, PNJ_SHRINK)
-            const pictures = await Promise.all(HATS.map(hat => this.assets.image(hat.path)))
-            hats = pictures.map(picture => Texture.fromPixels(this.ui.gpu, picture))
+            hats = await loadAll(HATS)
+            masks = await loadAll(MASKS)
+            items = await loadAll(ITEMS)
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             this.host.report(`Le banc des PNJ n'a pas pu être chargé : ${error.message}`)
             return
         }
-        this.#hats = hats.map((texture, index) => ({ sprite: Sprite.whole(texture), size: HATS[index].size }))
+        this.#hats = hats
+        this.#masks = masks
+        this.#items = items
         const pnj = new Pnj(rig)
-        pnj.onHatMove(hat => {
-            const angle = Math.round(hat.angle * 180 / Math.PI)
-            this.#hatLabel.text = `Chapeau : ${Math.round(hat.x)}, ${Math.round(hat.y)}, ${angle}°`
-        })
+        const tell = (label: Label, name: string) => (place: Readonly<PartPlace>) => {
+            const angle = Math.round(place.angle * 180 / Math.PI)
+            label.text = `${name} : ${Math.round(place.x)}, ${Math.round(place.y)}, ${angle}°`
+        }
+        pnj.onHatMove(tell(this.#hatLabel, "Chapeau"))
+        pnj.onMaskMove(tell(this.#maskLabel, "Masque"))
+        pnj.onItemMove(tell(this.#itemLabel, "Objet"))
         this.#view = new PnjView(new PnjActor(pnj))
         this.#view.hat = this.#hats[0]
         this.#build()
@@ -159,7 +184,9 @@ export class PnjScreen {
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
         // Kept from one build to the next, so taken out of the panels of the last one first.
-        for(const kept of [this.#view, this.#hatLabel, this.#modeButton]) kept?.parent?.remove(kept)
+        for(const kept of [this.#view, this.#hatLabel, this.#maskLabel, this.#itemLabel, this.#modeButton]){
+            kept?.parent?.remove(kept)
+        }
         const row = new Box("row", { gap: MARGIN, padding: MARGIN, align: "stretch" })
         row.fixedSize = { width: this.ui.width, height: this.ui.height }
         const view = this.#view
@@ -200,6 +227,14 @@ export class PnjScreen {
             label: clothes.label,
             action: () => { view.hatColor = clothes.color },
         }))))
+        this.#accessorySection(column, "Masque", MASKS, this.#masks, this.#maskLabel, {
+            set: mask => { view.mask = mask },
+            color: color => { view.maskColor = color },
+        })
+        this.#accessorySection(column, "Objet porté", ITEMS, this.#items, this.#itemLabel, {
+            set: item => { view.item = item },
+            color: color => { view.itemColor = color },
+        })
         column.add(this.#title("Vêtements"))
         column.add(this.#buttons(CLOTHES.map(clothes => ({
             label: clothes.label,
@@ -241,6 +276,23 @@ export class PnjScreen {
             const slider = this.#sliders[index]
             if(slider) slider.value = Math.round(setting.read(view.actor.pnj) * SLIDER_STEPS)
         })
+    }
+
+    /** A title, the choice of one accessory or none, its position and the choice of its color. */
+    #accessorySection(
+        column: Box, title: string, looks: readonly PnjHatLook[], sprites: readonly PnjAccessory[], label: Label,
+        setters: { set(accessory: PnjAccessory|null): void, color(color: Color|null): void },
+    ): void {
+        column.add(this.#title(title))
+        column.add(this.#buttons([
+            { label: "Aucun", action: () => setters.set(null) },
+            ...looks.map((look, index) => ({ label: look.label, action: () => setters.set(sprites[index]) })),
+        ]))
+        column.add(label)
+        column.add(this.#buttons(CLOTHES.map(clothes => ({
+            label: clothes.label,
+            action: () => setters.color(clothes.color),
+        }))))
     }
 
     #leaveButton(): Button {

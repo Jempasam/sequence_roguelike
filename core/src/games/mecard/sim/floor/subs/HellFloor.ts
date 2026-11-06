@@ -34,10 +34,7 @@ export const HELL_FLOOR: FloorType = {
     name: "Enfer",
     description: "Du feu et de la rage, et le diable au bout. Plus de démons, d'autels et d'élites, peu d'hôpitaux.",
     icon: "mecard/floors/hell/logo.png",
-    look: sceneLook(38, 14, 14, [
-        "mecard/floors/hell/1.png", "mecard/floors/hell/2.png", "mecard/floors/hell/3.png",
-        "mecard/floors/hell/4.png", "mecard/floors/hell/5.png",
-    ], "mecard/floors/hell/border.png"),
+    look: sceneLook(38, 14, 14, "mecard/floors/hell"),
     decorations: [
         { picture: "mecard/floors/hell/statue.png", size: 2 },
         { picture: "mecard/floors/hell/flame.png", size: 2 },

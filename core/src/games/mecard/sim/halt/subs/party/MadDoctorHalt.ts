@@ -1,8 +1,9 @@
+import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { UNIT } from "../../../base/keywords"
@@ -14,10 +15,13 @@ export class MadDoctorHalt extends AbstractHalt {
     constructor(run: Run){
         super(MAD_DOCTOR_HALT, run,
             ["Deux ", UNIT.as("unités"), " ? Sur ma table, elles n'en feront plus qu'une !"],
-            sceneLook(13, 31, 23, [
-                "mecard/travel/mad-doctor/1.png", "mecard/travel/mad-doctor/2.png", "mecard/travel/mad-doctor/3.png",
-                "mecard/travel/mad-doctor/4.png", "mecard/travel/mad-doctor/5.png",
-            ], "mecard/travel/mad-doctor/border.png", haltPnj("madDoctor", [0.3, 0.9, 0.6], [0.2, 0.2, 0.25], { arrive: "fear" })),
+            sceneLook(13, 31, 23, "mecard/travel/mad-doctor"),
+            {
+                hat: "doctorHat",
+                clothes: rgba(0.3, 0.9, 0.6),
+                hatColor: rgba(0.2, 0.2, 0.25),
+                cues: { arrive: "fear" }
+            },
         )
     }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { HALT_TYPES, PLACE_INFOS } from "@game/core/mecard"
+import { HALTS, PLACE_INFOS } from "@game/core/mecard"
 import type { HaltKind } from "@game/core/mecard"
 import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltFixtures"
 
@@ -9,11 +9,11 @@ import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltF
 const SEEDS = 20
 
 /** Every kind of halt, with its sort. */
-const HALTS = Object.entries(HALT_TYPES).map(([kind, type]) => ({ kind: kind as HaltKind, type }))
+const HALTS = Object.entries(HALTS).map(([kind, type]) => ({ kind: kind as HaltKind, type }))
 
 // --- Tests ---
 
-describe("HALT_TYPES", () => {
+describe("HALTS", () => {
     test.each(HALTS)("$kind → told by its sort on the map", ({ kind, type }) => {
         expect(PLACE_INFOS[kind].name).toBe(type.name)
         expect(PLACE_INFOS[kind].description).toBe(type.description)

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { HOSPITAL_HALT, OFFER_SIZE, RED_HEART, Run, SPENT_LOOT_HEARTS } from "@game/core/mecard"
+import { HOSPITAL_HALT, INVENTED_COUNTS, RED_HEART, Run, SPENT_LOOT_HEARTS } from "@game/core/mecard"
 import type { Text } from "@game/core"
 import type { HeartLoot, Shown } from "@game/core/mecard"
 
-import { ScriptedPlayer } from "../../../../../fixtures/haltFixtures"
+import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 
 // --- Tests ---
 
@@ -32,8 +32,8 @@ describe("HospitalHalt", () => {
         expect(offered).toHaveLength(run.heroes.length)
         run.heroes.forEach((hero, index) => {
             const hand = offered[index]
-            expect(hand).toHaveLength(OFFER_SIZE)
-            expect(new Set(hand).size).toBe(OFFER_SIZE)
+            expect(hand).toHaveLength(INVENTED_COUNTS)
+            expect(new Set(hand).size).toBe(INVENTED_COUNTS)
             expect(hand.every(loot => SPENT_LOOT_HEARTS.includes(loot))).toBe(true)
             const [{ heart, count }] = hand
             expect(hero.hearts.filter(each => each.kind === heart)).toHaveLength(count)

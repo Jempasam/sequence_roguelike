@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest"
 import { plainText, spansOf } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    ALL_CARDS, CARTE, COLLAGE, CHARGE, DECK, Damage, FusionCard, HALT_TYPES, HEART, HeartCount, ITEMS,
-    MELANGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, USABLES, UNSTABLE_THRUST,
+    ALL_CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, HALTS, HEART, HeartCount, ITEMS,
+    MERGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, USABLES, UNSTABLE_THRUST,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
@@ -19,7 +19,7 @@ const ALL_TEXTS: readonly (readonly [string, Text])[] = [
     ...ALL_CARDS.map(card => [card.name, card.description] as const),
     ...ITEMS.map(item => [item.name, item.description] as const),
     ...USABLES.map(usable => [usable.name, usable.description] as const),
-    ...Object.values(HALT_TYPES).map(type => [type.name, type.description] as const),
+    ...Object.values(HALTS).map(type => [type.name, type.description] as const),
 ]
 
 // --- Tests ---
@@ -37,8 +37,8 @@ describe("mecardDisplay", () => {
     })
 
     test("a keyword → its form, standing out, linking to the keyword whatever the form", () => {
-        const [piece] = spans(COLLAGE.as("collées"))
-        expect(piece).toMatchObject({ kind: "string", text: "collées", link: COLLAGE })
+        const [piece] = spans(FUSION.as("collées"))
+        expect(piece).toMatchObject({ kind: "string", text: "collées", link: FUSION })
         expect(piece.color).not.toBeNull()
     })
 
@@ -80,7 +80,7 @@ describe("mecardDisplay", () => {
 })
 
 describe("explanationOf", () => {
-    test.each([COLLAGE, MELANGE, CARTE, UNIT, SUPPRESSION, DECK])("%s → an explanation", keyword => {
+    test.each([FUSION, MERGE, CARTE, UNIT, SUPPRESSION, DECK])("%s → an explanation", keyword => {
         expect(plainText(explanationOf(keyword) ?? "")).not.toBe("")
     })
 

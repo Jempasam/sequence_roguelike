@@ -6,7 +6,7 @@ import type { Floor, FloorContext } from "../floor/Floor"
 /** What a place of the journey holds. */
 export type PlaceKind =
     | "battle"|"elite"|"boss"|"hospital"|"shop"|"chest"|"removal"|"altar"|"forge"|"butcher"|"enchanter"
-    | "alchemist"|"merchant"|"witch"|"inventor"|"tavern"|"trainer"|"demon"|"antiquarian"|"magician"
+    | "alchemist"|"merchant"|"witch"|"inventor"|"tavern"|"trainer"|"masterTrainer"|"demon"|"antiquarian"|"magician"
     | "madDoctor"|"weaver"|"strategist"|"necromancer"|"exit"
 
 /** The kinds of fights a place may hold. */
@@ -105,6 +105,25 @@ export class Journey implements FloorContext {
     /** Lay a halt on the map. */
     public addHalt(kind: Exclude<HaltKind, "exit">, at: Spot): Place {
         return this.#add({ ...at, kind, next: [], exitTo: null, monsters: [] })
+    }
+
+    /**
+     * Lay a halt in a row of the map, in the widest gap of the row: every place of the row before leads to
+     * it, and it leads to every place of the row after. In the first row nothing leads to it, so it is a way in.
+     *
+     * @throws {@link Error} When the row is not one before the exits, or past the map.
+     */
+    public insertHalt(kind: Exclude<HaltKind, "exit">, layer: number): Place {
+        const layers = this.layers
+        const rows = layers.length - (this.exits.length > 0 ? 1 : 0)
+        if(layer < 0 || layer >= rows) throw new Error(`The map has ${rows} rows to lay a halt in.`)
+        const edges = [0, ...layers[layer].map(place => place.across), 1]
+        let gap = 0
+        for(let i = 1; i < edges.length; i++) if(edges[i] - edges[i - 1] > edges[gap + 1] - edges[gap]) gap = i - 1
+        const halt = this.addHalt(kind, { layer, across: (edges[gap] + edges[gap + 1]) / 2 })
+        for(const before of layers[layer - 1] ?? []) this.link(before, halt)
+        for(const after of layers[layer + 1] ?? []) this.link(halt, after)
+        return halt
     }
 
     /** Make a place lead to another. */

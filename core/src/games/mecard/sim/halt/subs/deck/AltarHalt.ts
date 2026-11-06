@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { concat, joinText } from "../../../../../../semantic"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
@@ -5,7 +6,7 @@ import type { Run } from "../../../run/Run"
 import { sacrifice } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, DECK } from "../../../base/keywords"
@@ -27,10 +28,12 @@ export class AltarHalt extends DeckHalt {
     constructor(run: Run){
         super(ALTAR_HALT, run,
             ["Offre deux ", CARTE.as("cartes"), ", et je copie une troisième de ton ", DECK, "."],
-            sceneLook(36, 13, 18, [
-                "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
-                "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
-            ], "mecard/travel/altar/border.png", haltPnj("altar", [0.9, 0.2, 0.25], [1, 0.85, 0.3])),
+            sceneLook(36, 13, 18, "mecard/travel/altar"),
+            {
+                hat: "mitre",
+                clothes: rgba(0.9, 0.2, 0.25),
+                hatColor: rgba(1, 0.85, 0.3)
+            },
         )
     }
 

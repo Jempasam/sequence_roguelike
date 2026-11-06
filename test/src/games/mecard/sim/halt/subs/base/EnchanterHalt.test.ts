@@ -5,7 +5,7 @@ import {
 } from "@game/core/mecard"
 import type { Card, Halt, Hero } from "@game/core/mecard"
 
-import { ScriptedPlayer } from "../../../../../fixtures/haltFixtures"
+import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 
 // --- Fixture builders ---
 

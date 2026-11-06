@@ -1,9 +1,10 @@
+import { rgba } from "../../../base/Rgba"
 import type { Card } from "../../../card/Card"
 import { inventedFusion, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { fusionShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
@@ -17,10 +18,13 @@ export class InventorHalt extends CardGiftHalt {
     constructor(run: Run){
         super(INVENTOR_HALT, run,
             ["Trois ", FUSION.as("collages"), " sortent de l'atelier. Choisis le tien."],
-            sceneLook(28, 26, 23, [
-                "mecard/travel/inventor/1.png", "mecard/travel/inventor/2.png", "mecard/travel/inventor/3.png",
-                "mecard/travel/inventor/4.png", "mecard/travel/inventor/5.png",
-            ], "mecard/travel/inventor/border.png", haltPnj("inventor", [0.8, 0.7, 0.5], [0.35, 0.25, 0.15])),
+            sceneLook(28, 26, 23, "mecard/travel/inventor"),
+            {
+                hat: "goggles",
+                clothes: rgba(0.8, 0.7, 0.5),
+                hatColor: rgba(0.35, 0.25, 0.15),
+                item: "wrench"
+            },
         )
 
         // Création des fusions

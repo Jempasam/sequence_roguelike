@@ -34,10 +34,7 @@ export const FOREST_FLOOR: FloorType = {
     name: "Forêt",
     description: "Des chasseurs rapides, et un troll au bout. Plus d'hôpitaux, de tavernes et de dresseurs.",
     icon: "mecard/floors/forest/logo.png",
-    look: sceneLook(16, 32, 22, [
-        "mecard/floors/forest/1.png", "mecard/floors/forest/2.png", "mecard/floors/forest/3.png",
-        "mecard/floors/forest/4.png", "mecard/floors/forest/5.png",
-    ], "mecard/floors/forest/border.png"),
+    look: sceneLook(16, 32, 22, "mecard/floors/forest"),
     decorations: [
         { picture: "mecard/floors/forest/cabin.png", size: 2 },
         { picture: "mecard/floors/forest/tree.png", size: 2 },

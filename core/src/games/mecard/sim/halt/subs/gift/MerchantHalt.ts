@@ -6,7 +6,7 @@ import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described } from "../shown"
@@ -23,10 +23,10 @@ export class MerchantHalt extends AbstractHalt {
     constructor(run: Run){
         super(MERCHANT_HALT, run,
             "J'ai trois objets pour toi. Prends-en un !",
-            sceneLook(33, 23, 20, [
-                "mecard/travel/merchant/1.png", "mecard/travel/merchant/2.png", "mecard/travel/merchant/3.png",
-                "mecard/travel/merchant/4.png", "mecard/travel/merchant/5.png",
-            ], "mecard/travel/merchant/border.png", haltPnj("merchant", null, null)),
+            sceneLook(33, 23, 20, "mecard/travel/merchant"),
+            {
+                hat: "featherToque"
+            },
         )
         this.#items = merchantItems(run.rng)
     }

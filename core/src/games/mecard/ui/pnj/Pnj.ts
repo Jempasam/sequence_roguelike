@@ -47,13 +47,19 @@ export class Pnj extends PnjPose {
         this.#clothes = clothes?.clone() ?? null
     }
 
-    /** Draw it in its pose, its origin between its feet, with the blend and the tint of the painter. */
-    public draw(painter: Painter): void {
+    /**
+     * Draw it in its pose, its origin between its feet, with the blend and the tint of the painter.
+     *
+     * @param betweenBodyAndSkin - Called once the body is drawn and before its skin, to draw under the hands
+     * what they hold.
+     */
+    public draw(painter: Painter, betweenBodyAndSkin?: () => void): void {
         const clothes = this.#clothes
         painter.push()
         if(clothes) painter.setColorMode("hue")
         this.#body.draw(painter, this.#bodyPoint, clothes ?? WHITE)
         painter.pop()
+        betweenBodyAndSkin?.()
         this.#skin.draw(painter, this.#bodyPoint, WHITE)
         this.#head.draw(painter, this.#headPoint, WHITE)
     }

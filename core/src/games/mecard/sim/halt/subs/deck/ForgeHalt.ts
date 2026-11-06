@@ -1,3 +1,4 @@
+import { rgba } from "../../../base/Rgba"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
@@ -5,7 +6,7 @@ import type { Run } from "../../../run/Run"
 import { forge } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
-import { haltPnj, sceneLook } from "../../SceneLook"
+import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
@@ -18,10 +19,14 @@ export class ForgeHalt extends DeckHalt {
     constructor(run: Run){
         super(FORGE_HALT, run,
             ["Donne-moi deux ", CARTE.as("cartes"), ", je les forge dans l'ordre choisi."],
-            sceneLook(41, 18, 10, [
-                "mecard/travel/forge/1.png", "mecard/travel/forge/2.png", "mecard/travel/forge/3.png",
-                "mecard/travel/forge/4.png", "mecard/travel/forge/5.png",
-            ], "mecard/travel/forge/border.png", haltPnj("forge", [1, 0.45, 0.15], [0.4, 0.3, 0.2], { pick: "strike" })),
+            sceneLook(41, 18, 10, "mecard/travel/forge"),
+            {
+                hat: "skullcap",
+                clothes: rgba(1, 0.45, 0.15),
+                hatColor: rgba(0.4, 0.3, 0.2),
+                cues: { pick: "strike" },
+                item: "hammer"
+            },
         )
     }
 

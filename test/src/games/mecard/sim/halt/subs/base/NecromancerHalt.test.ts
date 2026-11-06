@@ -3,7 +3,7 @@ import { KEPT_LOOT_HEARTS, NECROMANCER_HALT, NECROMANCER_OFFER_SIZE, Run, SPENT_
 import type { Text } from "@game/core"
 import type { HeartLoot, Shown, Way } from "@game/core/mecard"
 
-import { ScriptedPlayer } from "../../../../../fixtures/haltFixtures"
+import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 
 /** A player remembering the hearts it was offered, each time it was. */
 class Watching extends ScriptedPlayer {

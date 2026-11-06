@@ -5,6 +5,7 @@ import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import { Component, NineSlice, Rope, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
+import type { Rgba } from "../../sim/base/Rgba"
 import { FLOOR_TYPES } from "../../sim/catalog/floors"
 import type { Decoration } from "../../sim/floor/Floor"
 import type { Journey, Place } from "../../sim/run/Journey"
@@ -60,6 +61,15 @@ const CODE_SCALE = 3
 
 /** How thick the outline of the code of a place is, in virtual pixels. */
 const CODE_OUTLINE = 2
+
+/** How thick the glow of a place is: in pixels of its logo, and in virtual pixels around its code. */
+const GLOW_WIDTH = 1
+const CODE_GLOW_WIDTH = 2
+
+/** The eight ways a picture is drawn again around itself to outline it. */
+const AROUND: readonly (readonly [number, number])[] = [
+    [-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1],
+]
 
 /** How much darker a place the party can no more go to is drawn. */
 const BEHIND = 0.45
@@ -377,15 +387,24 @@ export class JourneyView extends Component {
             const circle = open ? OPEN_PATH : HOVERED_CIRCLE
             this.#paintUnder(painter, art.circle, x, y, circle)
         }
+        const glow = PLACE_LOOKS[place.kind].glow
         if(!logo){
-            this.#paintCode(painter, PLACE_LOOKS[place.kind].code, x, y, shade)
+            this.#paintCode(painter, PLACE_LOOKS[place.kind].code, x, y, shade, glow)
             return
         }
-        painter.setTint(new Color(shade, shade, shade))
         painter.push()
         const logoLeft = x - Math.floor(logo.width * LOGO_SCALE / 2)
         painter.translate(logoLeft, y - Math.floor(logo.height * LOGO_SCALE / 2))
         painter.scale(LOGO_SCALE)
+        if(glow){
+            painter.setColorMode("mask")
+            painter.setTint(new Color(glow.r * shade, glow.g * shade, glow.b * shade, glow.a))
+            for(let distance = 1; distance <= GLOW_WIDTH; distance++){
+                for(const [dx, dy] of AROUND) painter.sprite(logo, dx * distance, dy * distance)
+            }
+            painter.setColorMode("modulate")
+        }
+        painter.setTint(new Color(shade, shade, shade))
         painter.sprite(logo, 0, 0)
         painter.pop()
     }
@@ -394,11 +413,18 @@ export class JourneyView extends Component {
      * The code of a place, white outlined in black, centered on a point.
      *
      * @param shade - How bright its white is, from 0 to 1.
+     * @param glow - The color of a glow around its outline, none for no glow.
      */
-    #paintCode(painter: Painter, code: string, x: number, y: number, shade: number): void {
+    #paintCode(painter: Painter, code: string, x: number, y: number, shade: number, glow?: Rgba): void {
         const text = this.#codes
         const left = x - Math.floor(text.widthOf(code) / 2)
         const top = y - Math.floor(text.lineHeight / 2)
+        if(glow){
+            painter.setTint(new Color(glow.r * shade, glow.g * shade, glow.b * shade, glow.a))
+            for(let distance = CODE_OUTLINE + 1; distance <= CODE_OUTLINE + CODE_GLOW_WIDTH; distance++){
+                for(const [dx, dy] of AROUND) text.draw(painter, code, left + dx * distance, top + dy * distance)
+            }
+        }
         const color = new Color(shade, shade, shade)
         text.drawOutlined(painter, code, left, top, color, TEXT_OUTLINE, CODE_OUTLINE)
     }

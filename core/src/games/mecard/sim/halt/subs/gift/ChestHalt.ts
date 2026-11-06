@@ -1,5 +1,5 @@
 import type { Card } from "../../../card/Card"
-import { lootCards, OFFER_SIZE } from "../../../run/offers"
+import { lootCards, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -23,7 +23,7 @@ export class ChestHalt extends CardGiftHalt {
                 "mecard/travel/chest/4.png", "mecard/travel/chest/5.png",
             ], "mecard/travel/chest/border.png"),
         )
-        this.#cards = lootCards(run.rng, OFFER_SIZE)
+        this.#cards = lootCards(run.rng, INVENTED_COUNTS)
     }
 
 

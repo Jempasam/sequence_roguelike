@@ -1,6 +1,6 @@
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import { heartLootText, SPENT_LOOT_HEARTS } from "../../../run/Run"
 import type { HeartLoot, Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
@@ -41,7 +41,7 @@ export class HospitalHalt extends AbstractHalt {
             return
         }
         const show = (loot: HeartLoot) => ({ cards: [], text: heartLootText(loot) })
-        const offers = distinct(this.run.rng, SPENT_LOOT_HEARTS, OFFER_SIZE)
+        const offers = distinct(this.run.rng, SPENT_LOOT_HEARTS, INVENTED_COUNTS)
         ctx.offer(concat("Quel cœur pour ", hero, " ?"), offers, show, loot => {
             this.run.giveHearts(hero, loot)
             this.#giveHearts(ctx, others)

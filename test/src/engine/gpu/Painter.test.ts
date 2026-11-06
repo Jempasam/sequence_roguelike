@@ -136,7 +136,7 @@ describe("Painter vertices", () => {
 describe("Painter state", () => {
     test("modulate, colorize, hue → uColorMode 0, 1, 2", () => {
         const { fake, gpu, painter, texture } = setup()
-        for(const mode of ["modulate", "colorize", "hue"] as const){
+        for(const mode of ["modulate", "colorize", "hue", "mask"] as const){
             painter.setColorMode(mode)
             painter.sprite(Sprite.whole(texture), 0, 0)
             gpu.flush()

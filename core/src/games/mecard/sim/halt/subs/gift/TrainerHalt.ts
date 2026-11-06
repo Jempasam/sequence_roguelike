@@ -3,7 +3,7 @@ import type { Rng } from "../../../base/Rng"
 import { COMMON_MONSTERS } from "../../../catalog/monsters"
 import type { Monster } from "../../../catalog/monsters"
 import { PETS } from "../../../catalog/pets"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -14,7 +14,7 @@ import { CARTE, DECK } from "../../../base/keywords"
 
 /** The monsters a trainer offers as allies. */
 export function trainerMonsters(rng: Rng): Monster[] {
-    return [...distinct(rng, PETS, OFFER_SIZE - 1), ...distinct(rng, COMMON_MONSTERS, 1)]
+    return [...distinct(rng, PETS, INVENTED_COUNTS - 1), ...distinct(rng, COMMON_MONSTERS, 1)]
 }
 
 /** The trainer: a monster among some joins the party, played by a bot. */

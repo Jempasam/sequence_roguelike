@@ -1,7 +1,7 @@
 import { concat } from "../../../../../../semantic"
 import { BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -28,7 +28,7 @@ export class MagicianHalt extends CardGiftHalt {
                 "mecard/travel/magician/4.png", "mecard/travel/magician/5.png",
             ], "mecard/travel/magician/border.png", haltPnj("magician", [0.6, 0.3, 1], [0.2, 0.15, 0.4], { done: "spin" })),
         )
-        this.#boosters = distinct(run.rng, BOOSTERS, OFFER_SIZE)
+        this.#boosters = distinct(run.rng, BOOSTERS, INVENTED_COUNTS)
     }
 
 

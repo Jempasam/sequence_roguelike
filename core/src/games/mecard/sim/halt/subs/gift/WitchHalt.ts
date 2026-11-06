@@ -1,7 +1,7 @@
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import { USABLES } from "../../../catalog/index"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { Usable } from "../../../usable/Usable"
 import type { HaltContext } from "../../HaltContext"
@@ -13,7 +13,7 @@ import { usableText } from "../shown"
 
 /** The usables a witch offers. */
 export function witchUsables(rng: Rng): Usable[] {
-    return distinct(rng, USABLES, OFFER_SIZE)
+    return distinct(rng, USABLES, INVENTED_COUNTS)
 }
 
 /** The witch: a usable among some, for a character of the party. */

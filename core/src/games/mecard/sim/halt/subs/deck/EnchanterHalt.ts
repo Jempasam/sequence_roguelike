@@ -6,7 +6,7 @@ import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import { LOOT_CARDS } from "../../../catalog/index"
 import { allCards } from "../../../run/Hero"
 import type { Hero } from "../../../run/Hero"
-import { lootCards, OFFER_SIZE } from "../../../run/offers"
+import { lootCards, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import { removeCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
@@ -39,7 +39,7 @@ function fitting(enchantment: Card): (card: Card) => boolean {
  */
 export function enchantments(rng: Rng, party: readonly Hero[]): Card[] {
     const fits = (enchantment: Card): boolean => party.some(hero => allCards(hero).some(fitting(enchantment)))
-    return lootCards(rng, OFFER_SIZE, LOOT_CARDS.filter(fits))
+    return lootCards(rng, INVENTED_COUNTS, LOOT_CARDS.filter(fits))
 }
 
 /**

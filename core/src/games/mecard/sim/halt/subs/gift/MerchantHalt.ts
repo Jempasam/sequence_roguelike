@@ -2,7 +2,7 @@ import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import { ITEMS } from "../../../catalog/index"
 import type { Item } from "../../../item/Item"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -13,7 +13,7 @@ import { described } from "../shown"
 
 /** The items a merchant offers. */
 export function merchantItems(rng: Rng): Item[] {
-    return distinct(rng, ITEMS, OFFER_SIZE)
+    return distinct(rng, ITEMS, INVENTED_COUNTS)
 }
 
 /** The merchant: an item among some, for a character of the party. */

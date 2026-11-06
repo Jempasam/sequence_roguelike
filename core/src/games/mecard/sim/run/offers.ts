@@ -6,7 +6,7 @@ import { FusionCard } from "../card/subs/composite/FusionCard"
 import { LOOT_CARDS } from "../catalog/index"
 
 /** How many things a place offers to choose from. */
-export const OFFER_SIZE = 3
+export const INVENTED_COUNTS = 3
 
 /** How likely a fusion of the inventor holds a second tree after the first. */
 const SECOND_TREE = 0.4

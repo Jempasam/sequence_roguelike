@@ -1,5 +1,5 @@
 import type { Card } from "../../../card/Card"
-import { inventedFusion, OFFER_SIZE } from "../../../run/offers"
+import { inventedFusion, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -8,6 +8,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { fusionShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { FUSION } from "../../../base/keywords"
+import { lootUpgraded } from "../../../catalog/upgrades"
 
 /** The inventor: a fusion among some. */
 export class InventorHalt extends CardGiftHalt {
@@ -21,7 +22,12 @@ export class InventorHalt extends CardGiftHalt {
                 "mecard/travel/inventor/4.png", "mecard/travel/inventor/5.png",
             ], "mecard/travel/inventor/border.png", haltPnj("inventor", [0.8, 0.7, 0.5], [0.35, 0.25, 0.15])),
         )
-        this.#fusions = Array.from({ length: OFFER_SIZE }, () => inventedFusion(run.rng))
+
+        // Création des fusions
+        this.#fusions = [
+            ...Array.from({ length: INVENTED_COUNTS-1 }, () => inventedFusion(run.rng)),
+            lootUpgraded(run.rng)!!,
+        ]
     }
 
 

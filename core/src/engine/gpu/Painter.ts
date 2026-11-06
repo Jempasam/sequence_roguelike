@@ -129,7 +129,7 @@ export class Painter {
         this.#state.blend = blend
     }
 
-    /** Multiply by the color of the vertices, shade it by the luminance, or take its hue: see `ColorMode`. */
+    /** Multiply by the color of the vertices, shade it by the luminance, take its hue, or take only the opacity of the texture: see `ColorMode`. */
     public setColorMode(colorMode: ColorMode): void {
         this.#state.colorMode = colorMode
     }

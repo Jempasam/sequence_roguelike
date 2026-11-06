@@ -125,7 +125,8 @@ varying vec4 vData;
 /**
  * The steps every shader shares after `shade`, in premultiplied alpha, which stays right since the
  * luminance and the saturation are linear: the color mode, the tint, the colorization, the light, then the
- * cutout. `uColorMode` is 0 to modulate, 1 to colorize, 2 to take the hue of the vertices.
+ * cutout. `uColorMode` is 0 to modulate, 1 to colorize, 2 to take the hue of the vertices,
+ * 3 to take only the opacity of the texel and the whole color of the vertices.
  *
  * The hue mode keeps the luminance `L` and the saturation `S` of the texel, the gap between its highest and
  * lowest channels, and takes only the hue of the vertex color: that color stretched so its lowest channel
@@ -147,7 +148,8 @@ vec3 engineHue(vec3 c, float alpha, vec3 vertex){
 
 void main(){
     vec4 c = shade(vUV, vData);
-    if(uColorMode > 1.5) c = vec4(engineHue(c.rgb, c.a, vColor.rgb) * vColor.a, c.a * vColor.a);
+    if(uColorMode > 2.5) c = vec4(vColor.rgb * c.a * vColor.a, c.a * vColor.a);
+    else if(uColorMode > 1.5) c =vec4(engineHue(c.rgb, c.a, vColor.rgb) * vColor.a, c.a * vColor.a);
     else if(uColorMode > 0.5) c = vec4(engineLuminance(c.rgb) * vColor.rgb, c.a * vColor.a);
     else c *= vColor;
     c *= uTint;

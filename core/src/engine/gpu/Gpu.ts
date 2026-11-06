@@ -15,7 +15,7 @@ import type { TargetSurface } from "./TargetSurface"
 import { Texture } from "./Texture"
 
 /** The value of `uColorMode` for each color mode, as the fragment stage of the shaders reads it. */
-const COLOR_MODE_VALUES: Readonly<Record<ColorMode, number>> = { modulate: 0, colorize: 1, hue: 2 }
+const COLOR_MODE_VALUES: Readonly<Record<ColorMode, number>> = { modulate: 0, colorize: 1, hue: 2, mask: 3 }
 
 /** What the GPU allows, read once at startup. */
 export interface GpuLimits {

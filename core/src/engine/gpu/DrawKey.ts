@@ -27,8 +27,9 @@ export type BlendState = "cutout"|"over"|"multiply"|"copy"
  * - `"hue"`: gives it the hue of the vertex color, keeping its luminance and its saturation, the gap
  *   between its highest and lowest channels. A white stays white, a grey stays grey, a saturated zone takes
  *   the hue: what recolors clothes painted in one hue. A grey vertex color turns the base into its grey.
+ * - `"mask"`: keeps only its opacity, the color being 100% that of the vertices: the base is a stencil.
  */
-export type ColorMode = "modulate"|"colorize"|"hue"
+export type ColorMode = "modulate"|"colorize"|"hue"|"mask"
 
 /**
  * Which fragments pass the depth test, named so that a greater `z` is nearer: `"nearer-or-equal"` draws

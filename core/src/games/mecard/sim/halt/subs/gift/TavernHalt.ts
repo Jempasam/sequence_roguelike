@@ -4,7 +4,7 @@ import { KITS } from "../../../catalog/kits"
 import type { Kit } from "../../../catalog/kits"
 import { heroOf } from "../../../run/Hero"
 import type { Hero } from "../../../run/Hero"
-import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -16,7 +16,7 @@ import { stuffOf } from "../shown"
 /** The kits a tavern offers: heroes not in the party yet, fewer when fewer are left. */
 export function tavernKits(rng: Rng, party: readonly Hero[]): Kit[] {
     const free = KITS.filter(kit => !party.some(hero => hero.name === kit.name))
-    return distinct(rng, free, OFFER_SIZE)
+    return distinct(rng, free, INVENTED_COUNTS)
 }
 
 /** The tavern: a hero among some joins the party, with its kit. */

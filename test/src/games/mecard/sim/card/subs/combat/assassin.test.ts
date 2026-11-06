@@ -77,7 +77,7 @@ describe("SHADOW", () => {
         const hero = unit(on, 3, 6)
         unit(on, 1, 1, { team: MONSTERS })
         play(on, [[hero, chain(SHADOW)]])
-        expect(on.units.filter(body => body.summoned === "shadow")).toEqual([])
+        expect(on.units.filter(body => body.sprite === "shadow")).toEqual([])
     })
 })
 
@@ -111,7 +111,7 @@ describe("MINE", () => {
         unit(on, 1, 1, { team: MONSTERS })
         play(on, [[hero, chain(MINE)]])
         const again = loadBattle(saveBattle(on))
-        const body = again.units.find(each => each.summoned === "mine")
+        const body = again.units.find(each => each.sprite === "mine")
         expect(body?.position.y).toBeCloseTo(5)
         expect(saveBattle(loadBattle(saveBattle(on)))).toEqual(saveBattle(on))
     })

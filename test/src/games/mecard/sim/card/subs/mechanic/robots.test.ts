@@ -11,7 +11,7 @@ import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 
 /** The robot of a battle, none when none. */
 function robotOf(on: ReturnType<typeof battle>): Unit {
-    const robot = on.units.find(body => body.summoned === "robot")
+    const robot = on.units.find(body => body.sprite === "robot")
     if(!robot) throw new Error("No robot was built.")
     return robot
 }
@@ -66,7 +66,7 @@ describe("IMPROVISED_ROBOT", () => {
         const hero = unit(on, 3, 5)
         unit(on, 3, 4, { team: MONSTERS })
         play(on, [[hero, chain(IMPROVISED_ROBOT, BOW_MODULE)]])
-        expect(on.units.some(body => body.summoned === "robot")).toBe(false)
+        expect(on.units.some(body => body.sprite === "robot")).toBe(false)
     })
 })
 

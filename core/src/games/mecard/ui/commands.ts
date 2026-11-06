@@ -450,7 +450,7 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
             }),
             info: command("unit info <unité> : décrit une unité.", [UNIT], (ctx, unit) => {
                 const who = unit.controller === "player" ? "joueur" : "bot"
-                ctx.print(`${unit.name} : ${unit.team.name}, ${who}${unit.temporary ? ", temporaire" : ""}.`)
+                ctx.print(`${unit.name} : ${unit.team.name}, ${who}${unit.vanishing ? ", temporaire" : ""}.`)
                 ctx.print(`En ${unit.position}, regarde ${unit.direction}.`)
                 ctx.print(`Cœurs ${heartsText(unit)} : ${heartList(unit.hearts.all)}.`)
                 const statuses = [...unit.statuses.values()].map(String)

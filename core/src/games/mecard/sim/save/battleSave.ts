@@ -6,7 +6,7 @@ import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
 import type { Area } from "../battle/Area"
 import type { BattleState, UnitState } from "../battle/BattleState"
-import type { Controller, StatBases, SummonLook } from "../battle/Unit"
+import type { Controller, StatBases } from "../battle/Unit"
 import { CardChain } from "../card/CardChain"
 import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
@@ -21,7 +21,7 @@ import { CARD_NAMES, HEART_NAMES, ITEM_NAMES, STATUS_NAMES, USABLE_NAMES } from 
 import type { StatusData } from "./catalogNames"
 
 /** The version of the shape of a save, raised whenever it changes, so an old save is refused clearly. */
-export const BATTLE_SAVE_VERSION = 12
+export const BATTLE_SAVE_VERSION = 13
 
 /** A point or a direction, as `[x, y]`. */
 type SavedVector = readonly [number, number]
@@ -88,14 +88,8 @@ export interface SavedUnit {
 
     readonly bases: StatBases
 
-    /** What it is when it is a summoned body, none for a character. */
-    readonly summoned: SummonLook|null
-
-    /** Does its body take room? */
-    readonly tangible: boolean
-
-    /** Does it play its cards although it is a summoned body? */
-    readonly acting: boolean
+    /** Does it count for its team? */
+    readonly decisive: boolean
 
     /** The ground it covers, for a body lying on it, none for one standing. */
     readonly zone: SavedArea|null
@@ -123,7 +117,6 @@ export interface BattleSave {
     readonly arena: {
         readonly width: number
         readonly height: number
-        readonly pillars: readonly (readonly [number, number, number])[]
     }
     readonly rng: number
     readonly round: number
@@ -175,10 +168,7 @@ export function saveBattle(battle: Battle, options: SaveOptions = {}): BattleSav
     }
     return {
         version: BATTLE_SAVE_VERSION,
-        arena: {
-            width: state.arena.width, height: state.arena.height,
-            pillars: state.arena.pillars.map(({ center, radius }) => [center.x, center.y, radius]),
-        },
+        arena: { width: state.arena.width, height: state.arena.height },
         rng: state.rng, round: state.round, phase: state.phase,
         winner: state.winner ? teams.indexOf(state.winner) : null,
         teams: teams.map(team => ({ name: team.name, color: team.color ? colorOf(team.color) : null })),
@@ -214,10 +204,9 @@ export function battleStateOf(save: BattleSave): BattleState {
     }
     const teams = save.teams.map(team => new Team(team.name, team.color ? rgba(...team.color) : null))
     const card = cardLoader()
-    const pillars = save.arena.pillars.map(([x, y, radius]) => ({ center: new Vector2(x, y), radius }))
     const units = save.units.map(unit => loadedUnit(unit, teams, card))
     return {
-        arena: new Arena(save.arena.width, save.arena.height, pillars),
+        arena: new Arena(save.arena.width, save.arena.height),
         rng: save.rng, round: save.round, phase: save.phase,
         winner: save.winner === null ? null : teams[save.winner],
         units,
@@ -357,9 +346,7 @@ function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[])
         usables: (spec.usables ?? []).map(each => [each.usable.name, each.charges]),
         statuses: unit.statuses.map(status => [status.type.name, savedStatus(status)]),
         bases: unit.bases,
-        summoned: spec.summoned ?? null,
-        tangible: spec.tangible ?? true,
-        acting: spec.acting ?? false,
+        decisive: spec.decisive ?? true,
         zone: spec.zone ? savedArea(spec.zone) : null,
     }
 }
@@ -377,8 +364,7 @@ function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: Saved
             hearts: unit.hearts.map(([kind, isEmpty]) => new Heart(HEART_NAMES.of(kind), isEmpty)),
             decks: unit.decks.map(() => []), items: unit.items.map(name => ITEM_NAMES.of(name)),
             usables: unit.usables.map(([name, charges]) => new Carried(USABLE_NAMES.of(name), charges)),
-            summoned: unit.summoned, tangible: unit.tangible, zone: unit.zone ? loadedArea(unit.zone) : null,
-            acting: unit.acting,
+            decisive: unit.decisive, zone: unit.zone ? loadedArea(unit.zone) : null,
         },
         hand: cards(unit.hand),
         decks: unit.decks.map(deck => ({ pile: cards(deck.pile), discard: cards(deck.discard) })),

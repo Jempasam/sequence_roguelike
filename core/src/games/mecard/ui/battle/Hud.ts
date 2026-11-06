@@ -14,7 +14,8 @@ import type { CardNode } from "../../sim/card/CardNode"
 
 import { statLines } from "../describe"
 import type { Draft } from "./Draft"
-import { battleGrid, GAP } from "../hud/BattleGrid"
+import type { ImagePath } from "../../../../engine/assets"
+import { battleGrid, GAP, sideWidth } from "../hud/BattleGrid"
 import type { BattleGrid, UiRect } from "../hud/BattleGrid"
 import { CardFlight, flightSize } from "../hud/CardFlight"
 import { CARD_LOOKS, CardView } from "../hud/CardView"
@@ -32,7 +33,11 @@ import { colorOf } from "../look/colors"
 import { CHOSEN_TEXT, DIM_TEXT, STAT_DOWN, STAT_UP, WARNING_TEXT } from "../look/theme"
 import { decksOf } from "./BattleScene"
 import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
-import { ThingView, usesText } from "../hud/ThingView"
+import { BagView, SLOT_SIZE } from "../hud/BagView"
+import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
+import { ThingView } from "../hud/ThingView"
+import type { Carried } from "../../sim/usable/Usable"
+import { described, usableText } from "../../sim/halt/subs/shown"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
 
@@ -199,6 +204,8 @@ export class Hud {
         this.#landing = null
         const grid = this.#grid()
         this.#place(this.#panel(this.#selectedStats()), grid.stats)
+        const belted = this.#draft()
+        if(belted && belted.unit.usables.length > 0) this.#place(this.#panel(this.#belt(belted)), grid.usables)
         this.#place(this.#panel(this.#journalled()), grid.journal)
         this.#place(this.#panel(this.#right()), grid.units)
         this.#place(this.#panel(this.#told()), grid.info)
@@ -332,9 +339,16 @@ export class Hud {
     #grid(): BattleGrid {
         const { width, height } = this.size()
         const { font, panel, scrollbar, textScale } = this.theme
+        // The label, the bag wrapping its slots in the width of the zone, and the padding of the panel.
+        const frame = this.host.sprites.bag?.border.left ?? 0
+        const inside = sideWidth(width) - 2 * (panel.padding + frame)
+        const count = stacked(this.#draft()?.unit.usables ?? [], carried => carried.usable).length
+        const rows = Math.ceil(count / Math.max(1, Math.floor(inside / SLOT_SIZE)))
+        const beltHeight = font.lineHeight * textScale + 1 + rows * SLOT_SIZE + 2 * frame + 2 * panel.padding + 2
         return battleGrid(width, height, {
             chain: CARD_LOOKS.chain.height + LINK_ROOM + scrollbar.width,
             hand: PILE_HEIGHT,
+            usables: this.#draft()?.unit.usables.length ? beltHeight : 0,
             info: INFO_LINES * font.lineHeight * textScale + 2 * (panel.padding + this.#info.padding),
         })
     }
@@ -376,7 +390,7 @@ export class Hud {
     }
 
     /**
-     * What acts on the chain of the unit selected, always in sight, then its stats, scrolling in the room
+     * The title of the chain of the unit selected, always in sight, then its stats, scrolling in the room
      * left.
      */
     #selectedStats(): Component {
@@ -388,7 +402,6 @@ export class Hud {
             column.add(this.#label(title, colorOf(draft.unit)))
         }
         if(warning && mode !== "playing") column.add(this.#paragraph(warning, WARNING_TEXT))
-        if(draft && draft.unit.usables.length > 0) column.add(this.#belt(draft))
         this.#details.parent?.remove(this.#details)
         this.#details.content = active ? this.#stats(active) : null
         column.add(this.#details, { grow: 1 })
@@ -424,20 +437,48 @@ export class Hud {
     #belt(draft: Draft): Component {
         const column = new Box("column", { gap: 1 })
         column.add(this.#label("Utilisables (au début de l'exécution) :", DIM_TEXT))
-        const row = new Box("row", { gap: 2 })
-        draft.unit.usables.forEach((carried, index) => {
-            const { usable } = carried
-            const used = draft.used.has(index)
-            const uses = usesText(usable, carried.charges)
-            const view = new ThingView(this.theme, this.host.sprites, usable.icon, uses)
-            view.lit = used
-            view.spent = carried.spent
-            view.onPick = () => this.actions.toggleUsable(index)
-            view.onHover = over => this.showInfo(over ? concat(usable, " : ", usable.description) : null)
-            row.add(view)
+        const entries = draft.unit.usables.map((carried, index) => ({ carried, index }))
+        const views = stacked(entries, entry => entry.carried.usable).map(({ first, members }) => {
+            const { usable } = first.carried
+            const left = members.reduce((sum, entry) => sum + entry.carried.charges, 0)
+            const full = members.length * (usable.charges ?? 1)
+            const view = this.#thing(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
+            const active = members.filter(entry => draft.used.has(entry.index)).length
+            view.lit = active > 0
+            view.active = active
+            view.spent = members.every(entry => entry.carried.spent)
+            // A click uses one more of the stack, and once all that can be are used, none any more.
+            view.onPick = () => {
+                const next = members.find(entry => !draft.used.has(entry.index) && !entry.carried.spent)
+                if(next) this.actions.toggleUsable(next.index)
+                else for(const entry of members) if(draft.used.has(entry.index)) this.actions.toggleUsable(entry.index)
+            }
+            return view
         })
-        column.add(row)
+        column.add(this.#bag(views), { align: "start" })
         return column
+    }
+
+    /** The usables of a belt as pictures, the same ones in one, their charges added. */
+    #usableViews(belt: readonly Carried[]): ThingView[] {
+        return stacked(belt, carried => carried.usable).map(({ first, members }) => {
+            const { usable } = first
+            const left = members.reduce((sum, carried) => sum + carried.charges, 0)
+            const full = members.length * (usable.charges ?? 1)
+            return this.#thing(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
+        })
+    }
+
+    /** An item or a usable as its picture with its uses left, told on hover, as in the journey. */
+    #thing(icon: ImagePath, uses: string|null, told: Text): ThingView {
+        const view = new ThingView(this.theme, this.host.sprites, icon, uses)
+        view.onHover = over => this.showInfo(over ? told : null)
+        return view
+    }
+
+    /** Things in a bag, to add to a column aligned at its start so the bag wraps at the width of the column. */
+    #bag(things: readonly Component[]): BagView {
+        return new BagView(this.theme, things, this.host.sprites.bag)
     }
 
     /**
@@ -455,9 +496,17 @@ export class Hud {
             if(stat.base) row.add(this.#label(`(${stat.base})`, DIM_TEXT))
             column.add(row)
         }
-        if(unit.items.length > 0) column.add(this.#paragraph(["Objets : ", ...joinText(unit.items, ", ")], DIM_TEXT))
-        if(unit.usables.length > 0){
-            column.add(this.#paragraph(["Utilisables : ", ...joinText(unit.usables, ", ")], DIM_TEXT))
+        if(unit.items.length > 0){
+            column.add(this.#label("Objets", DIM_TEXT))
+            const items = stacked(unit.items, item => item).map(({ first, members }) => {
+                return this.#thing(first.icon, countText(members.length), countTold(described(first, first), members.length))
+            })
+            column.add(this.#bag(items), { align: "start" })
+        }
+        // The usables of the unit being planned lie in their own zone, to use.
+        if(unit.usables.length > 0 && !this.#draft()){
+            column.add(this.#label("Utilisables", DIM_TEXT))
+            column.add(this.#bag(this.#usableViews(unit.usables)), { align: "start" })
         }
         const shown = this.host.scene.of(unit)?.statuses ?? []
         const statuses = [...unit.statuses.values()].filter(status => shown.includes(status.type))

@@ -5,7 +5,7 @@ import type { BattleRows, UiRect } from "@game/core/mecard/battle-grid"
 // --- Fixture builders ---
 
 /** Rows as tall as what the battle screen shows in them. */
-const ROWS: BattleRows = { chain: 60, hand: 62, info: 32 }
+const ROWS: BattleRows = { chain: 60, hand: 62, info: 32, usables: 30 }
 
 /** The sizes of the interface a screen may give. */
 const SIZES = [[480, 270], [512, 288], [360, 270], [640, 360]] as const
@@ -56,11 +56,23 @@ describe.each(SIZES)("battleGrid at %d by %d", (width, height) => {
         expect(grid.info.top).toBe(grid.hand.bottom + GAP)
     })
 
+    test("the usables lie between the stats and the journal, as tall as they asked", () => {
+        expect(grid.usables.top).toBeGreaterThanOrEqual(grid.stats.bottom + GAP)
+        expect(grid.usables.bottom).toBeLessThanOrEqual(grid.journal.top)
+        expect(grid.usables.bottom - grid.usables.top).toBe(ROWS.usables)
+    })
+
     test("the rows under the map are as tall as they asked", () => {
         expect(grid.chain.bottom - grid.chain.top).toBe(ROWS.chain)
         expect(grid.hand.bottom - grid.hand.top).toBe(ROWS.hand)
         expect(grid.info.bottom - grid.info.top).toBe(ROWS.info)
     })
+})
+
+test("without usables the stats take the whole room above the journal", () => {
+    const grid = battleGrid(480, 270, { ...ROWS, usables: 0 })
+    expect(grid.stats.bottom).toBe(grid.map.bottom)
+    expect(grid.usables.bottom - grid.usables.top).toBe(0)
 })
 
 test("a screen too short leaves the map no room, not a negative one", () => {

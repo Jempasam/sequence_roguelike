@@ -41,7 +41,7 @@ export function placeWave(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const body = battle.place(owner, {
-        look: "wave", name: "Vague", at, direction, tangible: false, size: WAVE_SIZE,
+        sprite: "wave", name: "Vague", at, direction, tangible: false, size: WAVE_SIZE,
         hearts: Heart.many(TIME_HEART, WAVE_ROUNDS), cards: [STEP],
     })
     if(body) battle.applyStatus(body, new Surging(element))

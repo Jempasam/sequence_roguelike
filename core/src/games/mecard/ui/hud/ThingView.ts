@@ -7,6 +7,7 @@ import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import type { Usable } from "../../sim/usable/Usable"
 
 import { LIT_EDGE } from "../look/colors"
+import { CHOSEN_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
 
 /** The size of the picture of an item or a usable, in virtual pixels. */
@@ -67,6 +68,15 @@ export class ThingView extends Component {
         this.invalidate()
     }
 
+    /** How many of the stack are to be used, written in yellow over its top left corner when any is. */
+    public get active(): number { return this.#active }
+
+    public set active(active: number){
+        if(active === this.#active) return
+        this.#active = active
+        this.invalidate()
+    }
+
     /** Is it spent, its picture dim? */
     public get spent(): boolean { return this.#spent }
 
@@ -112,11 +122,15 @@ export class ThingView extends Component {
             const top = ICON_SIZE - layout.lineHeight
             layout.drawOutlined(painter, this.uses, left, top, USES_COLOR, USES_OUTLINE)
         }
+        if(this.#active > 0){
+            this.#layout.drawOutlined(painter, String(this.#active), 0, 0, CHOSEN_TEXT, USES_OUTLINE)
+        }
         painter.pop()
     }
 
 
     readonly #layout: TextLayout
+    #active = 0
     #lit = false
     #spent = false
 }

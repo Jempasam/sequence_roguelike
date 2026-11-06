@@ -4,7 +4,7 @@ import type { Vector2 } from "../base/Vector2"
 import type { UnitContext } from "../battle/Action"
 import type { Area } from "../battle/Area"
 import type { Battle } from "../battle/Battle"
-import type { SummonLook, Unit } from "../battle/Unit"
+import type { Unit } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import type { Heart } from "../heart/Heart"
 import type { Status, StatusType } from "../status/Status"
@@ -49,7 +49,7 @@ export abstract class HazardStatus implements Status {
 
 /** A hazard left in the arena: the body it is, lying on the ground, and what it does. */
 export interface HazardSpec {
-    readonly look: SummonLook
+    readonly sprite: string
     readonly name: string
 
     /** The ground it covers, where its body lies: its middle. */
@@ -76,7 +76,7 @@ export interface HazardSpec {
  */
 export function placeHazard(battle: Battle, owner: Unit, spec: HazardSpec): Unit|null {
     const body = battle.place(owner, {
-        look: spec.look, name: spec.name, at: middleOf(spec.zone), hearts: spec.hearts, tangible: false,
+        sprite: spec.sprite, name: spec.name, at: middleOf(spec.zone), hearts: spec.hearts, tangible: false,
         zone: spec.zone, cards: spec.cards,
     })
     if(body && spec.status) battle.applyStatus(body, spec.status)

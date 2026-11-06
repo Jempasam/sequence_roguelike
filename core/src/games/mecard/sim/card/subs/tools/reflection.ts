@@ -14,15 +14,15 @@ export function reflected(
     battle: Battle, at: Vector2, direction: Vector2, clearance: number, slack: number, struck: Unit|null,
 ): Vector2|null {
     if(struck) return mirrored(direction, at.minus(struck.position).normalized)
-    const { width, height, pillars } = battle.arena
+    const { width, height } = battle.arena
     const reach = clearance + slack
     const flipX = at.x <= reach || at.x >= width - reach
     const flipY = at.y <= reach || at.y >= height - reach
     if(flipX || flipY){
         return new Vector2(flipX ? -direction.x : direction.x, flipY ? -direction.y : direction.y)
     }
-    const pillar = pillars.find(each => at.distance(each.center) <= each.radius + reach)
-    return pillar ? mirrored(direction, at.minus(pillar.center).normalized) : null
+    const pillar = battle.bodies.find(each => !each.touchable && at.distance(each.position) <= each.radius + reach)
+    return pillar ? mirrored(direction, at.minus(pillar.position).normalized) : null
 }
 
 /** A direction mirrored along a normal, none without a normal. */

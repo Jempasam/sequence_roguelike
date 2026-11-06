@@ -3,12 +3,12 @@ import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
 import { Vector2 } from "../base/Vector2"
 import type { ErrorSink } from "../base/Observable"
-import type { Rgba } from "../base/Rgba"
 import type { Card } from "../card/Card"
 
 import { CardChain } from "../card/CardChain"
 import type { Carried, UsableSlot } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
+import { SOLID_HEART } from "../heart/subs/SolidHeartKind"
 import type { Item } from "../item/Item"
 import type { Process } from "../process/Process"
 import type { Status, StatusType } from "../status/Status"
@@ -16,6 +16,7 @@ import { battleStateOf, saveBattle } from "../save/battleSave"
 import type { BattleSave, SaveOptions } from "../save/battleSave"
 import { planFor } from "../ai/Bot"
 import { Fleeting } from "../status/subs/Fleeting"
+import { Vanishing } from "../process/subs/Vanishing"
 
 import type { Action, ActionRun, PlugContext, Pose } from "./Action"
 import { touches } from "./Area"
@@ -26,19 +27,12 @@ import { labelEffect, polygonEffect } from "./effects"
 import type { BattleEvent, MoveEvent, Nature } from "./events"
 import { BattleSignals } from "./signals"
 import type { Effect } from "./signals"
-import type { Team } from "./Team"
+import { Team } from "./Team"
 import { COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, TICKS_PER_SECOND, UNBLOCK_DAMAGE } from "./rules"
-import { SUMMON_COLORS, Unit, UNIT_RADIUS } from "./Unit"
-import type { Controller, StatBases, SummonLook, UnitSpec, UnitStats } from "./Unit"
+import { Unit, UNIT_RADIUS } from "./Unit"
+import type { Controller, StatBases, UnitSpec, UnitStats } from "./Unit"
+import { HERO_COLORS, MONSTER_COLORS, SUMMON_PALETTE } from "./palettes"
 import { DECK } from "../base/keywords"
-
-/** The colors of the units of the first team, in the order they enter. */
-const HERO_COLORS: readonly Rgba[] = [rgba(0.35, 0.6, 1), rgba(0.4, 0.85, 0.45), rgba(0.75, 0.5, 1)]
-
-/** The colors of the units of the other teams, in the order they enter. */
-const MONSTER_COLORS: readonly Rgba[] = [
-    rgba(0.95, 0.35, 0.3), rgba(1, 0.6, 0.25), rgba(0.85, 0.3, 0.6), rgba(0.75, 0.75, 0.3),
-]
 
 /**
  * Where a battle stands: waiting for its round to start and draw, its preparation, its execution, or its
@@ -198,6 +192,9 @@ export class Battle {
     /** The team left standing, none during the battle and for a draw. */
     public winner: Team|null = null
 
+    /** The team of the scenery, pillars, none until one is set up. */
+    public scenery: Team|null = null
+
     /** The unit whose action plays, or played last this round, none before the first. */
     public actor: Unit|null = null
 
@@ -330,9 +327,26 @@ export class Battle {
         return this.units.filter(unit => unit.alive)
     }
 
-    /** The units still standing whose body takes room: what blocks the way, is aimed at and hit. */
+    /** The units still standing whose body takes room: what blocks the way. */
     public get bodies(): Unit[] {
         return this.units.filter(unit => unit.alive && unit.tangible)
+    }
+
+    /** The bodies that blows and zones touch: all but the scenery, a pillar. */
+    public get touchables(): Unit[] {
+        return this.bodies.filter(unit => unit.touchable)
+    }
+
+    /** Set up a pillar of stone: a body that blocks, is never aimed at, touched or moved by others. */
+    public addPillar(center: Vector2, radius: number): Unit {
+        this.scenery ??= new Team("Décor")
+        const pillar = new Unit({
+            name: "Pilier", sprite: "pillar", team: this.scenery, controller: "bot", position: center,
+            direction: Vector2.DOWN, hearts: [new Heart(SOLID_HEART)], decks: [], decisive: false,
+            bases: { size: radius / UNIT_RADIUS, targetable: false, touchable: false, movable: false },
+        }, this)
+        this.#enter(pillar)
+        return pillar
     }
 
     /** The teams, in the order their first unit entered. */
@@ -342,28 +356,28 @@ export class Battle {
 
     /** The living units whose body takes room and an area touches, in the order they entered. */
     public unitsIn(area: Area, except: Unit|null = null): Unit[] {
-        return this.bodies.filter(unit => unit !== except && touches(area, unit.position, unit.radius))
+        return this.touchables.filter(unit => unit !== except && touches(area, unit.position, unit.radius))
     }
 
     /**
-     * Is there room for a body at a point: within the walls, off the pillars and the others?
+     * Is there room for a body at a point: within the walls, off the others?
      *
      * @param except - The unit whose body it is, which is never in its own way.
      * @param radius - The radius of the body, that of the unit by default, else that of a body of size 1.
-     * @param slack - How much smaller the pillars and the others are taken to be, in meters.
+     * @param slack - How much smaller the others are taken to be, in meters.
      */
     public free(
         point: Vector2, except: Unit|null = null, radius = except?.radius ?? UNIT_RADIUS, slack = 0,
     ): boolean {
-        if(this.arena.solid(point, radius, slack)) return false
+        if(this.arena.solid(point, radius)) return false
         return !this.bodies.some(unit => {
             return unit !== except && unit.position.distance(point) < radius + unit.radius - slack
         })
     }
 
-    /** The living units of the other teams whose body takes room. */
+    /** The living units of the other teams whose body takes room and the others aim at. */
     public enemiesOf(unit: Unit): Unit[] {
-        return this.bodies.filter(other => other.team !== unit.team)
+        return this.bodies.filter(other => other.team !== unit.team && other.targetable)
     }
 
     /**
@@ -395,17 +409,14 @@ export class Battle {
         const from = pose.position
         const direction = pose.direction
         let reach = Math.min(range, this.#wallDistance(from, direction))
-        for(const pillar of this.arena.pillars){
-            const entry = entryDistance(from, direction, pillar.center, pillar.radius)
-            if(entry !== null) reach = Math.min(reach, entry)
-        }
         let hit: Unit|null = null
         for(const other of this.bodies){
             if(other === unit || through.includes(other)) continue
             const entry = entryDistance(from, direction, other.position, other.radius)
             if(entry !== null && entry <= reach){
                 reach = entry
-                hit = other
+                // Scenery stops the line without being hit.
+                hit = other.touchable ? other : null
             }
         }
         return { end: from.plus(direction.times(reach)), unit: hit }
@@ -563,7 +574,7 @@ export class Battle {
         // Every chain is given first, so whoever shows them sees them all from the first preparation on.
         for(const unit of this.initiative) this.#giveChain(unit)
         for(const unit of this.initiative){
-            if(unit.acting && !this.#plans.has(unit)){
+            if(!unit.decisive && unit.plays && !this.#plans.has(unit)){
                 this.#planSummon(unit)
                 this.#giveChain(unit)
             }
@@ -654,6 +665,8 @@ export class Battle {
      */
     public move(unit: Unit, direction: Vector2, distance: number, forced = false): Trip {
         if(!forced && !this.#canMove(unit)) return { to: unit.position, distance: 0, struck: null }
+        // What others move, a push, a wind, leaves the scenery where it stands.
+        if(forced && !unit.movable) return { to: unit.position, distance: 0, struck: null }
         const travel = this.travel(unit, unit.position, direction, distance)
         if(travel.distance < distance) this.events.push({ type: "blocked", unit })
         if(travel.distance > 0) this.#relocate(unit, travel.to, travel.distance / SHOVE_SPEED)
@@ -671,9 +684,12 @@ export class Battle {
      * obstacles: it stops at their contact, at the last point where it touched nothing.
      */
     public travel(unit: Unit, from: Vector2, direction: Vector2, distance: number): Trip {
+        const scenery = this.bodies.filter(body => !body.touchable)
         const clear = (point: Vector2, slack: number): boolean => unit.tangible
             ? this.free(point, unit, unit.radius, slack)
-            : !this.arena.solid(point, unit.radius, slack)
+            : !this.arena.solid(point, unit.radius) && !scenery.some(body => {
+                return body !== unit && body.position.distance(point) < unit.radius + body.radius - slack
+            })
         const steps = Math.max(1, Math.ceil(distance / TRAVEL_STEP))
         let reached = from
         let travelled = 0
@@ -681,7 +697,7 @@ export class Battle {
         for(let i = 1; i <= steps; i++){
             const next = from.plus(direction.times(distance * i / steps))
             if(!clear(next, COLLISION_SLACK)){
-                const struck = this.bodies.find(other => {
+                const struck = this.touchables.find(other => {
                     const touching = unit.radius + other.radius - COLLISION_SLACK
                     return other !== unit && other.position.distance(next) < touching
                 }) ?? null
@@ -815,6 +831,17 @@ export class Battle {
         }
     }
 
+    /** Take a unit out of the battle for good, nothing left of it: a clone at the end of its round. */
+    public vanish(unit: Unit): void {
+        const at = this.units.indexOf(unit)
+        if(at < 0) return
+        this.endProcesses(unit)
+        unit.hearts.unplug()
+        for(const status of unit.statuses.values()) status.remove({ battle: this, unit })
+        this.units.splice(at, 1)
+        this.signals.vanished.notify({ unit })
+    }
+
     /** End every process of a unit: each does what it does as it ends, then what it kept is taken back. */
     public endProcesses(unit: Unit): void {
         const plugs = this.#processes.get(unit)
@@ -890,9 +917,11 @@ export class Battle {
         const clone = new Unit({
             name: `${unit.name}'`, sprite: unit.sprite, team: unit.team, controller: unit.controller, position: spot,
             direction: unit.direction, hearts, decks: [],
-            temporary: true, bases: { size: unit.stats.size.value },
+            decisive: false, bases: { size: unit.stats.size.value },
         }, this)
+        clone.owner = unit
         this.#enter(clone)
+        this.startProcess(clone, new Vanishing())
         this.#followUp(unit, clone)
         return clone
     }
@@ -914,6 +943,7 @@ export class Battle {
             spec: { ...state.spec, name: `${unit.name}'`, controller: "bot", position: spot, hearts, usables: [] },
         })
         clone.owner = unit
+        if(unit.vanishing) this.startProcess(clone, new Vanishing())
         // The cards of its round go back to its decks too, or its loop would miss them from then on.
         const played = this.#played.get(unit)
         if(played) this.#played.set(clone, [...played])
@@ -985,10 +1015,10 @@ export class Battle {
      * when the point is taken.
      */
     public summon(
-        owner: Unit, look: SummonLook, name: string, at: Vector2, hearts: readonly Heart[],
+        owner: Unit, sprite: string, name: string, at: Vector2, hearts: readonly Heart[],
         direction: Vector2 = owner.direction,
     ): Unit|null {
-        const body = this.place(owner, { look, name, at, hearts, direction })
+        const body = this.place(owner, { sprite, name, at, hearts, direction })
         if(body) this.applyStatus(body, new Fleeting())
         return body
     }
@@ -1008,15 +1038,15 @@ export class Battle {
         const cards = body.cards ?? []
         const acting = cards.length > 0
         const placed = new Unit({
-            name: body.name, sprite: body.look, team: owner.team, controller: "bot", position: body.at,
+            name: body.name, sprite: body.sprite, team: owner.team, controller: "bot", position: body.at,
             direction: body.direction ?? owner.direction, hearts: body.hearts, decks: acting ? [cards] : [],
-            summoned: body.look,
-            tangible, zone: body.zone ?? null, acting,
+            decisive: false, zone: body.zone ?? null,
             bases: acting
                 ? {
-                    size, ordered: true, draw: cards.length, firstDraw: cards.length, chainSize: cards.length,
+                    size, tangible, ordered: true, draw: cards.length, firstDraw: cards.length,
+                    chainSize: cards.length,
                 }
-                : { size },
+                : { size, tangible },
         }, this)
         placed.owner = owner
         this.#enter(placed)
@@ -1129,7 +1159,7 @@ export class Battle {
         const order = this.#charactersOrder(round)
         // The summoned bodies that play and the perfect clones come right after their owner, in the order
         // they came.
-        for(const body of this.living.filter(unit => unit.acting || this.#followsOwner(unit))){
+        for(const body of this.living.filter(unit => (unit.plays && !unit.decisive) || this.#followsOwner(unit))){
             const index = body.owner ? order.indexOf(body.owner) : -1
             let at = index < 0 ? order.length : index + 1
             while(index >= 0 && at < order.length && order[at].owner === body.owner) at++
@@ -1140,14 +1170,12 @@ export class Battle {
 
     /** Is it a perfect clone whose maker still lives, whom it plays right after? */
     #followsOwner(unit: Unit): boolean {
-        return unit.character && unit.owner?.alive === true
+        return unit.decisive && unit.owner?.alive === true
     }
 
-    /** The characters in their order of play: one of each team in turn, the first shifting each round. */
+    /** The units that count for their team in their order of play: one of each team in turn, the first shifting each round. */
     #charactersOrder(round: number): Unit[] {
-        const standing = this.living.filter(unit => {
-            return !unit.temporary && unit.character && !this.#followsOwner(unit)
-        })
+        const standing = this.living.filter(unit => unit.decisive && !this.#followsOwner(unit))
         const byTeam = this.teams.map(team => standing.filter(unit => unit.team === team))
         const order: Unit[] = []
         const longest = Math.max(0, ...byTeam.map(units => units.length))
@@ -1197,10 +1225,11 @@ export class Battle {
      * entered, never from who gives the chains, so a battle loaded has the colors of the one saved.
      */
     #enter(unit: Unit): void {
-        const first = this.units.length === 0 || this.units[0].team === unit.team
-        const palette = first ? HERO_COLORS : MONSTER_COLORS
-        const rank = this.units.filter(other => other.team === unit.team && other.character).length
-        unit.color = unit.summoned ? SUMMON_COLORS[unit.summoned] : palette[rank % palette.length]
+        const mine = this.units.filter(other => other.decisive === unit.decisive)
+        const first = (this.units.find(other => other.decisive) ?? unit).team === unit.team
+        const palette = !unit.decisive ? SUMMON_PALETTE : first ? HERO_COLORS : MONSTER_COLORS
+        const rank = unit.decisive ? mine.filter(other => other.team === unit.team).length : mine.length
+        unit.color = palette[rank % palette.length]
         this.units.push(unit)
         this.#forward(unit)
         type Stat = [keyof UnitStats, UnitStats[keyof UnitStats]]
@@ -1422,14 +1451,8 @@ export class Battle {
         }
         this.#played.clear()
         for(const unit of this.units) unit.stepsPlayed.length = 0
-        // The clones vanish, and so do the hazards gone off or worn out: nothing is left of them.
-        const clones = this.units.filter(unit => unit.temporary || (unit.zone && !unit.alive))
-        for(const clone of clones){
-            clone.hearts.unplug()
-            for(const status of clone.statuses.values()) status.remove({ battle: this, unit: clone })
-            this.units.splice(this.units.indexOf(clone), 1)
-            this.signals.vanished.notify({ unit: clone })
-        }
+        // The hazards gone off or worn out vanish: nothing is left of them.
+        for(const hazard of this.units.filter(unit => unit.zone && !unit.alive)) this.vanish(hazard)
         this.#pass = 0
         this.actor = null
         this.#checkOver()
@@ -1453,7 +1476,7 @@ export class Battle {
 
     #checkOver(): void {
         if(this.phase === "over") return
-        const standing = new Set(this.living.filter(unit => !unit.temporary && unit.character).map(unit => {
+        const standing = new Set(this.living.filter(unit => unit.decisive && !unit.vanishing).map(unit => {
             return unit.team
         }))
         if(standing.size > 1) return
@@ -1546,8 +1569,7 @@ function unitState(unit: Unit): UnitState {
             position: unit.position,
             direction: unit.direction, hearts: unit.hearts.all, decks: unit.decks.all.map(() => []),
             items: unit.items,
-            usables: unit.usables, temporary: unit.temporary, summoned: unit.summoned,
-            tangible: unit.tangible, zone: unit.zone, acting: unit.acting,
+            usables: unit.usables, decisive: unit.decisive, zone: unit.zone,
         },
         hand: [...unit.hand],
         decks: unit.decks.all.map(deck => ({ pile: [...deck.pile], discard: [...deck.discard] })),
@@ -1559,7 +1581,8 @@ function unitState(unit: Unit): UnitState {
 
 /** A body left in the arena for a unit, by {@link Battle.place}. */
 export interface PlacedBody {
-    readonly look: SummonLook
+    /** Its picture, by its name among the sprites of the units. */
+    readonly sprite: string
     readonly name: string
     readonly at: Vector2
     readonly hearts: readonly Heart[]

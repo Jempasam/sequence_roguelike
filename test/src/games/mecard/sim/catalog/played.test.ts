@@ -7,6 +7,8 @@ import {
 } from "@game/core/mecard"
 import type { Card, CardType } from "@game/core/mecard"
 
+import { withPillars } from "../fixtures"
+
 // --- Fixture builders ---
 
 /** How many rounds each battle is played for at most. */
@@ -82,7 +84,7 @@ function played(card: Card, index: number): Card {
 
 /** A battle of two bots on each side, each holding every card of the loot as a tree that plays. */
 function lootBattle(seed: number): Battle {
-    const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3.5, 3.5), radius: 0.4 }]), seed)
+    const on = withPillars(new Battle(new Arena(7, 7), seed), { center: new Vector2(3.5, 3.5), radius: 0.4 })
     const cards = LOOT_CARDS.map((card, index) => played(card, index + seed))
     for(const [side, team] of [new Team("A"), new Team("B")].entries()){
         for(const rank of [0, 1]){

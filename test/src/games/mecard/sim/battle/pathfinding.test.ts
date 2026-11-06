@@ -2,12 +2,12 @@ import { describe, expect, test } from "vitest"
 import { Arena, Battle, PATH_AIM, pathTo, STEP, Vector2 } from "@game/core/mecard"
 import type { Pillar } from "@game/core/mecard"
 
-import { chain, MONSTERS, play, unit } from "../fixtures"
+import { chain, MONSTERS, play, unit, withPillars } from "../fixtures"
 
 /** A battle on an arena of 7 by 7 with pillars at some points, each 0.45 m wide. */
 function among(...points: readonly (readonly [number, number])[]): Battle {
     const pillars: Pillar[] = points.map(([x, y]) => ({ center: new Vector2(x, y), radius: 0.45 }))
-    return new Battle(new Arena(7, 7, pillars), 1)
+    return withPillars(new Battle(new Arena(7, 7), 1), ...pillars)
 }
 
 // --- Tests ---

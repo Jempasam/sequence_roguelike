@@ -4,7 +4,7 @@ import {
     SHADOW_STEP, Vector2,
 } from "@game/core/mecard"
 
-import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
+import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../../fixtures"
 
 // --- Tests ---
 
@@ -40,7 +40,7 @@ describe("LEAP", () => {
     })
 
     test("landing on a pillar → thrown aside for a heart", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3, 3), radius: 0.3 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.3 })
         const hero = unit(on, 3, 6)
         unit(on, 6, 1, { team: MONSTERS })
         play(on, [[hero, chain(LEAP)]])
@@ -154,7 +154,7 @@ describe("SHADOW_STEP", () => {
     })
 
     test("a pillar in the way → stops there, no way through", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3, 3), radius: 0.5 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.5 })
         const hero = unit(on, 3, 4.5)
         unit(on, 6, 1, { team: MONSTERS })
         play(on, [[hero, chain(SHADOW_STEP)]])

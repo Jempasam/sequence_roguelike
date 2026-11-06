@@ -4,8 +4,9 @@ import {
     HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, SHIELD_HEART, SHOT, SLASH, STEP,
     STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURN_RIGHT, UNIT_RADIUS, Vector2, WAIT,
 } from "@game/core/mecard"
+import type { Unit } from "@game/core/mecard"
 
-import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
+import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../fixtures"
 
 // --- Tests ---
 
@@ -83,7 +84,7 @@ describe("Battle round", () => {
 describe("Collisions", () => {
     /** A battle with a pillar 0.5 m wide at (3.5, 3). */
     function pillared(): Battle {
-        return new Battle(new Arena(7, 7, [{ center: new Vector2(3.5, 3), radius: 0.5 }]), 1)
+        return withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3.5, 3), radius: 0.5 })
     }
 
     test("brushing past a pillar → goes on", () => {
@@ -115,6 +116,49 @@ describe("Collisions", () => {
         const walker = unit(on, 3.5, 3.82)
         const gone = on.travel(walker, walker.position, new Vector2(1, 0), 1)
         expect(gone.distance).toBeCloseTo(1)
+    })
+
+    test("a pillar → a body of the battle, off the order of play, never aimed at nor touched", () => {
+        const on = pillared()
+        const hero = unit(on, 1, 5)
+        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        expect(pillar.decisive).toBe(false)
+        expect(pillar.radius).toBeCloseTo(0.5)
+        expect(on.bodies).toContain(pillar)
+        expect(on.touchables).not.toContain(pillar)
+        expect(on.enemiesOf(hero)).not.toContain(pillar)
+        expect(on.free(new Vector2(3.5, 3), null)).toBe(false)
+        on.startRound()
+        expect(on.initiative).toEqual([hero])
+    })
+
+    test("a ray into a pillar → stops there, hitting nobody", () => {
+        const on = pillared()
+        const shooter = unit(on, 3.5, 5)
+        const hit = on.ray(shooter, 6, { position: shooter.position, direction: Vector2.UP })
+        expect(hit.unit).toBeNull()
+        expect(hit.end.y).toBeCloseTo(3.5)
+    })
+
+    test("a push → leaves a pillar where it stands", () => {
+        const on = pillared()
+        const pusher = unit(on, 1, 5)
+        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        on.push(pillar, Vector2.RIGHT, 1, pusher)
+        expect(pillar.position.equals(new Vector2(3.5, 3))).toBe(true)
+    })
+
+    test("a pillar playing a step itself → moves", () => {
+        const on = pillared()
+        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        expect(on.move(pillar, Vector2.RIGHT, 1).distance).toBeGreaterThan(0)
+    })
+
+    test("a pillar → saved and loaded back, once", () => {
+        const on = pillared()
+        unit(on, 1, 5)
+        const loaded = Battle.restore(on.state())
+        expect(loaded.units.filter(each => each.sprite === "pillar")).toHaveLength(1)
     })
 
     test("straight into a body → the body is struck, the true contact kept", () => {
@@ -167,7 +211,7 @@ describe("Free positions", () => {
     })
 
     test("a pillar between → the shot stops on it", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3, 3), radius: 0.45 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.45 })
         const shooter = unit(on, 3, 6)
         const behind = unit(on, 3, 1, { team: MONSTERS })
         play(on, [[shooter, chain(SHOT)]])
@@ -267,7 +311,7 @@ describe("Steps of others", () => {
     })
 
     test("a hypnosis → goes through a pillar", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3.5, 3.5), radius: 0.5 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3.5, 3.5), radius: 0.5 })
         const caster = unit(on, 3, 5)
         const target = unit(on, 3, 2, { team: MONSTERS, direction: Vector2.LEFT })
         play(on, [[caster, chain(HYPNOSIS, STEP)]])
@@ -302,6 +346,21 @@ describe("Steps of others", () => {
         expect(clone).toBeDefined()
         expectAt(maker, 3, 3)
         expect(on.units).toHaveLength(2)
+    })
+
+    test("a clone → carries a vanishing process and counts for no team, gone at the round's end", () => {
+        const on = battle()
+        const maker = unit(on, 3, 5)
+        unit(on, 0, 0, { team: MONSTERS })
+        on.startRound()
+        const clone = on.clone(maker, [new Heart(RED_HEART), new Heart(RED_HEART)]) as Unit
+        expect(clone.vanishing).toBe(true)
+        expect(clone.decisive).toBe(false)
+        const gone: Unit[] = []
+        on.signals.vanished.add(({ unit: each }) => gone.push(each))
+        play(on, [])
+        expect(gone).toEqual([clone])
+        expect(on.units).not.toContain(clone)
     })
 
     test("a burn → a heart at the end of the round", () => {
@@ -443,7 +502,7 @@ describe("Battle.unblock", () => {
     })
 
     test("throws a unit off a pillar", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3, 3), radius: 0.45 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.45 })
         const stuck = unit(on, 3, 3)
         on.unblock(stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)

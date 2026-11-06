@@ -4,11 +4,11 @@ import {
     RANGE_COLOR, RED_HEART, ROOTED, STURDY_AIM, SWAP, Vector2, VINE,
 } from "@game/core/mecard"
 
-import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
+import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../../fixtures"
 
 /** A battle on an arena of 7 by 7 with one pillar at its middle. */
 function pillared(): Battle {
-    return new Battle(new Arena(7, 7, [{ center: new Vector2(3.5, 2), radius: 0.5 }]), 1)
+    return withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3.5, 2), radius: 0.5 })
 }
 
 /** Two full red hearts. */

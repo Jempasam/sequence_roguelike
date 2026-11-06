@@ -189,7 +189,7 @@ export class BarrelCard extends PotionActionCard {
 
     protected shows(_battle: Battle, _unit: Unit, pose: Pose, dose: Dose): Indicator[] {
         const at = this.#spot(pose)
-        return [summonShown("barrel", at), shown(dose, { kind: "circle", center: at, radius: SPLASH_RADIUS })]
+        return [summonShown(at), shown(dose, { kind: "circle", center: at, radius: SPLASH_RADIUS })]
     }
 
 

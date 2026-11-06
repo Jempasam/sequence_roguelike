@@ -7,6 +7,11 @@ export const GAP = 3
 /** The share of the width of the interface each side column takes: the middle one takes the rest. */
 const SIDE_SHARE = 0.29
 
+/** How wide each side column is for an interface of a width, in virtual pixels. */
+export function sideWidth(width: number): number {
+    return Math.floor(width * SIDE_SHARE)
+}
+
 /** A rectangle of the interface, in virtual pixels. */
 export interface UiRect {
     readonly left: number
@@ -20,12 +25,18 @@ export interface BattleRows {
     readonly chain: number
     readonly hand: number
     readonly info: number
+
+    /** How tall the usables above the journal are, none when the unit selected carries none. */
+    readonly usables: number
 }
 
 /** Where each zone of the battle screen lies. */
 export interface BattleGrid {
     /** The stats of the unit selected. */
     readonly stats: UiRect
+
+    /** What the unit selected carries to use, between the stats and the journal. */
+    readonly usables: UiRect
 
     /** What happened lately. */
     readonly journal: UiRect
@@ -54,6 +65,7 @@ export interface BattleGrid {
  *
  * ```
  * stats    map    units
+ * usables  map    units
  * journal  chain  units
  * journal  hand   decks
  * journal  info   info
@@ -64,7 +76,7 @@ export interface BattleGrid {
  * @param width - The size of the interface, in virtual pixels.
  */
 export function battleGrid(width: number, height: number, rows: BattleRows): BattleGrid {
-    const side = Math.floor(width * SIDE_SHARE)
+    const side = sideWidth(width)
     const firstRight = MARGIN + side
     const lastLeft = width - MARGIN - side
     const middleLeft = firstRight + GAP
@@ -76,8 +88,11 @@ export function battleGrid(width: number, height: number, rows: BattleRows): Bat
     const chainBottom = handTop - GAP
     const chainTop = chainBottom - rows.chain
     const mapBottom = Math.max(MARGIN, chainTop - GAP)
+    const usablesTop = mapBottom - rows.usables
+    const statsBottom = rows.usables > 0 ? Math.max(MARGIN, usablesTop - GAP) : mapBottom
     return {
-        stats: { left: MARGIN, top: MARGIN, right: firstRight, bottom: mapBottom },
+        stats: { left: MARGIN, top: MARGIN, right: firstRight, bottom: statsBottom },
+        usables: { left: MARGIN, top: rows.usables > 0 ? statsBottom + GAP : mapBottom, right: firstRight, bottom: mapBottom },
         journal: { left: MARGIN, top: chainTop, right: firstRight, bottom },
         map: { left: middleLeft, top: MARGIN, right: middleRight, bottom: mapBottom },
         units: { left: lastLeft, top: MARGIN, right: width - MARGIN, bottom: chainBottom },

@@ -1,6 +1,6 @@
 import { Vector2 } from "../base/Vector2"
 
-/** A round pillar of stone: nothing walks or shoots through it. */
+/** A round pillar of stone: where one stands and how wide it is, to be set up in a battle. */
 export interface Pillar {
     readonly center: Vector2
 
@@ -9,14 +9,11 @@ export interface Pillar {
 }
 
 /**
- * The room a battle is fought in: its size in meters, and its pillars. Positions are free: the grid drawn
- * on the floor is a ruler for the eye, not a constraint.
+ * The room a battle is fought in: its size in meters. Positions are free: the grid drawn on the floor is a
+ * ruler for the eye, not a constraint. What stands in it, pillars included, is made of units.
  */
 export class Arena {
 
-
-    /** The pillars, which stop movement and attacks. */
-    public readonly pillars: readonly Pillar[]
 
     constructor(
         /** Its width, in meters. */
@@ -24,11 +21,7 @@ export class Arena {
 
         /** Its height, in meters. */
         public readonly height: number,
-
-        pillars: readonly Pillar[] = [],
-    ){
-        this.pillars = [...pillars]
-    }
+    ){}
 
 
     /** Does a disc of a radius around a point lie within the walls? */
@@ -44,13 +37,8 @@ export class Arena {
         return new Vector2(x, y)
     }
 
-    /**
-     * Does a disc of a radius around a point cross a wall or a pillar?
-     *
-     * @param slack - How much smaller the pillars are taken to be, in meters. The walls stay where they are.
-     */
-    public solid(point: Vector2, radius: number, slack = 0): boolean {
-        if(!this.inside(point, radius)) return true
-        return this.pillars.some(pillar => pillar.center.distance(point) < pillar.radius + radius - slack)
+    /** Does a disc of a radius around a point cross a wall? */
+    public solid(point: Vector2, radius: number): boolean {
+        return !this.inside(point, radius)
     }
 }

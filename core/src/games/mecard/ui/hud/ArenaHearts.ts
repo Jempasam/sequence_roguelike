@@ -2,12 +2,18 @@ import { Box } from "../../../../engine/ui"
 import type { Layer, Theme } from "../../../../engine/ui"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Heart } from "../../sim/heart/Heart"
+import { SOLID_HEART } from "../../sim/heart/subs/SolidHeartKind"
 import type { Process } from "../../sim/process/Process"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { BattleScene } from "../battle/BattleScene"
 
 import { heartsRow } from "./HeartView"
 import { processRow } from "./ProcessView"
+
+/** Does a unit hold nothing but solid hearts, which no wound takes? */
+function onlySolid(unit: Unit): boolean {
+    return unit.hearts.all.every(heart => heart.kind === SOLID_HEART)
+}
 
 /**
  * The hearts of the units over the arena, in a layer of the interface of their own: the same rows as in the
@@ -44,6 +50,8 @@ export class ArenaHearts {
         this.#rows.clear()
         const { litHeart, litProcess } = scene
         for(const { unit, hearts, processes } of scene.living){
+            // What holds only solid hearts, a pillar, has no life to show.
+            if(onlySolid(unit)) continue
             const block = new Box("column", { gap: 1, align: "center" })
             const lit = litHeart?.unit === unit ? litHeart.indexes : []
             const row = heartsRow(this.theme, hearts, (heart, over) => this.onHover(unit, heart, over), lit)

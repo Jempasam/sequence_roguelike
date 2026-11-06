@@ -54,7 +54,7 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
         const clearOfOthers = !unit.tangible || others.every(other => {
             return other.position.distance(point) >= unit.radius + other.radius - COLLISION_SLACK
         })
-        const can = clearOfOthers && !battle.arena.solid(point, unit.radius, COLLISION_SLACK)
+        const can = clearOfOthers && !battle.arena.solid(point, unit.radius)
         standing.set(cell, can)
         return can
     }

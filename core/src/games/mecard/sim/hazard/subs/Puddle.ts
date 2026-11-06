@@ -69,7 +69,7 @@ export function placePuddle(
     battle: Battle, owner: Unit, center: Vector2, dose: Dose, level: number, rounds: number,
 ): Unit|null {
     return placeHazard(battle, owner, {
-        look: "puddle", name: `Flaque de ${dose.potion}`,
+        sprite: "puddle", name: `Flaque de ${dose.potion}`,
         zone: { kind: "circle", center, radius: PUDDLE_RADIUS },
         hearts: Heart.many(TIME_HEART, rounds),
         status: new Puddle(dose, level),

@@ -2,6 +2,10 @@ import { Atlas } from "../../../../engine/atlas"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import type { Gpu, Sprite } from "../../../../engine/gpu"
 import { ITEMS, USABLES } from "../../sim/catalog"
+import { Rope } from "../../../../engine/ui"
+import type { NineSlice } from "../../../../engine/ui"
+import { BagView } from "../hud/BagView"
+import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
 
 /** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
 const SPRITE_PATHS: Readonly<Record<string, ImagePath>> = {
@@ -44,6 +48,7 @@ const SPRITE_PATHS: Readonly<Record<string, ImagePath>> = {
     tornado: "mecard/units/tornado.png",
     wave: "mecard/units/wave.png",
     rock: "mecard/units/rock.png",
+    pillar: "mecard/units/pillar.png",
     mine: "mecard/units/mine.png",
     shadow: "mecard/units/shadow.png",
     coin: "mecard/units/coin.png",
@@ -64,6 +69,7 @@ const ICON_PATHS: Readonly<Record<string, ImagePath>> = {
     haste: "mecard/processes/haste.png",
     ritual: "mecard/processes/ritual.png",
     shadow_link: "mecard/processes/shadow_link.png",
+    vanishing: "mecard/processes/vanishing.png",
 }
 
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
@@ -110,6 +116,26 @@ export class UnitSprites {
         return this.#invalidCard
     }
 
+    /** The worn paper of the maps, the arena lying on it, none before it is loaded. */
+    public get paper(): Sprite|null {
+        return this.#paper
+    }
+
+    /** The leather frame of the bags of items and usables, none before it is loaded. */
+    public get bag(): NineSlice|null {
+        return this.#bag
+    }
+
+    /** The darker spot under what stands on the arena, none before it is loaded. */
+    public get shade(): Sprite|null {
+        return this.#shade
+    }
+
+    /** The line of the paths of the maps, the grid of the arena drawn with it, none before it is loaded. */
+    public get rope(): Rope|null {
+        return this.#rope
+    }
+
     /** Call something once the sprites are loaded: at once when they are already. */
     public whenLoaded(listener: () => void): void {
         if(this.loaded) listener()
@@ -127,7 +153,12 @@ export class UnitSprites {
         const paths = [...named, ...icons].map(([, path]) => path)
         const others = [...CARD_BACK_PATHS, INVALID_CARD_PATH]
         const things = [...new Set([...ITEMS, ...USABLES].map(thing => thing.icon))]
-        const pictures = await Promise.all([...paths, ...others, ...things].map(path => assets.image(path)))
+        const all = [...paths, ...others, ...things, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
+        const [pictures, bag] = await Promise.all([
+            Promise.all(all.map(path => assets.image(path))),
+            BagView.loadFrame(gpu, assets),
+        ])
+        this.#bag = bag
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
         things.forEach((path, index) => {
@@ -138,6 +169,9 @@ export class UnitSprites {
         const backs = entries.slice(paths.length, paths.length + CARD_BACK_PATHS.length)
         this.#cardBacks = backs.map(entry => atlas.sprite(entry))
         this.#invalidCard = atlas.sprite(entries[paths.length + CARD_BACK_PATHS.length])
+        this.#paper = atlas.sprite(entries[all.length - 3])
+        this.#rope = new Rope(atlas.sprite(entries[all.length - 2]))
+        this.#shade = atlas.sprite(entries[all.length - 1])
         for(const listener of this.#listeners.splice(0)) listener()
     }
 
@@ -148,4 +182,8 @@ export class UnitSprites {
     readonly #listeners: (() => void)[] = []
     #cardBacks: readonly Sprite[] = []
     #invalidCard: Sprite|null = null
+    #paper: Sprite|null = null
+    #rope: Rope|null = null
+    #shade: Sprite|null = null
+    #bag: NineSlice|null = null
 }

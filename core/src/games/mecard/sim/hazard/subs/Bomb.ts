@@ -13,7 +13,7 @@ export const BOMB_RADIUS = 0.2
 /** Leave a bomb thrown by a unit: it plays right after it, waits, then blows up at the next pass. */
 export function placeBomb(battle: Battle, owner: Unit, center: Vector2): Unit|null {
     return placeHazard(battle, owner, {
-        look: "bomb", name: "Bombe", zone: { kind: "circle", center, radius: BOMB_RADIUS },
+        sprite: "bomb", name: "Bombe", zone: { kind: "circle", center, radius: BOMB_RADIUS },
         hearts: [new Heart(TIME_HEART)], cards: [WAIT, KAMIKAZE],
     })
 }

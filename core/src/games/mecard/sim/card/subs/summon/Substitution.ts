@@ -48,7 +48,7 @@ export class SubstitutionCard extends ActionCard {
                 const travelled = battle.travel(unit, pose.position, pose.direction.opposite, distance)
                 const dash = arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)
                 if(travelled.distance === 0) return still(pose, dash)
-                return still({ ...pose, position: travelled.to }, dash, summonShown("log", pose.position))
+                return still({ ...pose, position: travelled.to }, dash, summonShown(pose.position))
             },
         }
     }

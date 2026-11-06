@@ -42,7 +42,7 @@ export function placeWhirlwind(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const body = battle.place(owner, {
-        look: "tornado", name: "Tourbillon", at, direction, tangible: false,
+        sprite: "tornado", name: "Tourbillon", at, direction, tangible: false,
         hearts: Heart.many(TIME_HEART, WHIRLWIND_ROUNDS),
         cards: new Array(WHIRLWIND_STEPS).fill(RANDOM_STEP),
     })

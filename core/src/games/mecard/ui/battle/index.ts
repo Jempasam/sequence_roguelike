@@ -5,3 +5,4 @@
 
 export * from "./BattleScene"
 export * from "./BattleAnimations"
+export * from "./BoardView"

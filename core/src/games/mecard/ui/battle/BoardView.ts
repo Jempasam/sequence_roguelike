@@ -2,11 +2,11 @@ import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import type { BitmapFont } from "../../../../engine/text"
-import { outline } from "../../sim/battle/Area"
+import { outline, touches } from "../../sim/battle/Area"
 import { BURN } from "../../sim/status/subs/Burn"
 import { DODGE } from "../../sim/status/subs/Dodge"
 import { ROOTED } from "../../sim/status/subs/Rooted"
-import type { Vector2 } from "../../sim/base/Vector2"
+import { Vector2 } from "../../sim/base/Vector2"
 import type { Indicator } from "../../sim/battle/Action"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
@@ -34,10 +34,8 @@ const LABEL_HALF_HEIGHT = 4
 /** How long the head of an arrow is, at least, in pixels. */
 const ARROW_HEAD = 5
 
-const FLOOR = new Color(0.13, 0.11, 0.17)
-const GRID = new Color(0.18, 0.16, 0.23)
-const PILLAR = new Color(0.36, 0.33, 0.4)
-const PILLAR_TOP = new Color(0.46, 0.43, 0.5)
+/** The ink of the grid, as the paths of the map of the journey. */
+const GRID = new Color(0.3, 0.2, 0.13, 0.35)
 const INK = new Color(0.05, 0.04, 0.08)
 const FIRE = new Color(1, 0.45, 0.1, 0.45)
 const BOMB = new Color(0.08, 0.08, 0.1)
@@ -55,8 +53,20 @@ const SPRITE_DISC_ALPHA = 0.45
 /** How far below the middle of the body the feet of a sprite stand, in pixels. */
 const FEET_DROP = 1
 
+/** Added to the size of a unit that is only found by the ground it covers: it ranks after any body. */
+const ZONE_RANK = 100
+
+/** Added to the size of a unit that takes no room: it ranks after a unit of the same size standing there. */
+const GROUND_RANK = 0.01
+
 /** How many sides the outline of a hitbox is drawn with. */
 const HITBOX_SIDES = 24
+
+/** How large the shade under a thing is, as a share of its size. */
+const SHADE_SIZE = 1.5
+
+/** How thick the lines of the grid are, in pixels. */
+const GRID_THICKNESS = 2
 
 /** The dot each status is shown by, under its unit. */
 const STATUS_DOTS = new Map<StatusType, Color>([
@@ -72,7 +82,19 @@ export interface WorldRect {
 }
 
 /**
- * The arena of the battle, drawn in the low resolution world each frame from the scene: the units where the
+ * The units to draw over the ground, in the order they overlap: those that take no room first, then each
+ * one over the units farther up the arena, as a thing nearer the viewer stands over what lies behind it.
+ * Those covering a zone are left out, drawn on the ground before. Units level with each other keep their
+ * order.
+ */
+export function drawOrder(units: readonly SceneUnit[]): SceneUnit[] {
+    return units
+        .filter(shown => !shown.unit.zone)
+        .sort((a, b) => Number(a.unit.tangible) - Number(b.unit.tangible) || a.position.y - b.position.y)
+}
+
+/**
+ * The arena of the battle, drawn by its {@link ArenaView} each frame from the scene: the units where the
  * replay has them, what it shows over the arena, what it lights up, and the preview of what is hovered.
  *
  * @remarks
@@ -136,17 +158,34 @@ export class BoardView {
             const scale = this.#spriteScale(unit.stats.size.value)
             return [cx, cy + (FEET_DROP - sprite.height) * scale - 1]
         }
-        const radius = unit.radius * this.#meter * (unit.temporary ? 0.75 : 1)
+        const radius = unit.radius * this.#meter * (unit.vanishing ? 0.75 : 1)
         return [cx, cy - radius - 1]
     }
 
-    /** The living unit whose body lies under a point of the world, none when none does. */
+    /**
+     * The living unit lying under a point of the world, none when none does: any unit, one that takes no
+     * room and a pillar too. Where several lie there, the body that is hit first wins, the smallest of
+     * them, so what lies under a unit never hides it; a ground covered only by the zone of a unit comes last.
+     */
     public unitAt(x: number, y: number): Unit|null {
         const meter = this.#meter
-        return this.#bodies().find(shown => {
+        const at = new Vector2((x - this.#left) / meter, (y - this.#top) / meter)
+        let found: Unit|null = null
+        let best = Infinity
+        for(const shown of this.scene.living){
+            const { unit } = shown
             const [cx, cy] = this.#pixels(shown.position)
-            return Math.hypot(x - cx, y - cy) <= shown.unit.radius * meter + 1
-        })?.unit ?? null
+            const onBody = Math.hypot(x - cx, y - cy) <= unit.radius * meter + 1
+            const onZone = unit.zone !== null && touches(unit.zone, at, 0)
+            if(!onBody && !onZone) continue
+            // A body lying on the ground comes after one standing, of the same size.
+            const rank = (onBody ? 0 : ZONE_RANK) + unit.radius + (unit.tangible ? 0 : GROUND_RANK)
+            if(rank <= best){
+                best = rank
+                found = unit
+            }
+        }
+        return found
     }
 
     /** Draw the arena and what is shown over it. */
@@ -162,9 +201,9 @@ export class BoardView {
         painter.push()
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
-        this.#drawHitboxes(painter, battle)
+        this.#drawHitboxes(painter)
         painter.pop()
-        for(const shown of this.scene.living) if(!shown.unit.zone) this.#drawUnit(painter, shown)
+        for(const shown of drawOrder(this.scene.living)) this.#drawUnit(painter, shown)
         // What is shown over the arena stays in it: a reach wider than the room is cut at its walls.
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
@@ -191,11 +230,8 @@ export class BoardView {
      * The hitbox of every body, a pale disc with its edge: the units, the clones however small they look,
      * and the pillars. What touches what reads at a glance.
      */
-    #drawHitboxes(painter: Painter, battle: Battle): void {
-        const bodies = [
-            ...this.#bodies().map(shown => ({ center: shown.position, radius: shown.unit.radius })),
-            ...battle.arena.pillars,
-        ]
+    #drawHitboxes(painter: Painter): void {
+        const bodies = this.#bodies().map(shown => ({ center: shown.position, radius: shown.unit.radius }))
         for(const { center, radius } of bodies){
             const [cx, cy] = this.#pixels(center)
             const pixels = radius * this.#meter
@@ -211,20 +247,37 @@ export class BoardView {
     }
 
     #drawFloor(painter: Painter, battle: Battle): void {
-        const { width, height, pillars } = battle.arena
+        const { width, height } = battle.arena
         const meter = this.#meter
-        painter.setTint(FLOOR)
-        painter.rect(this.#left, this.#top, width * meter, height * meter)
+        // No floor of its own: the paper under the arena shows, the grid lying on it.
         painter.setTint(GRID)
-        for(let x = 1; x < width; x++) painter.rect(this.#left + x * meter, this.#top, 1, height * meter)
-        for(let y = 1; y < height; y++) painter.rect(this.#left, this.#top + y * meter, width * meter, 1)
-        for(const pillar of pillars){
-            const [cx, cy] = this.#pixels(pillar.center)
-            painter.setTint(PILLAR)
-            painter.circle(cx, cy, pillar.radius * meter)
-            painter.setTint(PILLAR_TOP)
-            painter.circle(cx - 1, cy - 1, Math.max(1, pillar.radius * meter - 3))
+        // The lines of the grid have the picture of the paths of the map of the journey, when loaded.
+        const rope = this.sprites.rope
+        const line = (ax: number, ay: number, bx: number, by: number): void => {
+            if(rope) rope.draw(painter, { x: ax, y: ay }, { x: bx, y: by }, GRID_THICKNESS)
+            else painter.rect(Math.min(ax, bx), Math.min(ay, by), Math.max(1, bx - ax), Math.max(1, by - ay))
         }
+        const right = this.#left + width * meter
+        const bottom = this.#top + height * meter
+        for(let x = 1; x < width; x++) line(this.#left + x * meter, this.#top, this.#left + x * meter, bottom)
+        for(let y = 1; y < height; y++) line(this.#left, this.#top + y * meter, right, this.#top + y * meter)
+    }
+
+    /** The darker spot under a thing of the arena, centered on it, as wide as 1.5 times its size in pixels. */
+    #drawShade(painter: Painter, cx: number, cy: number, size: number, opacity = 1): void {
+        const shade = this.sprites.shade
+        if(!shade) return
+        const scale = size * SHADE_SIZE / shade.width
+        painter.setBlend("alpha")
+        painter.setTint(this.#faded.set(1, 1, 1, opacity))
+        painter.push()
+        painter.translate(Math.round(cx - shade.width * scale / 2), Math.round(cy - shade.height * scale / 2))
+        painter.scale(scale, scale)
+        // The picture is faint: drawn twice, it darkens the paper enough to tell where a thing stands.
+        painter.sprite(shade, 0, 0)
+        painter.sprite(shade, 0, 0)
+        painter.pop()
+        painter.setBlend("cutout")
     }
 
     /**
@@ -238,11 +291,12 @@ export class BoardView {
             const sprite = this.sprites.of(unit.sprite)
             if(sprite){
                 const [x, y] = this.#pixels(position)
+                this.#drawShade(painter, x, y, this.#meter)
                 painter.setBlend("alpha")
                 // What it covers shows under its picture, when it acts on the whole of its zone.
-                if(unit.summoned === "fire" || unit.summoned === "puddle"){
+                if(unit.sprite === "fire" || unit.sprite === "puddle"){
                     const { r, g, b, a } = unit.color
-                    painter.setTint(unit.summoned === "fire" ? FIRE : this.#faded.set(r, g, b, a))
+                    painter.setTint(unit.sprite === "fire" ? FIRE : this.#faded.set(r, g, b, a))
                     this.#fillPolygon(painter, outline(zone))
                 }
                 painter.setTint(this.#faded.set(1, 1, 1, 1))
@@ -256,15 +310,16 @@ export class BoardView {
                 painter.setBlend("cutout")
                 continue
             }
-            if(unit.summoned !== "bomb"){
+            if(unit.sprite !== "bomb"){
                 painter.setBlend("alpha")
                 const { r, g, b, a } = unit.color
-                painter.setTint(unit.summoned === "fire" ? FIRE : this.#faded.set(r, g, b, a))
+                painter.setTint(unit.sprite === "fire" ? FIRE : this.#faded.set(r, g, b, a))
                 this.#fillPolygon(painter, outline(zone))
                 painter.setBlend("cutout")
                 continue
             }
             const [cx, cy] = this.#pixels(position)
+            this.#drawShade(painter, cx, cy, 6)
             painter.setTint(BOMB)
             painter.circle(cx, cy, 3)
             painter.setTint(FUSE)
@@ -275,7 +330,8 @@ export class BoardView {
     #drawUnit(painter: Painter, shown: SceneUnit): void {
         const { unit } = shown
         const [cx, cy] = this.#pixels(shown.position)
-        const radius = unit.radius * this.#meter * (unit.temporary ? 0.75 : 1)
+        const radius = unit.radius * this.#meter * (unit.vanishing ? 0.75 : 1)
+        this.#drawShade(painter, cx, cy, unit.stats.size.value * this.#meter * (unit.vanishing ? 0.75 : 1), shown.opacity)
         if(unit === this.highlighted){
             painter.setTint(HIGHLIGHTED)
             painter.circle(cx, cy, radius + 3)
@@ -315,18 +371,21 @@ export class BoardView {
         painter: Painter, shown: SceneUnit, sprite: Sprite, cx: number, cy: number, radius: number,
     ): void {
         const { r, g, b, a } = colorOf(shown.unit)
-        painter.setBlend("alpha")
-        painter.setTint(this.#faded.set(r, g, b, a * SPRITE_DISC_ALPHA * shown.opacity))
-        painter.circle(cx, cy, radius)
         const ahead = shown.direction
-        const side = ahead.right
-        const tip = radius + 2
-        painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
-        painter.triangle(
-            cx + ahead.x * tip, cy + ahead.y * tip,
-            cx + ahead.x * radius + side.x * 1.5, cy + ahead.y * radius + side.y * 1.5,
-            cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
-        )
+        painter.setBlend("alpha")
+        // Scenery has no team disc and faces nowhere: its picture alone stands there.
+        if(shown.unit.targetable){
+            painter.setTint(this.#faded.set(r, g, b, a * SPRITE_DISC_ALPHA * shown.opacity))
+            painter.circle(cx, cy, radius)
+            const side = ahead.right
+            const tip = radius + 2
+            painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
+            painter.triangle(
+                cx + ahead.x * tip, cy + ahead.y * tip,
+                cx + ahead.x * radius + side.x * 1.5, cy + ahead.y * radius + side.y * 1.5,
+                cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
+            )
+        }
         painter.setTint(this.#faded.set(1, 1, 1, shown.opacity))
         const scale = this.#spriteScale(shown.unit.stats.size.value)
         const width = sprite.width * scale

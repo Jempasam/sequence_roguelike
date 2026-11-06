@@ -33,7 +33,9 @@ import { DeckView } from "../hud/DeckView"
 import { DetailBox } from "../hud/DetailBox"
 import { cardsOption, heroOption, unitHead } from "../hud/ChoiceOptions"
 import { BagView } from "../hud/BagView"
-import { ThingView, usesText } from "../hud/ThingView"
+import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
+import { ThingView } from "../hud/ThingView"
+import type { Item } from "../../sim/item/Item"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
 import { heartsRow, heartText } from "../hud/HeartView"
@@ -820,10 +822,12 @@ export class TravelScreen {
         const room = this.#sideWidth - 2 * this.theme.panel.padding - this.theme.scrollbar.width - 1
         for(const deck of hero.decks) column.add(this.#deckView(deck, "mini", room, { color: DIM_TEXT }))
         const lists: [string, readonly Component[]][] = [
-            ["Objets", hero.items.map(item => this.#thingView(item.icon, null, described(item, item)))],
-            ["Utilisables", hero.usables.map(carried => {
-                const { usable } = carried
-                return this.#thingView(usable.icon, usesText(usable, carried.charges), usableText(usable))
+            ["Objets", this.#itemViews(hero.items)],
+            ["Utilisables", stacked(hero.usables, carried => carried.usable).map(({ first, members }) => {
+                const { usable } = first
+                const left = members.reduce((sum, carried) => sum + carried.charges, 0)
+                const full = members.length * (usable.charges ?? 1)
+                return this.#thingView(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
             })],
         ]
         for(const [name, things] of lists){
@@ -1008,8 +1012,11 @@ export class TravelScreen {
         const column = new Box("column", { gap: MARGIN })
         for(const deck of decks) column.add(this.#deckView(deck, size, room, look))
         const things = [
-            ...items.map(item => this.#thingView(item.icon, null, described(item, item))),
-            ...usables.map(usable => this.#thingView(usable.icon, usesText(usable), usableText(usable))),
+            ...this.#itemViews(items),
+            ...stacked(usables, usable => usable).map(({ first, members }) => {
+                const full = members.length * (first.charges ?? 1)
+                return this.#thingView(first.icon, stackUsesText(first, full, full), countTold(usableText(first), members.length))
+            }),
         ]
         if(things.length > 0) column.add(this.#bag(things), { align: "start" })
         return column
@@ -1041,6 +1048,13 @@ export class TravelScreen {
             nameLook: { ...look, onLink: this.#told.hearLink },
             deck: this.#placeOf(deck),
             tell: text => this.#tell(text),
+        })
+    }
+
+    /** Items as pictures, the same ones in one with their count. */
+    #itemViews(items: readonly Item[]): ThingView[] {
+        return stacked(items, item => item).map(({ first, members }) => {
+            return this.#thingView(first.icon, countText(members.length), countTold(described(first, first), members.length))
         })
     }
 

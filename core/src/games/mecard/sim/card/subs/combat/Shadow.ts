@@ -18,7 +18,7 @@ export const SHADOW = new ActionCard("Ombre", [
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         placeHazard(battle, unit, {
-            look: "shadow", name: "Ombre", hearts: [new Heart(TIME_HEART)],
+            sprite: "shadow", name: "Ombre", hearts: [new Heart(TIME_HEART)],
             zone: { kind: "circle", center: unit.position, radius: UNIT_RADIUS },
         })
         battle.startProcess(unit, new ShadowLink())

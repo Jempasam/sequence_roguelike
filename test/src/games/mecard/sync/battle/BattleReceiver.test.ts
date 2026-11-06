@@ -98,7 +98,7 @@ describe("BattleReceiver", () => {
         const { main, viewers: [viewer], drifts } = session({ secret: true })
         for(let round = 0; round < 30 && main.phase === "preparation"; round++){
             playMain(main)
-            const piles = watched(viewer).units.flatMap(unit => unit.decks.all[0].pile)
+            const piles = watched(viewer).units.filter(unit => unit.decks.all.length > 0).flatMap(unit => unit.decks.all[0].pile)
             expect(piles.every(card => card === SECRET_CARD)).toBe(true)
         }
         expect(drifts).toEqual([])

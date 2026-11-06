@@ -18,10 +18,12 @@ import type { RootPreview } from "../../sim/card/CardChain"
 
 import { BattleAnimations } from "./BattleAnimations"
 import { BattleScene } from "./BattleScene"
+import { ArenaView } from "./ArenaView"
 import { BoardView } from "./BoardView"
 import { Draft } from "./Draft"
 import { Hud } from "./Hud"
 import type { HudHost, Mode } from "./Hud"
+import type { UiRect } from "../hud/BattleGrid"
 import { processText } from "../hud/ProcessView"
 import { ArenaHearts } from "../hud/ArenaHearts"
 import { heartText } from "../hud/HeartView"
@@ -201,7 +203,10 @@ export class BattleScreen implements HudHost {
             this.#hud.follow(unit)
         }
         this.#board = new BoardView(theme.font, theme.white, this.scene, sprites)
-        // Made before the panels, so they lie over it.
+        // Made before the panels, so they lie over it, and the hearts between.
+        const floor = ui.addLayer("battle-floor")
+        this.#arenaView = new ArenaView(theme, this.#board, engine, sprites)
+        this.#floor = floor
         const arena = ui.addLayer("battle-arena")
         this.#arenaHearts = new ArenaHearts(theme, arena, sprites, (unit, heart, over) => {
             this.hoverUnit(unit, over)
@@ -212,7 +217,7 @@ export class BattleScreen implements HudHost {
         })
         const main = ui.addLayer("battle")
         this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }))
-        this.#layers = [arena, main]
+        this.#layers = [floor, arena, main]
         this.#connectInputs()
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
@@ -228,10 +233,10 @@ export class BattleScreen implements HudHost {
     }
 
     /** Are the panels around the arena shown? What comes after a battle goes in their place. */
-    public get panels(): boolean { return this.#layers[1].content.visible }
+    public get panels(): boolean { return this.#layers[2].content.visible }
 
     public set panels(visible: boolean){
-        this.#layers[1].content.visible = visible
+        this.#layers[2].content.visible = visible
     }
 
     /** May the players not plan a unit, its round being another's, or theirs being given? */
@@ -249,7 +254,7 @@ export class BattleScreen implements HudHost {
      * Play on what the battle told, then draw the arena in the world, in the room the panels leave. The input
      * was given to the interface already, so the clicks a widget took are consumed.
      */
-    public frame(input: InputFrame, world: Painter, dt: number): void {
+    public frame(input: InputFrame, _world: Painter, dt: number): void {
         // The panels are sized from the interface: a new size of the window lays them out again.
         const size = `${this.ui.width}×${this.ui.height}`
         if(size !== this.#size){
@@ -263,20 +268,19 @@ export class BattleScreen implements HudHost {
         if(this.scene.version !== this.#shownVersion) this.refresh()
         this.ui.update(dt)
         this.#hud.frame(dt)
-        const { toWorld, toUi } = this.options
-        const room = this.#hud.arenaRoom()
-        const [left, top] = toWorld(room.left, room.top)
-        const [right, bottom] = toWorld(room.right, room.bottom)
-        this.#board.fit(this.#engine, { left, top, right, bottom })
+        const room = this.#placeArena()
+        const { left, top } = room
+        this.#board.fit(this.#engine, this.#arenaView.roomIn(room.right - left, room.bottom - top))
         this.#arenaHearts.place(unit => {
             const [x, y] = this.#board.heartsAnchor(unit)
-            return toUi(x, y)
+            return [left + x, top + y] as const
         })
-        // The arena lies under the empty zones of the interface: the pointer is over it when over no widget.
-        const [x, y] = toWorld(this.ui.pointerX, this.ui.pointerY)
-        this.#arenaUnit = this.ui.hovered ? null : this.#board.unitAt(x, y)
+        // The arena takes no pointer: it is over it when over no widget.
+        const { pointerX, pointerY } = this.ui
+        this.#arenaUnit = this.ui.hovered ? null : this.#board.unitAt(pointerX - left, pointerY - top)
         this.#showHighlighted()
-        this.#board.draw(world, this.#engine)
+        // The board moves at every frame: the arena draws it again, from itself, being opaque.
+        this.#arenaView.invalidate()
     }
 
     /** Build the panels again, from the battle as it stands. */
@@ -334,7 +338,14 @@ export class BattleScreen implements HudHost {
     readonly #arenaHearts: ArenaHearts
 
     /** The layers it lays its panels in: the hearts over the arena, then the interface. */
-    readonly #layers: readonly [Layer, Layer]
+    readonly #layers: readonly [Layer, Layer, Layer]
+
+    /** The arena as a component, in the layer under the hearts. */
+    readonly #arenaView: ArenaView
+    readonly #floor: Layer
+
+    /** Where the arena lies in the interface, as last placed. */
+    #arenaRoom: UiRect|null = null
 
     #engine: Battle
 
@@ -537,12 +548,32 @@ export class BattleScreen implements HudHost {
         if(this.skippable) this.catchUp()
     }
 
+    /** Lay the arena over the room the panels leave, and tell where it lies. */
+    #placeArena(): UiRect {
+        const room = this.#hud.arenaRoom()
+        const view = this.#arenaView
+        const last = this.#arenaRoom
+        if(!last){
+            this.#floor.content.add(view, { x: "start", y: "start", offsetX: room.left, offsetY: room.top })
+        } else if(last.left !== room.left || last.top !== room.top){
+            this.#floor.content.setSlot(view, { offsetX: room.left, offsetY: room.top })
+        }
+        const width = room.right - room.left
+        const height = room.bottom - room.top
+        if(!last || last.right - last.left !== width || last.bottom - last.top !== height){
+            view.fixedSize = { width, height }
+        }
+        this.#arenaRoom = room
+        return room
+    }
+
     /** Select the unit a click on the arena lands on, the click no widget took. */
     #clickArena(input: InputFrame): void {
+        const room = this.#arenaRoom
+        if(!room) return
         for(const event of input.events){
             if(event.type !== "pointer-down" || event.button !== 0 || event.consumed) continue
-            const [x, y] = this.options.toWorld(event.x / this.ui.scale, event.y / this.ui.scale)
-            const unit = this.#board.unitAt(x, y)
+            const unit = this.#board.unitAt(event.x / this.ui.scale - room.left, event.y / this.ui.scale - room.top)
             if(unit) this.#choose(unit)
         }
     }

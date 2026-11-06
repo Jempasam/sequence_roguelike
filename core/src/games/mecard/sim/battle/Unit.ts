@@ -13,6 +13,7 @@ import type { Heart } from "../heart/Heart"
 import { Hearts } from "../heart/Hearts"
 import type { Item } from "../item/Item"
 import type { Process } from "../process/Process"
+import { Vanishing } from "../process/subs/Vanishing"
 import type { Status, StatusType } from "../status/Status"
 
 import type { Action, ActionRun } from "./Action"
@@ -23,33 +24,6 @@ import type {
 } from "./events"
 import type { Area } from "./Area"
 import type { Team } from "./Team"
-
-/**
- * What a summoned body is, which its look follows: a coin, a log, a stone of a wall... or a hazard left in
- * the arena, a bomb, flames, a puddle.
- */
-export type SummonLook =
-    |"coin"|"log"|"stone"|"barrel"|"totem"|"thorns"|"bomb"|"fire"|"puddle"|"mine"|"shadow"|"tornado"|"wave"
-    |"rock"|"robot"
-
-/** The color each kind of summoned body is drawn and named in. */
-export const SUMMON_COLORS: Readonly<Record<SummonLook, Rgba>> = {
-    coin: rgba(1, 0.85, 0.3),
-    log: rgba(0.65, 0.45, 0.25),
-    stone: rgba(0.6, 0.6, 0.62),
-    barrel: rgba(0.75, 0.5, 0.3),
-    totem: rgba(0.5, 0.9, 0.6),
-    thorns: rgba(0.35, 0.7, 0.3),
-    bomb: rgba(0.2, 0.2, 0.22),
-    fire: rgba(1, 0.45, 0.15, 0.45),
-    puddle: rgba(0.5, 0.5, 0.7, 0.35),
-    mine: rgba(0.35, 0.3, 0.25),
-    shadow: rgba(0.25, 0.15, 0.35, 0.6),
-    tornado: rgba(0.8, 1, 0.85, 0.6),
-    wave: rgba(0.3, 0.6, 1, 0.5),
-    rock: rgba(0.55, 0.52, 0.48),
-    robot: rgba(0.6, 0.7, 0.75),
-}
 
 /** Who plans the chains of a unit. */
 export type Controller = "player"|"bot"
@@ -74,29 +48,14 @@ export interface UnitSpec {
 
     readonly items?: readonly Item[]
 
-    /** Does it vanish at the end of the round, as a clone does? No by default. */
-    readonly temporary?: boolean
-
     /**
-     * What it is when it is a summoned body, none for a character: a body with no deck, out of the order of
-     * play, which no team stands by. None by default.
+     * Does it count for its team: for the end of the battle, the seats of the players and the colors of
+     * the team? Yes by default; a body summoned, a clone, a pillar does not.
      */
-    readonly summoned?: SummonLook|null
+    readonly decisive?: boolean
 
     /** What it carries to use once, during a preparation: its belt. None by default. */
     readonly usables?: readonly Carried[]
-
-    /**
-     * Does it play its cards although it is a summoned body: a robot, a bomb, a whirlwind? It then plays
-     * right after its owner, as a bot, its deck in order. No by default.
-     */
-    readonly acting?: boolean
-
-    /**
-     * Does its body take room, so it blocks the way and the others aim at it, hit it, push it? Yes by
-     * default; a hazard lying on the ground does not.
-     */
-    readonly tangible?: boolean
 
     /** The ground it covers, for a body lying on the arena: a puddle, flames. None by default. */
     readonly zone?: Area|null
@@ -194,6 +153,21 @@ export class UnitStats {
 
     /** Its size: how much bigger than the base its body is, a factor of its radius. */
     public readonly size = new Attribute(1)
+
+    /**
+     * Does its body take room, so it blocks the way and the others aim at it, hit it, push it? Yes by
+     * default; a hazard lying on the ground does not.
+     */
+    public readonly tangible = new Attribute(true)
+
+    /** Do the cards and the bots aim at it, and take it for an enemy? A pillar is not aimed at. */
+    public readonly targetable = new Attribute(true)
+
+    /** Do blows, zones, potions and lightning touch it? A pillar is not touched. */
+    public readonly touchable = new Attribute(true)
+
+    /** Do others move it: a push, a wind, a whirlwind? Its own moves are not concerned, as `mobility` is. */
+    public readonly movable = new Attribute(true)
 }
 
 /**
@@ -264,20 +238,11 @@ export class Unit {
     /** What it carries to use once, during a preparation: what is used leaves it. */
     public readonly usables: Carried[]
 
-    /** Does it vanish at the end of the round? */
-    public readonly temporary: boolean
+    /** Does it count for its team: the end of the battle, the seats, the colors? */
+    public readonly decisive: boolean
 
-    /** What it is when it is a summoned body, none for a character. */
-    public readonly summoned: SummonLook|null
-
-    /** Does it play its cards although it is a summoned body? It then plays right after its owner. */
-    public readonly acting: boolean
-
-    /** Who summoned it, none for a character: a summoned body that plays plays right after it. */
+    /** Who summoned it, none when nobody did: a body that plays its cards plays right after its owner. */
     public owner: Unit|null = null
-
-    /** Does its body take room: does it block the way, is it aimed at and hit? */
-    public readonly tangible: boolean
 
     /** The ground it covers, for a body lying on the arena, none for one standing. */
     public readonly zone: Area|null
@@ -337,10 +302,7 @@ export class Unit {
         this.controller = spec.controller
         this.items = [...spec.items ?? []]
         this.usables = [...spec.usables ?? []]
-        this.temporary = spec.temporary ?? false
-        this.summoned = spec.summoned ?? null
-        this.acting = spec.acting ?? false
-        this.tangible = spec.tangible ?? true
+        this.decisive = spec.decisive ?? true
         this.zone = spec.zone ?? null
         this.position = spec.position
         this.direction = spec.direction
@@ -357,15 +319,27 @@ export class Unit {
         return !this.hearts.isDead
     }
 
-    /** Does it play for its team, a character or its clone, rather than being a summoned body? */
-    public get character(): boolean {
-        return this.summoned === null
+    /** Does it have cards to play? Then it takes a place in the order of play. */
+    public get plays(): boolean {
+        return this.hand.length > 0 || this.decks.all.some(deck => deck.pile.length + deck.discard.length > 0)
     }
 
-    /** Does it take a place in the order of play: a character, or a summoned body playing its cards? */
-    public get plays(): boolean {
-        return (this.character && !this.temporary) || this.acting
+    /** Does it vanish at the end of the round, as a clone does? */
+    public get vanishing(): boolean {
+        return this.processes.some(process => process instanceof Vanishing)
     }
+
+    /** Does its body take room: does it block the way? */
+    public get tangible(): boolean { return this.stats.tangible.value }
+
+    /** Do the cards and the bots aim at it? */
+    public get targetable(): boolean { return this.stats.targetable.value }
+
+    /** Do blows and zones touch it? */
+    public get touchable(): boolean { return this.stats.touchable.value }
+
+    /** Do others move it? */
+    public get movable(): boolean { return this.stats.movable.value }
 
     /** The radius of its body, in meters: the base, times its size. */
     public get radius(): number {

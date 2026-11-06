@@ -346,7 +346,8 @@ export class Run {
     public newBattle(): Battle {
         const monsters = this.#monsters()
         const starts = this.#partyStarts()
-        const battle = new Battle(this.#arena(starts), this.rng.int(2 ** 31))
+        const pillars = this.#pillars(starts)
+        const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), this.rng.int(2 ** 31))
         this.#units.clear()
         this.heroes.forEach((hero, index) => {
             const unit = battle.add({
@@ -369,6 +370,7 @@ export class Run {
                 },
             })
         })
+        for(const { center, radius } of pillars) battle.addPillar(center, radius)
         return battle
     }
 
@@ -612,10 +614,10 @@ export class Run {
     }
 
     /**
-     * An arena with its pillars in the middle rows, away from where the units start: the top rows of the
+     * The pillars of an arena, in the middle rows, away from where the units start: the top rows of the
      * monsters, and where the party stands.
      */
-    #arena(starts: readonly Vector2[]): Arena {
+    #pillars(starts: readonly Vector2[]): Pillar[] {
         const pillars: Pillar[] = []
         const clear = PILLAR_RADIUS + UNIT_RADIUS + PILLAR_CLEARANCE
         while(pillars.length < PILLARS){
@@ -626,7 +628,7 @@ export class Run {
             const onStart = starts.some(start => start.distance(center) < clear)
             if(!crowded && !onStart) pillars.push({ center, radius: PILLAR_RADIUS })
         }
-        return new Arena(ARENA_SIZE, ARENA_SIZE, pillars)
+        return pillars
     }
 
     /** The monsters of the current place, those of the first fight of the map when it holds none. */

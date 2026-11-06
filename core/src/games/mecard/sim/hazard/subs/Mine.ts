@@ -48,7 +48,7 @@ export class Mined extends HazardStatus {
 /** Leave a mine laid by a unit, lying there for some rounds. */
 export function placeMine(battle: Battle, owner: Unit, center: Vector2): Unit|null {
     return placeHazard(battle, owner, {
-        look: "mine", name: "Mine", zone: { kind: "circle", center, radius: MINE_RADIUS },
+        sprite: "mine", name: "Mine", zone: { kind: "circle", center, radius: MINE_RADIUS },
         hearts: Heart.many(TIME_HEART, MINE_ROUNDS), status: new Mined(),
     })
 }

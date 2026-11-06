@@ -9,6 +9,7 @@ import { FLOOR_TYPES } from "../../sim/catalog/floors"
 import type { Decoration } from "../../sim/floor/Floor"
 import type { Journey, Place } from "../../sim/run/Journey"
 
+import { PAPER_PATH, PATH_PICTURE, paperFrame, SHADE_PICTURE } from "../look/paper"
 import { TEXT_OUTLINE } from "../look/theme"
 import { PLACE_LOOKS } from "./placeLooks"
 import { scatter } from "./scatter"
@@ -37,18 +38,8 @@ const OPEN_ROPE_WIDTH = 6
 const PATH_WIDTH = 1
 const OPEN_PATH_WIDTH = 2
 
-/** The picture of the paper of the map, and how wide its worn margins are, in texels. */
-const PAPER: ImagePath = "mecard/travel/map/paper.png"
-const PAPER_MARGIN = 10
-
 /** The whole factor the paper of the map is drawn at. */
 const PAPER_SCALE = 2
-
-/** The picture of a path, running along its height. */
-const PATH_PICTURE: ImagePath = "mecard/travel/map/path.png"
-
-/** The picture of the darker spot under a place. */
-const SHADE: ImagePath = "mecard/travel/map/shade.png"
 
 /** The picture of the circle drawn under the place hovered. */
 const CIRCLE: ImagePath = "mecard/travel/map/circle.png"
@@ -130,24 +121,18 @@ export class JourneyView extends Component {
         ])]
         const pieces = FLOOR_TYPES.flatMap(type => type.decorations)
         const decorations = [...new Set(pieces.map(each => each.picture))]
-        const paths = [PAPER, PATH_PICTURE, SHADE, CIRCLE, ...logos, ...decorations]
+        const paths = [PAPER_PATH, PATH_PICTURE, SHADE_PICTURE, CIRCLE, ...logos, ...decorations]
         const pictures = await Promise.all(paths.map(path => assets.image(path)))
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
         const [paper, path, shade, circle, ...sprites] = entries.map(entry => atlas.sprite(entry))
-        const margin = PAPER_MARGIN
-        const drawn = margin * PAPER_SCALE
         return {
             logos: new Map(logos.map((logo, index) => [logo, sprites[index]])),
             decorations: new Map(decorations.map((each, index) => [each, sprites[logos.length + index]])),
             path: new Rope(path),
             shade,
             circle,
-            paper: new NineSlice(paper, { left: margin, top: margin, right: margin, bottom: margin }, {
-                opaqueCenter: true,
-                border: { left: drawn, top: drawn, right: drawn, bottom: drawn },
-                tiling: { mirror: true },
-            }),
+            paper: paperFrame(paper, PAPER_SCALE),
         }
     }
 

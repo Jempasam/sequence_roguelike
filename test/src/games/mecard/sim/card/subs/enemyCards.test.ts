@@ -8,7 +8,7 @@ import {
 } from "@game/core/mecard"
 import type { Card, Unit } from "@game/core/mecard"
 
-import { battle, chain, expectAt, MONSTERS, play, unit } from "../../fixtures"
+import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../fixtures"
 
 // --- Fixture builders ---
 
@@ -97,7 +97,7 @@ describe("SHADOW_AIM", () => {
 
 describe("MEGA_LASER", () => {
     test("a pillar on its way → goes through, a meter wide, and no wider", () => {
-        const on = new Battle(new Arena(7, 7, [{ center: new Vector2(3.5, 2), radius: 0.5 }]), 1)
+        const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3.5, 2), radius: 0.5 })
         const shooter = unit(on, 3.5, 5)
         const edge = unit(on, 4.2, 1, { team: MONSTERS })
         const behind = unit(on, 3.5, 0.5, { team: MONSTERS })

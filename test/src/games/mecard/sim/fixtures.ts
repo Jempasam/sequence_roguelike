@@ -1,6 +1,6 @@
 import { expect } from "vitest"
 import { Arena, Battle, CardChain, Heart, RED_HEART, Team, Vector2 } from "@game/core/mecard"
-import type { Card, Rgba, Run, Unit } from "@game/core/mecard"
+import type { Card, Pillar, Rgba, Run, Unit } from "@game/core/mecard"
 
 // The fixture builders shared by the tests of the simulation of Dungeon of the Mecard.
 
@@ -15,6 +15,12 @@ export const MONSTERS = new Team("Monstres")
 /** A battle on an empty arena of 7 by 7, its units not started. */
 export function battle(): Battle {
     return new Battle(new Arena(7, 7), 1)
+}
+
+/** A battle with pillars standing in it. */
+export function withPillars(on: Battle, ...pillars: readonly Pillar[]): Battle {
+    for(const { center, radius } of pillars) on.addPillar(center, radius)
+    return on
 }
 
 /** The battle of the current place of a run, its first round started, as the screen starts it. */

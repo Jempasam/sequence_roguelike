@@ -66,7 +66,7 @@ export class RobotCard extends AbstractCard<readonly Action[], readonly Card[]> 
             use: function* ({ battle, unit }){
                 const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
                 battle.place(unit, {
-                    look: "robot", name: "Robot", at: spotOf(unit), direction: unit.direction,
+                    sprite: "robot", name: "Robot", at: spotOf(unit), direction: unit.direction,
                     hearts: Heart.many(SHIELD_HEART, count), cards: program,
                 })
                 yield* hold(battle, SHORT_TIME)
@@ -74,7 +74,7 @@ export class RobotCard extends AbstractCard<readonly Action[], readonly Card[]> 
             preview: ({ battle, unit, pose }) => {
                 const spot = spotOf(pose)
                 if(!battle.free(spot, unit, UNIT_RADIUS)) return still(pose, label(spot, "pas de place", NOTE_COLOR))
-                return still(pose, summonShown("robot", spot))
+                return still(pose, summonShown(spot))
             },
         }
     }

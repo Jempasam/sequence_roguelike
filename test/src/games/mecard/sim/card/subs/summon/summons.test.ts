@@ -9,7 +9,7 @@ import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures
 
 /** The summoned bodies of a battle still standing. */
 function bodies(on: Battle): Unit[] {
-    return on.living.filter(each => each.summoned !== null)
+    return on.living.filter(each => !each.decisive)
 }
 
 // --- Tests ---

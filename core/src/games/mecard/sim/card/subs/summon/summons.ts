@@ -45,7 +45,7 @@ export const COIN = new SummonCard("Pièce", [
     "Lance une pièce ", meters(COIN_THROW), " × portée devant : une alliée de ", new HeartCount(COIN_HALVES),
     " + invocation, qui bloque les coups et attire les visées. Perd ", new HeartCount(1), " à chaque fin de round.",
 ], Rarity.COMMON, {
-    look: "coin", name: "Pièce", halves: COIN_HALVES, thrown: true,
+    sprite: "coin", name: "Pièce", halves: COIN_HALVES, thrown: true,
     spots: (unit, pose) => [ahead(pose, COIN_THROW * unit.stats.throwRange.value)],
 })
 
@@ -54,7 +54,7 @@ export const STONE_WALL = new SummonCard("Mur de pierre", [
     "Dresse trois pierres de ", new HeartCount(STONE_HALVES), " + invocation chacune, à ", meters(AHEAD),
     " devant, en travers. Chacune perd ", new HeartCount(1), " à chaque fin de round.",
 ], Rarity.RARE, {
-    look: "stone", name: "Pierre", halves: STONE_HALVES,
+    sprite: "stone", name: "Pierre", halves: STONE_HALVES,
     spots: (_unit, pose) => [-STONE_SPACING, 0, STONE_SPACING].map(side => ahead(pose, AHEAD, side)),
 })
 
@@ -63,7 +63,7 @@ export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
     "Fait pousser des ronces à ", meters(AHEAD), " devant : ", new HeartCount(THORNS_HALVES), " + invocation, et un cœur ",
     THORN_HEART, " perdu d'abord.",
 ], Rarity.RARE, {
-    look: "thorns", name: "Ronces", halves: THORNS_HALVES,
+    sprite: "thorns", name: "Ronces", halves: THORNS_HALVES,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
     equip: (_battle, body) => {
         for(const heart of Heart.many(THORN_HEART, THORN_HEARTS)) body.hearts.give(heart)
@@ -75,7 +75,7 @@ export const TOTEM = new SummonCard("Totem", [
     "Plante un totem de ", new HeartCount(TOTEM_HALVES), " + invocation à ", meters(AHEAD), " devant. En fin de round, ",
     "il soigne de ", new HeartCount(TOTEM_HEAL), " + soin chaque allié à ", meters(TOTEM_RADIUS), ".",
 ], Rarity.EPIC, {
-    look: "totem", name: "Totem", halves: TOTEM_HALVES,
+    sprite: "totem", name: "Totem", halves: TOTEM_HALVES,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
     equip: (battle, body, owner) => {
         battle.applyStatus(body, new Healing(TOTEM_HEAL + owner.stats.heal.value))

@@ -32,7 +32,7 @@ export const COOP_SEATS: SeatMode = {
 export const ENEMY_SEATS: SeatMode = {
     candidates: ({ battle, monstersTeam }) => {
         if(!battle || battle.round > 0) return []
-        return battle.units.filter(unit => unit.team === monstersTeam && unit.character)
+        return battle.units.filter(unit => unit.team === monstersTeam && unit.decisive)
     },
     seatHost: () => {},
     enterBattle: seats => seats.clear(),

@@ -13,7 +13,7 @@ const SHADOW_LINK_WIDTH = 0.3
 function closestShadow({ battle, unit }: UnitContext): Unit|null {
     let closest: Unit|null = null
     for(const body of battle.living){
-        if(body.summoned !== "shadow" || body.owner !== unit) continue
+        if(body.sprite !== "shadow" || body.owner !== unit) continue
         const distance = unit.position.distance(body.position)
         if(!closest || distance < unit.position.distance(closest.position)) closest = body
     }

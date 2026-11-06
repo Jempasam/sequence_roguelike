@@ -45,7 +45,7 @@ describe("Hazards, bodies lying on the ground", () => {
         on.endPreparation()
         on.playRound()
         expect(enemy.life).toBeLessThan(4)
-        expect(on.living.filter(each => each.summoned === "fire")).toEqual([])
+        expect(on.living.filter(each => each.sprite === "fire")).toEqual([])
     })
 
     test("a puddle → as many time hearts as its rounds, poured on whoever steps in, worn out after them", () => {
@@ -85,7 +85,7 @@ describe("Hazards playing cards", () => {
         unit(on, 6, 1, { team: MONSTERS })
         on.startRound()
         const body = on.place(owner, {
-            look: "stone", name: "Robot", at: new Vector2(3, 3), hearts: Heart.many(SHIELD_HEART, 2),
+            sprite: "stone", name: "Robot", at: new Vector2(3, 3), hearts: Heart.many(SHIELD_HEART, 2),
             cards: [WAIT, STEP],
         })
         expect(on.initiative.indexOf(body!)).toBe(on.initiative.indexOf(owner) + 1)
@@ -97,6 +97,6 @@ describe("Hazards playing cards", () => {
         const loaded = loadBattle(saveBattle(on))
         const again = loaded.units[on.units.indexOf(body!)]
         expect(again.owner).toBe(loaded.units[on.units.indexOf(owner)])
-        expect(again.acting).toBe(true)
+        expect(again.plays && !again.decisive).toBe(true)
     })
 })

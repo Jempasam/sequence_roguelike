@@ -49,7 +49,7 @@ export function placeBurningGround(
     battle: Battle, owner: Unit, zone: Area, rounds: number, element: Element,
 ): Unit|null {
     return placeHazard(battle, owner, {
-        look: "fire", name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
+        sprite: "fire", name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
         status: new BurningGround(element),
     })
 }

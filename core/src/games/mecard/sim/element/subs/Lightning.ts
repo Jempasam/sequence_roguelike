@@ -56,7 +56,7 @@ export class Lightning extends AbstractElement {
         // Read before any of it acts, so the arc follows the bodies as they stood when it struck.
         for(let index = 0; index < touched.length; index++){
             const from = touched[index]
-            for(const next of battle.bodies){
+            for(const next of battle.touchables){
                 const inReach = next.position.distance(from.position) <= ARC_JUMP
                 if(next === unit || touched.includes(next) || !inReach) continue
                 touched.push(next)

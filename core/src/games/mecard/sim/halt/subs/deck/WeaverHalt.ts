@@ -8,25 +8,16 @@ import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { haltPnj, sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
-import { DeckHalt } from "../DeckHalt"
+import { DeckHalt } from "./DeckHalt"
 import { cardShown } from "../shown"
-import { CARTE, DECK, MELANGE } from "../../../base/keywords"
-
-/** What the weaver says of itself. */
-const LINE = ["Je lie deux ", CARTE.as("cartes"), " : ", MELANGE.as("mélangées"), ", ou l'une au hasard."]
-
-/** How the weaver looks. Waiting for its own art: the scene of the forge. */
-const LOOK = sceneLook(41, 18, 10, [
-    "mecard/travel/forge/1.png", "mecard/travel/forge/2.png", "mecard/travel/forge/3.png",
-    "mecard/travel/forge/4.png", "mecard/travel/forge/5.png",
-], "mecard/travel/forge/border.png", haltPnj("weaver", [0.3, 0.85, 0.9], [0.35, 0.25, 0.4]))
+import { CARTE, DECK, MERGE } from "../../../base/keywords"
 
 /** The ways the weaver ties two cards. */
 const MODES: readonly WeaveMode[] = ["merged", "random"]
 
 /** What each way of the weaver ties, as the players are told. */
 const WEAVE_TEXTS: Readonly<Record<WeaveMode, Text>> = {
-    merged: [MELANGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions qui ne prennent rien, jouées en même temps, en une seule étape."],
+    merged: [MERGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions qui ne prennent rien, jouées en même temps, en une seule étape."],
     random: ["Au hasard : deux ", CARTE.as("cartes"), " qui prennent et donnent la même chose ; l'une des deux est tirée à chaque combat."],
 }
 
@@ -40,7 +31,14 @@ export class WeaverHalt extends DeckHalt {
 
 
     constructor(run: Run){
-        super(WEAVER_HALT, run, LINE, LOOK)
+        super(WEAVER_HALT, run,
+            ["Je lie deux ", CARTE.as("cartes"), " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
+            // Waiting for its own art: the scene of the forge.
+            sceneLook(41, 18, 10, [
+                "mecard/travel/forge/1.png", "mecard/travel/forge/2.png", "mecard/travel/forge/3.png",
+                "mecard/travel/forge/4.png", "mecard/travel/forge/5.png",
+            ], "mecard/travel/forge/border.png", haltPnj("weaver", [0.3, 0.85, 0.9], [0.35, 0.25, 0.4])),
+        )
     }
 
 
@@ -76,7 +74,7 @@ export class WeaverHalt extends DeckHalt {
 /** The sort of the weaver. Waiting for its own art: the logo of the forge. */
 export const WEAVER_HALT: HaltType = {
     name: "Tisserand",
-    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MELANGE.as("mélangées"), ", ou l'une au hasard."],
+    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
     code: "TI",
     icon: "mecard/travel/forge/logo.png",
     transition: DOOR_TRANSITION,

@@ -12,15 +12,6 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { CARTE, DECK } from "../../../base/keywords"
 
-/** What the trainer says of itself. */
-const LINE = "Un de mes deux pets, ou d'un monstre croisé en chemin, te suivra, et se battra seul."
-
-/** How the trainer looks. */
-const LOOK = sceneLook(23, 28, 15, [
-    "mecard/travel/trainer/1.png", "mecard/travel/trainer/2.png", "mecard/travel/trainer/3.png",
-    "mecard/travel/trainer/4.png", "mecard/travel/trainer/5.png",
-], "mecard/travel/trainer/border.png", haltPnj("trainer", [0.55, 0.75, 0.3], [0.3, 0.55, 0.2]))
-
 /** The monsters a trainer offers as allies. */
 export function trainerMonsters(rng: Rng): Monster[] {
     return [...distinct(rng, PETS, OFFER_SIZE - 1), ...distinct(rng, COMMON_MONSTERS, 1)]
@@ -31,7 +22,13 @@ export class TrainerHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(TRAINER_HALT, run, LINE, LOOK)
+        super(TRAINER_HALT, run,
+            "Un de mes deux pets, ou d'un monstre croisé en chemin, te suivra, et se battra seul.",
+            sceneLook(23, 28, 15, [
+                "mecard/travel/trainer/1.png", "mecard/travel/trainer/2.png", "mecard/travel/trainer/3.png",
+                "mecard/travel/trainer/4.png", "mecard/travel/trainer/5.png",
+            ], "mecard/travel/trainer/border.png", haltPnj("trainer", [0.55, 0.75, 0.3], [0.3, 0.55, 0.2])),
+        )
         this.#monsters = trainerMonsters(run.rng)
     }
 

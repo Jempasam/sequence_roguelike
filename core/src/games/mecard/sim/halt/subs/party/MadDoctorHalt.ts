@@ -1,27 +1,24 @@
-import { concat } from "../../../../../semantic"
-import type { Run } from "../../run/Run"
-import type { HaltContext } from "../HaltContext"
-import type { HaltType } from "../HaltType"
-import { haltPnj, sceneLook } from "../SceneLook"
-import { DOOR_TRANSITION } from "../transitions"
-import { AbstractHalt } from "./AbstractHalt"
-import { UNIT } from "../../base/keywords"
-
-/** What the mad doctor says of itself. */
-const LINE = ["Deux ", UNIT.as("unités"), " ? Sur ma table, elles n'en feront plus qu'une !"]
-
-/** How the mad doctor looks. */
-const LOOK = sceneLook(13, 31, 23, [
-    "mecard/travel/mad-doctor/1.png", "mecard/travel/mad-doctor/2.png", "mecard/travel/mad-doctor/3.png",
-    "mecard/travel/mad-doctor/4.png", "mecard/travel/mad-doctor/5.png",
-], "mecard/travel/mad-doctor/border.png", haltPnj("madDoctor", [0.3, 0.9, 0.6], [0.2, 0.2, 0.25], { arrive: "fear" }))
+import { concat } from "../../../../../../semantic"
+import type { Run } from "../../../run/Run"
+import type { HaltContext } from "../../HaltContext"
+import type { HaltType } from "../../HaltType"
+import { haltPnj, sceneLook } from "../../SceneLook"
+import { DOOR_TRANSITION } from "../../transitions"
+import { AbstractHalt } from "../AbstractHalt"
+import { UNIT } from "../../../base/keywords"
 
 /** The mad doctor: two characters of the party merged into one. */
 export class MadDoctorHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(MAD_DOCTOR_HALT, run, LINE, LOOK)
+        super(MAD_DOCTOR_HALT, run,
+            ["Deux ", UNIT.as("unités"), " ? Sur ma table, elles n'en feront plus qu'une !"],
+            sceneLook(13, 31, 23, [
+                "mecard/travel/mad-doctor/1.png", "mecard/travel/mad-doctor/2.png", "mecard/travel/mad-doctor/3.png",
+                "mecard/travel/mad-doctor/4.png", "mecard/travel/mad-doctor/5.png",
+            ], "mecard/travel/mad-doctor/border.png", haltPnj("madDoctor", [0.3, 0.9, 0.6], [0.2, 0.2, 0.25], { arrive: "fear" })),
+        )
     }
 
 

@@ -1,6 +1,6 @@
 import { concat, Keyword } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import { CARTE, COLLAGE, DECK, INVOCATION, MELANGE, PERFECT_CLONE, SUPPRESSION, UNIT } from "../../sim/base/keywords"
+import { CARTE, FUSION, DECK, COMPOSITE, INVOCATION, MERGE, PERFECT_CLONE, RANDOM, SUPPRESSION, UNIT } from "../../sim/base/keywords"
 import { AbstractCard } from "../../sim/card/subs/AbstractCard"
 import { AbstractHeartKind } from "../../sim/heart/subs/AbstractHeartKind"
 import { AbstractItem } from "../../sim/item/subs/AbstractItem"
@@ -9,15 +9,23 @@ import { AbstractUsable } from "../../sim/usable/subs/AbstractUsable"
 
 /** What the interface says of each keyword. */
 const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
-    [COLLAGE, [
-        "Des ", CARTE.as("cartes"), " ", COLLAGE.as("collées"), " ne prennent la place que d'une seule ", CARTE,
+    [COMPOSITE, [
+        "Une ", COMPOSITE, " est une ", CARTE, " faite d'autres ", CARTE.as("cartes"), " et qui ne prend la place que d'une",
+        " seule : un ", FUSION, ", un ", MERGE, ", ou un ", RANDOM, ".",
+    ]],
+    [RANDOM, [
+        "Deux ", CARTE.as("cartes"), " qui prennent et donnent la même chose : à la fin de la préparation, l'une",
+        " des deux est tirée au ", RANDOM, " et remplace le ", RANDOM, ".",
+    ]],
+    [FUSION, [
+        "Des ", CARTE.as("cartes"), " ", FUSION.as("collées"), " ne prennent la place que d'une seule ", CARTE,
         " dans la chaîne. À la fin de la préparation, elles la remplacent, dans l'ordre, et se lisent comme si",
         " elles étaient posées là, avec leurs voisines.",
     ]],
-    [MELANGE, [
-        "Deux ", CARTE.as("cartes"), " d'action ", MELANGE.as("mélangées"), " sont jouées en même temps, en une",
+    [MERGE, [
+        "Deux ", CARTE.as("cartes"), " d'action ", MERGE.as("mélangées"), " sont jouées en même temps, en une",
         " seule étape. Seules les ", CARTE.as("cartes"), " d'action qui ne prennent rien se ",
-        MELANGE.as("mélangent"), ".",
+        MERGE.as("mélangent"), ".",
     ]],
     [CARTE, ["Ce qu'une ", UNIT, " pioche, pose dans sa chaîne, puis joue."]],
     [UNIT, ["Tout ce qui se tient dans l'arène : héros, monstres, dangers."]],

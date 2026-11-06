@@ -1,29 +1,26 @@
-import { concat } from "../../../../../semantic"
-import type { Hero } from "../../run/Hero"
-import { distinct, OFFER_SIZE } from "../../run/offers"
-import { heartLootText, SPENT_LOOT_HEARTS } from "../../run/Run"
-import type { HeartLoot, Run } from "../../run/Run"
-import type { HaltContext } from "../HaltContext"
-import type { HaltType } from "../HaltType"
-import { haltPnj, sceneLook } from "../SceneLook"
-import { DOOR_TRANSITION } from "../transitions"
-import { AbstractHalt } from "./AbstractHalt"
-
-/** What the hospital says of itself. */
-const LINE = "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec des cœurs de plus."
-
-/** How the hospital looks. */
-const LOOK = sceneLook(18, 33, 41, [
-    "mecard/travel/hospital/1.png", "mecard/travel/hospital/2.png", "mecard/travel/hospital/3.png",
-    "mecard/travel/hospital/4.png", "mecard/travel/hospital/5.png",
-], "mecard/travel/hospital/border.png", haltPnj("hospital", [0.9, 0.95, 1], null))
+import { concat } from "../../../../../../semantic"
+import type { Hero } from "../../../run/Hero"
+import { distinct, OFFER_SIZE } from "../../../run/offers"
+import { heartLootText, SPENT_LOOT_HEARTS } from "../../../run/Run"
+import type { HeartLoot, Run } from "../../../run/Run"
+import type { HaltContext } from "../../HaltContext"
+import type { HaltType } from "../../HaltType"
+import { haltPnj, sceneLook } from "../../SceneLook"
+import { DOOR_TRANSITION } from "../../transitions"
+import { AbstractHalt } from "../AbstractHalt"
 
 /** The hospital: the party healed, then hearts used once, chosen among a few drawn, for each character. */
 export class HospitalHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(HOSPITAL_HALT, run, LINE, LOOK)
+        super(HOSPITAL_HALT, run,
+            "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec des cœurs de plus.",
+            sceneLook(18, 33, 41, [
+                "mecard/travel/hospital/1.png", "mecard/travel/hospital/2.png", "mecard/travel/hospital/3.png",
+                "mecard/travel/hospital/4.png", "mecard/travel/hospital/5.png",
+            ], "mecard/travel/hospital/border.png", haltPnj("hospital", [0.9, 0.95, 1], null)),
+        )
     }
 
 

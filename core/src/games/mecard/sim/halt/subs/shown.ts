@@ -2,7 +2,7 @@ import { concat, joinText } from "../../../../../semantic"
 import type { Text } from "../../../../../semantic"
 import type { Card } from "../../card/Card"
 import { CardChain, signatureOf } from "../../card/CardChain"
-import { isFusion } from "../../card/subs/composite/FusionCard"
+import { isComposite } from "../../card/subs/composite/CompositeCard"
 import { deckNameOf } from "../../run/deckName"
 import { allCards } from "../../run/Hero"
 import type { Hero } from "../../run/Hero"
@@ -55,7 +55,7 @@ export function cardShown(card: Card, from?: readonly Card[]): Shown {
  * @param from - The deck it comes from or goes to, none for none.
  */
 export function fusionShown(fusion: Card, from?: readonly Card[]): Shown {
-    const chain = new CardChain(isFusion(fusion) ? fusion.contents : [fusion])
+    const chain = new CardChain(isComposite(fusion) ? fusion.contents : [fusion])
     const activity = chain.activity()
     const greyed = chain.cards.filter((_, index) => !activity[index])
     const { input } = signatureOf(fusion)

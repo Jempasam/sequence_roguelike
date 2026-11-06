@@ -1,29 +1,20 @@
-import { concat } from "../../../../../semantic"
-import type { Rng } from "../../base/Rng"
-import type { Card } from "../../card/Card"
-import { ITEMS, USABLES } from "../../catalog/index"
-import type { Item } from "../../item/Item"
-import { allCards } from "../../run/Hero"
-import { distinct, lootCards } from "../../run/offers"
-import type { Run } from "../../run/Run"
-import { removeCards } from "../../run/visits"
-import type { Usable } from "../../usable/Usable"
-import type { HaltContext, Shown } from "../HaltContext"
-import type { HaltType } from "../HaltType"
-import { haltPnj, sceneLook } from "../SceneLook"
-import { DOOR_TRANSITION } from "../transitions"
-import { AbstractHalt } from "./AbstractHalt"
-import { described, usableText } from "./shown"
-import { CARTE, DECK, SUPPRESSION, UNIT } from "../../base/keywords"
-
-/** What the shop says of itself. */
-const LINE = [CARTE.as("Cartes"), ", objets, utilisables. Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"]
-
-/** How the shop looks. */
-const LOOK = sceneLook(36, 28, 15, [
-    "mecard/travel/shop/1.png", "mecard/travel/shop/2.png", "mecard/travel/shop/3.png",
-    "mecard/travel/shop/4.png", "mecard/travel/shop/5.png",
-], "mecard/travel/shop/border.png", haltPnj("shop", [0.35, 0.55, 1], [1, 0.8, 0.3]))
+import { concat } from "../../../../../../semantic"
+import type { Rng } from "../../../base/Rng"
+import type { Card } from "../../../card/Card"
+import { ITEMS, USABLES } from "../../../catalog/index"
+import type { Item } from "../../../item/Item"
+import { allCards } from "../../../run/Hero"
+import { distinct, lootCards } from "../../../run/offers"
+import type { Run } from "../../../run/Run"
+import { removeCards } from "../../../run/visits"
+import type { Usable } from "../../../usable/Usable"
+import type { HaltContext, Shown } from "../../HaltContext"
+import type { HaltType } from "../../HaltType"
+import { haltPnj, sceneLook } from "../../SceneLook"
+import { DOOR_TRANSITION } from "../../transitions"
+import { AbstractHalt } from "../AbstractHalt"
+import { described, usableText } from "../shown"
+import { CARTE, DECK, SUPPRESSION, UNIT } from "../../../base/keywords"
 
 /** What an item costs at the shop, in gold. */
 export const ITEM_PRICE = 50
@@ -75,7 +66,13 @@ export class ShopHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(SHOP_HALT, run, LINE, LOOK)
+        super(SHOP_HALT, run,
+            [CARTE.as("Cartes"), ", objets, utilisables. Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"],
+            sceneLook(36, 28, 15, [
+                "mecard/travel/shop/1.png", "mecard/travel/shop/2.png", "mecard/travel/shop/3.png",
+                "mecard/travel/shop/4.png", "mecard/travel/shop/5.png",
+            ], "mecard/travel/shop/border.png", haltPnj("shop", [0.35, 0.55, 1], [1, 0.8, 0.3])),
+        )
         this.#goods = shopGoods(run.rng)
     }
 

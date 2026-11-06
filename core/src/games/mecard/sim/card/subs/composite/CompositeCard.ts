@@ -47,6 +47,21 @@ export abstract class CompositeCard<T, U = undefined> extends AbstractCard<T, U>
     }
 }
 
+/** Is a card made of other cards, of any kind: a collage, a mélange or a draw between two? */
+export function isComposite(card: Card): card is Card & { readonly contents: readonly Card[] } {
+    return card instanceof CompositeCard
+}
+
+/**
+ * The cards a composite is cut back into, one level down: one inside it stays whole.
+ *
+ * @throws {@link Error} When the card is not a composite.
+ */
+export function cut(card: Card): readonly Card[] {
+    if(!isComposite(card)) throw new Error(`${card.name} is not made of cards: there is nothing to cut.`)
+    return card.contents
+}
+
 /**
  * How many cards of the catalog a card is made of: one for a card holding none, and for one holding cards,
  * those of each of them.

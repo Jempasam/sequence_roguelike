@@ -10,7 +10,7 @@ import { SWEEP } from "../attack/Sweep"
 import { THRUST } from "../attack/Thrust"
 import { CompositeCard } from "./CompositeCard"
 import type { CompositeLook } from "./CompositeCard"
-import { COLLAGE } from "../../../base/keywords"
+import { FUSION } from "../../../base/keywords"
 
 /** What a fusion is named by, between the names of its cards. */
 const FUSION_JOIN = " + "
@@ -31,7 +31,7 @@ export class FusionCard extends CompositeCard<Preparation> {
     constructor(cards: readonly Card[], look: CompositeLook = {}){
         if(cards.length < 2) throw new Error(`A fusion holds two cards at least, not ${cards.length}.`)
         super(cards, FUSION_JOIN, contents => {
-            return [COLLAGE.as("Collage"), ". Fin de préparation : se remplace par ", ...joinText(contents, ", "), ", dans l'ordre."]
+            return [FUSION.as("Collage"), ". Fin de préparation : se remplace par ", ...joinText(contents, ", "), ", dans l'ordre."]
         }, look)
         this.#preparation = { rewrite: () => ({ cards: this.contents, consumed: 0, acting: false }) }
     }
@@ -45,19 +45,9 @@ export class FusionCard extends CompositeCard<Preparation> {
     readonly #preparation: Preparation
 }
 
-/** Is a card a fusion? */
+/** Is a card a fusion, a collage only? */
 export function isFusion(card: Card): card is FusionCard {
     return card instanceof FusionCard
-}
-
-/**
- * The cards a fusion is cut back into, one level down: a fusion inside it stays whole.
- *
- * @throws {@link Error} When the card is not a fusion.
- */
-export function cut(card: Card): readonly Card[] {
-    if(!isFusion(card)) throw new Error(`${card.name} is not a fusion: there is nothing to cut.`)
-    return card.contents
 }
 
 /** Two thrusts for one card of room, each a coin toss. */

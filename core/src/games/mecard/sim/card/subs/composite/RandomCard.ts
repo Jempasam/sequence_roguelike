@@ -9,6 +9,7 @@ import { THRUST } from "../attack/Thrust"
 import { FIRE, WATER } from "../spell/ElementCard"
 import { CompositeCard } from "./CompositeCard"
 import type { CompositeLook } from "./CompositeCard"
+import { RANDOM } from "../../../base/keywords"
 
 /** What a random card is named by, between the names of its cards. */
 const RANDOM_JOIN = " | "
@@ -31,7 +32,7 @@ export class RandomCard extends CompositeCard<Preparation> {
             throw new Error(`${first.name} and ${second.name} do not take and give the same: no draw between them.`)
         }
         super([first, second], RANDOM_JOIN, ([one, other]) => {
-            return ["Fin de préparation : devient ", one, " ou ", other, ", au hasard."]
+            return [RANDOM.as("Hasard"), ". Fin de préparation : devient ", one, " ou ", other, ", tirée au sort."]
         }, look)
         this.#preparation = {
             rewrite: ctx => ({ cards: [ctx.pick(this.contents)], consumed: 0, acting: false }),

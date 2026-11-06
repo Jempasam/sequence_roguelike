@@ -11,15 +11,6 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { usableText } from "../shown"
 
-/** What the witch says of itself. */
-const LINE = "Trois utilisables mijotent ici. Prends-en un."
-
-/** How the witch looks. */
-const LOOK = sceneLook(20, 31, 15, [
-    "mecard/travel/witch/1.png", "mecard/travel/witch/2.png", "mecard/travel/witch/3.png",
-    "mecard/travel/witch/4.png", "mecard/travel/witch/5.png",
-], "mecard/travel/witch/border.png", haltPnj("witch", [0.45, 0.85, 0.3], [0.5, 0.25, 0.7], { done: "spin" }))
-
 /** The usables a witch offers. */
 export function witchUsables(rng: Rng): Usable[] {
     return distinct(rng, USABLES, OFFER_SIZE)
@@ -30,7 +21,13 @@ export class WitchHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(WITCH_HALT, run, LINE, LOOK)
+        super(WITCH_HALT, run,
+            "Trois utilisables mijotent ici. Prends-en un.",
+            sceneLook(20, 31, 15, [
+                "mecard/travel/witch/1.png", "mecard/travel/witch/2.png", "mecard/travel/witch/3.png",
+                "mecard/travel/witch/4.png", "mecard/travel/witch/5.png",
+            ], "mecard/travel/witch/border.png", haltPnj("witch", [0.45, 0.85, 0.3], [0.5, 0.25, 0.7], { done: "spin" })),
+        )
         this.#usables = witchUsables(run.rng)
     }
 

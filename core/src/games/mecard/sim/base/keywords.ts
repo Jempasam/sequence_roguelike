@@ -6,11 +6,17 @@ import { Keyword } from "../../../../semantic"
 /** The unit damage and life are counted in, half a heart. */
 export const HEART = new Keyword("cœur")
 
+/** Any card made of other cards: a collage, a mélange, or one of two drawn at random. */
+export const COMPOSITE = new Keyword("fusion")
+
 /** Cards laid end to end in the room of one, which take its place at the end of the preparation. */
-export const COLLAGE = new Keyword("collage")
+export const FUSION = new Keyword("collage")
 
 /** Two cards of actions played at once. */
-export const MELANGE = new Keyword("mélange")
+export const MERGE = new Keyword("mélange")
+
+/** Two cards of which one is drawn at the end of the preparation. */
+export const RANDOM = new Keyword("hasard")
 
 export const CARTE = new Keyword("carte")
 

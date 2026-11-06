@@ -1,24 +1,21 @@
 /**
  * @packageDocumentation
- * The halts of Dungeon of the Mecard, one file for each: its file exports its class and its sort. Those
- * working on one deck are in `deck`, and those giving something taken among a few offers in `gift`.
+ * The halts of Dungeon of the Mecard, one file for each: its file exports its class and its sort. They are
+ * sorted by what they work on: a deck in `deck`, something taken among a few offers or bought in `gift`, and
+ * the characters of the party in `party`.
  * {@link AbstractHalt} is what they all share, {@link DeckHalt} and {@link CardGiftHalt} the mechanisms some
  * of them share.
  */
 
 export * from "./AbstractHalt"
-export * from "./DeckHalt"
-export * from "./EnchanterHalt"
 export * from "./ExitHalt"
-export * from "./HospitalHalt"
-export * from "./MadDoctorHalt"
-export * from "./NecromancerHalt"
-export * from "./ShopHalt"
 export * from "./deck/AlchemistHalt"
 export * from "./deck/AltarHalt"
 export * from "./deck/AntiquarianHalt"
 export * from "./deck/ButcherHalt"
+export * from "./deck/DeckHalt"
 export * from "./deck/DemonHalt"
+export * from "./deck/EnchanterHalt"
 export * from "./deck/ForgeHalt"
 export * from "./deck/RemovalHalt"
 export * from "./deck/StrategistHalt"
@@ -28,7 +25,11 @@ export * from "./gift/ChestHalt"
 export * from "./gift/InventorHalt"
 export * from "./gift/MagicianHalt"
 export * from "./gift/MerchantHalt"
+export * from "./gift/ShopHalt"
 export * from "./gift/TavernHalt"
 export * from "./gift/TrainerHalt"
 export * from "./gift/WitchHalt"
+export * from "./party/HospitalHalt"
+export * from "./party/MadDoctorHalt"
+export * from "./party/NecromancerHalt"
 export * from "./shown"

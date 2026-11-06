@@ -10,15 +10,6 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
 
-/** What the magician says of itself. */
-const LINE = ["Trois boosters, et chacun tient des ", CARTE.as("cartes"), " assorties."]
-
-/** How the magician looks. */
-const LOOK = sceneLook(26, 13, 41, [
-    "mecard/travel/magician/1.png", "mecard/travel/magician/2.png", "mecard/travel/magician/3.png",
-    "mecard/travel/magician/4.png", "mecard/travel/magician/5.png",
-], "mecard/travel/magician/border.png", haltPnj("magician", [0.6, 0.3, 1], [0.2, 0.15, 0.4], { done: "spin" }))
-
 /** A booster, closed: the card it is pictured by, and what it holds. */
 function boosterShown(chosen: Booster): Shown {
     const count = chosen.pools.reduce((sum, pool) => sum + pool.count, 0)
@@ -30,7 +21,13 @@ export class MagicianHalt extends CardGiftHalt {
 
 
     constructor(run: Run){
-        super(MAGICIAN_HALT, run, LINE, LOOK)
+        super(MAGICIAN_HALT, run,
+            ["Trois boosters, et chacun tient des ", CARTE.as("cartes"), " assorties."],
+            sceneLook(26, 13, 41, [
+                "mecard/travel/magician/1.png", "mecard/travel/magician/2.png", "mecard/travel/magician/3.png",
+                "mecard/travel/magician/4.png", "mecard/travel/magician/5.png",
+            ], "mecard/travel/magician/border.png", haltPnj("magician", [0.6, 0.3, 1], [0.2, 0.15, 0.4], { done: "spin" })),
+        )
         this.#boosters = distinct(run.rng, BOOSTERS, OFFER_SIZE)
     }
 

@@ -7,17 +7,8 @@ import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { haltPnj, sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
-import { DeckHalt } from "../DeckHalt"
+import { DeckHalt } from "./DeckHalt"
 import { CARTE, DECK } from "../../../base/keywords"
-
-/** What the altar says of itself. */
-const LINE = ["Offre deux ", CARTE.as("cartes"), ", et je copie une troisième de ton ", DECK, "."]
-
-/** How the altar looks. */
-const LOOK = sceneLook(36, 13, 18, [
-    "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
-    "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
-], "mecard/travel/altar/border.png", haltPnj("altar", [0.9, 0.2, 0.25], [1, 0.85, 0.3]))
 
 /** The cards of a deck with one copy of each card given taken out. */
 function without(cards: readonly Card[], taken: readonly Card[]): Card[] {
@@ -34,7 +25,13 @@ export class AltarHalt extends DeckHalt {
 
 
     constructor(run: Run){
-        super(ALTAR_HALT, run, LINE, LOOK)
+        super(ALTAR_HALT, run,
+            ["Offre deux ", CARTE.as("cartes"), ", et je copie une troisième de ton ", DECK, "."],
+            sceneLook(36, 13, 18, [
+                "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
+                "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
+            ], "mecard/travel/altar/border.png", haltPnj("altar", [0.9, 0.2, 0.25], [1, 0.85, 0.3])),
+        )
     }
 
 

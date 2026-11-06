@@ -11,15 +11,6 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described } from "../shown"
 
-/** What the merchant says of itself. */
-const LINE = "J'ai trois objets pour toi. Prends-en un !"
-
-/** How the merchant looks. */
-const LOOK = sceneLook(33, 23, 20, [
-    "mecard/travel/merchant/1.png", "mecard/travel/merchant/2.png", "mecard/travel/merchant/3.png",
-    "mecard/travel/merchant/4.png", "mecard/travel/merchant/5.png",
-], "mecard/travel/merchant/border.png", haltPnj("merchant", null, null))
-
 /** The items a merchant offers. */
 export function merchantItems(rng: Rng): Item[] {
     return distinct(rng, ITEMS, OFFER_SIZE)
@@ -30,7 +21,13 @@ export class MerchantHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(MERCHANT_HALT, run, LINE, LOOK)
+        super(MERCHANT_HALT, run,
+            "J'ai trois objets pour toi. Prends-en un !",
+            sceneLook(33, 23, 20, [
+                "mecard/travel/merchant/1.png", "mecard/travel/merchant/2.png", "mecard/travel/merchant/3.png",
+                "mecard/travel/merchant/4.png", "mecard/travel/merchant/5.png",
+            ], "mecard/travel/merchant/border.png", haltPnj("merchant", null, null)),
+        )
         this.#items = merchantItems(run.rng)
     }
 

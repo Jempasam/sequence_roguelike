@@ -1,25 +1,16 @@
-import { concat } from "../../../../../semantic"
-import type { Hero } from "../../run/Hero"
-import { distinct } from "../../run/offers"
-import { heartLootText, KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../run/Run"
-import type { HeartLoot, Run } from "../../run/Run"
-import type { HaltContext, Shown } from "../HaltContext"
-import type { HaltType } from "../HaltType"
-import { haltPnj, sceneLook } from "../SceneLook"
-import { DOOR_TRANSITION } from "../transitions"
-import { AbstractHalt } from "./AbstractHalt"
+import { concat } from "../../../../../../semantic"
+import type { Hero } from "../../../run/Hero"
+import { distinct } from "../../../run/offers"
+import { heartLootText, KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../../run/Run"
+import type { HeartLoot, Run } from "../../../run/Run"
+import type { HaltContext, Shown } from "../../HaltContext"
+import type { HaltType } from "../../HaltType"
+import { haltPnj, sceneLook } from "../../SceneLook"
+import { DOOR_TRANSITION } from "../../transitions"
+import { AbstractHalt } from "../AbstractHalt"
 
 /** How many kinds of heart the necromancer offers, each time it asks. */
 export const NECROMANCER_OFFER_SIZE = 2
-
-/** What the necromancer says of itself. */
-const LINE = "Les cœurs des morts battent encore. Un qui revient, un qui s'use : à toi de choisir."
-
-/** How the necromancer looks. Waiting for its own art: the scene of the altar. */
-const LOOK = sceneLook(36, 13, 18, [
-    "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
-    "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
-], "mecard/travel/altar/border.png", haltPnj("necromancer", [0.2, 0.15, 0.3], null))
 
 /** Hearts as a dialog offers them. */
 function lootShown(loot: HeartLoot): Shown {
@@ -31,7 +22,14 @@ export class NecromancerHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(NECROMANCER_HALT, run, LINE, LOOK)
+        super(NECROMANCER_HALT, run,
+            "Les cœurs des morts battent encore. Un qui revient, un qui s'use : à toi de choisir.",
+            // Waiting for its own art: the scene of the altar.
+            sceneLook(36, 13, 18, [
+                "mecard/travel/altar/1.png", "mecard/travel/altar/2.png", "mecard/travel/altar/3.png",
+                "mecard/travel/altar/4.png", "mecard/travel/altar/5.png",
+            ], "mecard/travel/altar/border.png", haltPnj("necromancer", [0.2, 0.15, 0.3], null)),
+        )
         this.#kept = distinct(run.rng, KEPT_LOOT_HEARTS, NECROMANCER_OFFER_SIZE)
         this.#spent = distinct(run.rng, SPENT_LOOT_HEARTS, NECROMANCER_OFFER_SIZE)
     }

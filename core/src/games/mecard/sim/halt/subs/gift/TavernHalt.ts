@@ -13,15 +13,6 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { stuffOf } from "../shown"
 
-/** What the tavern says of itself. */
-const LINE = "Ces héros boivent ici. L'un d'eux peut te suivre."
-
-/** How the tavern looks. */
-const LOOK = sceneLook(36, 23, 13, [
-    "mecard/travel/tavern/1.png", "mecard/travel/tavern/2.png", "mecard/travel/tavern/3.png",
-    "mecard/travel/tavern/4.png", "mecard/travel/tavern/5.png",
-], "mecard/travel/tavern/border.png", haltPnj("tavern", [1, 0.6, 0.25], [0.55, 0.2, 0.15]))
-
 /** The kits a tavern offers: heroes not in the party yet, fewer when fewer are left. */
 export function tavernKits(rng: Rng, party: readonly Hero[]): Kit[] {
     const free = KITS.filter(kit => !party.some(hero => hero.name === kit.name))
@@ -33,7 +24,13 @@ export class TavernHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(TAVERN_HALT, run, LINE, LOOK)
+        super(TAVERN_HALT, run,
+            "Ces héros boivent ici. L'un d'eux peut te suivre.",
+            sceneLook(36, 23, 13, [
+                "mecard/travel/tavern/1.png", "mecard/travel/tavern/2.png", "mecard/travel/tavern/3.png",
+                "mecard/travel/tavern/4.png", "mecard/travel/tavern/5.png",
+            ], "mecard/travel/tavern/border.png", haltPnj("tavern", [1, 0.6, 0.25], [0.55, 0.2, 0.15])),
+        )
         this.#kits = tavernKits(run.rng, run.heroes)
     }
 

@@ -7,7 +7,7 @@ import { THRUST } from "../attack/Thrust"
 import { STEP } from "../movement/Step"
 import { CompositeCard } from "./CompositeCard"
 import type { CompositeLook } from "./CompositeCard"
-import { MELANGE } from "../../../base/keywords"
+import { MERGE } from "../../../base/keywords"
 
 /** What a merged card is named by, between the names of its cards. */
 const MERGED_JOIN = " & "
@@ -30,7 +30,7 @@ export class MergedCard extends CompositeCard<readonly Action[]> {
             }
         }
         super([first, second], MERGED_JOIN, ([one, other]) => {
-            return [MELANGE.as("Mélange"), " : joue ", one, " et ", other, " en même temps, en une seule étape."]
+            return [MERGE.as("Mélange"), " : joue ", one, " et ", other, " en même temps, en une seule étape."]
         }, look)
     }
 

@@ -1,9 +1,9 @@
-import type { Card } from "../../card/Card"
-import type { Hero } from "../../run/Hero"
-import type { HaltContext } from "../HaltContext"
+import type { Card } from "../../../card/Card"
+import type { Hero } from "../../../run/Hero"
+import type { HaltContext } from "../../HaltContext"
 
-import { AbstractHalt } from "./AbstractHalt"
-import { DECK } from "../../base/keywords"
+import { AbstractHalt } from "../AbstractHalt"
+import { DECK } from "../../../base/keywords"
 
 /** A halt working on one deck of one character, both asked first, among those it can work on. */
 export abstract class DeckHalt extends AbstractHalt {

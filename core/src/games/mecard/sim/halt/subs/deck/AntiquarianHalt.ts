@@ -7,17 +7,8 @@ import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { haltPnj, sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
-import { DeckHalt } from "../DeckHalt"
+import { DeckHalt } from "./DeckHalt"
 import { CARTE } from "../../../base/keywords"
-
-/** What the antiquarian says of itself. */
-const LINE = ["Vends-moi une ", CARTE, " : plus elle en tient, plus je paie."]
-
-/** How the antiquarian looks. */
-const LOOK = sceneLook(31, 26, 23, [
-    "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
-    "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
-], "mecard/travel/antiquarian/border.png", haltPnj("antiquarian", [0.7, 0.6, 0.5], [0.45, 0.2, 0.5]))
 
 /** What the antiquarian pays of the prices of the cards a card holds, for each of them. */
 const SHARE_PER_CARD = 0.5
@@ -49,7 +40,13 @@ export class AntiquarianHalt extends DeckHalt {
 
 
     constructor(run: Run){
-        super(ANTIQUARIAN_HALT, run, LINE, LOOK)
+        super(ANTIQUARIAN_HALT, run,
+            ["Vends-moi une ", CARTE, " : plus elle en tient, plus je paie."],
+            sceneLook(31, 26, 23, [
+                "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
+                "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
+            ], "mecard/travel/antiquarian/border.png", haltPnj("antiquarian", [0.7, 0.6, 0.5], [0.45, 0.2, 0.5])),
+        )
     }
 
 

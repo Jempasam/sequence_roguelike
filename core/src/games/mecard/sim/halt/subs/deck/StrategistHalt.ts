@@ -14,15 +14,6 @@ import { AbstractHalt } from "../AbstractHalt"
 import { decksShown } from "../shown"
 import { CARTE, DECK } from "../../../base/keywords"
 
-/** What the strategist says of itself. */
-const LINE = ["Deux ", DECK.as("decks"), " valent mieux qu'un. Je divise, je trie, je fusionne, ou je t'apprends à piocher."]
-
-/** How the strategist looks. Waiting for its own art: the scene of the antiquarian. */
-const LOOK = sceneLook(31, 26, 23, [
-    "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
-    "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
-], "mecard/travel/antiquarian/border.png", haltPnj("strategist", [0.2, 0.3, 0.6], [0.8, 0.65, 0.25]))
-
 /** What the strategist may do with the decks of a character. */
 type StrategistPlan = "split"|"sort"|"join"|"draw"
 
@@ -56,7 +47,14 @@ export class StrategistHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(STRATEGIST_HALT, run, LINE, LOOK)
+        super(STRATEGIST_HALT, run,
+            ["Deux ", DECK.as("decks"), " valent mieux qu'un. Je divise, je trie, je fusionne, ou je t'apprends à piocher."],
+            // Waiting for its own art: the scene of the antiquarian.
+            sceneLook(31, 26, 23, [
+                "mecard/travel/antiquarian/1.png", "mecard/travel/antiquarian/2.png", "mecard/travel/antiquarian/3.png",
+                "mecard/travel/antiquarian/4.png", "mecard/travel/antiquarian/5.png",
+            ], "mecard/travel/antiquarian/border.png", haltPnj("strategist", [0.2, 0.3, 0.6], [0.8, 0.65, 0.25])),
+        )
     }
 
 

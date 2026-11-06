@@ -1,30 +1,21 @@
-import { concat } from "../../../../../semantic"
-import type { Rng } from "../../base/Rng"
-import type { Card } from "../../card/Card"
-import { readsWhole } from "../../card/CardChain"
-import { FusionCard } from "../../card/subs/composite/FusionCard"
-import { LOOT_CARDS } from "../../catalog/index"
-import { allCards } from "../../run/Hero"
-import type { Hero } from "../../run/Hero"
-import { lootCards, OFFER_SIZE } from "../../run/offers"
-import type { Run } from "../../run/Run"
-import { removeCards } from "../../run/visits"
-import type { HaltContext } from "../HaltContext"
-import type { HaltType } from "../HaltType"
-import { haltPnj, sceneLook } from "../SceneLook"
-import { DOOR_TRANSITION } from "../transitions"
-import { AbstractHalt } from "./AbstractHalt"
-import { cardShown, fusionShown } from "./shown"
-import { CARTE, COLLAGE, DECK } from "../../base/keywords"
-
-/** What the enchanter says of itself. */
-const LINE = ["Je ", COLLAGE.as("colle"), " à ta ", CARTE, " l'un de mes trois enchantements."]
-
-/** How the enchanter looks. */
-const LOOK = sceneLook(15, 23, 43, [
-    "mecard/travel/enchanter/1.png", "mecard/travel/enchanter/2.png", "mecard/travel/enchanter/3.png",
-    "mecard/travel/enchanter/4.png", "mecard/travel/enchanter/5.png",
-], "mecard/travel/enchanter/border.png", haltPnj("enchanter", [0.3, 0.45, 1], [0.75, 0.35, 1]))
+import { concat } from "../../../../../../semantic"
+import type { Rng } from "../../../base/Rng"
+import type { Card } from "../../../card/Card"
+import { readsWhole } from "../../../card/CardChain"
+import { FusionCard } from "../../../card/subs/composite/FusionCard"
+import { LOOT_CARDS } from "../../../catalog/index"
+import { allCards } from "../../../run/Hero"
+import type { Hero } from "../../../run/Hero"
+import { lootCards, OFFER_SIZE } from "../../../run/offers"
+import type { Run } from "../../../run/Run"
+import { removeCards } from "../../../run/visits"
+import type { HaltContext } from "../../HaltContext"
+import type { HaltType } from "../../HaltType"
+import { haltPnj, sceneLook } from "../../SceneLook"
+import { DOOR_TRANSITION } from "../../transitions"
+import { AbstractHalt } from "../AbstractHalt"
+import { cardShown, fusionShown } from "../shown"
+import { CARTE, FUSION, DECK } from "../../../base/keywords"
 
 /**
  * The order an enchantment and a card of a deck fuse in: the enchantment first when it takes the card,
@@ -80,7 +71,13 @@ export class EnchanterHalt extends AbstractHalt {
 
 
     constructor(run: Run){
-        super(ENCHANTER_HALT, run, LINE, LOOK)
+        super(ENCHANTER_HALT, run,
+            ["Je ", FUSION.as("colle"), " à ta ", CARTE, " l'un de mes trois enchantements."],
+            sceneLook(15, 23, 43, [
+                "mecard/travel/enchanter/1.png", "mecard/travel/enchanter/2.png", "mecard/travel/enchanter/3.png",
+                "mecard/travel/enchanter/4.png", "mecard/travel/enchanter/5.png",
+            ], "mecard/travel/enchanter/border.png", haltPnj("enchanter", [0.3, 0.45, 1], [0.75, 0.35, 1])),
+        )
         this.#offered = enchantments(run.rng, run.heroes)
     }
 
@@ -109,7 +106,7 @@ export class EnchanterHalt extends AbstractHalt {
     #chooseTarget(ctx: HaltContext, enchantment: Card, deck: Card[], back?: () => void): void {
         const title = concat(enchantment, " : sur quelle ", CARTE, " ?")
         const pick = (): void => ctx.cards(title, deck, { min: 1, max: 1 }, ([target]) => {
-            ctx.confirm(["Le ", COLLAGE, " enchanté :"], fusionShown(enchanted(enchantment, target), deck), "Enchanter", () => {
+            ctx.confirm(["Le ", FUSION, " enchanté :"], fusionShown(enchanted(enchantment, target), deck), "Enchanter", () => {
                 this.impact()
                 ctx.tell("Enchantée :", fusionShown(this.run.changeDeck(deck, changed => enchant(changed, enchantment, target)), deck))
             }, { back: pick })
@@ -121,7 +118,7 @@ export class EnchanterHalt extends AbstractHalt {
 /** The sort of the enchanter. */
 export const ENCHANTER_HALT: HaltType = {
     name: "Enchanteur",
-    description: ["Une ", CARTE, " parmi trois, ", COLLAGE.as("collée"), " à une ", CARTE, " du ", DECK, "."],
+    description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],
     code: "EN",
     icon: "mecard/travel/enchanter/logo.png",
     transition: DOOR_TRANSITION,

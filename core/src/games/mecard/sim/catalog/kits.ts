@@ -115,9 +115,9 @@ export const KITS: readonly Kit[] = [
 function shared<T>(first: readonly T[], second: readonly T[]): number {
     const left = [...second]
     let count = 0
-    for(const each of first){
+    for (const each of first) {
         const at = left.indexOf(each)
-        if(at >= 0){
+        if (at >= 0) {
             left.splice(at, 1)
             count++
         }
@@ -142,9 +142,9 @@ export function kitScore(hero: Hero, kit: Kit): number {
 export function closestKit(hero: Hero, kits: readonly Kit[] = KITS): Kit {
     let best = kits[0]
     let bestScore = -1
-    for(const kit of kits){
+    for (const kit of kits) {
         const score = kitScore(hero, kit)
-        if(score > bestScore){
+        if (score > bestScore) {
             best = kit
             bestScore = score
         }

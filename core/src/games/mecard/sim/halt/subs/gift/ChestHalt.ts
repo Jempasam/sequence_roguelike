@@ -9,21 +9,20 @@ import { cardShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
 
-/** What the chest says of itself: no character stands there, so it is only told. */
-const LINE = ["Une ", CARTE, " parmi trois, gratuite."]
-
-/** How the chest looks, with nobody standing there. */
-const LOOK = sceneLook(31, 23, 13, [
-    "mecard/travel/chest/1.png", "mecard/travel/chest/2.png", "mecard/travel/chest/3.png",
-    "mecard/travel/chest/4.png", "mecard/travel/chest/5.png",
-], "mecard/travel/chest/border.png")
-
 /** The chest: a card among some, free. */
 export class ChestHalt extends CardGiftHalt {
 
 
     constructor(run: Run){
-        super(CHEST_HALT, run, LINE, LOOK)
+        super(CHEST_HALT, run,
+            // No character stands there, so it is only told.
+            ["Une ", CARTE, " parmi trois, gratuite."],
+            // Nobody standing there.
+            sceneLook(31, 23, 13, [
+                "mecard/travel/chest/1.png", "mecard/travel/chest/2.png", "mecard/travel/chest/3.png",
+                "mecard/travel/chest/4.png", "mecard/travel/chest/5.png",
+            ], "mecard/travel/chest/border.png"),
+        )
         this.#cards = lootCards(run.rng, OFFER_SIZE)
     }
 

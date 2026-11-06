@@ -1,21 +1,22 @@
 import { describe, expect, test } from "vitest"
 import {
-    AIM, canUpgrade, DOUBLE_DIAGONAL, FIRE, FOCUS, LOOT_CARDS, readsWhole, REPEAT_2, Rng, SLASH, SPELL,
-    upgradeOf,
+    AIM, canUpgrade, FIRE, isFusion, LOOT_CARDS, readsWhole, Rng, SLASH, SPELL, upgradeOf,
 } from "@game/core/mecard"
 
 // --- Tests ---
 
 describe("upgradeOf", () => {
-    test("a blow → doubled or played to both diagonals, first", () => {
+    test("a blow → a card made of it and an upgrade", () => {
         const upgrade = upgradeOf(SLASH, new Rng(1))
-        expect([REPEAT_2, DOUBLE_DIAGONAL]).toContain(upgrade?.[0])
-        expect(upgrade?.[1]).toBe(SLASH)
+        expect(upgrade?.contents).toContain(SLASH)
+        expect(upgrade?.contents?.length).toBe(2)
     })
 
-    test("an element → its spell first; a preparation card → twice", () => {
-        expect(upgradeOf(FIRE, new Rng(1))).toEqual([SPELL, FIRE])
-        expect(upgradeOf(FOCUS, new Rng(1))).toEqual([FOCUS, FOCUS])
+    test("an element → no card is made of nothing: it still takes its spell in front", () => {
+        for(let seed = 1; seed < 20; seed++){
+            const upgrade = upgradeOf(FIRE, new Rng(seed))
+            if(upgrade && isFusion(upgrade)) expect(upgrade.contents).toEqual([SPELL, FIRE])
+        }
     })
 
     test("an aim → none; every upgrade of the loot reads whole", () => {
@@ -23,7 +24,7 @@ describe("upgradeOf", () => {
         expect(upgradeOf(AIM, new Rng(1))).toBeNull()
         for(const card of LOOT_CARDS){
             const upgrade = upgradeOf(card, new Rng(2))
-            if(upgrade) expect(readsWhole(upgrade)).toBe(true)
+            if(upgrade?.contents) expect(readsWhole(upgrade.contents)).toBe(true)
         }
     })
 })

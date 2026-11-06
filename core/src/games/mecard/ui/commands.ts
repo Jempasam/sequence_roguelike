@@ -83,6 +83,9 @@ export interface MecardContext extends CommandContext {
     /** Open the bench of the forearm of the halts, where it points at the pointer for a try. */
     showArm(): void
 
+    /** Open the catalogue of the cards, hearts, monsters and the rest of the game. */
+    showLibrary(): void
+
     /** Play a transition over the screen, for a try, telling its middle and its end. */
     playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void
 
@@ -134,6 +137,7 @@ export class LiveContext implements MecardContext {
     public visit(kind: HaltKind): void { this.host().visit(kind) }
     public showPnj(): void { this.host().showPnj() }
     public showArm(): void { this.host().showArm() }
+    public showLibrary(): void { this.host().showLibrary() }
     public playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void {
         this.host().playTransition(path, duration, reverse)
     }
@@ -821,7 +825,7 @@ const DEFAULT_TRANSITION = 1500
 /** The ways a transition is played, as typed. */
 const TRANSITION_WAYS = ["endroit", "envers"] as const
 
-/** The commands of the tools of the game, outside the run: `pnj`, `bras`, `transition`. */
+/** The commands of the tools of the game, outside the run: `pnj`, `bras`, `catalogue`, `transition`. */
 function toolCommands(): Record<string, Command<MecardContext, unknown>> {
     return {
         pnj: command("pnj : ouvre le banc d'essai des PNJ, leurs animations, chapeaux et vêtements.", [], ctx => {
@@ -829,6 +833,9 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
         }),
         bras: command("bras : ouvre le banc d'essai du bras des haltes, qui pointe vers la souris.", [], ctx => {
             ctx.showArm()
+        }),
+        catalogue: command("catalogue : ouvre le catalogue des cartes, cœurs, monstres et autres.", [], ctx => {
+            ctx.showLibrary()
         }),
         transition: command(
             "transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"

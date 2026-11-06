@@ -58,7 +58,7 @@ export {
     MAX_DIRTY_RECTS, MIN_VIRTUAL_HEIGHT,
     NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
     Slider, Stack, Tabs, TextInput, TileRun, Tilt, Tooltip, TOOLTIP_DELAY, Transition, UI_BINDINGS, uiActions,
-    UiRoot, WHEEL_STEP,
+    UiRoot, WHEEL_STEP, WrapBox,
 } from "./engine/ui"
 export type {
     Align, Animation, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,

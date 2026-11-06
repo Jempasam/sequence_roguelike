@@ -119,16 +119,15 @@ export function cutFusions(deck: Card[], fusions: readonly Card[]): void {
 }
 
 /**
- * Make two copies of a card of a deck one better card, at the alchemist: the copies leave, the upgrade
- * comes in, fused.
+ * Make two copies of a card of a deck one better card, at the alchemist: the copies leave, the upgraded
+ * card comes in.
  *
- * @returns The fusion, now in the deck in place of the copies.
+ * @returns The upgraded card, now in the deck in place of the copies.
  */
-export function transmute(deck: Card[], card: Card, upgrade: readonly Card[]): Card {
+export function transmute(deck: Card[], card: Card, upgraded: Card): Card {
     removeCards(deck, [card, card])
-    const fusion = new FusionCard(upgrade)
-    deck.push(fusion)
-    return fusion
+    deck.push(upgraded)
+    return upgraded
 }
 
 /**

@@ -59,9 +59,9 @@ describe("forge and cutFusions", () => {
 })
 
 describe("transmute", () => {
-    test("two copies → one fusion of the upgrade", () => {
+    test("two copies → the upgraded card in their place", () => {
         const hero = holding(THRUST, THRUST, STEP)
-        const fusion = transmute(hero.decks[0], THRUST, [REPEAT_2, THRUST])
+        const fusion = transmute(hero.decks[0], THRUST, new FusionCard([REPEAT_2, THRUST]))
         expect(hero.decks[0]).toEqual([STEP, fusion])
     })
 })

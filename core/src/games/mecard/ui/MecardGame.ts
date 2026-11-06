@@ -13,6 +13,7 @@ import type { SyncRoom, SyncSender } from "../sync/SyncChannel"
 
 import { LiveContext, registerCommands } from "./commands"
 import type { MecardContext, MecardHost } from "./commands"
+import { LibraryScreen } from "./library/LibraryScreen"
 import { UnitSprites } from "./look/UnitSprites"
 import { PnjScreen } from "./pnj/PnjScreen"
 import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
@@ -102,6 +103,7 @@ export class MecardGame {
             report: text => this.#console.print(text),
             leave: () => this.#travelOn(),
         }, assets)
+        this.#library = new LibraryScreen(theme, ui, { leave: () => this.#travelOn() }, sprites)
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi,
             restart: () => this.restart(),
@@ -133,6 +135,7 @@ export class MecardGame {
             },
             showPnj: () => this.#pnjOn(),
             showArm: () => this.#armOn(),
+            showLibrary: () => this.#libraryOn(),
             hostGame: (mode, policy) => this.hostGame(mode, policy),
             connect: (code, guest) => this.#connect(code, guest),
             playTransition: (path, duration, reverse) => {
@@ -162,6 +165,7 @@ export class MecardGame {
         this.#openConsole(input)
         if(this.#pnj.visible) this.#pnj.frame()
         else if(this.#arm.visible) this.#arm.frame()
+        else if(this.#library.visible) this.#library.frame(input)
         this.#screen.frame(input, world, dt)
     }
 
@@ -208,6 +212,7 @@ export class MecardGame {
     readonly #screen: RunScreen
     readonly #pnj: PnjScreen
     readonly #arm: ArmScreen
+    readonly #library: LibraryScreen
     readonly #broadcaster: RunBroadcaster|null
     readonly #console: Console<MecardContext>
     readonly #consoleView: ConsoleView<MecardContext>
@@ -279,6 +284,7 @@ export class MecardGame {
     #benchesOff(): void {
         this.#pnj.visible = false
         this.#arm.visible = false
+        this.#library.visible = false
         if(!this.#screen.visible) this.#screen.visible = true
     }
 
@@ -286,6 +292,7 @@ export class MecardGame {
     #pnjOn(): void {
         this.#screen.visible = false
         this.#arm.visible = false
+        this.#library.visible = false
         this.#pnj.visible = true
     }
 
@@ -293,7 +300,16 @@ export class MecardGame {
     #armOn(): void {
         this.#screen.visible = false
         this.#pnj.visible = false
+        this.#library.visible = false
         this.#arm.visible = true
+    }
+
+    /** Show the catalogue alone, the run left where it stands. */
+    #libraryOn(): void {
+        this.#screen.visible = false
+        this.#pnj.visible = false
+        this.#arm.visible = false
+        this.#library.visible = true
     }
 
 

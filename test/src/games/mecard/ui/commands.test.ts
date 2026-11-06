@@ -50,6 +50,7 @@ function game(): Game {
         visit: kind => visited.push(kind),
         showPnj: () => {},
         showArm: () => {},
+        showLibrary: () => {},
         playTransition: (path, duration, reverse) => transitions.push([path, duration, reverse]),
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),

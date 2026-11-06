@@ -1,14 +1,21 @@
 import { describe, expect, test } from "vitest"
-import { booster, readsWhole, Rng } from "@game/core/mecard"
+import { BOOSTERS, openBooster, Rng } from "@game/core/mecard"
 
 // --- Tests ---
 
-describe("booster", () => {
-    test("any seed → its head taking the card after it", () => {
-        for(let seed = 1; seed < 40; seed++){
-            const { head, cards } = booster(new Rng(seed))
-            expect(cards[0]).toBe(head)
-            expect(readsWhole([head, cards[1]])).toBe(true)
+describe("openBooster", () => {
+    test("any seed → as many cards as the pools ask, each from its pool", () => {
+        for(const booster of BOOSTERS){
+            const count = booster.pools.reduce((sum, pool) => sum + pool.count, 0)
+            for(let seed = 1; seed < 20; seed++){
+                const cards = openBooster(new Rng(seed), booster)
+                expect(cards).toHaveLength(count)
+                let at = 0
+                for(const { count: asked, pool } of booster.pools){
+                    for(const card of cards.slice(at, at + asked)) expect(pool).toContain(card)
+                    at += asked
+                }
+            }
         }
     })
 })

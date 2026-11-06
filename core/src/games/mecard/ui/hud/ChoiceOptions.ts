@@ -35,6 +35,12 @@ export interface OptionExtras {
 
     /** The place of the deck its cards come from, which colors them, none for cards of no deck. */
     readonly deck?: number|null
+
+    /** What the pointer coming over a card or leaving it does, nothing when none. */
+    readonly onCardHover?: (card: Card, over: boolean) => void
+
+    /** How many cards at most lie in a row, the others going on rows under it. All in one row when none. */
+    readonly perRow?: number
 }
 
 /**
@@ -47,13 +53,20 @@ export function cardsOption(
     const column = new Box("column", { gap: 2, align: "center" })
     if(extras.head) column.add(extras.head)
     if(cards.length > 0){
-        const row = new Box("row", { gap: CARD_GAP, align: "start" })
-        for(const card of cards){
-            const view = new CardView(theme, card, "hand")
-            view.deck = extras.deck ?? null
-            row.add(view)
+        const perRow = Math.max(1, extras.perRow ?? cards.length)
+        const rows = new Box("column", { gap: CARD_GAP, align: "center" })
+        for(let first = 0; first < cards.length; first += perRow){
+            const row = new Box("row", { gap: CARD_GAP, align: "start" })
+            for(const card of cards.slice(first, first + perRow)){
+                const view = new CardView(theme, card, "hand")
+                view.deck = extras.deck ?? null
+                const onCardHover = extras.onCardHover
+                if(onCardHover) view.onHover = over => onCardHover(card, over)
+                row.add(view)
+            }
+            rows.add(row)
         }
-        column.add(row)
+        column.add(rows)
     }
     if(extras.under) column.add(extras.under)
     if(text !== null) column.add(new Paragraph(theme, text), { align: "stretch" })

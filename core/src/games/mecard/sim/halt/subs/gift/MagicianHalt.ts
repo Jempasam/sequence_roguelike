@@ -1,10 +1,7 @@
 import { concat } from "../../../../../../semantic"
-import type { Rng } from "../../../base/Rng"
-import type { Card } from "../../../card/Card"
-import { ACTION } from "../../../card/CardType"
-import { signatureOf } from "../../../card/CardChain"
-import { LOOT_CARDS } from "../../../catalog/index"
-import { fillersOf, lootCard, OFFER_SIZE, standing } from "../../../run/offers"
+import { BOOSTERS, openBooster } from "../../../catalog/boosters"
+import type { Booster } from "../../../catalog/boosters"
+import { distinct, OFFER_SIZE } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -22,27 +19,10 @@ const LOOK = sceneLook(26, 13, 41, [
     "mecard/travel/magician/4.png", "mecard/travel/magician/5.png",
 ], "mecard/travel/magician/border.png", haltPnj("magician", [0.6, 0.3, 1], [0.2, 0.15, 0.4], { done: "spin" }))
 
-/** How many cards a booster holds beside the card they go in. */
-const BOOSTER_FILLERS = 2
-
-/** A set of cards that go together, sold as one: a card taking others, and cards that fit it. */
-export interface Booster {
-    /** The card the others go in. */
-    readonly head: Card
-    readonly cards: readonly Card[]
-}
-
-/** A booster of the magician: a card of the loot taking others, and cards fitting its first slot. */
-export function booster(rng: Rng): Booster {
-    const head = lootCard(rng, LOOT_CARDS.filter(card => signatureOf(card).input !== null && standing(card)))
-    // Every head takes an input: the fallback is never used.
-    const fillers = fillersOf(signatureOf(head).input ?? ACTION)
-    return { head, cards: [head, ...Array.from({ length: BOOSTER_FILLERS }, () => lootCard(rng, fillers))] }
-}
-
-/** A booster: its cards, and the one they gather around. */
+/** A booster, closed: the card it is pictured by, and what it holds. */
 function boosterShown(chosen: Booster): Shown {
-    return { cards: chosen.cards, text: concat("Autour de ", chosen.head, " : ", chosen.head.description) }
+    const count = chosen.pools.reduce((sum, pool) => sum + pool.count, 0)
+    return { cards: [chosen.icon], text: concat(chosen.name, " : ", String(count), " cartes") }
 }
 
 /** The magician: a booster among some, its cards going together. */
@@ -51,12 +31,14 @@ export class MagicianHalt extends CardGiftHalt {
 
     constructor(run: Run){
         super(MAGICIAN_HALT, run, LINE, LOOK)
-        this.#boosters = Array.from({ length: OFFER_SIZE }, () => booster(run.rng))
+        this.#boosters = distinct(run.rng, BOOSTERS, OFFER_SIZE)
     }
 
 
     public start(ctx: HaltContext): void {
-        ctx.offer("Choisis un booster", this.#boosters, boosterShown, chosen => this.give(ctx, chosen.cards))
+        ctx.offer("Choisis un booster", this.#boosters, boosterShown, chosen => {
+            this.give(ctx, openBooster(this.run.rng, chosen))
+        })
     }
 
 

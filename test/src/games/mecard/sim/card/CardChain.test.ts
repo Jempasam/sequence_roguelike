@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    CHAIN_SIZE, DOUBLE_DIAGONAL, FIRE, FOCUS, FusionCard, GAMBLE, MergedCard, PRAYER, RandomCard, REPEAT_2,
+    CHAIN_SIZE, DOUBLE_DIAGONAL, FIRE, FusionCard, GAMBLE, MergedCard, PRAYER, RandomCard, REPEAT_2,
     PREPARATION, resolve, signatureOf, SLASH, SPELL, STEP, STUNNING_DASH, SWEEP, THRUST, UNSTABLE_THRUST,
     Vector2, WATER,
 } from "@game/core/mecard"
@@ -58,7 +58,7 @@ describe("resolve", () => {
     })
 
     test("a preparation card → acting, gone from the chain, no step", () => {
-        const resolution = resolve([FOCUS], drawing(0))
+        const resolution = resolve([PRAYER], drawing(0))
         expect(resolution.acting).toEqual([0])
         expect(resolution.cards).toEqual([])
         expect(resolution.chain.actionsLeft()).toHaveLength(0)
@@ -177,7 +177,7 @@ describe("CardChain.preview", () => {
     test("a fusion of preparation cards → no preview, nothing uncertain after", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
-        const [fused, after] = chain(new FusionCard([FOCUS, FOCUS]), STEP).preview(on, walker)
+        const [fused, after] = chain(new FusionCard([PRAYER, PRAYER]), STEP).preview(on, walker)
         expect(fused.preview).toBeNull()
         expect(after.uncertain).toBe(false)
     })

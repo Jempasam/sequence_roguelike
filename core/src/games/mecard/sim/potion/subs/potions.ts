@@ -6,6 +6,7 @@ import { ENRAGED, Rage } from "../../status/subs/Rage"
 import { SLOWED, Slowness, SLOWNESS_FACTOR } from "../../status/subs/Slowness"
 import { VULNERABILITY_DAMAGE, Vulnerability, VULNERABLE } from "../../status/subs/Vulnerability"
 import { WEAKENED, Weakness, WEAKNESS_MALUS } from "../../status/subs/Weakness"
+import { SOUL_LINKED, SOUL_SHIELDED, SoulLink, SoulShield } from "../../status/subs/Wounds"
 import type { Potion } from "../Potion"
 
 import { StatusPotion } from "./StatusPotion"
@@ -39,8 +40,16 @@ export const FRENZY_POTION = new StatusPotion("frénésie", [
     "Avant chaque étape, se tourne vers l'", UNIT, " la plus proche, alliée ou ennemie.",
 ], FRENZIED, rounds => new Frenzy(rounds))
 
+export const SOUL_LINK_POTION = new StatusPotion("lien d'âme", [
+    "Chaque blessure d'une ", UNIT, " liée est répétée aux autres.",
+], SOUL_LINKED, rounds => new SoulLink(rounds))
+
+export const SOUL_SHIELD_POTION = new StatusPotion("bouclier d'âme", [
+    "Chaque blessure d'une ", UNIT, " liée est partagée entre toutes.",
+], SOUL_SHIELDED, rounds => new SoulShield(rounds))
+
 /** Every potion, as saved by name. */
 export const POTIONS: readonly Potion[] = [
     POISON_POTION, SLOWNESS_POTION, WEAKNESS_POTION, RAGE_POTION, CONFUSION_POTION, VULNERABILITY_POTION,
-    FRENZY_POTION,
+    FRENZY_POTION, SOUL_LINK_POTION, SOUL_SHIELD_POTION,
 ]

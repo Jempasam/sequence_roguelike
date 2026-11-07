@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    FIRE, FOCUS, GAMBLE, read, readsWhole, REPEAT_2, SPELL, STEP, supplied, THRUST,
+    FIRE, PRAYER, GAMBLE, read, readsWhole, REPEAT_2, SPELL, STEP, supplied, THRUST,
 } from "@game/core/mecard"
 
 // --- Tests ---
@@ -39,8 +39,8 @@ describe("read", () => {
     })
 
     test("a preparation card → a root, played", () => {
-        const reading = read([FOCUS])
-        expect(reading.roots.map(String)).toEqual([FOCUS.name])
+        const reading = read([PRAYER])
+        expect(reading.roots.map(String)).toEqual([PRAYER.name])
         expect(reading.greyed).toEqual([])
     })
 

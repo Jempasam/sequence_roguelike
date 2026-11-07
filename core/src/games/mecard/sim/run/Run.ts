@@ -371,6 +371,14 @@ export class Run {
             })
         })
         for(const { center, radius } of pillars) battle.addPillar(center, radius)
+        // The battle knows no purse: what the heroes win in it goes to the one of the run.
+        battle.onGetGold.add(({ unit, amount }) => {
+            if(unit.team === this.heroesTeam) this.gold += amount
+        })
+        battle.onGetCards.add(({ unit, cards }) => {
+            const hero = this.heroes.find(each => this.#units.get(each) === unit)
+            if(hero) this.changeDeck(firstDeck(hero), deck => deck.push(...cards))
+        })
         return battle
     }
 

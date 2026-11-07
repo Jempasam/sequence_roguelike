@@ -20,7 +20,7 @@ import type { Action, ActionRun } from "./Action"
 import type { Battle } from "./Battle"
 import { Decks } from "./Decks"
 import type {
-    ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, DeathEvent, HitEvent, MoveEvent,
+    ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, DeathEvent, HitEvent, IncomingShove, MoveEvent,
 } from "./events"
 import type { Area } from "./Area"
 import type { Team } from "./Team"
@@ -189,8 +189,20 @@ export class Unit {
     /** One of its attacks touched another unit. */
     public readonly hitting: Observable<HitEvent>
 
+    /** Another unit's attack touched it. */
+    public readonly struck: Observable<HitEvent>
+
     /** It changed cell. */
     public readonly moved: Observable<MoveEvent>
+
+    /** Another unit is about to move it: what it hears may shorten the way. */
+    public readonly incomingShove: Observable<IncomingShove>
+
+    /** Another unit moved it: where from and to. Told besides {@link Unit.moved}, which tells every move. */
+    public readonly shoved: Observable<MoveEvent>
+
+    /** Is another unit moving it right now? Its strides then are not its own. */
+    public shoving = false
 
     /** It killed another unit. */
     public readonly killed: Observable<DeathEvent>
@@ -286,7 +298,10 @@ export class Unit {
         const { report, rng } = battle
         this.attacking = new Observable(report)
         this.hitting = new Observable(report)
+        this.struck = new Observable(report)
         this.moved = new Observable(report)
+        this.incomingShove = new Observable(report)
+        this.shoved = new Observable(report)
         this.killed = new Observable(report)
         this.onDeath = new Observable(report)
         this.stepStarted = new Observable(report)

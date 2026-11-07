@@ -39,6 +39,9 @@ export class Hearts {
     /** A wound landed: how many hearts it took. */
     public readonly onDamage: Observable<HurtEvent>
 
+    /** An echo of a wound landed, which sets off nothing a wound does: how many hearts it took. */
+    public readonly onEcho: Observable<HurtEvent>
+
     /** Hearts were healed. */
     public readonly onHeal: Observable<HealEvent>
 
@@ -53,6 +56,12 @@ export class Hearts {
 
     /** A wound took hearts of a kind, which left the bar or left others in their place. */
     public readonly onWound: Observable<HeartLossEvent>
+
+    /**
+     * A wound took the last hearts keeping the unit alive, which it lost in this wound, before it is dead: a
+     * heart given while this is told keeps it alive.
+     */
+    public readonly onEmptied: Observable<HeartLossEvent[]>
 
 
     //// State ////
@@ -72,11 +81,13 @@ export class Hearts {
         const { report } = unit.battle
         this.onIncoming = new Observable(report)
         this.onDamage = new Observable(report)
+        this.onEcho = new Observable(report)
         this.onHeal = new Observable(report)
         this.onAdd = new Observable(report)
         this.onRemove = new Observable(report)
         this.onReplace = new Observable(report)
         this.onWound = new Observable(report)
+        this.onEmptied = new Observable(report)
         this.all = Heart.copies(hearts)
         for(const heart of this.all) this.ruleOf(heart)
     }
@@ -131,6 +142,20 @@ export class Hearts {
      * @returns How many hearts it lost.
      */
     public damage(amount: number, nature: Nature, source: Unit|null): number {
+        return this.#wound(amount, nature, source, false)
+    }
+
+    /**
+     * Wound the unit as the echo of another wound, through its protections: told by {@link Hearts.onEcho}, not
+     * by {@link Hearts.onDamage}, so what answers a wound does not answer this, and echoes never loop.
+     *
+     * @returns How many hearts it lost.
+     */
+    public echo(amount: number, nature: Nature, source: Unit|null): number {
+        return this.#wound(amount, nature, source, true)
+    }
+
+    #wound(amount: number, nature: Nature, source: Unit|null, derived: boolean): number {
         const { unit } = this
         const { battle } = unit
         if(this.isDead) return 0
@@ -140,15 +165,19 @@ export class Hearts {
         }
         battle.effectDepth++
         try {
-            const incoming = { target: unit, source, nature, amount }
+            const incoming = { target: unit, source, nature, derived, amount }
             this.onIncoming.notify(incoming)
             if(incoming.amount <= 0){
                 battle.events.push({ type: "dodged", unit })
                 return 0
             }
-            const lost = this.#take({ amount: incoming.amount, nature, source })
+            const taken: HeartLossEvent[] = []
+            const lost = this.#take({ amount: incoming.amount, nature, source }, taken)
+            if(this.isDead) this.onEmptied.notify(taken)
             battle.events.push({ type: "hurt", unit, amount: lost })
-            this.onDamage.notify({ target: unit, source, nature, amount: lost })
+            const hurt = { target: unit, source, nature, amount: lost }
+            if(derived) this.onEcho.notify(hurt)
+            else this.onDamage.notify(hurt)
             if(this.isDead) unit.die(source)
             return lost
         } finally {
@@ -232,7 +261,7 @@ export class Hearts {
      *
      * @returns How many hearts it took.
      */
-    #take(damage: HeartDamage): number {
+    #take(damage: HeartDamage, taken: HeartLossEvent[]): number {
         const { unit } = this
         let lost = 0
         while(damage.amount > 0){
@@ -241,7 +270,9 @@ export class Hearts {
             lost += hearts.length
             const { kind } = hearts[0]
             this.#lose(hearts, damage.source, places => {
-                this.onWound.notify({ unit, kind, indexes: places.map(({ index }) => index) })
+                const event = { unit, kind, indexes: places.map(({ index }) => index) }
+                taken.push(event)
+                this.onWound.notify(event)
             })
         }
         return lost

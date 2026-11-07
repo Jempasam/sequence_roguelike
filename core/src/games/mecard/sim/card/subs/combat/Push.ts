@@ -4,8 +4,9 @@ import { damage, meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, travel } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { arrow, label, still } from "../tools/previews"
+import { shove } from "../tools/shoving"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
 import { UNIT } from "../../../base/keywords"
@@ -44,8 +45,9 @@ export class PushCard extends ActionCard {
                     return
                 }
                 // Pushed into something before the whole distance, it takes the damage of a blocked push.
-                const gone = yield* travel({ battle, unit: target }, unit.direction, distance, speed, true)
-                if(gone.distance < distance) target.hearts.damage(PUSH_BLOCKED_DAMAGE, "physical", unit)
+                yield* shove({
+                    battle, by: unit, target, direction: unit.direction, distance, speed, impact: PUSH_BLOCKED_DAMAGE,
+                })
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)

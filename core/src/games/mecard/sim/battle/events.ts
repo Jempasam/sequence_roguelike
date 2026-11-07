@@ -35,6 +35,9 @@ export interface IncomingDamage {
     readonly source: Unit|null
     readonly nature: Nature
 
+    /** Is it an echo of another wound, which sets off nothing a wound does? */
+    readonly derived: boolean
+
     /** How many hearts will land. */
     amount: number
 }
@@ -117,6 +120,19 @@ export interface MoveEvent {
     readonly unit: Unit
     readonly from: Vector2
     readonly to: Vector2
+}
+
+/** A unit about to be moved by another: the listeners may shorten it. */
+export interface IncomingShove {
+    readonly target: Unit
+
+    /** Who moves it, none when nobody does. */
+    readonly by: Unit|null
+
+    readonly direction: Vector2
+
+    /** How far it will be moved, in meters. */
+    distance: number
 }
 
 /** A unit dying. */

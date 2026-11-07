@@ -6,6 +6,7 @@ import type { HeartKind } from "../../heart/HeartKind"
 import { SHIELD_HEART } from "../../heart/subs/ShieldHeartKind"
 
 import { AbstractUsable } from "./AbstractUsable"
+import type { UsableOptions } from "./AbstractUsable"
 
 /** How many hearts the flasks of the catalog give. */
 const FLASK_HEARTS = 2
@@ -22,8 +23,10 @@ export class HeartFlask extends AbstractUsable {
 
         /** How many it gives. */
         public readonly count = FLASK_HEARTS,
+
+        options: UsableOptions = {},
     ){
-        super(name, icon, ["Donne ", new HeartCount(count), " ", kind, "."])
+        super(name, icon, ["Donne ", new HeartCount(count), " ", kind, "."], options)
     }
 
 

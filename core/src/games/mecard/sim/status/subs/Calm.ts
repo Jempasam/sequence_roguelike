@@ -1,0 +1,72 @@
+import { rgba } from "../../base/Rgba"
+import type { Observer } from "../../base/Observable"
+import type { UnitContext } from "../../battle/Action"
+import { WAIT } from "../../card/subs/movement/Wait"
+import { ScalingStatus } from "../ScalingStatus"
+import type { StatGain } from "../ScalingStatus"
+import { StatusType } from "../Status"
+
+/** How many meters of vision a round of concentration gives, and how many of range per meter of vision. */
+export const CONCENTRATION_VISION = 1
+export const CONCENTRATION_RANGE = 0.25
+
+/** A concentration: the vision and the range grow with the rounds left. */
+export const CONCENTRATED = new StatusType("concentration", rgba(0.55, 0.85, 1), "positive")
+
+/** Does the step a unit just played wait? */
+function waited({ unit }: UnitContext): boolean {
+    return unit.stepsPlayed[unit.stepsPlayed.length - 1] === WAIT.action
+}
+
+/** The listener of a status gaining a round at each wait of its unit. */
+function onWait(ctx: UnitContext, gain: () => void): Observer {
+    return ctx.unit.stepEnded.add(() => {
+        if(waited(ctx)) gain()
+    })
+}
+
+/** Concentrated: more vision and range for each round left, and a round more at each wait. */
+export class Concentration extends ScalingStatus {
+
+
+    public readonly type = CONCENTRATED
+
+    public copy(): Concentration { return new Concentration(this.rounds) }
+
+    protected gains(rounds: number): readonly StatGain[] {
+        return [
+            { stat: stats => stats.aimRange, amount: CONCENTRATION_VISION * rounds },
+            { stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * CONCENTRATION_VISION * rounds },
+        ]
+    }
+
+    protected override watch(ctx: UnitContext): Observer[] {
+        return [onWait(ctx, () => {
+            this.rounds++
+            this.refresh(this.rounds)
+        })]
+    }
+}
+
+/** A fury held back: the strength grows with the rounds left. */
+export const FURIOUS = new StatusType("fureur contenue", rgba(1, 0.5, 0.2), "positive")
+
+/** Furious: as much strength as rounds left, and a round more at each wait. */
+export class HeldFury extends ScalingStatus {
+
+
+    public readonly type = FURIOUS
+
+    public copy(): HeldFury { return new HeldFury(this.rounds) }
+
+    protected gains(rounds: number): readonly StatGain[] {
+        return [{ stat: stats => stats.strength, amount: rounds }]
+    }
+
+    protected override watch(ctx: UnitContext): Observer[] {
+        return [onWait(ctx, () => {
+            this.rounds++
+            this.refresh(this.rounds)
+        })]
+    }
+}

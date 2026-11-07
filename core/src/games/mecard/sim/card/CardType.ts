@@ -1,4 +1,5 @@
 import type { Action, UnitContext } from "../battle/Action"
+import type { Unit } from "../battle/Unit"
 import type { Element } from "../element/Element"
 import type { Dose } from "../potion/Potion"
 
@@ -68,5 +69,17 @@ export const ELEMENT = new CardType<Element>("élément")
 /** A dose of a potion, for a card pouring it. */
 export const POTION = new CardType<Dose>("potion")
 
+/**
+ * A piece of a machine: the cards it plays, and what it does to the body built from it. Whatever must be
+ * drawn at random is drawn when it is read, with the chance given.
+ */
+export interface Module {
+    /** The cards it holds, in the order they play. */
+    cards(pick: <T>(options: readonly T[]) => T): readonly Card[]
+
+    /** Do what it does to the body built from it, a robot. */
+    tune(body: Unit): void
+}
+
 /** The cards of a machine, for a card building it or putting them in the chain. */
-export const MODULE = new CardType<readonly Card[]>("module")
+export const MODULE = new CardType<Module>("module")

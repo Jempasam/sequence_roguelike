@@ -3,6 +3,7 @@
  * The processes, one file for each class.
  */
 
+export * from "./Grievance"
 export * from "./Haste"
 export * from "./Riding"
 export * from "./Ritual"

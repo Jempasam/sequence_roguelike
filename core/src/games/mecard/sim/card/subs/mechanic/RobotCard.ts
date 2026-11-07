@@ -9,6 +9,7 @@ import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 import type { Card } from "../../Card"
 import { gives } from "../../Card"
 import { ACTION, MODULE } from "../../CardType"
+import type { Module } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
@@ -37,7 +38,7 @@ function spotOf(pose: Pose): Vector2 {
  * A robot built from the module plugged into it: a body a little ahead, facing as its unit, with nothing but
  * shield hearts, which plays the cards of the module right after its unit, every round.
  */
-export class RobotCard extends AbstractCard<readonly Action[], readonly Card[]> {
+export class RobotCard extends AbstractCard<readonly Action[], Module> {
 
 
     public readonly output = ACTION
@@ -56,19 +57,20 @@ export class RobotCard extends AbstractCard<readonly Action[], readonly Card[]> 
     }
 
 
-    public get(cards: readonly Card[]): readonly Action[] {
-        return [RobotCard.#building(this, this.program(cards))]
+    public get(module: Module): readonly Action[] {
+        return [RobotCard.#building(this, module)]
     }
 
 
-    static #building(card: RobotCard, program: readonly Card[]): Action {
+    static #building(card: RobotCard, module: Module): Action {
         return {
             use: function* ({ battle, unit }){
                 const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
-                battle.place(unit, {
+                const robot = battle.place(unit, {
                     sprite: "robot", name: "Robot", at: spotOf(unit), direction: unit.direction,
-                    hearts: Heart.many(SHIELD_HEART, count), cards: program,
+                    hearts: Heart.many(SHIELD_HEART, count), cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
                 })
+                if(robot) module.tune(robot)
                 yield* hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
@@ -99,7 +101,7 @@ export const TANK_ROBOT = new RobotCard("Robot tank", [
 /** The cards of the module on its right, in its place. */
 export const IMPROVISED_WEAPON = new RewriteCard("Arme improvisée", [
     "Fin de préparation : se remplace par les ", CARTE.as("cartes"), " du module à sa droite.",
-], Rarity.COMMON, (_ctx, { next }) => {
+], Rarity.COMMON, (ctx, { next }) => {
     if(!next || !gives(next, MODULE)) return { cards: [], consumed: 0, acting: false }
-    return { cards: next.get(undefined), consumed: 1, acting: false }
+    return { cards: next.get(undefined).cards(options => ctx.pick(options)), consumed: 1, acting: false }
 })

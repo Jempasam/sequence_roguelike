@@ -6,4 +6,5 @@
  */
 
 export * from "./RoundStatus"
+export * from "./ScalingStatus"
 export * from "./Status"

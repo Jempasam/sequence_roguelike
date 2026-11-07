@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
-    FOCUS, HORSE, saveBattle, STEP, Strength, STRENGTH_CARD, Vector2, WAIT,
+    HORSE, saveBattle, STEP, Strength, STRENGTH_CARD, Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Process } from "@game/core/mecard"
 
@@ -69,7 +69,7 @@ describe("Process", () => {
         const on = battle()
         const hero = unit(on, 1, 5)
         unit(on, 6, 1, { team: MONSTERS })
-        play(on, [[hero, chain(FOCUS, STEP)]])
+        play(on, [[hero, chain(STRENGTH_CARD, STEP)]])
         expect(() => saveBattle(on)).not.toThrow()
     })
 })
@@ -96,14 +96,3 @@ describe("Cheval", () => {
     })
 })
 
-describe("Concentration", () => {
-    it("is a process of strength for the round", () => {
-        const on = battle()
-        const hero = unit(on, 1, 5, { hand: [FOCUS, WAIT] })
-        unit(on, 6, 1, { team: MONSTERS })
-        on.startRound()
-        on.commit(hero, chain(FOCUS, WAIT))
-        on.endPreparation()
-        expect(hero.processes.map(String)).toEqual(["force +1"])
-    })
-})

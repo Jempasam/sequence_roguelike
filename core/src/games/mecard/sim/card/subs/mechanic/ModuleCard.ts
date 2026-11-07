@@ -1,6 +1,7 @@
 import { joinText } from "../../../../../../semantic"
 import type { Card } from "../../Card"
 import { MODULE } from "../../CardType"
+import type { Module } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
@@ -12,7 +13,7 @@ import { RAM } from "../movement/Ram"
 import { STEP } from "../movement/Step"
 
 /** A piece of a machine: the cards it is made of, for a card building it or putting them in the chain. */
-export class ModuleCard extends AbstractCard<readonly Card[]> {
+export class ModuleCard extends AbstractCard<Module> {
 
 
     public readonly output = MODULE
@@ -28,8 +29,8 @@ export class ModuleCard extends AbstractCard<readonly Card[]> {
     }
 
 
-    public get(): readonly Card[] {
-        return this.cards
+    public get(): Module {
+        return { cards: () => this.cards, tune: () => {} }
     }
 }
 

@@ -82,6 +82,18 @@ const WAIT_COLOR = rgba(0.75, 0.75, 0.85)
 /** The color of the flash of an explosion. */
 const BLAST_COLOR = rgba(1, 0.35, 0.1, 0.6)
 
+/** A unit won cards for good. */
+export interface CardsEvent {
+    readonly unit: Unit
+    readonly cards: readonly Card[]
+}
+
+/** A unit won gold. */
+export interface GoldEvent {
+    readonly unit: Unit
+    readonly amount: number
+}
+
 /** Where a move ended, or would end. */
 export interface Trip {
     /** Where the unit stops. */
@@ -144,6 +156,12 @@ export class Battle {
 
     /** One of the steps of a unit is about to play, whichever it is. */
     public readonly unitStepping: Observable<Unit>
+
+    /** A unit won gold: the battle knows no purse, the game adds it to the one of the run. */
+    public readonly onGetGold: Observable<GoldEvent>
+
+    /** A unit won cards for good: the battle knows no deck of the run, the game adds them to it. */
+    public readonly onGetCards: Observable<CardsEvent>
 
     /** What it tells whoever shows it, as it plays. */
     public readonly signals: BattleSignals
@@ -214,6 +232,8 @@ export class Battle {
         this.roundEnded = new Observable(this.report)
         this.unitMoved = new Observable(this.report)
         this.unitStepping = new Observable(this.report)
+        this.onGetGold = new Observable(this.report)
+        this.onGetCards = new Observable(this.report)
         this.phaseChanged = new Observable(this.report)
         this.preparationEnding = new Observable(this.report)
         this.loaded = new Observable(this.report)
@@ -663,11 +683,13 @@ export class Battle {
      * @param forced - Is it moved by another, as a push is, whatever its mobility?
      * @returns How far it went, and the unit it ran into, none when none.
      */
-    public move(unit: Unit, direction: Vector2, distance: number, forced = false): Trip {
+    public move(
+        unit: Unit, direction: Vector2, distance: number, forced = false, through: readonly Unit[] = [],
+    ): Trip {
         if(!forced && !this.#canMove(unit)) return { to: unit.position, distance: 0, struck: null }
         // What others move, a push, a wind, leaves the scenery where it stands.
         if(forced && !unit.movable) return { to: unit.position, distance: 0, struck: null }
-        const travel = this.travel(unit, unit.position, direction, distance)
+        const travel = this.travel(unit, unit.position, direction, distance, through)
         if(travel.distance < distance) this.events.push({ type: "blocked", unit })
         if(travel.distance > 0) this.#relocate(unit, travel.to, travel.distance / SHOVE_SPEED)
         return travel
@@ -682,11 +704,18 @@ export class Battle {
      * What blocks the way is tested with obstacles a little smaller than they are, so a body brushing past
      * one goes on, and a body against one can still leave it. Once blocked, the body is placed with the true
      * obstacles: it stops at their contact, at the last point where it touched nothing.
+     *
+     * @param through - The bodies it goes through, none by default: walls and the other bodies still block.
      */
-    public travel(unit: Unit, from: Vector2, direction: Vector2, distance: number): Trip {
+    public travel(
+        unit: Unit, from: Vector2, direction: Vector2, distance: number, through: readonly Unit[] = [],
+    ): Trip {
         const scenery = this.bodies.filter(body => !body.touchable)
         const clear = (point: Vector2, slack: number): boolean => unit.tangible
-            ? this.free(point, unit, unit.radius, slack)
+            ? !this.arena.solid(point, unit.radius) && !this.bodies.some(body => {
+                return body !== unit && !through.includes(body)
+                    && body.position.distance(point) < unit.radius + body.radius - slack
+            })
             : !this.arena.solid(point, unit.radius) && !scenery.some(body => {
                 return body !== unit && body.position.distance(point) < unit.radius + body.radius - slack
             })
@@ -699,7 +728,7 @@ export class Battle {
             if(!clear(next, COLLISION_SLACK)){
                 const struck = this.touchables.find(other => {
                     const touching = unit.radius + other.radius - COLLISION_SLACK
-                    return other !== unit && other.position.distance(next) < touching
+                    return other !== unit && !through.includes(other) && other.position.distance(next) < touching
                 }) ?? null
                 return { ...contact ?? backedOut(from, direction, point => clear(point, 0)), struck }
             }
@@ -779,8 +808,50 @@ export class Battle {
             if(dealt <= 0) continue
             hit.push(target)
             attacker.hitting.notify({ attacker, target, amount: dealt })
+            target.struck.notify({ attacker, target, amount: dealt })
         }
         return hit
+    }
+
+    /**
+     * Lash out at several areas at once, as one zone: every unit any of them touches but the attacker takes
+     * the damage once.
+     *
+     * @param scale - How many times the damage each unit touched takes, once by default.
+     * @returns The units the damage landed on.
+     */
+    public strikeMany(
+        attacker: Unit, areas: readonly Area[], amount: number, nature: Nature, scale: (target: Unit) => number = () => 1,
+    ): Unit[] {
+        const targets = new Set<Unit>()
+        for(const area of areas){
+            attacker.attacking.notify({ attacker, area })
+            this.events.push({ type: "struck", unit: attacker, area, nature })
+            for(const target of this.unitsIn(area, attacker)) targets.add(target)
+        }
+        const hit: Unit[] = []
+        for(const target of targets){
+            const dealt = target.hearts.damage(amount * scale(target), nature, attacker)
+            if(dealt <= 0) continue
+            hit.push(target)
+            attacker.hitting.notify({ attacker, target, amount: dealt })
+            target.struck.notify({ attacker, target, amount: dealt })
+        }
+        return hit
+    }
+
+    /** Give cards to a unit for good: told to whoever holds its decks. */
+    public giveCards(unit: Unit, cards: readonly Card[]): void {
+        if(cards.length === 0) return
+        this.onGetCards.notify({ unit, cards })
+        this.events.push({ type: "status", unit, text: ["+ ", cards.map(card => card.name).join(", "), " pour de bon"] })
+    }
+
+    /** Give gold to a unit: told to whoever holds the purse. */
+    public giveGold(unit: Unit, amount: number): void {
+        if(amount <= 0) return
+        this.onGetGold.notify({ unit, amount })
+        this.events.push({ type: "status", unit, text: `+ ${amount} or` })
     }
 
     /**
@@ -1075,6 +1146,23 @@ export class Battle {
         this.initiative.splice(at, 0, unit)
         // Coming before the unit about to play, the order shifts: that unit still plays next.
         if(at < this.#cursor) this.#cursor++
+    }
+
+    /** The bodies a unit summoned, the ones that are still in the battle. */
+    public summonsOf(owner: Unit): Unit[] {
+        return this.units.filter(unit => unit.owner === owner)
+    }
+
+    /**
+     * Play the last step of a unit once more, at the end: its chain is read to its end first. For after the
+     * preparation, before the execution.
+     */
+    public duplicateLastStep(unit: Unit): void {
+        unit.readChain()
+        const last = unit.steps[unit.steps.length - 1]
+        if(!last) return
+        unit.steps.push(last)
+        this.events.push({ type: "status", unit, text: "dernière étape doublée" })
     }
 
     /** Have a unit read a copy of what it committed: the plan stays as it was, the copy is rewritten. */

@@ -1,5 +1,5 @@
 import type { Text } from "../../../../../../semantic"
-import { PHYSICAL_COLOR } from "../../../battle/previewColors"
+import { HAZARD_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -54,6 +54,11 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
         return [this.action]
     }
 
+    /** The units it marks in its preview as the ones it would reach: none by default, its area says it all. */
+    protected marked(_battle: Battle, _unit: Unit, _area: Area): Unit[] {
+        return []
+    }
+
     /** The hearts its unit adds to it: its strength, for a blow at hand. */
     public bonus(stats: UnitStats): number {
         return stats.strength.value
@@ -80,7 +85,11 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
                 yield* hold(battle, RECOVERY_TIME, [polygon(area, PHYSICAL_COLOR)])
             },
             preview: ({ battle, unit, pose }) => {
-                return still(pose, polygon(card.reach(battle, unit, pose, 1), PHYSICAL_COLOR))
+                const area = card.reach(battle, unit, pose, 1)
+                const marks = card.marked(battle, unit, area).map(hit => {
+                    return polygon({ kind: "circle", center: hit.position, radius: hit.radius }, HAZARD_COLOR)
+                })
+                return still(pose, polygon(area, PHYSICAL_COLOR), ...marks)
             },
         }
     }

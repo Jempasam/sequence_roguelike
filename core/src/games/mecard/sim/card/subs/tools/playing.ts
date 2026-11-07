@@ -73,10 +73,12 @@ export function* flight(battle: Battle, seconds: number, at: (share: number) => 
  *
  * @param speed - How fast it goes, in meters per second, a walk by default.
  * @param forced - Is it moved by another, whatever its mobility?
+ * @param through - The bodies it goes through, none by default.
  * @returns How far it went, and the unit it ran into, none when none.
  */
 export function* travel(
     { battle, unit }: UnitContext, direction: Vector2, distance: number, speed = WALK_SPEED, forced = false,
+    through: readonly Unit[] = [],
 ): Generator<void, Gone, void> {
     const count = ticks(distance / speed)
     const stride = distance / count
@@ -84,7 +86,7 @@ export function* travel(
     battle.startGlide(unit)
     try {
         for(let tick = 0; tick < count && unit.alive; tick++){
-            const moved = battle.move(unit, direction, stride, forced)
+            const moved = battle.move(unit, direction, stride, forced, through)
             gone += moved.distance
             if(moved.distance < stride - TRAVEL_SLACK) return { distance: gone, struck: moved.struck }
             yield

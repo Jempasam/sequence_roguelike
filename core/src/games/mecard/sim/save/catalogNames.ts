@@ -51,6 +51,11 @@ import { SLOWED, Slowness } from "../status/subs/Slowness"
 import { Splashing, SPLASHING } from "../status/subs/Splashing"
 import { Vulnerability, VULNERABLE } from "../status/subs/Vulnerability"
 import { WEAKENED, Weakness } from "../status/subs/Weakness"
+import { DEMONIC, DemonEnergy } from "../status/subs/DemonEnergy"
+import { CONCENTRATED, Concentration, FURIOUS, HeldFury } from "../status/subs/Calm"
+import {
+    BLEEDING, Bleeding, Fragility, FRAGILE, Mark, MARKED, SOUL_LINKED, SOUL_SHIELDED, SoulLink, SoulShield,
+} from "../status/subs/Wounds"
 
 /** Every kind of heart, as saved by name. */
 export const HEART_KINDS: readonly HeartKind[] = [
@@ -143,6 +148,14 @@ export const STATUS_CODECS: readonly StatusCodec[] = [
     roundCodec(POISONED, rounds => new Poison(rounds)),
     roundCodec(SLOWED, rounds => new Slowness(rounds)),
     roundCodec(WEAKENED, rounds => new Weakness(rounds)),
+    roundCodec(DEMONIC, rounds => new DemonEnergy(rounds)),
+    roundCodec(CONCENTRATED, rounds => new Concentration(rounds)),
+    roundCodec(FURIOUS, rounds => new HeldFury(rounds)),
+    roundCodec(BLEEDING, rounds => new Bleeding(rounds)),
+    roundCodec(MARKED, rounds => new Mark(rounds)),
+    roundCodec(FRAGILE, rounds => new Fragility(rounds)),
+    roundCodec(SOUL_LINKED, rounds => new SoulLink(rounds)),
+    roundCodec(SOUL_SHIELDED, rounds => new SoulShield(rounds)),
     roundCodec(ENRAGED, rounds => new Rage(rounds)),
     roundCodec(CONFUSED, rounds => new Confusion(rounds)),
     roundCodec(VULNERABLE, rounds => new Vulnerability(rounds)),

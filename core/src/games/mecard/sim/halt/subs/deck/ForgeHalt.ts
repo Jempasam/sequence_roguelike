@@ -36,20 +36,29 @@ export class ForgeHalt extends DeckHalt {
     }
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
-        const pick = (): void => ctx.cards(
-            [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " de ", hero, ", dans l'ordre où tu les choisis"], deck,
-            { min: 2, max: 2 }, cards => {
-                ctx.confirm(["Le ", FUSION, " forgé :"], fusionShown(new FusionCard(cards), deck), "Forger", () => {
-                    this.impact()
-                    ctx.tell("Forgée :", fusionShown(this.run.changeDeck(deck, changed => forge(changed, cards)), deck))
-                }, { back: pick })
-            }, { back })
-        pick()
+        const round = (n: 1|2, back?: () => void): void => {
+            const ask = (): void => ctx.confirm(
+                ["Je ", FUSION.as("forge"), n == 1 ? " une première" : " une seconde", " paire de ", CARTE.as("cartes"), " ?"],
+                { cards: [] }, "Forger", pick, back ? { back } : undefined)
+            const pick = (): void => ctx.cards(
+                [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " de ", hero, ", dans l'ordre où tu les choisis"], deck,
+                { min: 2, max: 2 }, cards => {
+                    ctx.confirm(["Le résultat ", FUSION.as("forgé"), " :"], fusionShown(new FusionCard(cards), deck), "Forger", () => {
+                        this.impact()
+                        const made = this.run.changeDeck(deck, changed => forge(changed, cards))
+                        if (n == 1 && this.fits(deck)) round(2)
+                        else ctx.tell([FUSION.as("Forgée"), " :"], fusionShown(made, deck))
+                    }, { back: pick })
+                }, { back: ask })
+            ask()
+        }
+        round(1, back)
     }
 }
 
 /** The sort of the forge. */
 export const FORGE_HALT: HaltType = {
+    id: "forge",
     name: "Forge",
     description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],
     code: "FO",

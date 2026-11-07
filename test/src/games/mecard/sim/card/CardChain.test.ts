@@ -119,7 +119,7 @@ describe("resolve", () => {
     test("a draw → the card drawn, read in its place", () => {
         const resolution = resolve([SPELL, new RandomCard(FIRE, WATER)], drawing(1))
         expect(resolution.reading.roots.map(String)).toEqual([`${SPELL.name}(${WATER.name})`])
-        expect(resolution.origin).toEqual([0, 1])
+        expect(resolution.sources).toEqual([[0], [1]])
     })
 
     test("a merged card → one step", () => {

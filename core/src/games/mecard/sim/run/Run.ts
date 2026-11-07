@@ -13,6 +13,7 @@ import { UNIT_RADIUS } from "../battle/Unit"
 import type { Pillar } from "../battle/Arena"
 import type { Unit } from "../battle/Unit"
 import type { Card } from "../card/Card"
+import { BATTLE, BOSS, ELITE } from "../catalog/fights"
 import { FIRST_FLOOR } from "../catalog/floors"
 import { ITEMS } from "../catalog/index"
 import { STARTING_KITS } from "../catalog/kits"
@@ -41,7 +42,7 @@ import type { Usable } from "../usable/Usable"
 
 import { allyOf, firstDeck, HERO_COLOR, heroOf, merged, redHearts } from "./Hero"
 import type { Hero } from "./Hero"
-import type { FightKind, PlaceKind } from "./Journey"
+import type { FightType } from "./PlaceType"
 import { inventedFusion, lootCard, lootCards } from "./offers"
 import { CARTE } from "../base/keywords"
 
@@ -123,8 +124,7 @@ const PARTY_SPACING = 2
 /** How much gold a run starts with. */
 const STARTING_GOLD = 30
 
-/** How much gold a won fight gives, by its kind, and how much more at random, at most. */
-const FIGHT_GOLD: Readonly<Record<FightKind, number>> = { battle: 15, elite: 35, boss: 80 }
+/** How much more gold than its sort gives a won fight gives at random, at most. */
 const GOLD_SPREAD = 10
 
 /** The hearts won at the end of a fight: those that come back, so they last the whole run. */
@@ -307,10 +307,10 @@ export class Run {
 
     //// Fights ////
 
-    /** The kind of the fight of the place, a battle when the place holds none. */
-    public get fight(): FightKind {
-        const kind: PlaceKind|undefined = this.travel.place?.kind
-        return kind === "elite" || kind === "boss" ? kind : "battle"
+    /** The sort of the fight of the place, a battle when the place holds none. */
+    public get fight(): FightType {
+        const type = this.travel.place?.type
+        return type === ELITE ? ELITE : type === BOSS ? BOSS : BATTLE
     }
 
     /**
@@ -401,7 +401,7 @@ export class Run {
             this.defeated.notify(this)
             return
         }
-        this.gold += FIGHT_GOLD[this.fight] + this.rng.int(GOLD_SPREAD + 1)
+        this.gold += this.fight.gold + this.rng.int(GOLD_SPREAD + 1)
         this.#rewards = this.#drawRewards()
         this.#enterPhase("rewards")
         this.rewardsOffered.notify(this.#rewards)
@@ -577,17 +577,13 @@ export class Run {
     #drawRewards(): Reward[] {
         const item = (): Reward => ({ kind: "item", item: this.rng.pick(ITEMS) ?? ITEMS[0] })
         const fusion = (): Reward => ({ kind: "card", card: inventedFusion(this.rng) })
-        switch(this.fight){
-            case "elite": return [{ kind: "card", card: lootCard(this.rng) }, item(), fusion()]
-            case "boss": return [item(), item(), fusion()]
-            case "battle": {
-                const rewards: Reward[] = lootCards(this.rng, REWARD_CHOICES - 1).map(card => ({ kind: "card", card }))
-                if(this.rng.chance(0.5)) rewards.push(item())
-                else rewards.push({ kind: "heart", loot: this.rng.pick(KEPT_LOOT_HEARTS) ?? KEPT_LOOT_HEARTS[0] })
-                return rewards
-            }
-            default: throw new Error("A fight of an unknown kind was won.")
-        }
+        const fight = this.fight
+        if(fight === ELITE) return [{ kind: "card", card: lootCard(this.rng) }, item(), fusion()]
+        if(fight === BOSS) return [item(), item(), fusion()]
+        const rewards: Reward[] = lootCards(this.rng, REWARD_CHOICES - 1).map(card => ({ kind: "card", card }))
+        if(this.rng.chance(0.5)) rewards.push(item())
+        else rewards.push({ kind: "heart", loot: this.rng.pick(KEPT_LOOT_HEARTS) ?? KEPT_LOOT_HEARTS[0] })
+        return rewards
     }
 
     /** A name no character of the party has: the name, or the name and a number. */

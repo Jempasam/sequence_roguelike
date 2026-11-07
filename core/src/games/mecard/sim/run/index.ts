@@ -9,6 +9,7 @@
 export * from "./deckName"
 export * from "./Hero"
 export * from "./Journey"
+export * from "./PlaceType"
 export * from "./offers"
 export * from "./Run"
 export * from "./visits"

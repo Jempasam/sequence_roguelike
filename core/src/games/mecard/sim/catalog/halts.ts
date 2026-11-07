@@ -16,46 +16,64 @@ import { MAGICIAN_HALT } from "../halt/subs/gift/MagicianHalt"
 import { MERCHANT_HALT } from "../halt/subs/gift/MerchantHalt"
 import { TAVERN_HALT } from "../halt/subs/gift/TavernHalt"
 import { MASTER_TRAINER_HALT } from "../halt/subs/master/MasterTrainerHalt"
+import { MASTER_MAGICIAN_HALT } from "../halt/subs/master/MasterMagicianHalt"
+import { MASTER_INVENTOR_HALT } from "../halt/subs/master/MasterInventorHalt"
+import { GREAT_FORGE_HALT } from "../halt/subs/great/GreatForgeHalt"
 import { TRAINER_HALT } from "../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../halt/subs/party/NecromancerHalt"
 import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
-import type { HaltKind } from "../run/Journey"
 
 
-/** The sorts of halt of each kind of place holding one. */
-export const SIMPLE_HALTS = {
-    hospital: HOSPITAL_HALT,
-    shop: SHOP_HALT,
-    chest: CHEST_HALT,
-    removal: REMOVAL_HALT,
-    altar: ALTAR_HALT,
-    forge: FORGE_HALT,
-    butcher: BUTCHER_HALT,
-    enchanter: ENCHANTER_HALT,
-    alchemist: ALCHEMIST_HALT,
-    merchant: MERCHANT_HALT,
-    witch: WITCH_HALT,
-    inventor: INVENTOR_HALT,
-    tavern: TAVERN_HALT,
-    trainer: TRAINER_HALT,
-    demon: DEMON_HALT,
-    antiquarian: ANTIQUARIAN_HALT,
-    magician: MAGICIAN_HALT,
-    madDoctor: MAD_DOCTOR_HALT,
-    weaver: WEAVER_HALT,
-    strategist: STRATEGIST_HALT,
-    necromancer: NECROMANCER_HALT,
-    exit: EXIT_HALT,
+/**
+ * The sorts of halt that give something plain.
+ *
+ * @remarks
+ * The lists are functions, not values: the halts reach the saves, which reach the catalog, while the
+ * halts are still being read, and a value built then would hold nothing of them.
+ */
+export function simpleHalts(): readonly HaltType[] {
+    return [
+        HOSPITAL_HALT, SHOP_HALT, CHEST_HALT, REMOVAL_HALT, ALTAR_HALT, FORGE_HALT, BUTCHER_HALT,
+        ENCHANTER_HALT, ALCHEMIST_HALT, MERCHANT_HALT, WITCH_HALT, INVENTOR_HALT, TAVERN_HALT, TRAINER_HALT,
+        DEMON_HALT, ANTIQUARIAN_HALT, MAGICIAN_HALT, MAD_DOCTOR_HALT, WEAVER_HALT, STRATEGIST_HALT,
+        NECROMANCER_HALT,
+    ]
 }
 
-export const MASTER_HALTS = {
-    masterTrainer: MASTER_TRAINER_HALT,
+/**
+ * The sorts of halt of a master, who gives more than the others.
+ * Master halt are modifier version of other halt that merge their
+ * reward with upgrades.
+ * */
+export function masterHalts(): readonly HaltType[] {
+    return [MASTER_TRAINER_HALT, MASTER_MAGICIAN_HALT, MASTER_INVENTOR_HALT]
 }
 
-/** The sort of halt of each kind of place holding one. */
-export const HALTS = {
-    ...SIMPLE_HALTS,
+/** The sorts of halt of a great one: a simple halt, working further. */
+export function greatHalts(): readonly HaltType[] {
+    return [GREAT_FORGE_HALT]
+}
+
+/** The sorts of halt a floor may lay: all but the exits, which are not its own. */
+export function layableHalts(): readonly HaltType[] {
+    return [...simpleHalts(), ...masterHalts(), ...greatHalts()]
+}
+
+/** Every sort of halt. */
+export function allHalts(): readonly HaltType[] {
+    return [...layableHalts(), EXIT_HALT]
+}
+
+/**
+ * The sort of halt with an id.
+ *
+ * @throws {@link Error} When the catalog has none.
+ */
+export function haltById(id: string): HaltType {
+    const type = allHalts().find(each => each.id === id)
+    if(!type) throw new Error(`The catalog has no halt "${id}".`)
+    return type
 }

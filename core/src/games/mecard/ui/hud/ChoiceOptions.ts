@@ -33,6 +33,9 @@ export interface OptionExtras {
     /** What it shows under its cards, nothing when none. */
     readonly under?: Component|null
 
+    /** What it shows in a row before its cards, such as boosters, nothing when none. */
+    readonly before?: readonly Component[]
+
     /** The place of the deck its cards come from, which colors them, none for cards of no deck. */
     readonly deck?: number|null
 
@@ -56,6 +59,11 @@ export function cardsOption(
 ): Component {
     const column = new Box("column", { gap: 2, align: "center" })
     if(extras.head) column.add(extras.head)
+    if(extras.before?.length){
+        const row = new Box("row", { gap: CARD_GAP, align: "start" })
+        for(const piece of extras.before) row.add(piece)
+        column.add(row)
+    }
     if(cards.length > 0){
         const perRow = Math.max(1, extras.perRow ?? cards.length)
         const rows = new Box("column", { gap: CARD_GAP, align: "center" })

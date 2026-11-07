@@ -54,6 +54,7 @@ export class TrainerHalt extends AbstractHalt {
 
 /** The sort of the trainer. */
 export const TRAINER_HALT: HaltType = {
+    id: "trainer",
     name: "Dresseur",
     description: "Un allié parmi deux pets et un monstre, joué par un bot.",
     code: "DR",

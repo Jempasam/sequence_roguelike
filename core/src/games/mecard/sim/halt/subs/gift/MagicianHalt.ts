@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
-import { BOOSTERS, openBooster } from "../../../catalog/boosters"
+import { BOOSTERS, boosterPoolsText, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -11,10 +11,9 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
 
-/** A booster, closed: the card it is pictured by, and what it holds. */
-function boosterShown(chosen: Booster): Shown {
-    const count = chosen.pools.reduce((sum, pool) => sum + pool.count, 0)
-    return { cards: [chosen.icon], text: concat(chosen.name, " : ", String(count), " cartes") }
+/** A booster, closed, and what it holds, told under the pointer. */
+export function boosterShown(chosen: Booster): Shown {
+    return { cards: [], boosters: [chosen], text: concat(chosen.name, " : ", boosterPoolsText(chosen)) }
 }
 
 /** The magician: a booster among some, its cards going together. */
@@ -50,6 +49,7 @@ export class MagicianHalt extends CardGiftHalt {
 
 /** The sort of the magician. */
 export const MAGICIAN_HALT: HaltType = {
+    id: "magician",
     name: "Magicien",
     description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],
     code: "MG",

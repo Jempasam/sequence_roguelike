@@ -58,6 +58,7 @@ export class AltarHalt extends DeckHalt {
 
 /** The sort of the altar. */
 export const ALTAR_HALT: HaltType = {
+    id: "altar",
     name: "Autel sacrificiel",
     description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],
     code: "AU",

@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { HALTS, PLACE_INFOS } from "@game/core/mecard"
-import type { HaltKind } from "@game/core/mecard"
+import { allHalts, haltById, placeTypeById } from "@game/core/mecard"
 import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltFixtures"
 
 // --- Fixture builders ---
@@ -8,28 +7,32 @@ import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltF
 /** How many runs a halt is played on: enough for each to find something to work on. */
 const SEEDS = 20
 
-/** Every kind of halt, with its sort. */
-const HALTS = Object.entries(HALTS).map(([kind, type]) => ({ kind: kind as HaltKind, type }))
+/** Every sort of halt, by its id. */
+const CASES = allHalts().map(type => ({ kind: type.id, type }))
 
 // --- Tests ---
 
-describe("HALTS", () => {
-    test.each(HALTS)("$kind → told by its sort on the map", ({ kind, type }) => {
-        expect(PLACE_INFOS[kind].name).toBe(type.name)
-        expect(PLACE_INFOS[kind].description).toBe(type.description)
+describe("halts", () => {
+    test.each(CASES)("$kind → found again by its id", ({ kind, type }) => {
+        expect(haltById(kind)).toBe(type)
+        expect(placeTypeById(kind)).toBe(type)
     })
 
-    test.each(HALTS)("$kind → made of its own sort", ({ type }) => {
+    test("ids → no two sorts of halt share one", () => {
+        expect(new Set(allHalts().map(type => type.id)).size).toBe(allHalts().length)
+    })
+
+    test.each(CASES)("$kind → made of its own sort", ({ type }) => {
         expect(type.create(preparedRun(1)).type).toBe(type)
     })
 
-    test.each(HALTS)("$kind → titled by its name, with something to say", ({ type }) => {
+    test.each(CASES)("$kind → titled by its name, with something to say", ({ type }) => {
         const halt = type.create(preparedRun(1))
         expect(halt.title).toBe(type.name)
         expect(halt.line).not.toBe("")
     })
 
-    test.each(HALTS)("$kind → no impact while the first dialog is left unanswered", ({ type }) => {
+    test.each(CASES)("$kind → no impact while the first dialog is left unanswered", ({ type }) => {
         const run = preparedRun(2)
         const halt = type.create(run)
         const before = stateOf(run)
@@ -40,7 +43,7 @@ describe("HALTS", () => {
         expect(stateOf(run)).toBe(before)
     })
 
-    test.each(HALTS)("$kind → the same first dialog when opened again", ({ type }) => {
+    test.each(CASES)("$kind → the same first dialog when opened again", ({ type }) => {
         const run = preparedRun(3)
         const halt = type.create(run)
         const first = new ScriptedPlayer(run)
@@ -51,7 +54,7 @@ describe("HALTS", () => {
         expect(again.log).toEqual(first.log)
     })
 
-    test.each(HALTS)("$kind → an impact exactly when the run changed", ({ type }) => {
+    test.each(CASES)("$kind → an impact exactly when the run changed", ({ type }) => {
         let impacts = 0
         for(let seed = 0; seed < SEEDS; seed++){
             const run = preparedRun(seed)

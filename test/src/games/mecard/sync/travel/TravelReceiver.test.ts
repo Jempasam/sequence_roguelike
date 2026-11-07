@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { CAVE_FLOOR, Run } from "@game/core/mecard"
-import type { ConfirmDialog, Place, PlaceMove, Travel } from "@game/core/mecard"
+import { CAVE_FLOOR, CHEST_HALT, EXIT_HALT, Run } from "@game/core/mecard"
+import type { ConfirmDialog, Place, PlaceMove, PlaceType, Travel } from "@game/core/mecard"
 import {
     BATTLE_TOPIC, BattleBroadcaster, BattleReceiver, LocalSync, TRAVEL_TOPIC, TravelBroadcaster,
     TravelReceiver, writeTravelMessage,
@@ -31,16 +31,16 @@ function rankOf(travel: Travel): number {
     return travel.place ? travel.journey.places.indexOf(travel.place) : -1
 }
 
-/** A place of a kind on the map, the first there. */
-function placeOf(travel: Travel, kind: Place["kind"]): Place {
-    const place = travel.journey.places.find(each => each.kind === kind)
-    if(!place) throw new Error(`The map has no ${kind}.`)
+/** A place of a sort on the map, the first there. */
+function placeOf(travel: Travel, type: PlaceType): Place {
+    const place = travel.journey.places.find(each => each.type === type)
+    if(!place) throw new Error(`The map has no ${type.id}.`)
     return place
 }
 
 /** Visit a halt and leave it. */
 function visitAndLeave(run: Run): void {
-    run.travel.visit("chest")
+    run.travel.visit(CHEST_HALT)
     run.travel.leave()
 }
 
@@ -83,15 +83,15 @@ describe("TravelReceiver", () => {
         const { run, viewer } = session()
         let loads = 0
         viewer.engine.loaded.add(() => loads++)
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         expect(loads).toBe(0)
     })
 
     test("an exit taken → the new floor and its map, no drift", () => {
         const { run, viewer, drifts } = session()
-        const exit = placeOf(run.travel, "exit")
+        const exit = placeOf(run.travel, EXIT_HALT)
         run.travel.jump(exit)
-        run.travel.visit("exit")
+        run.travel.visit(EXIT_HALT)
         const [dialog] = run.travel.dialogs
         run.travel.accept(dialog as ConfirmDialog)
         expect(run.travel.floor.level).toBe(2)
@@ -188,7 +188,7 @@ describe("TravelBroadcaster", () => {
         const sent: string[] = []
         const run = new Run(2)
         new TravelBroadcaster(run.travel, writingTo(sent))
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         run.backToMap()
         expect(sent).toHaveLength(2)
     })

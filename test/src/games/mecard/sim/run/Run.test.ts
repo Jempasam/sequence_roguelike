@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    ARCHER_KIT, CaveFloor, CAVE_FLOOR, FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, LAYERS, MINE_FLOOR, planFor,
+    ARCHER_KIT, BATTLE, BOSS, CaveFloor, CHEST_HALT, EXIT_HALT, SHOP_HALT, CAVE_FLOOR, FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, LAYERS, MINE_FLOOR, planFor,
     RED_HEART, Run, TROLL,
 } from "@game/core/mecard"
-import type { Battle, Monster, Place, PlaceKind } from "@game/core/mecard"
+import type { Battle, Monster, Place, PlaceType } from "@game/core/mecard"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
 
 // --- Fixture builders ---
@@ -53,9 +53,9 @@ function toBoss(run: Run): void {
     for(let layer = 0; layer < LAYERS; layer++) walk(run, run.travel.next[0])
 }
 
-/** Stand a party on a new place of a kind. */
-function standOn(run: Run, kind: PlaceKind): Place {
-    const place: Place = { kind, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+/** Stand a party on a new place of a sort. */
+function standOn(run: Run, type: PlaceType): Place {
+    const place: Place = { type, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
     run.travel.jump(place)
     return place
 }
@@ -111,7 +111,7 @@ describe("Run.travel", () => {
         const run = new Run(1)
         toBoss(run)
         const { depth } = run.travel
-        expect(run.travel.next.map(place => place.kind)).toEqual(["exit", "exit"])
+        expect(run.travel.next.map(place => place.type)).toEqual([EXIT_HALT, EXIT_HALT])
         walk(run, run.travel.next[0])
         expect(run.travel.depth).toBe(depth)
     })
@@ -159,23 +159,23 @@ describe("Run.travel", () => {
 describe("Run.haltOf", () => {
     test("asked twice → the same halt", () => {
         const run = new Run(1)
-        const place = standOn(run, "chest")
+        const place = standOn(run, CHEST_HALT)
         expect(run.travel.haltOf(place)).toBe(run.travel.haltOf(place))
     })
 
     test("two places of a kind → two halts", () => {
         const run = new Run(1)
-        expect(run.travel.haltOf(standOn(run, "chest"))).not.toBe(run.travel.haltOf(standOn(run, "chest")))
+        expect(run.travel.haltOf(standOn(run, CHEST_HALT))).not.toBe(run.travel.haltOf(standOn(run, CHEST_HALT)))
     })
 
     test("a fight → an error", () => {
         const run = new Run(1)
-        expect(() => run.travel.haltOf(standOn(run, "battle"))).toThrow()
+        expect(() => run.travel.haltOf(standOn(run, BATTLE))).toThrow()
     })
 
     test("another floor → new halts", () => {
         const run = new Run(1)
-        const place = standOn(run, "chest")
+        const place = standOn(run, CHEST_HALT)
         const halt = run.travel.haltOf(place)
         run.travel.enterFloor(FOREST_FLOOR.create(2))
         expect(run.travel.haltOf(place)).not.toBe(halt)
@@ -190,21 +190,21 @@ describe("Run.returnable", () => {
     test("a halt never entered → none, nothing drawn", () => {
         const run = new Run(1)
         const twin = new Run(1)
-        standOn(run, "chest")
+        standOn(run, CHEST_HALT)
         expect(run.travel.returnable).toBeNull()
         expect(run.rng.next()).toBe(twin.rng.next())
     })
 
     test("a halt left with the run as it was → its place", () => {
         const run = new Run(1)
-        const place = standOn(run, "chest")
+        const place = standOn(run, CHEST_HALT)
         run.travel.haltOf(place).start(new ScriptedPlayer(run))
         expect(run.travel.returnable).toBe(place)
     })
 
     test("a halt that changed the run → none", () => {
         const run = new Run(1)
-        const halt = run.travel.haltOf(standOn(run, "chest"))
+        const halt = run.travel.haltOf(standOn(run, CHEST_HALT))
         const player = new ScriptedPlayer(run)
         halt.start(player)
         player.play()
@@ -214,8 +214,8 @@ describe("Run.returnable", () => {
 
     test("a place gone from → none", () => {
         const run = new Run(1)
-        run.travel.haltOf(standOn(run, "chest"))
-        standOn(run, "shop")
+        run.travel.haltOf(standOn(run, CHEST_HALT))
+        standOn(run, SHOP_HALT)
         expect(run.travel.returnable).toBeNull()
     })
 })
@@ -234,7 +234,7 @@ describe("Run fights", () => {
     test("the boss → leads its monsters", () => {
         const run = new Run(2)
         toBoss(run)
-        expect(run.fight).toBe("boss")
+        expect(run.fight).toBe(BOSS)
         const fight = fought(run)
         const bosses = fight.units.filter(unit => unit.name.startsWith(GOLEM.name))
         expect(bosses).toHaveLength(1)
@@ -342,7 +342,7 @@ describe("Run, its phases", () => {
     test("a fight reached → no battle until it is started", () => {
         const run = new Run(2)
         const { travel } = run
-        const place: Place = { kind: "battle", layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        const place: Place = { type: BATTLE, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)
@@ -399,7 +399,7 @@ describe("Run, its phases", () => {
 
     test("back to the map → the visit left and the battle dropped", () => {
         const run = new Run(2)
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         run.startBattle()
         run.backToMap()
         expect(run.battle).toBeNull()

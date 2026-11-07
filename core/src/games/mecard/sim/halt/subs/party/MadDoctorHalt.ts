@@ -48,6 +48,7 @@ export class MadDoctorHalt extends AbstractHalt {
 
 /** The sort of the mad doctor. */
 export const MAD_DOCTOR_HALT: HaltType = {
+    id: "madDoctor",
     name: "Docteur Fou",
     description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],
     code: "DF",

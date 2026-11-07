@@ -1,7 +1,5 @@
 import { joinText } from "../../../../../../semantic"
-import type { Attribute } from "../../../base/Attribute"
 import { damage } from "../../../battle/words"
-import type { UnitStats } from "../../../battle/Unit"
 import { SLASH } from "../../../card/subs/attack/Slash"
 import { SWEEP } from "../../../card/subs/attack/Sweep"
 import { THRUST } from "../../../card/subs/attack/Thrust"
@@ -15,23 +13,11 @@ const WHETSTONE_BONUS = 1
 const BLOWS = [SLASH, THRUST, SWEEP]
 
 /** A stone adding to every blow. */
-export class Whetstone extends StatItem {
-
-
-    constructor(
-        /** How many hearts it adds to each blow. */
-        bonus: number,
-    ){
-        super(
-            "Pierre à aiguiser", "mecard/items/whetstone.png",
-            ["+", damage(bonus, "physical"), " de force : à chaque coup, ", ...joinText(BLOWS, ", "), "."], bonus,
-        )
-    }
-
-
-    public stat(stats: UnitStats): Attribute<number> {
-        return stats.strength
-    }
-}
-
-export const WHETSTONE = new Whetstone(WHETSTONE_BONUS)
+export const WHETSTONE = new StatItem("Pierre à aiguiser", "mecard/items/whetstone.png", [
+    {
+        stat: stats => stats.strength,
+        amount: WHETSTONE_BONUS,
+        shown: damage(WHETSTONE_BONUS, "physical"),
+        text: ["de force : à chaque coup, ", ...joinText(BLOWS, ", ")],
+    },
+])

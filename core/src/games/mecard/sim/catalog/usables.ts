@@ -1,0 +1,16 @@
+/**
+ * @packageDocumentation
+ * The catalog of the usables.
+ */
+
+import type { Usable } from "../usable"
+import {
+    ENERGIZER, FIRE_FLASK, GLUE_FLASK, HASTE_ELIXIR, HEALING_POTION, MIXER, PLANT_BAG, SHIELD_FLASK,
+    STRENGTH_ELIXIR, THRUST_BOTTLE,
+} from "../usable/subs"
+
+/** Every usable, for the loot and the shops. */
+export const USABLES: readonly Usable[] = [
+    HEALING_POTION, SHIELD_FLASK, STRENGTH_ELIXIR, HASTE_ELIXIR, FIRE_FLASK, GLUE_FLASK, PLANT_BAG, ENERGIZER,
+    THRUST_BOTTLE, MIXER,
+]

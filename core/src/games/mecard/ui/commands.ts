@@ -4,7 +4,7 @@ import { plainText } from "../../../semantic"
 import type { Arg, Command, CommandContext, Console } from "../../../engine/console"
 import { UnitStats } from "../sim/battle/Unit"
 import { Rarity } from "../sim/card/Rarity"
-import { ALL_CARDS, USABLES, ITEMS } from "../sim/catalog/index"
+import { CARDS, USABLES, ITEMS } from "../sim/catalog/index"
 import { KITS } from "../sim/catalog/kits"
 import { MONSTERS } from "../sim/catalog/monsters"
 import { Heart, insertHeart } from "../sim/heart/Heart"
@@ -12,9 +12,9 @@ import { HEART_KINDS } from "../sim/save/catalogNames"
 import { BLOODLUST, Bloodlust } from "../sim/status/subs/Bloodlust"
 import { deckName } from "../sim/run/deckName"
 import { allCards, firstDeck, hero } from "../sim/run/Hero"
-import { isHalt } from "../sim/run/Journey"
 import { FLOOR_TYPES } from "../sim/catalog/floors"
-import { infoOf, PLACE_INFOS } from "../sim/catalog/places"
+import { allHalts, layableHalts } from "../sim/catalog/halts"
+import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
 import { Burn, BURN } from "../sim/status/subs/Burn"
 import { CONFUSED, Confusion } from "../sim/status/subs/Confusion"
@@ -37,7 +37,9 @@ import type { Usable } from "../sim/usable/Usable"
 import type { HeartKind } from "../sim/heart/HeartKind"
 import type { Item } from "../sim/item/Item"
 import type { Hero } from "../sim/run/Hero"
-import type { HaltKind, Place, PlaceInfo, PlaceKind } from "../sim/run/Journey"
+import type { Place } from "../sim/run/Journey"
+import type { PlaceType } from "../sim/run/PlaceType"
+import type { HaltType } from "../sim/halt/HaltType"
 import type { FloorType } from "../sim/floor/Floor"
 import type { Run } from "../sim/run/Run"
 import type { Status, StatusType } from "../sim/status/Status"
@@ -46,7 +48,7 @@ import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, randomSeats } from "../sync/run/S
 import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 
 import { chainText, heartsText } from "./describe"
-import { PLACE_TRANSITIONS } from "./travel/placeLooks"
+import { placeTransitions } from "./travel/placeLooks"
 
 /** What the commands of Dungeon of the Mecard run with: the run, its battle, the screen to build again. */
 export interface MecardContext extends CommandContext {
@@ -75,7 +77,7 @@ export interface MecardContext extends CommandContext {
     showMap(): void
 
     /** Visit a halt where the party stands, without going anywhere. */
-    visit(kind: HaltKind): void
+    visit(type: HaltType): void
 
     /** Open the bench of the characters, where they are animated and dressed for a try. */
     showPnj(): void
@@ -134,7 +136,7 @@ export class LiveContext implements MecardContext {
     public restart(): void { this.host().restart() }
     public go(place: Place): void { this.host().go(place) }
     public showMap(): void { this.host().showMap() }
-    public visit(kind: HaltKind): void { this.host().visit(kind) }
+    public visit(type: HaltType): void { this.host().visit(type) }
     public showPnj(): void { this.host().showPnj() }
     public showArm(): void { this.host().showArm() }
     public showLibrary(): void { this.host().showLibrary() }
@@ -203,7 +205,7 @@ function wordOf(name: string): string {
 
 const UNIT: Arg<MecardContext, Unit> = named("l'unité", ctx => ctx.battle.living, unit => wordOf(unit.name))
 const HERO: Arg<MecardContext, Hero> = named("le héros", ctx => ctx.run.heroes, hero => wordOf(hero.name))
-const CARD: Arg<MecardContext, Card> = named("la carte", () => ALL_CARDS, card => wordOf(card.name))
+const CARD: Arg<MecardContext, Card> = named("la carte", () => CARDS, card => wordOf(card.name))
 const ITEM: Arg<MecardContext, Item> = named("l'objet", () => ITEMS, item => wordOf(item.name))
 const HEART: Arg<MecardContext, HeartKind> = named("le cœur", () => HEART_KINDS, kind => wordOf(kind.name))
 const MONSTER: Arg<MecardContext, Monster> = named("le monstre", () => MONSTERS, monster => wordOf(monster.name))
@@ -246,17 +248,12 @@ const NEXT_PLACE: Arg<MecardContext, Place> = {
 }
 
 /** The halts, as `travel visit` opens them. */
-const VISIT_KINDS = (Object.keys(PLACE_INFOS) as PlaceKind[]).filter(isHalt)
-
-/** The halts a command lays on the map: all but the exits, which come with the map. */
-const LAYABLE_KINDS = VISIT_KINDS.filter((kind): kind is Exclude<HaltKind, "exit"> => kind !== "exit")
-
-/** The word a kind of place is typed as: its name. */
-function kindWord(kind: PlaceKind): string {
-    return wordOf(PLACE_INFOS[kind].name)
+/** The word a sort of place is typed as: its name. */
+function typeWord(type: PlaceType): string {
+    return wordOf(type.name)
 }
 
-const VISIT: Arg<MecardContext, HaltKind> = named("la halte", () => VISIT_KINDS, kindWord)
+const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
 const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => FLOOR_TYPES, type => wordOf(type.name))
 const KIT: Arg<MecardContext, Kit> = named("le kit", () => KITS, kit => wordOf(kit.name))
 const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => USABLES, each => wordOf(each.name))
@@ -362,7 +359,7 @@ function catalogCommands(): Record<string, Command<MecardContext, unknown>> {
         card: group("card", "les cartes du jeu.", {
             list: command("card list [rareté] : liste les cartes, d'une rareté ou toutes.", [optional(RARITY, null)],
                 (ctx, rarity) => {
-                    for(const card of ALL_CARDS){
+                    for(const card of CARDS){
                         if(!rarity || card.rarity === rarity) ctx.print(`${wordOf(card.name)} (${card.rarity}) : ${plainText(card.description)}`)
                     }
                 }),
@@ -781,20 +778,20 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.go(place)
             }),
             places: command("travel places : liste les sortes de lieux.", [], ctx => {
-                for(const [kind, info] of Object.entries(PLACE_INFOS) as [PlaceKind, PlaceInfo][]){
-                    ctx.print(`${kindWord(kind)} : ${plainText(info.description)}`)
+                for(const type of allPlaceTypes()){
+                    ctx.print(`${typeWord(type)} : ${plainText(type.description)}`)
                 }
             }),
             visit: command("travel visit <halte> : visite une halte sur place, sans avancer sur la carte.",
-                [VISIT], (ctx, kind) => {
-                    ctx.print(`L'équipe visite ${PLACE_INFOS[kind].name}.`)
-                    ctx.visit(kind)
+                [VISIT], (ctx, type) => {
+                    ctx.print(`L'équipe visite ${type.name}.`)
+                    ctx.visit(type)
                 }),
             put: command("travel put <halte> <couche> : pose une halte sur la carte, dans la couche, reliée à celles d'avant et d'après.",
-                [named("la halte", () => LAYABLE_KINDS, kindWord), whole("la couche", 1)],
-                (ctx, kind, layer) => {
-                    ctx.run.travel.layHalt(kind, layer - 1)
-                    ctx.print(`${PLACE_INFOS[kind].name} posé en couche ${layer}.`)
+                [named("la halte", layableHalts, typeWord), whole("la couche", 1)],
+                (ctx, type, layer) => {
+                    ctx.run.travel.layHalt(type, layer - 1)
+                    ctx.print(`${type.name} posé en couche ${layer}.`)
                     ctx.showMap()
                 }),
             jump: command("travel jump <couche> <rang> : pose l'équipe sur un lieu de la carte, sans y entrer.",
@@ -851,12 +848,12 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
             "transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"
                 + ` ${DEFAULT_TRANSITION} ms par défaut, et dit quand elle passe son milieu et sa fin.`,
             [
-                named("la transition", () => [...PLACE_TRANSITIONS.keys()], name => name),
+                named("la transition", () => [...placeTransitions().keys()], name => name),
                 optional(whole("la durée en millisecondes", 1), DEFAULT_TRANSITION),
                 optional(named("le sens", () => TRANSITION_WAYS, way => way), "endroit"),
             ],
             (ctx, name, duration, way) => {
-                const path = PLACE_TRANSITIONS.get(name)
+                const path = placeTransitions().get(name)
                 if(path) ctx.playTransition(path, duration / 1000, way === "envers")
             },
         ),

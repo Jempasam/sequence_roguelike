@@ -2,11 +2,16 @@ import type { Rng } from "../../base/Rng"
 import { BERSERKER, BRUTE, DEVIL, ELF_ASSASSIN, FIRE_MAGE, IMP } from "../../catalog/monsters"
 import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
-import type { FightKind } from "../../run/Journey"
+import { ELITE } from "../../catalog/fights"
+import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
+import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
+import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
+import type { FightType } from "../../run/PlaceType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
-import { AbstractFloor } from "./AbstractFloor"
+import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 
 /** Who lives in hell. */
@@ -21,10 +26,12 @@ export class HellFloor extends AbstractFloor {
 
     /** Dark bargains, and little rest. */
     protected override weights(): PlaceWeights {
-        return { ...super.weights(), demon: 6, altar: 7, madDoctor: 4, elite: 12, hospital: 2 }
+        return reweighted(
+            super.weights(), [DEMON_HALT, 6], [ALTAR_HALT, 7], [MAD_DOCTOR_HALT, 4], [ELITE, 12], [HOSPITAL_HALT, 2],
+        )
     }
 
-    protected monsters(fight: FightKind, layer: number, rng: Rng): Monster[] {
+    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
         return encounter(MONSTERS, DEVIL, fight, layer, this.level, rng)
     }
 }

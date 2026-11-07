@@ -115,7 +115,7 @@ describe("Travel", () => {
         run.travel.loaded.add(() => told++)
         run.travel.load(source.travel.save())
         expect(run.travel.depth).toBe(source.travel.depth)
-        expect(run.travel.place?.kind).toBe(source.travel.place?.kind)
+        expect(run.travel.place?.type).toBe(source.travel.place?.type)
         expect(told).toBe(1)
     })
 

@@ -2,25 +2,11 @@ import type { Text } from "../../../../semantic"
 import type { Rng } from "../base/Rng"
 import type { Monster } from "../catalog/monsters"
 import type { Floor, FloorContext } from "../floor/Floor"
+import type { HaltType } from "../halt/HaltType"
 
-/** What a place of the journey holds. */
-export type PlaceKind =
-    | "battle"|"elite"|"boss"|"hospital"|"shop"|"chest"|"removal"|"altar"|"forge"|"butcher"|"enchanter"
-    | "alchemist"|"merchant"|"witch"|"inventor"|"tavern"|"trainer"|"masterTrainer"|"demon"|"antiquarian"|"magician"
-    | "madDoctor"|"weaver"|"strategist"|"necromancer"|"exit"
+import type { FightType, PlaceType } from "./PlaceType"
 
-/** The kinds of fights a place may hold. */
-export type FightKind = "battle"|"elite"|"boss"
-
-/** The kinds of halts: the places that hold no fight, but a visit. */
-export type HaltKind = Exclude<PlaceKind, FightKind>
-
-/** Is a kind of place a halt, visited rather than fought? */
-export function isHalt(kind: PlaceKind): kind is HaltKind {
-    return kind !== "battle" && kind !== "elite" && kind !== "boss"
-}
-
-/** What the players are told of a kind of place: its name, and what it does. */
+/** What the players are told of a sort of place: its name, and what it does. */
 export interface PlaceInfo {
     readonly name: string
     readonly description: Text
@@ -37,7 +23,8 @@ export interface Spot {
 
 /** A place of the journey: what it holds, where it lies, and where it leads. */
 export interface Place extends Spot {
-    readonly kind: PlaceKind
+    /** What it holds: a fight of some sort, or a halt. */
+    readonly type: PlaceType
 
     /** The places it leads to, from left to right. */
     readonly next: Place[]
@@ -98,13 +85,13 @@ export class Journey implements FloorContext {
     }
 
     /** Lay a fight on the map, with its monsters. */
-    public addFight(kind: FightKind, monsters: readonly Monster[], at: Spot): Place {
-        return this.#add({ ...at, kind, next: [], exitTo: null, monsters })
+    public addFight(type: FightType, monsters: readonly Monster[], at: Spot): Place {
+        return this.#add({ ...at, type, next: [], exitTo: null, monsters })
     }
 
     /** Lay a halt on the map. */
-    public addHalt(kind: Exclude<HaltKind, "exit">, at: Spot): Place {
-        return this.#add({ ...at, kind, next: [], exitTo: null, monsters: [] })
+    public addHalt(type: HaltType, at: Spot): Place {
+        return this.#add({ ...at, type, next: [], exitTo: null, monsters: [] })
     }
 
     /**
@@ -113,14 +100,14 @@ export class Journey implements FloorContext {
      *
      * @throws {@link Error} When the row is not one before the exits, or past the map.
      */
-    public insertHalt(kind: Exclude<HaltKind, "exit">, layer: number): Place {
+    public insertHalt(type: HaltType, layer: number): Place {
         const layers = this.layers
         const rows = layers.length - (this.exits.length > 0 ? 1 : 0)
         if(layer < 0 || layer >= rows) throw new Error(`The map has ${rows} rows to lay a halt in.`)
         const edges = [0, ...layers[layer].map(place => place.across), 1]
         let gap = 0
         for(let i = 1; i < edges.length; i++) if(edges[i] - edges[i - 1] > edges[gap + 1] - edges[gap]) gap = i - 1
-        const halt = this.addHalt(kind, { layer, across: (edges[gap] + edges[gap + 1]) / 2 })
+        const halt = this.addHalt(type, { layer, across: (edges[gap] + edges[gap + 1]) / 2 })
         for(const before of layers[layer - 1] ?? []) this.link(before, halt)
         for(const after of layers[layer + 1] ?? []) this.link(halt, after)
         return halt
@@ -131,15 +118,19 @@ export class Journey implements FloorContext {
         from.next.push(to)
     }
 
-    /** Lay an exit to each floor, a row past the map, every place leading nowhere leading to them all. */
-    public addExits(floors: readonly Floor[]): void {
+    /**
+     * Lay an exit to each floor, a row past the map, every place leading nowhere leading to them all.
+     *
+     * @param exit - The sort of halt of the exits: the catalog's, which this does not read itself.
+     */
+    public addExits(floors: readonly Floor[], exit: HaltType): void {
         const ends = this.#places.filter(place => place.next.length === 0)
         const layer = this.layers.length
         this.exits = floors
         floors.forEach((exitTo, index) => {
             const across = (index + 0.5) / floors.length
-            const exit = this.#add({ kind: "exit", layer, across, next: [], exitTo, monsters: [] })
-            for(const end of ends) this.link(end, exit)
+            const place = this.#add({ type: exit, layer, across, next: [], exitTo, monsters: [] })
+            for(const end of ends) this.link(end, place)
         })
     }
 

@@ -2,11 +2,16 @@ import type { Rng } from "../../base/Rng"
 import { BULL, ELF_ARCHER, ELF_ASSASSIN, GOBLIN_RIDER, HUNTER, TROLL } from "../../catalog/monsters"
 import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
-import type { FightKind } from "../../run/Journey"
+import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
+import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
+import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
+import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
+import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import type { FightType } from "../../run/PlaceType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
-import { AbstractFloor } from "./AbstractFloor"
+import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 
 /** Who lives in the forest. */
@@ -21,10 +26,12 @@ export class ForestFloor extends AbstractFloor {
 
     /** Places to rest and people to meet, more than to craft. */
     protected override weights(): PlaceWeights {
-        return { ...super.weights(), hospital: 9, tavern: 6, trainer: 6, witch: 6, forge: 2 }
+        return reweighted(
+            super.weights(), [HOSPITAL_HALT, 9], [TAVERN_HALT, 6], [TRAINER_HALT, 6], [WITCH_HALT, 6], [FORGE_HALT, 2],
+        )
     }
 
-    protected monsters(fight: FightKind, layer: number, rng: Rng): Monster[] {
+    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
         return encounter(MONSTERS, TROLL, fight, layer, this.level, rng)
     }
 }

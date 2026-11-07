@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { Console } from "@game/core"
-import { BURN, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
-import type { Battle, PlaceKind, Unit } from "@game/core/mecard"
+import { BURN, FORGE_HALT, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
+import type { Battle, HaltType, Unit } from "@game/core/mecard"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core/mecard/sync"
@@ -16,8 +16,8 @@ interface Game {
     battle(): Battle
     readonly changed: Unit[]
 
-    /** The kinds of places visited on the spot, in order. */
-    readonly visited: PlaceKind[]
+    /** The sorts of halt visited on the spot, in order. */
+    readonly visited: HaltType[]
 
     /** The transitions played, in order: their painting, duration in seconds, and whether in reverse. */
     readonly transitions: (readonly [string, number, boolean])[]
@@ -34,7 +34,7 @@ function game(): Game {
     const run = new Run(3)
     let battle = run.newBattle()
     const changed: Unit[] = []
-    const visited: PlaceKind[] = []
+    const visited: HaltType[] = []
     const transitions: (readonly [string, number, boolean])[] = []
     const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
     const connections: (readonly [string, boolean])[] = []
@@ -244,7 +244,7 @@ describe("Mecard commands", () => {
     test("travel visit → the place visited where the party stands, fights not offered", () => {
         const { console, run, visited } = game()
         console.submit("travel visit Forge")
-        expect(visited).toEqual(["forge"])
+        expect(visited).toEqual([FORGE_HALT])
         expect(run.travel.place).toBeNull()
         expect(console.check("travel visit Combat").valid).toBe(false)
     })
@@ -263,7 +263,7 @@ describe("Mecard commands", () => {
         const { journey } = run.travel
         const before = journey.layers[2].length
         console.submit("travel put Forge 3")
-        const halt = journey.layers[2].find(place => place.kind === "forge")
+        const halt = journey.layers[2].find(place => place.type === FORGE_HALT)
         expect(journey.layers[2]).toHaveLength(before + 1)
         expect(journey.layers[1].every(place => place.next.includes(halt!))).toBe(true)
         expect(halt?.next).toEqual(journey.layers[3])

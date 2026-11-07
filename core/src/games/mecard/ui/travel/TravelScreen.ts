@@ -33,6 +33,7 @@ import { DeckView } from "../hud/DeckView"
 import { DetailBox } from "../hud/DetailBox"
 import { cardsOption, heroOption, unitHead } from "../hud/ChoiceOptions"
 import { BagView } from "../hud/BagView"
+import { boosterView } from "../hud/BoosterView"
 import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
 import { ThingView } from "../hud/ThingView"
 import type { Item } from "../../sim/item/Item"
@@ -43,6 +44,7 @@ import { HoverPanel } from "../hud/HoverPanel"
 import {
     BUBBLE_TEXT, CHOSEN_TEXT, DIM_TEXT, STAT_DOWN, STAT_UP, TEXT_OUTLINE, WARNING_TEXT,
 } from "../look/theme"
+import { pictured } from "../library/UpgradeEntry"
 import { JourneyView } from "./JourneyView"
 import type { MapArt } from "./JourneyView"
 import { PointingArm } from "./PointingArm"
@@ -146,6 +148,15 @@ interface Next {
     readonly label: string
     readonly action: () => void
     readonly enabled?: boolean
+}
+
+/**
+ * The cards of what is shown: its upgrades as the catalogue pictures them, then its own cards. Its upgrades
+ * go beside its boosters instead when it has some.
+ */
+function cardsOf(shown: Shown): Card[] {
+    const upgrades = shown.boosters?.length ? [] : (shown.upgrades ?? []).map(pictured)
+    return [...upgrades, ...shown.cards]
 }
 
 /**
@@ -541,8 +552,9 @@ export class TravelScreen {
         const options = dialog.offers.map(shown => {
             const head = shown.unit ? unitHead(this.theme, shown.unit, this.sprites) : null
             const under = this.#stuffShown(shown, "mini", OFFERED_DECK_ROOM, {})
-            return cardsOption(this.theme, shown.cards, shown.text ?? null, {
-                head, under, deck: this.#placeOf(shown.from), sprite: shown.sprite, sprites: this.sprites,
+            return cardsOption(this.theme, cardsOf(shown), shown.text ?? null, {
+                head, under, before: this.#boostersShown(shown), deck: this.#placeOf(shown.from),
+                sprite: shown.sprite, sprites: this.sprites,
             })
         })
         this.#choose({
@@ -990,10 +1002,13 @@ export class TravelScreen {
     /** Cards in a row, then decks, items and usables, then a text under them. What is hovered is told. */
     #shown(shown: Shown): Component {
         const column = new Box("column", { gap: 2 })
-        if(shown.cards.length > 0){
+        const cards = cardsOf(shown)
+        const boosters = this.#boostersShown(shown)
+        if(cards.length + boosters.length > 0){
             const row = new Box("row", { gap: CARD_GAP, align: "start" })
+            for(const booster of boosters) row.add(booster)
             const deck = this.#placeOf(shown.from)
-            for(const card of shown.cards) row.add(this.#cardView(card, deck))
+            for(const card of cards) row.add(this.#cardView(card, deck))
             column.add(row)
         }
         if(shown.decks?.length) this.#hint = CARD_HINT
@@ -1077,6 +1092,14 @@ export class TravelScreen {
     }
 
     /** A card of a dialog, told on hover: the dialog says to hover its cards while none is. */
+    /** The boosters of what is shown, each framed in leather, then the upgrades beside them. */
+    #boostersShown(shown: Shown): Component[] {
+        const boosters = shown.boosters ?? []
+        if(boosters.length === 0) return []
+        const upgrades = (shown.upgrades ?? []).map(upgrade => new CardView(this.theme, pictured(upgrade), "hand"))
+        return [...boosters.map(booster => boosterView(this.theme, booster, this.sprites.booster)), ...upgrades]
+    }
+
     #cardView(card: Card, deck: number|null): CardView {
         this.#hint = CARD_HINT
         const view = new CardView(this.theme, card, "chain")

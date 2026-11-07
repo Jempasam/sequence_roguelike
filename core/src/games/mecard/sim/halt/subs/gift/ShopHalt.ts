@@ -149,6 +149,7 @@ export class ShopHalt extends AbstractHalt {
 
 /** The sort of the shop. */
 export const SHOP_HALT: HaltType = {
+    id: "shop",
     name: "Magasin",
     description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],
     code: "MA",

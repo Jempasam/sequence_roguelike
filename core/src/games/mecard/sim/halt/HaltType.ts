@@ -1,6 +1,5 @@
-import type { ImagePath, LayeredImagePath } from "../../../../engine/assets"
-import type { Rgba } from "../base/Rgba"
-import type { PlaceInfo } from "../run/Journey"
+import type { ImagePath } from "../../../../engine/assets"
+import type { PlaceType } from "../run/PlaceType"
 import type { Run } from "../run/Run"
 
 import type { Halt } from "./Halt"
@@ -12,18 +11,9 @@ import type { Halt } from "./Halt"
  * Its pictures are paths, which nothing here reads: only an interface loads them, so the simulation runs
  * without any.
  */
-export interface HaltType extends PlaceInfo {
-    /** The code of two letters at most shown on the map while its icon is not loaded. */
-    readonly code: string
-
+export interface HaltType extends PlaceType {
     /** The picture of its token on the map. */
     readonly icon: ImagePath
-
-    /** The color of a glow around its token on the map, none for no glow. */
-    readonly glow?: Rgba
-
-    /** The painting of the transition entering it, read as `Transition` reads it. */
-    readonly transition: LayeredImagePath
 
     /** Make a halt of this sort for a run, what it offers drawn from the random numbers of the run. */
     create(run: Run): Halt

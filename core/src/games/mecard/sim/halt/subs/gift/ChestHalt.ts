@@ -35,6 +35,7 @@ export class ChestHalt extends CardGiftHalt {
 
 /** The sort of the chest. */
 export const CHEST_HALT: HaltType = {
+    id: "chest",
     name: "Coffre",
     description: ["Une ", CARTE, " parmi trois, gratuite."],
     code: "CO",

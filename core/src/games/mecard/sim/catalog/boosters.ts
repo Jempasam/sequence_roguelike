@@ -1,3 +1,5 @@
+import { concat, joinText } from "../../../../semantic"
+import type { Text } from "../../../../semantic"
 import type { Rng } from "../base/Rng"
 import { rgba } from "../base/Rgba"
 import type { Rgba } from "../base/Rgba"
@@ -58,6 +60,18 @@ export interface Booster {
     /** The card it is pictured by. */
     readonly icon: Card
     readonly pools: readonly BoosterPool[]
+}
+
+/** What a booster holds, pool after pool: how many cards it draws from which cards. */
+export function boosterPoolsText(booster: Booster): Text {
+    return concat(...booster.pools.flatMap(({ count, pool }, index) => {
+        return [index === 0 ? "" : " · ", `${count} parmi `, joinText(pool, ", ")]
+    }))
+}
+
+/** How many cards a booster gives when it is opened. */
+export function boosterSize(booster: Booster): number {
+    return booster.pools.reduce((sum, pool) => sum + pool.count, 0)
 }
 
 /** The cards a booster gives when it is opened: for each pool, `count` of its cards drawn at random, all different when it can. */

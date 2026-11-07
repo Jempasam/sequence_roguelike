@@ -55,6 +55,7 @@ export class WitchHalt extends AbstractHalt {
 
 /** The sort of the witch. */
 export const WITCH_HALT: HaltType = {
+    id: "witch",
     name: "Sorcière",
     description: "Un utilisable parmi trois.",
     code: "SO",

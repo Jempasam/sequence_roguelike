@@ -1,6 +1,4 @@
-import type { Attribute } from "../../../base/Attribute"
 import { damage } from "../../../battle/words"
-import type { UnitStats } from "../../../battle/Unit"
 
 import { StatItem } from "./StatItem"
 
@@ -8,20 +6,11 @@ import { StatItem } from "./StatItem"
 const SCOPE_BONUS = 1
 
 /** A scope adding to every shot: precision. */
-export class Scope extends StatItem {
-
-
-    constructor(
-        /** How many hearts it adds to each shot. */
-        bonus: number,
-    ){
-        super("Viseur", "mecard/items/scope.png", ["+", damage(bonus, "physical"), " de précision : à chaque tir."], bonus)
-    }
-
-
-    public stat(stats: UnitStats): Attribute<number> {
-        return stats.precision
-    }
-}
-
-export const SCOPE = new Scope(SCOPE_BONUS)
+export const SCOPE = new StatItem("Viseur", "mecard/items/scope.png", [
+    {
+        stat: stats => stats.precision,
+        amount: SCOPE_BONUS,
+        shown: damage(SCOPE_BONUS, "physical"),
+        text: "de précision",
+    },
+])

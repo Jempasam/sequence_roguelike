@@ -1,6 +1,4 @@
-import type { Attribute } from "../../../base/Attribute"
 import { frenchNumber } from "../../../battle/words"
-import type { UnitStats } from "../../../battle/Unit"
 
 import { StatItem } from "./StatItem"
 
@@ -8,20 +6,11 @@ import { StatItem } from "./StatItem"
 const BOOTS_MOVE = 0.5
 
 /** Boots taking every move farther. */
-export class Boots extends StatItem {
-
-
-    constructor(
-        /** How much farther it takes every move, added to the move factor. */
-        move: number,
-    ){
-        super("Bottes de sept lieues", "mecard/items/boots.png", ["Tous tes déplacements vont ", frenchNumber(move * 100), " % plus loin."], move)
-    }
-
-
-    public stat(stats: UnitStats): Attribute<number> {
-        return stats.move
-    }
-}
-
-export const BOOTS = new Boots(BOOTS_MOVE)
+export const BOOTS = new StatItem("Bottes de sept lieues", "mecard/items/boots.png", [
+    {
+        stat: stats => stats.move,
+        amount: BOOTS_MOVE,
+        shown: [frenchNumber(BOOTS_MOVE * 100), " %"],
+        text: "de portée de déplacement",
+    },
+])

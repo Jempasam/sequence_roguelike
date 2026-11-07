@@ -49,6 +49,7 @@ export class MerchantHalt extends AbstractHalt {
 
 /** The sort of the merchant. */
 export const MERCHANT_HALT: HaltType = {
+    id: "merchant",
     name: "Marchand ambulant",
     description: "Un objet parmi trois.",
     code: "MB",

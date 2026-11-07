@@ -1,5 +1,7 @@
 import type { Text } from "../../../../semantic"
 import type { Card } from "../card/Card"
+import type { Booster } from "../catalog/boosters"
+import type { CardUpgrade } from "../catalog/upgrades"
 import type { Item } from "../item/Item"
 import type { Hero } from "../run/Hero"
 import type { Usable } from "../usable/Usable"
@@ -12,6 +14,12 @@ export interface Shown {
     readonly unit?: Hero
 
     readonly cards: readonly Card[]
+
+    /** Boosters it shows, closed, in front of its cards, as the interface pictures them. */
+    readonly boosters?: readonly Booster[]
+
+    /** Upgrades it comes with, shown as the catalogue pictures them, in front of its cards. */
+    readonly upgrades?: readonly CardUpgrade[]
 
     /** The deck of the party its cards come from or go to, which they take the color of, none for none. */
     readonly from?: readonly Card[]

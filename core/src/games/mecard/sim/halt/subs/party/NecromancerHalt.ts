@@ -72,6 +72,7 @@ export class NecromancerHalt extends AbstractHalt {
 
 /** The sort of the necromancer. */
 export const NECROMANCER_HALT: HaltType = {
+    id: "necromancer",
     name: "Nécromancien",
     description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",
     code: "NE",

@@ -59,6 +59,7 @@ export class TavernHalt extends AbstractHalt {
 
 /** The sort of the tavern. */
 export const TAVERN_HALT: HaltType = {
+    id: "tavern",
     name: "Taverne",
     description: "Un héros parmi trois rejoint l'équipe.",
     code: "TA",

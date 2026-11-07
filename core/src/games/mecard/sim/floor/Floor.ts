@@ -2,7 +2,9 @@ import type { ImagePath } from "../../../../engine/assets"
 import type { Rng } from "../base/Rng"
 import type { Monster } from "../catalog/monsters"
 import type { SceneLook } from "../halt/SceneLook"
-import type { FightKind, HaltKind, Place, PlaceInfo, Spot } from "../run/Journey"
+import type { HaltType } from "../halt/HaltType"
+import type { Place, PlaceInfo, Spot } from "../run/Journey"
+import type { FightType } from "../run/PlaceType"
 
 /** A picture lying on the map of a floor, for the look of it. */
 export interface Decoration {
@@ -40,10 +42,10 @@ export interface FloorContext {
     readonly rng: Rng
 
     /** Lay a fight on the map, with its monsters. */
-    addFight(kind: FightKind, monsters: readonly Monster[], at: Spot): Place
+    addFight(type: FightType, monsters: readonly Monster[], at: Spot): Place
 
     /** Lay a halt on the map. */
-    addHalt(kind: Exclude<HaltKind, "exit">, at: Spot): Place
+    addHalt(type: HaltType, at: Spot): Place
 
     /** Make a place lead to another. */
     link(from: Place, to: Place): void

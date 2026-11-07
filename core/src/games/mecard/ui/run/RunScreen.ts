@@ -17,7 +17,6 @@ import type { BattleLocks } from "../battle/BattleScreen"
 import { cardsOption, heroOption } from "../hud/ChoiceOptions"
 import type { UnitSprites } from "../look/UnitSprites"
 import { CHOSEN_TEXT, WARNING_TEXT } from "../look/theme"
-import { PLACE_LOOKS } from "../travel/placeLooks"
 import { NO_TRAVEL_LOCKS, TravelScreen } from "../travel/TravelScreen"
 import type { TravelLocks } from "../travel/TravelScreen"
 import { PlaceTransitions } from "./PlaceTransitions"
@@ -280,7 +279,7 @@ export class RunScreen {
 
     /** Play the transition into a fight, its battle shown at its middle, at once when nothing is shown yet. */
     async #enterBattle(battle: Battle): Promise<void> {
-        if(this.#visible) await this.transitions.enter(PLACE_LOOKS[this.#engine.fight].transition)
+        if(this.#visible) await this.transitions.enter(this.#engine.fight.transition)
         if(this.#engine.battle !== battle) return
         if(this.battleScreen.engine !== battle) this.battleScreen.engine = battle
         this.#bringBattle()

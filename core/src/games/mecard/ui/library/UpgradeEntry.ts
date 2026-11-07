@@ -30,10 +30,10 @@ function mysteryFor(upgrade: CardUpgrade): Card {
  * An upgrade as it is pictured: its card joined to a mystery card, in its place and in its way. A random
  * way is pictured as a fusion, the first it tries.
  */
-function pictured(upgrade: CardUpgrade): Card {
+export function pictured(upgrade: CardUpgrade): Card {
     const mystery = mysteryFor(upgrade)
     const pair: [Card, Card] = upgrade.placement === "front" ? [upgrade.card, mystery] : [mystery, upgrade.card]
-    return upgrade.fusion === "merge" ? new MergedCard(pair[0], pair[1]) : new FusionCard(pair)
+    return upgrade.fusion === "merge" ? new MergedCard(pair) : new FusionCard(pair)
 }
 
 /** An upgrade in the catalogue: its name, its card, and where and how it joins the card it improves. */

@@ -121,6 +121,7 @@ export class EnchanterHalt extends AbstractHalt {
 
 /** The sort of the enchanter. */
 export const ENCHANTER_HALT: HaltType = {
+    id: "enchanter",
     name: "Enchanteur",
     description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],
     code: "EN",

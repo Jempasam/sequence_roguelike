@@ -1,18 +1,11 @@
 import { Hand, Label } from "../../../../engine/ui"
-import { concat, joinText } from "../../../../semantic"
-import type { Text } from "../../../../semantic"
+import { concat } from "../../../../semantic"
+import { boosterPoolsText as poolsText } from "../../sim/catalog/boosters"
 import type { Booster } from "../../sim/catalog/boosters"
 import { CardView } from "../hud/CardView"
 import { cardsOption } from "../hud/ChoiceOptions"
 import { engineColor } from "../look/colors"
 import type { Entry, LibraryLook } from "./entries"
-
-/** What a booster holds, pool after pool: how many cards it draws from which cards. */
-function poolsText(booster: Booster): Text {
-    return concat(...booster.pools.flatMap(({ count, pool }, index) => {
-        return [index === 0 ? "" : " · ", `${count} parmi `, joinText(pool, ", ")]
-    }))
-}
 
 /**
  * A booster in the catalogue: its name in its color, its cards in one row that overlaps when the entry is too

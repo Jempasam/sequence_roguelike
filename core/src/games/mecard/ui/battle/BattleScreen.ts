@@ -12,7 +12,6 @@ import type { Battle, Phase } from "../../sim/battle/Battle"
 import type { Team } from "../../sim/battle/Team"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
-import type { CardNode } from "../../sim/card/CardNode"
 import { CardChain } from "../../sim/card/CardChain"
 import type { RootPreview } from "../../sim/card/CardChain"
 
@@ -450,8 +449,7 @@ export class BattleScreen implements HudHost {
         this.#hud.actions = {
             choose: unit => this.#choose(unit),
             pick: card => this.#pick(card),
-            plug: (node, slot) => this.#plug(node, slot),
-            remove: node => this.#remove(node),
+            remove: place => this.#remove(place),
             toggleUsable: index => this.#toggleUsable(index),
             launch: () => this.launch(),
             skip: () => this.#skip(),
@@ -472,18 +470,12 @@ export class BattleScreen implements HudHost {
     #pick(card: Card): void {
         const placement = this.#draft()?.place(card)
         this.warning = placement === "full" ? ["La chaîne est pleine : reprends une ", CARTE, " avant d'en poser une autre."]
-            : placement === "lifted" ? [card, " ne tient pas seule : pose d'abord une ", CARTE, " qui la prend."]
-                : null
+            : null
         this.refresh()
     }
 
-    #plug(node: CardNode, slot: number): void {
-        this.#draft()?.plug(node, slot)
-        this.refresh()
-    }
-
-    #remove(node: CardNode): void {
-        this.#draft()?.remove(node)
+    #remove(place: number): void {
+        this.#draft()?.remove(place)
         this.refresh()
     }
 

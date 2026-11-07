@@ -75,6 +75,7 @@ export class AntiquarianHalt extends DeckHalt {
 
 /** The sort of the antiquarian. */
 export const ANTIQUARIAN_HALT: HaltType = {
+    id: "antiquarian",
     name: "Antiquaire",
     description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],
     code: "AN",

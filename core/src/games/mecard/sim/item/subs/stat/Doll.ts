@@ -1,6 +1,4 @@
-import type { Attribute } from "../../../base/Attribute"
 import { HeartCount } from "../../../battle/words"
-import type { UnitStats } from "../../../battle/Unit"
 
 import { StatItem } from "./StatItem"
 
@@ -8,20 +6,11 @@ import { StatItem } from "./StatItem"
 const DOLL_BONUS = 1
 
 /** A doll adding to the life of every body its unit summons: summoning. */
-export class Doll extends StatItem {
-
-
-    constructor(
-        /** How many hearts it adds to each summon. */
-        bonus: number,
-    ){
-        super("Poupée de chiffon", "mecard/items/doll.png", ["+", new HeartCount(bonus), " de vie à chacune de tes invocations."], bonus)
-    }
-
-
-    public stat(stats: UnitStats): Attribute<number> {
-        return stats.summon
-    }
-}
-
-export const DOLL = new Doll(DOLL_BONUS)
+export const DOLL = new StatItem("Poupée de chiffon", "mecard/items/doll.png", [
+    {
+        stat: stats => stats.summon,
+        amount: DOLL_BONUS,
+        shown: new HeartCount(DOLL_BONUS),
+        text: "de vie à chacune de tes invocations",
+    },
+])

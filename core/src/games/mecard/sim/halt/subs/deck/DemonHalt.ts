@@ -47,6 +47,7 @@ export class DemonHalt extends DeckHalt {
 
 /** The sort of the demon. */
 export const DEMON_HALT: HaltType = {
+    id: "demon",
     name: "Démon",
     description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],
     code: "DÉ",

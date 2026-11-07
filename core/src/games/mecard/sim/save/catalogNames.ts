@@ -1,7 +1,7 @@
 import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
 import { FLOOR_TYPES } from "../catalog/floors"
-import { ALL_CARDS, USABLES, ITEMS } from "../catalog/index"
+import { CARDS, USABLES, ITEMS } from "../catalog/index"
 import { MONSTERS } from "../catalog/monsters"
 import type { Monster } from "../catalog/monsters"
 import { PETS } from "../catalog/pets"
@@ -209,7 +209,7 @@ class Names<T extends { readonly name: string }> {
 }
 
 /** The cards by name, the secret one among them. */
-export const CARD_NAMES = new Names<Card>("card", [...ALL_CARDS, SECRET_CARD])
+export const CARD_NAMES = new Names<Card>("card", [...CARDS, SECRET_CARD])
 
 export const ITEM_NAMES = new Names<Item>("item", ITEMS)
 export const ELEMENT_NAMES = new Names<Element>("element", [...BASE_ELEMENTS, ...COMPOUNDS])

@@ -168,6 +168,7 @@ export class StrategistHalt extends AbstractHalt {
 
 /** The sort of the strategist. */
 export const STRATEGIST_HALT: HaltType = {
+    id: "strategist",
     name: "Stratège",
     description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],
     code: "ST",

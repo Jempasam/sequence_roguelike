@@ -45,6 +45,7 @@ export class ButcherHalt extends DeckHalt {
 
 /** The sort of the butcher. */
 export const BUTCHER_HALT: HaltType = {
+    id: "butcher",
     name: "Boucher",
     description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],
     code: "BU",

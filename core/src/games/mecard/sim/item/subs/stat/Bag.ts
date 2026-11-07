@@ -1,28 +1,15 @@
-import type { Attribute } from "../../../base/Attribute"
-import { frenchNumber } from "../../../battle/words"
-import type { UnitStats } from "../../../battle/Unit"
+import { CARTE } from "../../../base/keywords"
 
 import { StatItem } from "./StatItem"
-import { CARTE } from "../../../base/keywords"
 
 /** How many more cards the bag of the catalog lets the hand hold. */
 const BAG_ROOM = 2
 
 /** A bag letting the hand hold more cards. */
-export class Bag extends StatItem {
-
-
-    constructor(
-        /** How many more cards it lets the hand hold. */
-        room: number,
-    ){
-        super("Sac sans fond", "mecard/items/bag.png", ["Ta main tient ", frenchNumber(room), " ", CARTE.as("cartes"), " de plus."], room)
-    }
-
-
-    public stat(stats: UnitStats): Attribute<number> {
-        return stats.handSize
-    }
-}
-
-export const BAG = new Bag(BAG_ROOM)
+export const BAG = new StatItem("Sac sans fond", "mecard/items/bag.png", [
+    {
+        stat: stats => stats.handSize,
+        amount: BAG_ROOM,
+        text: [CARTE.as("cartes"), " dans ta main"],
+    },
+])

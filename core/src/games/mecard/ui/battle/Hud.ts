@@ -10,7 +10,6 @@ import type { Battle } from "../../sim/battle/Battle"
 import type { Team } from "../../sim/battle/Team"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
-import type { CardNode } from "../../sim/card/CardNode"
 
 import { statLines } from "../describe"
 import type { Draft } from "./Draft"
@@ -20,7 +19,7 @@ import type { BattleGrid, UiRect } from "../hud/BattleGrid"
 import { CardFlight, flightSize } from "../hud/CardFlight"
 import { CARD_LOOKS, CardView } from "../hud/CardView"
 import type { CardPlace } from "../hud/CardView"
-import { ChainStrip, LINK_ROOM, stripOf, stripOfView } from "../hud/ChainStrip"
+import { ChainStrip, FlatStrip, LINK_ROOM, stripOfView } from "../hud/ChainStrip"
 import type { StripCard } from "../hud/ChainStrip"
 import { CardChain } from "../../sim/card/CardChain"
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
@@ -135,14 +134,11 @@ export interface HudActions {
     /** Select a unit: a unit of the players to put its chain together, any other to look at its chain. */
     choose(unit: Unit): void
 
-    /** Place a card of the hand where it fits best, or lift it, or put it back down. */
+    /** Place a card of the hand where it fits best. */
     pick(card: Card): void
 
-    /** Put the lifted card into an empty slot of a placed card. */
-    plug(node: CardNode, slot: number): void
-
     /** Take a placed card back to the hand. */
-    remove(node: CardNode): void
+    remove(place: number): void
 
     /** Choose to use what lies at a place of the belt of the unit planned, or not to use it anymore. */
     toggleUsable(index: number): void
@@ -153,7 +149,7 @@ export interface HudActions {
 
 /** What the panels do before a screen tied them. */
 const NO_ACTIONS: HudActions = {
-    choose: () => {}, pick: () => {}, plug: () => {}, remove: () => {}, toggleUsable: () => {},
+    choose: () => {}, pick: () => {}, remove: () => {}, toggleUsable: () => {},
     launch: () => {}, skip: () => {},
 }
 
@@ -600,8 +596,6 @@ export class Hud {
         if(roots.length === 0) return this.#label("(rien)", DIM_TEXT)
         return new ChainStrip(this.theme, roots, place, {
             pick: () => this.actions.choose(unit),
-            plug: () => {},
-            canPlug: () => false,
             hoverRoot: (index, over) => {
                 this.host.hoverRoot(unit, index, over)
                 this.host.hoverUnit(unit, over)
@@ -772,25 +766,17 @@ export class Hud {
 
     /** The chain being put together, its cards linked to what they take, or a word when it is empty. */
     #chain(draft: Draft, deckOf: (card: Card) => number|null): Component {
-        if(draft.roots.length === 0){
+        const { cards } = draft.chain
+        if(cards.length === 0){
             const empty = this.#label("Ta chaîne est vide : clique ta main.", DIM_TEXT)
             const width = empty.measure(Infinity).preferredWidth
             empty.fixedSize = { width, height: CARD_LOOKS.chain.height + LINK_ROOM }
             return empty
         }
-        // Each card of the strip finds its node back, to take it back or plug into it.
-        const nodes = new Map<StripCard, CardNode>()
-        const roots = draft.roots.map(root => stripOf(root, nodes))
-        const nodeOf = (strip: StripCard): CardNode => {
-            const node = nodes.get(strip)
-            if(!node) throw new Error("A card of the strip has no node. Build the strip with stripOf.")
-            return node
-        }
-        return new ChainStrip(this.theme, roots, "chain", {
-            pick: strip => this.actions.remove(nodeOf(strip)),
-            plug: (strip, slot) => this.actions.plug(nodeOf(strip), slot),
-            canPlug: (strip, slot) => draft.canPlug(nodeOf(strip), slot),
-            hoverRoot: (index, over) => this.host.hoverRoot(draft.unit, index, over),
+        const active = draft.active
+        return new FlatStrip(this.theme, cards.map((card, place) => ({ card, active: active[place] })), draft.groups, {
+            pick: place => this.actions.remove(place),
+            hover: (place, over) => this.host.hoverRoot(draft.unit, draft.rootOf(place), over),
             deckOf,
         })
     }
@@ -802,7 +788,7 @@ export class Hud {
     #hand(draft: Draft, deckOf: (card: Card) => number|null): Component {
         const hand = new Hand({ gap: HAND_GAP })
         for(const card of draft.available){
-            const view = new CardView(this.theme, card, "hand", card === draft.lifted)
+            const view = new CardView(this.theme, card, "hand")
             view.deck = deckOf(card)
             view.onPick = () => this.actions.pick(card)
             view.onHover = over => this.host.hoverCard(card, over)

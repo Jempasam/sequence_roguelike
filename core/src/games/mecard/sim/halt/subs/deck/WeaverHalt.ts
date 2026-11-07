@@ -76,6 +76,7 @@ export class WeaverHalt extends DeckHalt {
 
 /** The sort of the weaver. Waiting for its own art: the logo of the forge. */
 export const WEAVER_HALT: HaltType = {
+    id: "weaver",
     name: "Tisserand",
     description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
     code: "TI",

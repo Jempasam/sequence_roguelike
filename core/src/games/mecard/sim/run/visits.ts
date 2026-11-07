@@ -92,7 +92,7 @@ export function weavable(card: Card, deck: readonly Card[], mode: WeaveMode): bo
 export function woven(cards: readonly Card[], mode: WeaveMode): Card {
     if(!canWeave(cards, mode)) throw new Error(`${cards.join(", ")} cannot be woven as ${mode}.`)
     const [first, second] = cards
-    return mode === "merged" ? new MergedCard(first, second) : new RandomCard(first, second)
+    return mode === "merged" ? new MergedCard([first, second]) : new RandomCard(first, second)
 }
 
 /**

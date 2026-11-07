@@ -19,8 +19,11 @@ export interface Resolution {
     /** The same, ready to be read. */
     readonly chain: CardChain
 
-    /** For each card of the row rewritten, where the card it came from stood in the row given. */
-    readonly origin: readonly number[]
+    /**
+     * For each card of the row rewritten, where the cards of the row given it stands for stood: itself when it
+     * is still there, a card a preparation gave standing for that preparation and what it took away.
+     */
+    readonly sources: readonly (readonly number[])[]
 
     /** What each card gives, none for a card greyed out. */
     readonly values: readonly unknown[]
@@ -58,13 +61,16 @@ export interface ChainWatcher {
 
 /** How cards were rewritten by a preparation: where each came from, and what hangs on what. */
 export interface Rewriting {
-    /** For each card now, where the card it came from stood in the row given. */
-    readonly origin: readonly number[]
+    /** For each card now, where the cards of the row given it stands for stood. */
+    readonly sources: readonly (readonly number[])[]
 
     /** Does each card now stand where it is by a chance a preview guessed? */
     readonly drawn: readonly boolean[]
 
-    /** Where the preparations acting on the battle stood in the row given. */
+    /**
+     * Where the preparations acting on the battle stood in the row given, with the cards they took away: they
+     * play, whatever they gave.
+     */
     readonly acted: readonly number[]
 }
 
@@ -125,14 +131,16 @@ export class CardChain {
 
     /**
      * A hand read from left to right, as a bot plays it: a card taking an input takes the card that follows
-     * it. The reading stops at the first root that does not play, or that the size would not hold.
+     * it. A root that does not play is left out, so an element alone or an action missing its input does not
+     * keep the others from playing. The reading stops at the first root the size would not hold.
      *
      * @param size - How many cards the chain holds at most.
      */
     public static leftToRight(hand: readonly Card[], size: number): CardChain {
         const chain = new CardChain()
         for(const root of new CardChain(hand).rootsWith(hand)){
-            if(!root.active || chain.size + root.size > size) break
+            if(!root.active) continue
+            if(chain.size + root.size > size) break
             chain.cards.push(...root.cards)
         }
         return chain
@@ -206,7 +214,7 @@ export class CardChain {
         ctx: RewriteContext|null, deck: readonly Card[] = [], acting: UnitContext|null = null, trial = false,
     ): Rewriting {
         const { cards } = this
-        const origin = cards.map((_, index) => index)
+        const sources: number[][] = cards.map((_, index) => [index])
         const drawn: boolean[] = cards.map(() => false)
         // The preparations whose rewrite gave each card, which never rewrite it again.
         const lineage: ReadonlySet<Card>[] = cards.map(() => new Set())
@@ -219,7 +227,7 @@ export class CardChain {
                 continue
             }
             if(lineage[at].has(card)){
-                for(const each of [cards, origin, drawn, lineage]) each.splice(at, 1)
+                for(const each of [cards, sources, drawn, lineage]) each.splice(at, 1)
                 this.watcher?.changed()
                 continue
             }
@@ -253,28 +261,30 @@ export class CardChain {
                     return options[0]
                 },
             }, spot)
-            if(rewrite.acting) acted.push(origin[at])
             // The tree goes, and the cards on its right it consumed.
             const replaced = last - at + 1 + Math.min(Math.max(0, rewrite.consumed), cards.length - last - 1)
             const taken: (Card|null)[] = cards.slice(at + 1, at + replaced)
-            const takenFrom = origin.slice(at + 1, at + replaced)
-            // A card given back as it was taken keeps where it came from: the screen greys it as itself.
-            const from = rewrite.cards.map(each => {
-                const kept = taken.indexOf(each)
-                if(kept < 0) return origin[at]
-                taken[kept] = null
-                return takenFrom[kept]
+            const takenFrom = sources.slice(at + 1, at + replaced)
+            // A card given back as it was taken stands for itself: the screen greys it as itself.
+            const kept = rewrite.cards.map(each => {
+                const found = taken.indexOf(each)
+                if(found >= 0) taken[found] = null
+                return found
             })
+            // A card the preparation gave stands for it and for the cards it took away, not given back.
+            const gone = [...sources[at], ...taken.flatMap((each, index) => each ? takenFrom[index] : [])]
+            const from = rewrite.cards.map((_, index) => kept[index] >= 0 ? takenFrom[kept[index]] : gone)
+            if(rewrite.acting) acted.push(...gone)
             const wasDrawn = drawn.slice(at, at + replaced).some(Boolean) || guessing
             const gave = new Set([...lineage[at], card])
             cards.splice(at, replaced, ...rewrite.cards)
-            origin.splice(at, replaced, ...from)
+            sources.splice(at, replaced, ...from)
             drawn.splice(at, replaced, ...rewrite.cards.map(() => wasDrawn))
             lineage.splice(at, replaced, ...rewrite.cards.map(() => gave))
             this.watcher?.changed()
             // What it gave is read again from its place: a preparation among it is rewritten in turn.
         }
-        return { origin, drawn, acted }
+        return { sources, drawn, acted }
     }
 
     /** How many cards it holds, a card holding others counting for one. */
@@ -358,14 +368,14 @@ export class CardChain {
         let uncertain = false
         const beforeSteps: ((ctx: PreviewContext) => Preview)[] = []
         const resolution = resolve(this.cards, null, battle.cardsOf(unit))
-        const { origin, values, guessed } = resolution
+        const { sources, values, guessed } = resolution
         const made = resolution.reading.roots
         return this.roots.map(root => {
             const hidden = hideNested && root.inputs.length > 0
             const start = pose
             // The roots it was rewritten into: those whose card came from a card of its tree.
             const own = made.filter(each => {
-                return origin[each.index] >= root.index && origin[each.index] < root.index + root.size
+                return sources[each.index].some(from => from >= root.index && from < root.index + root.size)
             })
             const acting = own.filter(each => each.card.output === ACTION)
             const showable = acting.length > 0 && !hidden
@@ -436,7 +446,7 @@ function resolved(
     trial: boolean,
 ): Resolution {
     const chain = new CardChain(row)
-    const { origin, drawn, acted } = chain.prepare(ctx, deck, acting, trial)
+    const { sources, drawn, acted } = chain.prepare(ctx, deck, acting, trial)
     const { cards } = chain
     const values: unknown[] = cards.map(() => undefined)
     const ok: boolean[] = cards.map(() => false)
@@ -449,7 +459,7 @@ function resolved(
         ok[index] = true
         guessed[index] = drawn[index] || (given && guessed[index + 1])
     }
-    return { cards, chain, origin, values, guessed, reading: read(cards), acting: acted }
+    return { cards, chain, sources, values, guessed, reading: read(cards), acting: acted }
 }
 
 /**
@@ -460,8 +470,8 @@ function resolved(
  */
 export function activityOf(resolution: Resolution, length: number): boolean[] {
     const active = new Array<boolean>(length).fill(false)
-    resolution.origin.forEach((from, index) => {
-        if(resolution.reading.active[index]) active[from] = true
+    resolution.sources.forEach((from, index) => {
+        if(resolution.reading.active[index]) for(const source of from) active[source] = true
     })
     for(const from of resolution.acting) active[from] = true
     return active

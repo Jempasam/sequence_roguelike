@@ -2,7 +2,7 @@ import type { Assets, LayeredImagePath } from "../../../../engine/assets"
 import { Transition } from "../../../../engine/ui"
 import type { Stack, TransitionPlay, UiRoot } from "../../../../engine/ui"
 
-import { PLACE_LOOKS } from "../travel/placeLooks"
+import { allPlaceTypes } from "../../sim/catalog/places"
 
 /** How long the transition entering a place takes, in seconds. */
 const ENTER_DURATION = 1.5
@@ -23,7 +23,7 @@ export class PlaceTransitions {
         this.#ui = ui
         this.#layer = ui.addLayer("transition").content
         // Loaded now, so the first place entered does not wait for its transition.
-        const paths = new Set(Object.values(PLACE_LOOKS).map(look => look.transition))
+        const paths = new Set(allPlaceTypes().map(type => type.transition))
         for(const path of paths) void this.#of(path)
     }
 

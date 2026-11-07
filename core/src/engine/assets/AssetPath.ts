@@ -51,6 +51,7 @@ export type AssetPath =
     | "mecard/floors/mine/mountain.png"
     | "mecard/floors/mine/ore.png"
     | "mecard/hud/bag.png"
+    | "mecard/hud/booster.png"
     | "mecard/items/alembic.png"
     | "mecard/items/amulet.png"
     | "mecard/items/bag.png"

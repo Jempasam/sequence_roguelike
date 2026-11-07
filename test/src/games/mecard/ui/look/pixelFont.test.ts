@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import { spansOf } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    ALL_CARDS, FIRE, HALTS, ITEMS, MergedCard, RandomCard, Run, STEP, THRUST, USABLES, WATER,
+    CARDS, FIRE, allHalts, ITEMS, MergedCard, RandomCard, Run, STEP, THRUST, USABLES, WATER,
 } from "@game/core/mecard"
 import { pixelFont } from "@game/core/mecard/pixel-font"
 import { uiSetup } from "../../../../fixtures/uiFixtures"
@@ -25,13 +25,13 @@ describe("pixelFont", () => {
     })
 
     test("every card, item and usable → its name and what it does fully drawn", () => {
-        for(const thing of [...ALL_CARDS, ...ITEMS, ...USABLES]){
+        for(const thing of [...CARDS, ...ITEMS, ...USABLES]){
             expect(missing([thing.name, thing.description]), thing.name).toEqual([])
         }
     })
 
     test("every halt → its name, what it does and its line fully drawn", () => {
-        for(const type of Object.values(HALTS)){
+        for(const type of allHalts()){
             const halt = type.create(new Run(1))
             expect(missing([type.name, type.description, halt.line]), type.name).toEqual([])
         }

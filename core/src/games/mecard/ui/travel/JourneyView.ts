@@ -12,7 +12,7 @@ import type { Journey, Place } from "../../sim/run/Journey"
 
 import { PAPER_PATH, PATH_PICTURE, paperFrame, SHADE_PICTURE } from "../look/paper"
 import { TEXT_OUTLINE } from "../look/theme"
-import { PLACE_LOOKS } from "./placeLooks"
+import { allPlaceTypes } from "../../sim/catalog/places"
 import { scatter } from "./scatter"
 import type { ScatteredPiece } from "./scatter"
 import type { ShownParty } from "./ShownParty"
@@ -126,7 +126,7 @@ export class JourneyView extends Component {
      */
     public static async loadArt(gpu: Gpu, assets: Assets): Promise<MapArt> {
         const logos = [...new Set([
-            ...Object.values(PLACE_LOOKS).flatMap(({ icon }) => icon ? [icon] : []),
+            ...allPlaceTypes().flatMap(({ icon }) => icon ? [icon] : []),
             ...FLOOR_TYPES.map(({ icon }) => icon),
         ])]
         const pieces = FLOOR_TYPES.flatMap(type => type.decorations)
@@ -380,16 +380,16 @@ export class JourneyView extends Component {
         const passed = this.here !== null && place.layer <= this.here.layer && place !== this.here && !open
         const shade = passed ? BEHIND : 1
         const art = this.#art
-        const icon = place.exitTo?.type.icon ?? PLACE_LOOKS[place.kind].icon
+        const icon = place.exitTo?.type.icon ?? place.type.icon
         const logo = icon && art?.logos.get(icon)
         if(art) this.#paintUnder(painter, art.shade, x, y, NO_TINT)
         if(art && place === this.#hovered){
             const circle = open ? OPEN_PATH : HOVERED_CIRCLE
             this.#paintUnder(painter, art.circle, x, y, circle)
         }
-        const glow = PLACE_LOOKS[place.kind].glow
+        const glow = place.type.glow
         if(!logo){
-            this.#paintCode(painter, PLACE_LOOKS[place.kind].code, x, y, shade, glow)
+            this.#paintCode(painter, place.type.code, x, y, shade, glow)
             return
         }
         painter.push()

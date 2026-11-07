@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { LAYERS, Run } from "@game/core/mecard"
-import type { CardsDialog, Dialog, HeroDialog, OfferDialog, Place, PlaceKind, Travel } from "@game/core/mecard"
+import { BATTLE, BUTCHER_HALT, CHEST_HALT, LAYERS, REMOVAL_HALT, Run } from "@game/core/mecard"
+import type { CardsDialog, Dialog, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
-/** A new place of a kind, on no map. */
-function placeOf(kind: PlaceKind): Place {
-    return { kind, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+/** A new place of a sort, on no map. */
+function placeOf(type: PlaceType): Place {
+    return { type, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
 }
 
 /** The last dialog opened, of the sort the test knows it is. */
@@ -23,7 +23,7 @@ function logOf(travel: Travel): string[] {
     travel.moved.add(() => log.push("moved"))
     travel.visitStarted.add(halt => log.push(`visit ${halt.title}`))
     travel.visitEnded.add(halt => log.push(`end ${halt.title}`))
-    travel.fightReached.add(place => log.push(`fight ${place.kind}`))
+    travel.fightReached.add(place => log.push(`fight ${place.type.id}`))
     travel.offerAsked.add(() => log.push("offer"))
     travel.heroAsked.add(dialog => log.push(dialog.follows ? "hero follows" : "hero"))
     travel.cardsAsked.add(() => log.push("cards"))
@@ -73,14 +73,14 @@ describe("Travel, going", () => {
 
     test("a place it does not lead to → cannot go", () => {
         const { travel } = new Run(1)
-        expect(() => travel.go(placeOf("chest"))).toThrow()
+        expect(() => travel.go(placeOf(CHEST_HALT))).toThrow()
         expect(travel.phase).toBe("map")
     })
 
     test("a jump → stands there, told, without entering", () => {
         const { travel } = new Run(1)
         const log = logOf(travel)
-        const place = placeOf("chest")
+        const place = placeOf(CHEST_HALT)
         travel.jump(place)
         expect(travel.place).toBe(place)
         expect(log).toEqual(["moved"])
@@ -92,7 +92,7 @@ describe("Travel, fights", () => {
         const run = new Run(1)
         const { travel } = run
         const log = logOf(travel)
-        const place = placeOf("battle")
+        const place = placeOf(BATTLE)
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)
@@ -111,7 +111,7 @@ describe("Travel, visits", () => {
         const [hero] = run.heroes
         const log = logOf(travel)
         const cards = hero.decks[0].length
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         travel.takeOffer(open<OfferDialog>(travel), 0)
         travel.takeHero(open<HeroDialog>(travel), hero)
         expect(travel.halt?.title).toBe("Coffre")
@@ -129,7 +129,7 @@ describe("Travel, visits", () => {
 
     test("a character asked during a pick → follows it, both open", () => {
         const { travel } = new Run(3)
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         travel.takeOffer(offer, 0)
         const asked = open<HeroDialog>(travel)
@@ -140,7 +140,7 @@ describe("Travel, visits", () => {
     test("a step answered again → the steps after it taken back", () => {
         const run = new Run(3)
         const { travel } = run
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         travel.takeOffer(offer, 0)
         const first = open<HeroDialog>(travel)
@@ -154,7 +154,7 @@ describe("Travel, visits", () => {
         const run = new Run(3)
         const { travel } = run
         const log = logOf(travel)
-        travel.visit("removal")
+        travel.visit(REMOVAL_HALT)
         travel.takeHero(open<HeroDialog>(travel), run.heroes[0])
         const cards = open<CardsDialog>(travel)
         expect(cards.back).toBe(true)
@@ -165,21 +165,21 @@ describe("Travel, visits", () => {
 
     test("no way back → refused", () => {
         const { travel } = new Run(3)
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         expect(() => travel.goBack(open(travel))).toThrow()
     })
 
     test("nobody can profit → told so, the character refusing", () => {
         const { travel } = new Run(3)
         const log = logOf(travel)
-        travel.visit("butcher")
+        travel.visit(BUTCHER_HALT)
         expect(log.slice(-3)).toEqual(["react done", "told", "react refuse"])
     })
 
     test("a dialog no longer open → refused", () => {
         const run = new Run(3)
         const { travel } = run
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         travel.leave()
         expect(() => travel.takeOffer(offer, 0)).toThrow()
@@ -187,7 +187,7 @@ describe("Travel, visits", () => {
 
     test("an offer it does not hold → refused", () => {
         const { travel } = new Run(3)
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         expect(() => travel.takeOffer(offer, offer.offers.length)).toThrow()
     })
@@ -195,7 +195,7 @@ describe("Travel, visits", () => {
     test("a character it does not let in → refused", () => {
         const run = new Run(3)
         const { travel } = run
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         travel.takeOffer(open<OfferDialog>(travel), 0)
         expect(() => travel.takeHero(open<HeroDialog>(travel), new Run(4).heroes[0])).toThrow()
     })
@@ -203,7 +203,7 @@ describe("Travel, visits", () => {
     test("too many cards, or the same twice → refused", () => {
         const run = new Run(3)
         const { travel } = run
-        travel.visit("removal")
+        travel.visit(REMOVAL_HALT)
         travel.takeHero(open<HeroDialog>(travel), run.heroes[0])
         const cards = open<CardsDialog>(travel)
         expect(() => travel.takeCards(cards, [])).toThrow()
@@ -218,7 +218,7 @@ describe("Travel, visits", () => {
         const [, second] = hero.decks[0]
         const copies = (): number => hero.decks[0].filter(card => card === second).length
         const before = copies()
-        travel.visit("removal")
+        travel.visit(REMOVAL_HALT)
         travel.takeHero(open<HeroDialog>(travel), hero)
         travel.takeCards(open<CardsDialog>(travel), [1])
         expect(copies()).toBe(before - 1)
@@ -226,7 +226,7 @@ describe("Travel, visits", () => {
 
     test("a halt left as it was → gone back into, the same, no deeper", () => {
         const { travel } = new Run(3)
-        const place = placeOf("chest")
+        const place = placeOf(CHEST_HALT)
         travel.jump(place)
         const halt = travel.haltOf(place)
         const { depth } = travel
@@ -292,7 +292,7 @@ describe("Run, the party told", () => {
         const [hero] = run.heroes
         const decks: unknown[] = []
         run.deckChanged.add(deck => decks.push(deck))
-        travel.visit("chest")
+        travel.visit(CHEST_HALT)
         travel.takeOffer(open<OfferDialog>(travel), 0)
         travel.takeHero(open<HeroDialog>(travel), hero)
         expect(decks).toEqual([hero.decks[0]])

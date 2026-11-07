@@ -34,6 +34,7 @@ export class ExitHalt extends AbstractHalt {
 
 /** The sort of the exits: one leads where the place it stands on says, else to the first floor ahead. */
 export const EXIT_HALT: HaltType = {
+    id: "exit",
     name: "Sortie",
     description: "Mène à un autre étage.",
     code: "S",

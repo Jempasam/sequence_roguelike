@@ -1,0 +1,91 @@
+/**
+ * @packageDocumentation
+ * The catalog of the cards: the ones found as loot, and every card of the game.
+ */
+
+import type { Card } from "../card"
+import { Rarity } from "../card/Rarity"
+import {
+    ANTIDOTE, ASSASSIN_BLOW, ASSASSIN_STEP, ASSASSINATION, BACK_DASH, BANDAGE, BARREL, BIG_BOTTLE, BLINK,
+    BODY_CARDS, BOMB, BOTTLE, CHARGE,
+    CHARM,
+    CLONE, COATED_BLADE, COIN, CONFUSION, CURSED_FLURRY, DAGGER, DISTILLATION, DOUBLE_DIAGONAL, DRAW,
+    DrawnCard, EXPLOSIVE_DASH, FAR_AIM, FEAR, FIRE, FLAMETHROWER, FLASH_GRENADE, FOCUS, FRENZY, GAMBLE,
+    GRAPPLE, HORSE, HYPNOSIS, INSTINCT, LASSO, PATH_AIM, PLANT, POISON, POTION_POUCH, POTION_RAIN, PRAYER,
+    PUDDLE, PUSH,
+    RAGE, RAGE_FIT, RANDOM_AIM, RECOVERY, REPEAT_2, REPEAT_3, REPETITION, RICOCHET, SHOT, SHOTGUN, SLASH,
+    SLOWNESS, SPELL, STONE, STONE_WALL, STRENGTH_CARD, STUNNING_DASH, STURDY_AIM, SUBSTITUTION,
+    SUPER_REPETITION, SWAP,
+    SWEEP, TASER, THORN_SHIELD, THROWN_POTION, THRUST, TORNADO, TOTEM, UNSTABLE_ELEMENT, UNSTABLE_THRUST,
+    UNSURE_BLOW, VINE,
+    VULNERABILITY, WATER, WEAK_AIM, WEAKNESS, weighted,
+    BLOOD_AXE, BLOODLUST_CARD, BOUNCE_DASH, BOUNCING_BOW, CROSSBOW, HARPOON, HEAD_JUMP, HUNT, KNIGHT_MOVE,
+    LEAP,
+    MEGA_SLASH, MINE, SCYTHE, SHADOW, SHADOW_STEP, SKULL_BREAK, TACKLE,
+    AURA, BLAST_MODULE, BOW_MODULE, BULL_MODULE, COMPOUND_CARDS, CONJURATION, CROSSED_SPELL, ECHO,
+    GRAND_RITUAL_CARD,
+    IMPROVISED_ROBOT, IMPROVISED_WEAPON, LIGHTNING, MISSILE, RAM, REACTION, RITUAL, SMALL_SPELL, TANK_ROBOT,
+    WIND,
+    DIVISION, DRIZZLE, FLEE, MEGA_LASER, PURSUIT, RETREAT_SHOT, SHADOW_AIM, SHADOW_WAY, SIDESTEP, SPARK, SPIT,
+    MergedCard, FusionCard, KAMIKAZE,
+} from "../card/subs"
+import { KITS } from "./kits"
+import { CARTE } from "../base/keywords"
+
+/**
+ * Any card of the game that fits its place, drawn at the end of the preparation, the commoner more often:
+ * named here, where every card is known.
+ */
+export const CHAOS: Card = new DrawnCard("Chaos", [
+    "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
+], Rarity.EPIC, () => weighted(CARDS))
+
+/** The potions and what pours them, found as loot. */
+const POTION_CARDS: readonly Card[] = [
+    POISON, SLOWNESS, WEAKNESS, RAGE, CONFUSION, VULNERABILITY, FRENZY, ANTIDOTE, DISTILLATION, BOTTLE,
+    BIG_BOTTLE, THROWN_POTION, POTION_RAIN, BARREL, COATED_BLADE, PUDDLE, POTION_POUCH, RAGE_FIT,
+]
+
+/** The cards found as loot, the rare ones less often. */
+export const LOOT_CARDS: readonly Card[] = [
+    SHOT, SLASH, THRUST, SWEEP, STUNNING_DASH, BACK_DASH, BLINK, BOMB, FLAMETHROWER, TASER, PUSH, CHARM, FEAR,
+    CLONE, DOUBLE_DIAGONAL, REPEAT_2, REPEAT_3, HYPNOSIS, SPELL, FIRE, WATER, PLANT, STONE, FOCUS, PRAYER,
+    UNSTABLE_THRUST, CURSED_FLURRY, CHARGE, UNSTABLE_ELEMENT, UNSURE_BLOW,
+    RANDOM_AIM, FAR_AIM, STURDY_AIM, WEAK_AIM, PATH_AIM, LASSO, GRAPPLE, VINE, ASSASSIN_STEP, SWAP,
+    EXPLOSIVE_DASH,
+    DAGGER, SHOTGUN, RICOCHET, FLASH_GRENADE, BANDAGE, COIN, SUBSTITUTION, STONE_WALL, THORN_SHIELD, TOTEM,
+    TORNADO, REPETITION, SUPER_REPETITION, INSTINCT, CHAOS, RECOVERY, DRAW, STRENGTH_CARD, HORSE,
+    KNIGHT_MOVE, LEAP, BOUNCE_DASH, SKULL_BREAK, HEAD_JUMP, MEGA_SLASH, ASSASSINATION, HARPOON, SCYTHE,
+    BLOOD_AXE,
+    BOUNCING_BOW, CROSSBOW, MINE, SHADOW_STEP, TACKLE, BLOODLUST_CARD, SHADOW, HUNT, ASSASSIN_BLOW,
+    WIND, LIGHTNING, AURA, SMALL_SPELL, CONJURATION, CROSSED_SPELL, REACTION, RITUAL, GRAND_RITUAL_CARD, ECHO,
+    BOW_MODULE, BULL_MODULE, BLAST_MODULE, MISSILE, IMPROVISED_ROBOT, TANK_ROBOT, IMPROVISED_WEAPON, RAM,
+    MEGA_LASER, SIDESTEP, FLEE, SPIT, DIVISION, PURSUIT, SHADOW_WAY, SPARK, DRIZZLE, RETREAT_SHOT,
+    ...POTION_CARDS,
+]
+
+
+export const BARRAGE = new MergedCard([SHOTGUN, CROSSBOW], { name: "Barrage", rarity: Rarity.LEGENDARY })
+
+export const SHADOW_COMBO = new FusionCard([STRENGTH_CARD, SHADOW_AIM, SHADOW, ASSASSINATION], { name: "Combo de l'ombre", rarity: Rarity.LEGENDARY })
+
+export const CRUSH = new MergedCard([HEAD_JUMP, SKULL_BREAK], { name: "Écrasement", rarity: Rarity.LEGENDARY })
+
+export const FORCED_SUICIDE = new FusionCard([GAMBLE, HYPNOSIS, KAMIKAZE], { name: "Forced Suicide", rarity: Rarity.LEGENDARY })
+
+export const TWIN_BLADES = new MergedCard([SLASH, SLASH], { name: "Lames jumelles", rarity: Rarity.LEGENDARY })
+
+export const CROSS_BOMB = new FusionCard([DOUBLE_DIAGONAL, BOMB], { name: "Bombe en croix", rarity: Rarity.LEGENDARY })
+
+/** Rare and very powerful cards: two strong actions played at once. */
+export const LEGENDARY_CARDS: readonly Card[] = [
+    BARRAGE, SHADOW_COMBO, CRUSH, FORCED_SUICIDE, TWIN_BLADES, CROSS_BOMB
+]
+
+/** Every card of the game, each once: what the console gives by name. */
+export const CARDS: readonly Card[] = [
+    ...new Set([
+        ...KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
+        ...COMPOUND_CARDS,
+    ]),
+]

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { AssetError } from "@game/core"
 import type { Assets, Painter } from "@game/core"
-import { isHalt, Run } from "@game/core/mecard"
+import { CHEST_HALT, isHalt, Run } from "@game/core/mecard"
 import { TravelScreen } from "@game/core/mecard/travel-screen"
 import type { TravelScreenOptions } from "@game/core/mecard/travel-screen"
 
@@ -116,7 +116,7 @@ describe("TravelScreen", () => {
     test("a halt told by the journey → its way in played, once, the screen held until its middle", async() => {
         const game = shown()
         const { run, screen, enters } = game
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         expect(run.travel.phase).toBe("visit")
         await play(game, 1)
         expect(enters).toHaveLength(1)
@@ -130,7 +130,7 @@ describe("TravelScreen", () => {
     test("back into the halt it stands on → nothing moved, so the way in plays at once", async() => {
         const game = shown()
         const { run, screen, enters } = game
-        const halt = run.travel.journey.places.find(place => isHalt(place.kind) && !place.exitTo)
+        const halt = run.travel.journey.places.find(place => isHalt(place.type) && !place.exitTo)
         if(!halt) throw new Error("The map holds no halt.")
         run.travel.jump(halt)
         run.travel.haltOf(halt)
@@ -144,7 +144,7 @@ describe("TravelScreen", () => {
     test("left during its way in → back on the map, nothing held", async() => {
         const game = shown()
         const { run, screen, enters } = game
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         await play(game, 1 / 60)
         run.travel.leave()
         enters[0]()

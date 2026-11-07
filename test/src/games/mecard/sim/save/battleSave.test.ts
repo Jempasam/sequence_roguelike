@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    ALL_CARDS, BARREL, BATTLE_SAVE_VERSION, Burn, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
+    CARDS, BARREL, BATTLE_SAVE_VERSION, Burn, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
     HEART_KINDS, ITEMS, loadBattle, MergedCard, planFor, POISON, Poison, POTIONS, PUDDLE, RandomCard,
     REPEAT_2, Run, saveBattle, SECRET_CARD, SLOWNESS, STATUS_CODECS, STEP, THRUST, UNSTABLE_THRUST, USABLES,
     Vector2, Vulnerability, WATER, WHETSTONE,
@@ -203,7 +203,7 @@ describe("catalog names", () => {
     })
 
     test("each card, item, usable and heart → a name of its own", () => {
-        for(const values of [[...ALL_CARDS, SECRET_CARD], ITEMS, USABLES, HEART_KINDS]){
+        for(const values of [[...CARDS, SECRET_CARD], ITEMS, USABLES, HEART_KINDS]){
             const names = values.map(value => value.name)
             expect(new Set(names).size).toBe(names.length)
         }

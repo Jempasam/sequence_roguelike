@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import { plainText, spansOf } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    ALL_CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, HALTS, HEART, HeartCount, ITEMS,
+    CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, allHalts, HEART, HeartCount, ITEMS,
     MERGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, USABLES, UNSTABLE_THRUST,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
@@ -16,10 +16,10 @@ const spans = (text: Text) => spansOf(text, mecardDisplay)
 const hasPicture = (text: Text): boolean => spansOf(text).some(span => span.kind === "svg")
 
 const ALL_TEXTS: readonly (readonly [string, Text])[] = [
-    ...ALL_CARDS.map(card => [card.name, card.description] as const),
+    ...CARDS.map(card => [card.name, card.description] as const),
     ...ITEMS.map(item => [item.name, item.description] as const),
     ...USABLES.map(usable => [usable.name, usable.description] as const),
-    ...Object.values(HALTS).map(type => [type.name, type.description] as const),
+    ...allHalts().map(type => [type.name, type.description] as const),
 ]
 
 // --- Tests ---

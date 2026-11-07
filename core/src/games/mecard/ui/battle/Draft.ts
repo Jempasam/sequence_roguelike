@@ -1,35 +1,37 @@
-import { CardChain, signatureOf } from "../../sim/card/CardChain"
+import { CardChain, resolve } from "../../sim/card/CardChain"
 import { playable } from "../../sim/card/Reading"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 import type { CardNode } from "../../sim/card/CardNode"
+import type { CardType } from "../../sim/card/CardType"
 import type { RootPreview } from "../../sim/card/CardChain"
 import type { Carried } from "../../sim/usable/Usable"
 
-/**
- * What a click on a card of the hand did: placed it, lifted it since it fits nowhere yet, put it back down,
- * or nothing since the chain is full.
- */
-export type Placement = "placed"|"lifted"|"dropped"|"full"
+/** What a click on a card of the hand did: placed it, or nothing since the chain is full. */
+export type Placement = "placed"|"full"
+
+/** Cards of the chain that serve together, and the type of what they give. */
+export interface Group {
+    /** Where the cards stand in the row of the chain, in order. */
+    readonly places: readonly number[]
+
+    readonly type: CardType<unknown>
+}
 
 /**
- * The chain a player is putting together for a unit, before committing it: the cards placed, the card of
- * the hand lifted, waiting for a slot, and what of its belt the unit is to use.
+ * The chain a player is putting together for a unit, before committing it: the cards placed, and what of its
+ * belt the unit is to use.
  *
  * @remarks
- * A click places a card where it fits best: the first empty slot that takes it, in the order of the chain,
- * else the end of the chain. A card that fits nowhere yet, an element with no spell to go in, is lifted
- * instead, and the slots it would go in light up once there are some. A slot is filled by putting the card
- * right after the card of the slot, in the row of the chain: a card takes the card on its right.
+ * A click puts a card at the end of the chain, so the order of the clicks is the order of the chain. A card
+ * is never refused: one that nothing connects once the preparations are rewritten is greyed out, and
+ * {@link Draft.groups} tells which cards serve together.
  */
 export class Draft {
 
 
     public readonly chain = new CardChain()
-
-    /** The card of the hand lifted, waiting for a slot, none when none is. */
-    public lifted: Card|null = null
 
     /** The places in the belt of the unit of what it is to use at the start of the execution. */
     public readonly used = new Set<number>()
@@ -79,46 +81,48 @@ export class Draft {
     }
 
     /**
-     * Place a card where it fits best, or lift it when it fits nowhere yet. A card lifted and clicked
-     * again is placed when a slot took it meanwhile, put back down otherwise.
+     * Which cards of the chain serve together once its preparations are rewritten, each group the places of
+     * the cards in the row, in order: a card, the preparation that took it, the card that takes what the
+     * preparation gives. A card nothing connects is in no group.
+     */
+    public get groups(): readonly Group[] {
+        const { sources, reading } = resolve(this.chain.cards, null, this.deck)
+        const groups: Group[] = []
+        for(const root of reading.roots){
+            const places = new Set<number>()
+            for(let index = root.index; index < root.index + root.size; index++){
+                for(const source of sources[index]) places.add(source)
+            }
+            if(places.size > 1) groups.push({ places: [...places].sort((a, b) => a - b), type: root.card.output })
+        }
+        return groups
+    }
+
+    /** The root of the chain a card of the row belongs to, in the order of the roots. */
+    public rootOf(place: number): number {
+        const roots = this.roots
+        const found = roots.findIndex(root => place >= root.index && place < root.index + root.size)
+        return found < 0 ? roots.length - 1 : found
+    }
+
+    /** Does each card of the chain play, once its preparations are rewritten? */
+    public get active(): boolean[] {
+        return this.chain.activity(this.deck)
+    }
+
+    /**
+     * Put a card at the end of the chain: always, unless the chain is full. A card put where nothing connects
+     * it is greyed out by the resolution of the chain, not refused.
      */
     public place(card: Card): Placement {
-        const wasLifted = this.lifted === card
         if(!this.hasRoom) return "full"
-        const open = this.#openSlotFor(card)
-        if(open){
-            this.chain.cards.splice(open.index + 1, 0, card)
-            this.lifted = null
-            return "placed"
-        }
-        if(wasLifted){
-            this.lifted = null
-            return "dropped"
-        }
-        if(playable(card)){
-            this.chain.cards.push(card)
-            this.lifted = null
-            return "placed"
-        }
-        this.lifted = card
-        return "lifted"
+        this.chain.cards.push(card)
+        return "placed"
     }
 
-    /** Can the lifted card go into a slot of a placed card? */
-    public canPlug(node: CardNode, slot: number): boolean {
-        return this.lifted !== null && this.hasRoom && accepts(node, slot, this.lifted)
-    }
-
-    /** Put the lifted card into a slot of a placed card. Does nothing when it cannot. */
-    public plug(node: CardNode, slot: number): void {
-        if(!this.lifted || !this.canPlug(node, slot)) return
-        this.chain.cards.splice(node.index + 1, 0, this.lifted)
-        this.lifted = null
-    }
-
-    /** Take a placed card back to the hand, with everything plugged into it. */
-    public remove(node: CardNode): void {
-        this.chain.cards.splice(node.index, node.size)
+    /** Take a card of the chain back to the hand. */
+    public remove(place: number): void {
+        this.chain.cards.splice(place, 1)
     }
 
     /** What a root of the chain would do, after the roots before it, none when there is no such root. */
@@ -135,31 +139,4 @@ export class Draft {
         if(!playable(card) || card.input !== null) return null
         return new CardChain([...this.chain.cards, card]).preview(battle, this.unit, false).at(-1) ?? null
     }
-
-
-    /** The first empty slot taking a card, in the order of the chain, depth first, none when none does. */
-    #openSlotFor(card: Card): CardNode|null {
-        const search = (node: CardNode): CardNode|null => {
-            for(let slot = 0; slot < node.inputs.length; slot++){
-                const input = node.inputs[slot]
-                if(!input && accepts(node, slot, card)) return node
-                const deeper = input ? search(input) : null
-                if(deeper) return deeper
-            }
-            return null
-        }
-        for(const root of this.roots){
-            const found = search(root)
-            if(found) return found
-        }
-        return null
-    }
-}
-
-/**
- * Can a card go into a slot of a placed card: is the slot empty, and does the card truly give what it
- * takes, a fusion read as its cards?
- */
-function accepts(node: CardNode, slot: number, card: Card): boolean {
-    return node.inputs[slot] === null && node.card.input === signatureOf(card).output
 }

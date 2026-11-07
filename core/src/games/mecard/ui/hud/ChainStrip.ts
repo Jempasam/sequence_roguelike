@@ -10,7 +10,6 @@ import type { ChainView } from "../../sim/card/CardChain"
 
 import { CardView } from "./CardView"
 import type { CardPlace } from "./CardView"
-import { SlotView } from "./SlotView"
 
 /** The space under the cards, in virtual pixels, where the links between them are drawn. */
 export const LINK_ROOM = 6
@@ -42,9 +41,6 @@ export interface StripCard {
 
     /** Is it crossed out, since it could not be built? */
     readonly crossed: boolean
-
-    /** The name of what each slot takes, a "?" when the card is hidden. */
-    readonly takes: readonly string[]
 
     /** The color of the link to each slot. */
     readonly links: readonly Color[]
@@ -79,7 +75,6 @@ export function stripOf(node: CardNode, nodes: Map<StripCard, CardNode>): StripC
         active: node.active,
         lit: false,
         crossed: false,
-        takes: node.card.input ? [node.card.input.name] : [],
         links: node.card.input ? [linkOf(node.card.input)] : [],
     }
     nodes.set(strip, node)
@@ -100,7 +95,6 @@ export function stripOfView(view: ChainView, marks: StripMarks = NO_MARKS): Stri
         active: view.index >= cursor,
         lit: looked,
         crossed: looked && lit.invalid,
-        takes: view.inputs.map(() => type?.name ?? "?"),
         links: view.inputs.map(() => !type ? HIDDEN_LINK : linkOf(type)),
     }
 }
@@ -109,12 +103,6 @@ export function stripOfView(view: ChainView, marks: StripMarks = NO_MARKS): Stri
 export interface ChainStripHost {
     /** A card was clicked. */
     pick(card: StripCard): void
-
-    /** An empty slot was clicked. */
-    plug(card: StripCard, slot: number): void
-
-    /** Does the lifted card fit in an empty slot? */
-    canPlug(card: StripCard, slot: number): boolean
 
     /** The pointer came over the cards of a root, or left them. */
     hoverRoot(index: number, over: boolean): void
@@ -172,8 +160,7 @@ export class ChainStrip extends Stack {
                 card.onHover = hover
                 row.add(card)
                 strip.inputs.forEach((input, slot) => {
-                    const plugged = input ? add(input) : this.#slot(strip, slot, host, hover)
-                    links.push({ from: card, to: plugged, color: strip.links[slot] })
+                    if(input) links.push({ from: card, to: add(input), color: strip.links[slot] })
                 })
                 return card
             }
@@ -194,15 +181,75 @@ export class ChainStrip extends Stack {
 
 
     readonly #row: Box
+}
 
-    /** An empty slot of a card, added to the row. */
-    #slot(strip: StripCard, slot: number, host: ChainStripHost, hover: (over: boolean) => void): Component {
-        const empty = new SlotView(this.theme, strip.takes[slot], host.canPlug(strip, slot), this.cardPlace)
-        empty.onPick = () => host.plug(strip, slot)
-        empty.onHover = hover
-        this.#row.add(empty)
-        return empty
+/** A card of a flat strip: whether it plays, rather than being greyed out. */
+export interface FlatCard {
+    readonly card: Card
+    readonly active: boolean
+}
+
+/** Cards of a flat strip that serve together, as places in the strip, and the type of what they give. */
+export interface FlatGroup {
+    readonly places: readonly number[]
+    readonly type: CardType<unknown>
+}
+
+/** What a flat strip does when its cards are clicked or hovered. */
+export interface FlatStripHost {
+    /** The card at a place was clicked. */
+    pick(place: number): void
+
+    /** The pointer came over the card at a place, or left it. */
+    hover(place: number, over: boolean): void
+
+    /** The deck a card comes from, none for a card from elsewhere. */
+    deckOf(card: Card): number|null
+}
+
+/**
+ * A chain laid out flat, in the order of its row, with a link under the cards that serve together: the
+ * chain being put together, whose cards read as they are rewritten, not as they stand.
+ */
+export class FlatStrip extends Stack {
+
+
+    constructor(
+        public readonly theme: Theme,
+        cards: readonly FlatCard[],
+        groups: readonly FlatGroup[],
+        host: FlatStripHost,
+    ){
+        super()
+        const row = new Box("row", { gap: 2, align: "start" })
+        this.#row = row
+        const views = cards.map(({ card, active }, place) => {
+            const view = new CardView(theme, card, "chain")
+            view.dimmed = !active
+            view.deck = host.deckOf(card)
+            view.onPick = () => host.pick(place)
+            view.onHover = over => host.hover(place, over)
+            row.add(view)
+            return view
+        })
+        const links: Link[] = groups.flatMap(({ places, type }) => places.slice(1).map((place, index) => ({
+            from: views[places[index]], to: views[place], color: linkOf(type),
+        })))
+        this.add(new Links(theme, row, links), { x: "stretch", y: "stretch" })
+        this.add(row, { x: "start", y: "start" })
     }
+
+
+    protected override computeHint(maxWidth: number): SizeHint {
+        const hint = this.#row.measure(maxWidth)
+        return {
+            minWidth: hint.minWidth, minHeight: hint.minHeight + LINK_ROOM,
+            preferredWidth: hint.preferredWidth, preferredHeight: hint.preferredHeight + LINK_ROOM,
+        }
+    }
+
+
+    readonly #row: Box
 }
 
 /** The links of a strip, drawn under its cards: down from the middle of a card, across, up to the other. */

@@ -40,7 +40,7 @@ describe("MecardViewer", () => {
         new RunBroadcaster(run, channel)
         expect(viewer.run.gold).toBe(321)
         run.travel.jump(run.travel.next[0])
-        expect(viewer.run.travel.place?.kind).toBe(run.travel.place?.kind)
+        expect(viewer.run.travel.place?.type).toBe(run.travel.place?.type)
         viewer.dispose()
     })
 })

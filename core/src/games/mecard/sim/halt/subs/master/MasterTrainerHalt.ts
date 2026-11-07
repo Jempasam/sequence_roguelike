@@ -1,20 +1,20 @@
 import { concat } from "../../../../../../semantic"
 import { CARTE, DECK } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
-import type { Card } from "../../../card/Card"
 import type { Monster } from "../../../catalog/monsters"
+import { upgradeAll, upgradeMatches, UPGRADES } from "../../../catalog/upgrades"
+import type { CardUpgrade } from "../../../catalog/upgrades"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
-import { upgradeOf } from "../deck/AlchemistHalt"
 import { trainerMonsters } from "../gift/TrainerHalt"
 
 /**
- * The master trainer: a trainer whose ally comes trained, every card of its deck upgraded when an upgrade
- * matches it. It offers the allies of the trainer, shown upgraded before the choice.
+ * The master trainer: a trainer whose ally comes trained, one upgrade put on every card of its deck it
+ * matches. It offers the allies of the trainer, shown upgraded, the upgrade beside them.
  */
 export class MasterTrainerHalt extends AbstractHalt {
 
@@ -31,43 +31,44 @@ export class MasterTrainerHalt extends AbstractHalt {
                 item: "whip"
             },
         )
-        this.#monsters = trainerMonsters(run.rng).map(monster => this.#trained(monster))
+        this.#offers = trainerMonsters(run.rng).map(monster => this.#trained(monster))
     }
 
 
     public start(ctx: HaltContext): void {
-        ctx.offer("Quel allié ?", this.#monsters, monster => ({
-            cards: [...new Set(monster.cards)], sprite: monster.sprite,
-            text: [monster, " : ", monster.hearts, " cœurs, ", monster.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu."],
-        }), monster => {
+        ctx.offer("Quel allié ?", this.#offers, ({ base, upgrade }) => ({
+            cards: [...new Set(base.cards)],
+            upgrades: upgrade ? [upgrade] : [],
+            sprite: base.sprite,
+            text: [base, " : ", base.hearts, " cœurs, ", base.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu."],
+        }), ({ monster }) => {
             this.impact()
             ctx.tell(concat(this.run.tame(monster), " rejoint l'équipe."))
         })
     }
 
 
-    /** The monsters offered, already trained. */
-    readonly #monsters: readonly Monster[]
+    /** The allies offered, already trained, and the upgrade each got. */
+    readonly #offers: readonly { base: Monster, monster: Monster, upgrade: CardUpgrade|null }[]
 
     /**
-     * A monster with every card of its deck upgraded that has an upgrade, each by one matching it at random,
-     * the copies of a card all alike.
+     * A monster with one upgrade, drawn among those matching at least one card of its deck, put on every
+     * card of its deck it matches. The plain monster is kept to be shown beside the upgrade.
      */
-    #trained(monster: Monster): Monster {
-        const made = new Map<Card, Card>()
-        const cards = monster.cards.map(card => {
-            if(!made.has(card)) made.set(card, upgradeOf(card, this.run.rng) ?? card)
-            return made.get(card) ?? card
-        })
-        return Object.create(monster, { cards: { value: cards, enumerable: true } }) as Monster
+    #trained(base: Monster): { base: Monster, monster: Monster, upgrade: CardUpgrade|null } {
+        const upgrade = this.run.rng.pick(UPGRADES.filter(each => base.cards.some(card => upgradeMatches(each, card)))) ?? null
+        if(!upgrade) return { base, monster: base, upgrade }
+        const cards = upgradeAll(upgrade, base.cards, this.run.rng)
+        return { base, monster: Object.create(base, { cards: { value: cards, enumerable: true } }) as Monster, upgrade }
     }
 }
 
 /** The sort of the master trainer. */
 export const MASTER_TRAINER_HALT: HaltType = {
+    id: "masterTrainer",
     name: "Maître dresseur",
-    description: ["Un allié parmi deux pets et un monstre, joué par un bot, une amélioration sur chacune de ses ", CARTE.as("cartes"), "."],
-    code: "MD",
+    description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
+    code: "D*",
     icon: "mecard/travel/trainer/logo.png",
     glow: rgba(1, 0.8, 0.2),
     transition: DOOR_TRANSITION,

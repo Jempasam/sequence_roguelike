@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { GOBLIN, loadTravel, Run, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
+import { BATTLE, GOBLIN, loadTravel, Run, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
 import type { Monster, Travel, TravelSave } from "@game/core/mecard"
 
 // --- Fixture builders ---
@@ -38,7 +38,7 @@ describe("saveTravel", () => {
         const { travel } = new Run(3)
         const loaded = reloaded(saveTravel(travel))
         const shape = ({ journey }: Travel) => journey.places.map(place => ({
-            kind: place.kind, layer: place.layer, across: place.across,
+            kind: place.type.id, layer: place.layer, across: place.across,
             next: place.next.map(to => journey.places.indexOf(to)),
             monsters: place.monsters.map(monster => monster.name),
             exit: place.exitTo && [place.exitTo.type.name, place.exitTo.level],
@@ -51,7 +51,7 @@ describe("saveTravel", () => {
     test("a monster out of the catalog → refused", () => {
         const { travel } = new Run(3)
         const stranger: Monster = { ...GOBLIN, name: "Inconnu" }
-        travel.journey.addFight("battle", [stranger], { layer: 0, across: 0.5 })
+        travel.journey.addFight(BATTLE, [stranger], { layer: 0, across: 0.5 })
         expect(() => saveTravel(travel)).toThrow("Inconnu")
     })
 

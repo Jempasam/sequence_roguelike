@@ -46,6 +46,7 @@ export class InventorHalt extends CardGiftHalt {
 
 /** The sort of the inventor. */
 export const INVENTOR_HALT: HaltType = {
+    id: "inventor",
     name: "Inventeur",
     description: ["Un ", FUSION, " parmi trois."],
     code: "IN",

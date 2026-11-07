@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest"
 import { plainText } from "@game/core"
 import {
-    ALL_CARDS, BOMB, FLAMETHROWER, GLASS_HEART, ITEMS, MONSTERS, PUSH, RED_HEART, SHIELD_HEART, SHOT, SLASH,
+    CARDS, BOMB, FLAMETHROWER, GLASS_HEART, ITEMS, MONSTERS, PUSH, RED_HEART, SHIELD_HEART, SHOT, SLASH,
     SPELL, SWEEP, TASER, THORN_HEART, THRUST,
 } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
 /** Every value of the catalog that tells itself, with a description when it has one. */
-const TOLD = [...ALL_CARDS, ...ITEMS, RED_HEART, SHIELD_HEART, THORN_HEART, GLASS_HEART]
+const TOLD = [...CARDS, ...ITEMS, RED_HEART, SHIELD_HEART, THORN_HEART, GLASS_HEART]
 
 /** Does a plain text hold an object that told nothing, or a part that was missing? */
 function isBroken(text: string): boolean {

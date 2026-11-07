@@ -1,8 +1,35 @@
 import type { Rng } from "../../base/Rng"
 import type { Monster } from "../../catalog/monsters"
-import { isHalt } from "../../run/Journey"
-import type { FightKind, Place, PlaceKind, Spot } from "../../run/Journey"
+import { BATTLE, BOSS, ELITE } from "../../catalog/fights"
+import { ALCHEMIST_HALT } from "../../halt/subs/deck/AlchemistHalt"
+import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
+import { ANTIQUARIAN_HALT } from "../../halt/subs/deck/AntiquarianHalt"
+import { BUTCHER_HALT } from "../../halt/subs/deck/ButcherHalt"
+import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
+import { ENCHANTER_HALT } from "../../halt/subs/deck/EnchanterHalt"
+import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
+import { REMOVAL_HALT } from "../../halt/subs/deck/RemovalHalt"
+import { STRATEGIST_HALT } from "../../halt/subs/deck/StrategistHalt"
+import { WEAVER_HALT } from "../../halt/subs/deck/WeaverHalt"
+import { CHEST_HALT } from "../../halt/subs/gift/ChestHalt"
+import { INVENTOR_HALT } from "../../halt/subs/gift/InventorHalt"
+import { MAGICIAN_HALT } from "../../halt/subs/gift/MagicianHalt"
+import { MERCHANT_HALT } from "../../halt/subs/gift/MerchantHalt"
+import { SHOP_HALT } from "../../halt/subs/gift/ShopHalt"
+import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
+import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
+import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
+import { MASTER_TRAINER_HALT } from "../../halt/subs/master/MasterTrainerHalt"
+import { MASTER_MAGICIAN_HALT } from "../../halt/subs/master/MasterMagicianHalt"
+import { MASTER_INVENTOR_HALT } from "../../halt/subs/master/MasterInventorHalt"
+import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
+import { NECROMANCER_HALT } from "../../halt/subs/party/NecromancerHalt"
+import type { Place, Spot } from "../../run/Journey"
+import { isHalt } from "../../run/PlaceType"
+import type { FightType, PlaceType } from "../../run/PlaceType"
 import type { Floor, FloorContext, FloorType } from "../Floor"
+import { greatHalts, masterHalts } from "../../catalog/halts"
 
 /** How many layers a floor lays, the boss in the last. */
 export const LAYERS = 12
@@ -26,26 +53,35 @@ const SAME_IN_A_ROW = 3
 /** How many plans a floor draws at most to find one with no such row: few ever fail twice. */
 const MOST_PLANS = 32
 
-/** The kinds of place a floor lays: all but the exits, which are not its own. */
-type LaidKind = Exclude<PlaceKind, "exit">
-
 /** A place to come, not on the map yet: what it holds may still change, and its monsters are not drawn. */
 interface PlannedPlace {
-    kind: LaidKind
+    type: PlaceType
     readonly at: Spot
     readonly leading: readonly PlannedPlace[]
     readonly next: PlannedPlace[]
 }
 
-/** How often each kind of place turns up, relative to the others. */
-export type PlaceWeights = Readonly<Partial<Record<LaidKind, number>>>
+/** How often each sort of place turns up, relative to the others, the ones that never are left out. */
+export type PlaceWeights = ReadonlyMap<PlaceType, number>
 
-/** How often each kind of place turns up on a floor that says nothing else. */
-const WEIGHTS: PlaceWeights = {
-    battle: 28, elite: 7, hospital: 5, shop: 5, chest: 6, removal: 4, altar: 3, forge: 4, butcher: 2,
-    enchanter: 4, alchemist: 3, merchant: 4, witch: 3, inventor: 3, tavern: 2, trainer: 2, masterTrainer: 1, demon: 1,
-    antiquarian: 3, magician: 3, madDoctor: 1, weaver: 2, strategist: 3, necromancer: 2,
+/** Weights as they were, but for the sorts given, which weigh what they say: a new sort goes last. */
+export function reweighted(
+    weights: PlaceWeights, ...changes: readonly (readonly [PlaceType, number])[]
+): PlaceWeights {
+    return new Map([...weights, ...changes])
 }
+
+/** How often each sort of place turns up on a floor that says nothing else. */
+const WEIGHTS: PlaceWeights = new Map<PlaceType, number>([
+    [BATTLE, 28], [ELITE, 7], [HOSPITAL_HALT, 5], [SHOP_HALT, 5], [CHEST_HALT, 6], [REMOVAL_HALT, 4],
+    [ALTAR_HALT, 3], [FORGE_HALT, 4], [BUTCHER_HALT, 2], [ENCHANTER_HALT, 4], [ALCHEMIST_HALT, 3],
+    [MERCHANT_HALT, 4], [WITCH_HALT, 3], [INVENTOR_HALT, 3], [TAVERN_HALT, 2], [TRAINER_HALT, 2],
+    [MASTER_TRAINER_HALT, 1], [MASTER_MAGICIAN_HALT, 1], [MASTER_INVENTOR_HALT, 1], [DEMON_HALT, 1], [ANTIQUARIAN_HALT, 3], [MAGICIAN_HALT, 3], [MAD_DOCTOR_HALT, 1],
+    [WEAVER_HALT, 2], [STRATEGIST_HALT, 3], [NECROMANCER_HALT, 2],
+
+    ...masterHalts().map(type => [type, 1] as const),
+    ...greatHalts().map(type => [type, 1] as const)
+])
 
 /**
  * A floor laid in layers of places, each leading to some of the next, from the battles of the first layer to
@@ -68,7 +104,7 @@ export abstract class AbstractFloor implements Floor {
 
     public fillMap(ctx: FloorContext): void {
         const plan = this.#planWithoutRows(ctx.rng)
-        const places = plan.map(({ kind, at }) => this.#lay(ctx, kind, at))
+        const places = plan.map(({ type, at }) => this.#lay(ctx, type, at))
         plan.forEach(({ next }, index) => {
             for(const to of next) ctx.link(places[index], places[plan.indexOf(to)])
         })
@@ -76,7 +112,7 @@ export abstract class AbstractFloor implements Floor {
 
 
     /** The monsters of a fight in a layer, drawn from some random numbers. */
-    protected abstract monsters(fight: FightKind, layer: number, rng: Rng): Monster[]
+    protected abstract monsters(fight: FightType, layer: number, rng: Rng): Monster[]
 
     /** How often each kind of place turns up, in the layers of the middle. */
     protected weights(): PlaceWeights {
@@ -107,9 +143,9 @@ export abstract class AbstractFloor implements Floor {
             const row: PlannedPlace[] = []
             for(let index = 0; index < width; index++){
                 const leading = links.filter(([, to]) => to === index).map(([from]) => previous[from])
-                const kind = this.#kindOf(layer, leading, rng)
+                const type = this.#typeOf(layer, leading, rng)
                 const at = { layer, across: (index + 0.5) / width }
-                const place: PlannedPlace = { kind, at, leading, next: [] }
+                const place: PlannedPlace = { type, at, leading, next: [] }
                 for(const from of leading) from.next.push(place)
                 row.push(place)
             }
@@ -120,31 +156,32 @@ export abstract class AbstractFloor implements Floor {
     }
 
     /** Lay a place on the map, its monsters with it when it holds a fight. */
-    #lay(ctx: FloorContext, kind: LaidKind, at: Spot): Place {
-        if(isHalt(kind)) return ctx.addHalt(kind, at)
-        return ctx.addFight(kind, this.monsters(kind, at.layer, ctx.rng), at)
+    #lay(ctx: FloorContext, type: PlaceType, at: Spot): Place {
+        if(isHalt(type)) return ctx.addHalt(type, at)
+        const fight = type as FightType
+        return ctx.addFight(fight, this.monsters(fight, at.layer, ctx.rng), at)
     }
 
-    /** The kind of a place of a layer, the places leading to it known. */
-    #kindOf(layer: number, leading: readonly PlannedPlace[], rng: Rng): LaidKind {
-        if(layer === 0) return "battle"
-        if(layer === LAYERS - 1) return "boss"
-        if(layer === LAYERS - 2) return "hospital"
-        return drawn(this.#allowed(layer, leading), rng) ?? "battle"
+    /** The sort of a place of a layer, the places leading to it known. */
+    #typeOf(layer: number, leading: readonly PlannedPlace[], rng: Rng): PlaceType {
+        if(layer === 0) return BATTLE
+        if(layer === LAYERS - 1) return BOSS
+        if(layer === LAYERS - 2) return HOSPITAL_HALT
+        return drawn(this.#allowed(layer, leading), rng) ?? BATTLE
     }
 
-    /** The kinds a place of a layer may be, with their weights, the places next to it known. */
-    #allowed(layer: number, around: readonly PlannedPlace[]): [LaidKind, number][] {
-        return (Object.entries(this.weights()) as [LaidKind, number][]).filter(([kind]) => {
-            if(kind === "elite" && layer < FIRST_ELITE_LAYER) return false
-            if(kind === "shop" && layer === 1) return false
-            return kind === "battle" || !around.some(place => place.kind === kind)
+    /** The sorts a place of a layer may be, with their weights, the places next to it known. */
+    #allowed(layer: number, around: readonly PlannedPlace[]): [PlaceType, number][] {
+        return [...this.weights()].filter(([type]) => {
+            if(type === ELITE && layer < FIRST_ELITE_LAYER) return false
+            if(type === SHOP_HALT && layer === 1) return false
+            return type === BATTLE || !around.some(place => place.type === type)
         })
     }
 
     /** The halts a fight may turn into. */
-    #haltsFor({ at, leading, next }: PlannedPlace): [LaidKind, number][] {
-        return this.#allowed(at.layer, [...leading, ...next]).filter(([kind]) => isHalt(kind))
+    #haltsFor({ at, leading, next }: PlannedPlace): [PlaceType, number][] {
+        return this.#allowed(at.layer, [...leading, ...next]).filter(([type]) => isHalt(type))
     }
 
     /**
@@ -162,26 +199,26 @@ export abstract class AbstractFloor implements Floor {
             const halt = rng.pick(middlesOfRows(plan, isHaltPlace, free))
             const place = halt ?? rng.pick(middlesOfRows(plan, isFightPlace, replaceable))
             if(!place) return
-            place.kind = halt ? "battle" : drawn(this.#haltsFor(place), rng) ?? place.kind
+            place.type = halt ? BATTLE : drawn(this.#haltsFor(place), rng) ?? place.type
             changed.add(place)
         }
     }
 }
 
-const isHaltPlace = (place: PlannedPlace): boolean => isHalt(place.kind)
-const isFightPlace = (place: PlannedPlace): boolean => !isHalt(place.kind)
+const isHaltPlace = (place: PlannedPlace): boolean => isHalt(place.type)
+const isFightPlace = (place: PlannedPlace): boolean => !isHalt(place.type)
 
 /** Does a path of a plan meet too many alike in a row? */
 function hasRows(plan: readonly PlannedPlace[]): boolean {
     return middlesOfRows(plan, isHaltPlace).length > 0 || middlesOfRows(plan, isFightPlace).length > 0
 }
 
-/** One of the kinds, the heavier the likelier, none for none. */
-function drawn(kinds: readonly [LaidKind, number][], rng: Rng): LaidKind|undefined {
-    let roll = rng.next() * kinds.reduce((sum, [, weight]) => sum + weight, 0)
-    for(const [kind, weight] of kinds){
+/** One of the sorts, the heavier the likelier, none for none. */
+function drawn(types: readonly [PlaceType, number][], rng: Rng): PlaceType|undefined {
+    let roll = rng.next() * types.reduce((sum, [, weight]) => sum + weight, 0)
+    for(const [type, weight] of types){
         roll -= weight
-        if(roll < 0) return kind
+        if(roll < 0) return type
     }
     return undefined
 }

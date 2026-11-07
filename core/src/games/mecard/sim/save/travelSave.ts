@@ -1,7 +1,11 @@
 import type { Monster } from "../catalog/monsters"
 import type { Floor } from "../floor/Floor"
-import { isHalt, Journey } from "../run/Journey"
-import type { PlaceKind, Place } from "../run/Journey"
+import { EXIT_HALT } from "../halt/subs/ExitHalt"
+import { placeTypeById } from "../catalog/places"
+import { Journey } from "../run/Journey"
+import type { Place } from "../run/Journey"
+import { isHalt } from "../run/PlaceType"
+import type { FightType } from "../run/PlaceType"
 import type { Run } from "../run/Run"
 import type { Travel } from "../travel/Travel"
 
@@ -15,7 +19,8 @@ type SavedFloor = readonly [string, number]
 
 /** A place of a map, its exits aside. */
 export interface SavedPlace {
-    readonly kind: Exclude<PlaceKind, "exit">
+    /** The id of its sort of place, an exit's apart: the exits are not written down. */
+    readonly kind: string
     readonly layer: number
     readonly across: number
 
@@ -119,10 +124,10 @@ function savedJourney(journey: Journey): SavedJourney {
     return {
         scenery,
         places: places.flatMap(place => {
-            const { kind, layer, across } = place
-            if(kind === "exit") return []
-            const next = place.next.filter(to => to.kind !== "exit").map(to => places.indexOf(to))
-            return [{ kind, layer, across, next, monsters: place.monsters.map(savedMonster) }]
+            const { type, layer, across } = place
+            if(place.exitTo) return []
+            const next = place.next.filter(to => !to.exitTo).map(to => places.indexOf(to))
+            return [{ kind: type.id, layer, across, next, monsters: place.monsters.map(savedMonster) }]
         }),
         exits: exits.map(savedFloor),
     }
@@ -133,12 +138,13 @@ function loadedJourney(save: SavedJourney, run: Run): Journey {
     const journey = new Journey(run.rng, save.scenery)
     const places = save.places.map(({ kind, layer, across, monsters }) => {
         const at = { layer, across }
-        if(isHalt(kind)) return journey.addHalt(kind, at)
-        return journey.addFight(kind, monsters.map(name => MONSTER_NAMES.of(name)), at)
+        const type = placeTypeById(kind)
+        if(isHalt(type)) return journey.addHalt(type, at)
+        return journey.addFight(type as FightType, monsters.map(name => MONSTER_NAMES.of(name)), at)
     })
     save.places.forEach(({ next }, index) => {
         for(const rank of next) journey.link(places[index], placeAt(journey, rank))
     })
-    journey.addExits(save.exits.map(loadedFloor))
+    journey.addExits(save.exits.map(loadedFloor), EXIT_HALT)
     return journey
 }

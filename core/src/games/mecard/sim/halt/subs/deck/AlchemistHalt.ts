@@ -61,6 +61,7 @@ export class AlchemistHalt extends DeckHalt {
 
 /** The sort of the alchemist. */
 export const ALCHEMIST_HALT: HaltType = {
+    id: "alchemist",
     name: "Alchimiste",
     description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],
     code: "AL",

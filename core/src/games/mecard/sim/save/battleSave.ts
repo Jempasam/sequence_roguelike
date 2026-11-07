@@ -302,7 +302,7 @@ export function cardLoader(): (saved: SavedCard) => Card {
         const known = made.get(key)
         if(known) return known
         const card = "fused" in saved ? new FusionCard(saved.fused.map(load))
-            : "merged" in saved ? new MergedCard(...pair(saved.merged.map(load)))
+            : "merged" in saved ? new MergedCard(saved.merged.map(load))
                 : new RandomCard(...pair(saved.random.map(load)))
         made.set(key, card)
         return card

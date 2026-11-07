@@ -73,7 +73,24 @@ export function upgraded(upgrade: CardUpgrade, card: Card, rng: Rng): Card {
     if(ways.length === 0) throw new Error(`${upgrade.name} does not match ${card.name}.`)
     const way = ways.length === 1 ? ways[0] : rng.pick(ways) ?? ways[0]
     const pair = paired(upgrade, card)
-    return way === "merge" ? new MergedCard(pair[0], pair[1]) : new FusionCard(pair)
+    return way === "merge" ? new MergedCard(pair) : new FusionCard(pair)
+}
+
+/** Does an upgrade match every card of a list? */
+export function upgradeFitsAll(upgrade: CardUpgrade, cards: readonly Card[]): boolean {
+    return cards.every(card => upgradeMatches(upgrade, card))
+}
+
+/**
+ * The cards of a list with an upgrade put on each it matches, the others left as they are, the copies of a
+ * card all alike.
+ */
+export function upgradeAll(upgrade: CardUpgrade, cards: readonly Card[], rng: Rng): Card[] {
+    const made = new Map<Card, Card>()
+    return cards.map(card => {
+        if(!made.has(card)) made.set(card, upgradeMatches(upgrade, card) ? upgraded(upgrade, card, rng) : card)
+        return made.get(card) ?? card
+    })
 }
 
 /** The upgrades of a list that match a card. */

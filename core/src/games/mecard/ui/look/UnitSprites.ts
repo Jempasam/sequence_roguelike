@@ -5,6 +5,7 @@ import { ITEMS, USABLES } from "../../sim/catalog"
 import { Rope } from "../../../../engine/ui"
 import type { NineSlice } from "../../../../engine/ui"
 import { BagView } from "../hud/BagView"
+import { loadBoosterFrame } from "../hud/BoosterView"
 import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
 
 /** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
@@ -126,6 +127,11 @@ export class UnitSprites {
         return this.#bag
     }
 
+    /** The embossed leather frame laid over the icon of a booster, none before it is loaded. */
+    public get booster(): NineSlice|null {
+        return this.#booster
+    }
+
     /** The darker spot under what stands on the arena, none before it is loaded. */
     public get shade(): Sprite|null {
         return this.#shade
@@ -154,11 +160,13 @@ export class UnitSprites {
         const others = [...CARD_BACK_PATHS, INVALID_CARD_PATH]
         const things = [...new Set([...ITEMS, ...USABLES].map(thing => thing.icon))]
         const all = [...paths, ...others, ...things, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
-        const [pictures, bag] = await Promise.all([
+        const [pictures, bag, booster] = await Promise.all([
             Promise.all(all.map(path => assets.image(path))),
             BagView.loadFrame(gpu, assets),
+            loadBoosterFrame(gpu, assets),
         ])
         this.#bag = bag
+        this.#booster = booster
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
         things.forEach((path, index) => {
@@ -186,4 +194,5 @@ export class UnitSprites {
     #rope: Rope|null = null
     #shade: Sprite|null = null
     #bag: NineSlice|null = null
+    #booster: NineSlice|null = null
 }

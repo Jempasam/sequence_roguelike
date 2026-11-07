@@ -129,9 +129,9 @@ export class MecardGame {
                 this.#screen.travelScreen.go(place)
             },
             showMap: () => this.#travelOn(),
-            visit: kind => {
+            visit: type => {
                 this.#travelOn()
-                this.run.travel.visit(kind)
+                this.run.travel.visit(type)
             },
             showPnj: () => this.#pnjOn(),
             showArm: () => this.#armOn(),

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { planFor, Run } from "@game/core/mecard"
+import { CHEST_HALT, planFor, Run } from "@game/core/mecard"
 import { LocalSync, RunBroadcaster, RunReceiver } from "@game/core/mecard/sync"
 
 // --- Fixture builders ---
@@ -44,7 +44,7 @@ describe("RunReceiver", () => {
 
     test("a halt left → the gold and the decks of the viewer are the main client's", () => {
         const { run, viewer } = session()
-        run.travel.visit("chest")
+        run.travel.visit(CHEST_HALT)
         run.gold = 777
         run.changeDeck(run.heroes[0].decks[0], deck => deck.pop())
         run.travel.leave()

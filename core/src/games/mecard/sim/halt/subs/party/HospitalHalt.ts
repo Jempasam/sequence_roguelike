@@ -53,6 +53,7 @@ export class HospitalHalt extends AbstractHalt {
 
 /** The sort of the hospital. */
 export const HOSPITAL_HALT: HaltType = {
+    id: "hospital",
     name: "Hôpital",
     description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",
     code: "H",

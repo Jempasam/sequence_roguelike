@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
     BOTTLE, CardChain, CHAOS, DOUBLE_DIAGONAL, DRAW, FIRE, FusionCard, Heart, INSTINCT, POISON,
     POTION_POUCH, PRAYER, PREPARATION, RECOVERY, RED_HEART, REPEAT_2, REPETITION, resolve, SLASH, SPELL, STEP,
-    SUPER_REPETITION, THRUST, TORNADO, Vector2,
+    SUPER_REPETITION, THRUST, TORNADO, Vector2, REACTION, RITUAL, WATER, AURA,
 } from "@game/core/mecard"
 import type { RewriteContext } from "@game/core/mecard"
 
@@ -220,5 +220,40 @@ describe("DRAW", () => {
         play(on, [[drawer, chain(DRAW)]])
         // The draw of the next round comes on top.
         expect(drawer.hand.length).toBe(before + 2 + drawer.stats.draw.value)
+    })
+})
+
+describe("cards a preparation reads on its right", () => {
+    test("a ritual and an element → both play, the element being kept", () => {
+        expect(new CardChain([RITUAL, FIRE]).activity()).toEqual([true, true])
+    })
+
+    test("a reaction and one element → the element stays greyed out", () => {
+        expect(new CardChain([REACTION, FIRE]).activity()).toEqual([false, false])
+    })
+
+    test("a reaction and two elements → the three play, standing for the compound", () => {
+        const resolution = resolve([REACTION, FIRE, WATER], drawing(0))
+        expect(resolution.cards).toHaveLength(1)
+        expect(resolution.sources).toEqual([[0, 1, 2]])
+        expect(new CardChain([SPELL, REACTION, FIRE, WATER]).activity()).toEqual([true, true, true, true])
+    })
+
+    test("a card given back → stands for itself", () => {
+        expect(resolve([REPETITION, STEP], drawing(0)).sources).toEqual([[1], [0]])
+    })
+})
+
+describe("a spell before a reaction", () => {
+    test("aura, reaction, two elements → all four play, the elements standing for the compound", () => {
+        const row = [AURA, REACTION, FIRE, WATER]
+        expect(new CardChain(row).activity()).toEqual([true, true, true, true])
+        const { sources, reading } = resolve(row, drawing(0))
+        expect(reading.roots).toHaveLength(1)
+        expect(sources).toEqual([[0], [1, 2, 3]])
+    })
+
+    test("aura, reaction, one element → the reaction does nothing, the aura takes the element", () => {
+        expect(new CardChain([AURA, REACTION, FIRE]).activity()).toEqual([true, false, true])
     })
 })

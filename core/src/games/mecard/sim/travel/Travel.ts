@@ -2,14 +2,16 @@ import type { Text } from "../../../../semantic"
 import { Observable } from "../base/Observable"
 import type { Card } from "../card/Card"
 import { exitsOf } from "../catalog/floors"
-import { HALTS } from "../catalog/halts"
 import type { Floor } from "../floor/Floor"
 import type { Halt } from "../halt/Halt"
 import type { CardChoosing, Choosing, Count, HaltContext, Shown, Way } from "../halt/HaltContext"
+import type { HaltType } from "../halt/HaltType"
+import { EXIT_HALT } from "../halt/subs/ExitHalt"
 import type { HaltMoment } from "../halt/SceneLook"
 import type { Hero } from "../run/Hero"
-import { isHalt, Journey } from "../run/Journey"
-import type { HaltKind, Place } from "../run/Journey"
+import { Journey } from "../run/Journey"
+import type { Place } from "../run/Journey"
+import { isHalt } from "../run/PlaceType"
 import type { Run } from "../run/Run"
 import { loadTravel, saveTravel } from "../save/travelSave"
 import type { TravelSave } from "../save/travelSave"
@@ -214,11 +216,11 @@ export class Travel {
      * @throws {@link Error} When the place holds a fight.
      */
     public haltOf(place: Place): Halt {
-        const { kind } = place
-        if(!isHalt(kind)) throw new Error(`A place of kind ${kind} holds a fight, not a halt.`)
+        const { type } = place
+        if(!isHalt(type)) throw new Error(`A place of sort ${type.id} holds a fight, not a halt.`)
         const kept = this.#halts.get(place)
         if(kept) return kept
-        const halt = HALTS[kind].create(this.run)
+        const halt = type.create(this.run)
         this.#halts.set(place, halt)
         return halt
     }
@@ -294,7 +296,7 @@ export class Travel {
     public enter(): void {
         const place = this.#place
         if(this.#phase !== "entering" || !place) throw new Error("The party is entering no place.")
-        if(isHalt(place.kind)){
+        if(isHalt(place.type)){
             this.#open(this.haltOf(place))
             return
         }
@@ -303,14 +305,14 @@ export class Travel {
     }
 
     /**
-     * Visit a new halt of a kind where the party stands, without going anywhere. It belongs to no place, so
+     * Visit a new halt of a sort where the party stands, without going anywhere. It belongs to no place, so
      * nothing of it stays once left.
      *
      * @throws {@link Error} Out of the map.
      */
-    public visit(kind: HaltKind): void {
+    public visit(type: HaltType): void {
         if(this.#phase !== "map") throw new Error(`The party visits from the map, not during ${this.#phase}.`)
-        this.#open(HALTS[kind].create(this.run))
+        this.#open(type.create(this.run))
     }
 
     /**
@@ -339,8 +341,8 @@ export class Travel {
      * @param layer - The row, from 0.
      * @throws {@link Error} When the row is not one a halt may be laid in.
      */
-    public layHalt(kind: Exclude<HaltKind, "exit">, layer: number): Place {
-        const place = this.journey.insertHalt(kind, layer)
+    public layHalt(type: HaltType, layer: number): Place {
+        const place = this.journey.insertHalt(type, layer)
         this.mapDrawn.notify(this.journey)
         return place
     }
@@ -493,7 +495,7 @@ export class Travel {
     #newJourney(): Journey {
         const map = new Journey(this.run.rng)
         this.floor.fillMap(map)
-        map.addExits(exitsOf(this.floor))
+        map.addExits(exitsOf(this.floor), EXIT_HALT)
         return map
     }
 

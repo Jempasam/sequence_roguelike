@@ -44,6 +44,7 @@ export class RemovalHalt extends DeckHalt {
 
 /** The sort of the removal. */
 export const REMOVAL_HALT: HaltType = {
+    id: "removal",
     name: "Oubli",
     description: [SUPPRESSION.as("Retire"), " de une à trois ", CARTE.as("cartes"), " du ", DECK, " d'une ", UNIT, "."],
     code: "OU",

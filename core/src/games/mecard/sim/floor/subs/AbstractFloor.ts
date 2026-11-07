@@ -73,11 +73,14 @@ export function reweighted(
 
 /** How often each sort of place turns up on a floor that says nothing else. */
 const WEIGHTS: PlaceWeights = new Map<PlaceType, number>([
-    [BATTLE, 28], [ELITE, 7], [HOSPITAL_HALT, 5], [SHOP_HALT, 5], [CHEST_HALT, 6], [REMOVAL_HALT, 4],
-    [ALTAR_HALT, 3], [FORGE_HALT, 4], [BUTCHER_HALT, 2], [ENCHANTER_HALT, 4], [ALCHEMIST_HALT, 3],
-    [MERCHANT_HALT, 4], [WITCH_HALT, 3], [INVENTOR_HALT, 3], [TAVERN_HALT, 2], [TRAINER_HALT, 2],
-    [MASTER_TRAINER_HALT, 1], [MASTER_MAGICIAN_HALT, 1], [MASTER_INVENTOR_HALT, 1], [DEMON_HALT, 1], [ANTIQUARIAN_HALT, 3], [MAGICIAN_HALT, 3], [MAD_DOCTOR_HALT, 1],
-    [WEAVER_HALT, 2], [STRATEGIST_HALT, 3], [NECROMANCER_HALT, 2],
+    ...([
+        [BATTLE, 28], [ELITE, 7], [HOSPITAL_HALT, 5], [SHOP_HALT, 5], [CHEST_HALT, 6], [REMOVAL_HALT, 4],
+        [ALTAR_HALT, 3], [FORGE_HALT, 4], [BUTCHER_HALT, 2], [ENCHANTER_HALT, 4], [ALCHEMIST_HALT, 3],
+        [MERCHANT_HALT, 4], [WITCH_HALT, 3], [INVENTOR_HALT, 3], [TAVERN_HALT, 2], [TRAINER_HALT, 2],
+        [MASTER_TRAINER_HALT, 1], [MASTER_MAGICIAN_HALT, 1], [MASTER_INVENTOR_HALT, 1], [DEMON_HALT, 1],
+        [ANTIQUARIAN_HALT, 3], [MAGICIAN_HALT, 3], [MAD_DOCTOR_HALT, 1],
+        [WEAVER_HALT, 2], [STRATEGIST_HALT, 3], [NECROMANCER_HALT, 2],
+    ] as [PlaceType,number][]).map(([type,i]) => [type, i*2] as const),
 
     ...masterHalts().map(type => [type, 1] as const),
     ...greatHalts().map(type => [type, 1] as const)

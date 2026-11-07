@@ -2,6 +2,7 @@ import type { Rng } from "../base/Rng"
 import type { Card } from "../card/Card"
 import { readsWhole } from "../card/CardChain"
 import { ACTION } from "../card/CardType"
+import { RECOVERY } from "../card/subs"
 import { SHOT } from "../card/subs/attack/Shot"
 import { SLASH } from "../card/subs/attack/Slash"
 import { SWEEP } from "../card/subs/attack/Sweep"
@@ -14,7 +15,7 @@ import { DOUBLE_DIAGONAL } from "../card/subs/modifier/DoubleDiagonal"
 import { REPEAT_2 } from "../card/subs/modifier/RepeatCard"
 import { STEP } from "../card/subs/movement/Step"
 import { THROWN_POTION } from "../card/subs/potion/PotionActions"
-import { ELEMENT_CARDS } from "../card/subs/spell/ElementCard"
+import { ELEMENT_CARDS, FIRE, LIGHTNING, PLANT, STONE, WATER, WIND } from "../card/subs/spell/ElementCard"
 import { SPELL } from "../card/subs/spell/SpellCard"
 import { LOOT_CARDS } from "./index"
 
@@ -130,13 +131,16 @@ export const UPGRADES: readonly CardUpgrade[] = [
     front("Incantation", SPELL),
     front("Automate", IMPROVISED_ROBOT),
     front("Jet", THROWN_POTION),
+    front("Récupération", RECOVERY),
     front("Élan", STEP, "random"),
-    back("Feu", ELEMENT_CARDS[0]),
-    back("Eau", ELEMENT_CARDS[1]),
-    back("Plante", ELEMENT_CARDS[2]),
-    back("Pierre", ELEMENT_CARDS[3]),
-    back("Vent", ELEMENT_CARDS[4]),
-    back("Foudre", ELEMENT_CARDS[5]),
+
+    back("Feu", FIRE),
+    back("Eau", WATER),
+    back("Plante", PLANT),
+    back("Pierre", STONE),
+    back("Vent", WIND),
+    back("Foudre", LIGHTNING),
+
     back("Module d'arc", BOW_MODULE),
     back("Module de taureau", BULL_MODULE),
     back("Module d'explosion", BLAST_MODULE),

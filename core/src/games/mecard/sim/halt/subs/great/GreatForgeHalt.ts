@@ -9,11 +9,9 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "../deck/DeckHalt"
+import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
 import { fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
-
-/** The blue of the great forger: its glow, its crown and its hammer. */
-const GREAT_COLOR = rgba(0.3, 0.6, 1)
 
 /** How many times the great forger offers to forge. */
 const ROUNDS = 3
@@ -30,7 +28,7 @@ export class GreatForgeHalt extends DeckHalt {
             ["Donne-moi deux ou trois ", CARTE.as("cartes"), ", je les forge dans l'ordre choisi, jusqu'à trois fois."],
             sceneLook(41, 18, 10, "mecard/travel/forge"),
             {
-                hat: "hornedCrown",
+                hat: GREAT_HAT,
                 clothes: rgba(1, 0.45, 0.15),
                 hatColor: GREAT_COLOR,
                 cues: { pick: "strike" },

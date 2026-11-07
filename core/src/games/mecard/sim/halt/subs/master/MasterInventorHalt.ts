@@ -1,4 +1,4 @@
-import { rgba } from "../../../base/Rgba"
+import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
 import { FUSION } from "../../../base/keywords"
 import type { Card } from "../../../card/Card"
 import { INVENTED_COUNTS, inventedFusion } from "../../../run/offers"
@@ -21,9 +21,9 @@ export class MasterInventorHalt extends CardGiftHalt {
             sceneLook(28, 26, 23, "mecard/travel/inventor"),
             {
                 hat: "goggles",
-                mask: "sunglasses",
-                clothes: rgba(1, 0.8, 0.2),
-                hatColor: rgba(1, 0.8, 0.2),
+                mask: MASTER_MASK,
+                clothes: MASTER_COLOR,
+                hatColor: MASTER_COLOR,
                 item: "wrench"
             },
         )
@@ -50,7 +50,7 @@ export const MASTER_INVENTOR_HALT: HaltType = {
     description: ["Un ", FUSION, " parmi trois, chacun amélioré."],
     code: "IN*",
     icon: "mecard/travel/inventor/logo.png",
-    glow: rgba(1, 0.8, 0.2),
+    glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterInventorHalt(run),
 }

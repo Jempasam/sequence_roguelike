@@ -19,6 +19,10 @@ import { MASTER_TRAINER_HALT } from "../halt/subs/master/MasterTrainerHalt"
 import { MASTER_MAGICIAN_HALT } from "../halt/subs/master/MasterMagicianHalt"
 import { MASTER_INVENTOR_HALT } from "../halt/subs/master/MasterInventorHalt"
 import { GREAT_FORGE_HALT } from "../halt/subs/great/GreatForgeHalt"
+import { GREAT_SHOP_HALT } from "../halt/subs/great/GreatShopHalt"
+import { GREAT_HOSPITAL_HALT } from "../halt/subs/great/GreatHospitalHalt"
+import { GREAT_WITCH_HALT } from "../halt/subs/great/GreatWitchHalt"
+import { GREAT_MERCHANT_HALT } from "../halt/subs/great/GreatMerchantHalt"
 import { TRAINER_HALT } from "../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
@@ -54,7 +58,7 @@ export function masterHalts(): readonly HaltType[] {
 
 /** The sorts of halt of a great one: a simple halt, working further. */
 export function greatHalts(): readonly HaltType[] {
-    return [GREAT_FORGE_HALT]
+    return [GREAT_FORGE_HALT, GREAT_SHOP_HALT, GREAT_HOSPITAL_HALT, GREAT_WITCH_HALT, GREAT_MERCHANT_HALT]
 }
 
 /** The sorts of halt a floor may lay: all but the exits, which are not its own. */

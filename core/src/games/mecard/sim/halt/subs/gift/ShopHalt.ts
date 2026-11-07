@@ -50,9 +50,9 @@ export function shopGoods(rng: Rng): Good[] {
     ]
 }
 
-/** A good of the shop, with its price. */
-function goodShown(good: Good): Shown {
-    const price = `${good.price} or`
+/** A good of the shop, with its price, the one it has unless another is given. */
+export function goodShown(good: Good, cost: number = good.price): Shown {
+    const price = `${cost} or`
     switch(good.kind){
         case "card": return { cards: [good.card], text: concat(price, " · ", good.card, " : ", good.card.description) }
         case "item": return { cards: [], text: concat(price, " · ", described(good.item, good.item)) }

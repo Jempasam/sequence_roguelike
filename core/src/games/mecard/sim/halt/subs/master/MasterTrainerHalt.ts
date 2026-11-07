@@ -1,6 +1,6 @@
 import { concat } from "../../../../../../semantic"
 import { CARTE, DECK } from "../../../base/keywords"
-import { rgba } from "../../../base/Rgba"
+import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
 import type { Monster } from "../../../catalog/monsters"
 import { upgradeAll, upgradeMatches, UPGRADES } from "../../../catalog/upgrades"
 import type { CardUpgrade } from "../../../catalog/upgrades"
@@ -25,9 +25,9 @@ export class MasterTrainerHalt extends AbstractHalt {
             sceneLook(23, 28, 15, "mecard/travel/trainer"),
             {
                 hat: "huntingHat",
-                mask: "sunglasses",
-                clothes: rgba(1, 0.8, 0.2),
-                hatColor: rgba(1, 0.8, 0.2),
+                mask: MASTER_MASK,
+                clothes: MASTER_COLOR,
+                hatColor: MASTER_COLOR,
                 item: "whip"
             },
         )
@@ -70,7 +70,7 @@ export const MASTER_TRAINER_HALT: HaltType = {
     description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
     code: "D*",
     icon: "mecard/travel/trainer/logo.png",
-    glow: rgba(1, 0.8, 0.2),
+    glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterTrainerHalt(run),
 }

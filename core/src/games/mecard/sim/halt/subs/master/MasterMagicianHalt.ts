@@ -1,5 +1,5 @@
 import { CARTE } from "../../../base/keywords"
-import { rgba } from "../../../base/Rgba"
+import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
 import { BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { upgradeAll, upgradeFitsAll, UPGRADES } from "../../../catalog/upgrades"
@@ -44,9 +44,9 @@ export class MasterMagicianHalt extends CardGiftHalt {
             sceneLook(26, 13, 41, "mecard/travel/magician"),
             {
                 hat: "topHat",
-                mask: "sunglasses",
-                clothes: rgba(1, 0.8, 0.2),
-                hatColor: rgba(1, 0.8, 0.2),
+                mask: MASTER_MASK,
+                clothes: MASTER_COLOR,
+                hatColor: MASTER_COLOR,
                 cues: { done: "spin" },
                 item: "magicianWand"
             },
@@ -81,7 +81,7 @@ export const MASTER_MAGICIAN_HALT: HaltType = {
     description: ["Un booster parmi trois, ouvert et ses ", CARTE.as("cartes"), " améliorées."],
     code: "MG*",
     icon: "mecard/travel/magician/logo.png",
-    glow: rgba(1, 0.8, 0.2),
+    glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterMagicianHalt(run),
 }

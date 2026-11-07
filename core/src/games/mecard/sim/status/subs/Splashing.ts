@@ -5,8 +5,11 @@ import { fading, polygonOf } from "../../battle/effects"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
-import { StatusType } from "../Status"
-import type { Status } from "../Status"
+import { BaseStatus } from "../BaseStatus"
+import { familyType } from "../Status"
+import type { StatusType } from "../Status"
+import { doseVariants } from "../StatusVariants"
+import type { DoseType } from "../StatusVariants"
 
 /** How far a barrel splashes its potion when it breaks, in meters. */
 export const SPLASH_RADIUS = 1.5
@@ -15,27 +18,29 @@ export const SPLASH_RADIUS = 1.5
 const SPLASH_TIME = 0.4
 
 /** A barrel full of a potion, which it splashes when it breaks. */
-export const SPLASHING = new StatusType("tonneau", rgba(0.75, 0.5, 0.3), "neutral")
+export const SPLASHING = familyType("tonneau", rgba(0.75, 0.5, 0.3), "neutral")
 
-/** Splashing: when it dies, it pours a potion on every unit around it. A barrel holds it. */
-export class Splashing implements Status {
+/** The kinds of barrel, one for each dose. */
+export const BARRELS = doseVariants(SPLASHING, dose => `${SPLASHING} (${dose.potion})`, (type, level) => new Splashing(type, level))
 
+/** Splashing: when it dies, it pours its potion on every unit around it, at its level. A barrel holds it. */
+export class Splashing extends BaseStatus {
 
-    public readonly type = SPLASHING
 
     constructor(
-        public readonly dose: Dose,
+        public readonly type: DoseType,
+        level: number,
+    ){
+        super(level)
+    }
 
-        /** The level it pours its potion at. */
-        public readonly level: number,
-    ){}
 
+    /** The potion it splashes. */
+    public get dose(): Dose { return this.type.dose }
 
-    public copy(): Splashing { return new Splashing(this.dose, this.level) }
+    public override toString(): string { return `${SPLASHING} (${this.dose.potion})` }
 
-    public toString(): string { return `${SPLASHING} (${this.dose.potion})` }
-
-    public toSemString(): Text { return [SPLASHING, " (", this.dose.potion, ")"] }
+    public override toSemString(): Text { return [SPLASHING, " (", this.dose.potion, ")"] }
 
     public init({ battle, unit }: UnitContext): void {
         this.#observer = unit.onDeath.add(() => {
@@ -43,7 +48,8 @@ export class Splashing implements Status {
             battle.signals.notifyStatus.notify({ unit, status: this })
             battle.post(fading(SPLASH_TIME, [polygonOf(area, { ...this.dose.potion.color, a: 0.5 })]))
             battle.events.push({ type: "status", unit, text: ["éclabousse ", this.dose.potion] })
-            for(const target of battle.unitsIn(area)) pour(battle, this.dose, target, this.level)
+            const level = this.dose.sign * this.level
+            for(const target of battle.unitsIn(area)) pour(battle, this.dose, target, level)
         })
     }
 
@@ -51,9 +57,9 @@ export class Splashing implements Status {
         this.#observer?.remove()
     }
 
-    /** A barrel holds one potion. */
-    public merge(): void {}
-
 
     #observer?: Observer
 }
+
+/** The kind of a barrel of a dose. */
+export function barrelOf(dose: Dose): StatusType { return BARRELS.of(dose) }

@@ -6,7 +6,7 @@ import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Pose } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
 import { damage, meters } from "../../../battle/words"
-import { Burn } from "../../../status/subs/Burn"
+import { BURN, Burn } from "../../../status/subs/Burn"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, travel, WALK_SPEED } from "../tools/playing"
@@ -87,7 +87,7 @@ export const BLAZE = new ActionCard("Embrasement", [
     use: function* ({ battle, unit }){
         for(const target of battle.unitsIn(groundOf(unit, unit), unit)){
             target.hearts.damage(FLAMES_DAMAGE, "elemental", sourceOf(unit))
-            battle.applyStatus(target, new Burn(FLAMES_BURN))
+            battle.applyStatus(target, BURN, FLAMES_BURN)
         }
         unit.hearts.slay(null)
         yield* hold(battle, SHORT_TIME)

@@ -408,7 +408,7 @@ export class BoardView {
         let x = Math.round(left)
         for(const type of shown.statuses){
             const { r, g, b } = type.color
-            painter.setTint(STATUS_DOTS.get(type) ?? this.#faded.set(r, g, b, 1))
+            painter.setTint(STATUS_DOTS.get(type.family) ??this.#faded.set(r, g, b, 1))
             painter.rect(x, Math.round(top), 3, 3)
             x += 4
         }

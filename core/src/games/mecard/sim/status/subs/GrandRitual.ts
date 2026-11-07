@@ -5,44 +5,47 @@ import type { Observer } from "../../base/Observable"
 import { counted } from "../../battle/words"
 import type { Element } from "../../element/Element"
 import { RoundStatus } from "../RoundStatus"
-import { StatusType } from "../Status"
-import type { Status } from "../Status"
+import { familyType } from "../Status"
+import type { StatusType } from "../Status"
+import { elementOf, elementVariants } from "../StatusVariants"
+import type { ElementType } from "../StatusVariants"
 
 /** A grand ritual: an element kept for rounds. */
-export const GRAND_RITUAL = new StatusType("grand rituel", rgba(0.8, 0.6, 1), "positive")
+export const GRAND_RITUAL = familyType("grand rituel", rgba(0.8, 0.6, 1), "positive")
 
-/** An element kept for rounds, for what meets it: an echo. */
+/** The kinds of grand ritual, one for each element. */
+export const GRAND_RITUALS = elementVariants(
+    GRAND_RITUAL, element => `${GRAND_RITUAL} de ${element}`, (type, level) => new GrandRitual(type, level),
+)
+
+/** An element kept for rounds, for what meets it: an echo. Its level is its rounds. */
 export class GrandRitual extends RoundStatus {
 
 
-    public readonly type = GRAND_RITUAL
-
     constructor(
-        /** The element it keeps. */
-        public element: Element,
-
-        rounds: number,
+        public readonly type: ElementType,
+        level: number,
     ){
-        super(rounds)
+        super(level)
     }
 
 
-    public override toString(): string { return `${GRAND_RITUAL} de ${this.element} ${counted(this.rounds, "round")}` }
+    /** The element it keeps. */
+    public get element(): Element { return this.type.element }
+
+    public override toString(): string { return `${this.type} ${counted(this.level, "round")}` }
 
     public override toSemString(): Text {
-        return concat(GRAND_RITUAL, " de ", this.element, ` ${counted(this.rounds, "round")}`)
+        return concat(GRAND_RITUAL, " de ", this.element, ` ${counted(this.level, "round")}`)
     }
-
-    public copy(): GrandRitual { return new GrandRitual(this.element, this.rounds) }
-
-    /** A new one adds its rounds, and keeps its element. */
-    public override merge(incoming: Status): void {
-        super.merge(incoming)
-        if(incoming instanceof GrandRitual) this.element = incoming.element
-    }
-
 
     protected plug(): Observer[] {
         return []
     }
 }
+
+/** The kind of a grand ritual of an element. */
+export function ritualType(element: Element): StatusType { return GRAND_RITUALS.of(element) }
+
+/** The element kept by a kind of status, none when it is not the kind of a grand ritual. */
+export function ritualElementOf(type: StatusType): Element|null { return elementOf(type, GRAND_RITUAL) }

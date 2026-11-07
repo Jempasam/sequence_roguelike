@@ -1,5 +1,3 @@
-import type { Text } from "../../../../../semantic"
-import { colored } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { touches } from "../../battle/Area"
@@ -20,18 +18,13 @@ export const MINE_ROUNDS = 3
 export const MINE_RADIUS = 0.25
 
 /** A mine. */
-export const MINE_HAZARD = new StatusType("mine", HAZARD_TEXT, "neutral")
+export const MINE_HAZARD = new StatusType("mine", HAZARD_TEXT, "neutral", level => new Mined(level), { cloned: false })
 
 /** A mine: whatever body comes to touch it sets it off, wounding everyone around. */
 export class Mined extends HazardStatus {
 
 
-    public readonly type = MINE_HAZARD
-
-    public toString(): string { return "mine" }
-
-    public toSemString(): Text { return colored(HAZARD_TEXT, this.toString()) }
-
+    public readonly type: StatusType = MINE_HAZARD
 
     protected plug({ battle, unit }: UnitContext): void {
         this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
@@ -49,6 +42,6 @@ export class Mined extends HazardStatus {
 export function placeMine(battle: Battle, owner: Unit, center: Vector2): Unit|null {
     return placeHazard(battle, owner, {
         sprite: "mine", name: "Mine", zone: { kind: "circle", center, radius: MINE_RADIUS },
-        hearts: Heart.many(TIME_HEART, MINE_ROUNDS), status: new Mined(),
+        hearts: Heart.many(TIME_HEART, MINE_ROUNDS), status: { type: MINE_HAZARD, level: 1 },
     })
 }

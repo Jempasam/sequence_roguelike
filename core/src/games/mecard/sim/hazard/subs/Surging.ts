@@ -6,7 +6,8 @@ import { STEP } from "../../card/subs/movement/Step"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { StatusType } from "../../status/Status"
+import { familyType } from "../../status/Status"
+import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
@@ -21,13 +22,15 @@ const WAVE_SIZE = 2
 const WAVE_PUSH = 1.5
 
 /** A wave. */
-export const SURGING = new StatusType("vague", HAZARD_TEXT, "neutral")
+export const SURGING = familyType("vague", HAZARD_TEXT, "neutral", { cloned: false })
+
+/** The kinds of wave, one for each element. */
+export const WAVES = elementVariants(
+    SURGING, element => `${SURGING} de ${element}`, (type, level) => new Surging(type, level),
+)
 
 /** A wave: a body touching it suffers an element, and is carried along. */
 export class Surging extends ContactHazard {
-
-
-    public readonly type = SURGING
 
 
     protected touch(ctx: UnitContext, body: Unit, target: Unit): void {
@@ -44,6 +47,6 @@ export function placeWave(
         sprite: "wave", name: "Vague", at, direction, tangible: false, size: WAVE_SIZE,
         hearts: Heart.many(TIME_HEART, WAVE_ROUNDS), cards: [STEP],
     })
-    if(body) battle.applyStatus(body, new Surging(element))
+    if(body) battle.applyStatus(body, WAVES.of(element), 1)
     return body
 }

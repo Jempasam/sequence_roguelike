@@ -1,11 +1,8 @@
-import type { Text } from "../../../../../semantic"
-import { colored } from "../../base/Rgba"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
+import type { ElementType } from "../../status/StatusVariants"
 import { HazardStatus } from "../Hazard"
-
-import { HAZARD_TEXT } from "./hazardText"
 
 /** How far apart two bodies may stand and still touch, in meters: a body stops a stride short of another. */
 const CONTACT_SLACK = 0.08
@@ -18,16 +15,15 @@ export abstract class ContactHazard extends HazardStatus {
 
 
     constructor(
-        /** The element whose negative it applies. */
-        public readonly element: Element,
+        public readonly type: ElementType,
+        level: number,
     ){
-        super()
+        super(level)
     }
 
 
-    public toString(): string { return `${this.type} de ${this.element}` }
-
-    public toSemString(): Text { return colored(HAZARD_TEXT, this.toString()) }
+    /** The element whose negative it applies. */
+    public get element(): Element { return this.type.element }
 
 
     /** What befalls a body touching it, for the unit that called it. */

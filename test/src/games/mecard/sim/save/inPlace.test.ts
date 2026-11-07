@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Burn, CardChain, loadBattle, planFor, Poison, Run } from "@game/core/mecard"
+import { BURN, CardChain, loadBattle, planFor, POISONED, Run } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
 
@@ -18,8 +18,8 @@ function planAll(battle: Battle): void {
 /** A battle with statuses on its units, which listen to it. */
 function burning(): Battle {
     const battle = firstBattle()
-    battle.applyStatus(battle.units[0], new Burn(2))
-    battle.applyStatus(battle.units[1], new Poison(2))
+    battle.applyStatus(battle.units[0], BURN, 2)
+    battle.applyStatus(battle.units[1], POISONED, 2)
     return battle
 }
 

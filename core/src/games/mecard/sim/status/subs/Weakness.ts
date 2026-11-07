@@ -9,15 +9,13 @@ import { StatusType } from "../Status"
 export const WEAKNESS_MALUS = 1
 
 /** A weakness: the blows hit softer. */
-export const WEAKENED = new StatusType("faiblesse", rgba(0.75, 0.6, 0.5), "negative")
+export const WEAKENED = new StatusType("faiblesse", rgba(0.75, 0.6, 0.5), "negative", level => new Weakness(level))
 
 /** Weakened: its strength lowered, so each of its blows takes less. */
 export class Weakness extends RoundStatus {
 
 
-    public readonly type = WEAKENED
-
-    public copy(): Weakness { return new Weakness(this.rounds) }
+    public readonly type: StatusType = WEAKENED
 
     protected plug({ unit }: UnitContext): Observer[] {
         const key = new ModifierKey("faiblesse")

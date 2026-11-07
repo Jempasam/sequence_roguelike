@@ -6,7 +6,8 @@ import { RANDOM_STEP } from "../../card/subs/body/BodyCards"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { StatusType } from "../../status/Status"
+import { familyType } from "../../status/Status"
+import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
@@ -21,13 +22,15 @@ const WHIRLWIND_STEPS = 4
 const WHIRLWIND_THROW = 1.5
 
 /** A whirlwind. */
-export const WHIRLING = new StatusType("tourbillon", HAZARD_TEXT, "neutral")
+export const WHIRLING = familyType("tourbillon", HAZARD_TEXT, "neutral", { cloned: false })
+
+/** The kinds of whirlwind, one for each element. */
+export const WHIRLWINDS = elementVariants(
+    WHIRLING, element => `${WHIRLING} de ${element}`, (type, level) => new Whirling(type, level),
+)
 
 /** A whirlwind: a body touching it is thrown away from it, and suffers an element. */
 export class Whirling extends ContactHazard {
-
-
-    public readonly type = WHIRLING
 
 
     protected touch(ctx: UnitContext, body: Unit, target: Unit): void {
@@ -46,6 +49,6 @@ export function placeWhirlwind(
         hearts: Heart.many(TIME_HEART, WHIRLWIND_ROUNDS),
         cards: new Array(WHIRLWIND_STEPS).fill(RANDOM_STEP),
     })
-    if(body) battle.applyStatus(body, new Whirling(element))
+    if(body) battle.applyStatus(body, WHIRLWINDS.of(element), 1)
     return body
 }

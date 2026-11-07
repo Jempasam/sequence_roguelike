@@ -3,7 +3,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { placeWave } from "../../hazard/subs/Surging"
-import { Slowness } from "../../status/subs/Slowness"
+import { Slowness, SLOWED } from "../../status/subs/Slowness"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
 
@@ -25,7 +25,7 @@ export class Water extends AbstractElement {
 
 
     public applyNegative({ battle }: UnitContext, target: Unit): void {
-        battle.applyStatus(target, new Slowness(WATER_SLOW))
+        battle.applyStatus(target, SLOWED, WATER_SLOW)
     }
 
     public applyPositive({ battle }: UnitContext, target: Unit): void {

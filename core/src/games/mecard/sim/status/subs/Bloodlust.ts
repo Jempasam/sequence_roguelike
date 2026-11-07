@@ -10,17 +10,15 @@ import { StatusType } from "../Status"
 export const BLOODLUST_STRIDE = 0.7
 
 /** A bloodlust: the unit goes on toward whoever is weakest. */
-export const BLOODLUST = new StatusType("soif de sang", rgba(0.85, 0.1, 0.2), "positive")
+export const BLOODLUST = new StatusType("soif de sang", rgba(0.85, 0.1, 0.2), "positive", level => new Bloodlust(level))
 
 /** Thirsting for blood: a step of the unit bringing it closer to the frailest enemy goes a stride further. */
 export class Bloodlust extends RoundStatus {
 
 
-    public readonly type = BLOODLUST
+    public readonly type: StatusType = BLOODLUST
 
     // Read over a whole step: a move is told stride by stride, and the stride it adds is no step of its own.
-    public copy(): Bloodlust { return new Bloodlust(this.rounds) }
-
     protected plug({ battle, unit }: UnitContext): Observer[] {
         let prey: Unit|null = null
         let distance = 0

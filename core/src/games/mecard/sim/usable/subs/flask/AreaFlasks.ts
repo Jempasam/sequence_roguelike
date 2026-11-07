@@ -29,8 +29,9 @@ export class SplashFlask extends AbstractUsable {
 
     protected act({ battle, unit }: UnitContext): void {
         const { end } = battle.ray(unit, FLASK_FLIGHT * unit.stats.throwRange.value)
+        const given = this.make()
         for(const other of battle.unitsIn({ kind: "circle", center: end, radius: FLASK_SPLASH }, unit)){
-            battle.applyStatus(other, this.make())
+            battle.applyStatus(other, given.type, given.level)
         }
     }
 }

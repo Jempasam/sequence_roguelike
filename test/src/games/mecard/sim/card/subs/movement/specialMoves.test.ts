@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    Arena, Battle, BOUNCE_DASH, HEAD_JUMP, Heart, HUNT, KNIGHT_MOVE, LEAP, RED_HEART, Rooted,
+    Arena, Battle, BOUNCE_DASH, HEAD_JUMP, Heart, HUNT, KNIGHT_MOVE, LEAP, RED_HEART, ROOTED,
     SHADOW_STEP, Vector2,
 } from "@game/core/mecard"
 
@@ -52,7 +52,7 @@ describe("LEAP", () => {
         const on = battle()
         const hero = unit(on, 3, 6)
         unit(on, 6, 1, { team: MONSTERS })
-        on.applyStatus(hero, new Rooted(2))
+        on.applyStatus(hero, ROOTED, 2)
         play(on, [[hero, chain(LEAP)]])
         expectAt(hero, 3, 6)
     })

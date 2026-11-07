@@ -11,7 +11,7 @@ export const CONCENTRATION_VISION = 1
 export const CONCENTRATION_RANGE = 0.25
 
 /** A concentration: the vision and the range grow with the rounds left. */
-export const CONCENTRATED = new StatusType("concentration", rgba(0.55, 0.85, 1), "positive")
+export const CONCENTRATED = new StatusType("concentration", rgba(0.55, 0.85, 1), "positive", level => new Concentration(level))
 
 /** Does the step a unit just played wait? */
 function waited({ unit }: UnitContext): boolean {
@@ -29,44 +29,34 @@ function onWait(ctx: UnitContext, gain: () => void): Observer {
 export class Concentration extends ScalingStatus {
 
 
-    public readonly type = CONCENTRATED
+    public readonly type: StatusType = CONCENTRATED
 
-    public copy(): Concentration { return new Concentration(this.rounds) }
-
-    protected gains(rounds: number): readonly StatGain[] {
+    protected gains(level: number): readonly StatGain[] {
         return [
-            { stat: stats => stats.aimRange, amount: CONCENTRATION_VISION * rounds },
-            { stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * CONCENTRATION_VISION * rounds },
+            { stat: stats => stats.aimRange, amount: CONCENTRATION_VISION * level },
+            { stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * CONCENTRATION_VISION * level },
         ]
     }
 
     protected override watch(ctx: UnitContext): Observer[] {
-        return [onWait(ctx, () => {
-            this.rounds++
-            this.refresh(this.rounds)
-        })]
+        return [onWait(ctx, () => this.setLevel(this.level + 1))]
     }
 }
 
 /** A fury held back: the strength grows with the rounds left. */
-export const FURIOUS = new StatusType("fureur contenue", rgba(1, 0.5, 0.2), "positive")
+export const FURIOUS = new StatusType("fureur contenue", rgba(1, 0.5, 0.2), "positive", level => new HeldFury(level))
 
 /** Furious: as much strength as rounds left, and a round more at each wait. */
 export class HeldFury extends ScalingStatus {
 
 
-    public readonly type = FURIOUS
+    public readonly type: StatusType = FURIOUS
 
-    public copy(): HeldFury { return new HeldFury(this.rounds) }
-
-    protected gains(rounds: number): readonly StatGain[] {
-        return [{ stat: stats => stats.strength, amount: rounds }]
+    protected gains(level: number): readonly StatGain[] {
+        return [{ stat: stats => stats.strength, amount: level }]
     }
 
     protected override watch(ctx: UnitContext): Observer[] {
-        return [onWait(ctx, () => {
-            this.rounds++
-            this.refresh(this.rounds)
-        })]
+        return [onWait(ctx, () => this.setLevel(this.level + 1))]
     }
 }

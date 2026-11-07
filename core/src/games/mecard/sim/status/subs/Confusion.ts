@@ -14,15 +14,13 @@ const WAYS: readonly Vector2[] = [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vecto
 })
 
 /** A confusion: the unit may face anywhere before a step. */
-export const CONFUSED = new StatusType("confusion", rgba(0.9, 0.5, 0.9), "negative")
+export const CONFUSED = new StatusType("confusion", rgba(0.9, 0.5, 0.9), "negative", level => new Confusion(level))
 
 /** Confused: before each of its steps, one chance in two to face one of the eight ways, drawn at random. */
 export class Confusion extends RoundStatus {
 
 
-    public readonly type = CONFUSED
-
-    public copy(): Confusion { return new Confusion(this.rounds) }
+    public readonly type: StatusType = CONFUSED
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.stepStarted.add(() => {

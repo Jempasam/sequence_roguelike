@@ -3,9 +3,9 @@ import type { PlugContext } from "../../../battle/Action"
 import { distanceToSegment } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
 import { meters } from "../../../battle/words"
-import { DemonEnergy } from "../../../status/subs/DemonEnergy"
-import { Bleeding } from "../../../status/subs/Wounds"
-import { Concentration } from "../../../status/subs/Calm"
+import { DEMONIC } from "../../../status/subs/DemonEnergy"
+import { BLEEDING } from "../../../status/subs/Wounds"
+import { CONCENTRATED } from "../../../status/subs/Calm"
 import { turnUnitsIn } from "../../../card/subs/tools/turning"
 import { shoveNow } from "../../../card/subs/tools/shoving"
 import { WAIT } from "../../../card/subs/movement/Wait"
@@ -170,7 +170,7 @@ export class ChippedBlade extends AbstractItem {
             armed = false
             // A blow at hand: what is hit from afar is a shot.
             if(target.position.distance(unit.position) > BLOW_REACH) return
-            battle.applyStatus(target, new Bleeding(1))
+            battle.applyStatus(target, BLEEDING, 1)
         }))
     }
 }
@@ -189,7 +189,7 @@ export class DemonFang extends AbstractItem {
 
 
     public init({ battle, unit, hold }: PlugContext): void {
-        hold(unit.killed.add(() => battle.applyStatus(unit, new DemonEnergy(1))))
+        hold(unit.killed.add(() => battle.applyStatus(unit, DEMONIC, 1)))
     }
 }
 
@@ -206,7 +206,7 @@ export class Rosary extends AbstractItem {
 
     public init({ battle, unit, hold }: PlugContext): void {
         hold(unit.stepEnded.add(() => {
-            if(unit.stepsPlayed[unit.stepsPlayed.length - 1] === WAIT.action) battle.applyStatus(unit, new Concentration(1))
+            if(unit.stepsPlayed[unit.stepsPlayed.length - 1] === WAIT.action) battle.applyStatus(unit, CONCENTRATED, 1)
         }))
     }
 }

@@ -1,6 +1,6 @@
 import { rgba } from "../../base/Rgba"
 import type { PlugContext } from "../../battle/Action"
-import { DemonEnergy } from "../../status/subs/DemonEnergy"
+import { DEMONIC } from "../../status/subs/DemonEnergy"
 import { AbstractProcess } from "../AbstractProcess"
 
 /** Weakening blows: each wound the unit takes opens another, an echo of the strength of the one who weakened it. */
@@ -33,6 +33,6 @@ export class Grievance extends AbstractProcess {
 
 
     public override init({ battle, unit, hold }: PlugContext): void {
-        hold(unit.hearts.onDamage.add(() => battle.applyStatus(unit, new DemonEnergy(1))))
+        hold(unit.hearts.onDamage.add(() => battle.applyStatus(unit, DEMONIC, 1)))
     }
 }

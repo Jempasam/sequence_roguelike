@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
 import {
     ANTIDOTE, Arena, Battle, BIG_BOTTLE, BOTTLE, COATED_BLADE, CONFUSED, CONFUSION, DISTILLATION, ENRAGED,
-    Heart, Poison, POISON, POISONED, POTION_LEVEL, POTION_RAIN, PUDDLE, RAGE, RAGE_FIT,
+    Heart, POISON, POISONED, POTION_LEVEL, POTION_RAIN, PUDDLE, RAGE, RAGE_FIT,
     RED_HEART, SLASH, SLOWED, SLOWNESS, STEP, THORN_HEART, THROWN_POTION, Vector2, VULNERABILITY,
-    Vulnerability, VULNERABLE, WAIT,
+    VULNERABLE, WAIT,
 } from "@game/core/mecard"
-import type { RoundStatus, StatusType, Unit } from "@game/core/mecard"
+import type { StatusType, Unit } from "@game/core/mecard"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
 
@@ -16,7 +16,7 @@ function sturdy(): Heart[] {
 
 /** The rounds a status of a kind has left on a unit, none when it holds none. */
 function roundsOf(unit: Unit, type: StatusType): number|undefined {
-    return (unit.statusOf(type) as RoundStatus|undefined)?.rounds
+    return unit.statusOf(type)?.level
 }
 
 // --- Tests ---
@@ -43,7 +43,7 @@ describe("the level of a potion", () => {
         const on = battle()
         const drinker = unit(on, 3, 5)
         unit(on, 0.5, 0.5, { team: MONSTERS })
-        on.applyStatus(drinker, new Poison(3))
+        on.applyStatus(drinker, POISONED, 3)
         play(on, [[drinker, chain(BOTTLE, ANTIDOTE, POISON)]])
         expect(drinker.statusOf(POISONED)).toBeUndefined()
     })
@@ -54,7 +54,7 @@ describe("Poison", () => {
         const on = battle()
         const target = unit(on, 3, 5, { team: MONSTERS, hearts: sturdy() })
         const player = unit(on, 0.5, 0.5)
-        on.applyStatus(target, new Poison(3))
+        on.applyStatus(target, POISONED, 3)
         const lost: number[] = []
         for(let round = 0; round < 4; round++){
             const before = target.life
@@ -69,7 +69,7 @@ describe("Vulnerability", () => {
     test("a wound → a half more, once", () => {
         const on = battle()
         const target = unit(on, 3, 5, { team: MONSTERS, hearts: sturdy() })
-        on.applyStatus(target, new Vulnerability(2))
+        on.applyStatus(target, VULNERABLE, 2)
         target.hearts.damage(2, "physical", null)
         expect(16 - target.life).toBe(3)
     })
@@ -79,8 +79,8 @@ describe("Vulnerability", () => {
         const thorny = () => [...sturdy(), ...Heart.many(THORN_HEART, 2)]
         const a = unit(on, 3, 5, { hearts: thorny() })
         const b = unit(on, 3, 4, { team: MONSTERS, hearts: thorny() })
-        on.applyStatus(a, new Vulnerability(2))
-        on.applyStatus(b, new Vulnerability(2))
+        on.applyStatus(a, VULNERABLE, 2)
+        on.applyStatus(b, VULNERABLE, 2)
         b.hearts.damage(2, "physical", a)
         expect(a.alive && b.alive).toBe(true)
     })

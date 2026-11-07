@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest"
 import {
-    BLEED, BLOCK, BLEEDING, BLUE_HEART, Bleeding, Concentration, CONCENTRATED, CONCENTRATION, COOL_HEAD,
-    EXPLOSIVE_HEART, EXPLOSIVE_SHELL, FRAGILE, Fragility, FRAGILITY_CARD, GRUDGE, HEMORRHAGE, MARK_CARD, POISONED, Poison, RAMPART, SOUL_LINKED, SoulLink,
-    SOUL_SHIELDED, SoulShield, SUCTION, WAIT, WEAKENING_BLOWS, DEMONIC,
+    BLEED, BLOCK, BLEEDING, BLUE_HEART, Concentration, CONCENTRATED, CONCENTRATION, COOL_HEAD,
+    EXPLOSIVE_HEART, EXPLOSIVE_SHELL, FRAGILE, FRAGILITY_CARD, GRUDGE, HEMORRHAGE, MARK_CARD, POISONED, RAMPART, SOUL_LINKED,
+    SOUL_SHIELDED, SUCTION, WAIT, WEAKENING_BLOWS, DEMONIC,
 } from "@game/core/mecard"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../../../fixtures"
@@ -43,8 +43,8 @@ describe("soul bonds", () => {
         const on = battle()
         const a = unit(on, 2, 2)
         const b = unit(on, 5, 5, { team: MONSTERS })
-        on.applyStatus(a, new SoulLink(2))
-        on.applyStatus(b, new SoulLink(2))
+        on.applyStatus(a, SOUL_LINKED, 2)
+        on.applyStatus(b, SOUL_LINKED, 2)
         a.hearts.damage(2, "physical", null)
         expect(a.life).toBe(2)
         expect(b.life).toBe(2)
@@ -55,8 +55,8 @@ describe("soul bonds", () => {
         const on = battle()
         const a = unit(on, 2, 2)
         const b = unit(on, 5, 5, { team: MONSTERS })
-        on.applyStatus(a, new SoulShield(2))
-        on.applyStatus(b, new SoulShield(2))
+        on.applyStatus(a, SOUL_SHIELDED, 2)
+        on.applyStatus(b, SOUL_SHIELDED, 2)
         a.hearts.damage(2, "physical", null)
         expect(a.life).toBe(3)
         expect(b.life).toBe(3)
@@ -81,7 +81,7 @@ describe("bleeding", () => {
         const on = battle()
         const sucker = unit(on, 3.5, 3.5)
         const foe = unit(on, 3.5, 6, { team: MONSTERS })
-        on.applyStatus(foe, new Bleeding(3))
+        on.applyStatus(foe, BLEEDING, 3)
         play(on, [[sucker, chain(SUCTION)]])
         expect(foe.life).toBe(3)
         expect(foe.statuses.has(BLEEDING)).toBe(true)
@@ -94,10 +94,10 @@ describe("bleeding", () => {
         const given = statusesGiven(on)
         play(on, [[hero, chain(BLEED)]])
         expect(given).toContain(BLEEDING)
-        on.applyStatus(foe, new Bleeding(2))
+        on.applyStatus(foe, BLEEDING, 2)
         play(on, [[hero, chain(HEMORRHAGE)]])
         // Doubled to 4, then one round gone: 3 left.
-        expect((foe.statuses.get(BLEEDING) as Bleeding).rounds).toBe(3)
+        expect(foe.statuses.get(BLEEDING)?.level).toBe(3)
     })
 })
 
@@ -120,7 +120,7 @@ describe("marks and fragility", () => {
         const given = statusesGiven(on)
         play(on, [[hero, chain(FRAGILITY_CARD)]])
         expect(given).toContain(FRAGILE)
-        on.applyStatus(foe, new Fragility(2))
+        on.applyStatus(foe, FRAGILE, 2)
         foe.hearts.damage(1, "physical", hero)
         expect(foe.life).toBe(2)
     })
@@ -142,7 +142,7 @@ describe("concentration", () => {
         const on = battle()
         const hero = unit(on, 3.5, 5)
         unit(on, 1, 1, { team: MONSTERS })
-        on.applyStatus(hero, new Poison(5))
+        on.applyStatus(hero, POISONED, 5)
         const given = statusesGiven(on)
         play(on, [[hero, chain(COOL_HEAD)]])
         expect(hero.statuses.has(POISONED)).toBe(false)

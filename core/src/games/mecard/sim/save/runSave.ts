@@ -14,7 +14,7 @@ import { saveTravel } from "./travelSave"
 import type { TravelSave } from "./travelSave"
 
 /** The version of the shape of a run saved, raised whenever it changes, so an old one is refused clearly. */
-export const RUN_SAVE_VERSION = 1
+export const RUN_SAVE_VERSION = 2
 
 /** A character of the party, written down as a unit of a battle is. */
 export interface SavedHero {

@@ -1,7 +1,7 @@
 import type { Observer } from "../../sim/base/Observable"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
-import { Possessed, POSSESSED } from "../../sim/status/subs/Possessed"
+import { POSSESSED } from "../../sim/status/subs/Possessed"
 
 import { BattleHost } from "../battle/BattleHost"
 import { JOIN_TOPIC, PLAN_TOPIC, SEAT_TOPIC } from "../SyncChannel"
@@ -180,7 +180,7 @@ export class RunHost {
         for(const unit of battle.units){
             if(!this.isGuests(unit) || unit.controller !== "bot") continue
             battle.control(unit, "player")
-            battle.applyStatus(unit, new Possessed())
+            battle.applyStatus(unit, POSSESSED, 1)
             battle.reshuffle(unit)
             this.#handed.add(unit.name)
         }

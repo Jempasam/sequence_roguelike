@@ -4,7 +4,7 @@ import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit, UnitStats } from "../../../battle/Unit"
-import { DemonEnergy } from "../../../status/subs/DemonEnergy"
+import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { blowDamage, meters } from "../../../battle/words"
 import { Rarity } from "../../Rarity"
 
@@ -152,7 +152,7 @@ export class DemonicStrikeCard extends BlowCard {
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         const hit = super.land(battle, unit, area)
-        if(hit.length > 0) battle.applyStatus(unit, new DemonEnergy(hit.length))
+        if(hit.length > 0) battle.applyStatus(unit, DEMONIC, hit.length)
         return hit
     }
 

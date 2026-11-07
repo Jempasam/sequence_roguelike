@@ -36,7 +36,7 @@ export class Fire extends AbstractElement {
 
 
     public applyNegative({ battle }: UnitContext, target: Unit): void {
-        battle.applyStatus(target, new Burn(FIRE_BURN))
+        battle.applyStatus(target, BURN, FIRE_BURN)
     }
 
     public applyPositive({ battle }: UnitContext, target: Unit): void {

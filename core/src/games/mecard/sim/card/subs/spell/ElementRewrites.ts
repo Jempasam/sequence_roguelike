@@ -4,7 +4,7 @@ import type { Element } from "../../../element/Element"
 import { reaction } from "../../../element/reactions"
 import { Echo } from "../../../element/subs/Echo"
 import { Ritual } from "../../../process/subs/Ritual"
-import { GrandRitual } from "../../../status/subs/GrandRitual"
+import { ritualType } from "../../../status/subs/GrandRitual"
 import type { Card, RewriteSpot } from "../../Card"
 import { ELEMENT } from "../../CardType"
 import type { Rewrite } from "../../CardType"
@@ -97,7 +97,7 @@ export const GRAND_RITUAL_CARD = new RewriteCard("Grand rituel", [
     "Fin de préparation : garde l'élément à sa droite pendant ", counted(GRAND_RITUAL_ROUNDS, "round"), ". Un Écho s'y mêle.",
 ], Rarity.EPIC, keeping, ({ battle, unit, spot }) => {
     const element = elementOf(spot.next)
-    if(element) battle.applyStatus(unit, new GrandRitual(element, GRAND_RITUAL_ROUNDS))
+    if(element) battle.applyStatus(unit, ritualType(element), GRAND_RITUAL_ROUNDS)
 })
 
 /** An element meeting the ritual going on, when it plays: what they give as they react. */

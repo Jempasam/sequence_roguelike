@@ -16,7 +16,7 @@ import { kitEntry } from "./KitEntry"
 import { upgradeEntry } from "./UpgradeEntry"
 import { KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../sim/run/Run"
 import { HEART_KINDS } from "../../sim/save/catalogNames"
-import { STATUS_TYPES } from "../../sim/status/statusTypes"
+import { STATUS_FAMILIES, STATUS_TYPES } from "../../sim/status/statusTypes"
 import { usableText, described } from "../../sim/halt/subs/shown"
 import { cardsOption, unitHead } from "../hud/ChoiceOptions"
 import { heartsRow } from "../hud/HeartView"
@@ -105,7 +105,7 @@ export function sections(look: LibraryLook): Section[] {
         },
         {
             title: "Effets",
-            entries: () => STATUS_TYPES.map(type => {
+            entries: () => [...STATUS_TYPES, ...STATUS_FAMILIES].map(type => {
                 const polarity = { negative: "négatif", positive: "positif", neutral: "neutre" }[type.polarity]
                 const text = concat(type, " : effet ", polarity, ".")
                 const view = cardsOption(theme, [], null, { head: new Label(theme, type.name, { color: engineColor(type.color) }) })

@@ -9,15 +9,13 @@ import { StatusType } from "../Status"
 export const SLOWNESS_FACTOR = 0.5
 
 /** A slowness: the moves go shorter. */
-export const SLOWED = new StatusType("lenteur", rgba(0.5, 0.6, 0.9), "negative")
+export const SLOWED = new StatusType("lenteur", rgba(0.5, 0.6, 0.9), "negative", level => new Slowness(level))
 
 /** Slowed: its agility halved, so each of its moves goes half as far. */
 export class Slowness extends RoundStatus {
 
 
-    public readonly type = SLOWED
-
-    public copy(): Slowness { return new Slowness(this.rounds) }
+    public readonly type: StatusType = SLOWED
 
     protected plug({ unit }: UnitContext): Observer[] {
         const key = new ModifierKey("lenteur")

@@ -1,5 +1,3 @@
-import type { Text } from "../../../../../semantic"
-import { colored } from "../../base/Rgba"
 import type { UnitContext } from "../../battle/Action"
 import { touches } from "../../battle/Area"
 import type { Area } from "../../battle/Area"
@@ -8,31 +6,35 @@ import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { StatusType } from "../../status/Status"
+import { familyType } from "../../status/Status"
+import { elementVariants } from "../../status/StatusVariants"
+import type { ElementType } from "../../status/StatusVariants"
 import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
 
 /** Ground on fire. */
-export const BURNING_GROUND = new StatusType("sol en feu", HAZARD_TEXT, "neutral")
+export const BURNING_GROUND = familyType("sol en feu", HAZARD_TEXT, "neutral", { cloned: false })
+
+/** The kinds of ground on fire, one for each element. */
+export const BURNING_GROUNDS = elementVariants(
+    BURNING_GROUND, element => `${BURNING_GROUND} de ${element}`, (type, level) => new BurningGround(type, level),
+)
 
 /** Ground on fire: each unit playing a step on it suffers the negative of an element. */
 export class BurningGround extends HazardStatus {
 
 
-    public readonly type = BURNING_GROUND
-
     constructor(
-        /** The element whose negative it applies. */
-        public readonly element: Element,
+        public readonly type: ElementType,
+        level: number,
     ){
-        super()
+        super(level)
     }
 
 
-    public toString(): string { return `${BURNING_GROUND} de ${this.element}` }
-
-    public toSemString(): Text { return colored(HAZARD_TEXT, this.toString()) }
+    /** The element whose negative it applies. */
+    public get element(): Element { return this.type.element }
 
 
     protected plug({ battle, unit }: UnitContext): void {
@@ -50,6 +52,6 @@ export function placeBurningGround(
 ): Unit|null {
     return placeHazard(battle, owner, {
         sprite: "fire", name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
-        status: new BurningGround(element),
+        status: { type: BURNING_GROUNDS.of(element), level: 1 },
     })
 }

@@ -10,7 +10,9 @@ import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
-import { StatusType } from "../../status/Status"
+import { familyType } from "../../status/Status"
+import { doseVariants } from "../../status/StatusVariants"
+import type { DoseType } from "../../status/StatusVariants"
 import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
@@ -22,30 +24,35 @@ export const PUDDLE_ROUNDS = 3
 export const PUDDLE_RADIUS = 1
 
 /** A puddle of a potion. */
-export const PUDDLE_HAZARD = new StatusType("flaque", HAZARD_TEXT, "neutral")
+export const PUDDLE_HAZARD = familyType("flaque", HAZARD_TEXT, "neutral", { cloned: false })
+
+/** The kinds of puddle, one for each dose. */
+export const PUDDLES = doseVariants(
+    PUDDLE_HAZARD, dose => `${PUDDLE_HAZARD} de ${dose.potion}`, (type, level) => new Puddle(type, level),
+)
 
 /**
  * A puddle of a potion: it pours its potion on each unit stepping into it, then at the end of each round on
- * every unit standing in it. Its body counts its rounds with its time hearts.
+ * every unit standing in it, at its level. Its body counts its rounds with its time hearts.
  */
 export class Puddle extends HazardStatus {
 
 
-    public readonly type = PUDDLE_HAZARD
-
     constructor(
-        public readonly dose: Dose,
-
-        /** The level it pours its potion at. */
-        public readonly level: number,
+        public readonly type: DoseType,
+        level: number,
     ){
-        super()
+        super(level)
     }
 
 
-    public toString(): string { return `flaque de ${this.dose.potion}` }
+    /** The potion it pours. */
+    public get dose(): Dose { return this.type.dose }
 
-    public toSemString(): Text { return colored(this.dose.potion.color, this.toString()) }
+    /** The level it pours the potion at: its level, turned around for an antidote. */
+    public get poured(): number { return this.dose.sign * this.level }
+
+    public override toSemString(): Text { return colored(this.dose.potion.color, this.toString()) }
 
 
     protected plug({ battle, unit }: UnitContext): void {
@@ -54,12 +61,12 @@ export class Puddle extends HazardStatus {
         this.hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             if(touches(zone(), to, mover.radius) && !touches(zone(), from, mover.radius)){
-                pour(battle, this.dose, mover, this.level)
+                pour(battle, this.dose, mover, this.poured)
             }
         }))
         this.hold(battle.roundEnding.add(() => {
             if(!unit.alive) return
-            for(const target of battle.unitsIn(zone())) pour(battle, this.dose, target, this.level)
+            for(const target of battle.unitsIn(zone())) pour(battle, this.dose, target, this.poured)
         }))
     }
 }
@@ -72,6 +79,6 @@ export function placePuddle(
         sprite: "puddle", name: `Flaque de ${dose.potion}`,
         zone: { kind: "circle", center, radius: PUDDLE_RADIUS },
         hearts: Heart.many(TIME_HEART, rounds),
-        status: new Puddle(dose, level),
+        status: { type: PUDDLES.of(dose), level: Math.abs(level) },
     })
 }

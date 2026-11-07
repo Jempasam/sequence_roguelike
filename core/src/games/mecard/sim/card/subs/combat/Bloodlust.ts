@@ -1,6 +1,6 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { counted, meters } from "../../../battle/words"
-import { Bloodlust, BLOODLUST_STRIDE } from "../../../status/subs/Bloodlust"
+import { BLOODLUST, BLOODLUST_STRIDE } from "../../../status/subs/Bloodlust"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
@@ -16,7 +16,7 @@ export const BLOODLUST_CARD = new ActionCard("Soif de sang", [
     "t'emporte de ", meters(BLOODLUST_STRIDE), " de plus devant toi.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
-        battle.applyStatus(unit, new Bloodlust(BLOODLUST_ROUNDS))
+        battle.applyStatus(unit, BLOODLUST, BLOODLUST_ROUNDS)
         yield* hold(battle, SHORT_TIME, [label(unit.position, "soif de sang", NOTE_COLOR)])
     },
     preview: ({ pose }) => still(pose, label(pose.position, "soif de sang", NOTE_COLOR)),

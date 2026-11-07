@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    Add, AIM, Arena, Battle, BLINK, Burn, Carried, CLONE, DODGE_CARD, FIRE_FLASK, FusionCard, GLASS_HEART,
+    Add, AIM, Arena, Battle, BLINK, BURN, Carried, CLONE, DODGE_CARD, FIRE_FLASK, FusionCard, GLASS_HEART,
     HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, SHIELD_HEART, SHOT, SLASH, STEP,
     STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURN_RIGHT, UNIT_RADIUS, Vector2, WAIT,
 } from "@game/core/mecard"
@@ -368,7 +368,7 @@ describe("Steps of others", () => {
         const target = unit(on, 3, 3)
         unit(on, 0, 0, { team: MONSTERS })
         on.startRound()
-        on.applyStatus(target, new Burn(1))
+        on.applyStatus(target, BURN, 1)
         play(on, [])
         expect(target.life).toBe(3)
         expect(target.statuses.size).toBe(0)

@@ -28,7 +28,8 @@ export class StatusElixir extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        battle.applyStatus(unit, this.make())
+        const given = this.make()
+        battle.applyStatus(unit, given.type, given.level)
     }
 }
 

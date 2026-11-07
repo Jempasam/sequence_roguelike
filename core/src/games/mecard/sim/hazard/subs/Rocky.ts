@@ -5,7 +5,8 @@ import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
-import { StatusType } from "../../status/Status"
+import { familyType } from "../../status/Status"
+import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
@@ -14,13 +15,15 @@ import { HAZARD_TEXT } from "./hazardText"
 const BOULDER_HEARTS = 2
 
 /** A boulder. */
-export const ROCKY = new StatusType("rocher", HAZARD_TEXT, "neutral")
+export const ROCKY = familyType("rocher", HAZARD_TEXT, "neutral", { cloned: false })
+
+/** The kinds of boulder, one for each element. */
+export const BOULDERS = elementVariants(
+    ROCKY, element => `${ROCKY} de ${element}`, (type, level) => new Rocky(type, level),
+)
 
 /** A boulder: a body touching it suffers an element. */
 export class Rocky extends ContactHazard {
-
-
-    public readonly type = ROCKY
 
 
     protected touch(ctx: UnitContext, _body: Unit, target: Unit): void {
@@ -34,6 +37,6 @@ export function placeBoulder(
 ): Unit|null {
     const hearts = Heart.many(RED_HEART, BOULDER_HEARTS + owner.stats.summon.value)
     const body = battle.summon(owner, "rock", "Rocher", at, hearts, direction)
-    if(body) battle.applyStatus(body, new Rocky(element))
+    if(body) battle.applyStatus(body, BOULDERS.of(element), 1)
     return body
 }

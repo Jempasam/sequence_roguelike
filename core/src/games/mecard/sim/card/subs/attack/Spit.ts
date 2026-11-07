@@ -2,7 +2,7 @@ import { rgba } from "../../../base/Rgba"
 import { MOVE_WIDTH } from "../../../battle/previewColors"
 import { meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
-import { Slowness } from "../../../status/subs/Slowness"
+import { Slowness, SLOWED } from "../../../status/subs/Slowness"
 
 import { ActionCard } from "../ActionCard"
 import { fly } from "../tools/bolt"
@@ -42,7 +42,7 @@ export class SpitCard extends ActionCard {
             use: function* ({ battle, unit }){
                 const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value)
                 yield* fly(battle, unit.position, end, SPIT_COLOR)
-                if(hit) battle.applyStatus(hit, new Slowness(rounds))
+                if(hit) battle.applyStatus(hit, SLOWED, rounds)
             },
             preview: ({ battle, unit, pose }) => {
                 const { end } = battle.ray(unit, range * unit.stats.throwRange.value, pose)

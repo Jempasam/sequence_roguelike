@@ -4,7 +4,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { Ritual } from "../../process/subs/Ritual"
-import { GRAND_RITUAL, GrandRitual } from "../../status/subs/GrandRitual"
+import { ritualElementOf } from "../../status/subs/GrandRitual"
 import type { Element } from "../Element"
 import { reaction } from "../reactions"
 
@@ -13,8 +13,10 @@ export function ritualOf(unit: Unit): Element|null {
     const rituals = unit.processes.filter(each => each instanceof Ritual)
     const last = rituals[rituals.length - 1]
     if(last instanceof Ritual) return last.element
-    const status = unit.statusOf(GRAND_RITUAL)
-    return status instanceof GrandRitual ? status.element : null
+    // Rituals of other elements may be held together: the last one given is the one heard.
+    let heard: Element|null = null
+    for(const type of unit.statuses.keys()) heard = ritualElementOf(type) ?? heard
+    return heard
 }
 
 /**

@@ -6,6 +6,7 @@
  */
 
 export * from "./Attribute"
+export * from "./Codec"
 export * from "./Observable"
 export * from "./Rgba"
 export * from "./Rng"

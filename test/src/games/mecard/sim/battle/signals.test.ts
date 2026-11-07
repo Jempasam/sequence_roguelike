@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    Add, BLINK, Burn, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART, TICKS_PER_SECOND,
+    Add, BLINK, BURN, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART, TICKS_PER_SECOND,
     Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
@@ -118,7 +118,7 @@ describe("Battle signals", () => {
         const burnt = unit(on, 3, 3)
         unit(on, 0, 0, { team: MONSTERS })
         on.startRound()
-        on.applyStatus(burnt, new Burn(1))
+        on.applyStatus(burnt, BURN, 1)
         const told = heard(on)
         play(on, [[burnt, chain(WAIT)]])
         const notice = told.indexOf("notifyStatus")

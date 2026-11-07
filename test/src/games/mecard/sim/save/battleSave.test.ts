@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import {
-    CARDS, BARREL, BATTLE_SAVE_VERSION, Burn, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
-    HEART_KINDS, ITEMS, loadBattle, MergedCard, planFor, POISON, Poison, POTIONS, PUDDLE, RandomCard,
-    REPEAT_2, Run, saveBattle, SECRET_CARD, SLOWNESS, STATUS_CODECS, STEP, THRUST, UNSTABLE_THRUST, USABLES,
-    Vector2, Vulnerability, WATER, WHETSTONE,
+    CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
+    HEART_KINDS, ITEMS, loadBattle, MergedCard, planFor, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
+    REPEAT_2, Run, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
+    USABLES,
+    Vector2, VULNERABLE, WATER, WHETSTONE,
 } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
@@ -67,15 +68,16 @@ describe("saveBattle", () => {
         const battle = firstBattle()
         const save = saveBattle(battle, { secret: true })
         for(const unit of save.units){
-            expect(unit.decks.flatMap(deck => deck.pile).every(name => name === SECRET_CARD.name)).toBe(true)
+            const secret = savedCard(SECRET_CARD)
+            expect(unit.decks.flatMap(deck => deck.pile).every(name => name === secret)).toBe(true)
         }
-        expect(save.units[0].hand).toEqual(battle.units[0].hand.map(card => card.name))
+        expect(save.units[0].hand).toEqual(battle.units[0].hand.map(savedCard))
     })
 
     test("statuses, items and stats changed → loaded back, plugged in again", () => {
         const battle = firstBattle()
         const [hero] = battle.units
-        battle.applyStatus(hero, new Burn(3))
+        battle.applyStatus(hero, BURN, 3)
         battle.equip(hero, WHETSTONE)
         hero.stats.chainSize.base = 6
         const loaded = loadBattle(saveBattle(battle))
@@ -106,7 +108,7 @@ describe("saveBattle, fusions and usables", () => {
     test("a merged card, a draw and a fusion of the catalog in hand → loaded back as what they were", () => {
         const battle = started(new Run(3))
         const [hero] = battle.units
-        hero.hand.push(new MergedCard(STEP, THRUST), new RandomCard(FIRE, WATER), UNSTABLE_THRUST)
+        hero.hand.push(new MergedCard([STEP, THRUST]), new RandomCard(FIRE, WATER), UNSTABLE_THRUST)
         const save = saveBattle(battle)
         expect(JSON.stringify(saveBattle(loadBattle(save)))).toBe(JSON.stringify(save))
         const [merged, drawn, fused] = loadBattle(save).units[0].hand.slice(-3)
@@ -170,8 +172,8 @@ describe("summoned bodies, potions and puddles", () => {
         // In the open, facing the right wall, so there is room for what it throws.
         hero.position = new Vector2(1, 3.5)
         hero.direction = Vector2.RIGHT
-        original.applyStatus(hero, new Poison(2))
-        original.applyStatus(hero, new Vulnerability(3))
+        original.applyStatus(hero, POISONED, 2)
+        original.applyStatus(hero, VULNERABLE, 3)
         const cards = [COIN, BARREL, POISON, PUDDLE, SLOWNESS]
         hero.stats.chainSize.base = cards.length
         hero.hand.push(...cards)
@@ -197,7 +199,7 @@ describe("summoned bodies, potions and puddles", () => {
 
 describe("catalog names", () => {
     test("each potion and kind of status → a name of its own", () => {
-        for(const names of [POTIONS.map(each => each.name), STATUS_CODECS.map(each => each.type.name)]){
+        for(const names of [POTIONS.map(each => each.name), STATUS_TYPES.map(each => each.name)]){
             expect(new Set(names).size).toBe(names.length)
         }
     })

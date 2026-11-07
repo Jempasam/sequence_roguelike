@@ -4,7 +4,7 @@ import type { UnitContext } from "../../battle/Action"
 import { lineEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
 import { damage, HeartCount, meters } from "../../battle/words"
-import { Poison } from "../../status/subs/Poison"
+import { Poison, POISONED } from "../../status/subs/Poison"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
 
@@ -41,7 +41,7 @@ export class Plant extends AbstractElement {
 
 
     public applyNegative({ battle }: UnitContext, target: Unit): void {
-        battle.applyStatus(target, new Poison(PLANT_POISON))
+        battle.applyStatus(target, POISONED, PLANT_POISON)
     }
 
     public applyPositive({ unit }: UnitContext, target: Unit): void {

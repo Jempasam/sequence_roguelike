@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    AURA, BRAMBLES, BURN, Burn, CONJURATION, CROSSED_SPELL, ECHO, FIRE, FIRE_ELEMENT, GRAND_RITUAL_CARD,
+    AURA, BRAMBLES, BURN, CONJURATION, CROSSED_SPELL, ECHO, FIRE, FIRE_ELEMENT, GRAND_RITUAL_CARD,
     Heart,
     LAVA, LIGHTNING, LIGHTNING_ELEMENT, loadBattle, MUD, PLANT, POISONED, reaction, REACTION, RED_HEART,
-    RITUAL, ROOTED, Rooted,
+    RITUAL, ROOTED,
     saveBattle, SHIELD_HEART, SLOWED, SMALL_SPELL, SPELL, STEAM, STEP, STONE, STONE_ELEMENT, STORM, WAIT,
     WATER, WATER_ELEMENT,
     WIND, WIND_ELEMENT, Vector2,
@@ -87,7 +87,7 @@ describe("AURA", () => {
         const on = battle()
         const hero = unit(on, 3, 5)
         unit(on, 1, 1, { team: MONSTERS })
-        on.applyStatus(hero, new Burn(3))
+        on.applyStatus(hero, BURN, 3)
         on.startRound()
         hero.hand.push(AURA, FIRE, WAIT)
         on.commit(hero, chain(AURA, FIRE, WAIT))
@@ -103,7 +103,7 @@ describe("AURA", () => {
         const on = battle()
         const hero = unit(on, 3, 5)
         unit(on, 1, 1, { team: MONSTERS })
-        on.applyStatus(hero, new Rooted(9))
+        on.applyStatus(hero, ROOTED, 9)
         play(on, [[hero, chain(AURA, WATER)]])
         expect(hero.statusOf(ROOTED)).toBeUndefined()
     })

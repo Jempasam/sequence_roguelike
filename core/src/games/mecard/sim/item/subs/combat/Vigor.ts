@@ -35,9 +35,7 @@ export class Hourglass extends AbstractItem {
             if(round % 2 !== 1) return
             for(const status of [...unit.statuses.values()]){
                 if(!(status instanceof RoundStatus) || status.type.polarity !== "positive") continue
-                const back = status.copy()
-                back.rounds = 1
-                battle.applyStatus(unit, back)
+                battle.applyStatus(unit, status.type, 1)
             }
         }))
     }

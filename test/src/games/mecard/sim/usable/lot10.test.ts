@@ -3,7 +3,7 @@ import {
     BATTERY, BLOOD_FLASK, BLUE_BRACELET, BLUE_FLASK, BLUE_HEART, BOW_MODULE, BLEEDING, Carried, CALM_INFUSION,
     CONCENTRATED, COOL_SYRUP, DEMON_ELIXIR, DEMONIC, ENGINE_OIL, EXPLOSIVE_CORE, EXPLOSIVE_HEART, FISHING, FISHING_CARD,
     FOLDING_TURRET, FRAGILE, FRAGILITY_FLASK, FURIOUS, FURY_ELIXIR, IMPROVISED_ROBOT, INFLATABLE_DECOY, LEATHER_BAG,
-    MAGIC_WATCH, Poison, POISONED, SHARPENING_STONE, THRUST, THRUSTERS, TURRET, WHISTLE, WRENCH, STEP,
+    MAGIC_WATCH, POISONED, SHARPENING_STONE, THRUST, THRUSTERS, TURRET, WHISTLE, WRENCH, STEP,
 } from "@game/core/mecard"
 import type { Card, Unit, Usable } from "@game/core/mecard"
 
@@ -40,7 +40,7 @@ describe("elixirs", () => {
             expect(given).toContain(type)
         }
         const { on, hero, carried } = carrying(COOL_SYRUP)
-        on.applyStatus(hero, new Poison(3))
+        on.applyStatus(hero, POISONED, 3)
         used(on, hero, carried)
         expect(hero.statuses.has(POISONED)).toBe(false)
         expect(on.units.includes(hero)).toBe(true)

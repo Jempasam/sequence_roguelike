@@ -9,23 +9,23 @@ import { KITS } from "../sim/catalog/kits"
 import { MONSTERS } from "../sim/catalog/monsters"
 import { Heart, insertHeart } from "../sim/heart/Heart"
 import { HEART_KINDS } from "../sim/save/catalogNames"
-import { BLOODLUST, Bloodlust } from "../sim/status/subs/Bloodlust"
+import { BLOODLUST } from "../sim/status/subs/Bloodlust"
 import { deckName } from "../sim/run/deckName"
 import { allCards, firstDeck, hero } from "../sim/run/Hero"
 import { FLOOR_TYPES } from "../sim/catalog/floors"
 import { allHalts, layableHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
-import { Burn, BURN } from "../sim/status/subs/Burn"
-import { CONFUSED, Confusion } from "../sim/status/subs/Confusion"
-import { Dodge, DODGE } from "../sim/status/subs/Dodge"
-import { FRENZIED, Frenzy } from "../sim/status/subs/Frenzy"
-import { Poison, POISONED } from "../sim/status/subs/Poison"
-import { ENRAGED, Rage } from "../sim/status/subs/Rage"
-import { Rooted, ROOTED } from "../sim/status/subs/Rooted"
-import { SLOWED, Slowness } from "../sim/status/subs/Slowness"
-import { Vulnerability, VULNERABLE } from "../sim/status/subs/Vulnerability"
-import { WEAKENED, Weakness } from "../sim/status/subs/Weakness"
+import { BURN } from "../sim/status/subs/Burn"
+import { CONFUSED } from "../sim/status/subs/Confusion"
+import { DODGE } from "../sim/status/subs/Dodge"
+import { FRENZIED } from "../sim/status/subs/Frenzy"
+import { POISONED } from "../sim/status/subs/Poison"
+import { ENRAGED } from "../sim/status/subs/Rage"
+import { ROOTED } from "../sim/status/subs/Rooted"
+import { SLOWED } from "../sim/status/subs/Slowness"
+import { VULNERABLE } from "../sim/status/subs/Vulnerability"
+import { WEAKENED } from "../sim/status/subs/Weakness"
 import type { Attribute } from "../sim/base/Attribute"
 import type { Battle } from "../sim/battle/Battle"
 import type { Controller, Unit } from "../sim/battle/Unit"
@@ -42,7 +42,7 @@ import type { PlaceType } from "../sim/run/PlaceType"
 import type { HaltType } from "../sim/halt/HaltType"
 import type { FloorType } from "../sim/floor/Floor"
 import type { Run } from "../sim/run/Run"
-import type { Status, StatusType } from "../sim/status/Status"
+import type { StatusType } from "../sim/status/Status"
 import { Rng } from "../sim/base/Rng"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, randomSeats } from "../sync/run/Seats"
 import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
@@ -156,29 +156,28 @@ const DEFAULT_HEAL = 2
 /** How many names a line of a list holds, so it stays within the console. */
 const NAMES_PER_LINE = 6
 
-/** A status a command puts on a unit: its kind, and how it is made from a number, which some ignore. */
+/** A status a command puts on a unit: its kind, and the level it takes when none is said. */
 interface StatusMaker {
     readonly type: StatusType
 
-    /** What the number stands for, none when the status takes none. */
+    /** What the level stands for, none when the status takes none. */
     readonly amount: string|null
     readonly fallback: number
-    make(amount: number): Status
 }
 
 /** The statuses a command puts on a unit. */
 const STATUS_MAKERS: readonly StatusMaker[] = [
-    { type: BURN, amount: "rounds", fallback: 2, make: rounds => new Burn(rounds) },
-    { type: ROOTED, amount: "étapes", fallback: 2, make: steps => new Rooted(steps) },
-    { type: DODGE, amount: null, fallback: 0, make: () => new Dodge() },
-    { type: POISONED, amount: "rounds", fallback: 2, make: rounds => new Poison(rounds) },
-    { type: SLOWED, amount: "rounds", fallback: 2, make: rounds => new Slowness(rounds) },
-    { type: WEAKENED, amount: "rounds", fallback: 2, make: rounds => new Weakness(rounds) },
-    { type: ENRAGED, amount: "rounds", fallback: 2, make: rounds => new Rage(rounds) },
-    { type: CONFUSED, amount: "rounds", fallback: 2, make: rounds => new Confusion(rounds) },
-    { type: VULNERABLE, amount: "rounds", fallback: 2, make: rounds => new Vulnerability(rounds) },
-    { type: FRENZIED, amount: "rounds", fallback: 2, make: rounds => new Frenzy(rounds) },
-    { type: BLOODLUST, amount: "rounds", fallback: 3, make: rounds => new Bloodlust(rounds) },
+    { type: BURN, amount: "rounds", fallback: 2 },
+    { type: ROOTED, amount: "étapes", fallback: 2 },
+    { type: DODGE, amount: null, fallback: 1 },
+    { type: POISONED, amount: "rounds", fallback: 2 },
+    { type: SLOWED, amount: "rounds", fallback: 2 },
+    { type: WEAKENED, amount: "rounds", fallback: 2 },
+    { type: ENRAGED, amount: "rounds", fallback: 2 },
+    { type: CONFUSED, amount: "rounds", fallback: 2 },
+    { type: VULNERABLE, amount: "rounds", fallback: 2 },
+    { type: FRENZIED, amount: "rounds", fallback: 2 },
+    { type: BLOODLUST, amount: "rounds", fallback: 3 },
 ]
 
 /** The name of a stat of a unit, as typed. */
@@ -389,7 +388,7 @@ function catalogCommands(): Record<string, Command<MecardContext, unknown>> {
             }),
             add: command("status add <unité> <statut> [nombre] : met un statut.",
                 [UNIT, STATUS, optional(whole("le nombre", 1), null)], (ctx, unit, maker, amount) => {
-                    ctx.battle.applyStatus(unit, maker.make(amount ?? maker.fallback))
+                    ctx.battle.applyStatus(unit, maker.type, amount ?? maker.fallback)
                     ctx.print(`${unit.name} : ${unit.statusOf(maker.type)?.toString() ?? "rien"}.`)
                     ctx.refresh()
                 }),

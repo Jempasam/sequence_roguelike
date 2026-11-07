@@ -3,7 +3,7 @@ import { damage as damageText, meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import { placeFlames } from "../../../hazard/subs/Flames"
-import { Burn } from "../../../status/subs/Burn"
+import { BURN, Burn } from "../../../status/subs/Burn"
 
 import { ActionCard } from "../ActionCard"
 import { FLAMES_BURN, FLAMES_DAMAGE } from "../body/BodyCards"
@@ -62,7 +62,7 @@ export class FlamethrowerCard extends ActionCard {
                 yield* sweep(battle, FLAME_TIME, share => [polygon(flames(unit, share), ELEMENTAL_COLOR)])
                 const area = flames(unit)
                 for(const target of battle.strike(unit, area, amount, "elemental")){
-                    battle.applyStatus(target, new Burn(burn))
+                    battle.applyStatus(target, BURN, burn)
                 }
                 placeFlames(battle, unit, area)
             },

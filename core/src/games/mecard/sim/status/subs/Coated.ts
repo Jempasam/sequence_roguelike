@@ -4,36 +4,44 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
-import { StatusType } from "../Status"
-import type { Status } from "../Status"
+import { BaseStatus } from "../BaseStatus"
+import { familyType } from "../Status"
+import type { StatusType } from "../Status"
+import { doseVariants } from "../StatusVariants"
+import type { DoseType } from "../StatusVariants"
 
 /** A coated blade: the blows pour a potion. */
-export const COATED = new StatusType("lame enduite", rgba(0.6, 0.85, 0.75), "positive")
+export const COATED = familyType("lame enduite", rgba(0.6, 0.85, 0.75), "positive")
 
-/** Coated: until the end of the round, each of its attacks that lands pours a potion on what it hit. */
-export class Coated implements Status {
+/** The kinds of coat, one for each dose. */
+export const COATS = doseVariants(COATED, dose => `${COATED} (${dose.potion})`, (type, level) => new Coated(type, level))
 
+/**
+ * Coated: until the end of the round, each of its attacks that lands pours its potion on what it hit, at its
+ * level, turned around when the dose is an antidote.
+ */
+export class Coated extends BaseStatus {
 
-    public readonly type = COATED
 
     constructor(
-        public readonly dose: Dose,
+        public readonly type: DoseType,
+        level: number,
+    ){
+        super(level)
+    }
 
-        /** The level it pours its potion at. */
-        public readonly level: number,
-    ){}
 
+    /** The potion it pours. */
+    public get dose(): Dose { return this.type.dose }
 
-    public copy(): Coated { return new Coated(this.dose, this.level) }
+    public override toString(): string { return `${COATED} (${this.dose.potion})` }
 
-    public toString(): string { return `${COATED} (${this.dose.potion})` }
-
-    public toSemString(): Text { return [COATED, " (", this.dose.potion, ")"] }
+    public override toSemString(): Text { return [COATED, " (", this.dose.potion, ")"] }
 
     public init({ battle, unit }: UnitContext): void {
         this.#observers.push(
-            unit.hitting.add(({ target }) => pour(battle, this.dose, target, this.level)),
-            battle.roundEnded.add(() => battle.removeStatus(unit, COATED)),
+            unit.hitting.add(({ target }) => pour(battle, this.dose, target, this.dose.sign * this.level)),
+            battle.roundEnded.add(() => battle.removeStatus(unit, this.type)),
         )
     }
 
@@ -42,9 +50,9 @@ export class Coated implements Status {
         this.#observers.length = 0
     }
 
-    /** A new coat replaces nothing: the first one stays. */
-    public merge(): void {}
-
 
     readonly #observers: Observer[] = []
 }
+
+/** The kind of a coat of a dose. */
+export function coatOf(dose: Dose): StatusType { return COATS.of(dose) }

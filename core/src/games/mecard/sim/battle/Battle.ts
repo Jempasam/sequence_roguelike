@@ -15,7 +15,7 @@ import type { Status, StatusType } from "../status/Status"
 import { battleStateOf, saveBattle } from "../save/battleSave"
 import type { BattleSave, SaveOptions } from "../save/battleSave"
 import { planFor } from "../ai/Bot"
-import { Fleeting } from "../status/subs/Fleeting"
+import { FLEETING } from "../status/subs/Fleeting"
 import { Vanishing } from "../process/subs/Vanishing"
 
 import type { Action, ActionRun, PlugContext, Pose } from "./Action"
@@ -865,17 +865,30 @@ export class Battle {
         for(const target of this.unitsIn(area, except)) target.hearts.damage(amount, "physical", source)
     }
 
-    /** Put a status on a unit, merged into the one of its kind it already holds. */
-    public applyStatus(unit: Unit, status: Status): void {
+    /**
+     * Put a status of a kind on a unit, at a level: its level goes up by it when the unit holds one of the
+     * kind already. A level below 0 takes some off, as an antidote does, the status gone when nothing is
+     * left of it.
+     */
+    public applyStatus(unit: Unit, type: StatusType, level: number): void {
         if(!unit.alive) return
-        const held = unit.statuses.get(status.type)
-        if(held) held.merge(status)
-        else {
-            unit.statuses.set(status.type, status)
-            this.signals.statusAdded.notify({ unit, type: status.type })
+        const held = unit.statuses.get(type)
+        if(!held && level <= 0) return
+        let status: Status
+        if(held){
+            status = held
+            held.setLevel(held.level + level)
+        } else {
+            status = type.make(level, type)
+            unit.statuses.set(type, status)
+            this.signals.statusAdded.notify({ unit, type })
             status.init({ battle: this, unit })
         }
-        this.events.push({ type: "status", unit, text: held ?? status })
+        if(status.level > 0) this.events.push({ type: "status", unit, text: status })
+        else {
+            this.removeStatus(unit, type)
+            this.events.push({ type: "status", unit, text: [type, " dissipé"] })
+        }
     }
 
     /**
@@ -945,15 +958,6 @@ export class Battle {
         this.signals.statusRemoved.notify({ unit, type })
     }
 
-    /** Wear a status of a unit down by an amount, as an antidote does: taken off once nothing is left. */
-    public shorten(unit: Unit, type: StatusType, amount: number): void {
-        const status = unit.statuses.get(type)
-        if(!status) return
-        const spent = status.shorten?.(amount) ?? true
-        if(spent) this.removeStatus(unit, type)
-        this.events.push({ type: "status", unit, text: spent ? [type, " dissipé"] : status })
-    }
-
     /** Stun a unit: everything it has left to play is put off by one step. */
     public stun(unit: Unit): void {
         if(!unit.alive) return
@@ -1020,8 +1024,7 @@ export class Battle {
         if(played) this.#played.set(clone, [...played])
         this.#followUp(unit, clone)
         for(const status of unit.statuses.values()){
-            const copied = status.copy?.()
-            if(copied) this.applyStatus(clone, copied)
+            if(status.type.cloned) this.applyStatus(clone, status.type, status.level)
         }
         return clone
     }
@@ -1090,7 +1093,7 @@ export class Battle {
         direction: Vector2 = owner.direction,
     ): Unit|null {
         const body = this.place(owner, { sprite, name, at, hearts, direction })
-        if(body) this.applyStatus(body, new Fleeting())
+        if(body) this.applyStatus(body, FLEETING, 1)
         return body
     }
 

@@ -7,7 +7,7 @@ import { RoundStatus } from "../RoundStatus"
 import { StatusType } from "../Status"
 
 /** A bleeding: each move hurts. */
-export const BLEEDING = new StatusType("saignement", rgba(0.8, 0.05, 0.1), "negative")
+export const BLEEDING = new StatusType("saignement", rgba(0.8, 0.05, 0.1), "negative", level => new Bleeding(level))
 
 /** How many hearts each move of a bleeding unit takes. */
 export const BLEEDING_DAMAGE = 1
@@ -16,9 +16,7 @@ export const BLEEDING_DAMAGE = 1
 export class Bleeding extends RoundStatus {
 
 
-    public readonly type = BLEEDING
-
-    public copy(): Bleeding { return new Bleeding(this.rounds) }
+    public readonly type: StatusType = BLEEDING
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         // Told once per whole move, a glide of many strides being one: a step costs one heart, not one per tick.
@@ -32,15 +30,13 @@ export class Bleeding extends RoundStatus {
 }
 
 /** A mark: the next attack that hurts the unit hurts twice as much. */
-export const MARKED = new StatusType("marque", rgba(1, 0.85, 0.2), "negative")
+export const MARKED = new StatusType("marque", rgba(1, 0.85, 0.2), "negative", level => new Mark(level))
 
 /** Marked: the next wound of an attack is doubled, then the mark is gone. */
 export class Mark extends RoundStatus {
 
 
-    public readonly type = MARKED
-
-    public copy(): Mark { return new Mark(this.rounds) }
+    public readonly type: StatusType = MARKED
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onIncoming.add(incoming => {
@@ -53,7 +49,7 @@ export class Mark extends RoundStatus {
 }
 
 /** A fragility: each blow takes more. */
-export const FRAGILE = new StatusType("fragilité", rgba(0.75, 0.75, 0.85), "negative")
+export const FRAGILE = new StatusType("fragilité", rgba(0.75, 0.75, 0.85), "negative", level => new Fragility(level))
 
 /** How many hearts more each wound of a fragile unit takes. */
 export const FRAGILITY_DAMAGE = 1
@@ -62,9 +58,7 @@ export const FRAGILITY_DAMAGE = 1
 export class Fragility extends RoundStatus {
 
 
-    public readonly type = FRAGILE
-
-    public copy(): Fragility { return new Fragility(this.rounds) }
+    public readonly type: StatusType = FRAGILE
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onIncoming.add(incoming => {
@@ -76,7 +70,7 @@ export class Fragility extends RoundStatus {
 }
 
 /** A bond of souls: what wounds one of the bound wounds the others. */
-export const SOUL_LINKED = new StatusType("lien d'âme", rgba(0.7, 0.55, 1), "neutral")
+export const SOUL_LINKED = new StatusType("lien d'âme", rgba(0.7, 0.55, 1), "neutral", level => new SoulLink(level))
 
 /** The units of a battle holding a status of a kind, the living ones. */
 function holding(unit: Unit, type: StatusType): Unit[] {
@@ -87,9 +81,7 @@ function holding(unit: Unit, type: StatusType): Unit[] {
 export class SoulLink extends RoundStatus {
 
 
-    public readonly type = SOUL_LINKED
-
-    public copy(): SoulLink { return new SoulLink(this.rounds) }
+    public readonly type: StatusType = SOUL_LINKED
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onDamage.add(({ amount, nature, source }) => {
@@ -100,15 +92,13 @@ export class SoulLink extends RoundStatus {
 }
 
 /** A shield of souls: what wounds one of the bound is shared among all of them. */
-export const SOUL_SHIELDED = new StatusType("bouclier d'âme", rgba(0.5, 0.75, 1), "positive")
+export const SOUL_SHIELDED = new StatusType("bouclier d'âme", rgba(0.5, 0.75, 1), "positive", level => new SoulShield(level))
 
 /** Shielded: a wound is cut among the shielded units, the unit taking the largest share, the others an echo each. */
 export class SoulShield extends RoundStatus {
 
 
-    public readonly type = SOUL_SHIELDED
-
-    public copy(): SoulShield { return new SoulShield(this.rounds) }
+    public readonly type: StatusType = SOUL_SHIELDED
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onIncoming.add(incoming => {

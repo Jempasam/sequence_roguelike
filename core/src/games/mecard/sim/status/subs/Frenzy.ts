@@ -5,15 +5,13 @@ import { RoundStatus } from "../RoundStatus"
 import { StatusType } from "../Status"
 
 /** A frenzy: the unit turns on whoever is closest, before each of its steps. */
-export const FRENZIED = new StatusType("frénésie", rgba(1, 0.45, 0.1), "neutral")
+export const FRENZIED = new StatusType("frénésie", rgba(1, 0.45, 0.1), "neutral", level => new Frenzy(level))
 
 /** Frenzied: before each of its steps, it turns straight at the closest other unit, ally or enemy. */
 export class Frenzy extends RoundStatus {
 
 
-    public readonly type = FRENZIED
-
-    public copy(): Frenzy { return new Frenzy(this.rounds) }
+    public readonly type: StatusType = FRENZIED
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.stepStarted.add(() => {

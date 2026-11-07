@@ -41,6 +41,11 @@ export interface Dose {
     readonly factor: number
 }
 
+/** What tells two doses apart: the same text, the same dose. */
+export function doseKey(dose: Dose): string {
+    return JSON.stringify([dose.potion.name, dose.sign, dose.factor])
+}
+
 /** The level a potion action of the catalog gives its potion, before the alchemy of its unit. */
 export const POTION_LEVEL = 2
 

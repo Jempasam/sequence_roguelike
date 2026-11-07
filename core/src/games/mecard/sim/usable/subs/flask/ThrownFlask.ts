@@ -22,12 +22,15 @@ export abstract class ThrownFlask extends AbstractUsable {
     }
 
 
-    /** The status it puts on the enemy it hits. */
+    /** The status it puts on the enemy it hits: its kind and its level are what is put on, as a text it tells itself. */
     public abstract status(): Status
 
     protected act({ battle, unit }: UnitContext): void {
         const target = battle.nearestEnemy(unit, this.range)
-        if(target) battle.applyStatus(target, this.status())
+        if(target){
+            const given = this.status()
+            battle.applyStatus(target, given.type, given.level)
+        }
         else battle.events.push({ type: "skipped", unit, reason: "personne à portée" })
     }
 }

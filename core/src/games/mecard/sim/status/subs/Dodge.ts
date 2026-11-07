@@ -2,23 +2,21 @@ import type { Text } from "../../../../../semantic"
 import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
+import { BaseStatus } from "../BaseStatus"
 import { StatusType } from "../Status"
-import type { Status } from "../Status"
 
 /** A dodge: the physical attacks miss. */
-export const DODGE = new StatusType("esquive", rgba(0.55, 0.8, 1), "positive")
+export const DODGE = new StatusType("esquive", rgba(0.55, 0.8, 1), "positive", level => new Dodge(level))
 
-/** Dodging: the physical damage misses it until the end of the round. */
-export class Dodge implements Status {
+/** Dodging: the physical damage misses it until the end of the round. Dodging twice is dodging. */
+export class Dodge extends BaseStatus {
 
 
-    public readonly type = DODGE
+    public readonly type: StatusType = DODGE
 
-    public copy(): Dodge { return new Dodge() }
+    public override toString(): string { return DODGE.name }
 
-    public toString(): string { return DODGE.name }
-
-    public toSemString(): Text { return DODGE }
+    public override toSemString(): Text { return DODGE }
 
 
     public init({ battle, unit }: UnitContext): void {
@@ -36,9 +34,6 @@ export class Dodge implements Status {
         for(const observer of this.#observers) observer.remove()
         this.#observers.length = 0
     }
-
-    /** Dodging while dodging changes nothing. */
-    public merge(): void {}
 
 
     readonly #observers: Observer[] = []

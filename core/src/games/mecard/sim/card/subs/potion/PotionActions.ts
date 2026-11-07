@@ -10,8 +10,8 @@ import type { Area } from "../../../battle/Area"
 import { placePuddle, PUDDLE_RADIUS, PUDDLE_ROUNDS } from "../../../hazard/subs/Puddle"
 import { levelOf, POTION_LEVEL, pour } from "../../../potion/Potion"
 import type { Dose } from "../../../potion/Potion"
-import { Coated } from "../../../status/subs/Coated"
-import { SPLASH_RADIUS, Splashing } from "../../../status/subs/Splashing"
+import { coatOf } from "../../../status/subs/Coated"
+import { barrelOf, SPLASH_RADIUS } from "../../../status/subs/Splashing"
 import { ACTION, POTION } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
@@ -183,7 +183,7 @@ export class BarrelCard extends PotionActionCard {
     protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
         const at = this.#spot(unit)
         const barrel = battle.summon(unit, "barrel", "Tonneau", at, summonedHearts(unit, BARREL_HALVES))
-        if(barrel) battle.applyStatus(barrel, new Splashing(dose, level))
+        if(barrel) battle.applyStatus(barrel, barrelOf(dose), Math.abs(level))
         yield* wait(SHORT_TIME)
     }
 
@@ -203,7 +203,7 @@ export class CoatCard extends PotionActionCard {
 
 
     protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
-        battle.applyStatus(unit, new Coated(dose, level))
+        battle.applyStatus(unit, coatOf(dose), Math.abs(level))
         yield* hold(battle, SHORT_TIME, [shown(dose, { kind: "circle", center: unit.position, radius: UNIT_RADIUS })])
     }
 

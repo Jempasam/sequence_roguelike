@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
     Arena, Battle, CardChain, DIVISION, DRIZZLE, FLEE, Heart, LOOT_CARDS, MEGA_LASER,
     MONSTERS as KINDS,
-    PURSUIT, RED_HEART, RETREAT_SHOT, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHIELD_HEART, SIDESTEP, Slowness,
+    PURSUIT, RED_HEART, RETREAT_SHOT, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHIELD_HEART, SIDESTEP,
     SLOWED, SPARK, SPIT,
     STEP, Vector2,
 } from "@game/core/mecard"
@@ -145,7 +145,7 @@ describe("DIVISION", () => {
         const maker = unit(on, 3, 5)
         unit(on, 0.5, 0.5, { team: MONSTERS })
         maker.stats.strength.base = 2
-        on.applyStatus(maker, new Slowness(3))
+        on.applyStatus(maker, SLOWED, 3)
         play(on, [[maker, chain(DIVISION, STEP)]])
         const clone = cloneOf(on, maker) as Unit
         // Slowed as its maker, it walks half a step from where it came, 0.8 ahead of it.

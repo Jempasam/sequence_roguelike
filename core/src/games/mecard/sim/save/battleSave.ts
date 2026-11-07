@@ -10,18 +10,15 @@ import type { Controller, StatBases } from "../battle/Unit"
 import { CardChain } from "../card/CardChain"
 import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
-import { FusionCard } from "../card/subs/composite/FusionCard"
-import { MergedCard } from "../card/subs/composite/MergedCard"
-import { RandomCard } from "../card/subs/composite/RandomCard"
 import { Heart } from "../heart/Heart"
 import { Carried } from "../usable/Usable"
 import type { Status } from "../status/Status"
 
-import { CARD_NAMES, HEART_NAMES, ITEM_NAMES, STATUS_NAMES, USABLE_NAMES } from "./catalogNames"
-import type { StatusData } from "./catalogNames"
+import { CARD_CODECS, HEART_NAMES, ITEM_NAMES, USABLE_NAMES } from "./catalogNames"
+import { STATUS_CODECS } from "./statusCodecs"
 
 /** The version of the shape of a save, raised whenever it changes, so an old save is refused clearly. */
-export const BATTLE_SAVE_VERSION = 13
+export const BATTLE_SAVE_VERSION = 14
 
 /** A point or a direction, as `[x, y]`. */
 type SavedVector = readonly [number, number]
@@ -29,15 +26,8 @@ type SavedVector = readonly [number, number]
 /** A color, as `[r, g, b, a]`. */
 type SavedColor = readonly [number, number, number, number]
 
-/**
- * A card: by its name in the catalog, or for a card holding cards made during the run, which no catalog
- * holds, by its kind and its cards, in order.
- */
-export type SavedCard =
-    | string
-    | { readonly fused: readonly SavedCard[] }
-    | { readonly merged: readonly SavedCard[] }
-    | { readonly random: readonly SavedCard[] }
+/** A card, as {@link CARD_CODECS} writes it: by its name in the catalog, or by its kind and its cards. */
+export type SavedCard = string
 
 export interface SavedTeam {
     readonly name: string
@@ -83,8 +73,8 @@ export interface SavedUnit {
     /** What it carries to use, each by name, with the charges it has left. */
     readonly usables: readonly (readonly [string, number])[]
 
-    /** Each status, by the name of its kind, and what it holds. */
-    readonly statuses: readonly (readonly [string, StatusData])[]
+    /** Each status, by its kind as {@link STATUS_CODECS} writes it, and its level. */
+    readonly statuses: readonly (readonly [string, number])[]
 
     readonly bases: StatBases
 
@@ -164,7 +154,7 @@ export function saveBattle(battle: Battle, options: SaveOptions = {}): BattleSav
     const state = battle.state()
     const teams = [...new Set(state.units.map(unit => unit.spec.team))]
     const pile = (cards: readonly Card[]) => {
-        return cards.map(card => options.secret ? SECRET_CARD.name : savedCard(card))
+        return cards.map(card => options.secret ? savedCard(SECRET_CARD) : savedCard(card))
     }
     return {
         version: BATTLE_SAVE_VERSION,
@@ -265,11 +255,7 @@ function loadedArea(saved: SavedArea): Area {
 
 /** @throws {@link Error} For a card neither of the catalog nor holding cards. */
 export function savedCard(card: Card): SavedCard {
-    if(CARD_NAMES.has(card)) return card.name
-    if(card instanceof FusionCard) return { fused: card.contents.map(savedCard) }
-    if(card instanceof MergedCard) return { merged: card.contents.map(savedCard) }
-    if(card instanceof RandomCard) return { random: card.contents.map(savedCard) }
-    throw new Error(`${card.name} is not in the catalog: it cannot be saved.`)
+    return CARD_CODECS.save(card)
 }
 
 /**
@@ -280,10 +266,10 @@ export function savedCard(card: Card): SavedCard {
  */
 export function cardsInHand(hand: readonly Card[], saved: readonly SavedCard[]): Card[] {
     const left = [...hand]
-    const texts = left.map(card => JSON.stringify(savedCard(card)))
+    const texts = left.map(card => savedCard(card))
     return saved.map(each => {
-        const index = texts.indexOf(JSON.stringify(each))
-        if(index < 0) throw new Error(`The hand holds no ${JSON.stringify(each)}.`)
+        const index = texts.indexOf(each)
+        if(index < 0) throw new Error(`The hand holds no ${each}.`)
         texts.splice(index, 1)
         return left.splice(index, 1)[0]
     })
@@ -295,25 +281,14 @@ export function cardsInHand(hand: readonly Card[], saved: readonly SavedCard[]):
  * they were in the battle saved.
  */
 export function cardLoader(): (saved: SavedCard) => Card {
-    const made = new Map<string, Card>()
-    const load = (saved: SavedCard): Card => {
-        if(typeof saved === "string") return CARD_NAMES.of(saved)
-        const key = JSON.stringify(saved)
-        const known = made.get(key)
+    const made = new Map<SavedCard, Card>()
+    return saved => {
+        const known = made.get(saved)
         if(known) return known
-        const card = "fused" in saved ? new FusionCard(saved.fused.map(load))
-            : "merged" in saved ? new MergedCard(saved.merged.map(load))
-                : new RandomCard(...pair(saved.random.map(load)))
-        made.set(key, card)
+        const card = CARD_CODECS.load(saved)
+        made.set(saved, card)
         return card
     }
-    return load
-}
-
-/** @throws {@link Error} For anything but two cards. */
-function pair(cards: readonly Card[]): [Card, Card] {
-    if(cards.length !== 2) throw new Error(`A card holding two cards holds ${cards.length}: the save is corrupted.`)
-    return [cards[0], cards[1]]
 }
 
 /**
@@ -325,10 +300,9 @@ function savedHomes(homes: UnitState["homes"]): (readonly [SavedCard, number])[]
     const kinds = new Map<string, (readonly [SavedCard, number])[]>()
     for(const [card, deck] of homes){
         const saved = savedCard(card)
-        const key = JSON.stringify(saved)
-        const kind = kinds.get(key) ?? []
+        const kind = kinds.get(saved) ?? []
         kind.push([saved, deck])
-        kinds.set(key, kind)
+        kinds.set(saved, kind)
     }
     return [...kinds.values()].flat()
 }
@@ -344,15 +318,17 @@ function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[])
         cursor: unit.cursor, homes: savedHomes(unit.homes),
         items: (spec.items ?? []).map(item => item.name),
         usables: (spec.usables ?? []).map(each => [each.usable.name, each.charges]),
-        statuses: unit.statuses.map(status => [status.type.name, savedStatus(status)]),
+        statuses: unit.statuses.map(status => [STATUS_CODECS.save(status.type), status.level]),
         bases: unit.bases,
         decisive: spec.decisive ?? true,
         zone: spec.zone ? savedArea(spec.zone) : null,
     }
 }
 
-function savedStatus(status: Status): StatusData {
-    return STATUS_NAMES.of(status.type.name).codec.save(status)
+/** The status a kind and a level write down. */
+function loadedStatus([kind, level]: readonly [string, number]): Status {
+    const type = STATUS_CODECS.load(kind)
+    return type.make(level, type)
 }
 
 function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: SavedCard) => Card): UnitState {
@@ -369,7 +345,7 @@ function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: Saved
         hand: cards(unit.hand),
         decks: unit.decks.map(deck => ({ pile: cards(deck.pile), discard: cards(deck.discard) })),
         cursor: unit.cursor, homes: unit.homes.map(([saved, deck]) => [card(saved), deck]),
-        statuses: unit.statuses.map(([kind, data]) => STATUS_NAMES.of(kind).codec.load(data)),
+        statuses: unit.statuses.map(loadedStatus),
         bases: unit.bases,
     }
 }

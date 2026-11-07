@@ -3,7 +3,7 @@ import {
     BACK_EYES, BLOOD_PACT, BLUE_HEART, CELL, CHIPPED_BLADE, DEMON_FANG, DEMONIC, ECHO_ITEM, FISHER_GLOVE, GEAR,
     GLASS_CORE, GLASS_HEART, Heart, HOURGLASS, BLEEDING, IMPROVISED_ROBOT, BOW_MODULE, LEASH, MAGNET, RED_HEART,
     ROSARY, SCARY_MASK, STICKY_SOLES, SUCTION, SUMMON_HEART, THRUST, TORERO_CAPE, UNSTABLE_REACTOR, WAIT,
-    CONCENTRATED, THRUST_CHARGE, SHIELD_HEART, STEP, Concentration, TURRET,
+    CONCENTRATED, THRUST_CHARGE, SHIELD_HEART, STEP, TURRET,
 } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
@@ -113,10 +113,10 @@ describe("hearts", () => {
         const hero = unit(on, 3.5, 5)
         unit(on, 1, 1, { team: MONSTERS })
         on.equip(hero, HOURGLASS)
-        on.applyStatus(hero, new Concentration(3))
+        on.applyStatus(hero, CONCENTRATED, 3)
         play(on, [[hero, chain(STEP)]])
         // The first round is the one it keeps: 3 left, none lost.
-        expect((hero.statuses.get(CONCENTRATED) as Concentration).rounds).toBe(3)
+        expect(hero.statuses.get(CONCENTRATED)?.level).toBe(3)
     })
 })
 

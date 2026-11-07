@@ -6,7 +6,7 @@ import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../batt
 import { meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
-import { Rooted } from "../../../status/subs/Rooted"
+import { ROOTED } from "../../../status/subs/Rooted"
 
 import { ActionCard } from "../ActionCard"
 import { fly } from "../tools/bolt"
@@ -105,7 +105,7 @@ export class HookCard extends ActionCard {
                 const forced = caught.pulled !== unit
                 const theirs = { battle, unit: caught.pulled }
                 yield* travel(theirs, caught.way, caught.distance, PULL_SPEED, forced)
-                if(forced && roots > 0) battle.applyStatus(caught.pulled, new Rooted(roots))
+                if(forced && roots > 0) battle.applyStatus(caught.pulled, ROOTED, roots)
             },
             preview: ({ battle, unit, pose }) => {
                 const caught = HookCard.#caught(battle, unit, pose, range, pullsUnits, pullsSelf)

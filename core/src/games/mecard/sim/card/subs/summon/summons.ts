@@ -3,7 +3,7 @@ import { HeartCount, meters } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
 import { THORN_HEART } from "../../../heart/subs/ThornHeartKind"
-import { Healing, TOTEM_RADIUS } from "../../../status/subs/Healing"
+import { HEALING, TOTEM_RADIUS } from "../../../status/subs/Healing"
 import { Rarity } from "../../Rarity"
 
 import { SummonCard } from "./SummonCard"
@@ -78,6 +78,6 @@ export const TOTEM = new SummonCard("Totem", [
     sprite: "totem", name: "Totem", halves: TOTEM_HALVES,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
     equip: (battle, body, owner) => {
-        battle.applyStatus(body, new Healing(TOTEM_HEAL + owner.stats.heal.value))
+        battle.applyStatus(body, HEALING, TOTEM_HEAL + owner.stats.heal.value)
     },
 })

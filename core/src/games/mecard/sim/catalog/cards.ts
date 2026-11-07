@@ -117,6 +117,6 @@ export const LEGENDARY_CARDS: readonly Card[] = [
 export const CARDS: readonly Card[] = [
     ...new Set([
         ...KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
-        ...COMPOUND_CARDS,
+        ...COMPOUND_CARDS, SCOPED_GREAT_THRUST,
     ]),
 ]

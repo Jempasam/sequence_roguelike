@@ -529,7 +529,7 @@ export class Hud {
             if(index > 0) column.add(new TurnArrow(this.theme), { align: "center" })
             const ally = unit.team === viewpoint
             const draft = mode === "planning" && ally ? drafts.get(unit) : undefined
-            const planned = draft?.chain.view(false).map(view => stripOfView(view))
+            const planned = draft?.chain.view().map(view => stripOfView(view))
             const roots = planned ?? this.#shownRoots(unit)
             const head = new Box("row", { gap: 2, align: "center" })
             const steps = mode === "playing" ? ` [${shown?.steps ?? 0}]` : ""
@@ -579,13 +579,12 @@ export class Hud {
      * greyed out and what is being looked at marked, and as it was committed otherwise.
      */
     #shownRoots(unit: Unit): StripCard[] {
-        const { battle, mode, scene, viewpoint } = this.host
-        const hidden = unit.team !== viewpoint
+        const { battle, mode, scene } = this.host
         const shown = mode === "playing" ? scene.of(unit)?.chain : undefined
-        if(!shown) return (battle.planOf(unit)?.view(hidden) ?? []).map(view => stripOfView(view))
+        if(!shown) return (battle.planOf(unit)?.view() ?? []).map(view => stripOfView(view))
         const lit = scene.litCards?.unit === unit ? scene.litCards : null
         const marks = { cursor: shown.cursor, lit }
-        return new CardChain(shown.cards).view(hidden).map(view => stripOfView(view, marks))
+        return new CardChain(shown.cards).view().map(view => stripOfView(view, marks))
     }
 
     /**

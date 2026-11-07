@@ -127,7 +127,7 @@ export class Draft {
 
     /** What a root of the chain would do, after the roots before it, none when there is no such root. */
     public previewRoot(battle: Battle, index: number): RootPreview|null {
-        return this.chain.preview(battle, this.unit, false)[index] ?? null
+        return this.chain.preview(battle, this.unit)[index] ?? null
     }
 
     /**
@@ -137,6 +137,6 @@ export class Draft {
      */
     public previewWith(battle: Battle, card: Card): RootPreview|null {
         if(!playable(card) || card.input !== null) return null
-        return new CardChain([...this.chain.cards, card]).preview(battle, this.unit, false).at(-1) ?? null
+        return new CardChain([...this.chain.cards, card]).preview(battle, this.unit).at(-1) ?? null
     }
 }

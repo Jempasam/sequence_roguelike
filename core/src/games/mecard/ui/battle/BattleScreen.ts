@@ -609,14 +609,12 @@ export class BattleScreen implements HudHost {
         const draft = planning ? this.drafts.get(unit) : undefined
         const shown = planning ? undefined : this.scene.of(unit)?.chain
         const plan = draft ? draft.chain : shown ? new CardChain(shown.cards) : battle.planOf(unit)
-        // Another team sees the roots holding nested cards as hidden: they have no preview.
-        const hidden = unit.team !== this.viewpoint
         const preview = !planning ? null : draft
             ? draft.previewRoot(battle, index)
-            : plan?.preview(battle, unit, hidden)[index] ?? null
+            : plan?.preview(battle, unit)[index] ?? null
         this.#board.indicators = indicatorsOf(preview)
-        const view = plan?.view(hidden)[index]
-        if(view?.card) this.#hud.showInfo(concat(view.card, " : ", view.card.description))
+        const view = plan?.view()[index]
+        if(view) this.#hud.showInfo(concat(view.card, " : ", view.card.description))
     }
 
     /** Open the preparation on the screen: a draft for each unit the players may plan. */

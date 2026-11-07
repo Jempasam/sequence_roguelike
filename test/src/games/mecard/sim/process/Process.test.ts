@@ -88,7 +88,7 @@ describe("Cheval", () => {
         const on = battle()
         const rider = unit(on, 1, 6, { direction: Vector2.UP })
         unit(on, 6, 0.5, { team: MONSTERS })
-        const [horse, first, second] = chain(HORSE, WAIT, WAIT).preview(on, rider, false)
+        const [horse, first, second] = chain(HORSE, WAIT, WAIT).preview(on, rider)
         expect(horse.preview?.indicators.map(indicator => indicator.kind)).toEqual(["label", "arrow"])
         expect(horse.preview?.pose.position.y).toBeCloseTo(5)
         expect(first.preview?.pose.position.y).toBeCloseTo(4)

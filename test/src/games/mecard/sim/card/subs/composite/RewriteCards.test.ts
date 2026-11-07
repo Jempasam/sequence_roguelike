@@ -66,7 +66,7 @@ describe("RECOVERY", () => {
     test("rewritten in a preview → nothing put in the hand", () => {
         const on = battle()
         const player = unit(on, 3, 5, { hand: [RECOVERY, SLASH] })
-        chain(RECOVERY, SLASH).preview(on, player, false)
+        chain(RECOVERY, SLASH).preview(on, player)
         new CardChain([RECOVERY, SLASH]).activity()
         expect(player.hand).toEqual([RECOVERY, SLASH])
     })
@@ -157,7 +157,7 @@ describe("INSTINCT", () => {
     test("in a preview → guessed, so its root is not shown", () => {
         const on = battle()
         const player = unit(on, 3, 5, { hand: [STEP] })
-        const [root] = chain(INSTINCT).preview(on, player, false)
+        const [root] = chain(INSTINCT).preview(on, player)
         expect(root.preview).toBeNull()
     })
 })
@@ -200,7 +200,7 @@ describe("TORNADO", () => {
     test("its preview → the unit facing as it started", () => {
         const on = battle()
         const spinner = unit(on, 3, 5)
-        const [root] = chain(TORNADO, THRUST).preview(on, spinner, false)
+        const [root] = chain(TORNADO, THRUST).preview(on, spinner)
         expect(root.preview?.pose.direction).toEqual(Vector2.UP)
     })
 })

@@ -60,7 +60,7 @@ describe("SHOTGUN", () => {
     test("its preview → the sector the pellets may go in", () => {
         const on = battle()
         const shooter = unit(on, 3, 5)
-        const [root] = chain(SHOTGUN).preview(on, shooter, false)
+        const [root] = chain(SHOTGUN).preview(on, shooter)
         expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["polygon"])
     })
 })
@@ -79,7 +79,7 @@ describe("RICOCHET", () => {
         const on = battle()
         const shooter = unit(on, 3.5, 1)
         unit(on, 0.5, 0.5, { team: MONSTERS })
-        const [root] = chain(RICOCHET).preview(on, shooter, false)
+        const [root] = chain(RICOCHET).preview(on, shooter)
         expect(root.preview?.indicators).toHaveLength(2)
     })
 })

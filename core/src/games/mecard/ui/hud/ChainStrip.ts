@@ -17,20 +17,17 @@ export const LINK_ROOM = 6
 /** How far below the cards a link runs, in virtual pixels. */
 const LINK_DROP = 3
 
-/** The color of a link the viewer cannot know the type of, under a hidden card. */
-const HIDDEN_LINK = new Color(0.4, 0.38, 0.48)
-
 /** The color of a link carrying a type. */
 function linkOf(type: CardType<unknown>): Color {
     return typeColorOf(type)
 }
 
 /**
- * A card of a chain as a strip shows it: the card, none when the viewer may not see it, and what is plugged
- * into each of its slots, none for an empty one.
+ * A card of a chain as a strip shows it: the card, and what is plugged into each of its slots, none for an
+ * empty one.
  */
 export interface StripCard {
-    readonly card: Card|null
+    readonly card: Card
     readonly inputs: readonly (StripCard|null)[]
 
     /** Does it play, rather than being greyed out? */
@@ -81,12 +78,9 @@ export function stripOf(node: CardNode, nodes: Map<StripCard, CardNode>): StripC
     return strip
 }
 
-/**
- * A chain as another team sees it, its nested cards maybe hidden, as a strip shows it. Only the cards it
- * read already are greyed out: what a hidden card does to the others is not told.
- */
+/** A chain as a viewer sees it, as a strip shows it. Only the cards it read already are greyed out. */
 export function stripOfView(view: ChainView, marks: StripMarks = NO_MARKS): StripCard {
-    const type = view.card?.input
+    const type = view.card.input
     const { cursor, lit } = marks
     const looked = lit !== null && view.index >= lit.first && view.index <= lit.last
     return {
@@ -95,7 +89,7 @@ export function stripOfView(view: ChainView, marks: StripMarks = NO_MARKS): Stri
         active: view.index >= cursor,
         lit: looked,
         crossed: looked && lit.invalid,
-        links: view.inputs.map(() => !type ? HIDDEN_LINK : linkOf(type)),
+        links: type ? view.inputs.map(() => linkOf(type)) : [],
     }
 }
 

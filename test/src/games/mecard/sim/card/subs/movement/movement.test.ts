@@ -105,7 +105,7 @@ describe("aims", () => {
         const aimer = unit(on, 3, 6)
         unit(on, 1, 6, { team: MONSTERS })
         unit(on, 5, 6, { team: MONSTERS })
-        const [root] = chain(RANDOM_AIM).preview(on, aimer, false)
+        const [root] = chain(RANDOM_AIM).preview(on, aimer)
         expect(root.preview?.indicators.some(each => each.kind === "label" && each.text === "au hasard")).toBe(true)
         play(on, [[aimer, chain(RANDOM_AIM)]])
         expect(Math.abs(aimer.direction.x)).toBeCloseTo(1)
@@ -164,7 +164,7 @@ describe("EXPLOSIVE_DASH", () => {
     test("its preview, nothing in the way → the zone at the end of the dash, as a reach", () => {
         const on = battle()
         const dasher = unit(on, 3.5, 6)
-        const [root] = chain(EXPLOSIVE_DASH).preview(on, dasher, false)
+        const [root] = chain(EXPLOSIVE_DASH).preview(on, dasher)
         const [zone] = root.preview?.indicators ?? []
         expect(zone).toMatchObject({ kind: "polygon", color: RANGE_COLOR })
     })
@@ -172,7 +172,7 @@ describe("EXPLOSIVE_DASH", () => {
     test("its preview, into a pillar → the zone as a hazard", () => {
         const on = pillared()
         const dasher = unit(on, 3.5, 5)
-        const [root] = chain(EXPLOSIVE_DASH).preview(on, dasher, false)
+        const [root] = chain(EXPLOSIVE_DASH).preview(on, dasher)
         const [zone] = root.preview?.indicators ?? []
         expect(zone).toMatchObject({ kind: "polygon", color: HAZARD_COLOR })
     })

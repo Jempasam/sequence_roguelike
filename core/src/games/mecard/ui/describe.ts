@@ -3,14 +3,14 @@ import type { Attribute } from "../sim/base/Attribute"
 import type { Unit, UnitStats } from "../sim/battle/Unit"
 import type { ChainView } from "../sim/card/CardChain"
 
-/** A chain as a viewer sees it, on one line: the roots in order, a hidden card as `?`. */
+/** A chain as a viewer sees it, on one line: the roots in order, what is nested in parentheses. */
 export function chainText(views: readonly ChainView[]): string {
     if(views.length === 0) return "(rien)"
     return views.map(nodeText).join(" > ")
 }
 
 function nodeText(view: ChainView): string {
-    const name = view.card?.name ?? "?"
+    const name = view.card.name
     if(view.inputs.length === 0) return name
     return `${name}(${view.inputs.map(input => input ? nodeText(input) : "_").join(", ")})`
 }

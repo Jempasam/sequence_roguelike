@@ -135,24 +135,24 @@ describe("CardChain.preview", () => {
     test("two steps → the second starts where the first ends", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
-        const [first, second] = chain(STEP, STEP).preview(on, walker, false)
+        const [first, second] = chain(STEP, STEP).preview(on, walker)
         expect(second.start.position).toEqual(first.preview?.pose.position)
         expect(second.preview?.pose.position).toEqual(new Vector2(3, 1))
         expect(walker.position).toEqual(new Vector2(3, 5))
     })
 
-    test("a root with hidden nested cards → no preview, and the next one uncertain", () => {
+    test("a root with nested cards → its preview shown, the next one certain", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
-        const [hidden, next] = chain(REPEAT_2, STEP, STEP).preview(on, walker, true)
-        expect(hidden.preview).toBeNull()
-        expect(next.uncertain).toBe(true)
+        const [nested, next] = chain(REPEAT_2, STEP, STEP).preview(on, walker)
+        expect(nested.preview).not.toBeNull()
+        expect(next.uncertain).toBe(false)
     })
 
     test("a gamble → its action shown, marked 50 %", () => {
         const on = battle()
         const gambler = unit(on, 3, 5)
-        const [root] = chain(GAMBLE, THRUST).preview(on, gambler, false)
+        const [root] = chain(GAMBLE, THRUST).preview(on, gambler)
         const kinds = root.preview?.indicators.map(indicator => indicator.kind)
         expect(kinds).toEqual(["label", "polygon"])
     })
@@ -161,7 +161,7 @@ describe("CardChain.preview", () => {
         const on = battle()
         const attacker = unit(on, 3, 3)
         const target = unit(on, 3, 2, { team: MONSTERS })
-        chain(THRUST, STUNNING_DASH).preview(on, attacker, false)
+        chain(THRUST, STUNNING_DASH).preview(on, attacker)
         expect(target.life).toBe(4)
         expect(on.events).toEqual([])
     })
@@ -169,7 +169,7 @@ describe("CardChain.preview", () => {
     test("a fusion of two steps → shown as both, the next root after them", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
-        const [fused, after] = chain(new FusionCard([STEP, STEP]), STEP).preview(on, walker, true)
+        const [fused, after] = chain(new FusionCard([STEP, STEP]), STEP).preview(on, walker)
         expect(fused.preview?.pose.position).toEqual(new Vector2(3, 1))
         expect(after.uncertain).toBe(false)
     })
@@ -177,7 +177,7 @@ describe("CardChain.preview", () => {
     test("a fusion of preparation cards → no preview, nothing uncertain after", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
-        const [fused, after] = chain(new FusionCard([FOCUS, FOCUS]), STEP).preview(on, walker, false)
+        const [fused, after] = chain(new FusionCard([FOCUS, FOCUS]), STEP).preview(on, walker)
         expect(fused.preview).toBeNull()
         expect(after.uncertain).toBe(false)
     })
@@ -185,7 +185,7 @@ describe("CardChain.preview", () => {
     test("a preview of a fusion → the chain left as it was", () => {
         const on = battle()
         const planned = chain(new FusionCard([STEP, STEP]), STEP)
-        planned.preview(on, unit(on, 3, 5), false)
+        planned.preview(on, unit(on, 3, 5))
         expect(planned.cards).toHaveLength(2)
         expect(planned.cards[0]).toBeInstanceOf(FusionCard)
     })
@@ -194,7 +194,7 @@ describe("CardChain.preview", () => {
         const on = battle()
         const before = on.rng.state
         const walker = unit(on, 3, 5)
-        const [drawn, after] = chain(new RandomCard(STEP, THRUST), STEP).preview(on, walker, false)
+        const [drawn, after] = chain(new RandomCard(STEP, THRUST), STEP).preview(on, walker)
         expect(drawn.preview).toBeNull()
         expect(after.uncertain).toBe(true)
         expect(on.rng.state).toBe(before)
@@ -202,7 +202,7 @@ describe("CardChain.preview", () => {
 
     test("a draw for a spell → the spell not shown, as it hangs on the draw", () => {
         const on = battle()
-        const [spell] = chain(SPELL, new RandomCard(FIRE, WATER)).preview(on, unit(on, 3, 5), false)
+        const [spell] = chain(SPELL, new RandomCard(FIRE, WATER)).preview(on, unit(on, 3, 5))
         expect(spell.preview).toBeNull()
     })
 })

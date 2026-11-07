@@ -333,7 +333,7 @@ describe("Steps of others", () => {
         const on = battle()
         const caster = unit(on, 3, 5)
         unit(on, 4, 3, { team: MONSTERS })
-        const [root] = chain(HYPNOSIS, STEP).preview(on, caster, false)
+        const [root] = chain(HYPNOSIS, STEP).preview(on, caster)
         expect(root.preview?.indicators.slice(0, 2).map(indicator => indicator.kind)).toEqual(["polygon", "arrow"])
     })
 

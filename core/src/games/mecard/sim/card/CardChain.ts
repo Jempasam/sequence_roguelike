@@ -89,10 +89,9 @@ export interface RootPreview {
     readonly uncertain: boolean
 }
 
-/** A node seen by a viewer, whose nested cards may be hidden. */
+/** A node of a chain, as a viewer sees it. */
 export interface ChainView {
-    /** The card, none when the viewer may not see it. */
-    readonly card: Card|null
+    readonly card: Card
 
     /** Its place in the row. */
     readonly index: number
@@ -361,9 +360,8 @@ export class CardChain {
      * playing its inputs: a nested card has no preview of its own. A root rewritten previews what it is
      * rewritten into, a fusion the cards it holds; one hanging on a chance is not shown.
      *
-     * @param hideNested - Are the nested cards hidden from the viewer? A root holding some is not shown.
      */
-    public preview(battle: Battle, unit: Unit, hideNested: boolean): RootPreview[] {
+    public preview(battle: Battle, unit: Unit): RootPreview[] {
         let pose: Pose = unit
         let uncertain = false
         const beforeSteps: ((ctx: PreviewContext) => Preview)[] = []
@@ -371,15 +369,13 @@ export class CardChain {
         const { sources, values, guessed } = resolution
         const made = resolution.reading.roots
         return this.roots.map(root => {
-            const hidden = hideNested && root.inputs.length > 0
             const start = pose
             // The roots it was rewritten into: those whose card came from a card of its tree.
             const own = made.filter(each => {
                 return sources[each.index].some(from => from >= root.index && from < root.index + root.size)
             })
             const acting = own.filter(each => each.card.output === ACTION)
-            const showable = acting.length > 0 && !hidden
-                && acting.every(each => each.active && !guessed[each.index])
+            const showable = acting.length > 0 && acting.every(each => each.active && !guessed[each.index])
             if(!showable){
                 const result = { preview: null, start, uncertain }
                 // A root of actions that cannot be shown may move the unit: whatever follows is a guess.
@@ -404,18 +400,14 @@ export class CardChain {
         })
     }
 
-    /**
-     * The chain as another team sees it: the roots, and below a card taking inputs, nothing.
-     *
-     * @param hideNested - Are the nested cards hidden? Its own team sees them.
-     */
-    public view(hideNested: boolean): ChainView[] {
-        const view = (node: CardNode, hidden: boolean): ChainView => ({
-            card: hidden ? null : node.card,
+    /** The chain as a viewer sees it: the roots, and the cards nested in them. */
+    public view(): ChainView[] {
+        const view = (node: CardNode): ChainView => ({
+            card: node.card,
             index: node.index,
-            inputs: node.inputs.map(input => input ? view(input, hidden || hideNested) : null),
+            inputs: node.inputs.map(input => input ? view(input) : null),
         })
-        return this.roots.map(root => view(root, false))
+        return this.roots.map(view)
     }
 }
 

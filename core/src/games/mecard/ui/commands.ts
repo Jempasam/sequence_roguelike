@@ -458,7 +458,7 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.print(`Objets : ${unit.items.map(item => item.name).join(", ") || "(aucun)"}.`)
                 ctx.print(`Main ${unit.hand.length} · pioche ${unit.decks.piles.length} · défausse ${unit.decks.discards.length} · étapes restantes ${unit.stepsLeft}.`)
                 const plan = ctx.battle.planOf(unit)
-                if(plan) ctx.print(`Chaîne : ${chainText(plan.view(false))}.`)
+                if(plan) ctx.print(`Chaîne : ${chainText(plan.view())}.`)
             }),
             heal: command("unit heal <unité> [cœurs] : soigne, d'un cœur par défaut.",
                 [UNIT, optional(whole("les cœurs", 1), DEFAULT_HEAL)], (ctx, unit, halves) => {

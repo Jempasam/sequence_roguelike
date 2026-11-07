@@ -83,7 +83,7 @@ describe("PATH_AIM", () => {
         const on = among([3.5, 3.5])
         const walker = unit(on, 3.5, 5)
         unit(on, 3.5, 2, { team: MONSTERS })
-        const [root] = chain(PATH_AIM).preview(on, walker, false)
+        const [root] = chain(PATH_AIM).preview(on, walker)
         expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["polygon", "arrow"])
         expect(root.preview?.pose.direction.x).not.toBe(0)
     })

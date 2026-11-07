@@ -230,7 +230,7 @@ describe("BOUNCING_BOW", () => {
     test("each bounce gives it its whole range back", () => {
         const on = new Battle(new Arena(7, 3), 1)
         const hero = unit(on, 3, 2, { direction: Vector2.UP })
-        const [root] = chain(BOUNCING_BOW).preview(on, hero, false)
+        const [root] = chain(BOUNCING_BOW).preview(on, hero)
         expect(root.preview?.indicators).toHaveLength(3)
     })
 

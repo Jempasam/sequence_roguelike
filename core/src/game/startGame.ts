@@ -3,10 +3,12 @@ import { Gpu, Painter, RenderTexture, ScreenSurface, TextureSurface } from "../e
 import { InputSystem } from "../engine/input"
 import { Color } from "../engine/math"
 import { NetSync } from "../engine/net"
+import { SaveSlot } from "../engine/save"
 import { UiRoot } from "../engine/ui"
+import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "../games/mecard/sim/save/runSlot"
 import { MecardGame, MecardViewer, mecardTheme } from "../games/mecard/ui"
 import type { MecardNetwork } from "../games/mecard/ui"
-import type { Platform } from "../platform"
+import type { Platform, PlayerStorage } from "../platform"
 
 /** The size of the world as drawn, in pixels, before its integer upscale to the screen. */
 const LOW_RES_WIDTH = 320
@@ -54,6 +56,21 @@ export function startGame(platform: Platform): { dispose(): void } {
             theme, ui, new Assets(platform.assets), FIRST_SEED, toWorld, toUi, sync ?? null,
             networkOf(platform),
         )
+    // The storage opens on its own time: the menu offers to go on once the run kept is read. None when
+    // another instance of the game holds it, which then keeps nothing.
+    let storage: PlayerStorage|null = null
+    let closed = false
+    if(game instanceof MecardGame){
+        platform.storage.open().then(opened => {
+            if(closed || !opened){
+                if(opened) void opened.close()
+                else game.report("Une autre instance du jeu tient les sauvegardes : rien ne sera sauvegardé.")
+                return
+            }
+            storage = opened
+            game.keep(new SaveSlot(opened, RUN_SLOT_KEY, RUN_SAVE_FORMAT))
+        }, (error: unknown) => game.report(`Les sauvegardes ne sont pas disponibles : ${String(error)}`))
+    }
 
     loop.start(dtMs => {
         const dt = dtMs / 1000
@@ -79,6 +96,8 @@ export function startGame(platform: Platform): { dispose(): void } {
     return {
         dispose: () => {
             loop.stop()
+            closed = true
+            if(storage) void storage.close()
             if(game instanceof MecardViewer) game.dispose()
             ui.dispose()
             lowRes.dispose()

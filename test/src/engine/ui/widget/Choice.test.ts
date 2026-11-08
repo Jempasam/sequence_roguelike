@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Choice, Container, Hand, Scroll } from "@game/core"
+import { Choice, Container, OverflowContainer, Scroll } from "@game/core"
 import type { ChoiceStep, Component } from "@game/core"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
@@ -54,7 +54,7 @@ function choiceSteps(choice: Choice): (readonly Component[])[] {
     const column = choice.content
     if(!(column instanceof Container)) throw new Error("A choice holds a column of steps.")
     return column.children.map(each => {
-        const hand = find(each, Hand)
+        const hand = find(each, OverflowContainer)
         if(!hand) throw new Error("A step of a choice holds a hand of options.")
         return hand.children
     })
@@ -75,6 +75,31 @@ function wideOptions(setup: UiSetup, sizes: readonly [number, number][]): { choi
 // --- Tests ---
 
 describe("Choice", () => {
+    test("an option holding overlapped cards, one pointed at → it shows whole though the option holds the pointer", () => {
+        const setup = uiSetup()
+        const inner = new OverflowContainer({ minOverflow: 8, maxOverflow: 8 })
+        const cards = Array.from({ length: 5 }, (_, index) => new Probe(`card ${index}`, [20, 10], { interactive: true }))
+        for(const card of cards) inner.add(card)
+        const next = (picks: readonly number[]) => picks.length === 0 ? { title: null, options: [inner] } : null
+        const choice = new Choice(setup.theme, next, () => {}, { gap: 4 })
+        setup.main.content.add(choice, { x: "stretch", y: "start" })
+        setup.ui.render()
+        const before = cards.map(card => card.bounds.x)
+        let x = cards[1].bounds.x + 2
+        let y = cards[1].bounds.y + 5
+        for(let parent: Component|null = cards[1].parent; parent; parent = parent.parent){
+            x += parent.bounds.x
+            y += parent.bounds.y
+        }
+        setup.port.send({ type: "pointer-move", x, y })
+        setup.frame()
+        for(let frame = 0; frame < 60; frame++) setup.ui.update(1 / 60)
+        setup.ui.render()
+        const after = cards.map(card => card.bounds.x)
+        expect(after[2] - after[1]).toBeGreaterThanOrEqual(20)
+        expect(before[2] - before[1]).toBeLessThan(20)
+    })
+
     test("first shown → one step of options", () => {
         const setup = uiSetup()
         const { choice } = twoSteps(setup)

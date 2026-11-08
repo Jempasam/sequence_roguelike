@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN, MONSTER_BOOSTER_SIZE, Rng, Run, TAMED_BOSS_WEAKENING, allCards, monsterBooster,
+    BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN, MONSTER_BOOSTER_SIZE, Rng, TAMED_BOSS_WEAKENING, allCards, monsterBooster,
     offeredMonsters, openBooster, possessBy, readsWhole, tamedBoss,
 } from "@game/core/mecard"
+import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Tests ---
 
@@ -25,7 +26,7 @@ describe("monsterBooster", () => {
 
 describe("Run.recruit", () => {
     test("a monster joins as a hero the players plan", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const recruit = run.recruit(GOBLIN)
         expect(run.heroes).toContain(recruit)
         expect(recruit.controller).toBe("player")
@@ -36,7 +37,7 @@ describe("Run.recruit", () => {
 
 describe("Run.graft", () => {
     test("the character takes the monster's deck and hearts, in its place", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [hero] = run.heroes
         const hearts = hero.hearts.length
         const count = run.heroes.length

@@ -69,7 +69,7 @@ export function testTheme(gpu: Gpu): Theme {
         slider: {
             track: flat(0.2, 0.2, 0.2), thumb: flat(0.8, 0.8, 0.8), thumbWidth: 4, width: 44, height: 8,
         },
-        scrollbar: { track: flat(0.2, 0.2, 0.2), thumb: flat(0.8, 0.8, 0.8), width: 4, minThumb: 4 },
+        scrollbar: { track: flat(0.2, 0.2, 0.2), thumb: flat(0.8, 0.8, 0.8), thumbHover: flat(1, 1, 1), width: 4, minThumb: 4 },
         textInput: {
             background: flat(0, 0, 0), padding: 2, width: 40,
             cursorColor: new Color(), selectionColor: new Color(0, 0, 1),

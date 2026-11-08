@@ -9,7 +9,7 @@ import type { SizeHint } from "../SizeHint"
 import type { Theme } from "../Theme"
 import type { UiEvent } from "../input/UiEvent"
 import { Box } from "../layout/Box"
-import { Hand } from "../layout/Hand"
+import { OverflowContainer } from "../layout/OverflowContainer"
 import { Scroll } from "../layout/Scroll"
 import { Tilt } from "../layout/Tilt"
 
@@ -146,7 +146,7 @@ export class Choice extends ContentContainer {
         const depth = this.#options.length
         const column = new Box("column", { gap: this.#steps.gap, align: "stretch" })
         if(step.title) column.add(step.title, { align: "center" })
-        const hand = new Hand({ gap: this.#gap, strip: OPTION_STRIP })
+        const hand = new OverflowContainer({ gap: this.#gap, strip: OPTION_STRIP })
         const options = step.options.map((content, index) => {
             const phase = (depth + index) * WOBBLE_SHIFT * 2 * Math.PI
             const option = new ChoiceOption(content, phase, this.#picked)
@@ -187,7 +187,7 @@ class OptionRow extends ContentContainer {
         public readonly theme: Theme,
 
         /** The options. */
-        public readonly hand: Hand,
+        public readonly hand: OverflowContainer,
     ){
         super()
         this.#scroll = new Scroll(theme, { axis: "horizontal", width: 0, height: 0 })
@@ -216,19 +216,18 @@ class OptionRow extends ContentContainer {
     readonly #scroll: Scroll
     readonly #rect = new Rect()
 
-    /** Does it scroll at a width: one option too wide alone, or some that a hand would hide? */
+    /** Does it scroll at a width: the options too wide for it, or some that the hand would hide? */
     #scrolls(width: number): boolean {
-        return this.#sizes().widest > width || !this.hand.showsAll(width)
+        return this.hand.scrolls(width) || !this.hand.showsAll(width)
     }
 
     /** The sizes its options ask for, measured one by one, since the size of the hand may be fixed. */
-    #sizes(): { readonly total: number, readonly widest: number, readonly tallest: number } {
+    #sizes(): { readonly total: number, readonly tallest: number } {
         const hints = this.hand.children.map(option => option.measure(Infinity))
         const widths = hints.map(hint => hint.preferredWidth)
         const gaps = Math.max(0, hints.length - 1) * this.hand.gap
         return {
             total: widths.reduce((sum, width) => sum + width, gaps),
-            widest: Math.max(0, ...widths),
             tallest: Math.max(0, ...hints.map(hint => hint.preferredHeight)),
         }
     }

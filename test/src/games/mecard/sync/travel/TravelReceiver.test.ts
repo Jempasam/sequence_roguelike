@@ -7,14 +7,15 @@ import {
 } from "@game/core/mecard/sync"
 import type { SyncSender, TravelDesync } from "@game/core/mecard/sync"
 import { started } from "../../sim/fixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A main client telling the journey of a run, and a viewer listening to it, its drifts kept. */
 function session(options: { held?: boolean, seed?: number } = {}) {
     const channel = new LocalSync(options.held ?? false)
-    const run = new Run(options.seed ?? 11)
-    const viewer = new TravelReceiver(new Run(0).travel, channel)
+    const run = startedRun(options.seed ?? 11)
+    const viewer = new TravelReceiver(startedRun(0).travel, channel)
     const drifts: TravelDesync[] = []
     viewer.onDesync = desync => drifts.push(desync)
     const broadcaster = new TravelBroadcaster(run.travel, channel)
@@ -103,7 +104,7 @@ describe("TravelReceiver", () => {
 
     test("another journey told → loaded, no drift", () => {
         const { viewer, broadcaster, drifts } = session()
-        const next = new Run(12)
+        const next = startedRun(12)
         broadcaster.engine = next.travel
         expect(textOf(viewer.engine)).toBe(textOf(next.travel))
         expect(drifts).toEqual([])
@@ -120,10 +121,10 @@ describe("TravelReceiver", () => {
     })
 
     test("a move before any save → ignored, the next save taken in", () => {
-        const viewer = new TravelReceiver(new Run(0).travel, new LocalSync())
+        const viewer = new TravelReceiver(startedRun(0).travel, new LocalSync())
         viewer.receive(writeTravelMessage({ kind: "moved", number: 1, sequence: 2, from: null, to: 0, depth: 1 }))
         expect(viewer.engine.place).toBe(null)
-        const save = new Run(1).travel.save()
+        const save = startedRun(1).travel.save()
         let loads = 0
         viewer.engine.loaded.add(() => loads++)
         viewer.receive(writeTravelMessage({ kind: "save", number: 1, sequence: 3, save }))
@@ -131,8 +132,8 @@ describe("TravelReceiver", () => {
     })
 
     test("a message older than the one heard → ignored", () => {
-        const viewer = new TravelReceiver(new Run(0).travel, new LocalSync())
-        const save = new Run(1).travel.save()
+        const viewer = new TravelReceiver(startedRun(0).travel, new LocalSync())
+        const save = startedRun(1).travel.save()
         let loads = 0
         viewer.engine.loaded.add(() => loads++)
         viewer.receive(writeTravelMessage({ kind: "save", number: 1, sequence: 2, save }))
@@ -141,7 +142,7 @@ describe("TravelReceiver", () => {
     })
 
     test("a message in another shape → told to onError, nothing loaded", () => {
-        const viewer = new TravelReceiver(new Run(0).travel, new LocalSync())
+        const viewer = new TravelReceiver(startedRun(0).travel, new LocalSync())
         const errors: unknown[] = []
         viewer.onError = error => errors.push(error)
         viewer.receive("{\"kind\":\"hello\"}")
@@ -177,7 +178,7 @@ describe("TravelBroadcaster", () => {
         const channel = new LocalSync()
         const sent: string[] = []
         channel.listen(message => sent.push(message))
-        const run = new Run(2)
+        const run = startedRun(2)
         const broadcaster = new TravelBroadcaster(run.travel, channel)
         broadcaster.dispose()
         run.travel.jump(run.travel.next[0])
@@ -186,7 +187,7 @@ describe("TravelBroadcaster", () => {
 
     test("a halt left → the journey sent once", () => {
         const sent: string[] = []
-        const run = new Run(2)
+        const run = startedRun(2)
         new TravelBroadcaster(run.travel, writingTo(sent))
         run.travel.visit(CHEST_HALT)
         run.backToMap()
@@ -195,7 +196,7 @@ describe("TravelBroadcaster", () => {
 
     test("a viewer connecting after a move → hears what stands, not the move", () => {
         const channel = new LocalSync()
-        const run = new Run(2)
+        const run = startedRun(2)
         new TravelBroadcaster(run.travel, channel)
         run.travel.jump(run.travel.next[0])
         const heard: string[] = []
@@ -208,12 +209,12 @@ describe("TravelBroadcaster", () => {
 describe("SyncTopic", () => {
     test("a battle and a journey on one channel → each hears its own, no error", () => {
         const channel = new LocalSync()
-        const battles = new BattleReceiver(new Run(0).newBattle(), BATTLE_TOPIC.source(channel))
-        const journeys = new TravelReceiver(new Run(0).travel, TRAVEL_TOPIC.source(channel))
+        const battles = new BattleReceiver(startedRun(0).newBattle(), BATTLE_TOPIC.source(channel))
+        const journeys = new TravelReceiver(startedRun(0).travel, TRAVEL_TOPIC.source(channel))
         const errors: unknown[] = []
         battles.onError = error => errors.push(error)
         journeys.onError = error => errors.push(error)
-        const run = new Run(11)
+        const run = startedRun(11)
         new TravelBroadcaster(run.travel, TRAVEL_TOPIC.sender(channel))
         new BattleBroadcaster(started(run), BATTLE_TOPIC.sender(channel))
         expect(errors).toEqual([])
@@ -223,7 +224,7 @@ describe("SyncTopic", () => {
         const channel = new LocalSync()
         const sent: string[] = []
         channel.listen(message => sent.push(message))
-        new TravelBroadcaster(new Run(1).travel, TRAVEL_TOPIC.sender(channel))
+        new TravelBroadcaster(startedRun(1).travel, TRAVEL_TOPIC.sender(channel))
         expect(sent[0].startsWith("travel:")).toBe(true)
         expect(sent[0]).toContain(CAVE_FLOOR.name)
     })

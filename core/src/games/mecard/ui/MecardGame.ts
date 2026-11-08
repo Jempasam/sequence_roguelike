@@ -11,10 +11,16 @@ import { RunHost } from "../sync/run/RunHost"
 import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 import type { SyncRoom, SyncSender } from "../sync/SyncChannel"
 
+import type { SaveSlot } from "../../../engine/save"
+import type { RunSave } from "../sim/save/runSave"
+import { RunSaver } from "../sync/run/RunSaver"
+
 import { LiveContext, registerCommands } from "./commands"
 import type { MecardContext, MecardHost } from "./commands"
 import { LibraryScreen } from "./library/LibraryScreen"
 import { UnitSprites } from "./look/UnitSprites"
+import { GuideScreen } from "./guide/GuideScreen"
+import { MainMenuScreen } from "./menu/MainMenuScreen"
 import { PnjScreen } from "./pnj/PnjScreen"
 import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { ArmScreen } from "./travel/ArmScreen"
@@ -64,6 +70,9 @@ export class MecardGame {
 
     public get battle(): Battle { return this.#screen.battleScreen.engine }
 
+    /** The main menu. */
+    public get menu(): MainMenuScreen { return this.#menu }
+
     constructor(
         theme: Theme,
 
@@ -106,7 +115,8 @@ export class MecardGame {
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#travelOn() }, sprites)
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi,
-            restart: () => this.restart(),
+            // The party fell: its save is gone, back to the menu to start again.
+            restart: () => this.#menuOn(),
             ready: () => this.#host?.ready(),
             report: text => this.report(text),
         })
@@ -154,7 +164,16 @@ export class MecardGame {
         this.#consoleView = new ConsoleView(theme, this.#console)
         this.#consoleView.visible = false
         ui.addLayer("console").content.add(this.#consoleView, { x: "start", y: "start", offsetX: 4, offsetY: 4 })
-        this.#travelOn()
+        // Made last among the screens, so it lies over them.
+        this.#menu = new MainMenuScreen(theme, ui, {
+            newGame: () => this.#startNewGame(),
+            continueGame: () => this.#continueGame(),
+            openGuide: () => this.#guideOn(),
+            report: text => this.#console.print(text),
+        }, assets)
+        // Over the menu, which it replaces while it is read.
+        this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() })
+        this.#menuOn()
     }
 
 
@@ -163,12 +182,25 @@ export class MecardGame {
         this.#consoleView.resize(this.ui.width - 8, Math.floor(this.ui.height * CONSOLE_SHARE))
         this.ui.handle(input)
         this.#openConsole(input)
-        if(this.#pnj.visible) this.#pnj.frame()
+        if(this.#guide.visible) this.#guide.frame(input)
+        else if(this.#menu.visible) this.#menu.frame()
+        else if(this.#pnj.visible) this.#pnj.frame()
         else if(this.#arm.visible) this.#arm.frame()
         else if(this.#library.visible) this.#library.frame(input)
         this.#screen.frame(input, world, dt)
     }
 
+
+    /**
+     * Keep the run in progress in a slot from now on, and offer in the menu to go on with the one it holds.
+     * Until then, nothing is kept.
+     */
+    public keep(slot: SaveSlot<RunSave>): void {
+        this.#saves = slot
+        this.#saver?.dispose()
+        this.#saver = new RunSaver(this.run, slot, text => this.#console.print(text))
+        if(this.#menu.visible) void this.#readSave()
+    }
 
     /** Print what went wrong in the console. */
     public report(text: string): void {
@@ -204,11 +236,16 @@ export class MecardGame {
         if(this.#host) this.#host.engine = this.run
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
+        if(this.#saver) this.#saver.engine = this.run
         this.#screen.engine = this.run
         this.#travelOn()
     }
 
 
+    readonly #menu: MainMenuScreen
+    readonly #guide: GuideScreen
+    #saves: SaveSlot<RunSave>|null = null
+    #saver: RunSaver|null = null
     readonly #screen: RunScreen
     readonly #pnj: PnjScreen
     readonly #arm: ArmScreen
@@ -281,8 +318,63 @@ export class MecardGame {
         this.#screen.showMap()
     }
 
+    /** Show the main menu alone, with the choice of going on if a run is kept. */
+    #menuOn(): void {
+        this.#screen.visible = false
+        this.#pnj.visible = false
+        this.#arm.visible = false
+        this.#library.visible = false
+        this.#guide.visible = false
+        this.#menu.visible = true
+        void this.#readSave()
+    }
+
+    /** Show the guide alone, the menu left where it stands. */
+    #guideOn(): void {
+        this.#menu.visible = false
+        this.#guide.visible = true
+    }
+
+    /** Learn whether a run is kept, and grey the menu's choice of going on with it if none is. */
+    async #readSave(): Promise<void> {
+        const saves = this.#saves
+        if(!saves){
+            this.#menu.hasSave = false
+            return
+        }
+        try {
+            this.#menu.hasSave = await saves.load() !== null
+        } catch(error){
+            this.#menu.hasSave = false
+            this.#console.print(`La sauvegarde n'a pas pu être lue : ${String(error)}`)
+        }
+    }
+
+    /** Leave the menu for a new run, the one kept forgotten once the new one leaves its first halt. */
+    #startNewGame(): void {
+        this.#menu.visible = false
+        this.restart()
+    }
+
+    /** Leave the menu for the run kept. */
+    #continueGame(): void {
+        const saves = this.#saves
+        if(!saves) return
+        saves.load().then(save => {
+            if(!save) return
+            this.run.backToMap()
+            this.run.load(save)
+            this.#menu.visible = false
+            this.#travelOn()
+        }, (error: unknown) => {
+            this.#console.print(`La sauvegarde n'a pas pu être lue : ${String(error)}`)
+        })
+    }
+
     /** Hide the benches, the run shown again. */
     #benchesOff(): void {
+        this.#menu.visible = false
+        this.#guide.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
         this.#library.visible = false

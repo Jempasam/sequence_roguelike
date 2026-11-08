@@ -1,8 +1,9 @@
-import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, Heart, heroOf, KIT_HEARTS, redHearts } from "@game/core/mecard"
+import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, Heart, heroOf, redHearts } from "@game/core/mecard"
 import type { Carried } from "@game/core/mecard"
-import type { Card, Item, Kit, Monster, UnitSpec } from "@game/core/mecard"
+import type { Card, HeartGroup, Item, Kit, Monster, UnitSpec } from "@game/core/mecard"
 
-import type { Definitions, HeartGroup } from "./define"
+import { heartsOfKit } from "./define"
+import type { Definitions } from "./define"
 import { normalize, UsageError, unknownName } from "./errors"
 
 export type FighterKind = "kit"|"monster"|"pet"
@@ -82,7 +83,7 @@ export class Roster {
         this.fighters = [
             ...ALL_KITS
                 .filter(kit => !kitNames.has(normalize(kit.name)))
-                .map(kit => kitFighter(kit, KIT_HEARTS, [], false)),
+                .map(kit => kitFighter(kit, heartsOfKit(kit).hearts, heartsOfKit(kit).bonus, false)),
             ...definitions.kits.map(defined => kitFighter(defined.kit, defined.hearts, defined.bonus, true)),
             ...ALL_MONSTERS.filter(each => !monsterNames.has(normalize(each.name))).map(each => monsterFighter(each, "monster", false)),
             ...ALL_PETS.filter(each => !monsterNames.has(normalize(each.name))).map(each => monsterFighter(each, "pet", false)),

@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { KEPT_LOOT_HEARTS, NECROMANCER_HALT, NECROMANCER_OFFER_SIZE, Run, SPENT_LOOT_HEARTS } from "@game/core/mecard"
+import { KEPT_LOOT_HEARTS, NECROMANCER_HALT, NECROMANCER_OFFER_SIZE, SPENT_LOOT_HEARTS } from "@game/core/mecard"
 import type { Text } from "@game/core"
 import type { HeartLoot, Shown, Way } from "@game/core/mecard"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
+import { startedRun } from "../../../../../../fixtures/startedRun"
 
 /** A player remembering the hearts it was offered, each time it was. */
 class Watching extends ScriptedPlayer {
@@ -23,7 +24,7 @@ class Watching extends ScriptedPlayer {
 
 describe("NecromancerHalt", () => {
     test("a character given hearts that last, then hearts used once, each among two kinds", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [hero] = run.heroes
         const size = hero.hearts.length
         const halt = NECROMANCER_HALT.create(run)
@@ -41,7 +42,7 @@ describe("NecromancerHalt", () => {
     })
 
     test("nothing given before the second choice", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [hero] = run.heroes
         const size = hero.hearts.length
         const halt = NECROMANCER_HALT.create(run)
@@ -55,7 +56,7 @@ describe("NecromancerHalt", () => {
     })
 
     test("opened again, it offers the same hearts", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const halt = NECROMANCER_HALT.create(run)
         const first = new Watching(run)
         halt.start(first)

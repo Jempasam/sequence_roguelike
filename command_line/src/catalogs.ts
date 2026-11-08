@@ -63,7 +63,12 @@ export const CATALOGS: readonly Catalog[] = [
     { name: "cards", entries: () => described(ALL_CARDS) },
     { name: "kits", entries: () => ALL_KITS.map(kit => ({
         name: kit.name,
-        description: `cartes ${names(kit.cards)}, objets ${names(kit.items)}, usables ${names(kit.usables)}`,
+        description: [
+            `cœurs ${kit.hearts.map(group => `${group.kind.name}×${group.count}`).join(" + ")}`,
+            `cartes ${names(kit.cards)}`,
+            `objets ${names(kit.items)}`,
+            `usables ${names(kit.usables)}`,
+        ].join(", "),
     })) },
     { name: "monsters", entries: () => units(ALL_MONSTERS) },
     { name: "pets", entries: () => units(ALL_PETS) },

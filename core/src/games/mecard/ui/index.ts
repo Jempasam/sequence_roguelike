@@ -9,5 +9,6 @@
 export * from "./look/theme"
 export * from "./battle/BattleScreen"
 export * from "./run/RunScreen"
+export * from "./menu/MainMenuScreen"
 export * from "./MecardGame"
 export * from "./MecardViewer"

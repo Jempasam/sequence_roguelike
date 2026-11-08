@@ -2,6 +2,7 @@ import { plainText } from "@game/core"
 import type { Text } from "@game/core"
 import { deckNameOf, forge, Run, SLASH, STEP, THRUST } from "@game/core/mecard"
 import type { Card, Choosing, Count, HaltContext, HaltMoment, Hero, Shown, Way } from "@game/core/mecard"
+import { startedRun } from "./startedRun"
 
 /** How many answers a play gives at most, so a shop that can always be asked again ends. */
 const MAX_ANSWERS = 40
@@ -136,7 +137,7 @@ export class ScriptedPlayer implements HaltContext {
  * fusion and two copies of cards.
  */
 export function preparedRun(seed: number): Run {
-    const run = new Run(seed)
+    const run = startedRun(seed)
     run.gold = 1000
     const [first] = run.heroes
     first.decks[0].push(THRUST, THRUST, SLASH, SLASH, STEP, STEP)

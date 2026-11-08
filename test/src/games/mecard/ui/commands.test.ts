@@ -6,6 +6,7 @@ import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core/mecard/sync"
 import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
+import { startedRun } from "../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -31,7 +32,7 @@ interface Game {
 
 /** A console over a run, its first battle started. */
 function game(): Game {
-    const run = new Run(3)
+    const run = startedRun(3)
     let battle = run.newBattle()
     const changed: Unit[] = []
     const visited: HaltType[] = []
@@ -157,9 +158,10 @@ describe("Mecard commands", () => {
     test("item give → the item plugged in at once", () => {
         const { console, battle } = game()
         const unit = lancer(battle())
+        const strengthBefore = unit.stats.strength.value
         console.submit("item give Lancier Pierre_à_aiguiser")
         expect(unit.items).toContain(WHETSTONE)
-        expect(unit.stats.strength.value).toBe(1)
+        expect(unit.stats.strength.value).toBe(strengthBefore + 1)
     })
 
     test("status add then remove → the status on, then off", () => {
@@ -312,9 +314,9 @@ describe("Mecard commands", () => {
         console.submit("run control Lancier bot")
         expect(run.heroes[0].controller).toBe("bot")
         console.submit("run usable Lancier Potion_de_soin")
-        expect(run.heroes[0].usables.map(each => each.usable.name)).toEqual(["Potion de soin"])
+        expect(run.heroes[0].usables.map(each => each.usable.name)).toEqual(["Bouteille d'estoc", "Potion de soin"])
         console.submit("run unusable Lancier Potion_de_soin")
-        expect(run.heroes[0].usables).toEqual([])
+        expect(run.heroes[0].usables.map(each => each.usable.name)).toEqual(["Bouteille d'estoc"])
         expect(errors(console)).toEqual([])
     })
 

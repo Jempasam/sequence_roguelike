@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, GOBLIN, loadTravel, Run, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
+import { BATTLE, GOBLIN, loadTravel, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
 import type { Monster, Travel, TravelSave } from "@game/core/mecard"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A journey read back into a new run. */
 function reloaded(save: TravelSave): Travel {
-    return loadTravel(JSON.parse(JSON.stringify(save)) as TravelSave, new Run(99))
+    return loadTravel(JSON.parse(JSON.stringify(save)) as TravelSave, startedRun(99))
 }
 
 /** Stand the party on each next place, the first each time, a given number of times. */
@@ -18,12 +19,12 @@ function walk(travel: Travel, steps: number): void {
 
 describe("saveTravel", () => {
     test.each([1, 2, 3, 4, 5])("the first map of seed %i → the same save once read back", seed => {
-        const save = saveTravel(new Run(seed).travel)
+        const save = saveTravel(startedRun(seed).travel)
         expect(saveTravel(reloaded(save))).toEqual(save)
     })
 
     test("the party on its way → the same place, depth and ways on", () => {
-        const { travel } = new Run(7)
+        const { travel } = startedRun(7)
         walk(travel, 4)
         travel.depth = 5
         const loaded = reloaded(saveTravel(travel))
@@ -35,7 +36,7 @@ describe("saveTravel", () => {
     })
 
     test("a map read back → its links, monsters and exits as they were", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         const loaded = reloaded(saveTravel(travel))
         const shape = ({ journey }: Travel) => journey.places.map(place => ({
             kind: place.type.id, layer: place.layer, across: place.across,
@@ -49,21 +50,21 @@ describe("saveTravel", () => {
     })
 
     test("a monster out of the catalog → refused", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         const stranger: Monster = { ...GOBLIN, name: "Inconnu" }
         travel.journey.addFight(BATTLE, [stranger], { layer: 0, across: 0.5 })
         expect(() => saveTravel(travel)).toThrow("Inconnu")
     })
 
     test("out of the map → refused", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         travel.go(travel.next[0])
         expect(travel.phase).toBe("entering")
         expect(() => saveTravel(travel)).toThrow("entering")
     })
 
     test("a save of another version → refused", () => {
-        const save = { ...saveTravel(new Run(3).travel), version: TRAVEL_SAVE_VERSION + 1 }
+        const save = { ...saveTravel(startedRun(3).travel), version: TRAVEL_SAVE_VERSION + 1 }
         expect(() => reloaded(save)).toThrow("version")
     })
 })

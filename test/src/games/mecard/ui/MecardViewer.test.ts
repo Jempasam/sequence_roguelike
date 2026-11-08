@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest"
 import { AssetError } from "@game/core"
 import type { Assets } from "@game/core"
-import { Run } from "@game/core/mecard"
+
 import { LocalSync, RunBroadcaster } from "@game/core/mecard/sync"
 import { MecardViewer } from "@game/core/mecard/viewer"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
+import { startedRun } from "../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -35,7 +36,7 @@ describe("MecardViewer", () => {
 
     test("a journey come → its run is the one shown, a move followed", () => {
         const { channel, viewer } = watching()
-        const run = new Run(5)
+        const run = startedRun(5)
         run.gold = 321
         new RunBroadcaster(run, channel)
         expect(viewer.run.gold).toBe(321)

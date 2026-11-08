@@ -2,18 +2,19 @@ import { describe, expect, test } from "vitest"
 import {
     ALL_CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
     HEART_KINDS, ALL_ITEMS, loadBattle, MergedCard, planFor, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
-    REPEAT_2, Run, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
+    REPEAT_2, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
     ALL_USABLES,
     Vector2, VULNERABLE, WATER, WHETSTONE,
 } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** The first battle of a run, its first round drawn. */
 function firstBattle(seed = 3): Battle {
-    return started(new Run(seed))
+    return started(startedRun(seed))
 }
 
 /** Commit what the bot would play for every unit, players included. */
@@ -77,20 +78,21 @@ describe("saveBattle", () => {
     test("statuses, items and stats changed → loaded back, plugged in again", () => {
         const battle = firstBattle()
         const [hero] = battle.units
+        const strengthBefore = hero.stats.strength.value
         battle.applyStatus(hero, BURN, 3)
         battle.equip(hero, WHETSTONE)
         hero.stats.chainSize.base = 6
         const loaded = loadBattle(saveBattle(battle))
         const [back] = loaded.units
         expect(String(back.statuses.values().next().value)).toBe("brûlure 3 rounds")
-        expect(back.stats.strength.value).toBe(1)
+        expect(back.stats.strength.value).toBe(strengthBefore + 1)
         expect(back.stats.chainSize.base).toBe(6)
     })
 })
 
 describe("saveBattle, fusions and usables", () => {
     test("a fusion in hand and in a chain → written as its cards, loaded back as one card", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const fusion = new FusionCard([new FusionCard([REPEAT_2, THRUST]), STEP])
         run.heroes[0].decks[0].push(fusion, fusion)
         const battle = started(run)
@@ -106,7 +108,7 @@ describe("saveBattle, fusions and usables", () => {
     })
 
     test("a merged card, a draw and a fusion of the catalog in hand → loaded back as what they were", () => {
-        const battle = started(new Run(3))
+        const battle = started(startedRun(3))
         const [hero] = battle.units
         hero.hand.push(new MergedCard([STEP, THRUST]), new RandomCard(FIRE, WATER), UNSTABLE_THRUST)
         const save = saveBattle(battle)
@@ -121,6 +123,7 @@ describe("saveBattle, fusions and usables", () => {
     test("a belt and what was chosen → loaded back, used the same", () => {
         const original = firstBattle(4)
         const [hero] = original.units
+        hero.usables.splice(0)
         hero.usables.push(new Carried(HEALING_POTION), new Carried(HEALING_POTION))
         hero.hearts.damage(2, "physical", null)
         planAll(original)

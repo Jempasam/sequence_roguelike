@@ -1,13 +1,14 @@
 import { describe, expect, test } from "vitest"
 import { AssetError } from "@game/core"
 import type { Assets } from "@game/core"
-import { Run } from "@game/core/mecard"
+
 import { ALL_RUN_LOCKS, RunScreen } from "@game/core/mecard/run-screen"
 import type { RunLocks, RunScreenOptions } from "@game/core/mecard/run-screen"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 import { started } from "../../sim/fixtures"
 import { settled } from "../battle/replay"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -27,7 +28,7 @@ const NO_SPRITES = {
 /** A screen on a new run, shown. */
 function shown(locks?: RunLocks) {
     const setup = uiSetup({}, 620, 348)
-    const run = new Run(3)
+    const run = startedRun(3)
     const screen = new RunScreen(setup.ui, run, {
         theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES, locks,
         toWorld: (x, y) => [x, y], toUi: (x, y) => [x, y],
@@ -52,7 +53,7 @@ describe("RunScreen", () => {
 
     test("a battle joined by a viewer → shown the same way, nothing started by the screen", async() => {
         const { run, screen } = shown(ALL_RUN_LOCKS)
-        run.joinBattle(started(new Run(5)).save())
+        run.joinBattle(started(startedRun(5)).save())
         await settled()
         expect(screen.battleScreen.engine).toBe(run.battle)
         expect(screen.battleScreen.visible).toBe(true)

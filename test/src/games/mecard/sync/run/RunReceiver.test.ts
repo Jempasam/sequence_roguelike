@@ -1,14 +1,15 @@
 import { describe, expect, test } from "vitest"
 import { CHEST_HALT, planFor, Run } from "@game/core/mecard"
 import { LocalSync, RunBroadcaster, RunReceiver } from "@game/core/mecard/sync"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A main client telling a run, and a viewer listening to it. */
 function session(seed = 11) {
     const channel = new LocalSync()
-    const run = new Run(seed)
-    const viewer = new Run(0)
+    const run = startedRun(seed)
+    const viewer = startedRun(0)
     const receiver = new RunReceiver(viewer, channel)
     const broadcaster = new RunBroadcaster(run, channel)
     return { channel, run, viewer, receiver, broadcaster }
@@ -81,7 +82,7 @@ describe("RunReceiver", () => {
 
     test("a new run told → loaded in its place", () => {
         const { viewer, broadcaster } = session()
-        const next = new Run(12)
+        const next = startedRun(12)
         next.gold = 321
         broadcaster.engine = next
         expect(textOf(viewer)).toBe(textOf(next))
@@ -107,13 +108,13 @@ describe("RunBroadcaster", () => {
 
     test("a viewer connecting during a fight → it watches the battle, from the last round told", () => {
         const channel = new LocalSync()
-        const run = new Run(11)
+        const run = startedRun(11)
         new RunBroadcaster(run, channel)
         fight(run)
         const battle = run.battle
         if(!battle) throw new Error("The battle is not fought.")
         battle.advance()
-        const viewer = new Run(0)
+        const viewer = startedRun(0)
         new RunReceiver(viewer, channel)
         expect(viewer.phase).toBe("battle")
         expect(viewer.battle?.round).toBe(battle.round)
@@ -121,11 +122,11 @@ describe("RunBroadcaster", () => {
 
     test("a viewer connecting on the map → the run, no battle", () => {
         const channel = new LocalSync()
-        const run = new Run(11)
+        const run = startedRun(11)
         new RunBroadcaster(run, channel)
         fight(run)
         run.backToMap()
-        const viewer = new Run(0)
+        const viewer = startedRun(0)
         new RunReceiver(viewer, channel)
         expect(viewer.phase).toBe("travel")
         expect(textOf(viewer)).toBe(textOf(run))

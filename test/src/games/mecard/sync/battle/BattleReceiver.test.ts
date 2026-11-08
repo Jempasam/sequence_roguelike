@@ -7,6 +7,7 @@ import type { Battle, Card } from "@game/core/mecard"
 import { BattleBroadcaster, BattleReceiver, LocalSync, writeBattleMessage } from "@game/core/mecard/sync"
 import type { BattleDesync } from "@game/core/mecard/sync"
 import { started } from "../../sim/fixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 /** How many rounds a battle played to its end may last at most, before it is taken as stuck. */
 const SAFETY_ROUNDS = 1000
@@ -18,7 +19,7 @@ const WHOLE_BATTLE_TIMEOUT = 60_000
 
 /** A battle for a viewer to load into. */
 function empty(): Battle {
-    return new Run(0).newBattle()
+    return startedRun(0).newBattle()
 }
 
 /** A main client telling the first battle of a run, and viewers listening to it, their drifts kept. */
@@ -26,7 +27,7 @@ function session(
     options: { viewers?: number, secret?: boolean, held?: boolean, seed?: number, run?: Run } = {},
 ) {
     const channel = new LocalSync(options.held ?? false)
-    const main = started(options.run ?? new Run(options.seed ?? 11))
+    const main = started(options.run ?? startedRun(options.seed ?? 11))
     const viewers = Array.from({ length: options.viewers ?? 1 }, () => new BattleReceiver(empty(), channel))
     const drifts: BattleDesync[] = []
     for(const viewer of viewers) viewer.onDesync = desync => drifts.push(desync)
@@ -60,7 +61,7 @@ function textOf(battle: Battle, secret = false): string {
 
 describe("BattleReceiver", () => {
     test.each([false, true])("a hero with two decks, secret %s → no drift over a whole battle", secret => {
-        const run = new Run(11)
+        const run = startedRun(11)
         const [hero] = run.heroes
         splitDeck(hero, hero.decks[0], run.rng)
         const { main, drifts } = session({ secret, run })
@@ -149,7 +150,7 @@ describe("BattleReceiver", () => {
     })
 
     test("a message older than the one loaded → ignored", () => {
-        const main = started(new Run(11))
+        const main = started(startedRun(11))
         const viewer = new BattleReceiver(empty(), new LocalSync())
         const save = saveBattle(main)
         let loads = 0
@@ -171,7 +172,7 @@ describe("BattleReceiver", () => {
     })
 
     test("no battle watched → what comes is left out", () => {
-        const main = started(new Run(11))
+        const main = started(startedRun(11))
         const viewer = new BattleReceiver(null, new LocalSync())
         const save = saveBattle(main)
         viewer.receive(writeBattleMessage({ kind: "save", number: 1, sequence: 1, secret: false, save }))
@@ -184,7 +185,7 @@ describe("BattleBroadcaster", () => {
         const channel = new LocalSync()
         const sent: string[] = []
         channel.listen(message => sent.push(message))
-        const run = new Run(2)
+        const run = startedRun(2)
         const broadcaster = new BattleBroadcaster(started(run), channel)
         broadcaster.engine = started(run)
         expect(sent.map(message => JSON.parse(message).number)).toEqual([1, 2])
@@ -194,7 +195,7 @@ describe("BattleBroadcaster", () => {
         const channel = new LocalSync()
         const sent: string[] = []
         channel.listen(message => sent.push(message))
-        const battle = started(new Run(2))
+        const battle = started(startedRun(2))
         const broadcaster = new BattleBroadcaster(battle, channel)
         broadcaster.dispose()
         playMain(battle)
@@ -203,7 +204,7 @@ describe("BattleBroadcaster", () => {
 
     test("a viewer connecting → hears the last message of the battle, none between two", () => {
         const channel = new LocalSync()
-        const broadcaster = new BattleBroadcaster(started(new Run(2)), channel)
+        const broadcaster = new BattleBroadcaster(started(startedRun(2)), channel)
         const heard: string[] = []
         channel.listen(message => heard.push(message))
         expect(heard).toHaveLength(1)

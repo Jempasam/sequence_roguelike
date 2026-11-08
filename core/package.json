@@ -31,6 +31,10 @@
         "./mecard/run-screen": "./src/games/mecard/ui/run/RunScreen.ts",
         "./mecard/battle-screen": "./src/games/mecard/ui/battle/BattleScreen.ts",
         "./mecard/viewer": "./src/games/mecard/ui/MecardViewer.ts",
+        "./mecard/guide": "./src/games/mecard/ui/guide/GuideScreen.ts",
+        "./mecard/guide-blocks": "./src/games/mecard/ui/guide/GuideBlocks.ts",
+        "./mecard/guide-content": "./src/games/mecard/ui/guide/guide.ts",
+        "./mecard/menu": "./src/games/mecard/ui/menu/MainMenuScreen.ts",
         "./mecard/game": "./src/games/mecard/ui/MecardGame.ts"
     },
     "scripts": {

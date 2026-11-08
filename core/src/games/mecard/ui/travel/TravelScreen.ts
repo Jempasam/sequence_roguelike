@@ -39,6 +39,7 @@ import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
 import { AbsItemIcon, THING_ICON_SIZE } from "../hud/AbsItemIcon"
 import type { Item } from "../../sim/item/Item"
 import { withPicture } from "../hud/UnitPicture"
+import { HAND_VISUAL } from "../look/UnitSprites"
 import type { UnitSprites } from "../look/UnitSprites"
 import { heartsRow, heartText } from "../hud/HeartView"
 import { HoverPanel } from "../hud/HoverPanel"
@@ -556,6 +557,8 @@ export class TravelScreen {
             return cardsOption(this.theme, cardsOf(shown), shown.text ?? null, {
                 head, under, before: this.#boostersShown(shown), deck: this.#placeOf(shown.from),
                 sprite: shown.sprite, sprites: this.sprites,
+                // The cards of an ally, a character or a monster, overlap.
+                overlapped: Boolean(shown.unit || shown.sprite),
             })
         })
         this.#choose({
@@ -884,8 +887,10 @@ export class TravelScreen {
         const { decorations } = travel.floor.type
         const view = new JourneyView(this.theme, travel.journey, shown, open, decorations)
         view.art = this.#mapArt
-        view.party = this.run.heroes.flatMap(hero => {
-            const sprite = this.sprites.of(hero.sprite)
+        // A party of none is a giant hand floating where the party would stand.
+        const looks = this.run.heroes.length > 0 ? this.run.heroes.map(hero => hero.sprite) : [HAND_VISUAL]
+        view.party = looks.flatMap(look => {
+            const sprite = this.sprites.of(look)
             return sprite ? [sprite] : []
         })
         this.#mapView = view

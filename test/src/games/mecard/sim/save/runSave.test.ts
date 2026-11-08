@@ -3,6 +3,7 @@ import {
     allCards, FusionCard, ALL_ITEMS, loadRun, RED_HEART, Run, RUN_SAVE_VERSION, saveRun, splitDeck, ALL_USABLES,
 } from "@game/core/mecard"
 import type { RunSave } from "@game/core/mecard"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -13,7 +14,7 @@ function sent(run: Run): RunSave {
 
 /** A run with something of everything a party may hold. */
 function furnished(): Run {
-    const run = new Run(21)
+    const run = startedRun(21)
     const [first, second] = run.heroes
     splitDeck(first, first.decks[0], run.rng)
     run.giveItem(first, ALL_ITEMS[0])
@@ -30,7 +31,7 @@ function furnished(): Run {
 
 describe("saveRun", () => {
     test("a new run → the same save once read back", () => {
-        const save = sent(new Run(4))
+        const save = sent(startedRun(4))
         expect(sent(loadRun(save))).toEqual(save)
     })
 
@@ -61,13 +62,13 @@ describe("saveRun", () => {
     })
 
     test("during a battle → refused", () => {
-        const run = new Run(4)
+        const run = startedRun(4)
         run.startBattle()
         expect(() => saveRun(run)).toThrow("fight")
     })
 
     test("a save of another version → refused", () => {
-        const save = { ...saveRun(new Run(4)), version: RUN_SAVE_VERSION + 1 }
+        const save = { ...saveRun(startedRun(4)), version: RUN_SAVE_VERSION + 1 }
         expect(() => loadRun(save)).toThrow("version")
     })
 })

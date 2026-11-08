@@ -8,12 +8,17 @@ import { Rope } from "../../../../engine/ui"
 import type { NineSlice } from "../../../../engine/ui"
 import { BagView } from "../hud/BagView"
 import { loadBoosterFrame } from "../hud/BoosterView"
+import { visual } from "../../sim/base/Visual"
 import type { Visual } from "../../sim/base/Visual"
 import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
 import { loadPictures } from "./visualPath"
 
+/** The giant floating hand standing for a party of none on the map: it is no unit, so no kit names it. */
+export const HAND_VISUAL: Visual = visual("units/hand")
+
 /** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
 export const SPRITE_KEYS: readonly string[] = [
+    "units/hand",
     "units/lancer",
     "units/swordsman",
     "units/archer",
@@ -23,6 +28,30 @@ export const SPRITE_KEYS: readonly string[] = [
     "units/assassin",
     "units/apothecary",
     "units/puppeteer",
+    "units/pyromancer",
+    "units/priest",
+    "units/fisher",
+    "units/spiritist",
+    "units/bullfighter",
+    "units/chronomancer",
+    "units/rider",
+    "units/martyr",
+    "units/explosive_goblin",
+    "units/gravitationist",
+    "units/druid",
+    "units/gunner",
+    "units/hypnotist",
+    "units/knight",
+    "units/shadow_thief",
+    "units/tempest_mage",
+    "units/demonist",
+    "units/acrobat",
+    "units/black_knight",
+    "units/bleeder",
+    "units/turret_engineer",
+    "units/duelist",
+    "units/swamp_sorcerer",
+    "units/shadow_samurai",
     "units/goblin",
     "units/monster_archer",
     "units/brute",

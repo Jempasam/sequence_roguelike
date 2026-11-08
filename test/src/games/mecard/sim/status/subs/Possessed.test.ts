@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { Battle, POSSESSED, Run } from "@game/core/mecard"
+import { Battle, POSSESSED } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
+import { startedRun } from "../../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A first monster of a battle, with its deck in order. */
 function monster(): { battle: Battle, unit: Unit } {
-    const run = new Run(3)
+    const run = startedRun(3)
     const battle = run.newBattle()
     const unit = battle.units.find(each => each.team === run.monstersTeam)
     if(!unit) throw new Error("No monster in the battle.")

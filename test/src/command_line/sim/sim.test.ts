@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { ALL_KITS } from "@game/core/mecard"
 import { mergeTallies, planOf, run, sim, UsageError } from "@game/command_line/sim"
 import type { Console, Matrix, Tally } from "@game/command_line/sim"
 
@@ -95,7 +96,7 @@ describe("sim", () => {
 
     test("a group of partners → a column for each, the subject's own left empty", async() => {
         const [matrix] = await tablesOf("--of", "Mage", "--out", "with:kits", "--games", "1")
-        expect(matrix.columns).toHaveLength(10)
+        expect(matrix.columns).toHaveLength(ALL_KITS.length)
         expect(matrix.cells[0].filter(each => each === null)).toHaveLength(1)
     })
 
@@ -176,6 +177,6 @@ describe("sim command line", () => {
     test("the default outputs → the full comparison", async() => {
         const plan = await planOf(["--quiet"])
         expect(plan.columns.map(column => column.label)).toEqual(["total", "solo", "team", "cave", "forest", "mine", "hell", "kits"])
-        expect(plan.subjects).toHaveLength(10)
+        expect(plan.subjects).toHaveLength(ALL_KITS.length)
     })
 })

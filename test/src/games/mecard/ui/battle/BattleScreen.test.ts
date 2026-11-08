@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CardChain, Run } from "@game/core/mecard"
+import { CardChain } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 import { ALL_BATTLE_LOCKS, BattleScreen, NO_BATTLE_LOCKS } from "@game/core/mecard/battle-screen"
 import type { BattleLocks, BattleScreenOptions } from "@game/core/mecard/battle-screen"
@@ -7,6 +7,7 @@ import type { Painter } from "@game/core"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 import { settled } from "./replay"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -23,7 +24,7 @@ const NO_WORLD = new Proxy({}, { get: () => () => {} }) as unknown as Painter
 /** A screen on the first fight of a run, its battles over told. */
 function shown(locks: BattleLocks = NO_BATTLE_LOCKS) {
     const setup = uiSetup({}, 620, 348)
-    const battle = new Run(3).newBattle()
+    const battle = startedRun(3).newBattle()
     const over: Battle[] = []
     let readies = 0
     const screen = new BattleScreen(setup.ui, battle, {
@@ -270,7 +271,7 @@ describe("BattleScreen", () => {
         const game = shown()
         await played(game)
         const { screen } = game
-        const next = new Run(4).newBattle()
+        const next = startedRun(4).newBattle()
         screen.engine = next
         await played(game)
         expect(screen.engine).toBe(next)

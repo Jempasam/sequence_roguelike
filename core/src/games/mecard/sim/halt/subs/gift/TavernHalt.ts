@@ -39,6 +39,12 @@ export class TavernHalt extends AbstractHalt {
     }
 
 
+    /** A party of none cannot fight: nobody leaves before someone is hired. */
+    public override get locked(): boolean {
+        return this.run.heroes.length === 0 && this.#kits.length > 0
+    }
+
+
     public start(ctx: HaltContext): void {
         if(this.#kits.length === 0){
             ctx.tell("La taverne est vide : tous les héros sont déjà avec toi.")

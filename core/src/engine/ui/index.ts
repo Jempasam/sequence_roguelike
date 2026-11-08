@@ -1,7 +1,7 @@
 /**
  * @packageDocumentation
  * The interface of the game: menus, HUD and debug tools. A retained tree of {@link Component}s, laid out by
- * {@link Container}s ({@link Box}, {@link Stack}, {@link FitBox}, {@link Scroll}, {@link Hand},
+ * {@link Container}s ({@link Box}, {@link Stack}, {@link FitBox}, {@link Scroll}, {@link OverflowContainer},
  * {@link Tilt}), in the {@link Layer}s of a {@link UiRoot}. A container may {@link Pose} its children,
  * turned and scaled. The root keeps the state of the tree (focus, scrolling, cursor), lays out what
  * changed, and draws again only the zones that changed, into a texture of its own laid on the screen each
@@ -30,8 +30,8 @@ export { Layer } from "./Layer"
 export { Box } from "./layout/Box"
 export type { Align, BoxDirection, BoxOptions, BoxSlot } from "./layout/Box"
 export { FitBox } from "./layout/FitBox"
-export { Hand } from "./layout/Hand"
-export type { HandOptions } from "./layout/Hand"
+export { OverflowContainer } from "./layout/OverflowContainer"
+export type { OverflowContainerOptions } from "./layout/OverflowContainer"
 export type { FitMode } from "./layout/FitBox"
 export { Scroll, WHEEL_STEP } from "./layout/Scroll"
 export type { ScrollOptions } from "./layout/Scroll"

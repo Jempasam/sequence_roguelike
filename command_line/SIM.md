@@ -51,7 +51,7 @@ Un combat contre des kits est joué une fois sur deux depuis chaque côté de l'
 | `usable:Nom[*N]` | usables de départ (kits seulement) |
 | `@Base` | part d'un kit ou monstre du jeu, ou défini plus tôt ; `@kit:X` / `@monster:X` si le nom est ambigu |
 | `-Carte`, `-item:Nom`, `-usable:Nom` (`*N` ok) | retire ce que `@Base` apporte |
-| `heart:Type[*N]` | N cœurs de ce type : `heart:rouge*4`, `heart:rose*3`, `heart:noir*2`. Un monstre n'a que des rouges ; un kit sans aucun `heart:` a 6 rouges, un kit qui en nomme a exactement ceux-là (`heart:noir*6` seul : un kit sans cœur rouge). Les types : `rouge`, `rose`, `noir`, `bouclier`, `bleu`, `verre`, `temps`… |
+| `heart:Type[*N]` | N cœurs de ce type : `heart:rouge*4`, `heart:rose*3`, `heart:noir*2`. Un monstre n'a que des rouges ; un kit du jeu a ses propres cœurs (`list kits` les donne, et `@Kit` les reprend) ; un kit défini sans aucun `heart:` a 6 rouges, un kit qui en nomme a exactement ceux-là (`heart:noir*6` seul : un kit sans cœur rouge). Les types : `rouge`, `rose`, `noir`, `bouclier`, `bleu`, `verre`, `temps`… |
 | `-heart:Type[*N]` | retire des cœurs hérités de `@Base` (`-heart:rouge*2`) |
 | `draw:N`, `size:N` | pioche et taille : la définition est un monstre |
 

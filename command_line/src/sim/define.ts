@@ -5,14 +5,18 @@ import {
     ALL_CARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES, HEART_KINDS, KIT_HEARTS, monster, RED_HEART,
     visual,
 } from "@game/core/mecard"
-import type { Card, HeartKind, Item, Kit, Monster, Usable } from "@game/core/mecard"
+import type { Card, HeartGroup, HeartKind, Item, Kit, Monster, Usable } from "@game/core/mecard"
 
 import { normalize, UsageError, unknownName } from "./errors"
 
-/** Some hearts of one kind. */
-export interface HeartGroup {
-    readonly kind: HeartKind
-    readonly count: number
+export type { HeartGroup }
+
+/** The hearts of a kit of the game: how many red ones, and the groups of the other kinds. */
+export function heartsOfKit(kit: Kit): { hearts: number, bonus: HeartGroup[] } {
+    return {
+        hearts: kit.hearts.filter(group => group.kind === RED_HEART).reduce((sum, group) => sum + group.count, 0),
+        bonus: kit.hearts.filter(group => group.kind !== RED_HEART),
+    }
 }
 
 /** A kit defined on the command line: the kit, the red hearts it starts with and the hearts of other kinds. */
@@ -123,7 +127,10 @@ class Known {
             const own = this.kits.find(each => normalize(each.kit.name) === wanted)
             const official = ALL_KITS.find(each => normalize(each.name) === wanted)
             if(own) found.push(kitBase(own.kit, own.hearts, own.bonus))
-            else if(official) found.push(kitBase(official, KIT_HEARTS, []))
+            else if(official){
+                const { hearts, bonus } = heartsOfKit(official)
+                found.push(kitBase(official, hearts, bonus))
+            }
         }
         if(kind === null || kind === "monster" || kind === "pet"){
             const own = this.monsters.find(each => normalize(each.name) === wanted)
@@ -257,6 +264,7 @@ function parseDefinition(text: string, label: string, known: Known): DefinedKit|
             cards: draft.cards,
             items: draft.items,
             usables: draft.usables,
+            hearts: [{ kind: RED_HEART, count: hearts }, ...draft.bonus],
         },
         hearts,
         bonus: draft.bonus,
@@ -378,9 +386,9 @@ function fromModule(exported: Record<string, unknown>, path: string, known: Know
                 sprite: kit.sprite ?? CUSTOM_SPRITE,
                 items: kit.items ?? [],
                 usables: kit.usables ?? [],
+                hearts: kit.hearts ?? [{ kind: RED_HEART, count: KIT_HEARTS }],
             },
-            hearts: KIT_HEARTS,
-            bonus: [],
+            ...heartsOfKit({ ...kit, hearts: kit.hearts ?? [{ kind: RED_HEART, count: KIT_HEARTS }] }),
         }
         known.kits.push(defined)
         out.kits.push(defined)

@@ -10,5 +10,6 @@
 export * from "./battleSave"
 export * from "./catalogNames"
 export * from "./runSave"
+export * from "./runSlot"
 export * from "./statusCodecs"
 export * from "./travelSave"

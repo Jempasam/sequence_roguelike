@@ -32,6 +32,9 @@ export interface Halt {
     /** Did it change the run yet? A halt left before that may be visited again, as it was. */
     readonly hasImpact: boolean
 
+    /** Must the party stay until the halt let it go? The visit cannot be left while it is. */
+    readonly locked: boolean
+
     /**
      * Open the visit, from its first dialog. It is called again when the party comes back, what the halt
      * offers staying the same.

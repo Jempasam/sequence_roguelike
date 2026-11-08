@@ -2,12 +2,13 @@ import { describe, expect, test } from "vitest"
 import { BURN, CardChain, loadBattle, planFor, POISONED, Run } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** The first battle of a run, its first round drawn. */
 function firstBattle(seed = 3): Battle {
-    return started(new Run(seed))
+    return started(startedRun(seed))
 }
 
 /** Commit what the bot would play for every unit, players included. */
@@ -80,7 +81,7 @@ describe("Battle.load", () => {
 
 describe("Battle.advance", () => {
     test("waiting for its round → it starts, and the bots commit", () => {
-        const battle = new Run(3).newBattle()
+        const battle = startedRun(3).newBattle()
         battle.advance()
         expect(battle.phase).toBe("preparation")
         const bots = battle.initiative.filter(unit => unit.controller === "bot")
@@ -108,9 +109,9 @@ describe("Battle.advance", () => {
 
 describe("Travel", () => {
     test("loaded → stands where the save has it, told once", () => {
-        const source = new Run(5)
+        const source = startedRun(5)
         source.travel.jump(source.travel.next[0])
-        const run = new Run(5)
+        const run = startedRun(5)
         let told = 0
         run.travel.loaded.add(() => told++)
         run.travel.load(source.travel.save())
@@ -120,13 +121,13 @@ describe("Travel", () => {
     })
 
     test("on the map → waits for a place, not to go on", () => {
-        const { travel } = new Run(5)
+        const { travel } = startedRun(5)
         expect(travel.awaited.places).toEqual(travel.next)
         expect(travel.canAdvance).toBe(false)
     })
 
     test("entering a place → waits to go on, then is in", () => {
-        const { travel } = new Run(5)
+        const { travel } = startedRun(5)
         travel.go(travel.next[0])
         expect(travel.awaited.places).toEqual([])
         expect(travel.canAdvance).toBe(true)
@@ -137,10 +138,10 @@ describe("Travel", () => {
 
 describe("Run", () => {
     test("loaded → the party, the gold and the numbers of the save, what listens kept", () => {
-        const source = new Run(5)
+        const source = startedRun(5)
         source.gold = 321
         source.fire(source.heroes[0])
-        const run = new Run(8)
+        const run = startedRun(8)
         const told: Run[] = []
         run.loaded.add(loaded => told.push(loaded))
         run.load(source.save())
@@ -151,7 +152,7 @@ describe("Run", () => {
     })
 
     test("a fight reached → going on starts its battle", () => {
-        const run = new Run(5)
+        const run = startedRun(5)
         const { travel } = run
         const before = travel.journey.places.find(place => {
             return travel.journey.nextOf(place).some(next => next.monsters.length > 0)
@@ -170,7 +171,7 @@ describe("Run", () => {
 
     test("joining a battle fought elsewhere → it is the one being fought, and told", () => {
         const save = firstBattle().save()
-        const run = new Run(5)
+        const run = startedRun(5)
         const told: Battle[] = []
         run.battleStarted.add(battle => told.push(battle))
         run.joinBattle(save)

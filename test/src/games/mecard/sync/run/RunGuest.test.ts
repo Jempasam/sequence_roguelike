@@ -1,6 +1,6 @@
 import { NetSync } from "@game/core"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
-import { planFor, Run } from "@game/core/mecard"
+import { planFor } from "@game/core/mecard"
 import {
     COOP_SEATS, FIXED_SEATS, RunBroadcaster, RunGuest, RunHost, RunReceiver,
 } from "@game/core/mecard/sync"
@@ -8,6 +8,7 @@ import {
 import { nodeNet, startNetServer } from "../../../../fixtures/netServer"
 import type { NetServer } from "../../../../fixtures/netServer"
 import { fight, unitOf } from "../fixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -37,7 +38,7 @@ describe("RunGuest over the network", () => {
         const code = await main.ready
         const room = main.room
         if(!room) throw new Error("A main client has a room.")
-        const run = new Run(11)
+        const run = startedRun(11)
         let told = 0
         const host = new RunHost(run, room, COOP_SEATS, FIXED_SEATS, () => told++)
         new RunBroadcaster(run, main)
@@ -46,7 +47,7 @@ describe("RunGuest over the network", () => {
         opened.push(client)
         const link = client.link
         if(!link) throw new Error("A client coming to play has a link.")
-        const viewer = new Run(0)
+        const viewer = startedRun(0)
         new RunReceiver(viewer, client)
         const guest = new RunGuest(viewer, link, () => {})
         await until(() => guest.units.length === 1)

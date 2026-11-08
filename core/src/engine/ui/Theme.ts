@@ -68,6 +68,9 @@ export interface Theme {
         readonly track: NineSlice
         readonly thumb: NineSlice
 
+        /** The thumb while the pointer is over the bar or holds the thumb: lighter, so it is seen to be grabbed. */
+        readonly thumbHover: NineSlice
+
         /** The width of the bar, in virtual pixels. */
         readonly width: number
 

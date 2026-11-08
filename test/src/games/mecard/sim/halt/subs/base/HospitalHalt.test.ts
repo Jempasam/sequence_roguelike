@@ -1,15 +1,16 @@
 import { describe, expect, test } from "vitest"
-import { HOSPITAL_HALT, INVENTED_COUNTS, RED_HEART, Run, SPENT_LOOT_HEARTS } from "@game/core/mecard"
+import { HOSPITAL_HALT, INVENTED_COUNTS, RED_HEART, SPENT_LOOT_HEARTS } from "@game/core/mecard"
 import type { Text } from "@game/core"
 import type { HeartLoot, Shown } from "@game/core/mecard"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
+import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Tests ---
 
 describe("HospitalHalt", () => {
     test("each character healed, then given the hearts it picks among a few drawn", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [first] = run.heroes
         first.hearts[0].isEmpty = true
         const sizes = run.heroes.map(hero => hero.hearts.length)

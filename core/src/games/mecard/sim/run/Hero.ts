@@ -8,7 +8,6 @@ import { Team } from "../battle/Team"
 import { UnitStats } from "../battle/Unit"
 import type { Controller, StatBases } from "../battle/Unit"
 import type { Card } from "../card/Card"
-import { KIT_HEARTS } from "../catalog/kits"
 import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
 import { Carried } from "../usable/Usable"
@@ -63,7 +62,7 @@ export function hero(spec: HeroSpec): Hero {
 export function heroOf(kit: Kit, name = kit.name): Hero {
     return hero({
         name, sprite: kit.sprite, controller: "player", decks: [[...kit.cards]],
-        hearts: redHearts(KIT_HEARTS), items: [...kit.items],
+        hearts: Heart.groups(kit.hearts), items: [...kit.items],
         usables: kit.usables.map(usable => new Carried(usable)), bases: {},
     })
 }

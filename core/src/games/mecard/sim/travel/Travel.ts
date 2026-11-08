@@ -321,6 +321,7 @@ export class Travel {
      */
     public leave(): void {
         if(this.#phase === "entering") return
+        if(this.#halt?.locked) return
         const halt = this.#halt
         this.#steps.length = 0
         // Forgotten first, so the visit is over for whatever the halt does as it stops.

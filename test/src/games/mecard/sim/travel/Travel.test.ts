@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BUTCHER_HALT, CHEST_HALT, LAYERS, REMOVAL_HALT, Run } from "@game/core/mecard"
+import { BATTLE, BUTCHER_HALT, CHEST_HALT, LAYERS, REMOVAL_HALT } from "@game/core/mecard"
 import type { CardsDialog, Dialog, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -46,7 +47,7 @@ function toBoss(travel: Travel): void {
 
 describe("Travel, going", () => {
     test("a halt of the map → in once entered, the visit waiting for the players", () => {
-        const { travel } = new Run(1)
+        const { travel } = startedRun(1)
         const place = travel.next[0]
         travel.go(place)
         expect(travel.phase).toBe("entering")
@@ -55,30 +56,30 @@ describe("Travel, going", () => {
     })
 
     test("out of the map → cannot go", () => {
-        const { travel } = new Run(1)
+        const { travel } = startedRun(1)
         travel.go(travel.next[0])
         expect(() => travel.go(travel.next[0])).toThrow()
     })
 
     test("not entering a place → cannot enter", () => {
-        expect(() => new Run(1).travel.enter()).toThrow()
+        expect(() => startedRun(1).travel.enter()).toThrow()
     })
 
     test("entering a place → leaving does nothing", () => {
-        const { travel } = new Run(1)
+        const { travel } = startedRun(1)
         travel.go(travel.next[0])
         travel.leave()
         expect(travel.phase).toBe("entering")
     })
 
     test("a place it does not lead to → cannot go", () => {
-        const { travel } = new Run(1)
+        const { travel } = startedRun(1)
         expect(() => travel.go(placeOf(CHEST_HALT))).toThrow()
         expect(travel.phase).toBe("map")
     })
 
     test("a jump → stands there, told, without entering", () => {
-        const { travel } = new Run(1)
+        const { travel } = startedRun(1)
         const log = logOf(travel)
         const place = placeOf(CHEST_HALT)
         travel.jump(place)
@@ -89,7 +90,7 @@ describe("Travel, going", () => {
 
 describe("Travel, fights", () => {
     test("a fight → told, and nothing fought until the run is told to", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const { travel } = run
         const log = logOf(travel)
         const place = placeOf(BATTLE)
@@ -106,7 +107,7 @@ describe("Travel, fights", () => {
 
 describe("Travel, visits", () => {
     test("a chest → each step told in order, down to the map", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         const [hero] = run.heroes
         const log = logOf(travel)
@@ -128,7 +129,7 @@ describe("Travel, visits", () => {
     })
 
     test("a character asked during a pick → follows it, both open", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         travel.takeOffer(offer, 0)
@@ -138,7 +139,7 @@ describe("Travel, visits", () => {
     })
 
     test("a step answered again → the steps after it taken back", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
@@ -151,7 +152,7 @@ describe("Travel, visits", () => {
     })
 
     test("a way back → the dialog before, the character refusing", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         const log = logOf(travel)
         travel.visit(REMOVAL_HALT)
@@ -164,20 +165,20 @@ describe("Travel, visits", () => {
     })
 
     test("no way back → refused", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         travel.visit(CHEST_HALT)
         expect(() => travel.goBack(open(travel))).toThrow()
     })
 
     test("nobody can profit → told so, the character refusing", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         const log = logOf(travel)
         travel.visit(BUTCHER_HALT)
         expect(log.slice(-3)).toEqual(["react done", "told", "react refuse"])
     })
 
     test("a dialog no longer open → refused", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
@@ -186,22 +187,22 @@ describe("Travel, visits", () => {
     })
 
     test("an offer it does not hold → refused", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         travel.visit(CHEST_HALT)
         const offer = open<OfferDialog>(travel)
         expect(() => travel.takeOffer(offer, offer.offers.length)).toThrow()
     })
 
     test("a character it does not let in → refused", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         travel.visit(CHEST_HALT)
         travel.takeOffer(open<OfferDialog>(travel), 0)
-        expect(() => travel.takeHero(open<HeroDialog>(travel), new Run(4).heroes[0])).toThrow()
+        expect(() => travel.takeHero(open<HeroDialog>(travel), startedRun(4).heroes[0])).toThrow()
     })
 
     test("too many cards, or the same twice → refused", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         travel.visit(REMOVAL_HALT)
         travel.takeHero(open<HeroDialog>(travel), run.heroes[0])
@@ -212,7 +213,7 @@ describe("Travel, visits", () => {
     })
 
     test("cards taken → by their places in the pool", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         const [hero] = run.heroes
         const [, second] = hero.decks[0]
@@ -225,7 +226,7 @@ describe("Travel, visits", () => {
     })
 
     test("a halt left as it was → gone back into, the same, no deeper", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         const place = placeOf(CHEST_HALT)
         travel.jump(place)
         const halt = travel.haltOf(place)
@@ -237,7 +238,7 @@ describe("Travel, visits", () => {
     })
 
     test("an exit accepted → the next floor, its map new, the party before it", () => {
-        const { travel } = new Run(3)
+        const { travel } = startedRun(3)
         toBoss(travel)
         const entered: string[] = []
         travel.floorEntered.add(floor => entered.push(floor.type.name))
@@ -257,7 +258,7 @@ describe("Travel, visits", () => {
 
 describe("Run, the party told", () => {
     test("each change → one notification", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const [first, second] = run.heroes
         const log: string[] = []
         run.goldChanged.add(gold => log.push(`gold ${gold}`))
@@ -278,7 +279,7 @@ describe("Run, the party told", () => {
     })
 
     test("the same gold → told nothing", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         let told = 0
         run.goldChanged.add(() => told++)
         const { gold } = run
@@ -287,7 +288,7 @@ describe("Run, the party told", () => {
     })
 
     test("a halt changing a deck → told", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         const { travel } = run
         const [hero] = run.heroes
         const decks: unknown[] = []
@@ -299,6 +300,6 @@ describe("Run, the party told", () => {
     })
 
     test("a character not in the party → cannot be sent away", () => {
-        expect(() => new Run(3).fire(new Run(4).heroes[0])).toThrow()
+        expect(() => startedRun(3).fire(startedRun(4).heroes[0])).toThrow()
     })
 })

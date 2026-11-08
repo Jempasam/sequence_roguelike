@@ -3,6 +3,7 @@ import { AIM, Run, STEP, STRATEGIST_HALT, TACTICS_BOOK, THRUST, WAIT } from "@ga
 import type { Card, Choosing, Count, Halt, Hero } from "@game/core/mecard"
 import type { Text } from "@game/core"
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
+import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -22,7 +23,7 @@ class Strategy extends ScriptedPlayer {
 
 /** A run whose first hero holds some decks, alone in its party. */
 function holding(...decks: Card[][]): { run: Run, hero: Hero } {
-    const run = new Run(1)
+    const run = startedRun(1)
     const [hero] = run.heroes
     run.heroes.splice(1)
     hero.decks.splice(0, hero.decks.length, ...decks)

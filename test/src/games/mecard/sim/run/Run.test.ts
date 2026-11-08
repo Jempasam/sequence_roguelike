@@ -5,6 +5,7 @@ import {
 } from "@game/core/mecard"
 import type { Battle, Monster, Place, PlaceType } from "@game/core/mecard"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -64,19 +65,20 @@ function standOn(run: Run, type: PlaceType): Place {
 
 describe("Run", () => {
     test("bots on both sides → the battle ends, with no error", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const fight = fought(run)
         playOut(fight)
         expect(fight.events.filter(event => event.type === "error")).toEqual([])
         expect(fight.phase).toBe("over")
         run.endBattle()
-        expect(run.rewards).toHaveLength(3)
+        if(run.phase === "rewards") expect(run.rewards).toHaveLength(3)
+        else expect([run.phase, run.rewards]).toEqual(["over", []])
     })
 })
 
 describe("Run.travel", () => {
     test("a place of the first layer, then one it leads to → the party goes deeper", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const first = run.travel.next[0]
         walk(run, first)
         expect(run.travel.place).toBe(first)
@@ -86,18 +88,18 @@ describe("Run.travel", () => {
     })
 
     test("a place not reachable → an error", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         expect(() => walk(run, run.travel.journey.layers[2][0])).toThrow()
     })
 
     test("a new run → the first level of the cave", () => {
-        const { floor } = new Run(1).travel
+        const { floor } = startedRun(1).travel
         expect(floor.type).toBe(CAVE_FLOOR)
         expect(floor.level).toBe(1)
     })
 
     test("entering a floor → it, a new map, the party before its first layer", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const journey = run.travel.journey
         const forest = FOREST_FLOOR.create(2)
         walk(run, run.travel.next[0])
@@ -108,7 +110,7 @@ describe("Run.travel", () => {
     })
 
     test("from the boss → its exits, none more deep", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         toBoss(run)
         const { depth } = run.travel
         expect(run.travel.next.map(place => place.type)).toEqual([EXIT_HALT, EXIT_HALT])
@@ -117,7 +119,7 @@ describe("Run.travel", () => {
     })
 
     test("an exit cancelled → the other one open, and it can be taken", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         toBoss(run)
         const [first, second] = run.travel.next
         walk(run, first)
@@ -129,7 +131,7 @@ describe("Run.travel", () => {
     })
 
     test("an exit taken → its floor, a level harder", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         toBoss(run)
         const exit = run.travel.next[1]
         walk(run, exit)
@@ -142,7 +144,7 @@ describe("Run.travel", () => {
     })
 
     test("the exit of hell → the cave again, a level harder", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         run.travel.enterFloor(HELL_FLOOR.create(3))
         toBoss(run)
         const [exit] = run.travel.next
@@ -158,23 +160,23 @@ describe("Run.travel", () => {
 
 describe("Run.haltOf", () => {
     test("asked twice → the same halt", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const place = standOn(run, CHEST_HALT)
         expect(run.travel.haltOf(place)).toBe(run.travel.haltOf(place))
     })
 
     test("two places of a kind → two halts", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         expect(run.travel.haltOf(standOn(run, CHEST_HALT))).not.toBe(run.travel.haltOf(standOn(run, CHEST_HALT)))
     })
 
     test("a fight → an error", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         expect(() => run.travel.haltOf(standOn(run, BATTLE))).toThrow()
     })
 
     test("another floor → new halts", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const place = standOn(run, CHEST_HALT)
         const halt = run.travel.haltOf(place)
         run.travel.enterFloor(FOREST_FLOOR.create(2))
@@ -184,26 +186,26 @@ describe("Run.haltOf", () => {
 
 describe("Run.returnable", () => {
     test("nowhere yet → none", () => {
-        expect(new Run(1).travel.returnable).toBeNull()
+        expect(startedRun(1).travel.returnable).toBeNull()
     })
 
     test("a halt never entered → none, nothing drawn", () => {
-        const run = new Run(1)
-        const twin = new Run(1)
+        const run = startedRun(1)
+        const twin = startedRun(1)
         standOn(run, CHEST_HALT)
         expect(run.travel.returnable).toBeNull()
         expect(run.rng.next()).toBe(twin.rng.next())
     })
 
     test("a halt left with the run as it was → its place", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const place = standOn(run, CHEST_HALT)
         run.travel.haltOf(place).start(new ScriptedPlayer(run))
         expect(run.travel.returnable).toBe(place)
     })
 
     test("a halt that changed the run → none", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const halt = run.travel.haltOf(standOn(run, CHEST_HALT))
         const player = new ScriptedPlayer(run)
         halt.start(player)
@@ -213,7 +215,7 @@ describe("Run.returnable", () => {
     })
 
     test("a place gone from → none", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         run.travel.haltOf(standOn(run, CHEST_HALT))
         standOn(run, SHOP_HALT)
         expect(run.travel.returnable).toBeNull()
@@ -222,7 +224,7 @@ describe("Run.returnable", () => {
 
 describe("Run fights", () => {
     test("a won battle → gold", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         const gold = run.gold
         const fight = fought(run)
         win(run, fight)
@@ -232,7 +234,7 @@ describe("Run fights", () => {
     })
 
     test("the boss → leads its monsters", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         toBoss(run)
         expect(run.fight).toBe(BOSS)
         const fight = fought(run)
@@ -241,7 +243,7 @@ describe("Run fights", () => {
     })
 
     test("the boss of another floor → its own", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         run.travel.enterFloor(FOREST_FLOOR.create(2))
         toBoss(run)
         const fight = fought(run)
@@ -250,7 +252,7 @@ describe("Run fights", () => {
 
     test("a floor of a higher level → its monsters have more hearts", () => {
         const heartsAt = (level: number) => {
-            const run = new Run(2)
+            const run = startedRun(2)
             run.travel.enterFloor(new GoblinCave(level))
             walk(run, run.travel.next[0])
             const units = fought(run).units.filter(unit => unit.team === run.monstersTeam)
@@ -260,7 +262,7 @@ describe("Run fights", () => {
     })
 
     test("a party of seven → every one in the arena, no two on the same spot", () => {
-        const run = new Run(3)
+        const run = startedRun(3)
         for(let i = 0; i < 5; i++) run.tame(GOBLIN)
         const fight = fought(run)
         const party = fight.units.filter(unit => unit.team === run.heroesTeam)
@@ -275,7 +277,7 @@ describe("Run fights", () => {
     })
 
     test("an ally → plays its battle as a bot, with no error", () => {
-        const run = new Run(5)
+        const run = startedRun(5)
         run.tame(GOBLIN)
         const fight = fought(run)
         playOut(fight)
@@ -285,26 +287,26 @@ describe("Run fights", () => {
 
 describe("Run party", () => {
     test("a kit hired twice → two names", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const first = run.hire(ARCHER_KIT)
         const second = run.hire(ARCHER_KIT)
         expect(first.name).not.toBe(second.name)
     })
 
     test("two merged → one in place of the first", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [lancer, swordsman] = run.heroes
         const made = run.merge(lancer, swordsman)
         expect(run.heroes).toEqual([made])
     })
 
     test("one merged with itself → an error", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         expect(() => run.merge(run.heroes[0], run.heroes[0])).toThrow()
     })
 
     test("more spent than held → an error, the gold kept", () => {
-        const run = new Run(1)
+        const run = startedRun(1)
         expect(() => run.spend(run.gold + 1)).toThrow()
     })
 })
@@ -318,7 +320,7 @@ describe("Run, its phases", () => {
     }
 
     test("a whole fight → played by its methods alone, from the map back to the map", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         const { travel } = run
         const log: string[] = []
         run.phaseChanged.add(phase => log.push(phase))
@@ -340,7 +342,7 @@ describe("Run, its phases", () => {
     })
 
     test("a fight reached → no battle until it is started", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         const { travel } = run
         const place: Place = { type: BATTLE, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
         travel.jump(place)
@@ -354,7 +356,7 @@ describe("Run, its phases", () => {
     })
 
     test("a lost battle → the run over, told, with no reward", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         const defeats: Run[] = []
         run.defeated.add(each => defeats.push(each))
         lose(run, fought(run))
@@ -365,32 +367,32 @@ describe("Run, its phases", () => {
     })
 
     test("a battle not over → cannot end", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         fought(run)
         expect(() => run.endBattle()).toThrow()
     })
 
     test("a battle during a battle → refused", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         run.startBattle()
         expect(() => run.startBattle()).toThrow()
     })
 
     test("out of the rewards → nothing to claim or skip", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         expect(() => run.skipReward()).toThrow()
         expect(() => run.claim({ kind: "heart", loot: { heart: RED_HEART, count: 2 } }, run.heroes[0])).toThrow()
     })
 
     test("a reward not offered → refused", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         win(run, fought(run))
         run.endBattle()
         expect(() => run.claim({ kind: "heart", loot: { heart: RED_HEART, count: 2 } }, run.heroes[0])).toThrow()
     })
 
     test("a reward skipped → back on the map, nothing gained", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         win(run, fought(run))
         run.endBattle()
         run.skipReward()
@@ -398,7 +400,7 @@ describe("Run, its phases", () => {
     })
 
     test("back to the map → the visit left and the battle dropped", () => {
-        const run = new Run(2)
+        const run = startedRun(2)
         run.travel.visit(CHEST_HALT)
         run.startBattle()
         run.backToMap()

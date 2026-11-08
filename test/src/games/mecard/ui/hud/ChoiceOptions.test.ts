@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { Choice, Color, NineSlice } from "@game/core"
 import { heroOf, ALL_KITS } from "@game/core/mecard"
-import { cardsOption, unitHead } from "@game/core/mecard/choice-options"
+import { CARD_OVERLAP, cardsOption, unitHead } from "@game/core/mecard/choice-options"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 
@@ -31,7 +31,27 @@ function wobbleOffer(width: number): void {
 
 // --- Tests ---
 
+/** The width of an option of a kit, its cards overlapped or not, in a choice of a width. */
+function optionWidth(count: number, overlapped: boolean, width: number): number {
+    const setup = uiSetup({}, width, 270)
+    const [kit] = ALL_KITS
+    const cards = [...new Set(kit.cards)].slice(0, count)
+    const option = cardsOption(setup.theme, cards, null, { overlapped })
+    return option.measure(Infinity).preferredWidth
+}
+
 describe("cardsOption", () => {
+    test("overlapped cards → a third of a card each over the next, whatever the room", () => {
+        const [kit] = ALL_KITS
+        const count = Math.min(5, new Set(kit.cards).size)
+        expect(count).toBeGreaterThan(2)
+        const apart = optionWidth(count, false, 1000)
+        const overlapped = optionWidth(count, true, 1000)
+        expect(overlapped).toBeLessThan(apart)
+        expect(apart - overlapped).toBeGreaterThanOrEqual((count - 1) * (CARD_OVERLAP - 2) - 1)
+        expect(optionWidth(count, true, 100)).toBe(overlapped)
+    })
+
     test.each([1000, 324, 200])("kits offered in a choice %i wide → each fits, posed, and nothing is cut", width => {
         expect(() => wobbleOffer(width)).not.toThrow()
     })

@@ -81,6 +81,11 @@ export function lootHalts(): readonly HaltType[] {
     return [...simpleHalts(), ...masterHalts(), ...greatHalts(), ...darkHalts()]
 }
 
+/** The sorts of halt that may be given away, as the free bonus a run starts with: no shop. */
+export function freeHalts(): readonly HaltType[] {
+    return lootHalts().filter(type => type !== SHOP_HALT)
+}
+
 /** Every sort of halt. */
 export function allHalts(): readonly HaltType[] {
     return [...lootHalts(), EXIT_HALT]

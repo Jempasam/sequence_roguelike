@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
 import {
-    enchant, enchantedOrder, enchantments, ENCHANTER_HALT, FIRE, heroOf, LANCER_KIT, REPEAT_2, Rng, Run,
-    SPELL, STEP, THRUST,
+    enchant, enchantedOrder, enchantments, ENCHANTER_HALT, FIRE, heroOf, LANCER_KIT, REPEAT_2, Rng, SPELL, STEP, THRUST,
 } from "@game/core/mecard"
 import type { Card, Halt, Hero } from "@game/core/mecard"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
+import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -32,7 +32,7 @@ describe("enchantedOrder", () => {
 describe("enchantments", () => {
     test("the starting party → three, each fitting a card of a deck", () => {
         for(let seed = 1; seed < 40; seed++){
-            const { heroes } = new Run(seed)
+            const { heroes } = startedRun(seed)
             const offered = enchantments(new Rng(seed), heroes)
             expect(offered).toHaveLength(3)
             for(const enchantment of offered){
@@ -53,7 +53,7 @@ describe("enchantments", () => {
     })
 
     test("the starting party → cards of every sort it can fuse, not only those taking another", () => {
-        const { heroes } = new Run(1)
+        const { heroes } = startedRun(1)
         const offered = Array.from({ length: 200 }, (_, seed) => enchantments(new Rng(seed), heroes)).flat()
         expect(offered.some(card => card.input === null)).toBe(true)
         expect(offered.some(card => card.input !== null)).toBe(true)
@@ -67,7 +67,7 @@ describe("enchantments", () => {
 describe("EnchanterHalt", () => {
     /** A visit answered up to the fusion shown, cancelling when that dialog is answered if asked to. */
     function shownFusion(cancelling: boolean): { player: ScriptedPlayer, halt: Halt, hero: Hero } {
-        const run = new Run(1)
+        const run = startedRun(1)
         const [hero] = run.heroes
         run.heroes.splice(1)
         hero.decks.splice(0, hero.decks.length, [THRUST])

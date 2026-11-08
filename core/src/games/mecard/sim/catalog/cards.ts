@@ -36,9 +36,9 @@ import {
     CHARGED_SHOT, CROSS_CUT, DEATH_SCYTHE, DEMON_SLASH, DEMONIC_STRIKE, FISHING, GREAT_THRUST, MACHINE_GUN,
     QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
     BATTERING_RAM, CATCH, PROJECTION, SHOCK_WAVE, SLING_CARD, SUCTION, TIDE,
-    ABOUT_FACE, ALLY_AIM, ENERGETIC_AIM, ICY_GLARE, ORIENTATION, SHOUT, STEP, TAUNT,
+    ABOUT_FACE, AIM, ALLY_AIM, DODGE_CARD, ENERGETIC_AIM, ICY_GLARE, ORIENTATION, SHOUT, STEP, TAUNT, TURN_LEFT,
+    TURN_RIGHT, WAIT,
 } from "../card/subs"
-import { ALL_KITS } from "./kits"
 import { CARTE } from "../base/keywords"
 
 /**
@@ -106,18 +106,22 @@ export const QUAKE_SEISM = new MergedCard([SUCTION, QUAKE, SHOCK_WAVE], { name: 
 export const BULLET_RAIN = new MergedCard([MACHINE_GUN, MACHINE_GUN], { name: "Pluie de balles", rarity: Rarity.LEGENDARY })
 export const CROSS_BOMB = new FusionCard([DOUBLE_DIAGONAL, BOMB], { name: "Bombe en croix", rarity: Rarity.LEGENDARY })
 export const JOURNEY = new MergedCard([ORIENTATION, STEP, PATH_AIM, STEP], { name: "Voyage", rarity: Rarity.RARE })
+export const SPIRIT_DASH = new MergedCard([SPIRIT_ANCHOR, RAM], { name: "Dash spirituel", rarity: Rarity.LEGENDARY })
 
 /** Rare and very powerful cards: two strong actions played at once. */
 export const LEGENDARY_CARDS: readonly Card[] = [
     BARRAGE, SHADOW_COMBO, CRUSH, FORCED_SUICIDE, TWIN_BLADES,
     CROSS_BOMB, JOURNEY, SURPRISE_THRUST, MEGA_THRUST, QUAKE_SEISM,
-    BULLET_RAIN,
+    BULLET_RAIN, SPIRIT_DASH,
 ]
+
+/** The cards every kit starts with: moves, turns, an aim, a wait and a dodge. Found as loot nowhere. */
+export const BASIC_CARDS: readonly Card[] = [STEP, TURN_LEFT, TURN_RIGHT, AIM, WAIT, DODGE_CARD]
 
 /** Every card of the game, each once: what the console gives by name. */
 export const ALL_CARDS: readonly Card[] = [
     ...new Set([
-        ...ALL_KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
+        ...BASIC_CARDS, ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
         ...COMPOUND_CARDS, SCOPED_GREAT_THRUST, ...LEGENDARY_CARDS,
     ]),
 ]

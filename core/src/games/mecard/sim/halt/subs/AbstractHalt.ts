@@ -42,6 +42,9 @@ export abstract class AbstractHalt implements Halt {
 
     public get hasImpact(): boolean { return this.#hasImpact }
 
+    /** Free to leave by default. */
+    public get locked(): boolean { return false }
+
     public abstract start(ctx: HaltContext): void
 
     /** Nothing to clean up by default. */

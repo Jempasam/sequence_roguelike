@@ -1,6 +1,6 @@
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
-import { Box, Button, Hand, Label, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
+import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
 import type { Component, Layer, Theme } from "../../../../engine/ui"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
@@ -671,7 +671,7 @@ export class Hud {
     /** The hand of a unit as it fills up, the card on its way, if one is, keeping its place. */
     #drawing(unit: Unit, flight: Flight|null): Component {
         const cards = this.host.scene.of(unit)?.hand ?? []
-        const hand = new Hand({ gap: HAND_GAP })
+        const hand = new OverflowContainer({ gap: HAND_GAP })
         const deckOf = unit.decks.homeTeller()
         cards.forEach((card, index) => {
             const view = new CardView(this.theme, card, "hand")
@@ -700,7 +700,7 @@ export class Hud {
      */
     #decks(unit: Unit, room: number): Component {
         const { decks, cursor } = this.#shownDecks(unit)
-        const hand = new Hand({ gap: 1 })
+        const hand = new OverflowContainer({ gap: 1 })
         decks.forEach(({ pile, discard }, index) => {
             const next = decks.length > 1 && index === cursor
             const view = new DeckPile(this.theme, this.host.sprites.cardBack(index), pile, next)
@@ -743,7 +743,7 @@ export class Hud {
     /** The hand of a unit, face up: a click on a card selects the unit, and its hover highlights it. */
     #openHand(unit: Unit, place: CardPlace): Component {
         if(unit.hand.length === 0) return this.#label("(main vide)", DIM_TEXT)
-        const row = new Hand({ gap: place === "mini" ? 1 : HAND_GAP })
+        const row = new OverflowContainer({ gap: place === "mini" ? 1 : HAND_GAP })
         const deckOf = unit.decks.homeTeller()
         for(const card of unit.hand){
             const view = new CardView(this.theme, card, place)
@@ -786,7 +786,7 @@ export class Hud {
      * the one pointed at shown whole.
      */
     #hand(draft: Draft, deckOf: (card: Card) => number|null): Component {
-        const hand = new Hand({ gap: HAND_GAP })
+        const hand = new OverflowContainer({ gap: HAND_GAP })
         for(const card of draft.available){
             const view = new CardView(this.theme, card, "hand")
             view.deck = deckOf(card)

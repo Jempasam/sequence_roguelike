@@ -1,5 +1,5 @@
 import { Color } from "../../../../engine/math"
-import { Box, Image, Label, NineSlice, Panel, Paragraph } from "../../../../engine/ui"
+import { Box, Image, Label, NineSlice, OverflowContainer, Panel, Paragraph } from "../../../../engine/ui"
 import { Component } from "../../../../engine/ui"
 import type { Theme } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
@@ -10,7 +10,7 @@ import type { Hero } from "../../sim/run/Hero"
 
 import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
-import { CardView } from "./CardView"
+import { CARD_LOOKS, CardView } from "./CardView"
 import { heartsRow } from "./HeartView"
 import { withPicture } from "./UnitPicture"
 
@@ -22,6 +22,9 @@ const HERO_WIDTH = 84
 
 /** The space between two cards of an option, in virtual pixels. */
 const CARD_GAP = 2
+
+/** How far each card of an overlapped option overflows the next: a third of a card, whatever the room. */
+export const CARD_OVERLAP = Math.floor(CARD_LOOKS.hand.width / 2)
 
 /** The edge of an option, light so the option stands out, and its face, lighter than the panels. */
 const OPTION_EDGE = new Color(0.88, 0.85, 0.96)
@@ -53,6 +56,9 @@ export interface OptionExtras {
 
     /** How many cards at most lie in a row, the others going on rows under it. All in one row when none. */
     readonly perRow?: number
+
+    /** Do its cards overlap by {@link CARD_OVERLAP}, as those of an ally offered do, rather than lie apart? */
+    readonly overlapped?: boolean
 }
 
 /**
@@ -73,7 +79,9 @@ export function cardsOption(
         const perRow = Math.max(1, extras.perRow ?? cards.length)
         const rows = new Box("column", { gap: CARD_GAP, align: "center" })
         for(let first = 0; first < cards.length; first += perRow){
-            const row = new Box("row", { gap: CARD_GAP, align: "start" })
+            const row = extras.overlapped
+                ? new OverflowContainer({ minOverflow: CARD_OVERLAP, maxOverflow: CARD_OVERLAP })
+                : new Box("row", { gap: CARD_GAP, align: "start" })
             for(const card of cards.slice(first, first + perRow)){
                 const view = new CardView(theme, card, "hand")
                 view.deck = extras.deck ?? null

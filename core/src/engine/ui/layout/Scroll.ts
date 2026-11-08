@@ -158,11 +158,17 @@ export class Scroll extends ContentContainer {
 
     protected paint(painter: Painter): void {
         if(!this.#hasBar) return
-        const { track, thumb } = this.theme.scrollbar
+        const { track, thumb, thumbHover } = this.theme.scrollbar
         const bar = this.#barRect(this.#rect)
         track.draw(painter, bar.x, bar.y, bar.width, bar.height)
         const knob = this.#thumbRect(this.#knob)
-        thumb.draw(painter, knob.x, knob.y, knob.width, knob.height)
+        const look = this.#thumbHovered || this.#dragFrom !== null ? thumbHover : thumb
+        look.draw(painter, knob.x, knob.y, knob.width, knob.height)
+    }
+
+    /** The thumb lights while the pointer is over it: it is lit no more once the pointer leaves the scroll. */
+    protected override hoverChanged(): void {
+        if(!this.hovered) this.#setThumbHovered(false)
     }
 
     protected override handle(event: UiEvent): void {
@@ -185,11 +191,14 @@ export class Scroll extends ContentContainer {
                 if(this.#dragFrom !== null){
                     this.#dragTo(event)
                     event.consume()
+                } else {
+                    this.#setThumbHovered(this.#hasBar && this.#thumbRect(this.#knob).containsPoint(event.x, event.y))
                 }
                 break
             case "pointer-up":
                 if(event.button === 0 && this.#dragFrom !== null){
                     this.#dragFrom = null
+                    this.invalidate()
                     event.consume()
                 }
                 break
@@ -232,6 +241,16 @@ export class Scroll extends ContentContainer {
 
     /** Where the thumb was grabbed, in pixels along the bar from its start, none when not dragged. */
     #dragFrom: number|null = null
+
+    /** Is the pointer over the thumb? */
+    #thumbHovered = false
+
+    /** Light or darken the thumb, drawing it again when it changes. */
+    #setThumbHovered(hovered: boolean): void {
+        if(hovered === this.#thumbHovered) return
+        this.#thumbHovered = hovered
+        this.invalidate()
+    }
 
     /** The zone of the bar, in its own coordinates, written in a rectangle. */
     #barRect(out: Rect): Rect {

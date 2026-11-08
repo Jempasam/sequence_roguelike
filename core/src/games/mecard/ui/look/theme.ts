@@ -48,7 +48,9 @@ export function mecardTheme(gpu: Gpu): Theme {
         slider: {
             track: flat(0.2, 0.2, 0.2), thumb: flat(0.8, 0.8, 0.8), thumbWidth: 4, width: 44, height: 8,
         },
-        scrollbar: { track: flat(0.15, 0.14, 0.2), thumb: flat(0.5, 0.45, 0.6), width: 4, minThumb: 6 },
+        scrollbar: {
+            track: flat(0.15, 0.14, 0.2), thumb: flat(0.5, 0.45, 0.6), thumbHover: flat(0.78, 0.72, 0.9), width: 4, minThumb: 6,
+        },
         textInput: {
             background: flat(0, 0, 0), padding: 2, width: 60,
             cursorColor: new Color(), selectionColor: new Color(0.3, 0.3, 0.7),

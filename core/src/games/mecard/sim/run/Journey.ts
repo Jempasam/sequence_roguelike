@@ -134,6 +134,25 @@ export class Journey implements FloorContext {
         })
     }
 
+    /**
+     * Lay a halt in each of some rows before the map, one after the other, the last leading to the places the
+     * map started from: the first halt is the new way in. Every row of the map, the exits' too, moves up.
+     */
+    public addEntries(halts: readonly HaltType[]): void {
+        if(halts.length === 0) return
+        const starts = this.entries
+        for(const place of this.#places) (place as { layer: number }).layer += halts.length
+        let before: Place|null = null
+        halts.forEach((type, layer) => {
+            const halt = this.addHalt(type, { layer, across: 0.5 })
+            if(before) this.link(before, halt)
+            before = halt
+        })
+        for(const start of starts) this.link(before!, start)
+        // First in the order they were laid, so the exits stay the last, as a save reads them.
+        this.#places.unshift(...this.#places.splice(this.#places.length - halts.length))
+    }
+
     /** The places a party may go to from where it stands: the entries when it stands nowhere yet. */
     public nextOf(place: Place|null): readonly Place[] {
         if(!place) return this.entries

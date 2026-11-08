@@ -7,6 +7,7 @@ import type { TravelScreenOptions } from "@game/core/mecard/travel-screen"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../../fixtures/uiFixtures"
+import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
@@ -34,7 +35,7 @@ interface Shown {
 
 function shown(): Shown {
     const setup = uiSetup({}, 620, 348)
-    const run = new Run(1)
+    const run = startedRun(1)
     const enters: (() => void)[] = []
     const screen = new TravelScreen(setup.ui, run.travel, {
         theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES,
@@ -168,7 +169,7 @@ describe("TravelScreen", () => {
         const { run, screen } = game
         screen.go(run.travel.next[0])
         await play(game, 0.2)
-        screen.engine = new Run(2).travel
+        screen.engine = startedRun(2).travel
         await play(game, 1)
         expect(run.travel.phase).toBe("entering")
     })

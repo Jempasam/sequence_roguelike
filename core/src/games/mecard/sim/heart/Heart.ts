@@ -2,6 +2,12 @@ import type { Text } from "../../../../semantic"
 
 import type { HeartKind } from "./HeartKind"
 
+/** Some hearts of one kind. */
+export interface HeartGroup {
+    readonly kind: HeartKind
+    readonly count: number
+}
+
 /**
  * A heart of a life bar: its kind, and whether it is lost yet kept as an empty place, which a kind may fill
  * again. One life each: what it does lies in the rules of its kind, {@link HeartRule}.
@@ -25,6 +31,11 @@ export class Heart {
     /** A number of hearts of a kind, full. */
     public static many(kind: HeartKind, count: number): Heart[] {
         return Array.from({ length: Math.max(0, count) }, () => new Heart(kind))
+    }
+
+    /** Full hearts for each group, in order. */
+    public static groups(groups: readonly HeartGroup[]): Heart[] {
+        return groups.flatMap(({ kind, count }) => Heart.many(kind, count))
     }
 
     /** Its kind, `rouge`, or `rouge vide`. */

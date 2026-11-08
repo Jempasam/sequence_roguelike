@@ -20,7 +20,6 @@ describe("merged", () => {
     test("two heroes → hearts, cards and items together, draws and chains added, the rest the higher", () => {
         const lancer = heroOf(LANCER_KIT)
         const swordsman = heroOf(SWORDSMAN_KIT)
-        lancer.items.push(WHETSTONE)
         swordsman.hearts.push(...Heart.many(SHIELD_HEART, 2))
         lancer.bases.handSize = 10
         const made = merged(lancer, swordsman)
@@ -29,7 +28,7 @@ describe("merged", () => {
         expect(made.decks).toEqual([lancer.decks[0], swordsman.decks[0]])
         expect(made.items).toEqual([WHETSTONE])
         expect(made.hearts.map(heart => heart.kind.name).at(-1)).toBe(SHIELD_HEART.name)
-        expect(made.hearts).toHaveLength(14)
+        expect(made.hearts).toHaveLength(lancer.hearts.length + swordsman.hearts.length)
         expect(baseOf(made, "draw")).toBe(2 * baseOf(lancer, "draw"))
         expect(baseOf(made, "chainSize")).toBe(2 * baseOf(lancer, "chainSize"))
         expect(baseOf(made, "handSize")).toBe(10)

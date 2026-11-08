@@ -1,4 +1,4 @@
-import { Hand, Label } from "../../../../engine/ui"
+import { Label, OverflowContainer } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import { boosterPoolsText as poolsText } from "../../sim/catalog/boosters"
 import type { Booster } from "../../sim/catalog/boosters"
@@ -13,7 +13,7 @@ import type { Entry, LibraryLook } from "./entries"
  */
 export function boosterEntry(look: LibraryLook, booster: Booster): Entry {
     const text = concat(booster.name, " : ", poolsText(booster))
-    const hand = new Hand({ gap: 2 })
+    const hand = new OverflowContainer({ gap: 2 })
     for(const card of new Set([booster.icon, ...booster.pools.flatMap(({ pool }) => pool)])){
         const view = new CardView(look.theme, card, "hand")
         view.onHover = over => look.onCard(card, over)

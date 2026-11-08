@@ -4,6 +4,7 @@ import {
     COOP_SEATS, FIXED_SEATS, LocalRoom, LocalSync, RunBroadcaster, RunGuest, RunHost, RunReceiver,
 } from "@game/core/mecard/sync"
 import type { SeatMode, SeatPolicy, SyncLink } from "@game/core/mecard/sync"
+import { startedRun } from "../../../fixtures/startedRun"
 
 /** A run hosted, told on a channel, with how many times everyone was ready. */
 export interface Hosted {
@@ -29,7 +30,7 @@ export interface Playing {
 
 /** A run hosted, nobody connected. */
 export function hosted(mode: SeatMode = COOP_SEATS, policy: SeatPolicy = FIXED_SEATS): Hosted {
-    const run = new Run(11)
+    const run = startedRun(11)
     const room = new LocalRoom()
     const channel = new LocalSync()
     let told = 0
@@ -40,7 +41,7 @@ export function hosted(mode: SeatMode = COOP_SEATS, policy: SeatPolicy = FIXED_S
 
 /** A client coming to play. */
 export function connected({ room, channel }: Hosted, id: string): Playing {
-    const viewer = new Run(0)
+    const viewer = startedRun(0)
     const receiver = new RunReceiver(viewer, channel)
     const link = room.join(id)
     const seats: (readonly string[])[] = []

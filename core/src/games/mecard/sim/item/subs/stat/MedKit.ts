@@ -1,5 +1,4 @@
 import { HeartCount } from "../../../battle/words"
-import { CARTE } from "../../../base/keywords"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"

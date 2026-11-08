@@ -1,3 +1,4 @@
+import { resolve } from "node:path"
 import { defineConfig } from "vite"
 
 // With its extension: Vite's native config loader, its next default, does not resolve bare paths.
@@ -12,7 +13,8 @@ export default defineConfig({
         BUILD_ID: JSON.stringify(Date.now().toString(36)),
     },
     build: {
-        outDir: "dist",
+        // WEB_OUT_DIR: target folder, relative to where npm was launched (npm swallows an --outDir flag).
+        outDir: process.env.WEB_OUT_DIR ? resolve(process.env.INIT_CWD ?? process.cwd(), process.env.WEB_OUT_DIR) : "dist",
         emptyOutDir: true,
     },
     plugins: [cWasm()],

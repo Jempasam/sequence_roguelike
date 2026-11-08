@@ -1,5 +1,4 @@
 import { meters } from "../../../battle/words"
-import { AIM } from "../../../card/subs/movement/Aim"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"

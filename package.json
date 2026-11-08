@@ -15,6 +15,7 @@
     "scripts": {
         "web": "npm run dev -w @game/web",
         "web:build": "npm run build -w @game/web",
+        "web:build:docs": "node scripts/buildWebDocs.ts",
         "desktop": "npm run dev -w @game/desktop",
         "desktop:build": "npm run build -w @game/desktop",
         "desktop:build:node": "npm run build:node -w @game/desktop",

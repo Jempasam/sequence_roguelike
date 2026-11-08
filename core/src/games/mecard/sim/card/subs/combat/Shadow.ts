@@ -10,6 +10,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { visual } from "../../../base/Visual"
 
 /** A shadow left where the unit stands, which it jumps back to as the round ends. */
 export const SHADOW = new ActionCard("Ombre", [
@@ -18,7 +19,7 @@ export const SHADOW = new ActionCard("Ombre", [
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         placeHazard(battle, unit, {
-            sprite: "shadow", name: "Ombre", hearts: [new Heart(TIME_HEART)],
+            sprite: visual("units/shadow"), name: "Ombre", hearts: [new Heart(TIME_HEART)],
             zone: { kind: "circle", center: unit.position, radius: UNIT_RADIUS },
         })
         battle.startProcess(unit, new ShadowLink())

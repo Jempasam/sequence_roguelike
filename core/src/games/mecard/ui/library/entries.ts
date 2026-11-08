@@ -1,15 +1,17 @@
-import { Label } from "../../../../engine/ui"
+import { Box, Label } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
+import { CHOSEN_TEXT } from "../look/theme"
+import { AbsItemIcon, STATUS_ICON_SIZE, THING_ICON_SIZE, usesText } from "../hud/AbsItemIcon"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
-import { BOOSTERS } from "../../sim/catalog/boosters"
-import { ITEMS, LOOT_CARDS, USABLES } from "../../sim/catalog/index"
-import { KITS } from "../../sim/catalog/kits"
-import { MONSTERS } from "../../sim/catalog/monsters"
+import { ALL_BOOSTERS } from "../../sim/catalog/boosters"
+import { ALL_ITEMS, LOOT_CARDS, ALL_USABLES } from "../../sim/catalog/index"
+import { ALL_KITS } from "../../sim/catalog/kits"
+import { ALL_MONSTERS } from "../../sim/catalog/monsters"
 import { Heart } from "../../sim/heart/Heart"
 import type { HeartKind } from "../../sim/heart/HeartKind"
-import { UPGRADES } from "../../sim/catalog/upgrades"
+import { ALL_UPGRADES } from "../../sim/catalog/upgrades"
 import { allyOf } from "../../sim/run/Hero"
 import { boosterEntry } from "./BoosterEntry"
 import { kitEntry } from "./KitEntry"
@@ -21,7 +23,6 @@ import { usableText, described } from "../../sim/halt/subs/shown"
 import { cardsOption, unitHead } from "../hud/ChoiceOptions"
 import { heartsRow } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
-import { engineColor } from "../look/colors"
 
 /** Something the catalogue shows: how it looks in the list, and what the box of details says of it. */
 export interface Entry {
@@ -87,11 +88,11 @@ export function sections(look: LibraryLook): Section[] {
         },
         {
             title: "Aventuriers",
-            entries: () => KITS.map(kit => kitEntry(look, kit)),
+            entries: () => ALL_KITS.map(kit => kitEntry(look, kit)),
         },
         {
             title: "Monstres",
-            entries: () => MONSTERS.map(monster => {
+            entries: () => ALL_MONSTERS.map(monster => {
                 const hero = allyOf(monster, monster.name)
                 const text = concat(
                     monster, " : ", String(monster.hearts), " cœurs, pioche ", String(monster.draw), " : ",
@@ -107,32 +108,36 @@ export function sections(look: LibraryLook): Section[] {
             title: "Effets",
             entries: () => [...STATUS_TYPES, ...STATUS_FAMILIES].map(type => {
                 const polarity = { negative: "négatif", positive: "positif", neutral: "neutre" }[type.polarity]
-                const text = concat(type, " : effet ", polarity, ".")
-                const view = cardsOption(theme, [], null, { head: new Label(theme, type.name, { color: engineColor(type.color) }) })
-                return { view, text }
+                const text = concat(type, " (", polarity, ") : ", type.description)
+                const head = new Box("row", { gap: 4, align: "center" })
+                head.add(new AbsItemIcon(theme, sprites, type.visual, "", 2, STATUS_ICON_SIZE))
+                head.add(new Label(theme, type.name, { color: CHOSEN_TEXT }))
+                return { view: cardsOption(theme, [], null, { head }), text }
             }),
         },
         {
             title: "Objets",
-            entries: () => ITEMS.map(item => {
+            entries: () => ALL_ITEMS.map(item => {
                 const text = described(item, item)
-                return { view: cardsOption(theme, [], concat("Objet ", text)), text }
+                const thing = new AbsItemIcon(theme, sprites, item.icon, "", 1, THING_ICON_SIZE)
+                return { view: cardsOption(theme, [], concat("Objet ", text), { thing }), text }
             }),
         },
         {
             title: "Utilisables",
-            entries: () => USABLES.map(usable => {
+            entries: () => ALL_USABLES.map(usable => {
                 const text = usableText(usable)
-                return { view: cardsOption(theme, [], text), text }
+                const thing = new AbsItemIcon(theme, sprites, usable.icon, usesText(usable) ?? "", 1, THING_ICON_SIZE)
+                return { view: cardsOption(theme, [], text, { thing }), text }
             }),
         },
         {
             title: "Boosters",
-            entries: () => BOOSTERS.map(booster => boosterEntry(look, booster)),
+            entries: () => ALL_BOOSTERS.map(booster => boosterEntry(look, booster)),
         },
         {
             title: "Améliorations",
-            entries: () => UPGRADES.map(upgrade => upgradeEntry(look, upgrade)),
+            entries: () => ALL_UPGRADES.map(upgrade => upgradeEntry(look, upgrade)),
         },
     ]
 }

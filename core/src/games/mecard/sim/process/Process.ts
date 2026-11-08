@@ -1,6 +1,6 @@
 import type { Text } from "../../../../semantic"
-import type { Rgba } from "../base/Rgba"
 import type { PlugContext, UnitContext } from "../battle/Action"
+import type { Visual } from "../base/Visual"
 
 /**
  * Something going on for a unit until the end of the round: a bonus to its strength, a horse carrying it.
@@ -15,11 +15,8 @@ export interface Process {
     /** What it is called, `force`. */
     readonly name: string
 
-    /** Its picture, by its name among the icons of the processes. */
-    readonly icon: string
-
-    /** The color its name is written in. */
-    readonly color: Rgba
+    /** How its icon looks, and the color its name is written in. */
+    readonly icon: Visual
 
     /** Its name, for the console and the log. */
     toString(): string

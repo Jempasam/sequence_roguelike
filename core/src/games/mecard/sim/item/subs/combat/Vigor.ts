@@ -9,6 +9,7 @@ import { GLASS_HEART } from "../../../heart/subs/GlassHeartKind"
 import { RoundStatus } from "../../../status/RoundStatus"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How many glass hearts the glass heart gives, and how far around the reactor wounds. */
 const GLASS_HEARTS = 2
@@ -22,7 +23,7 @@ export class Hourglass extends AbstractItem {
 
 
     constructor(){
-        super("Sablier", "mecard/items/bottle_bag.png", [
+        super("Sablier", visual("items/bottle_bag"), [
             "Ses status positifs ne perdent un round qu'un round sur deux.",
         ])
     }
@@ -48,7 +49,7 @@ export class GlassCore extends AbstractItem {
 
 
     constructor(){
-        super("Cœur de verre", "mecard/items/amulet.png", ["Début du combat : gagne ", String(GLASS_HEARTS), " cœurs de verre."])
+        super("Cœur de verre", visual("items/amulet"), ["Début du combat : gagne ", String(GLASS_HEARTS), " cœurs de verre."])
     }
 
 
@@ -64,7 +65,7 @@ export class UnstableReactor extends AbstractItem {
 
 
     constructor(){
-        super("Réacteur instable", "mecard/items/alembic.png", [
+        super("Réacteur instable", visual("items/alembic"), [
             "Quand il perd un cœur bleu ou noir : un cœur de dégât à chaque ", UNIT, " à ", meters(REACTOR_RADIUS), " autour.",
         ])
     }
@@ -88,7 +89,7 @@ export class BloodPact extends AbstractItem {
 
 
     constructor(){
-        super("Pacte de sang", "mecard/items/fang.png", ["+1 force par cœur manquant."])
+        super("Pacte de sang", visual("items/fang"), ["+1 force par cœur manquant."])
     }
 
 
@@ -111,7 +112,7 @@ export class EchoItem extends AbstractItem {
 
 
     constructor(){
-        super("Écho", "mecard/items/spyglass.png", ["À la fin de la préparation, la dernière étape de la chaîne est jouée deux fois."])
+        super("Écho", visual("items/spyglass"), ["À la fin de la préparation, la dernière étape de la chaîne est jouée deux fois."])
     }
 
 
@@ -129,7 +130,7 @@ export class FisherGlove extends AbstractItem {
 
 
     constructor(){
-        super("Gant de pêcheur", "mecard/items/satchel.png", ["Chaque ", UNIT, " tuée donne ", String(GLOVE_GOLD), " or."])
+        super("Gant de pêcheur", visual("items/satchel"), ["Chaque ", UNIT, " tuée donne ", String(GLOVE_GOLD), " or."])
     }
 
 

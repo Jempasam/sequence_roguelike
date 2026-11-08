@@ -7,6 +7,7 @@ import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
 import { AbstractFloor } from "./AbstractFloor"
+import { visual } from "../../base/Visual"
 
 /** Who lives in the cave. */
 const MONSTERS: readonly Monster[] = [GOBLIN, ARCHER, BRUTE, SLIME]
@@ -27,14 +28,14 @@ export class CaveFloor extends AbstractFloor {
 export const CAVE_FLOOR: FloorType = {
     name: "Grotte",
     description: "Des gobelins et leurs amis, gardés par un golem runique. Un peu de tout sur le chemin.",
-    icon: "mecard/floors/cave/logo.png",
+    icon: visual("floors/cave/logo"),
     look: sceneLook(20, 18, 31, "mecard/travel/map"),
     decorations: [
-        { picture: "mecard/floors/cave/mouth.png", size: 2 },
-        { picture: "mecard/floors/cave/stalagmite.png", size: 2 },
-        { picture: "mecard/floors/cave/mushroom.png", size: 2 },
-        { picture: "mecard/floors/cave/bones.png", size: 2 },
-        { picture: "mecard/floors/cave/pebbles.png", size: 2 },
+        { picture: visual("floors/cave/mouth"), size: 2 },
+        { picture: visual("floors/cave/stalagmite"), size: 2 },
+        { picture: visual("floors/cave/mushroom"), size: 2 },
+        { picture: visual("floors/cave/bones"), size: 2 },
+        { picture: visual("floors/cave/pebbles"), size: 2 },
     ],
     create: level => new CaveFloor(level),
 }

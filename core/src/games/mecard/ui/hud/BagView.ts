@@ -4,7 +4,7 @@ import type { Gpu } from "../../../../engine/gpu"
 import { NineSlice, Panel, WrapBox } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
 
-import { ICON_SIZE } from "./ThingView"
+import { THING_ICON_SIZE as ICON_SIZE } from "./AbsItemIcon"
 
 /** The picture of a bag: leather around a slot, the slot being the repeated center. */
 const BAG_PICTURE: ImagePath = "mecard/hud/bag.png"

@@ -1,7 +1,7 @@
 import type { Place, PlaceInfo } from "../run/Journey"
 import type { PlaceType } from "../run/PlaceType"
 
-import { FIGHTS } from "./fights"
+import { ALL_FIGHTS } from "./fights"
 import { allHalts } from "./halts"
 
 /**
@@ -11,7 +11,7 @@ import { allHalts } from "./halts"
  * A function, not a value: the halts reach the saves, which reach this, while the halts are still being read.
  */
 export function allPlaceTypes(): readonly PlaceType[] {
-    return [...FIGHTS, ...allHalts()]
+    return [...ALL_FIGHTS, ...allHalts()]
 }
 
 /**

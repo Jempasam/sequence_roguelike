@@ -1,8 +1,8 @@
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
-import { Box, Button, Label, NineSlice, Panel, Scroll, WrapBox } from "../../../../engine/ui"
+import { Box, Button, Label, NineSlice, Panel, Scroll, TextInput, WrapBox } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
-import { concat } from "../../../../semantic"
+import { concat, plainText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
 
@@ -23,8 +23,16 @@ const CARD_WIDTH = 44
 const CARD_GAP = 2
 const ENTRY_FRAME = 16
 
+/** How wide the search field is, in virtual pixels. */
+const SEARCH_WIDTH = 80
+
 /** How tall the box of details is, in virtual pixels. */
 const DETAIL_HEIGHT = 44
+
+/** A text in lower case without accents, to compare what is typed with what is written. */
+function simplified(text: string): string {
+    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
+}
 
 /** What the catalogue hears from the game. */
 export interface LibraryHost {
@@ -61,6 +69,14 @@ export class LibraryScreen {
             },
         })
         this.#detail = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
+        // The field lives as long as the catalogue, so it keeps the focus while the list is made again.
+        this.#search = new TextInput(theme, { maxLength: 40 })
+        this.#search.onChange = text => {
+            this.#query = simplified(text)
+            this.#refreshList()
+        }
+        this.#count = new Label(theme, "", { color: DIM_TEXT })
+        this.#listSlot = new Box("column", { align: "stretch" })
     }
 
 
@@ -120,6 +136,11 @@ export class LibraryScreen {
     readonly #layer: Layer
     readonly #sections: readonly Section[]
     readonly #detail: DetailBox
+    readonly #search: TextInput
+    /** How many entries the list shows, beside the search field. */
+    readonly #count: Label
+    readonly #listSlot: Box
+    #query = ""
     #selected = 0
     #size = ""
 
@@ -128,6 +149,9 @@ export class LibraryScreen {
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
         this.#detail.parent?.remove(this.#detail)
+        this.#search.parent?.remove(this.#search)
+        this.#count.parent?.remove(this.#count)
+        this.#listSlot.parent?.remove(this.#listSlot)
         const backdrop = new Panel(this.theme, {
             background: NineSlice.flat(this.theme.white, BACKDROP), padding: 0, interactive: false,
         })
@@ -137,11 +161,27 @@ export class LibraryScreen {
         const leave = new Button(this.theme, "Retour")
         leave.onActivate = () => this.host.leave()
         const head = new Box("row", { gap: MARGIN, align: "center" })
-        head.add(title, { grow: 1 })
-        head.add(leave)
+        this.#search.fixedSize = { width: SEARCH_WIDTH, height: this.#search.measure(Infinity).preferredHeight }
+        // The title and the button sit in sides of the same width, so the field is in the middle.
+        const side = Math.max(title.measure(Infinity).preferredWidth, leave.measure(Infinity).preferredWidth)
+        const height = Math.max(title.measure(Infinity).preferredHeight, leave.measure(Infinity).preferredHeight)
+        const left = new Box("row", { align: "center" })
+        left.add(title)
+        left.fixedSize = { width: side, height }
+        const right = new Box("row", { align: "center" })
+        right.add(new Box("row"), { grow: 1 })
+        right.add(leave)
+        right.fixedSize = { width: side, height }
+        head.add(left)
+        head.add(new Box("row"), { grow: 1 })
+        head.add(this.#search)
+        head.add(this.#count)
+        head.add(new Box("row"), { grow: 1 })
+        head.add(right)
         column.add(head)
         column.add(this.#tabs())
-        column.add(this.#list(), { grow: 1 })
+        this.#refreshList()
+        column.add(this.#listSlot, { grow: 1 })
         const detail = this.#detail
         detail.hint = "Survole un élément pour le lire."
         detail.fixedSize = { width: this.ui.width - 2 * MARGIN, height: DETAIL_HEIGHT }
@@ -167,13 +207,22 @@ export class LibraryScreen {
         return scroll
     }
 
-    /** The entries of the tab chosen, in lines, in a scroll. */
+    /** Put the list of the entries that match the search in its slot, in place of the old one. */
+    #refreshList(): void {
+        for(const child of [...this.#listSlot.children]) this.#listSlot.remove(child)
+        this.#listSlot.add(this.#list(), { grow: 1 })
+    }
+
+    /** The entries of the tab chosen that match the search, in lines, in a scroll. */
     #list(): Scroll {
         const wrap = new WrapBox({ gap: MARGIN })
         this.#told.clear()
         // The cards of the old list are gone, and their pointer leaving will never be heard.
         this.#card = null
-        for(const entry of this.#sections[this.#selected].entries()){
+        const entries = this.#sections[this.#selected].entries()
+            .filter(entry => this.#query === "" || simplified(plainText(entry.text)).includes(this.#query))
+        this.#count.text = `${entries.length}`
+        for(const entry of entries){
             const holder = new Panel(this.theme, { background: null, padding: 0, interactive: false })
             holder.content = entry.view
             this.#told.set(holder, entry.text)

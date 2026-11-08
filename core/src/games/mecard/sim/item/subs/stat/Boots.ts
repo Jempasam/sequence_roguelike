@@ -1,12 +1,13 @@
 import { frenchNumber } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
+import { visual } from "../../../base/Visual"
 
 /** How much farther the boots of the catalog take every move, added to the move factor. */
 const BOOTS_MOVE = 0.5
 
 /** Boots taking every move farther. */
-export const BOOTS = new StatItem("Bottes de sept lieues", "mecard/items/boots.png", [
+export const BOOTS = new StatItem("Bottes de sept lieues", visual("items/boots"), [
     {
         stat: stats => stats.move,
         amount: BOOTS_MOVE,

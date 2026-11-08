@@ -3,6 +3,7 @@ import { frenchNumber } from "../../../battle/words"
 import type { Unit } from "../../../battle/Unit"
 
 import { RoundElixir } from "./RoundElixir"
+import { visual } from "../../../base/Visual"
 
 /** How much farther the elixir of haste of the catalog takes every move, added to the move factor. */
 const HASTE_MOVE = 0.5
@@ -15,7 +16,7 @@ export class HasteElixir extends RoundElixir {
         /** How much farther it takes every move, added to the move factor. */
         public readonly move: number,
     ){
-        super("Élixir de hâte", "mecard/usables/haste_elixir.png", ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce round."])
+        super("Élixir de hâte", visual("usables/haste_elixir"), ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce round."])
     }
 
 

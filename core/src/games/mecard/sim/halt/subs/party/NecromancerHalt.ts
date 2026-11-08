@@ -9,6 +9,7 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
+import { visual } from "../../../base/Visual"
 
 /** How many kinds of heart the necromancer offers, each time it asks. */
 export const NECROMANCER_OFFER_SIZE = 2
@@ -74,9 +75,7 @@ export class NecromancerHalt extends AbstractHalt {
 export const NECROMANCER_HALT: HaltType = {
     id: "necromancer",
     name: "Nécromancien",
-    description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",
-    code: "NE",
-    icon: "mecard/travel/necromancer/logo.png",
+    description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",    icon: visual("travel/necromancer/logo", { letter: "NE" }),
     transition: DOOR_TRANSITION,
     create: run => new NecromancerHalt(run),
 }

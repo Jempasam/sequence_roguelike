@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../engine/assets/Assets"
+import type { Visual } from "../base/Visual"
 import type { Text } from "../../../../semantic"
 import type { PlugContext } from "../battle/Action"
 
@@ -10,7 +10,7 @@ export interface Item {
     readonly name: string
 
     /** Its picture. */
-    readonly icon: ImagePath
+    readonly icon: Visual
 
     /** What it does, in one sentence, for the player. */
     readonly description: Text

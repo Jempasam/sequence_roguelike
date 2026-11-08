@@ -3,6 +3,7 @@ import type { Card } from "../../../card/Card"
 import { BOTTLE, BottleCard } from "../../../card/subs/potion/PotionActions"
 
 import { DrawnItem } from "./DrawnItem"
+import { visual } from "../../../base/Visual"
 
 /** A bag of bottles: a bottle in hand after each draw, when the hand holds none and has room. */
 export class BottleBag extends DrawnItem {
@@ -12,7 +13,7 @@ export class BottleBag extends DrawnItem {
         /** The bottle it gives. */
         public readonly bottle: Card,
     ){
-        super("Sac à bouteilles", "mecard/items/bottle_bag.png", ["Après la pioche, sans bouteille en main, en donne une : ", bottle, "."])
+        super("Sac à bouteilles", visual("items/bottle_bag"), ["Après la pioche, sans bouteille en main, en donne une : ", bottle, "."])
     }
 
 

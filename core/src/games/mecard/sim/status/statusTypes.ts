@@ -12,7 +12,7 @@ import { CONCENTRATED, FURIOUS } from "./subs/Calm"
 import { COATED } from "./subs/Coated"
 import { CONFUSED } from "./subs/Confusion"
 import { DEMONIC } from "./subs/DemonEnergy"
-import { DODGE } from "./subs/Dodge"
+import { COUNTER, DISARM, DODGE, SLIDING_PARRY, WOODEN_SHIELD } from "./subs/Dodge"
 import { FLEETING } from "./subs/Fleeting"
 import { FRENZIED } from "./subs/Frenzy"
 import { GRAND_RITUAL } from "./subs/GrandRitual"
@@ -32,7 +32,7 @@ import { BLEEDING, FRAGILE, MARKED, SOUL_LINKED, SOUL_SHIELDED } from "./subs/Wo
  * ones, then the bad ones, then what a body lying on the ground holds.
  */
 export const STATUS_TYPES: readonly StatusType[] = [
-    BLOODLUST, CONCENTRATED, DEMONIC, DODGE, FURIOUS, HEALING, SOUL_SHIELDED,
+    BLOODLUST, CONCENTRATED, COUNTER, DEMONIC, DISARM, DODGE, FURIOUS, SLIDING_PARRY, WOODEN_SHIELD, HEALING, SOUL_SHIELDED,
     ENRAGED, FLEETING, FRENZIED, POSSESSED, SOUL_LINKED,
     BLEEDING, BURN, CONFUSED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, VULNERABLE, WEAKENED,
     MINE_HAZARD,

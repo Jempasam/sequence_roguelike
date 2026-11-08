@@ -6,12 +6,14 @@ import { TextLayout } from "../../../../engine/text"
 import { Component, NineSlice, Rope, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import type { Rgba } from "../../sim/base/Rgba"
-import { FLOOR_TYPES } from "../../sim/catalog/floors"
+import type { Visual } from "../../sim/base/Visual"
+import { ALL_FLOORS } from "../../sim/catalog/floors"
 import type { Decoration } from "../../sim/floor/Floor"
 import type { Journey, Place } from "../../sim/run/Journey"
 
 import { PAPER_PATH, PATH_PICTURE, paperFrame, SHADE_PICTURE } from "../look/paper"
 import { TEXT_OUTLINE } from "../look/theme"
+import { distinctPictures, loadPictures } from "../look/visualPath"
 import { allPlaceTypes } from "../../sim/catalog/places"
 import { scatter } from "./scatter"
 import type { ScatteredPiece } from "./scatter"
@@ -83,10 +85,10 @@ const PARTY_FEET = 4
 /** What the map is drawn with, loaded together. */
 export interface MapArt {
     /** The logos of the places and the icons of the floors, by their picture. */
-    readonly logos: ReadonlyMap<ImagePath, Sprite>
+    readonly logos: ReadonlyMap<string, Sprite>
 
     /** What lies on the maps of the floors, by its picture. */
-    readonly decorations: ReadonlyMap<ImagePath, Sprite>
+    readonly decorations: ReadonlyMap<string, Sprite>
 
     /** The look of a path between two places. */
     readonly path: Rope
@@ -125,20 +127,28 @@ export class JourneyView extends Component {
      * @throws {@link AssetError} When a picture cannot be loaded.
      */
     public static async loadArt(gpu: Gpu, assets: Assets): Promise<MapArt> {
-        const logos = [...new Set([
+        const logos = distinctPictures([
             ...allPlaceTypes().flatMap(({ icon }) => icon ? [icon] : []),
-            ...FLOOR_TYPES.map(({ icon }) => icon),
-        ])]
-        const pieces = FLOOR_TYPES.flatMap(type => type.decorations)
-        const decorations = [...new Set(pieces.map(each => each.picture))]
-        const paths = [PAPER_PATH, PATH_PICTURE, SHADE_PICTURE, CIRCLE, ...logos, ...decorations]
-        const pictures = await Promise.all(paths.map(path => assets.image(path)))
+            ...ALL_FLOORS.map(({ icon }) => icon),
+        ])
+        const pieces = ALL_FLOORS.flatMap(type => type.decorations)
+        const decorations = distinctPictures(pieces.map(each => each.picture))
+        const fixed = [PAPER_PATH, PATH_PICTURE, SHADE_PICTURE, CIRCLE]
+        const [named, fixedPictures] = await Promise.all([
+            loadPictures(assets, [...logos, ...decorations].map(each => each.visual)),
+            Promise.all(fixed.map(path => assets.image(path))),
+        ])
         const atlas = new Atlas(gpu, { initialSize: 64 })
-        const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
+        const entries = atlas.addAll([...fixedPictures, ...named.map(({ pixels }) => pixels)].map(pixels => ({ pixels })))
         const [paper, path, shade, circle, ...sprites] = entries.map(entry => atlas.sprite(entry))
+        const spriteOf = new Map(named.map(({ key }, index) => [key, sprites[index]]))
+        const known = (each: Visual): [string, Sprite][] => {
+            const sprite = spriteOf.get(each.visual)
+            return sprite ? [[each.visual, sprite]] : []
+        }
         return {
-            logos: new Map(logos.map((logo, index) => [logo, sprites[index]])),
-            decorations: new Map(decorations.map((each, index) => [each, sprites[logos.length + index]])),
+            logos: new Map(logos.flatMap(known)),
+            decorations: new Map(decorations.flatMap(known)),
             path: new Rope(path),
             shade,
             circle,
@@ -257,7 +267,7 @@ export class JourneyView extends Component {
         const size = `${width}×${height}`
         if(this.#scattered?.size === size) return this.#scattered.pieces
         const sizes = this.decorations.map(({ picture, size: scale }) => {
-            const sprite = this.#art?.decorations.get(picture)
+            const sprite = this.#art?.decorations.get(picture.visual)
             return { width: (sprite?.width ?? 0) * scale, height: (sprite?.height ?? 0) * scale }
         })
         const places = this.journey.layers.flat().map(place => this.#center(place))
@@ -274,7 +284,7 @@ export class JourneyView extends Component {
         painter.setTint(DECORATION_TINT)
         for(const { piece, x, y } of this.#piecesLaid()){
             const { picture, size } = this.decorations[piece]
-            const sprite = this.#art.decorations.get(picture)
+            const sprite = this.#art.decorations.get(picture.visual)
             if(!sprite) continue
             painter.push()
             painter.translate(x, y)
@@ -381,7 +391,7 @@ export class JourneyView extends Component {
         const shade = passed ? BEHIND : 1
         const art = this.#art
         const icon = place.exitTo?.type.icon ?? place.type.icon
-        const logo = icon && art?.logos.get(icon)
+        const logo = art?.logos.get(icon.visual)
         if(art) this.#paintUnder(painter, art.shade, x, y, NO_TINT)
         if(art && place === this.#hovered){
             const circle = open ? OPEN_PATH : HOVERED_CIRCLE
@@ -389,7 +399,7 @@ export class JourneyView extends Component {
         }
         const glow = place.type.glow
         if(!logo){
-            this.#paintCode(painter, place.type.code, x, y, shade, glow)
+            this.#paintCode(painter, icon.letter, x, y, shade, glow)
             return
         }
         painter.push()

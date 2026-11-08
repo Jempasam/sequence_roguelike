@@ -7,6 +7,7 @@ import type { Hero } from "../run/Hero"
 import type { Usable } from "../usable/Usable"
 
 import type { HaltMoment } from "./SceneLook"
+import type { Visual } from "../base/Visual"
 
 /** What a dialog shows of something: cards, decks with their cards, items, usables, and a text under them. */
 export interface Shown {
@@ -30,8 +31,8 @@ export interface Shown {
     readonly items?: readonly Item[]
     readonly usables?: readonly Usable[]
 
-    /** The sprite of what it shows, by its name among the sprites of the units, shown left of its text. */
-    readonly sprite?: string
+    /** How what it shows looks, drawn left of its text. */
+    readonly sprite?: Visual
 
     /** What it says under the rest, nothing when the rest is enough. */
     readonly text?: Text

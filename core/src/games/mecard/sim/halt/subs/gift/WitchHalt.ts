@@ -1,7 +1,7 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
-import { USABLES } from "../../../catalog/index"
+import { LOOT_USABLES } from "../../../catalog/index"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { Usable } from "../../../usable/Usable"
@@ -11,10 +11,11 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { usableText } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The usables a witch offers. */
 export function witchUsables(rng: Rng): Usable[] {
-    return distinct(rng, USABLES, INVENTED_COUNTS)
+    return distinct(rng, LOOT_USABLES, INVENTED_COUNTS)
 }
 
 /** The witch: a usable among some, for a character of the party. */
@@ -38,7 +39,7 @@ export class WitchHalt extends AbstractHalt {
 
 
     public start(ctx: HaltContext): void {
-        const show = (usable: Usable) => ({ cards: [], text: usableText(usable) })
+        const show = (usable: Usable) => ({ cards: [], usables: [usable], text: usableText(usable) })
         ctx.offer("Choisis un utilisable", this.#usables, show, usable => {
             ctx.hero(concat(usable, " : pour qui ?"), hero => {
                 this.impact()
@@ -57,9 +58,7 @@ export class WitchHalt extends AbstractHalt {
 export const WITCH_HALT: HaltType = {
     id: "witch",
     name: "Sorcière",
-    description: "Un utilisable parmi trois.",
-    code: "SO",
-    icon: "mecard/travel/witch/logo.png",
+    description: "Un utilisable parmi trois.",    icon: visual("travel/witch/logo", { letter: "SO" }),
     transition: DOOR_TRANSITION,
     create: run => new WitchHalt(run),
 }

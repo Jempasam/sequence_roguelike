@@ -1,5 +1,7 @@
 import { rgba } from "../base/Rgba"
 import { Vector2 } from "../base/Vector2"
+import { loadedVisual, savedVisual } from "../base/Visual"
+import type { VisualData } from "../base/Visual"
 import type { Rgba } from "../base/Rgba"
 import { Arena } from "../battle/Arena"
 import { Battle } from "../battle/Battle"
@@ -43,8 +45,8 @@ export interface SavedDeck {
 export interface SavedUnit {
     readonly name: string
 
-    /** Its picture, by its name among the sprites of the units, none for one with no picture. */
-    readonly sprite: string|null
+    /** How it looks, none for one with no picture. */
+    readonly sprite: VisualData|string|null
 
     /** Its team, by its index in {@link BattleSave.teams}. */
     readonly team: number
@@ -310,7 +312,7 @@ function savedHomes(homes: UnitState["homes"]): (readonly [SavedCard, number])[]
 function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[]) => SavedCard[]): SavedUnit {
     const { spec } = unit
     return {
-        name: spec.name, sprite: spec.sprite ?? null, team, controller: spec.controller,
+        name: spec.name, sprite: savedVisual(spec.sprite), team, controller: spec.controller,
         position: [spec.position.x, spec.position.y], direction: [spec.direction.x, spec.direction.y],
         hearts: spec.hearts.map(heart => [heart.kind.name, heart.isEmpty]),
         hand: unit.hand.map(savedCard),
@@ -335,7 +337,7 @@ function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: Saved
     const cards = (saved: readonly SavedCard[]) => saved.map(card)
     return {
         spec: {
-            name: unit.name, sprite: unit.sprite, team: teams[unit.team], controller: unit.controller,
+            name: unit.name, sprite: loadedVisual(unit.sprite), team: teams[unit.team], controller: unit.controller,
             position: new Vector2(...unit.position), direction: new Vector2(...unit.direction),
             hearts: unit.hearts.map(([kind, isEmpty]) => new Heart(HEART_NAMES.of(kind), isEmpty)),
             decks: unit.decks.map(() => []), items: unit.items.map(name => ITEM_NAMES.of(name)),

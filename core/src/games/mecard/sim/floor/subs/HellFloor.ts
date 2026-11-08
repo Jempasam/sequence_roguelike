@@ -13,6 +13,7 @@ import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
+import { visual } from "../../base/Visual"
 
 /** Who lives in hell. */
 const MONSTERS: readonly Monster[] = [FIRE_MAGE, BERSERKER, BRUTE, ELF_ASSASSIN, IMP]
@@ -40,14 +41,14 @@ export class HellFloor extends AbstractFloor {
 export const HELL_FLOOR: FloorType = {
     name: "Enfer",
     description: "Du feu et de la rage, et le diable au bout. Plus de démons, d'autels et d'élites, peu d'hôpitaux.",
-    icon: "mecard/floors/hell/logo.png",
+    icon: visual("floors/hell/logo"),
     look: sceneLook(38, 14, 14, "mecard/floors/hell"),
     decorations: [
-        { picture: "mecard/floors/hell/statue.png", size: 2 },
-        { picture: "mecard/floors/hell/flame.png", size: 2 },
-        { picture: "mecard/floors/hell/skull.png", size: 2 },
-        { picture: "mecard/floors/hell/spike.png", size: 2 },
-        { picture: "mecard/floors/hell/crack.png", size: 2 },
+        { picture: visual("floors/hell/statue"), size: 2 },
+        { picture: visual("floors/hell/flame"), size: 2 },
+        { picture: visual("floors/hell/skull"), size: 2 },
+        { picture: visual("floors/hell/spike"), size: 2 },
+        { picture: visual("floors/hell/crack"), size: 2 },
     ],
     create: level => new HellFloor(level),
 }

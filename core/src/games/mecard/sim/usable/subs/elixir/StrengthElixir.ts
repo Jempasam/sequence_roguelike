@@ -3,6 +3,7 @@ import { damage } from "../../../battle/words"
 import type { Unit } from "../../../battle/Unit"
 
 import { RoundElixir } from "./RoundElixir"
+import { visual } from "../../../base/Visual"
 
 /** How many hearts the elixir of strength of the catalog adds to each attack, for its round. */
 const STRENGTH_BONUS = 1
@@ -15,7 +16,7 @@ export class StrengthElixir extends RoundElixir {
         /** How many hearts it adds to each attack. */
         public readonly bonus: number,
     ){
-        super("Élixir de force", "mecard/usables/strength_elixir.png", ["+", damage(bonus, "physical"), " à tes coups ce round."])
+        super("Élixir de force", visual("usables/strength_elixir"), ["+", damage(bonus, "physical"), " à tes coups ce round."])
     }
 
 

@@ -8,6 +8,7 @@ import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How far a leashed body goes before it turns, in meters. */
 const LEASH_STEP = 1
@@ -29,7 +30,7 @@ export class Gear extends AbstractItem {
 
 
     constructor(){
-        super("Engrenage", "mecard/items/bag.png", ["Chaque robot qu'elle construit gagne un cœur de bouclier."])
+        super("Engrenage", visual("items/bag"), ["Chaque robot qu'elle construit gagne un cœur de bouclier."])
     }
 
 
@@ -47,7 +48,7 @@ export class Cell extends AbstractItem {
 
 
     constructor(){
-        super("Pile", "mecard/items/med_kit.png", ["Chaque invocation de temps gagne un cœur de temps de plus."])
+        super("Pile", visual("items/med_kit"), ["Chaque invocation de temps gagne un cœur de temps de plus."])
     }
 
 
@@ -65,7 +66,7 @@ export class Leash extends AbstractItem {
 
 
     constructor(){
-        super("Laisse", "mecard/items/sling.png", [
+        super("Laisse", visual("items/sling"), [
             "Chaque invocation avance d'un mètre, puis se tourne vers l'", UNIT, " la plus proche, hors son invocatrice.",
         ])
     }
@@ -93,7 +94,7 @@ export class SummonHeart extends AbstractItem {
 
 
     constructor(){
-        super("Cœur d'invocation", "mecard/items/amulet.png", ["Quand une de ses invocations disparaît : gagne un cœur bleu."])
+        super("Cœur d'invocation", visual("items/amulet"), ["Quand une de ses invocations disparaît : gagne un cœur bleu."])
     }
 
 

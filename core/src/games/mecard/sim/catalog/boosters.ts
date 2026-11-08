@@ -107,7 +107,7 @@ export function boosterFit(booster: Booster, cards: readonly Card[]): number {
 }
 
 /** Every booster of the game, each written by hand. */
-export const BOOSTERS: readonly Booster[] = [
+export const ALL_BOOSTERS: readonly Booster[] = [
     {
         name: "Lames", color: rgba(0.8, 0.8, 0.9), icon: SLASH,
         pools: [{ count: 2, pool: [SLASH, THRUST, SWEEP, DAGGER] }, { count: 1, pool: [STEP, BACK_DASH, DODGE_CARD] }],
@@ -164,3 +164,6 @@ export const BOOSTERS: readonly Booster[] = [
         pools: [{ count: 2, pool: [CHARM, FEAR, HYPNOSIS] }, { count: 1, pool: [PUSH, SWAP, SUBSTITUTION] }],
     },
 ]
+
+/** The boosters a magician offers: all of them for now. */
+export const LOOT_BOOSTERS: readonly Booster[] = ALL_BOOSTERS

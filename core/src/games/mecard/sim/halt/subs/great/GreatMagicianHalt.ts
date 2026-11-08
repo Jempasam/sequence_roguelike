@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { CARTE } from "../../../base/keywords"
-import { BOOSTERS, openBooster } from "../../../catalog/boosters"
+import { LOOT_BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -11,6 +11,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { visual } from "../../../base/Visual"
 
 /** The booster, drawing twice as many cards from each of its pools. */
 function doubled(booster: Booster): Booster {
@@ -34,7 +35,7 @@ export class GreatMagicianHalt extends CardGiftHalt {
                 itemColor: GREAT_COLOR
             },
         )
-        this.#boosters = distinct(run.rng, BOOSTERS, INVENTED_COUNTS).map(doubled)
+        this.#boosters = distinct(run.rng, LOOT_BOOSTERS, INVENTED_COUNTS).map(doubled)
     }
 
 
@@ -54,8 +55,7 @@ export const GREAT_MAGICIAN_HALT: HaltType = {
     id: "greatMagician",
     name: "Grand magicien",
     description: ["Un booster parmi trois, en double : deux fois plus de ", CARTE.as("cartes"), "."],
-    code: "MG**",
-    icon: "mecard/travel/magician/logo.png",
+    icon: visual("travel/magician/logo", { letter: "MG**" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatMagicianHalt(run),

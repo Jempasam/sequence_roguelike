@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
+import type { Visual } from "../../../base/Visual"
 import { HeartCount } from "../../../battle/words"
 import type { PlugContext } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
@@ -7,6 +7,7 @@ import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How many hearts the belt of the death of the catalog gives. */
 const DEATH_BELT_HEARTS = 3
@@ -19,7 +20,7 @@ export class Belt extends AbstractItem {
 
 
     constructor(
-        name: string, icon: ImagePath,
+        name: string, icon: Visual,
 
         /** The kind of heart it gives, and the one that does not make it give. */
         public readonly kind: HeartKind,
@@ -42,6 +43,6 @@ export class Belt extends AbstractItem {
     }
 }
 
-export const STRENGTH_BELT = new Belt("Ceinture de force", "mecard/items/amulet.png", SHIELD_HEART, 1)
+export const STRENGTH_BELT = new Belt("Ceinture de force", visual("items/amulet"), SHIELD_HEART, 1)
 
-export const DEATH_BELT = new Belt("Ceinture de la mort", "mecard/items/amulet.png", BLUE_HEART, DEATH_BELT_HEARTS)
+export const DEATH_BELT = new Belt("Ceinture de la mort", visual("items/amulet"), BLUE_HEART, DEATH_BELT_HEARTS)

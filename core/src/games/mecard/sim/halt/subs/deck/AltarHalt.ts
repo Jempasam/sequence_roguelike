@@ -10,6 +10,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The cards of a deck with one copy of each card given taken out. */
 function without(cards: readonly Card[], taken: readonly Card[]): Card[] {
@@ -60,9 +61,7 @@ export class AltarHalt extends DeckHalt {
 export const ALTAR_HALT: HaltType = {
     id: "altar",
     name: "Autel sacrificiel",
-    description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],
-    code: "AU",
-    icon: "mecard/travel/altar/logo.png",
+    description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],    icon: visual("travel/altar/logo", { letter: "AU" }),
     transition: DOOR_TRANSITION,
     create: run => new AltarHalt(run),
 }

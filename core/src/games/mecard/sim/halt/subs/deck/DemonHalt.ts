@@ -10,6 +10,7 @@ import { sceneLook } from "../../SceneLook"
 import { CAVE_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, FUSION, DECK, UNIT } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The demon: a whole deck fused by pairs. */
 export class DemonHalt extends DeckHalt {
@@ -49,9 +50,7 @@ export class DemonHalt extends DeckHalt {
 export const DEMON_HALT: HaltType = {
     id: "demon",
     name: "Démon",
-    description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],
-    code: "DÉ",
-    icon: "mecard/travel/demon/logo.png",
+    description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],    icon: visual("travel/demon/logo", { letter: "DÉ" }),
     transition: CAVE_TRANSITION,
     create: run => new DemonHalt(run),
 }

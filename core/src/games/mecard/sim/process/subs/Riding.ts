@@ -1,6 +1,6 @@
-import { rgba } from "../../base/Rgba"
 import type { PlugContext } from "../../battle/Action"
 import { AbstractProcess } from "../AbstractProcess"
+import { visual } from "../../base/Visual"
 
 /** A ride for the round: the unit goes some way ahead before each of its steps, and once at the start. */
 export class Riding extends AbstractProcess {
@@ -10,7 +10,7 @@ export class Riding extends AbstractProcess {
         /** How far it goes each time, in meters, before the move factor of the unit. */
         public readonly length: number,
     ){
-        super("cheval", "horse", rgba(0.75, 0.55, 0.35))
+        super("cheval", visual("processes/horse", { color: [0.75, 0.55, 0.35] }))
     }
 
 

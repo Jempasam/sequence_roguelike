@@ -9,6 +9,7 @@ import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "../../sim/halt/PnjHats"
 import type { PnjHatLook } from "../../sim/halt/PnjHats"
 
 import { DIM_TEXT } from "../look/theme"
+import { pathOf } from "../look/visualPath"
 import { Pnj } from "./Pnj"
 import { PnjActor } from "./PnjActor"
 import type { PartPlace } from "./PnjPose"
@@ -146,7 +147,7 @@ export class PnjScreen {
         let masks: PnjAccessory[]
         let items: PnjAccessory[]
         const loadAll = async (looks: readonly PnjHatLook[]): Promise<PnjAccessory[]> => {
-            const pictures = await Promise.all(looks.map(look => this.assets.image(look.path)))
+            const pictures = await Promise.all(looks.map(look => this.assets.image(pathOf(look.path))))
             return pictures.map((picture, index) => ({
                 sprite: Sprite.whole(Texture.fromPixels(this.ui.gpu, picture)),
                 size: looks[index].size,

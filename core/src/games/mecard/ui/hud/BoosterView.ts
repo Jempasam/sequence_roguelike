@@ -1,7 +1,7 @@
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import { Atlas } from "../../../../engine/atlas"
 import type { Gpu } from "../../../../engine/gpu"
-import { Box, Label, NineSlice, Panel, sizeHint, Stack } from "../../../../engine/ui"
+import { Box, Container, Label, NineSlice, Panel, sizeHint, Stack } from "../../../../engine/ui"
 import type { Component, SizeHint, Theme } from "../../../../engine/ui"
 import type { Booster } from "../../sim/catalog/boosters"
 import { boosterSize } from "../../sim/catalog/boosters"
@@ -78,10 +78,14 @@ class Pocket extends Panel {
 
     #height = POCKET_HEIGHT
 
-    /** Is it or one of its ancestors the component under the pointer? An option of a choice holds it. */
+    /**
+     * Is it or one of its ancestors the component under the pointer, up to the first that holds the pointer
+     * whole, such as an option of a choice? What is above it, a panel or the choice itself, says nothing of it.
+     */
     #underPointer(): boolean {
         for(let node: Component|null = this; node; node = node.parent){
             if(node.hovered) return true
+            if(node instanceof Container && node.holdsPointer) return false
         }
         return false
     }

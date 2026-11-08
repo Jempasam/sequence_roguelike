@@ -10,6 +10,7 @@ import { AbstractHalt } from "../AbstractHalt"
 import { goodShown, shopGoods } from "../gift/ShopHalt"
 import type { Good } from "../gift/ShopHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { visual } from "../../../base/Visual"
 
 /** The share of every price the great shop takes off. */
 export const GREAT_SHOP_DISCOUNT = 0.25
@@ -118,8 +119,7 @@ export const GREAT_SHOP_HALT: HaltType = {
     id: "greatShop",
     name: "Grand magasin",
     description: [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, un quart moins cher."],
-    code: "MA*",
-    icon: "mecard/travel/shop/logo.png",
+    icon: visual("travel/shop/logo", { letter: "MA*" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatShopHalt(run),

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
-    HEART_KINDS, ITEMS, loadBattle, MergedCard, planFor, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
+    ALL_CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
+    HEART_KINDS, ALL_ITEMS, loadBattle, MergedCard, planFor, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
     REPEAT_2, Run, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
-    USABLES,
+    ALL_USABLES,
     Vector2, VULNERABLE, WATER, WHETSTONE,
 } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
@@ -182,8 +182,8 @@ describe("summoned bodies, potions and puddles", () => {
         for(const unit of original.initiative) if(unit !== hero) original.commit(unit, new CardChain())
         play(original)
         expect(original.phase).toBe("preparation")
-        expect(original.living.some(unit => unit.sprite === "coin")).toBe(true)
-        const puddles = (battle: Battle) => battle.living.filter(unit => unit.sprite === "puddle")
+        expect(original.living.some(unit => unit.sprite?.visual === "units/coin")).toBe(true)
+        const puddles = (battle: Battle) => battle.living.filter(unit => unit.sprite?.visual === "units/puddle")
         expect(puddles(original)).toHaveLength(1)
         const save = saveBattle(original)
         expect(JSON.stringify(saveBattle(loadBattle(save)))).toBe(JSON.stringify(save))
@@ -205,7 +205,7 @@ describe("catalog names", () => {
     })
 
     test("each card, item, usable and heart → a name of its own", () => {
-        for(const values of [[...CARDS, SECRET_CARD], ITEMS, USABLES, HEART_KINDS]){
+        for(const values of [[...ALL_CARDS, SECRET_CARD], ALL_ITEMS, ALL_USABLES, HEART_KINDS]){
             const names = values.map(value => value.name)
             expect(new Set(names).size).toBe(names.length)
         }

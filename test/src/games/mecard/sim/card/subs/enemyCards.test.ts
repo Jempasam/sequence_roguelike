@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     Arena, Battle, CardChain, DIVISION, DRIZZLE, FLEE, Heart, LOOT_CARDS, MEGA_LASER,
-    MONSTERS as KINDS,
+    ALL_MONSTERS as KINDS,
     PURSUIT, RED_HEART, RETREAT_SHOT, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHIELD_HEART, SIDESTEP,
     SLOWED, SPARK, SPIT,
     STEP, Vector2,

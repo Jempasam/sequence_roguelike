@@ -1,6 +1,6 @@
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
-import { ITEMS } from "../../../catalog/index"
+import { LOOT_ITEMS } from "../../../catalog/index"
 import type { Item } from "../../../item/Item"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -10,10 +10,11 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The items a merchant offers. */
 export function merchantItems(rng: Rng): Item[] {
-    return distinct(rng, ITEMS, INVENTED_COUNTS)
+    return distinct(rng, LOOT_ITEMS, INVENTED_COUNTS)
 }
 
 /** The merchant: an item among some, for a character of the party. */
@@ -33,7 +34,7 @@ export class MerchantHalt extends AbstractHalt {
 
 
     public start(ctx: HaltContext): void {
-        ctx.offer("Choisis un objet", this.#items, item => ({ cards: [], text: described(item, item) }), item => {
+        ctx.offer("Choisis un objet", this.#items, item => ({ cards: [], items: [item], text: described(item, item) }), item => {
             ctx.hero(concat(item, " : pour qui ?"), hero => {
                 this.impact()
                 this.run.giveItem(hero, item)
@@ -51,9 +52,7 @@ export class MerchantHalt extends AbstractHalt {
 export const MERCHANT_HALT: HaltType = {
     id: "merchant",
     name: "Marchand ambulant",
-    description: "Un objet parmi trois.",
-    code: "MB",
-    icon: "mecard/travel/merchant/logo.png",
+    description: "Un objet parmi trois.",    icon: visual("travel/merchant/logo", { letter: "MB" }),
     transition: DOOR_TRANSITION,
     create: run => new MerchantHalt(run),
 }

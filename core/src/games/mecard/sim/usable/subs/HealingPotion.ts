@@ -2,6 +2,7 @@ import { HeartCount } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 
 import { AbstractUsable } from "./AbstractUsable"
+import { visual } from "../../base/Visual"
 
 /** How many hearts the healing potion of the catalog gives back. */
 const POTION_HEAL = 3
@@ -14,7 +15,7 @@ export class HealingPotion extends AbstractUsable {
         /** How many hearts it gives back. */
         public readonly heal: number,
     ){
-        super("Potion de soin", "mecard/usables/healing_potion.png", ["Soigne ", new HeartCount(heal), " + soin."])
+        super("Potion de soin", visual("usables/healing_potion"), ["Soigne ", new HeartCount(heal), " + soin."])
     }
 
 

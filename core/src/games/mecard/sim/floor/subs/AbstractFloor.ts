@@ -29,7 +29,7 @@ import type { Place, Spot } from "../../run/Journey"
 import { isHalt } from "../../run/PlaceType"
 import type { FightType, PlaceType } from "../../run/PlaceType"
 import type { Floor, FloorContext, FloorType } from "../Floor"
-import { greatHalts, masterHalts } from "../../catalog/halts"
+import { darkHalts, greatHalts, masterHalts } from "../../catalog/halts"
 
 /** How many layers a floor lays, the boss in the last. */
 export const LAYERS = 12
@@ -83,7 +83,8 @@ const WEIGHTS: PlaceWeights = new Map<PlaceType, number>([
     ] as [PlaceType,number][]).map(([type,i]) => [type, i*2] as const),
 
     ...masterHalts().map(type => [type, 1] as const),
-    ...greatHalts().map(type => [type, 1] as const)
+    ...greatHalts().map(type => [type, 1] as const),
+    ...darkHalts().map(type => [type, 1] as const)
 ])
 
 /**

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
     AIM, BOW_MODULE, BULL, Heart, IMPROVISED_ROBOT, IMPROVISED_WEAPON, KAMIKAZE_ROBOT, MECHANIC_KIT,
     PATH_AIM,
-    MISSILE, RAM,
+    MISSILE, RAM, REPEATER,
     RED_HEART, resolve, saveBattle, loadBattle, SHIELD_HEART, SHOT, STONE_GOLEM, TANK_ROBOT, THRUST, WAIT,
 } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
@@ -11,7 +11,7 @@ import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 
 /** The robot of a battle, none when none. */
 function robotOf(on: ReturnType<typeof battle>): Unit {
-    const robot = on.units.find(body => body.sprite === "robot")
+    const robot = on.units.find(body => body.sprite?.visual === "units/robot")
     if(!robot) throw new Error("No robot was built.")
     return robot
 }
@@ -66,7 +66,7 @@ describe("IMPROVISED_ROBOT", () => {
         const hero = unit(on, 3, 5)
         unit(on, 3, 4, { team: MONSTERS })
         play(on, [[hero, chain(IMPROVISED_ROBOT, BOW_MODULE)]])
-        expect(on.units.some(body => body.sprite === "robot")).toBe(false)
+        expect(on.units.some(body => body.sprite?.visual === "units/robot")).toBe(false)
     })
 })
 
@@ -93,6 +93,15 @@ describe("IMPROVISED_WEAPON", () => {
     test("anything else on its right → nothing", () => {
         const { cards } = resolve([IMPROVISED_WEAPON, THRUST], { pick: options => options[0] })
         expect(cards).toEqual([THRUST])
+    })
+
+    test("a part that needs a module on its right, with no module → nothing, no error", () => {
+        const { cards } = resolve([IMPROVISED_WEAPON, REPEATER], { pick: options => options[0] })
+        expect(cards).toEqual([REPEATER])
+    })
+
+    test("a part, then a module → the weapon still gets nothing from the part", () => {
+        expect(() => resolve([IMPROVISED_WEAPON, REPEATER, MISSILE], { pick: options => options[0] })).not.toThrow()
     })
 })
 

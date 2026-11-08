@@ -1,0 +1,17 @@
+{
+  "palette": [
+    { "color": "#8a9098", "reflection": 0.6 }
+  ],
+  "pixels": {
+    "materials": [
+      ".000.",
+      ".0.0.",
+      ".0.0.",
+      ".000.",
+      "..0..",
+      "..0.."
+    ]
+  },
+  "filters": ["auto_depth"],
+  "render": { "preset": "simple", "light": 135 }
+}

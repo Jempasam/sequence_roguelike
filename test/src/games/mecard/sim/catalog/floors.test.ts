@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    BATTLE, BOSS, BOSSES, CaveFloor, CHEST_HALT, ELITE, encounter, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, FLOOR_TYPES, GOBLIN, GOLEM, isHalt,
+    BATTLE, BOSS, BOSS_MONSTERS, CaveFloor, CHEST_HALT, ELITE, encounter, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS, GOBLIN, GOLEM, isHalt,
     Journey, LAYERS, Rng,
 } from "@game/core/mecard"
 import type { Floor, FloorType, FightType, Place, PlaceType, PlaceWeights } from "@game/core/mecard"
@@ -59,10 +59,10 @@ function longestFightRow(map: Journey): number {
 
 describe("FLOOR_LINKS", () => {
     test("every sort → reached from the first", () => {
-        expect(reachable()).toEqual(new Set(FLOOR_TYPES))
+        expect(reachable()).toEqual(new Set(ALL_FLOORS))
     })
 
-    test.each(FLOOR_TYPES.map(type => ({ name: type.name, type })))("$name → leads somewhere", ({ type }) => {
+    test.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name → leads somewhere", ({ type }) => {
         expect(FLOOR_LINKS.get(type)?.length).toBeGreaterThan(0)
     })
 
@@ -73,7 +73,7 @@ describe("FLOOR_LINKS", () => {
     })
 })
 
-describe.each(FLOOR_TYPES.map(type => ({ name: type.name, type })))("$name", ({ type }) => {
+describe.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name", ({ type }) => {
     test("made at a level → of its sort, at that level", () => {
         const floor = type.create(5)
         expect(floor.type).toBe(type)
@@ -83,9 +83,9 @@ describe.each(FLOOR_TYPES.map(type => ({ name: type.name, type })))("$name", ({ 
     test("its boss → leads the monsters of a boss fight", () => {
         const place = mapOf(type.create(1)).places.find(each => each.type === BOSS)
         const [boss, ...others] = place?.monsters ?? []
-        expect(BOSSES).toContain(boss)
+        expect(BOSS_MONSTERS).toContain(boss)
         expect(others.length).toBeGreaterThan(0)
-        for(const other of others) expect(BOSSES).not.toContain(other)
+        for(const other of others) expect(BOSS_MONSTERS).not.toContain(other)
     })
 
     test("its map → no exit of its own, they are not its to lay", () => {
@@ -141,7 +141,7 @@ describe("a filled map", () => {
         expect(kinds).toEqual(new Set([BATTLE, FORGE_HALT, HOSPITAL_HALT, BOSS]))
     })
 
-    const types = FLOOR_TYPES.map(type => ({ name: type.name, type }))
+    const types = ALL_FLOORS.map(type => ({ name: type.name, type }))
 
     test.each(types)("$name → no three halts in a row", ({ type }) => {
         for(let seed = 1; seed <= 200; seed++){

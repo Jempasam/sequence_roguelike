@@ -4,12 +4,13 @@ import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { MergedCard } from "../card/subs/composite/MergedCard"
+import { ModuleCard } from "../card/subs/mechanic/ModuleCard"
 import { RandomCard } from "../card/subs/composite/RandomCard"
-import { FLOOR_TYPES } from "../catalog/floors"
-import { CARDS, USABLES, ITEMS } from "../catalog/index"
-import { MONSTERS } from "../catalog/monsters"
+import { ALL_FLOORS } from "../catalog/floors"
+import { ALL_CARDS, ALL_USABLES, ALL_ITEMS } from "../catalog/index"
+import { ALL_MONSTERS } from "../catalog/monsters"
 import type { Monster } from "../catalog/monsters"
-import { PETS } from "../catalog/pets"
+import { ALL_PETS } from "../catalog/pets"
 import type { Element } from "../element/Element"
 import type { FloorType } from "../floor/Floor"
 import { BASE_ELEMENTS, COMPOUNDS } from "../element/reactions"
@@ -19,6 +20,7 @@ import { BLACK_HEART } from "../heart/subs/BlackHeartKind"
 import { BLUE_HEART } from "../heart/subs/BlueHeartKind"
 import { EXPLOSIVE_HEART } from "../heart/subs/ExplosiveHeartKind"
 import { GLASS_HEART } from "../heart/subs/GlassHeartKind"
+import { GREEN_HEART } from "../heart/subs/GreenHeartKind"
 import { PINK_HEART } from "../heart/subs/PinkHeartKind"
 import { QUICK_HEART } from "../heart/subs/QuickHeartKind"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
@@ -34,7 +36,7 @@ import { POTIONS } from "../potion/subs/potions"
 /** Every kind of heart, as saved by name. */
 export const HEART_KINDS: readonly HeartKind[] = [
     RED_HEART, SHIELD_HEART, THORN_HEART, GLASS_HEART, TIME_HEART, SOLID_HEART, BLUE_HEART, PINK_HEART,
-    BLACK_HEART, EXPLOSIVE_HEART, VITAL_HEART, QUICK_HEART,
+    BLACK_HEART, EXPLOSIVE_HEART, VITAL_HEART, QUICK_HEART, GREEN_HEART,
 ]
 
 /** The potions by name. */
@@ -79,11 +81,28 @@ class Names<T extends { readonly name: string }> {
 
 /** The codecs of the cards: those of the catalog, the secret one among them, then the ones holding cards. */
 export const CARD_CODECS: Codecs<Card> = new Codecs<Card>("card", [
-    routeCodec("card", [...CARDS, SECRET_CARD]),
+    routeCodec("card", [...ALL_CARDS, SECRET_CARD]),
     cardsCodec("fused", FusionCard, cards => new FusionCard(cards)),
     cardsCodec("merged", MergedCard, cards => new MergedCard(cards)),
     cardsCodec("random", RandomCard, cards => new RandomCard(...pair(cards))),
+    moduleCodec(),
 ])
+
+/** The codec of a module made during a run, none of the catalog: its name, then its cards, each written down. */
+function moduleCodec(): Codec<Card> {
+    return {
+        prefix: "module",
+        is: card => card instanceof ModuleCard,
+        serialize: card => {
+            const { name, cards } = card as ModuleCard
+            return JSON.stringify([name, cards.map(each => CARD_CODECS.save(each))])
+        },
+        parse: text => {
+            const [name, cards] = JSON.parse(text) as [string, string[]]
+            return new ModuleCard(String(name), cards.map(each => CARD_CODECS.load(each)))
+        },
+    }
+}
 
 /** The codec of a kind of card holding cards: its cards, each written down, in order. */
 function cardsCodec<C extends Card>(
@@ -103,9 +122,9 @@ function pair(cards: readonly Card[]): [Card, Card] {
     return [cards[0], cards[1]]
 }
 
-export const ITEM_NAMES = new Names<Item>("item", ITEMS)
+export const ITEM_NAMES = new Names<Item>("item", ALL_ITEMS)
 export const ELEMENT_NAMES = new Names<Element>("element", [...BASE_ELEMENTS, ...COMPOUNDS])
-export const USABLE_NAMES = new Names<Usable>("usable", USABLES)
+export const USABLE_NAMES = new Names<Usable>("usable", ALL_USABLES)
 export const HEART_NAMES = new Names<HeartKind>("heart", HEART_KINDS)
-export const MONSTER_NAMES = new Names<Monster>("monster", [...MONSTERS, ...PETS])
-export const FLOOR_NAMES = new Names<FloorType>("floor", FLOOR_TYPES)
+export const MONSTER_NAMES = new Names<Monster>("monster", [...ALL_MONSTERS, ...ALL_PETS])
+export const FLOOR_NAMES = new Names<FloorType>("floor", ALL_FLOORS)

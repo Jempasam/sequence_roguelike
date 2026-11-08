@@ -13,6 +13,7 @@ import { ActionCard } from "../ActionCard"
 import { flight, SHORT_TIME, wait } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import type { Rarity } from "../../Rarity"
+import type { Visual } from "../../../base/Visual"
 
 /** How long a thrown body flies, in seconds. */
 const THROW_TIME = 0.25
@@ -29,7 +30,7 @@ export function summonShown(at: Vector2) {
 
 /** What a card summons, and how. */
 export interface SummonSpec {
-    readonly sprite: string
+    readonly sprite: Visual
 
     /** What each body is named. */
     readonly name: string

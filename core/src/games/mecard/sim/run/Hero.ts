@@ -15,6 +15,7 @@ import { Carried } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
 import type { Item } from "../item/Item"
+import type { Visual } from "../base/Visual"
 
 /** The color the names of the heroes and of their team are written in. */
 export const HERO_COLOR: Rgba = rgba(0.35, 0.6, 1)
@@ -26,8 +27,8 @@ export const HERO_COLOR: Rgba = rgba(0.35, 0.6, 1)
 export interface Hero {
     readonly name: string
 
-    /** Its picture, by its name among the sprites of the units, none for one with no picture. */
-    readonly sprite: string|null
+    /** How it looks, none for one with no picture. */
+    readonly sprite: Visual|null
 
     readonly controller: Controller
 
@@ -78,6 +79,11 @@ export function allyOf(monster: Monster, name: string): Hero {
         items: [],
         usables: [], bases: { draw: monster.draw, firstDraw: monster.draw, size: monster.size ?? 1 },
     })
+}
+
+/** A kind of monster the players plan, as a hero: the ally it would be, in their hands. */
+export function recruitOf(monster: Monster, name: string): Hero {
+    return hero({ ...allyOf(monster, name), controller: "player" })
 }
 
 /**

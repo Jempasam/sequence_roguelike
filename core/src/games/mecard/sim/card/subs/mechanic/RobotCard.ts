@@ -19,6 +19,7 @@ import { hold, SHORT_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
 import { summonShown } from "../summon/SummonCard"
 import { CARTE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** How far ahead a robot stands, in meters. */
 const ROBOT_AHEAD = 1
@@ -67,7 +68,7 @@ export class RobotCard extends AbstractCard<readonly Action[], Module> {
             use: function* ({ battle, unit }){
                 const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
                 const robot = battle.place(unit, {
-                    sprite: "robot", name: "Robot", at: spotOf(unit), direction: unit.direction,
+                    sprite: visual("units/robot"), name: "Robot", at: spotOf(unit), direction: unit.direction,
                     hearts: Heart.many(SHIELD_HEART, count), cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
                 })
                 if(robot) module.tune(robot)
@@ -98,10 +99,13 @@ export const TANK_ROBOT = new RobotCard("Robot tank", [
     "en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)
 
-/** The cards of the module on its right, in its place. */
+/**
+ * The cards of the module on its right, in its place. A module that takes another module to be built (a part
+ * fitted on a machine) is not one yet: the weapon has none.
+ */
 export const IMPROVISED_WEAPON = new RewriteCard("Arme improvisée", [
     "Fin de préparation : se remplace par les ", CARTE.as("cartes"), " du module à sa droite.",
 ], Rarity.COMMON, (ctx, { next }) => {
-    if(!next || !gives(next, MODULE)) return { cards: [], consumed: 0, acting: false }
+    if(!next || !gives(next, MODULE) || next.input !== null) return { cards: [], consumed: 0, acting: false }
     return { cards: next.get(undefined).cards(options => ctx.pick(options)), consumed: 1, acting: false }
 })

@@ -1,9 +1,8 @@
-import { rgba } from "../../base/Rgba"
 import { Vector2 } from "../../base/Vector2"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
-import { StatusType } from "../Status"
+import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
 /** The chance a confused unit goes a random way at each of its steps. */
 export const CONFUSION_CHANCE = 0.5
@@ -14,7 +13,7 @@ const WAYS: readonly Vector2[] = [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vecto
 })
 
 /** A confusion: the unit may face anywhere before a step. */
-export const CONFUSED = new StatusType("confusion", rgba(0.9, 0.5, 0.9), "negative", level => new Confusion(level))
+export const CONFUSED = new StatusType("confusion", statusVisual("confusion", 0.9, 0.5, 0.9), "negative", level => new Confusion(level), { description: ["Avant chaque pas, une chance sur deux de se tourner vers l'une des huit directions au hasard, pendant ", STATUS_LEVEL, " rounds."] })
 
 /** Confused: before each of its steps, one chance in two to face one of the eight ways, drawn at random. */
 export class Confusion extends RoundStatus {

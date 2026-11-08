@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../engine/assets"
+import type { Visual } from "../base/Visual"
 import type { Rng } from "../base/Rng"
 import type { Monster } from "../catalog/monsters"
 import type { SceneLook } from "../halt/SceneLook"
@@ -8,7 +8,7 @@ import type { FightType } from "../run/PlaceType"
 
 /** A picture lying on the map of a floor, for the look of it. */
 export interface Decoration {
-    readonly picture: ImagePath
+    readonly picture: Visual
 
     /** How many virtual pixels a pixel of its picture takes, a whole number. */
     readonly size: number
@@ -19,12 +19,12 @@ export interface Decoration {
  * sort is made. The sorts are the nodes of `FLOOR_LINKS`, which tells where each one leads.
  *
  * @remarks
- * Its pictures are paths, which nothing here reads: only an interface loads them, so the simulation runs
+ * Its pictures are visuals, keys that nothing here resolves: only an interface loads them, so the simulation runs
  * without any.
  */
 export interface FloorType extends PlaceInfo {
     /** The picture of the exits leading to it, on the map. */
-    readonly icon: ImagePath
+    readonly icon: Visual
 
     /** How the journey looks on its map: its background and its frame. */
     readonly look: SceneLook

@@ -6,11 +6,12 @@ import { RANDOM_STEP } from "../../card/subs/body/BodyCards"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { familyType } from "../../status/Status"
+import { familyType, statusVisual } from "../../status/Status"
 import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
+import { visual } from "../../base/Visual"
 
 /** How many rounds a whirlwind lasts. */
 const WHIRLWIND_ROUNDS = 2
@@ -22,7 +23,7 @@ const WHIRLWIND_STEPS = 4
 const WHIRLWIND_THROW = 1.5
 
 /** A whirlwind. */
-export const WHIRLING = familyType("tourbillon", HAZARD_TEXT, "neutral", { cloned: false })
+export const WHIRLING = familyType("tourbillon", statusVisual("whirling", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Un corps qui le touche est projeté loin de lui et subit un élément." })
 
 /** The kinds of whirlwind, one for each element. */
 export const WHIRLWINDS = elementVariants(
@@ -45,7 +46,7 @@ export function placeWhirlwind(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const body = battle.place(owner, {
-        sprite: "tornado", name: "Tourbillon", at, direction, tangible: false,
+        sprite: visual("units/tornado"), name: "Tourbillon", at, direction, tangible: false,
         hearts: Heart.many(TIME_HEART, WHIRLWIND_ROUNDS),
         cards: new Array(WHIRLWIND_STEPS).fill(RANDOM_STEP),
     })

@@ -48,6 +48,7 @@ Monorepo en npm workspaces :
 | `desktop/` | Les adapters Node (SDL, `@kmamal/gl`, `fs`), plus le build SEA. |
 | `server/` | Signalisation WebRTC et lobby. Ne dépend pas de `core`. |
 | `test/` | Les tests de `core`, rangés comme `core/src` (`test/src/engine/gpu/Painter.test.ts` teste `core/src/engine/gpu/Painter.ts`), et les fakes partagés (GL, input, stockage) dans `test/src/fixtures`. |
+| `command_line/` | Outil en ligne de commande, dépend de `core` : liste les catalogues Mecard (cartes, kits, monstres…). Voir [command_line/CLI.md](command_line/CLI.md). |
 | `assets/` | Images et sons livrés avec le jeu. |
 | `art/` | Les sources des images faites avec le projet `picture` (`.pic.json`), rendues dans `assets/` au même chemin. |
 

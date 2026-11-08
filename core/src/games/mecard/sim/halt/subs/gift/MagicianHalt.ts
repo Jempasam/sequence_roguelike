@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
-import { BOOSTERS, boosterPoolsText, openBooster } from "../../../catalog/boosters"
+import { LOOT_BOOSTERS, boosterPoolsText, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -10,6 +10,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** A booster, closed, and what it holds, told under the pointer. */
 export function boosterShown(chosen: Booster): Shown {
@@ -32,7 +33,7 @@ export class MagicianHalt extends CardGiftHalt {
                 item: "magicianWand"
             },
         )
-        this.#boosters = distinct(run.rng, BOOSTERS, INVENTED_COUNTS)
+        this.#boosters = distinct(run.rng, LOOT_BOOSTERS, INVENTED_COUNTS)
     }
 
 
@@ -51,9 +52,7 @@ export class MagicianHalt extends CardGiftHalt {
 export const MAGICIAN_HALT: HaltType = {
     id: "magician",
     name: "Magicien",
-    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],
-    code: "MG",
-    icon: "mecard/travel/magician/logo.png",
+    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],    icon: visual("travel/magician/logo", { letter: "MG" }),
     transition: DOOR_TRANSITION,
     create: run => new MagicianHalt(run),
 }

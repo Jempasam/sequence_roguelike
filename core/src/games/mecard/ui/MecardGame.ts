@@ -1,6 +1,6 @@
 import { AssetError } from "../../../engine/assets"
 import type { Assets } from "../../../engine/assets"
-import { Console, CONSOLE_KEY, ConsoleView } from "../../../engine/console"
+import { Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView } from "../../../engine/console"
 import type { Painter } from "../../../engine/gpu"
 import type { InputFrame } from "../../../engine/input"
 import type { Theme, UiRoot } from "../../../engine/ui"
@@ -236,7 +236,8 @@ export class MecardGame {
     /** Open the console when its key was pressed and nothing took the press: open, the console takes it. */
     #openConsole(input: InputFrame): void {
         const pressed = input.events.some(event => {
-            return event.type === "key-down" && event.code === CONSOLE_KEY && !event.consumed
+            return event.type === "key-down" && (event.code === CONSOLE_KEY || event.code === CONSOLE_SECOND_KEY)
+                && !event.consumed
         })
         if(pressed) this.#consoleView.open()
     }

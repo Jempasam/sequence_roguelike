@@ -10,6 +10,7 @@ import { fusionShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { FUSION } from "../../../base/keywords"
 import { lootUpgraded } from "../../../catalog/upgrades"
+import { visual } from "../../../base/Visual"
 
 /** The inventor: a fusion among some. */
 export class InventorHalt extends CardGiftHalt {
@@ -48,9 +49,7 @@ export class InventorHalt extends CardGiftHalt {
 export const INVENTOR_HALT: HaltType = {
     id: "inventor",
     name: "Inventeur",
-    description: ["Un ", FUSION, " parmi trois."],
-    code: "IN",
-    icon: "mecard/travel/inventor/logo.png",
+    description: ["Un ", FUSION, " parmi trois."],    icon: visual("travel/inventor/logo", { letter: "IN" }),
     transition: DOOR_TRANSITION,
     create: run => new InventorHalt(run),
 }

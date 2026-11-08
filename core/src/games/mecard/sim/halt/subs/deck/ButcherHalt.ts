@@ -11,6 +11,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, COMPOSITE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The butcher: a few fusions of a deck cut back into their cards. */
 export class ButcherHalt extends DeckHalt {
@@ -47,9 +48,7 @@ export class ButcherHalt extends DeckHalt {
 export const BUTCHER_HALT: HaltType = {
     id: "butcher",
     name: "Boucher",
-    description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],
-    code: "BU",
-    icon: "mecard/travel/butcher/logo.png",
+    description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],    icon: visual("travel/butcher/logo", { letter: "BU" }),
     transition: DOOR_TRANSITION,
     create: run => new ButcherHalt(run),
 }

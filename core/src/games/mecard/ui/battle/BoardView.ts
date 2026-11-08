@@ -1,16 +1,13 @@
+import type { Visual } from "../../sim/base/Visual"
 import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import type { BitmapFont } from "../../../../engine/text"
-import { outline, touches } from "../../sim/battle/Area"
-import { BURN } from "../../sim/status/subs/Burn"
-import { DODGE } from "../../sim/status/subs/Dodge"
-import { ROOTED } from "../../sim/status/subs/Rooted"
+import { touches } from "../../sim/battle/Area"
 import { Vector2 } from "../../sim/base/Vector2"
 import type { Indicator } from "../../sim/battle/Action"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
-import type { StatusType } from "../../sim/status/Status"
 
 import { colorOf } from "../look/colors"
 import type { BattleScene, SceneUnit } from "./BattleScene"
@@ -37,9 +34,6 @@ const ARROW_HEAD = 5
 /** The ink of the grid, as the paths of the map of the journey. */
 const GRID = new Color(0.3, 0.2, 0.13, 0.35)
 const INK = new Color(0.05, 0.04, 0.08)
-const FIRE = new Color(1, 0.45, 0.1, 0.45)
-const BOMB = new Color(0.08, 0.08, 0.1)
-const FUSE = new Color(1, 0.3, 0.2)
 const CHOSEN = new Color(1, 0.85, 0.35)
 const ACTING = new Color(1, 1, 1)
 const HIGHLIGHTED = new Color(0.45, 0.75, 1)
@@ -59,6 +53,9 @@ const ZONE_RANK = 100
 /** Added to the size of a unit that takes no room: it ranks after a unit of the same size standing there. */
 const GROUND_RANK = 0.01
 
+/** How thick a tie between two units is drawn, in meters. */
+const TETHER_THICKNESS = 0.2
+
 /** How many sides the outline of a hitbox is drawn with. */
 const HITBOX_SIDES = 24
 
@@ -67,11 +64,6 @@ const SHADE_SIZE = 1.5
 
 /** How thick the lines of the grid are, in pixels. */
 const GRID_THICKNESS = 2
-
-/** The dot each status is shown by, under its unit. */
-const STATUS_DOTS = new Map<StatusType, Color>([
-    [BURN, new Color(1, 0.5, 0.1)], [ROOTED, new Color(0.3, 0.8, 0.3)], [DODGE, new Color(0.4, 0.9, 1)],
-])
 
 /** A rectangle of the world, in pixels. */
 export interface WorldRect {
@@ -162,6 +154,12 @@ export class BoardView {
         return [cx, cy - radius - 1]
     }
 
+    /** Where the middle of the top edge of what lies under a unit, its statuses, is, in virtual pixels of the arena. */
+    public feetAnchor(unit: Unit): readonly [number, number] {
+        const [cx, cy] = this.#pixels(this.scene.of(unit)?.position ?? unit.position)
+        return [cx, cy + unit.radius * this.#meter * (unit.vanishing ? 0.75 : 1) + 1]
+    }
+
     /**
      * The living unit lying under a point of the world, none when none does: any unit, one that takes no
      * room and a pillar too. Where several lie there, the body that is hit first wins, the smallest of
@@ -202,6 +200,7 @@ export class BoardView {
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
         this.#drawHitboxes(painter)
+        this.#drawTethers(painter)
         painter.pop()
         for(const shown of drawOrder(this.scene.living)) this.#drawUnit(painter, shown)
         // What is shown over the arena stays in it: a reach wider than the room is cut at its walls.
@@ -246,6 +245,24 @@ export class BoardView {
         }
     }
 
+    /**
+     * The ties between units, from one to the other where the scene has them: the picture of the tie stretched,
+     * a plain line in its color while it has none, under the sprites.
+     */
+    #drawTethers(painter: Painter): void {
+        for(const { from, to, visual } of this.scene.tethers){
+            const a = this.scene.of(from)
+            const b = this.scene.of(to)
+            if(!a?.alive || !b?.alive) continue
+            const [ax, ay] = this.#pixels(a.position)
+            const [bx, by] = this.#pixels(b.position)
+            painter.setTint(this.#coloredBy(visual, 1))
+            const rope = this.sprites.tether(visual)
+            if(rope) rope.draw(painter, { x: ax, y: ay }, { x: bx, y: by }, TETHER_THICKNESS * this.#meter)
+            else painter.multiLine([{ x: ax, y: ay }, { x: bx, y: by }], Math.max(1, TETHER_THICKNESS * this.#meter / 3), false)
+        }
+    }
+
     #drawFloor(painter: Painter, battle: Battle): void {
         const { width, height } = battle.arena
         const meter = this.#meter
@@ -281,49 +298,34 @@ export class BoardView {
     }
 
     /**
-     * The bodies lying on the ground, under those standing: the picture of those that have one, the zones the
-     * others cover, a bomb as a bomb.
+     * The bodies lying on the ground, under those standing: each as its picture, or as a dot of the color its
+     * visual gives where it has none.
      */
     #drawHazards(painter: Painter): void {
         for(const { unit, position } of this.scene.living){
-            const zone = unit.zone
-            if(!zone) continue
+            if(!unit.zone) continue
+            const [x, y] = this.#pixels(position)
             const sprite = this.sprites.of(unit.sprite)
-            if(sprite){
-                const [x, y] = this.#pixels(position)
-                this.#drawShade(painter, x, y, this.#meter)
+            if(!sprite){
+                const [r, g, b] = unit.sprite?.color ?? [1, 1, 1]
+                this.#drawShade(painter, x, y, 6)
                 painter.setBlend("alpha")
-                // What it covers shows under its picture, when it acts on the whole of its zone.
-                if(unit.sprite === "fire" || unit.sprite === "puddle"){
-                    const { r, g, b, a } = unit.color
-                    painter.setTint(unit.sprite === "fire" ? FIRE : this.#faded.set(r, g, b, a))
-                    this.#fillPolygon(painter, outline(zone))
-                }
-                painter.setTint(this.#faded.set(1, 1, 1, 1))
-                const scale = this.#spriteScale(1)
-                painter.push()
-                const left = Math.round(x - sprite.width * scale / 2)
-                painter.translate(left, Math.round(y + (FEET_DROP - sprite.height) * scale))
-                painter.scale(scale, scale)
-                painter.sprite(sprite, 0, 0)
-                painter.pop()
+                painter.setTint(this.#faded.set(r, g, b, 1))
+                painter.circle(x, y, 3)
                 painter.setBlend("cutout")
                 continue
             }
-            if(unit.sprite !== "bomb"){
-                painter.setBlend("alpha")
-                const { r, g, b, a } = unit.color
-                painter.setTint(unit.sprite === "fire" ? FIRE : this.#faded.set(r, g, b, a))
-                this.#fillPolygon(painter, outline(zone))
-                painter.setBlend("cutout")
-                continue
-            }
-            const [cx, cy] = this.#pixels(position)
-            this.#drawShade(painter, cx, cy, 6)
-            painter.setTint(BOMB)
-            painter.circle(cx, cy, 3)
-            painter.setTint(FUSE)
-            painter.rect(cx + 1, cy - 4, 2, 2)
+            this.#drawShade(painter, x, y, this.#meter)
+            painter.setBlend("alpha")
+            painter.setTint(this.#coloredBy(unit.sprite, 1))
+            const scale = this.#spriteScale(1)
+            painter.push()
+            const left = Math.round(x - sprite.width * scale / 2)
+            painter.translate(left, Math.round(y + (FEET_DROP - sprite.height) * scale))
+            painter.scale(scale, scale)
+            painter.sprite(sprite, 0, 0)
+            painter.pop()
+            painter.setBlend("cutout")
         }
     }
 
@@ -345,7 +347,6 @@ export class BoardView {
         const sprite = this.sprites.of(unit.sprite)
         if(sprite){
             this.#drawSprite(painter, shown, sprite, cx, cy, radius)
-            this.#drawStatuses(painter, shown, cx - radius, cy + radius + 1)
             return
         }
         painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
@@ -360,7 +361,6 @@ export class BoardView {
         )
         painter.setTint(INK)
         this.#text.draw(painter, unit.name.slice(0, 1), Math.round(cx) - 1, Math.round(cy) - 4)
-        this.#drawStatuses(painter, shown, cx - radius, cy + radius + 1)
     }
 
     /**
@@ -386,7 +386,7 @@ export class BoardView {
                 cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
             )
         }
-        painter.setTint(this.#faded.set(1, 1, 1, shown.opacity))
+        painter.setTint(this.#coloredBy(shown.unit.sprite, shown.opacity))
         const scale = this.#spriteScale(shown.unit.stats.size.value)
         const width = sprite.width * scale
         const left = Math.round(cx - width / 2)
@@ -404,14 +404,10 @@ export class BoardView {
         return size * this.#meter / SPRITE_METER
     }
 
-    #drawStatuses(painter: Painter, shown: SceneUnit, left: number, top: number): void {
-        let x = Math.round(left)
-        for(const type of shown.statuses){
-            const { r, g, b } = type.color
-            painter.setTint(STATUS_DOTS.get(type.family) ??this.#faded.set(r, g, b, 1))
-            painter.rect(x, Math.round(top), 3, 3)
-            x += 4
-        }
+    /** The tint to draw the picture of a visual with: its coloration multiplies it, none leaves it as it is. */
+    #coloredBy(visual: Visual|null, opacity: number): Color {
+        const [r, g, b] = visual?.coloration ?? [1, 1, 1]
+        return this.#faded.set(r, g, b, opacity)
     }
 
     /** The units standing whose body takes room, where the scene has them. */

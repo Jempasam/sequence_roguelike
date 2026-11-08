@@ -3,6 +3,7 @@ import type { Status } from "../../../status/Status"
 import { Rooted } from "../../../status/subs/Rooted"
 
 import { THROW_RANGE, ThrownFlask } from "./ThrownFlask"
+import { visual } from "../../../base/Visual"
 
 /** How many steps the glue flask of the catalog roots its target for. */
 const GLUE_ROOT = 3
@@ -18,7 +19,7 @@ export class GlueFlask extends ThrownFlask {
         public readonly root: number,
     ){
         super(
-            "Flasque de glu", "mecard/usables/glue_flask.png",
+            "Flasque de glu", visual("usables/glue_flask"),
             ["L'ennemi le plus proche, à ", meters(range), " au plus, est ", new Rooted(root), "."],
             range,
         )

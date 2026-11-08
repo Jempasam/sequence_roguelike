@@ -25,6 +25,8 @@ import { BOTTLE, THROWN_POTION } from "../card/subs/potion/PotionActions"
 import { POISON, WEAKNESS } from "../card/subs/potion/PotionCard"
 import { SUBSTITUTION } from "../card/subs/summon/Substitution"
 import { COIN, STONE_WALL } from "../card/subs/summon/summons"
+import type { Visual } from "../base/Visual"
+import { visual } from "../base/Visual"
 
 /** The cards every kit starts with before its attacks: moves, turns, aims and a wait. A dodge ends it. */
 const BASICS: readonly Card[] = [STEP, STEP, STEP, BACK_DASH, TURN_LEFT, TURN_RIGHT, AIM, AIM, WAIT]
@@ -63,8 +65,8 @@ function closeDeckAround(...attacks: Card[]): Card[] {
 export interface Kit {
     readonly name: string
 
-    /** The picture of its character, by its name among the sprites of the units. */
-    readonly sprite: string
+    /** How its character looks. */
+    readonly sprite: Visual
 
     readonly cards: readonly Card[]
 
@@ -75,26 +77,26 @@ export interface Kit {
     readonly usables: readonly Usable[]
 }
 
-export const LANCER_KIT: Kit = { name: "Lancier", sprite: "lancer", cards: closeDeckAround(THRUST, THRUST, THRUST), items: [], usables: [] }
-export const SWORDSMAN_KIT: Kit = { name: "Épéiste", sprite: "swordsman", cards: closeDeckAround(SLASH, SLASH, SLASH), items: [], usables: [] }
-export const ARCHER_KIT: Kit = { name: "Archère", sprite: "archer", cards: starterDeck(SHOT), items: [], usables: [] }
-export const BRAWLER_KIT: Kit = { name: "Bagarreur", sprite: "brawler", cards: closeDeckAround(SWEEP, SWEEP, SWEEP), items: [], usables: [] }
-export const ARTIFICER_KIT: Kit = { name: "Artificière", sprite: "artificer", cards: deckAround(BOMB, BOMB, SLASH), items: [], usables: [] }
-export const MAGE_KIT: Kit = { name: "Mage", sprite: "mage", cards: deckAround(SPELL, SPELL, FIRE, WATER, STONE), items: [], usables: [] }
+export const LANCER_KIT: Kit = { name: "Lancier", sprite: visual("units/lancer"), cards: closeDeckAround(THRUST, THRUST, THRUST), items: [], usables: [] }
+export const SWORDSMAN_KIT: Kit = { name: "Épéiste", sprite: visual("units/swordsman"), cards: closeDeckAround(SLASH, SLASH, SLASH), items: [], usables: [] }
+export const ARCHER_KIT: Kit = { name: "Archère", sprite: visual("units/archer"), cards: starterDeck(SHOT), items: [], usables: [] }
+export const BRAWLER_KIT: Kit = { name: "Bagarreur", sprite: visual("units/brawler"), cards: closeDeckAround(SWEEP, SWEEP, SWEEP), items: [], usables: [] }
+export const ARTIFICER_KIT: Kit = { name: "Artificière", sprite: visual("units/artificer"), cards: deckAround(BOMB, BOMB, SLASH), items: [], usables: [] }
+export const MAGE_KIT: Kit = { name: "Mage", sprite: visual("units/mage"), cards: deckAround(SPELL, SPELL, FIRE, WATER, STONE), items: [], usables: [] }
 export const ASSASSIN_KIT: Kit = {
-    name: "Assassin", sprite: "assassin", cards: closeDeckAround(DAGGER, DAGGER, DAGGER, ASSASSIN_STEP, BLINK), items: [], usables: [],
+    name: "Assassin", sprite: visual("units/assassin"), cards: closeDeckAround(DAGGER, DAGGER, DAGGER, ASSASSIN_STEP, BLINK), items: [], usables: [],
 }
 export const APOTHECARY_KIT: Kit = {
-    name: "Apothicaire", sprite: "apothecary", cards: deckAround(THROWN_POTION, THROWN_POTION, BOTTLE, POISON, POISON, WEAKNESS, SLASH),
+    name: "Apothicaire", sprite: visual("units/apothecary"), cards: deckAround(THROWN_POTION, THROWN_POTION, BOTTLE, POISON, POISON, WEAKNESS, SLASH),
     items: [], usables: [],
 }
 export const PUPPETEER_KIT: Kit = {
-    name: "Marionnettiste", sprite: "puppeteer", cards: deckAround(COIN, COIN, SUBSTITUTION, STONE_WALL, SHOT, SHOT),
+    name: "Marionnettiste", sprite: visual("units/puppeteer"), cards: deckAround(COIN, COIN, SUBSTITUTION, STONE_WALL, SHOT, SHOT),
     items: [], usables: [],
 }
 
 export const MECHANIC_KIT: Kit = {
-    name: "Mécanicien", sprite: "mechanic",
+    name: "Mécanicien", sprite: visual("units/mechanic"),
     cards: deckAround(
         IMPROVISED_ROBOT, IMPROVISED_ROBOT, TANK_ROBOT, IMPROVISED_WEAPON, BOW_MODULE, BULL_MODULE,
         BLAST_MODULE, MISSILE,
@@ -106,7 +108,7 @@ export const MECHANIC_KIT: Kit = {
 export const STARTING_KITS: readonly Kit[] = [LANCER_KIT, SWORDSMAN_KIT]
 
 /** Every kit, the starting ones first: the tavern hires the others. */
-export const KITS: readonly Kit[] = [
+export const ALL_KITS: readonly Kit[] = [
     ...STARTING_KITS, ARCHER_KIT, BRAWLER_KIT, ARTIFICER_KIT, MAGE_KIT, ASSASSIN_KIT, APOTHECARY_KIT,
     PUPPETEER_KIT, MECHANIC_KIT,
 ]
@@ -139,7 +141,7 @@ export function kitScore(hero: Hero, kit: Kit): number {
 }
 
 /** The kit a hero is the closest to: the first of the best when several are as close. */
-export function closestKit(hero: Hero, kits: readonly Kit[] = KITS): Kit {
+export function closestKit(hero: Hero, kits: readonly Kit[] = ALL_KITS): Kit {
     let best = kits[0]
     let bestScore = -1
     for (const kit of kits) {
@@ -151,3 +153,6 @@ export function closestKit(hero: Hero, kits: readonly Kit[] = KITS): Kit {
     }
     return best
 }
+
+/** The kits the tavern may hire: all of them, the party filtering those it already has. */
+export const LOOT_KITS: readonly Kit[] = ALL_KITS

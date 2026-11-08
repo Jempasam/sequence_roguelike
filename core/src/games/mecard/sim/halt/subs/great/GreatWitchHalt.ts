@@ -10,6 +10,7 @@ import { AbstractHalt } from "../AbstractHalt"
 import { witchUsables } from "../gift/WitchHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
 import { usableText } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The great witch: a usable among some, for a character of the party, given three times over. */
 export class GreatWitchHalt extends AbstractHalt {
@@ -33,7 +34,7 @@ export class GreatWitchHalt extends AbstractHalt {
 
 
     public start(ctx: HaltContext): void {
-        const show = (usable: Usable) => ({ cards: [], text: concat("×3 · ", usableText(usable)) })
+        const show = (usable: Usable) => ({ cards: [], usables: [usable], text: concat("×3 · ", usableText(usable)) })
         ctx.offer("Choisis un utilisable", this.#usables, show, usable => {
             ctx.hero(concat(usable, " ×3 : pour qui ?"), hero => {
                 this.impact()
@@ -53,8 +54,7 @@ export const GREAT_WITCH_HALT: HaltType = {
     id: "greatWitch",
     name: "Grande sorcière",
     description: "Un utilisable parmi trois, en triple.",
-    code: "SO*",
-    icon: "mecard/travel/witch/logo.png",
+    icon: visual("travel/witch/logo", { letter: "SO*" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatWitchHalt(run),

@@ -10,6 +10,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { upgradeOf } from "../deck/AlchemistHalt"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { fusionShown } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The master inventor: an inventor whose every invention comes upgraded by an upgrade at random. */
 export class MasterInventorHalt extends CardGiftHalt {
@@ -48,8 +49,7 @@ export const MASTER_INVENTOR_HALT: HaltType = {
     id: "masterInventor",
     name: "Maître inventeur",
     description: ["Un ", FUSION, " parmi trois, chacun amélioré."],
-    code: "IN*",
-    icon: "mecard/travel/inventor/logo.png",
+    icon: visual("travel/inventor/logo", { letter: "IN*" }),
     glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterInventorHalt(run),

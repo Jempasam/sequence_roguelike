@@ -16,6 +16,8 @@ import { CardChain } from "../../sim/card/CardChain"
 import type { RootPreview } from "../../sim/card/CardChain"
 
 import { BattleAnimations } from "./BattleAnimations"
+import { PlayControl } from "../hud/PlayControl"
+import { PlayControlView } from "../hud/PlayControlView"
 import { BattleScene } from "./BattleScene"
 import { ArenaView } from "./ArenaView"
 import { BoardView } from "./BoardView"
@@ -23,7 +25,9 @@ import { Draft } from "./Draft"
 import { Hud } from "./Hud"
 import type { HudHost, Mode } from "./Hud"
 import type { UiRect } from "../hud/BattleGrid"
-import { processText } from "../hud/ProcessView"
+import { processText, statusText } from "../hud/StatusProcessList"
+import { StatusList } from "../hud/StatusList"
+import type { ShownStatus } from "./BattleScene"
 import { ArenaHearts } from "../hud/ArenaHearts"
 import { heartText } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
@@ -165,7 +169,7 @@ export class BattleScreen implements HudHost {
 
     /** May the players still launch the round, or say they are ready? */
     public get launchable(): boolean {
-        return this.#locks.round !== "waiting" && !this.#ready
+        return this.#locks.round !== "waiting" && !this.#ready && !this.#launched
     }
 
     /** May the round being shown be skipped? */
@@ -191,7 +195,8 @@ export class BattleScreen implements HudHost {
         this.#engine = engine
         this.#locks = options.locks ?? NO_BATTLE_LOCKS
         this.animations = new AnimationChain(error => options.report(String(error)))
-        this.#battleAnimations = new BattleAnimations(this.scene, this.animations, this.#clock)
+        this.#playControl = new PlayControl(this.#clock)
+        this.#battleAnimations = new BattleAnimations(this.scene, this.animations, this.#clock, this.#playControl)
         // Not told by being ready: the players still are when the next round draws.
         this.#battleAnimations.animates = unit => {
             return !this.#locks.isLocked(unit) && unit.team === this.viewpoint && unit.controller === "player"
@@ -213,10 +218,21 @@ export class BattleScreen implements HudHost {
         }, (unit, process, over) => {
             this.hoverUnit(unit, over)
             this.#hud.showInfo(over ? processText(process) : null)
-        })
+        }, (unit, status, over) => this.#hoverStatus(unit, status, over))
         const main = ui.addLayer("battle")
         this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }))
-        this.#layers = [floor, arena, main]
+        // Over the panels, kept from one build of them to the next, and laid over the arena by each frame.
+        const controls = ui.addLayer("battle-controls")
+        this.#controlsView = new PlayControlView(theme, this.#playControl)
+        controls.content.add(this.#controlsView, { x: "start", y: "start" })
+        this.#controls = controls
+        this.#statusList = new StatusList(theme, controls, sprites, (unit, status, over) => {
+            this.#hoverStatus(unit, status, over)
+        }, (unit, process, over) => {
+            this.hoverUnit(unit, over)
+            this.#hud.showInfo(over ? processText(process) : null)
+        })
+        this.#layers = [floor, arena, main, controls]
         this.#connectInputs()
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
@@ -240,7 +256,7 @@ export class BattleScreen implements HudHost {
 
     /** May the players not plan a unit, its round being another's, or theirs being given? */
     public isLocked(unit: Unit): boolean {
-        return this.#ready || this.#locks.isLocked(unit)
+        return this.#ready || this.#launched || this.#locks.isLocked(unit)
     }
 
     /** Stop showing the battle. */
@@ -273,7 +289,11 @@ export class BattleScreen implements HudHost {
         this.#arenaHearts.place(unit => {
             const [x, y] = this.#board.heartsAnchor(unit)
             return [left + x, top + y] as const
+        }, unit => {
+            const [x, y] = this.#board.feetAnchor(unit)
+            return [left + x, top + y] as const
         })
+        this.#statusList.place(room)
         // The arena takes no pointer: it is over it when over no widget.
         const { pointerX, pointerY } = this.ui
         this.#arenaUnit = this.ui.hovered ? null : this.#board.unitAt(pointerX - left, pointerY - top)
@@ -291,6 +311,7 @@ export class BattleScreen implements HudHost {
         this.#board.indicators = []
         this.#hud.refresh()
         this.#arenaHearts.rebuild(this.scene)
+        this.#listed = undefined
         this.#shownVersion = this.scene.version
         this.#showHighlighted()
     }
@@ -335,9 +356,16 @@ export class BattleScreen implements HudHost {
     readonly #board: BoardView
     readonly #hud: Hud
     readonly #arenaHearts: ArenaHearts
+    readonly #statusList: StatusList
+
+    /** The unit whose statuses the list shows, undefined before it is built. */
+    #listed: Unit|null|undefined
 
     /** The layers it lays its panels in: the hearts over the arena, then the interface. */
-    readonly #layers: readonly [Layer, Layer, Layer]
+    readonly #layers: readonly [Layer, Layer, Layer, Layer]
+    readonly #playControl: PlayControl
+    readonly #controlsView: PlayControlView
+    readonly #controls: Layer
 
     /** The arena as a component, in the layer under the hearts. */
     readonly #arenaView: ArenaView
@@ -355,6 +383,9 @@ export class BattleScreen implements HudHost {
 
     /** Did the players say they are ready, for another to launch the round? */
     #ready = false
+
+    /** Did the round start, its replay not shown yet? */
+    #launched = false
 
     /** Does a battle loaded wait for what is being shown to end? */
     #loadWaiting = false
@@ -413,6 +444,12 @@ export class BattleScreen implements HudHost {
                 }))
             }),
             battle.loaded.add(() => this.#showLoaded()),
+            // Not chained: the planning panel closes at once, whatever holds the replay of what comes.
+            battle.preparationEnding.add(() => {
+                this.#launched = true
+                this.drafts.clear()
+                this.refresh()
+            }),
         ]
     }
 
@@ -424,6 +461,7 @@ export class BattleScreen implements HudHost {
     /** Drop what waits to be played, and end what is going on. */
     #stopAnimations(): void {
         this.animations.cancel()
+        this.#playControl.cancel()
         this.#clock.finish()
     }
 
@@ -555,6 +593,9 @@ export class BattleScreen implements HudHost {
         if(!last || last.right - last.left !== width || last.bottom - last.top !== height){
             view.fixedSize = { width, height }
         }
+        if(!last || last.left !== room.left || last.top !== room.top){
+            this.#controls.content.setSlot(this.#controlsView, { offsetX: room.left, offsetY: room.top })
+        }
         this.#arenaRoom = room
         return room
     }
@@ -570,8 +611,19 @@ export class BattleScreen implements HudHost {
         }
     }
 
+    /** Highlight the unit of a status while the pointer is over its icon, and say what the status is. */
+    #hoverStatus(unit: Unit, status: ShownStatus, over: boolean): void {
+        this.hoverUnit(unit, over)
+        this.#hud.showInfo(over ? statusText(status) : null)
+    }
+
     /** Light up the highlighted unit everywhere it shows. */
     #showHighlighted(): void {
+        const listed = this.highlighted ?? this.active
+        if(listed !== this.#listed){
+            this.#listed = listed
+            this.#statusList.rebuild(listed, this.scene)
+        }
         this.#board.highlighted = this.highlighted
         this.#hud.highlight(this.highlighted)
     }
@@ -622,6 +674,7 @@ export class BattleScreen implements HudHost {
         this.mode = "planning"
         this.warning = null
         this.#ready = false
+        this.#launched = false
         this.drafts.clear()
         this.#openDrafts()
         this.active = [...this.drafts.keys()][0] ?? this.#sameUnit(this.active)

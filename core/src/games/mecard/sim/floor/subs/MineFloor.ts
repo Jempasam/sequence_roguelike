@@ -13,6 +13,7 @@ import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
+import { visual } from "../../base/Visual"
 
 /** Who lives in the mine. */
 const MONSTERS: readonly Monster[] = [KAMIKAZE_ROBOT, STONE_GOLEM, GOBLIN, BERSERKER, ICE_MAGE]
@@ -40,14 +41,14 @@ export class MineFloor extends AbstractFloor {
 export const MINE_FLOOR: FloorType = {
     name: "Mine",
     description: "Des robots et de la pierre, et un robot megalaser au bout. Plus de forges, de coffres et d'élites.",
-    icon: "mecard/floors/mine/logo.png",
+    icon: visual("floors/mine/logo"),
     look: sceneLook(34, 26, 20, "mecard/floors/mine"),
     decorations: [
-        { picture: "mecard/floors/mine/mountain.png", size: 2 },
-        { picture: "mecard/floors/mine/cart.png", size: 2 },
-        { picture: "mecard/floors/mine/ore.png", size: 2 },
-        { picture: "mecard/floors/mine/beam.png", size: 2 },
-        { picture: "mecard/floors/mine/gravel.png", size: 2 },
+        { picture: visual("floors/mine/mountain"), size: 2 },
+        { picture: visual("floors/mine/cart"), size: 2 },
+        { picture: visual("floors/mine/ore"), size: 2 },
+        { picture: visual("floors/mine/beam"), size: 2 },
+        { picture: visual("floors/mine/gravel"), size: 2 },
     ],
     create: level => new MineFloor(level),
 }

@@ -5,6 +5,7 @@ import { SWEEP } from "../../../card/subs/attack/Sweep"
 import { THRUST } from "../../../card/subs/attack/Thrust"
 
 import { StatItem } from "./StatItem"
+import { visual } from "../../../base/Visual"
 
 /** How many hearts the whetstone of the catalog adds to each blow. */
 const WHETSTONE_BONUS = 1
@@ -13,7 +14,7 @@ const WHETSTONE_BONUS = 1
 const BLOWS = [SLASH, THRUST, SWEEP]
 
 /** A stone adding to every blow. */
-export const WHETSTONE = new StatItem("Pierre à aiguiser", "mecard/items/whetstone.png", [
+export const WHETSTONE = new StatItem("Pierre à aiguiser", visual("items/whetstone"), [
     {
         stat: stats => stats.strength,
         amount: WHETSTONE_BONUS,

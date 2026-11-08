@@ -7,6 +7,7 @@ import { HEALING, TOTEM_RADIUS } from "../../../status/subs/Healing"
 import { Rarity } from "../../Rarity"
 
 import { SummonCard } from "./SummonCard"
+import { visual } from "../../../base/Visual"
 
 /** How far ahead the coin of the catalog lands, in meters, before the reach of the unit. */
 const COIN_THROW = 2.5
@@ -45,7 +46,7 @@ export const COIN = new SummonCard("Pièce", [
     "Lance une pièce ", meters(COIN_THROW), " × portée devant : une alliée de ", new HeartCount(COIN_HALVES),
     " + invocation, qui bloque les coups et attire les visées. Perd ", new HeartCount(1), " à chaque fin de round.",
 ], Rarity.COMMON, {
-    sprite: "coin", name: "Pièce", halves: COIN_HALVES, thrown: true,
+    sprite: visual("units/coin"), name: "Pièce", halves: COIN_HALVES, thrown: true,
     spots: (unit, pose) => [ahead(pose, COIN_THROW * unit.stats.throwRange.value)],
 })
 
@@ -54,7 +55,7 @@ export const STONE_WALL = new SummonCard("Mur de pierre", [
     "Dresse trois pierres de ", new HeartCount(STONE_HALVES), " + invocation chacune, à ", meters(AHEAD),
     " devant, en travers. Chacune perd ", new HeartCount(1), " à chaque fin de round.",
 ], Rarity.RARE, {
-    sprite: "stone", name: "Pierre", halves: STONE_HALVES,
+    sprite: visual("units/stone"), name: "Pierre", halves: STONE_HALVES,
     spots: (_unit, pose) => [-STONE_SPACING, 0, STONE_SPACING].map(side => ahead(pose, AHEAD, side)),
 })
 
@@ -63,7 +64,7 @@ export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
     "Fait pousser des ronces à ", meters(AHEAD), " devant : ", new HeartCount(THORNS_HALVES), " + invocation, et un cœur ",
     THORN_HEART, " perdu d'abord.",
 ], Rarity.RARE, {
-    sprite: "thorns", name: "Ronces", halves: THORNS_HALVES,
+    sprite: visual("units/thorns"), name: "Ronces", halves: THORNS_HALVES,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
     equip: (_battle, body) => {
         for(const heart of Heart.many(THORN_HEART, THORN_HEARTS)) body.hearts.give(heart)
@@ -75,7 +76,7 @@ export const TOTEM = new SummonCard("Totem", [
     "Plante un totem de ", new HeartCount(TOTEM_HALVES), " + invocation à ", meters(AHEAD), " devant. En fin de round, ",
     "il soigne de ", new HeartCount(TOTEM_HEAL), " + soin chaque allié à ", meters(TOTEM_RADIUS), ".",
 ], Rarity.EPIC, {
-    sprite: "totem", name: "Totem", halves: TOTEM_HALVES,
+    sprite: visual("units/totem"), name: "Totem", halves: TOTEM_HALVES,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
     equip: (battle, body, owner) => {
         battle.applyStatus(body, HEALING, TOTEM_HEAL + owner.stats.heal.value)

@@ -3,6 +3,7 @@ import type { Status } from "../../../status/Status"
 import { Burn } from "../../../status/subs/Burn"
 
 import { THROW_RANGE, ThrownFlask } from "./ThrownFlask"
+import { visual } from "../../../base/Visual"
 
 /** How many rounds the fire flask of the catalog sets its target burning for. */
 const FIRE_FLASK_BURN = 3
@@ -18,7 +19,7 @@ export class FireFlask extends ThrownFlask {
         public readonly burn: number,
     ){
         super(
-            "Flasque de feu", "mecard/usables/fire_flask.png",
+            "Flasque de feu", visual("usables/fire_flask"),
             ["L'ennemi le plus proche, à ", meters(range), " au plus, prend ", new Burn(burn), "."],
             range,
         )

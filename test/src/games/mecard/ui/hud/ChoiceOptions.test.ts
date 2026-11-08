@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { Choice, Color, NineSlice } from "@game/core"
-import { heroOf, KITS } from "@game/core/mecard"
+import { heroOf, ALL_KITS } from "@game/core/mecard"
 import { cardsOption, unitHead } from "@game/core/mecard/choice-options"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
@@ -14,7 +14,7 @@ const PICKED_WIDTH = 2
 function wobbleOffer(width: number): void {
     const setup = uiSetup({ debug: true }, width, 270)
     const sprites = { of: () => null } as unknown as Parameters<typeof unitHead>[2]
-    const options = KITS.map(kit => {
+    const options = ALL_KITS.map(kit => {
         const head = unitHead(setup.theme, heroOf(kit), sprites)
         return cardsOption(setup.theme, [...new Set(kit.cards)], kit.name, { head })
     })

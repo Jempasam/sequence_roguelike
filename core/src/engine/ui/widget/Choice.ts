@@ -278,7 +278,7 @@ class ChoiceOption extends Tilt {
 
     protected override get interactive(): boolean { return true }
 
-    protected override get holdsPointer(): boolean { return true }
+    public override get holdsPointer(): boolean { return true }
 
     protected override arranged(): void {
         super.arranged()

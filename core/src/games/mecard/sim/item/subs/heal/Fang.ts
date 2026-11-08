@@ -2,6 +2,7 @@ import { HeartCount } from "../../../battle/words"
 import type { PlugContext } from "../../../battle/Action"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How many hearts the fang of the catalog heals on each hit. */
 const FANG_HEAL = 1
@@ -14,7 +15,7 @@ export class Fang extends AbstractItem {
         /** How many hearts it heals on each hit. */
         public readonly heal: number,
     ){
-        super("Croc vampirique", "mecard/items/fang.png", ["Chaque coup qui touche soigne ", new HeartCount(heal), "."])
+        super("Croc vampirique", visual("items/fang"), ["Chaque coup qui touche soigne ", new HeartCount(heal), "."])
     }
 
 

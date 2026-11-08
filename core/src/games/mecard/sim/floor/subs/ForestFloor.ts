@@ -13,6 +13,7 @@ import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
+import { visual } from "../../base/Visual"
 
 /** Who lives in the forest. */
 const MONSTERS: readonly Monster[] = [HUNTER, ELF_ASSASSIN, GOBLIN_RIDER, BULL, ELF_ARCHER]
@@ -40,14 +41,14 @@ export class ForestFloor extends AbstractFloor {
 export const FOREST_FLOOR: FloorType = {
     name: "Forêt",
     description: "Des chasseurs rapides, et un troll au bout. Plus d'hôpitaux, de tavernes et de dresseurs.",
-    icon: "mecard/floors/forest/logo.png",
+    icon: visual("floors/forest/logo"),
     look: sceneLook(16, 32, 22, "mecard/floors/forest"),
     decorations: [
-        { picture: "mecard/floors/forest/cabin.png", size: 2 },
-        { picture: "mecard/floors/forest/tree.png", size: 2 },
-        { picture: "mecard/floors/forest/bush.png", size: 2 },
-        { picture: "mecard/floors/forest/stump.png", size: 2 },
-        { picture: "mecard/floors/forest/grass.png", size: 2 },
+        { picture: visual("floors/forest/cabin"), size: 2 },
+        { picture: visual("floors/forest/tree"), size: 2 },
+        { picture: visual("floors/forest/bush"), size: 2 },
+        { picture: visual("floors/forest/stump"), size: 2 },
+        { picture: visual("floors/forest/grass"), size: 2 },
     ],
     create: level => new ForestFloor(level),
 }

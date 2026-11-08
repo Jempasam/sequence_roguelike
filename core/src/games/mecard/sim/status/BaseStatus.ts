@@ -15,7 +15,12 @@ export abstract class BaseStatus implements Status {
     ){}
 
 
-    public setLevel(level: number): void { this.level = level }
+    public onLevel: ((level: number) => void)|null = null
+
+    public setLevel(level: number): void {
+        this.level = level
+        this.onLevel?.(level)
+    }
 
     public toString(): string { return `${this.type} ${this.level}` }
 

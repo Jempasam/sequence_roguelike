@@ -4,6 +4,7 @@ import type { HaltContext } from "../HaltContext"
 import type { HaltType } from "../HaltType"
 import { DOOR_TRANSITION } from "../transitions"
 import { AbstractHalt } from "./AbstractHalt"
+import { visual } from "../../base/Visual"
 
 /**
  * An exit, behind the boss of a floor: the floor it leads to shown, its look and what it holds, and the party
@@ -36,9 +37,7 @@ export class ExitHalt extends AbstractHalt {
 export const EXIT_HALT: HaltType = {
     id: "exit",
     name: "Sortie",
-    description: "Mène à un autre étage.",
-    code: "S",
-    icon: "mecard/floors/exit.png",
+    description: "Mène à un autre étage.",    icon: visual("floors/exit", { letter: "S" }),
     transition: DOOR_TRANSITION,
     create: run => new ExitHalt(run, run.travel.place?.exitTo ?? run.travel.journey.exits[0]),
 }

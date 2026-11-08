@@ -2,7 +2,7 @@ import { concat } from "../../../../../../semantic"
 import { CARTE, DECK } from "../../../base/keywords"
 import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
 import type { Monster } from "../../../catalog/monsters"
-import { upgradeAll, upgradeMatches, UPGRADES } from "../../../catalog/upgrades"
+import { upgradeAll, upgradeMatches, LOOT_UPGRADES } from "../../../catalog/upgrades"
 import type { CardUpgrade } from "../../../catalog/upgrades"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
@@ -11,6 +11,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { trainerMonsters } from "../gift/TrainerHalt"
+import { visual } from "../../../base/Visual"
 
 /**
  * The master trainer: a trainer whose ally comes trained, one upgrade put on every card of its deck it
@@ -56,7 +57,7 @@ export class MasterTrainerHalt extends AbstractHalt {
      * card of its deck it matches. The plain monster is kept to be shown beside the upgrade.
      */
     #trained(base: Monster): { base: Monster, monster: Monster, upgrade: CardUpgrade|null } {
-        const upgrade = this.run.rng.pick(UPGRADES.filter(each => base.cards.some(card => upgradeMatches(each, card)))) ?? null
+        const upgrade = this.run.rng.pick(LOOT_UPGRADES.filter(each => base.cards.some(card => upgradeMatches(each, card)))) ?? null
         if(!upgrade) return { base, monster: base, upgrade }
         const cards = upgradeAll(upgrade, base.cards, this.run.rng)
         return { base, monster: Object.create(base, { cards: { value: cards, enumerable: true } }) as Monster, upgrade }
@@ -68,8 +69,7 @@ export const MASTER_TRAINER_HALT: HaltType = {
     id: "masterTrainer",
     name: "Maître dresseur",
     description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
-    code: "D*",
-    icon: "mecard/travel/trainer/logo.png",
+    icon: visual("travel/trainer/logo", { letter: "D*" }),
     glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterTrainerHalt(run),

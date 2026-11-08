@@ -9,6 +9,7 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
+import { visual } from "../../../base/Visual"
 
 /** The hospital: the party healed, then hearts used once, chosen among a few drawn, for each character. */
 export class HospitalHalt extends AbstractHalt {
@@ -55,9 +56,7 @@ export class HospitalHalt extends AbstractHalt {
 export const HOSPITAL_HALT: HaltType = {
     id: "hospital",
     name: "Hôpital",
-    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",
-    code: "H",
-    icon: "mecard/travel/hospital/logo.png",
+    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",    icon: visual("travel/hospital/logo", { letter: "H" }),
     transition: DOOR_TRANSITION,
     create: run => new HospitalHalt(run),
 }

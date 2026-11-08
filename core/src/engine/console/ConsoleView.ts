@@ -42,6 +42,9 @@ const BEFORE_MARK = "…"
 /** The physical key that opens and closes the console: the one left of `1`, `²` or `` ` ``. */
 export const CONSOLE_KEY = "Backquote"
 
+/** The physical key that opens the console too: the one an AZERTY keyboard marks `:` and `/`. */
+export const CONSOLE_SECOND_KEY = "Period"
+
 /** The color each kind of line is written in. */
 const LINE_COLORS: Readonly<Record<ConsoleLineKind, Color>> = {
     output: VALID_COLOR, command: ENTERED_COLOR, error: INVALID_COLOR,
@@ -302,7 +305,7 @@ class ConsoleInput<C extends CommandContext> extends TextInput {
     ){
         // The key of the console types its own character: kept out of the line.
         super(theme, {
-            accepts: character => character !== "²" && character !== "`",
+            accepts: character => !["²", "`", ":", "/"].includes(character),
             colors: text => view.colorsOf(text),
         })
         this.onChange = text => view.changed(text)

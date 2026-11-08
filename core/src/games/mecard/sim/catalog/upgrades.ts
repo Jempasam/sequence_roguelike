@@ -1,58 +1,89 @@
 import type { Rng } from "../base/Rng"
 import type { Card } from "../card/Card"
-import { readsWhole } from "../card/CardChain"
-import { ACTION } from "../card/CardType"
+import { readsWhole, signatureOf } from "../card/CardChain"
+import type { CardType } from "../card/CardType"
+import { ACTION, ELEMENT, MODULE, POTION } from "../card/CardType"
 import { RECOVERY } from "../card/subs"
+import { DELAYED_CHARGE } from "../card/subs/modifier/Wrappers"
+import { TORNADO } from "../card/subs/modifier/Tornado"
+import { AIM } from "../card/subs/movement/Aim"
+import { DISTILLATION } from "../card/subs/potion/PotionCard"
+import { DRAW } from "../card/subs/preparation/Draw"
+import { PRAYER } from "../card/subs/preparation/Prayer"
 import { SHOT } from "../card/subs/attack/Shot"
 import { SLASH } from "../card/subs/attack/Slash"
 import { SWEEP } from "../card/subs/attack/Sweep"
 import { THRUST } from "../card/subs/attack/Thrust"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { MergedCard } from "../card/subs/composite/MergedCard"
-import { BLAST_MODULE, BOW_MODULE, BULL_MODULE, MISSILE } from "../card/subs/mechanic/ModuleCard"
-import { IMPROVISED_ROBOT } from "../card/subs/mechanic/RobotCard"
+import {
+    ARMOR_PLATING, HOMING_HEAD, INVERTER, MODULE_CORE, MODULE_MIXER, RECYCLING, REPEATER, THRUSTERS, TURBO,
+} from "../card/subs/mechanic/ModuleModifiers"
 import { DOUBLE_DIAGONAL } from "../card/subs/modifier/DoubleDiagonal"
 import { REPEAT_2 } from "../card/subs/modifier/RepeatCard"
 import { STEP } from "../card/subs/movement/Step"
-import { THROWN_POTION } from "../card/subs/potion/PotionActions"
-import { ELEMENT_CARDS, FIRE, LIGHTNING, PLANT, STONE, WATER, WIND } from "../card/subs/spell/ElementCard"
-import { SPELL } from "../card/subs/spell/SpellCard"
+import { FIRE, LIGHTNING, PLANT, STONE, WATER, WIND } from "../card/subs/spell/ElementCard"
+import { REACTION } from "../card/subs/spell/ElementRewrites"
 import { LOOT_CARDS } from "./index"
-
-/** Where an upgrade goes, beside the card it improves: in front of it, or behind it. */
-export type UpgradePlacement = "front"|"back"
 
 /** How an upgrade and its card become one: a fusion, a merge, or one of the two, by chance. */
 export type UpgradeFusion = "fusion"|"merge"|"random"
 
+/** What a card must take and give to be improved by an upgrade. */
+export interface UpgradeFilter {
+    /** What it must take; any card whatever it takes when missing. */
+    readonly input?: CardType<unknown>|null
+    /** What it must give; any card whatever it gives when missing. */
+    readonly output?: CardType<unknown>
+}
+
 /**
- * An improvement to stick in front of a card or behind it: a card, where it goes, and how the two become
- * one card.
+ * An improvement: a chain of cards, with holes where the improved card goes, a way the cards become one, and
+ * maybe a filter on the improved card. Without a filter, the card fits when the filled chain reads whole.
  */
 export interface CardUpgrade {
     readonly name: string
-    readonly card: Card
-    readonly placement: UpgradePlacement
+    /** The chain: each `undefined` is a hole, filled with a copy of the improved card. */
+    readonly chain: readonly (Card|undefined)[]
+    /** What the improved card must take and give; computed from the chain when missing. */
+    readonly filter?: UpgradeFilter
     readonly fusion: UpgradeFusion
 }
 
-/** The cards as they would lie in a row: the upgrade in front of the card, or behind it. */
-function paired(upgrade: CardUpgrade, card: Card): [Card, Card] {
-    return upgrade.placement === "front" ? [upgrade.card, card] : [card, upgrade.card]
+/** What a merge asks of each card: an action taking nothing. */
+const MERGED_FILTER: UpgradeFilter = { input: null, output: ACTION }
+
+/**
+ * What an upgrade asks of the card it improves, if it says: the filter it was given, and for a merge, always an
+ * action taking nothing, as a merge holds no other card.
+ */
+export function filterOf(upgrade: CardUpgrade): UpgradeFilter|undefined {
+    return upgrade.fusion === "merge" ? MERGED_FILTER : upgrade.filter
 }
 
-/** Can two cards be merged: do both give actions on their own? */
-function mergeable([first, second]: readonly [Card, Card]): boolean {
-    return [first, second].every(card => card.output === ACTION && card.input === null)
+/** The chain with a copy of the card in each hole. */
+export function filled(upgrade: CardUpgrade, card: Card): Card[] {
+    return upgrade.chain.map(held => held ?? card)
 }
 
-/** The ways an upgrade may join a card, in the order they are tried: none when they do not read whole. */
+/** Can cards be merged: do all give actions on their own? */
+function mergeable(cards: readonly Card[]): boolean {
+    return cards.every(card => card.output === ACTION && card.input === null)
+}
+
+/** Does a card agree with a filter on what it takes and gives? */
+function passes(filter: UpgradeFilter, card: Card): boolean {
+    const { input, output } = signatureOf(card)
+    return (filter.input === undefined || input === filter.input) && (filter.output === undefined || output === filter.output)
+}
+
+/** The ways an upgrade may join a card, in the order they are tried: none when the card does not fit. */
 function waysOf(upgrade: CardUpgrade, card: Card): ("fusion"|"merge")[] {
-    const pair = paired(upgrade, card)
-    if(upgrade.fusion === "merge") return mergeable(pair) ? ["merge"] : []
-    if(!readsWhole(pair)) return []
+    const cards = filled(upgrade, card)
+    if(upgrade.fusion === "merge") return mergeable(cards) ? ["merge"] : []
+    if(!(upgrade.filter ? passes(upgrade.filter, card) : readsWhole(cards))) return []
     if(upgrade.fusion === "fusion") return ["fusion"]
-    return mergeable(pair) ? ["fusion", "merge"] : ["fusion"]
+    return mergeable(cards) ? ["fusion", "merge"] : ["fusion"]
 }
 
 /**
@@ -73,8 +104,8 @@ export function upgraded(upgrade: CardUpgrade, card: Card, rng: Rng): Card {
     const ways = waysOf(upgrade, card)
     if(ways.length === 0) throw new Error(`${upgrade.name} does not match ${card.name}.`)
     const way = ways.length === 1 ? ways[0] : rng.pick(ways) ?? ways[0]
-    const pair = paired(upgrade, card)
-    return way === "merge" ? new MergedCard(pair) : new FusionCard(pair)
+    const cards = filled(upgrade, card)
+    return way === "merge" ? new MergedCard(cards) : new FusionCard(cards)
 }
 
 /** Does an upgrade match every card of a list? */
@@ -95,7 +126,7 @@ export function upgradeAll(upgrade: CardUpgrade, cards: readonly Card[], rng: Rn
 }
 
 /** The upgrades of a list that match a card. */
-export function upgradesFor(card: Card, upgrades: readonly CardUpgrade[] = UPGRADES): CardUpgrade[] {
+export function upgradesFor(card: Card, upgrades: readonly CardUpgrade[] = ALL_UPGRADES): CardUpgrade[] {
     return upgrades.filter(upgrade => upgradeMatches(upgrade, card))
 }
 
@@ -103,7 +134,7 @@ export function upgradesFor(card: Card, upgrades: readonly CardUpgrade[] = UPGRA
  * A card of the loot, upgraded: an upgrade at random, then a card of the loot it matches at random, the two
  * made one. None when no card of the loot matches the upgrades.
  */
-export function lootUpgraded(rng: Rng, upgrades: readonly CardUpgrade[] = UPGRADES, loot: readonly Card[] = LOOT_CARDS): Card|null {
+export function lootUpgraded(rng: Rng, upgrades: readonly CardUpgrade[] = LOOT_UPGRADES, loot: readonly Card[] = LOOT_CARDS): Card|null {
     const left = [...upgrades]
     rng.shuffle(left)
     for(const upgrade of left){
@@ -114,40 +145,91 @@ export function lootUpgraded(rng: Rng, upgrades: readonly CardUpgrade[] = UPGRAD
     return null
 }
 
+/** An upgrade made of a chain with holes, any number of them, and any number of cards of its own. */
+export function upgrade(name: string, chain: readonly (Card|undefined)[], fusion: UpgradeFusion = "fusion", filter?: UpgradeFilter): CardUpgrade {
+    return { name, chain, filter, fusion }
+}
+
 /** An upgrade giving a card in front of the cards it fuses with. */
 function front(name: string, card: Card, fusion: UpgradeFusion = "fusion"): CardUpgrade {
-    return { name, card, placement: "front", fusion }
+    return upgrade(name, [card, undefined], fusion)
 }
 
 /** An upgrade giving a card behind the cards it fuses with. */
 function back(name: string, card: Card, fusion: UpgradeFusion = "fusion"): CardUpgrade {
-    return { name, card, placement: "back", fusion }
+    return upgrade(name, [undefined, card], fusion)
+}
+
+/**
+ * An upgrade for a spell, a card giving an action from an element: behind it, a Réaction and an element, which
+ * reacts with the one the player puts after. The chain does not read whole by itself, so the filter says what fits.
+ */
+function reacting(name: string, element: Card): CardUpgrade {
+    return upgrade(`Réaction de ${name.toLowerCase()}`, [undefined, REACTION, element], "fusion", { input: ELEMENT })
+}
+
+/**
+ * An upgrade for a card giving an action from a module: behind it, a modifier of that module. The modifier
+ * waits for the module the player puts after, so the filter says what fits.
+ */
+function modified(modifier: Card): CardUpgrade {
+    return upgrade(modifier.name, [undefined, modifier], "fusion", { input: MODULE })
+}
+
+/** An upgrade putting a modifier of modules in front of any card giving a module. */
+function modifying(modifier: Card): CardUpgrade {
+    return upgrade(`${modifier.name} devant`, [modifier, undefined], "fusion", { output: MODULE })
+}
+
+/** An upgrade making an element react with the one of the card it improves: a Réaction, the element, the card. */
+function reactive(name: string, element: Card): CardUpgrade {
+    return upgrade(name, [REACTION, element, undefined], "fusion", { input: null, output: ELEMENT })
 }
 
 /** Every upgrade of the game, each written by hand. */
-export const UPGRADES: readonly CardUpgrade[] = [
+export const ALL_UPGRADES: readonly CardUpgrade[] = [
     front("Écho", REPEAT_2),
     front("Double diagonale", DOUBLE_DIAGONAL),
-    front("Incantation", SPELL),
-    front("Automate", IMPROVISED_ROBOT),
-    front("Jet", THROWN_POTION),
-    front("Récupération", RECOVERY),
-    front("Élan", STEP, "random"),
+    upgrade("Récupération", [RECOVERY, undefined], "fusion", {}),
+    front("Élan", STEP, "merge"),
 
-    back("Feu", FIRE),
-    back("Eau", WATER),
-    back("Plante", PLANT),
-    back("Pierre", STONE),
-    back("Vent", WIND),
-    back("Foudre", LIGHTNING),
+    upgrade("Provision", [DRAW, undefined], "fusion", {}),
+    upgrade("Bénédiction", [PRAYER, undefined], "fusion", {}),
+    upgrade("Visée", [AIM, undefined], "merge"),
+    upgrade("Tourbillon", [TORNADO, undefined], "fusion", { output: ACTION }),
+    upgrade("Charge retardée", [DELAYED_CHARGE, undefined], "fusion", { output: ACTION }),
+    upgrade("Triplé", [undefined, undefined, undefined], "fusion", { input: null, output: ACTION }),
+    upgrade("Alambic", [DISTILLATION, undefined], "fusion", { output: POTION }),
+    upgrade("Concentré", [undefined, DISTILLATION], "fusion", { input: POTION }),
 
-    back("Module d'arc", BOW_MODULE),
-    back("Module de taureau", BULL_MODULE),
-    back("Module d'explosion", BLAST_MODULE),
-    back("Missile", MISSILE),
-    back("Tir", SHOT),
-    back("Taille", SLASH),
-    back("Estoc", THRUST),
-    back("Balayage", SWEEP),
-    back("Fente", THRUST, "merge"),
+    // A Réaction, an element, then the element of the card: the two react.
+    reactive("Feu réactif", FIRE),
+    reactive("Eau réactive", WATER),
+    reactive("Plante réactive", PLANT),
+    reactive("Pierre réactive", STONE),
+    reactive("Vent réactif", WIND),
+    reactive("Foudre réactive", LIGHTNING),
+
+    // A spell, then a Réaction, then an element: what is plugged into the spell reacts with it.
+    reacting("Feu", FIRE),
+    reacting("Eau", WATER),
+    reacting("Plante", PLANT),
+    reacting("Pierre", STONE),
+    reacting("Vent", WIND),
+    reacting("Foudre", LIGHTNING),
+
+    // Behind a robot, a modifier of its module: the module itself comes from what the player puts after.
+    modified(THRUSTERS), modified(ARMOR_PLATING), modified(TURBO), modified(HOMING_HEAD), modified(MODULE_MIXER),
+    modified(RECYCLING), modified(REPEATER), modified(INVERTER), modified(MODULE_CORE),
+
+    // A modifier in front of any card giving a module, whatever it takes: the modifier modifies it.
+    modifying(THRUSTERS), modifying(ARMOR_PLATING), modifying(TURBO), modifying(HOMING_HEAD), modifying(MODULE_MIXER),
+    modifying(RECYCLING), modifying(REPEATER), modifying(INVERTER), modifying(MODULE_CORE),
+    back("Tir", SHOT, "merge"),
+    back("Taille", SLASH, "merge"),
+    back("Estoc", THRUST, "merge"),
+    back("Balayage", SWEEP, "merge"),
 ]
+
+/** The upgrades a trainer or a magician gives: all of them for now. */
+export const LOOT_UPGRADES: readonly CardUpgrade[] = ALL_UPGRADES

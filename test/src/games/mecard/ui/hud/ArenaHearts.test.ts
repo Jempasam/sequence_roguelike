@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { visual } from "@game/core/mecard"
 import { Heart, placeHazard, RED_HEART, SOLID_HEART, TIME_HEART, Vector2 } from "@game/core/mecard"
 import { ArenaHearts } from "@game/core/mecard/arena-hearts"
 import { BattleScene } from "@game/core/mecard/battle-ui"
@@ -42,7 +43,7 @@ describe("ArenaHearts.rebuild", () => {
         expect(rowsOver(on => {
             const hero = unit(on, 1, 5)
             placeHazard(on, hero, {
-                sprite: "fire", name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1 },
+                sprite: visual("units/fire"), name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1 },
                 hearts: [new Heart(TIME_HEART)],
             })
         })).toBe(2)
@@ -52,7 +53,7 @@ describe("ArenaHearts.rebuild", () => {
         expect(rowsOver(on => {
             const hero = unit(on, 1, 5)
             on.place(hero, {
-                sprite: "stone", name: "Mur", at: new Vector2(3, 3),
+                sprite: visual("units/stone"), name: "Mur", at: new Vector2(3, 3),
                 hearts: [new Heart(SOLID_HEART), new Heart(RED_HEART)],
             })
         })).toBe(2)

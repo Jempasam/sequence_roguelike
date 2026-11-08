@@ -14,6 +14,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { decksShown } from "../shown"
 import { CARTE, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** What the strategist may do with the decks of a character. */
 type StrategistPlan = "split"|"sort"|"join"|"draw"
@@ -170,9 +171,7 @@ export class StrategistHalt extends AbstractHalt {
 export const STRATEGIST_HALT: HaltType = {
     id: "strategist",
     name: "Stratège",
-    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],
-    code: "ST",
-    icon: "mecard/travel/strategist/logo.png",
+    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],    icon: visual("travel/strategist/logo", { letter: "ST" }),
     transition: DOOR_TRANSITION,
     create: run => new StrategistHalt(run),
 }

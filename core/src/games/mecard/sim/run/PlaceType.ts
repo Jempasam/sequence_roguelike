@@ -1,4 +1,5 @@
-import type { ImagePath, LayeredImagePath } from "../../../../engine/assets"
+import type { LayeredImagePath } from "../../../../engine/assets"
+import type { Visual } from "../base/Visual"
 import type { Rgba } from "../base/Rgba"
 import type { HaltType } from "../halt/HaltType"
 
@@ -9,18 +10,18 @@ import type { PlaceInfo } from "./Journey"
  * of a journey point to their sort; none is told apart by a name, whose only use is to write them down.
  *
  * @remarks
- * Its pictures are paths, which nothing here reads: only an interface loads them, so the simulation runs
+ * Its pictures are visuals, keys that nothing here resolves: only an interface loads them, so the simulation runs
  * without any.
  */
 export interface PlaceType extends PlaceInfo {
     /** What names it in a save or a command, never shown. Two sorts never share one. */
     readonly id: string
 
-    /** The code of two letters at most shown on the map while its icon is not loaded, or there is none. */
-    readonly code: string
-
-    /** The picture of its token on the map, drawn small, none for a fight. */
-    readonly icon: ImagePath|null
+    /**
+     * How its token looks on the map, drawn small: its picture, and the letters of two at most that the map
+     * writes in its stead where the picture is not loaded, or there is none, as for a fight.
+     */
+    readonly icon: Visual
 
     /** The color of a glow around its token on the map, none for no glow. */
     readonly glow?: Rgba

@@ -112,6 +112,20 @@ export function joinText(texts: readonly Text[], separator: Text): Text[] {
     return concat(...texts.flatMap((text, index) => index === 0 ? [text] : [separator, text]))
 }
 
+/**
+ * A text with a token put by a text: each occurrence of an object, a placeholder the text holds, is replaced.
+ * Objects telling themselves in their own text are not looked into.
+ */
+export function replaceInText(text: Text, token: object, by: Text): Text {
+    if(text === token) return by
+    if(typeof text === "string" || typeof text === "number") return text
+    if(isArray(text)) return text.map(part => replaceInText(part, token, by))
+    if(isSvg(text)) return text
+    if(isColored(text)) return { ...text, text: replaceInText(text.text, token, by) }
+    if(isLinked(text)) return { ...text, text: replaceInText(text.text, token, by) }
+    return text
+}
+
 /** What the parts around a part of a text hand down to it. */
 interface TextContext {
     readonly color: TextColor|null

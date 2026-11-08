@@ -11,6 +11,7 @@
         "typecheck": "tsc -p ."
     },
     "dependencies": {
+        "@game/command_line": "*",
         "@game/server": "*",
         "@game/core": "*",
         "fflate": "^0.8.2",

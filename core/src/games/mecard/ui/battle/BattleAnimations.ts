@@ -9,6 +9,7 @@ import { Heart } from "../../sim/heart/Heart"
 import type { Effect, HeartsSignal } from "../../sim/battle/signals"
 import type { Unit } from "../../sim/battle/Unit"
 
+import type { PlayControl } from "../hud/PlayControl"
 import type { BattleScene } from "./BattleScene"
 
 /** How long a number of damage or healing floats, in seconds. */
@@ -24,13 +25,10 @@ const NOTICE_TIME = 0.35
 export const DRAW_TIME = 0.25
 
 /**
- * How long the replay stops on a hand, in seconds: before the first card a unit draws, once the view is on
- * it, then after each card, so each one can be read.
+ * What a {@link Play} returns to stop for as long as the speed of the replay says: on a hand, before the
+ * first card a unit draws and after each card, and on what the replay lights up, a card, a heart, a process.
  */
-export const DRAW_PAUSE = 0.5
-
-/** How long the replay stops on what it lights up, a card, a heart, a process, in seconds. */
-export const HIGHLIGHT_TIME = 0.5
+const BEAT = -1
 
 /** How long a unit takes to fade out, then in, when it blinks, in seconds. */
 const BLINK_FADE = 0.08
@@ -62,6 +60,7 @@ export class BattleAnimations {
         public readonly scene: BattleScene,
         public readonly chain: AnimationChain,
         public readonly clock: FrameClock,
+        public readonly control: PlayControl,
     ){}
 
 
@@ -94,7 +93,7 @@ export class BattleAnimations {
                 })
                 scene.land()
             })
-            if(animated) this.chain.add(this.#stopping(() => DRAW_PAUSE, true))
+            if(animated) this.chain.add(this.#stopping(() => BEAT, true))
         }))
         on(signals.discarded, ({ unit, deck }) => () => {
             scene.change(unit, shown => shown.decks[deck].discard++)
@@ -121,10 +120,17 @@ export class BattleAnimations {
         const litCards = (unit: Unit, first: number, last: number, invalid: boolean): number => {
             this.onSelect?.(unit)
             scene.lightCards({ unit, first, last, invalid })
-            return HIGHLIGHT_TIME
+            return BEAT
         }
-        on(signals.cardActivated, ({ unit, first, last }) => () => litCards(unit, first, last, false))
-        on(signals.cardInvalid, ({ unit, index }) => () => litCards(unit, index, index, true))
+        // Held while paused, before the card is lit.
+        observers.push(signals.cardActivated.add(({ unit, first, last }) => {
+            this.chain.add(this.control.gate())
+            this.chain.add(this.#stopping(() => litCards(unit, first, last, false)))
+        }))
+        observers.push(signals.cardInvalid.add(({ unit, index }) => {
+            this.chain.add(this.control.gate())
+            this.chain.add(this.#stopping(() => litCards(unit, index, index, true)))
+        }))
         on(signals.chainChanged, ({ unit, cards, cursor }) => () => {
             scene.change(unit, shown => shown.chain = { cards, cursor })
         })
@@ -145,7 +151,7 @@ export class BattleAnimations {
         const litHearts = (unit: Unit, indexes: readonly number[]): number => {
             if(!scene.alive(unit)) return 0
             scene.lightHeart({ unit, indexes })
-            return HIGHLIGHT_TIME
+            return BEAT
         }
         on(signals.heartAdded, signal => () => {
             bar(signal)()
@@ -183,21 +189,31 @@ export class BattleAnimations {
             }))
         }))
         on(signals.vanished, ({ unit }) => () => scene.remove(unit))
-        on(signals.statusAdded, ({ unit, type }) => () => scene.change(unit, shown => {
-            if(!shown.statuses.includes(type)) shown.statuses.push(type)
+        on(signals.statusAdded, ({ unit, type, level }) => () => scene.change(unit, shown => {
+            if(!shown.statuses.some(each => each.type === type)) shown.statuses.push({ type, level })
+        }))
+        on(signals.statusLeveled, ({ unit, type, level }) => () => scene.change(unit, shown => {
+            const held = shown.statuses.find(each => each.type === type)
+            if(held) held.level = level
         }))
         on(signals.statusRemoved, ({ unit, type }) => () => scene.change(unit, shown => {
-            shown.statuses = shown.statuses.filter(each => each !== type)
+            shown.statuses = shown.statuses.filter(each => each.type !== type)
         }))
         on(signals.processStarted, ({ unit, process }) => () => {
             scene.change(unit, shown => shown.processes = [...shown.processes, process])
             if(!scene.alive(unit)) return 0
             scene.lightProcess({ unit, process })
-            return HIGHLIGHT_TIME
+            return BEAT
         })
         on(signals.processEnded, ({ unit, process }) => () => scene.change(unit, shown => {
             shown.processes = shown.processes.filter(each => each !== process)
         }))
+        on(signals.tethered, ({ tether }) => () => {
+            scene.tethers = [...scene.tethers, tether]
+        })
+        on(signals.untethered, ({ tether }) => () => {
+            scene.tethers = scene.tethers.filter(each => each !== tether)
+        })
         onAnimated(signals.effect, effect => () => this.#show(effect))
         on(signals.notifyStatus, ({ unit, status }) => () => {
             scene.notice = { unit, word: status.type.name }
@@ -224,8 +240,10 @@ export class BattleAnimations {
         return async() => {
             if(!draws) this.scene.watchDraw(null)
             const hold = play() ?? 0
-            if(hold <= 0) return
-            await this.clock.wait(hold)
+            if(hold === 0) return
+            // The pauses of the replay follow its speed, the others are as long as they are.
+            if(hold === BEAT) await this.control.speed()()
+            else await this.clock.wait(hold)
             this.scene.notice = null
             this.scene.unlight()
         }
@@ -236,7 +254,7 @@ export class BattleAnimations {
         if(this.scene.drawer === unit) return 0
         this.scene.watchDraw(unit)
         this.onSelect?.(unit)
-        return DRAW_PAUSE
+        return BEAT
     }
 
     /** Show a drawing over the arena, to its end. */

@@ -1,3 +1,4 @@
+import { visual } from "../../../base/Visual"
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -182,7 +183,7 @@ export class BarrelCard extends PotionActionCard {
 
     protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
         const at = this.#spot(unit)
-        const barrel = battle.summon(unit, "barrel", "Tonneau", at, summonedHearts(unit, BARREL_HALVES))
+        const barrel = battle.summon(unit, visual("units/barrel"), "Tonneau", at, summonedHearts(unit, BARREL_HALVES))
         if(barrel) battle.applyStatus(barrel, barrelOf(dose), Math.abs(level))
         yield* wait(SHORT_TIME)
     }

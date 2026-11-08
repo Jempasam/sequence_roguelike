@@ -1,7 +1,7 @@
-import { rgba } from "../../base/Rgba"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
+import { visual } from "../../base/Visual"
 
 /** How many hearts a unit going back to its shadow takes from each body on the way, whatever its stats. */
 export const SHADOW_LINK_DAMAGE = 1
@@ -13,7 +13,7 @@ const SHADOW_LINK_WIDTH = 0.3
 function closestShadow({ battle, unit }: UnitContext): Unit|null {
     let closest: Unit|null = null
     for(const body of battle.living){
-        if(body.sprite !== "shadow" || body.owner !== unit) continue
+        if(body.sprite?.visual !== "units/shadow" || body.owner !== unit) continue
         const distance = unit.position.distance(body.position)
         if(!closest || distance < unit.position.distance(closest.position)) closest = body
     }
@@ -28,7 +28,7 @@ export class ShadowLink extends AbstractProcess {
 
 
     constructor(){
-        super("lien d'ombre", "shadow_link", rgba(0.5, 0.4, 0.7))
+        super("lien d'ombre", visual("processes/shadow_link", { color: [0.5, 0.4, 0.7] }))
     }
 
 

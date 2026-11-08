@@ -10,6 +10,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { visual } from "../../../base/Visual"
 
 /** Hearts found as loot, twice as many. */
 function doubled({ heart, count }: HeartLoot): HeartLoot {
@@ -63,8 +64,7 @@ export const GREAT_HOSPITAL_HALT: HaltType = {
     id: "greatHospital",
     name: "Grand hôpital",
     description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun le cœur à usage unique choisi, en triple.",
-    code: "H*",
-    icon: "mecard/travel/hospital/logo.png",
+    icon: visual("travel/hospital/logo", { letter: "H*" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatHospitalHalt(run),

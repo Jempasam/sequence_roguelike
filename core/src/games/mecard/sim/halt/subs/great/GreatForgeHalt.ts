@@ -12,6 +12,7 @@ import { DeckHalt } from "../deck/DeckHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
 import { fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** How many times the great forger offers to forge. */
 const ROUNDS = 3
@@ -69,8 +70,7 @@ export const GREAT_FORGE_HALT: HaltType = {
     id: "greatForge",
     name: "Grand forgeron",
     description: [FUSION.as("Colle"), " deux ou trois ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi, jusqu'à trois fois."],
-    code: "FO*",
-    icon: "mecard/travel/forge/logo.png",
+    icon: visual("travel/forge/logo", { letter: "FO*" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatForgeHalt(run),

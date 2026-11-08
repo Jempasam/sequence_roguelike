@@ -6,6 +6,7 @@ import { POISON, SLOWNESS, WEAKNESS } from "../../../card/subs/potion/PotionCard
 
 import { AbstractUsable } from "../AbstractUsable"
 import { DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** How many charges the bag of plants of the catalog holds, filled again at each battle. */
 const PLANT_BAG_CHARGES = 3
@@ -23,7 +24,7 @@ export class PlantBag extends AbstractUsable {
 
         charges: number,
     ){
-        super("Sac de plantes", "mecard/usables/plant_bag.png", [
+        super("Sac de plantes", visual("usables/plant_bag"), [
             "Donne une potion, parmi quelques potions de base et celles encore dans le ", DECK, " ou la main. ",
             `${charges} charges, rechargées à chaque combat.`,
         ], { charges, refill: "battle" })

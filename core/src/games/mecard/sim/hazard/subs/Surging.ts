@@ -6,11 +6,12 @@ import { STEP } from "../../card/subs/movement/Step"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { familyType } from "../../status/Status"
+import { familyType, statusVisual } from "../../status/Status"
 import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
+import { visual } from "../../base/Visual"
 
 /** How many rounds a wave lasts. */
 const WAVE_ROUNDS = 2
@@ -22,7 +23,7 @@ const WAVE_SIZE = 2
 const WAVE_PUSH = 1.5
 
 /** A wave. */
-export const SURGING = familyType("vague", HAZARD_TEXT, "neutral", { cloned: false })
+export const SURGING = familyType("vague", statusVisual("surging", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Un corps qui la touche subit un élément et est emporté." })
 
 /** The kinds of wave, one for each element. */
 export const WAVES = elementVariants(
@@ -44,7 +45,7 @@ export function placeWave(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const body = battle.place(owner, {
-        sprite: "wave", name: "Vague", at, direction, tangible: false, size: WAVE_SIZE,
+        sprite: visual("units/wave"), name: "Vague", at, direction, tangible: false, size: WAVE_SIZE,
         hearts: Heart.many(TIME_HEART, WAVE_ROUNDS), cards: [STEP],
     })
     if(body) battle.applyStatus(body, WAVES.of(element), 1)

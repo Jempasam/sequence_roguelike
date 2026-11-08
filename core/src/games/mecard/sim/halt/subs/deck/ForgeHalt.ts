@@ -11,6 +11,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The forge: two cards of a deck fused, in the order picked. */
 export class ForgeHalt extends DeckHalt {
@@ -60,9 +61,7 @@ export class ForgeHalt extends DeckHalt {
 export const FORGE_HALT: HaltType = {
     id: "forge",
     name: "Forge",
-    description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],
-    code: "FO",
-    icon: "mecard/travel/forge/logo.png",
+    description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],    icon: visual("travel/forge/logo", { letter: "FO" }),
     transition: DOOR_TRANSITION,
     create: run => new ForgeHalt(run),
 }

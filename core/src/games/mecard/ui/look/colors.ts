@@ -19,6 +19,7 @@ const TYPE_COLORS: Readonly<Record<string, readonly [number, number, number]>> =
     "élément": [0.4, 0.85, 0.45],
     "potion": [0.6, 0.9, 0.2],
     "module": [0.6, 0.7, 0.75],
+    "secret": [1, 1, 1],
 }
 
 /** A color from a name alone: its hash sets the hue, so the same name is always the same color. */

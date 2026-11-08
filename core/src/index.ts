@@ -34,7 +34,7 @@ export type {
     DeviceKind, Direction, InputEvent, InputEventType, InputFrame, PadControl, Side,
 } from "./engine/input"
 export {
-    command, Console, CONSOLE_KEY, ConsoleView, group, MAX_CONSOLE_LINES, named, optional, tokensOf, whole,
+    command, Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView, group, MAX_CONSOLE_LINES, named, optional, tokensOf, whole,
 } from "./engine/console"
 export type {
     Arg, Command, CommandContext, ConsoleLine, ConsoleLineKind, GroupParsed, LineCheck, ValuesOf,

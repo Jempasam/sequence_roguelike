@@ -27,7 +27,7 @@ export class MergedCard extends CompositeCard<readonly Action[]> {
     constructor(cards: readonly Card[], look: CompositeLook = {}){
         if(cards.length < 2) throw new Error(`A merge holds two cards at least, not ${cards.length}.`)
         for(const card of cards){
-            if(card.output !== ACTION || card.input !== null){
+            if(!canMerge(card)){
                 throw new Error(`${card.name} does not give actions on its own: it cannot be played at once with another.`)
             }
         }
@@ -48,6 +48,11 @@ export class MergedCard extends CompositeCard<readonly Action[]> {
             preview: ctx => previewedAtOnce(rows, ctx),
         }]
     }
+}
+
+/** Can a card be merged with others: does it give actions on its own, taking nothing? */
+export function canMerge(card: Card): boolean {
+    return card.output === ACTION && card.input === null
 }
 
 /** Actions played one after the other, as one run. */

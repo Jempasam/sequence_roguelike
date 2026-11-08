@@ -10,6 +10,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** What the antiquarian pays of the prices of the cards a card holds, for each of them. */
 const SHARE_PER_CARD = 0.5
@@ -77,9 +78,7 @@ export class AntiquarianHalt extends DeckHalt {
 export const ANTIQUARIAN_HALT: HaltType = {
     id: "antiquarian",
     name: "Antiquaire",
-    description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],
-    code: "AN",
-    icon: "mecard/travel/antiquarian/logo.png",
+    description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],    icon: visual("travel/antiquarian/logo", { letter: "AN" }),
     transition: DOOR_TRANSITION,
     create: run => new AntiquarianHalt(run),
 }

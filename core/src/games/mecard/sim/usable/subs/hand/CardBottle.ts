@@ -1,9 +1,10 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
+import type { Visual } from "../../../base/Visual"
 import type { UnitContext } from "../../../battle/Action"
 import type { Card } from "../../../card/Card"
 import { THRUST } from "../../../card/subs/attack/Thrust"
 
 import { AbstractUsable } from "../AbstractUsable"
+import { visual } from "../../../base/Visual"
 
 /** How many times the bottles of cards of the catalog are used before they break. */
 const CARD_BOTTLE_CHARGES = 3
@@ -13,7 +14,7 @@ export class CardBottle extends AbstractUsable {
 
 
     constructor(
-        name: string, icon: ImagePath,
+        name: string, icon: Visual,
 
         /** The card it gives. */
         public readonly card: Card,
@@ -29,4 +30,4 @@ export class CardBottle extends AbstractUsable {
     }
 }
 
-export const THRUST_BOTTLE = new CardBottle("Bouteille d'estoc", "mecard/usables/thrust_bottle.png", THRUST, CARD_BOTTLE_CHARGES)
+export const THRUST_BOTTLE = new CardBottle("Bouteille d'estoc", visual("usables/thrust_bottle"), THRUST, CARD_BOTTLE_CHARGES)

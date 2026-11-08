@@ -1,4 +1,6 @@
 import type { ErrorSink } from "../base/Observable"
+import { loadedVisual, savedVisual } from "../base/Visual"
+import type { VisualData } from "../base/Visual"
 import type { Controller, StatBases } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import { Heart } from "../heart/Heart"
@@ -19,7 +21,7 @@ export const RUN_SAVE_VERSION = 2
 /** A character of the party, written down as a unit of a battle is. */
 export interface SavedHero {
     readonly name: string
-    readonly sprite: string|null
+    readonly sprite: VisualData|string|null
     readonly controller: Controller
     readonly decks: readonly (readonly SavedCard[])[]
 
@@ -91,7 +93,7 @@ export function heroesOf(save: RunSave): Hero[] {
 
 function savedHero({ name, sprite, controller, decks, hearts, items, usables, bases }: Hero): SavedHero {
     return {
-        name, sprite, controller, bases,
+        name, sprite: savedVisual(sprite), controller, bases,
         decks: decks.map(deck => deck.map(savedCard)),
         hearts: hearts.map(heart => [heart.kind.name, heart.isEmpty]),
         items: items.map(item => item.name),
@@ -102,7 +104,7 @@ function savedHero({ name, sprite, controller, decks, hearts, items, usables, ba
 function loadedHero(saved: SavedHero, card: (saved: SavedCard) => Card): Hero {
     const { name, sprite, controller, bases } = saved
     return hero({
-        name, sprite, controller, bases,
+        name, sprite: loadedVisual(sprite), controller, bases,
         decks: saved.decks.map(deck => deck.map(card)),
         hearts: saved.hearts.map(([kind, isEmpty]) => new Heart(HEART_NAMES.of(kind), isEmpty)),
         items: saved.items.map(item => ITEM_NAMES.of(item)),

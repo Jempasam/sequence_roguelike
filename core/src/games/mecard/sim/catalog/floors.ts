@@ -22,7 +22,7 @@ export const FLOOR_LINKS: ReadonlyMap<FloorType, readonly FloorType[]> = new Map
 ])
 
 /** Every sort of floor. */
-export const FLOOR_TYPES: readonly FloorType[] = [...FLOOR_LINKS.keys()]
+export const ALL_FLOORS: readonly FloorType[] = [...FLOOR_LINKS.keys()]
 
 /** The floors the exits of a floor lead to, a level harder. */
 export function exitsOf(floor: Floor): Floor[] {

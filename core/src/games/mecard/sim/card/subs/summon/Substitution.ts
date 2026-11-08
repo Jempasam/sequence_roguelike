@@ -1,3 +1,4 @@
+import { visual } from "../../../base/Visual"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import { HeartCount, meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
@@ -40,7 +41,7 @@ export class SubstitutionCard extends ActionCard {
                 const from = unit.position
                 const distance = length * unit.stats.move.value
                 const gone = yield* travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
-                if(gone.distance > 0) battle.summon(unit, "log", "Tronc", from, summonedHearts(unit, halves))
+                if(gone.distance > 0) battle.summon(unit, visual("units/log"), "Tronc", from, summonedHearts(unit, halves))
                 yield* wait(SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {

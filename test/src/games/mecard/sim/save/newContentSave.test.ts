@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest"
 import {
-    BARRELS, BOULDERS, BURNING_GROUNDS, CARDS, Codecs, COATED, COATS, FIRE_ELEMENT, GRAND_RITUALS, ITEMS,
+    BARRELS, BOULDERS, BURNING_GROUNDS, ALL_CARDS, Codecs, COATED, COATS, FIRE_ELEMENT, GRAND_RITUALS, ALL_ITEMS,
     LEGENDARY_CARDS, LOOT_CARDS, POISON_POTION, POTIONS, PUDDLES, savedCard, STATUS_CODECS, STATUS_TYPES,
-    USABLES, WATER_ELEMENT, WAVES, WHIRLWINDS, WIND_ELEMENT,
+    ALL_USABLES, WATER_ELEMENT, WAVES, WHIRLWINDS, WIND_ELEMENT,
 } from "@game/core/mecard"
 import { CARD_CODECS, ITEM_NAMES, USABLE_NAMES } from "@game/core/mecard"
 
@@ -10,25 +10,26 @@ import { CARD_CODECS, ITEM_NAMES, USABLE_NAMES } from "@game/core/mecard"
 
 describe("what the catalogs give is written down by name", () => {
     test("every card of the loot and the legendary ones can be saved", () => {
-        for(const card of [...LOOT_CARDS, ...LEGENDARY_CARDS]) expect(() => savedCard(card), card.name).not.toThrow()
+        for(const card of ALL_CARDS) expect(() => savedCard(card), card.name).not.toThrow()
+        for(const card of [...LOOT_CARDS, ...LEGENDARY_CARDS]) expect(ALL_CARDS).toContain(card)
     })
 
     test("every card is told apart by its name", () => {
-        const names = CARDS.map(card => card.name)
+        const names = ALL_CARDS.map(card => card.name)
         expect(new Set(names).size).toBe(names.length)
     })
 
     test("every item and usable is found back by its name", () => {
-        for(const item of ITEMS) expect(ITEM_NAMES.has(item), item.name).toBe(true)
-        for(const usable of USABLES) expect(USABLE_NAMES.has(usable), usable.name).toBe(true)
+        for(const item of ALL_ITEMS) expect(ITEM_NAMES.has(item), item.name).toBe(true)
+        for(const usable of ALL_USABLES) expect(USABLE_NAMES.has(usable), usable.name).toBe(true)
     })
 
     test("every card of the catalog is written down, then found back as itself", () => {
-        for(const card of CARDS) expect(CARD_CODECS.load(CARD_CODECS.save(card)), card.name).toBe(card)
+        for(const card of ALL_CARDS) expect(CARD_CODECS.load(CARD_CODECS.save(card)), card.name).toBe(card)
     })
 
     test("a card of a kind no codec writes → refused, naming the card", () => {
-        expect(() => CARD_CODECS.save({ ...CARDS[0], name: "Impostor" })).toThrow(/not a card that can be saved/)
+        expect(() => CARD_CODECS.save({ ...ALL_CARDS[0], name: "Impostor" })).toThrow(/not a card that can be saved/)
     })
 
     test("a text of no codec → refused as a save of another version", () => {

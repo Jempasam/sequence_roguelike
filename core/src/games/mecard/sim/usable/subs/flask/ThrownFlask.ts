@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
+import type { Visual } from "../../../base/Visual"
 import type { Text } from "../../../../../../semantic"
 import type { UnitContext } from "../../../battle/Action"
 import type { Status } from "../../../status/Status"
@@ -13,7 +13,7 @@ export abstract class ThrownFlask extends AbstractUsable {
 
 
     constructor(
-        name: string, icon: ImagePath, description: Text,
+        name: string, icon: Visual, description: Text,
 
         /** How far it reaches, in meters: the nearest enemy within it is hit. */
         public readonly range: number,

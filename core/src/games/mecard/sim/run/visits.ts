@@ -154,6 +154,25 @@ export function possess(deck: Card[]): readonly Card[] {
 }
 
 /**
+ * Fuse each card of a deck with the card of a monster at the same rank, as the archdemon does: the monster's
+ * deck read again from its start when it is shorter. A pair that reads whole in neither order leaves the
+ * card alone.
+ *
+ * @returns The deck as it now is.
+ */
+export function possessBy(deck: Card[], monsterCards: readonly Card[]): readonly Card[] {
+    if(monsterCards.length === 0) return deck
+    const made = deck.map((card, rank) => {
+        const other = monsterCards[rank % monsterCards.length]
+        if(readsWhole([card, other])) return new FusionCard([card, other])
+        if(readsWhole([other, card])) return new FusionCard([other, card])
+        return card
+    })
+    deck.splice(0, deck.length, ...made)
+    return deck
+}
+
+/**
  * Cut a deck in two at random, as the strategist does: half of its cards, as many as can be, go to a new deck
  * of the character, right after it.
  *

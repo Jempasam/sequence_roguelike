@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../../engine/assets/Assets"
+import type { Visual } from "../../base/Visual"
 import type { Text } from "../../../../../semantic"
 import { colored, rgba } from "../../base/Rgba"
 import type { UnitContext } from "../../battle/Action"
@@ -27,7 +27,7 @@ export abstract class AbstractUsable implements Usable {
         public readonly name: string,
 
         /** Its picture. */
-        public readonly icon: ImagePath,
+        public readonly icon: Visual,
 
         /** What it does, in one sentence, for the player. */
         public readonly description: Text,

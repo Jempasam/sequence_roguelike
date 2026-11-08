@@ -14,7 +14,7 @@ export class BlackHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("noir", "Se soigne ; le dernier se perd à chaque fin de round.", rgba(0.22, 0.12, 0.25))
+        super("noir", "Se soigne et se recharge à chaque combat ; le dernier se perd à chaque fin de round.", rgba(0.22, 0.12, 0.25))
     }
 
 
@@ -26,6 +26,12 @@ export class BlackHeartKind extends AbstractHeartKind {
 /** The rules of the black hearts: kept empty and healed, the last full one lost at the end of each round. */
 class BlackHeartRule extends KeptHeartRule {
 
+
+    public override onBattleStart({ unit }: UnitContext): void {
+        for(const heart of [...unit.hearts.all]){
+            if(heart.kind === this.kind) unit.hearts.restore(heart)
+        }
+    }
 
     public override init(ctx: UnitContext): void {
         this.atRoundEnd(ctx, () => {

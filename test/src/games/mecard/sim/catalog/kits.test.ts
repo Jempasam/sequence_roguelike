@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { closestKit, heroOf, KITS, kitScore, LANCER_KIT, MAGE_KIT, SWORDSMAN_KIT } from "@game/core/mecard"
+import { closestKit, heroOf, ALL_KITS, kitScore, LANCER_KIT, MAGE_KIT, SWORDSMAN_KIT } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -24,6 +24,6 @@ describe("kitScore", () => {
 
 describe("closestKit", () => {
     test("the hero of each kit → that kit", () => {
-        for(const kit of KITS) expect(closestKit(heroOf(kit))).toBe(kit)
+        for(const kit of ALL_KITS) expect(closestKit(heroOf(kit))).toBe(kit)
     })
 })

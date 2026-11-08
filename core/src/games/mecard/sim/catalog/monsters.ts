@@ -41,6 +41,8 @@ import { BLINK } from "../card/subs/movement/Blink"
 import { FLEE } from "../card/subs/movement/Flee"
 import { SHADOW_AIM } from "../card/subs/movement/ShadowAim"
 import { SIDESTEP } from "../card/subs/movement/Sidestep"
+import type { Visual } from "../base/Visual"
+import { visual } from "../base/Visual"
 
 /**
  * A kind of monster: its hearts, and the loop its deck plays.
@@ -53,8 +55,8 @@ import { SIDESTEP } from "../card/subs/movement/Sidestep"
 export interface Monster {
     readonly name: string
 
-    /** Its picture, by its name among the sprites of the units. */
-    readonly sprite: string
+    /** How it looks. */
+    readonly sprite: Visual
 
     /** How many red hearts it has. */
     readonly hearts: number
@@ -85,7 +87,7 @@ export function monster(spec: Omit<Monster, "toString"|"toSemString">): Monster 
 
 /** The small monsters: a round to come at you, then a thrust, the last one a coin toss. */
 export const GOBLIN = monster({
-    name: "Gobelin", sprite: "goblin", hearts: 4, draw: 3,
+    name: "Gobelin", sprite: visual("units/goblin"), hearts: 4, draw: 3,
     cards: [
         PATH_AIM, STEP, STEP,
         PATH_AIM, STEP, THRUST,
@@ -95,7 +97,7 @@ export const GOBLIN = monster({
 
 /** The archers: they turn and shoot, step away from whoever comes close, and aside to clear a rock. */
 export const ARCHER = monster({
-    name: "Archer", sprite: "monster_archer", hearts: 4, draw: 3,
+    name: "Archer", sprite: visual("units/monster_archer"), hearts: 4, draw: 3,
     cards: [
         AIM, SHOT, SHOT,
         AIM, FLEE, SHOT,
@@ -106,7 +108,7 @@ export const ARCHER = monster({
 
 /** The brutes: slow to come, then blows all around, the last ones after a stunning charge. */
 export const BRUTE = monster({
-    name: "Brute", sprite: "brute", hearts: 8, draw: 3,
+    name: "Brute", sprite: visual("units/brute"), hearts: 8, draw: 3,
     cards: [
         PATH_AIM, STEP, STEP,
         PATH_AIM, STEP, SWEEP,
@@ -119,7 +121,7 @@ export const BRUTE = monster({
  * the pillars.
  */
 export const HUNTER = monster({
-    name: "Chasseur", sprite: "hunter", hearts: 4, draw: 3,
+    name: "Chasseur", sprite: visual("units/hunter"), hearts: 4, draw: 3,
     cards: [
         STURDY_AIM, SHOT, SHOT,
         STURDY_AIM, BACK_DASH, RICOCHET,
@@ -130,7 +132,7 @@ export const HUNTER = monster({
 
 /** The berserkers: a fit of rage turns them on someone at each step, which aims their lasso and sweeps. */
 export const BERSERKER = monster({
-    name: "Berserker", sprite: "berserker", hearts: 6, draw: 3,
+    name: "Berserker", sprite: visual("units/berserker"), hearts: 6, draw: 3,
     cards: [
         RAGE_FIT, STEP, SLASH,
         LASSO, SWEEP, SWEEP,
@@ -143,7 +145,7 @@ export const BERSERKER = monster({
  * spell, so the players meet them before they own them.
  */
 export const GOLEM = monster({
-    name: "Golem runique", sprite: "golem", hearts: 16, draw: 4,
+    name: "Golem runique", sprite: visual("units/golem"), hearts: 16, draw: 4,
     cards: [
         PATH_AIM, REPEAT_2, SWEEP, STEP,
         PATH_AIM, STUNNING_DASH, HYPNOSIS, THRUST,
@@ -154,7 +156,7 @@ export const GOLEM = monster({
 
 /** The bulls: they turn and charge, more of it each round, and catch their breath. */
 export const BULL = monster({
-    name: "Taureau", sprite: "bull", hearts: 8, draw: 4,
+    name: "Taureau", sprite: visual("units/bull"), hearts: 8, draw: 4,
     cards: [
         PATH_AIM, RAM, WAIT, WAIT,
         PATH_AIM, RAM, PATH_AIM, RAM,
@@ -164,13 +166,13 @@ export const BULL = monster({
 
 /** The kamikaze robots: they come at you and blow up. */
 export const KAMIKAZE_ROBOT = monster({
-    name: "Robot kamikaze", sprite: "kamikaze_robot", hearts: 3, draw: 3,
+    name: "Robot kamikaze", sprite: visual("units/kamikaze_robot"), hearts: 3, draw: 3,
     cards: [PATH_AIM, STEP, STEP, PATH_AIM, STEP, KAMIKAZE],
 })
 
 /** The fire mages: sparks from afar, flames around whoever comes near, and a step away from it. */
 export const FIRE_MAGE = monster({
-    name: "Mage de feu", sprite: "fire_mage", hearts: 4, draw: 3,
+    name: "Mage de feu", sprite: visual("units/fire_mage"), hearts: 4, draw: 3,
     cards: [
         AIM, SMALL_SPELL, FIRE,
         AIM, CONJURATION, FIRE,
@@ -181,7 +183,7 @@ export const FIRE_MAGE = monster({
 
 /** The elf assassins: they aim through the walls, slip across, and finish off whoever is feverish. */
 export const ELF_ASSASSIN = monster({
-    name: "Assassin elfe", sprite: "elf_assassin", hearts: 4, draw: 3,
+    name: "Assassin elfe", sprite: visual("units/elf_assassin"), hearts: 4, draw: 3,
     cards: [
         SHADOW_AIM, SHADOW_STEP, ASSASSIN_BLOW,
         PATH_AIM, STEP, DAGGER,
@@ -192,7 +194,7 @@ export const ELF_ASSASSIN = monster({
 
 /** The goblin riders: on horse first, each of their steps then carries them ahead, a mere turn included. */
 export const GOBLIN_RIDER = monster({
-    name: "Gobelin cavalier", sprite: "goblin_rider", hearts: 5, draw: 4,
+    name: "Gobelin cavalier", sprite: visual("units/goblin_rider"), hearts: 5, draw: 4,
     cards: [
         HORSE, PATH_AIM, PATH_AIM, SLASH,
         HORSE, PATH_AIM, THRUST, THRUST,
@@ -202,7 +204,7 @@ export const GOBLIN_RIDER = monster({
 
 /** The stone golems: twice the body, slow to come, then blows all around. */
 export const STONE_GOLEM = monster({
-    name: "Golem de pierre", sprite: "stone_golem", hearts: 12, draw: 3, size: 2,
+    name: "Golem de pierre", sprite: visual("units/stone_golem"), hearts: 12, draw: 3, size: 2,
     cards: [
         PATH_AIM, STEP, WAIT,
         PATH_AIM, STEP, SWEEP,
@@ -212,7 +214,7 @@ export const STONE_GOLEM = monster({
 
 /** The slimes: slow to come, they spit to slow you, and split in two while they have hearts to share. */
 export const SLIME = monster({
-    name: "Slime", sprite: "slime", hearts: 6, draw: 3,
+    name: "Slime", sprite: visual("units/slime"), hearts: 6, draw: 3,
     cards: [
         PATH_AIM, STEP, STEP,
         AIM, SPIT, TACKLE,
@@ -222,7 +224,7 @@ export const SLIME = monster({
 
 /** The elf archers: they shoot on the move, and never let anyone come close. */
 export const ELF_ARCHER = monster({
-    name: "Archer elfe", sprite: "elf_archer", hearts: 4, draw: 3,
+    name: "Archer elfe", sprite: visual("units/elf_archer"), hearts: 4, draw: 3,
     cards: [
         AIM, CROSSBOW, FLEE,
         SIDESTEP, AIM, SHOT,
@@ -232,7 +234,7 @@ export const ELF_ARCHER = monster({
 
 /** The ice mages: the fire mages, with water. */
 export const ICE_MAGE = monster({
-    name: "Mage de glace", sprite: "ice_mage", hearts: 4, draw: 3,
+    name: "Mage de glace", sprite: visual("units/ice_mage"), hearts: 4, draw: 3,
     cards: [
         AIM, SMALL_SPELL, WATER,
         AIM, CONJURATION, WATER,
@@ -243,7 +245,7 @@ export const ICE_MAGE = monster({
 
 /** The imps: few hearts, but they run you down and jump at you. */
 export const IMP = monster({
-    name: "Diablotin", sprite: "imp", hearts: 3, draw: 3,
+    name: "Diablotin", sprite: visual("units/imp"), hearts: 3, draw: 3,
     cards: [
         PURSUIT, DAGGER, BLINK,
         PATH_AIM, BLINK, DAGGER,
@@ -252,14 +254,14 @@ export const IMP = monster({
 })
 
 /** The common monsters: those of the floors, and those tamed as allies. */
-export const COMMON_MONSTERS: readonly Monster[] = [
+export const LOOT_MONSTERS: readonly Monster[] = [
     GOBLIN, ARCHER, BRUTE, HUNTER, BERSERKER, BULL, KAMIKAZE_ROBOT, FIRE_MAGE, ELF_ASSASSIN, GOBLIN_RIDER,
     STONE_GOLEM, SLIME, ELF_ARCHER, ICE_MAGE, IMP,
 ]
 
 /** The troll of the forest: twice the body, a sweep at every step, and a charge when it is close. */
 export const TROLL = monster({
-    name: "Troll", sprite: "troll", hearts: 20, draw: 4, size: 2,
+    name: "Troll", sprite: visual("units/troll"), hearts: 20, draw: 4, size: 2,
     cards: [
         PATH_AIM, STEP, SWEEP, SWEEP,
         PATH_AIM, RAM, REPEAT_2, SWEEP,
@@ -270,7 +272,7 @@ export const TROLL = monster({
 
 /** The megalaser robot of the mine: it shoots at whoever is sturdiest, and hardly ever stops. */
 export const MEGALASER = monster({
-    name: "Robot Megalaser", sprite: "megalaser", hearts: 18, draw: 4,
+    name: "Robot Megalaser", sprite: visual("units/megalaser"), hearts: 18, draw: 4,
     cards: [
         STURDY_AIM, REPEAT_2, SHOT, WAIT,
         AIM, SHOTGUN, RICOCHET, BACK_DASH,
@@ -282,7 +284,7 @@ export const MEGALASER = monster({
 
 /** The devil of hell: flames from afar, and it steps through the walls to finish the job. */
 export const DEVIL = monster({
-    name: "Diable", sprite: "devil", hearts: 24, draw: 4,
+    name: "Diable", sprite: visual("units/devil"), hearts: 24, draw: 4,
     cards: [
         AIM, SPELL, FIRE, SHOT,
         SHADOW_AIM, SHADOW_STEP, ASSASSIN_BLOW, SWEEP,
@@ -292,7 +294,7 @@ export const DEVIL = monster({
 })
 
 /** The bosses, one guarding each floor. */
-export const BOSSES: readonly Monster[] = [GOLEM, TROLL, MEGALASER, DEVIL]
+export const BOSS_MONSTERS: readonly Monster[] = [GOLEM, TROLL, MEGALASER, DEVIL]
 
 /** Every kind of monster. */
-export const MONSTERS: readonly Monster[] = [...COMMON_MONSTERS, ...BOSSES]
+export const ALL_MONSTERS: readonly Monster[] = [...LOOT_MONSTERS, ...BOSS_MONSTERS]

@@ -5,10 +5,10 @@ import type { Heart } from "../../sim/heart/Heart"
 import { SOLID_HEART } from "../../sim/heart/subs/SolidHeartKind"
 import type { Process } from "../../sim/process/Process"
 import type { UnitSprites } from "../look/UnitSprites"
-import type { BattleScene } from "../battle/BattleScene"
+import type { BattleScene, ShownStatus } from "../battle/BattleScene"
 
 import { heartsRow } from "./HeartView"
-import { processRow } from "./ProcessView"
+import { StatusProcessList } from "./StatusProcessList"
 
 /** Does a unit hold nothing but solid hearts, which no wound takes? */
 function onlySolid(unit: Unit): boolean {
@@ -17,7 +17,7 @@ function onlySolid(unit: Unit): boolean {
 
 /**
  * The hearts of the units over the arena, in a layer of the interface of their own: the same rows as in the
- * panels, moved over their unit at each frame, the icons of their processes under them.
+ * panels, moved over their unit at each frame, the icons of their statuses and processes under it.
  *
  * @remarks
  * The arena is drawn in the world, at its own scale, so the hearts are widgets of the interface laid over
@@ -40,6 +40,9 @@ export class ArenaHearts {
 
         /** What the pointer coming over the icon of a process or leaving it does. */
         public readonly onProcessHover: (unit: Unit, process: Process, over: boolean) => void,
+
+        /** What the pointer coming over the icon of a status or leaving it does. */
+        public readonly onStatusHover: (unit: Unit, status: ShownStatus, over: boolean) => void,
     ){}
 
 
@@ -48,21 +51,24 @@ export class ArenaHearts {
         const content = this.layer.content
         for(const child of [...content.children]) content.remove(child)
         this.#rows.clear()
-        const { litHeart, litProcess } = scene
-        for(const { unit, hearts, processes } of scene.living){
+        this.#statusRows.clear()
+        const { litHeart } = scene
+        for(const { unit, hearts } of scene.living){
+            const list = new StatusProcessList(this.theme, this.sprites, scene, {
+                onStatusHover: this.onStatusHover,
+                onProcessHover: this.onProcessHover,
+            }, { direction: "row", align: "center" })
+            list.unit = unit
+            if(list.count > 0){
+                this.#statusRows.set(unit, list)
+                content.add(list)
+            }
             // What holds only solid hearts, a pillar, has no life to show.
             if(onlySolid(unit)) continue
-            const block = new Box("column", { gap: 1, align: "center" })
             const lit = litHeart?.unit === unit ? litHeart.indexes : []
             const row = heartsRow(this.theme, hearts, (heart, over) => this.onHover(unit, heart, over), lit)
-            block.add(row)
-            if(processes.length > 0){
-                block.add(processRow(this.theme, this.sprites, processes, (process, over) => {
-                    this.onProcessHover(unit, process, over)
-                }, litProcess?.unit === unit ? litProcess.process : null))
-            }
-            this.#rows.set(unit, { block, hearts: row })
-            content.add(block)
+            this.#rows.set(unit, row)
+            content.add(row)
         }
     }
 
@@ -71,18 +77,30 @@ export class ArenaHearts {
      *
      * @param anchorOf - Where the middle of the bottom edge of the hearts of a unit lies, in virtual pixels.
      */
-    public place(anchorOf: (unit: Unit) => readonly [number, number]): void {
-        for(const [unit, { block, hearts }] of this.#rows){
+    public place(
+        anchorOf: (unit: Unit) => readonly [number, number],
+        feetOf: (unit: Unit) => readonly [number, number],
+    ): void {
+        // The statuses and processes lie under the unit, their row centered on it.
+        for(const [unit, row] of this.#statusRows){
+            const [x, y] = feetOf(unit)
+            const { preferredWidth } = row.measure(Infinity)
+            this.layer.content.setSlot(row, { offsetX: Math.round(x - preferredWidth / 2), offsetY: Math.round(y) })
+        }
+        for(const [unit, hearts] of this.#rows){
             const [x, y] = anchorOf(unit)
-            const { preferredWidth } = block.measure(Infinity)
-            const offsetX = Math.round(x - preferredWidth / 2)
-            // The hearts lie on the anchor, the processes under them.
-            const offsetY = Math.round(y - hearts.measure(Infinity).preferredHeight)
-            this.layer.content.setSlot(block, { offsetX, offsetY })
+            const { preferredWidth, preferredHeight } = hearts.measure(Infinity)
+            // The hearts lie on the anchor.
+            this.layer.content.setSlot(hearts, {
+                offsetX: Math.round(x - preferredWidth / 2), offsetY: Math.round(y - preferredHeight),
+            })
         }
     }
 
 
-    /** The hearts and processes of each unit shown, and its row of hearts in them. */
-    readonly #rows = new Map<Unit, { readonly block: Box, readonly hearts: Box }>()
+    /** The row of hearts of each unit shown. */
+    readonly #rows = new Map<Unit, Box>()
+
+    /** The statuses and processes of each unit that has any. */
+    readonly #statusRows = new Map<Unit, StatusProcessList>()
 }

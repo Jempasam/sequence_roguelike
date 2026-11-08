@@ -1,14 +1,13 @@
 import type { Text } from "../../../../../semantic"
 import { ModifierKey, Multiply } from "../../base/Attribute"
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import { counted } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
-import { StatusType } from "../Status"
+import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
 /** A root: the unit cannot move on its own. */
-export const ROOTED = new StatusType("racines", rgba(0.45, 0.8, 0.3), "negative", level => new Rooted(level))
+export const ROOTED = new StatusType("racines", statusVisual("rooted", 0.45, 0.8, 0.3), "negative", level => new Rooted(level), { description: ["Ses ", STATUS_LEVEL, " prochains pas ne peuvent pas le déplacer, mais il agit encore."] })
 
 /** Rooted: the next steps of the unit cannot move it, though it still acts. Its level: the steps left. */
 export class Rooted extends BaseStatus {

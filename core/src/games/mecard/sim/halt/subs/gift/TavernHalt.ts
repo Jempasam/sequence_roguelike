@@ -1,7 +1,7 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
-import { KITS } from "../../../catalog/kits"
+import { LOOT_KITS } from "../../../catalog/kits"
 import type { Kit } from "../../../catalog/kits"
 import { heroOf } from "../../../run/Hero"
 import type { Hero } from "../../../run/Hero"
@@ -13,10 +13,11 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { stuffOf } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The kits a tavern offers: heroes not in the party yet, fewer when fewer are left. */
 export function tavernKits(rng: Rng, party: readonly Hero[]): Kit[] {
-    const free = KITS.filter(kit => !party.some(hero => hero.name === kit.name))
+    const free = LOOT_KITS.filter(kit => !party.some(hero => hero.name === kit.name))
     return distinct(rng, free, INVENTED_COUNTS)
 }
 
@@ -61,9 +62,7 @@ export class TavernHalt extends AbstractHalt {
 export const TAVERN_HALT: HaltType = {
     id: "tavern",
     name: "Taverne",
-    description: "Un héros parmi trois rejoint l'équipe.",
-    code: "TA",
-    icon: "mecard/travel/tavern/logo.png",
+    description: "Un héros parmi trois rejoint l'équipe.",    icon: visual("travel/tavern/logo", { letter: "TA" }),
     transition: DOOR_TRANSITION,
     create: run => new TavernHalt(run),
 }

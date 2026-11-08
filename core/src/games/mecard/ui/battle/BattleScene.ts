@@ -5,6 +5,7 @@ import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 import { Heart } from "../../sim/heart/Heart"
 import type { Process } from "../../sim/process/Process"
+import type { Tether } from "../../sim/battle/signals"
 import type { StatusType } from "../../sim/status/Status"
 
 /** How many cards a deck holds, as the screen shows it. */
@@ -60,6 +61,12 @@ export interface Flight {
     share: number
 }
 
+/** A status as the screen shows it: its kind and the level it has in the replay. */
+export interface ShownStatus {
+    readonly type: StatusType
+    level: number
+}
+
 /** A unit as the screen shows it, which the replay moves on, behind the battle already further on. */
 export interface SceneUnit {
     readonly unit: Unit
@@ -69,7 +76,8 @@ export interface SceneUnit {
     /** Its life bar, copies the battle never changes. */
     hearts: readonly Heart[]
 
-    statuses: StatusType[]
+    /** Its statuses, at the level the replay has them. */
+    statuses: ShownStatus[]
 
     /** The processes going on for it, in the order they started. */
     processes: Process[]
@@ -115,6 +123,9 @@ export class BattleScene {
 
     /** What is drawn over the arena now, the oldest first. */
     public indicators: readonly Indicator[] = []
+
+    /** The ties between units drawn now, the oldest first. */
+    public tethers: readonly Tether[] = []
 
     /** The unit playing its step, none between two. */
     public actor: Unit|null = null
@@ -222,7 +233,7 @@ export class BattleScene {
         const shown: SceneUnit = {
             unit, position: unit.position, direction: unit.direction,
             hearts: Heart.copies(unit.hearts.all),
-            statuses: [...unit.statuses.keys()], processes: [...unit.processes],
+            statuses: [...unit.statuses.values()].map(({ type, level }) => ({ type, level })), processes: [...unit.processes],
             steps: unit.stepsLeft, chain: { cards: [...unit.chain.cards], cursor: unit.chain.cursor },
             hand: [...unit.hand], decks: decksOf(unit), cursor: unit.decks.cursor,
             alive: unit.alive, opacity: 1,

@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest"
 import { plainText, spansOf } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, allHalts, HEART, HeartCount, ITEMS,
-    MERGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, USABLES, UNSTABLE_THRUST,
+    ALL_CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, allHalts, HEART, HeartCount, ALL_ITEMS,
+    MERGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES, UNSTABLE_THRUST,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
@@ -16,9 +16,9 @@ const spans = (text: Text) => spansOf(text, mecardDisplay)
 const hasPicture = (text: Text): boolean => spansOf(text).some(span => span.kind === "svg")
 
 const ALL_TEXTS: readonly (readonly [string, Text])[] = [
-    ...CARDS.map(card => [card.name, card.description] as const),
-    ...ITEMS.map(item => [item.name, item.description] as const),
-    ...USABLES.map(usable => [usable.name, usable.description] as const),
+    ...ALL_CARDS.map(card => [card.name, card.description] as const),
+    ...ALL_ITEMS.map(item => [item.name, item.description] as const),
+    ...ALL_USABLES.map(usable => [usable.name, usable.description] as const),
     ...allHalts().map(type => [type.name, type.description] as const),
 ]
 
@@ -90,8 +90,8 @@ describe("explanationOf", () => {
 
     test("what has a description → its name and its description", () => {
         expect(plainText(explanationOf(THRUST) ?? "")).toBe(`${THRUST.name} : ${plainText(THRUST.description)}`)
-        expect(plainText(explanationOf(ITEMS[0]) ?? "")).toContain(plainText(ITEMS[0].description))
-        expect(plainText(explanationOf(USABLES[0]) ?? "")).toContain(plainText(USABLES[0].description))
+        expect(plainText(explanationOf(ALL_ITEMS[0]) ?? "")).toContain(plainText(ALL_ITEMS[0].description))
+        expect(plainText(explanationOf(ALL_USABLES[0]) ?? "")).toContain(plainText(ALL_USABLES[0].description))
         expect(plainText(explanationOf(RED_HEART) ?? "")).toContain(plainText(RED_HEART.description))
     })
 })

@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
+import type { Visual } from "../../../base/Visual"
 import type { Text } from "../../../../../../semantic"
 import type { UnitContext } from "../../../battle/Action"
 import { meters } from "../../../battle/words"
@@ -8,6 +8,7 @@ import { Bleeding, Fragility } from "../../../status/subs/Wounds"
 import { AbstractUsable } from "../AbstractUsable"
 import type { UsableOptions } from "../AbstractUsable"
 import { UNIT } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** How far the flasks of this file fly, in meters, before the range of the unit, and how wide they splash. */
 const FLASK_FLIGHT = 5
@@ -18,7 +19,7 @@ export class SplashFlask extends AbstractUsable {
 
 
     constructor(
-        name: string, icon: ImagePath, description: Text, options: UsableOptions,
+        name: string, icon: Visual, description: Text, options: UsableOptions,
 
         /** The status each unit it splashes gets. */
         public readonly make: () => Status,
@@ -37,7 +38,7 @@ export class SplashFlask extends AbstractUsable {
 }
 
 export const BLOOD_FLASK = new SplashFlask(
-    "Fiole de sang", "mecard/usables/fire_flask.png",
+    "Fiole de sang", visual("usables/fire_flask"),
     [
         "Lancée à ", meters(FLASK_FLIGHT), " × portée devant : chaque ", UNIT, " à ", meters(FLASK_SPLASH),
         " de l'impact gagne un round de saignement. 2 utilisations, rechargées à chaque combat.",
@@ -46,7 +47,7 @@ export const BLOOD_FLASK = new SplashFlask(
 )
 
 export const FRAGILITY_FLASK = new SplashFlask(
-    "Fiole de fragilité", "mecard/usables/glue_flask.png",
+    "Fiole de fragilité", visual("usables/glue_flask"),
     [
         "Lancée à ", meters(FLASK_FLIGHT), " × portée devant : chaque ", UNIT, " à ", meters(FLASK_SPLASH),
         " de l'impact devient fragile pendant 2 rounds.",

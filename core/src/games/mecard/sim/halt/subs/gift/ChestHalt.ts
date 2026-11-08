@@ -8,6 +8,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { cardShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The chest: a card among some, free. */
 export class ChestHalt extends CardGiftHalt {
@@ -37,9 +38,7 @@ export class ChestHalt extends CardGiftHalt {
 export const CHEST_HALT: HaltType = {
     id: "chest",
     name: "Coffre",
-    description: ["Une ", CARTE, " parmi trois, gratuite."],
-    code: "CO",
-    icon: "mecard/travel/chest/logo.png",
+    description: ["Une ", CARTE, " parmi trois, gratuite."],    icon: visual("travel/chest/logo", { letter: "CO" }),
     transition: DOOR_TRANSITION,
     create: run => new ChestHalt(run),
 }

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    allCards, FusionCard, ITEMS, loadRun, RED_HEART, Run, RUN_SAVE_VERSION, saveRun, splitDeck, USABLES,
+    allCards, FusionCard, ALL_ITEMS, loadRun, RED_HEART, Run, RUN_SAVE_VERSION, saveRun, splitDeck, ALL_USABLES,
 } from "@game/core/mecard"
 import type { RunSave } from "@game/core/mecard"
 
@@ -16,8 +16,8 @@ function furnished(): Run {
     const run = new Run(21)
     const [first, second] = run.heroes
     splitDeck(first, first.decks[0], run.rng)
-    run.giveItem(first, ITEMS[0])
-    run.giveUsable(first, USABLES[0])
+    run.giveItem(first, ALL_ITEMS[0])
+    run.giveUsable(first, ALL_USABLES[0])
     run.giveHeart(second, RED_HEART)
     second.hearts[0].isEmpty = true
     const fused = new FusionCard(allCards(second).slice(0, 2))

@@ -69,6 +69,9 @@ export const ELEMENT = new CardType<Element>("élément")
 /** A dose of a potion, for a card pouring it. */
 export const POTION = new CardType<Dose>("potion")
 
+/** What is not known: the type of a card standing for any card, pictured only. */
+export const SECRET = new CardType<unknown>("secret")
+
 /**
  * A piece of a machine: the cards it plays, and what it does to the body built from it. Whatever must be
  * drawn at random is drawn when it is read, with the chance given.

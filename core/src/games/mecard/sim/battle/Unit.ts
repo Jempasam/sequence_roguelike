@@ -24,6 +24,7 @@ import type {
 } from "./events"
 import type { Area } from "./Area"
 import type { Team } from "./Team"
+import type { Visual } from "../base/Visual"
 
 /** Who plans the chains of a unit. */
 export type Controller = "player"|"bot"
@@ -32,8 +33,8 @@ export type Controller = "player"|"bot"
 export interface UnitSpec {
     readonly name: string
 
-    /** Its picture, by its name among the sprites of the units, none by default: a body, a hazard. */
-    readonly sprite?: string|null
+    /** How it looks, none by default: a body, a hazard. */
+    readonly sprite?: Visual|null
 
     readonly team: Team
     readonly controller: Controller
@@ -236,8 +237,8 @@ export class Unit {
 
     public readonly name: string
 
-    /** Its picture, by its name among the sprites of the units, none for one with no picture. */
-    public readonly sprite: string|null
+    /** How it looks, none for one with no picture. */
+    public readonly sprite: Visual|null
 
     public readonly team: Team
 
@@ -275,6 +276,9 @@ export class Unit {
 
     /** What it reads its steps from this round: what it committed, once rewritten. */
     public chain = new CardChain()
+
+    /** The first card of the last tree of its chain it started playing, none before it plays any. */
+    public lastPlayed: Card|null = null
 
     /** The steps ready to play, the next one first, before what its chain has left to give. */
     public readonly steps: Action[] = []
@@ -390,6 +394,7 @@ export class Unit {
     public takeChain(chain: CardChain): void {
         this.chain.watcher = null
         this.chain = chain
+        this.lastPlayed = null
         chain.watcher = this.#watcher
         this.#watcher.changed()
     }
@@ -462,6 +467,7 @@ export class Unit {
     readonly #watcher: ChainWatcher = {
         activated: (first, last) => {
             const cards = this.chain.cards.slice(first, last + 1)
+            this.lastPlayed = cards[0] ?? null
             this.onActivate.notify({ unit: this, first, last, cards })
         },
         invalid: index => this.onCardInvalid.notify({ unit: this, index }),

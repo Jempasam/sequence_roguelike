@@ -1,16 +1,15 @@
 import type { Text } from "../../../../../semantic"
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import { HeartCount } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
-import { StatusType } from "../Status"
+import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
 /** How far a totem heals, in meters. */
 export const TOTEM_RADIUS = 1.5
 
 /** A healing totem. */
-export const HEALING = new StatusType("soins", rgba(0.5, 1, 0.5), "positive", level => new Healing(level))
+export const HEALING = new StatusType("soins", statusVisual("healing", 0.5, 1, 0.5), "positive", level => new Healing(level), { description: ["À la fin de chaque round, soigne les unités de son équipe autour de lui de ", STATUS_LEVEL, " demi-cœurs."] })
 
 /**
  * Healing: at the end of each round, it heals the units of its team around it, by as many halves of hearts as

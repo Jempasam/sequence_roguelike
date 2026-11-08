@@ -12,6 +12,7 @@ import { BaseStatus } from "../status/BaseStatus"
 import type { StatusType } from "../status/Status"
 
 import { HAZARD_TEXT } from "./subs/hazardText"
+import type { Visual } from "../base/Visual"
 
 /**
  * What a hazard does, held by the body it is: a status, plugged in and taken back as any, and kept with the
@@ -48,7 +49,7 @@ export abstract class HazardStatus extends BaseStatus {
 
 /** A hazard left in the arena: the body it is, lying on the ground, and what it does. */
 export interface HazardSpec {
-    readonly sprite: string
+    readonly sprite: Visual
     readonly name: string
 
     /** The ground it covers, where its body lies: its middle. */

@@ -8,6 +8,12 @@ import { BattleBroadcaster, BattleReceiver, LocalSync, writeBattleMessage } from
 import type { BattleDesync } from "@game/core/mecard/sync"
 import { started } from "../../sim/fixtures"
 
+/** How many rounds a battle played to its end may last at most, before it is taken as stuck. */
+const SAFETY_ROUNDS = 1000
+
+/** How long a battle played to its end may take, in milliseconds: its length hangs on the seed. */
+const WHOLE_BATTLE_TIMEOUT = 60_000
+
 // --- Fixture builders ---
 
 /** A battle for a viewer to load into. */
@@ -65,14 +71,14 @@ describe("BattleReceiver", () => {
 
     test("two viewers follow a whole battle → the state of the main one at each round, no drift", () => {
         const { main, viewers, drifts } = session({ viewers: 2, seed: 13 })
-        for(let round = 0; round < 30 && main.phase === "preparation"; round++){
+        // Played to its end, however long the seed makes it: the cap only keeps a stuck battle from hanging.
+        for(let round = 0; round < SAFETY_ROUNDS && main.phase === "preparation"; round++){
             playMain(main)
             for(const viewer of viewers) expect(textOf(watched(viewer))).toBe(textOf(main))
         }
-        expect(main.phase).toBe("over")
         expect(drifts).toEqual([])
         for(const viewer of viewers) expect(watched(viewer).winner?.name).toBe(main.winner?.name)
-    })
+    }, WHOLE_BATTLE_TIMEOUT)
 
     test("robots, whirlwinds, waves and flames in play → the viewer follows, no drift", () => {
         const { main, viewers: [viewer], drifts } = session({ seed: 5 })

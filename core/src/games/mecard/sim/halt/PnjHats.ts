@@ -1,4 +1,5 @@
-import type { ImagePath } from "../../../../engine/assets"
+import type { Visual } from "../base/Visual"
+import { visual } from "../base/Visual"
 
 /**
  * A hat a character may wear: its name on the buttons, its picture, and how large it is worn. Its colors
@@ -6,7 +7,7 @@ import type { ImagePath } from "../../../../engine/assets"
  */
 export interface PnjHatLook {
     readonly label: string
-    readonly path: ImagePath
+    readonly path: Visual
     readonly size: number
 
     /**
@@ -19,25 +20,25 @@ export interface PnjHatLook {
 
 /** The hats a character may wear, by their name: each named for what it is. */
 export const PNJ_HATS = {
-    coif: { label: "Coiffe", path: "mecard/pnj/hats/coif.png", size: 1.15 },
-    furToque: { label: "Toque de fourrure", path: "mecard/pnj/hats/fur-toque.png", size: 1.1 },
-    hood: { label: "Capuche", path: "mecard/pnj/hats/hood.png", size: 1.25 },
-    mitre: { label: "Mitre", path: "mecard/pnj/hats/mitre.png", size: 0.8 },
-    skullcap: { label: "Calotte", path: "mecard/pnj/hats/skullcap.png", size: 1.1 },
-    chefToque: { label: "Toque", path: "mecard/pnj/hats/chef-toque.png", size: 1.05 },
-    starCone: { label: "Cône étoilé", path: "mecard/pnj/hats/star-cone.png", size: 1.1 },
-    turban: { label: "Turban", path: "mecard/pnj/hats/turban.png", size: 1.15 },
-    featherToque: { label: "Toque à plume", path: "mecard/pnj/hats/feather-toque.png", size: 1.4 },
-    witchHat: { label: "Sorcière", path: "mecard/pnj/hats/witch-hat.png", size: 1.6 },
-    goggles: { label: "Lunettes", path: "mecard/pnj/hats/goggles.png", size: 1.1 },
-    beret: { label: "Béret", path: "mecard/pnj/hats/beret.png", size: 1.3 },
-    huntingHat: { label: "Chapeau de chasse", path: "mecard/pnj/hats/hunting-hat.png", size: 1.4 },
-    hornedCrown: { label: "Couronne cornue", path: "mecard/pnj/hats/horned-crown.png", size: 1.3 },
-    velvetToque: { label: "Toque de velours", path: "mecard/pnj/hats/velvet-toque.png", size: 1.1 },
-    topHat: { label: "Haut-de-forme", path: "mecard/pnj/hats/top-hat.png", size: 1.3 },
-    doctorHat: { label: "Chapeau de médecin", path: "mecard/pnj/hats/doctor-hat.png", size: 1.6 },
-    bicorne: { label: "Bicorne", path: "mecard/pnj/hats/bicorne.png", size: 1.3 },
-    skullHood: { label: "Cagoule au crâne", path: "mecard/pnj/hats/skull-hood.png", size: 1.25 },
+    coif: { label: "Coiffe", path: visual("pnj/hats/coif"), size: 1.15 },
+    furToque: { label: "Toque de fourrure", path: visual("pnj/hats/fur-toque"), size: 1.1 },
+    hood: { label: "Capuche", path: visual("pnj/hats/hood"), size: 1.25 },
+    mitre: { label: "Mitre", path: visual("pnj/hats/mitre"), size: 0.8 },
+    skullcap: { label: "Calotte", path: visual("pnj/hats/skullcap"), size: 1.1 },
+    chefToque: { label: "Toque", path: visual("pnj/hats/chef-toque"), size: 1.05 },
+    starCone: { label: "Cône étoilé", path: visual("pnj/hats/star-cone"), size: 1.1 },
+    turban: { label: "Turban", path: visual("pnj/hats/turban"), size: 1.15 },
+    featherToque: { label: "Toque à plume", path: visual("pnj/hats/feather-toque"), size: 1.4 },
+    witchHat: { label: "Sorcière", path: visual("pnj/hats/witch-hat"), size: 1.6 },
+    goggles: { label: "Lunettes", path: visual("pnj/hats/goggles"), size: 1.1 },
+    beret: { label: "Béret", path: visual("pnj/hats/beret"), size: 1.3 },
+    huntingHat: { label: "Chapeau de chasse", path: visual("pnj/hats/hunting-hat"), size: 1.4 },
+    hornedCrown: { label: "Couronne cornue", path: visual("pnj/hats/horned-crown"), size: 1.3 },
+    velvetToque: { label: "Toque de velours", path: visual("pnj/hats/velvet-toque"), size: 1.1 },
+    topHat: { label: "Haut-de-forme", path: visual("pnj/hats/top-hat"), size: 1.3 },
+    doctorHat: { label: "Chapeau de médecin", path: visual("pnj/hats/doctor-hat"), size: 1.6 },
+    bicorne: { label: "Bicorne", path: visual("pnj/hats/bicorne"), size: 1.3 },
+    skullHood: { label: "Cagoule au crâne", path: visual("pnj/hats/skull-hood"), size: 1.25 },
 } as const satisfies Readonly<Record<string, PnjHatLook>>
 
 /** The name of a hat of the characters. */
@@ -49,15 +50,15 @@ export type PnjHatName = keyof typeof PNJ_HATS
  * is the middle of the face, so what is drawn high or low in the picture sits so on the face.
  */
 export const PNJ_MASKS = {
-    domino: { label: "Domino", path: "mecard/pnj/masks/domino.png", size: 0.83 },
-    wolf: { label: "Loup", path: "mecard/pnj/masks/wolf.png", size: 0.83 },
-    venetian: { label: "Vénitien", path: "mecard/pnj/masks/venetian.png", size: 0.83 },
-    skull: { label: "Crâne", path: "mecard/pnj/masks/skull.png", size: 0.83 },
-    skeleton: { label: "Squelette", path: "mecard/pnj/masks/skeleton.png", size: 0.83 },
-    beard: { label: "Barbe", path: "mecard/pnj/masks/beard.png", size: 0.83 },
-    hookedNose: { label: "Nez crochu", path: "mecard/pnj/masks/hooked-nose.png", size: 0.83 },
-    sunglasses: { label: "Lunettes de soleil", path: "mecard/pnj/masks/sunglasses.png", size: 0.83 },
-    nerd: { label: "Lunettes d'intello", path: "mecard/pnj/masks/nerd.png", size: 0.83 },
+    domino: { label: "Domino", path: visual("pnj/masks/domino"), size: 0.83 },
+    wolf: { label: "Loup", path: visual("pnj/masks/wolf"), size: 0.83 },
+    venetian: { label: "Vénitien", path: visual("pnj/masks/venetian"), size: 0.83 },
+    skull: { label: "Crâne", path: visual("pnj/masks/skull"), size: 0.83 },
+    skeleton: { label: "Squelette", path: visual("pnj/masks/skeleton"), size: 0.83 },
+    beard: { label: "Barbe", path: visual("pnj/masks/beard"), size: 0.83 },
+    hookedNose: { label: "Nez crochu", path: visual("pnj/masks/hooked-nose"), size: 0.83 },
+    sunglasses: { label: "Lunettes de soleil", path: visual("pnj/masks/sunglasses"), size: 0.83 },
+    nerd: { label: "Lunettes d'intello", path: visual("pnj/masks/nerd"), size: 0.83 },
 } as const satisfies Readonly<Record<string, PnjHatLook>>
 
 /** The name of a mask of the characters. */
@@ -69,18 +70,18 @@ export type PnjMaskName = keyof typeof PNJ_MASKS
  * the anchor says. At size 0.85 the picture is as long as the line (244 of the painting).
  */
 export const PNJ_ITEMS = {
-    sword: { label: "Épée", path: "mecard/pnj/items/sword.png", size: 0.85, anchor: [0.171, 0.5] },
-    scepter: { label: "Sceptre d'or", path: "mecard/pnj/items/scepter.png", size: 0.85, anchor: [0.329, 0.5] },
-    pitchfork: { label: "Fourche", path: "mecard/pnj/items/pitchfork.png", size: 0.85, anchor: [0.303, 0.5] },
-    bow: { label: "Arc", path: "mecard/pnj/items/bow.png", size: 0.85, anchor: [0.5, 0.5] },
-    wrench: { label: "Clé à molette", path: "mecard/pnj/items/wrench.png", size: 0.85, anchor: [0.276, 0.5] },
-    hammer: { label: "Marteau", path: "mecard/pnj/items/hammer.png", size: 0.85, anchor: [0.224, 0.5] },
-    cleaver: { label: "Couteau de boucher", path: "mecard/pnj/items/cleaver.png", size: 0.85, anchor: [0.145, 0.5] },
-    demonFork: { label: "Fourche de démon", path: "mecard/pnj/items/demon-fork.png", size: 0.85, anchor: [0.25, 0.5] },
-    magicianWand: { label: "Baguette de magicien", path: "mecard/pnj/items/magician-wand.png", size: 0.85, anchor: [0.355, 0.5] },
-    witchWand: { label: "Baguette de sorcière", path: "mecard/pnj/items/witch-wand.png", size: 0.85, anchor: [0.276, 0.5] },
-    potion: { label: "Potion", path: "mecard/pnj/items/potion.png", size: 0.85, anchor: [0.539, 0.5] },
-    whip: { label: "Fouet", path: "mecard/pnj/items/whip.png", size: 0.85, anchor: [0.118, 0.5] },
+    sword: { label: "Épée", path: visual("pnj/items/sword"), size: 0.85, anchor: [0.171, 0.5] },
+    scepter: { label: "Sceptre d'or", path: visual("pnj/items/scepter"), size: 0.85, anchor: [0.329, 0.5] },
+    pitchfork: { label: "Fourche", path: visual("pnj/items/pitchfork"), size: 0.85, anchor: [0.303, 0.5] },
+    bow: { label: "Arc", path: visual("pnj/items/bow"), size: 0.85, anchor: [0.5, 0.5] },
+    wrench: { label: "Clé à molette", path: visual("pnj/items/wrench"), size: 0.85, anchor: [0.276, 0.5] },
+    hammer: { label: "Marteau", path: visual("pnj/items/hammer"), size: 0.85, anchor: [0.224, 0.5] },
+    cleaver: { label: "Couteau de boucher", path: visual("pnj/items/cleaver"), size: 0.85, anchor: [0.145, 0.5] },
+    demonFork: { label: "Fourche de démon", path: visual("pnj/items/demon-fork"), size: 0.85, anchor: [0.25, 0.5] },
+    magicianWand: { label: "Baguette de magicien", path: visual("pnj/items/magician-wand"), size: 0.85, anchor: [0.355, 0.5] },
+    witchWand: { label: "Baguette de sorcière", path: visual("pnj/items/witch-wand"), size: 0.85, anchor: [0.276, 0.5] },
+    potion: { label: "Potion", path: visual("pnj/items/potion"), size: 0.85, anchor: [0.539, 0.5] },
+    whip: { label: "Fouet", path: visual("pnj/items/whip"), size: 0.85, anchor: [0.118, 0.5] },
 } as const satisfies Readonly<Record<string, PnjHatLook>>
 
 /** The name of an object carried by the characters. */

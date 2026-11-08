@@ -1,7 +1,17 @@
-import type { Text } from "../../../../semantic"
-import { colored } from "../base/Rgba"
+import { replaceInText } from "../../../../semantic"
+import type { Semantic, Text } from "../../../../semantic"
+import { colored, rgba } from "../base/Rgba"
 import type { Rgba } from "../base/Rgba"
+import { Visual } from "../base/Visual"
 import type { UnitContext } from "../battle/Action"
+
+/** The look of a status, by the name of its icon among those of the statuses, such as `burn`: and the color of its name. */
+export function statusVisual(icon: string, r: number, g: number, b: number): Visual {
+    return new Visual({
+        visual: `statuses/${icon}`,
+        color: [r, g, b],
+    })
+}
 
 /** What a status is to the unit holding it: what water washes off is negative. */
 export type Polarity = "negative"|"positive"|"neutral"
@@ -19,7 +29,16 @@ export interface StatusTypeOptions {
 
     /** The kind it is a variant of, for what shows a kind whatever its variant. Itself by default. */
     readonly family?: StatusType
+
+    /**
+     * What it does, as a text for the player, {@link STATUS_LEVEL} standing for its level. Its family's by
+     * default, nothing for a family of none.
+     */
+    readonly description?: Text
 }
+
+/** The level of a status in its description, put there by the level it has when the description is read. */
+export const STATUS_LEVEL: Semantic = { toSemString: () => "X" }
 
 /**
  * A kind of status: a unit holds one status of each kind at most. Compared by reference, so a kind with
@@ -34,11 +53,14 @@ export class StatusType {
     /** Does a clone of a unit hold it too? */
     public readonly cloned: boolean
 
+    /** What it does, its level written {@link STATUS_LEVEL}. */
+    public readonly description: Text
+
     constructor(
         public readonly name: string,
 
-        /** The color its name is written in. */
-        public readonly color: Rgba,
+        /** How it looks: its icon, and the color its name is written in. */
+        public readonly visual: Visual,
 
         /** What it is to the unit holding it. */
         public readonly polarity: Polarity,
@@ -50,8 +72,20 @@ export class StatusType {
     ){
         this.family = options.family ?? this
         this.cloned = options.cloned ?? true
+        this.description = options.description ?? options.family?.description ?? []
     }
 
+    /** What it does for a status of a level: its description, the level put in the place of the token. */
+    public describe(level: number): Text {
+        return replaceInText(this.description, STATUS_LEVEL, level)
+    }
+
+
+    /** The color its name is written in: the one of its visual. */
+    public get color(): Rgba {
+        const [r, g, b] = this.visual.color
+        return rgba(r, g, b)
+    }
 
     public toString(): string { return this.name }
 
@@ -63,9 +97,9 @@ export class StatusType {
  * itself, only of its variants, which name it as their {@link StatusType.family}.
  */
 export function familyType(
-    name: string, color: Rgba, polarity: Polarity, options: StatusTypeOptions = {},
+    name: string, visual: Visual, polarity: Polarity, options: StatusTypeOptions = {},
 ): StatusType {
-    return new StatusType(name, color, polarity, () => {
+    return new StatusType(name, visual, polarity, () => {
         throw new Error(`"${name}" has variants: a status is made of one of them, never of it.`)
     }, options)
 }
@@ -84,6 +118,9 @@ export interface Status {
 
     /** What is left of it, or how much it stacked: a status of no level is gone. */
     readonly level: number
+
+    /** Told the new level each time it changes, by whoever holds the status: the battle. None when nobody listens. */
+    onLevel: ((level: number) => void)|null
 
     /** Make it of another level, and whatever follows from the level with it. */
     setLevel(level: number): void

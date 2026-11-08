@@ -13,7 +13,7 @@ import type { Card } from "../../sim/card/Card"
 
 import { statLines } from "../describe"
 import type { Draft } from "./Draft"
-import type { ImagePath } from "../../../../engine/assets"
+import type { Visual } from "../../sim/base/Visual"
 import { battleGrid, GAP, sideWidth } from "../hud/BattleGrid"
 import type { BattleGrid, UiRect } from "../hud/BattleGrid"
 import { CardFlight, flightSize } from "../hud/CardFlight"
@@ -24,7 +24,7 @@ import type { StripCard } from "../hud/ChainStrip"
 import { CardChain } from "../../sim/card/CardChain"
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { DetailBox } from "../hud/DetailBox"
-import { processRow, processText } from "../hud/ProcessView"
+import { processText, statusText, StatusProcessList } from "../hud/StatusProcessList"
 import { heartsRow, heartText } from "../hud/HeartView"
 import { HoverPanel } from "../hud/HoverPanel"
 import { TurnArrow } from "../hud/TurnArrow"
@@ -34,7 +34,7 @@ import { decksOf } from "./BattleScene"
 import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
 import { BagView, SLOT_SIZE } from "../hud/BagView"
 import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
-import { ThingView } from "../hud/ThingView"
+import { AbsItemIcon, THING_ICON_SIZE } from "../hud/AbsItemIcon"
 import type { Carried } from "../../sim/usable/Usable"
 import { described, usableText } from "../../sim/halt/subs/shown"
 import { withPicture } from "../hud/UnitPicture"
@@ -440,8 +440,7 @@ export class Hud {
             const full = members.length * (usable.charges ?? 1)
             const view = this.#thing(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
             const active = members.filter(entry => draft.used.has(entry.index)).length
-            view.lit = active > 0
-            view.active = active
+            view.activation = active > 0 ? String(active) : null
             view.spent = members.every(entry => entry.carried.spent)
             // A click uses one more of the stack, and once all that can be are used, none any more.
             view.onPick = () => {
@@ -456,7 +455,7 @@ export class Hud {
     }
 
     /** The usables of a belt as pictures, the same ones in one, their charges added. */
-    #usableViews(belt: readonly Carried[]): ThingView[] {
+    #usableViews(belt: readonly Carried[]): AbsItemIcon[] {
         return stacked(belt, carried => carried.usable).map(({ first, members }) => {
             const { usable } = first
             const left = members.reduce((sum, carried) => sum + carried.charges, 0)
@@ -466,8 +465,8 @@ export class Hud {
     }
 
     /** An item or a usable as its picture with its uses left, told on hover, as in the journey. */
-    #thing(icon: ImagePath, uses: string|null, told: Text): ThingView {
-        const view = new ThingView(this.theme, this.host.sprites, icon, uses)
+    #thing(icon: Visual, uses: string|null, told: Text): AbsItemIcon {
+        const view = new AbsItemIcon(this.theme, this.host.sprites, icon, uses ?? "", 1, THING_ICON_SIZE)
         view.onHover = over => this.showInfo(over ? told : null)
         return view
     }
@@ -505,7 +504,7 @@ export class Hud {
             column.add(this.#bag(this.#usableViews(unit.usables)), { align: "start" })
         }
         const shown = this.host.scene.of(unit)?.statuses ?? []
-        const statuses = [...unit.statuses.values()].filter(status => shown.includes(status.type))
+        const statuses = [...unit.statuses.values()].filter(status => shown.some(each => each.type === status.type))
         if(statuses.length > 0) column.add(this.#paragraph(["Statuts : ", ...joinText(statuses, ", ")], DIM_TEXT))
         return column
     }
@@ -537,16 +536,18 @@ export class Hud {
             const hearts = this.#hearts(unit)
             const crowded = unit.hearts.maxHearts > HEARTS_BESIDE_NAME
             if(!crowded) head.add(hearts)
-            const processes = shown?.processes ?? []
-            if(processes.length > 0){
-                const lit = scene.litProcess?.unit === unit ? scene.litProcess.process : null
-                head.add(processRow(this.theme, this.host.sprites, processes, (process, over) => {
+            const marks = new StatusProcessList(this.theme, this.host.sprites, scene, {
+                onStatusHover: (_unit, status, over) => {
+                    this.host.hoverUnit(unit, over)
+                    this.showInfo(over ? statusText(status) : null)
+                },
+                onProcessHover: (_unit, process, over) => {
                     this.host.hoverUnit(unit, over)
                     this.showInfo(over ? processText(process) : null)
-                }, lit))
-            }
-            const statuses = (shown?.statuses ?? []).join(", ")
-            if(statuses) head.add(this.#label(statuses, DIM_TEXT))
+                },
+            }, { direction: "row", align: "center" })
+            marks.unit = unit
+            if(marks.count > 0) head.add(marks)
             const block = new Box("column", { gap: 1 })
             block.add(head)
             if(crowded) block.add(hearts)

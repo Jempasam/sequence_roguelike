@@ -64,6 +64,11 @@ export class HeartRule {
         return null
     }
 
+    /** What the hearts of the kind do at the start of each battle, for the unit of their bar. Nothing by default. */
+    public onBattleStart(ctx: UnitContext): void {
+        void ctx
+    }
+
     /** Heal this heart, saying whether it was. None is, by default. */
     public heal(heart: Heart): boolean {
         void heart

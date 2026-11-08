@@ -133,7 +133,7 @@ export abstract class Container<Slot> extends Component {
      * then never hit, nor hovered, nor sent the pointer: a card offered as a choice is picked whole. No by
      * default, and only an interactive container takes it.
      */
-    protected get holdsPointer(): boolean {
+    public get holdsPointer(): boolean {
         return false
     }
 

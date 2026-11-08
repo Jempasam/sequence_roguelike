@@ -2,6 +2,7 @@ import { HeartCount } from "../../../battle/words"
 import type { PlugContext } from "../../../battle/Action"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How many hearts the amulet of the catalog heals at the end of each round. */
 const AMULET_HEAL = 1
@@ -14,7 +15,7 @@ export class Amulet extends AbstractItem {
         /** How many hearts it heals at the end of each round. */
         public readonly heal: number,
     ){
-        super("Amulette de vigueur", "mecard/items/amulet.png", ["Soigne ", new HeartCount(heal), " à la fin de chaque round."])
+        super("Amulette de vigueur", visual("items/amulet"), ["Soigne ", new HeartCount(heal), " à la fin de chaque round."])
     }
 
 

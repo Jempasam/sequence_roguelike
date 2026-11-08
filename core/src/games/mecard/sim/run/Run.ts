@@ -9,13 +9,11 @@ import type { Rgba } from "../base/Rgba"
 import { Arena } from "../battle/Arena"
 import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
-import { UNIT_RADIUS } from "../battle/Unit"
-import type { Pillar } from "../battle/Arena"
 import type { Unit } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import { BATTLE, BOSS, ELITE } from "../catalog/fights"
 import { FIRST_FLOOR } from "../catalog/floors"
-import { ITEMS } from "../catalog/index"
+import { LOOT_ITEMS } from "../catalog/index"
 import { STARTING_KITS } from "../catalog/kits"
 import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
@@ -40,7 +38,8 @@ import { Travel } from "../travel/Travel"
 import { Carried } from "../usable/Usable"
 import type { Usable } from "../usable/Usable"
 
-import { allyOf, firstDeck, HERO_COLOR, heroOf, merged, redHearts } from "./Hero"
+import { ARENA_SIZE, monsterStart, partyStarts, pillarsFor } from "./formation"
+import { allyOf, firstDeck, HERO_COLOR, heroOf, merged, recruitOf, redHearts } from "./Hero"
 import type { Hero } from "./Hero"
 import type { FightType } from "./PlaceType"
 import { inventedFusion, lootCard, lootCards } from "./offers"
@@ -93,33 +92,8 @@ export function rewardText(reward: Reward): Text {
 /** The color the name of the team of the monsters is written in. */
 const MONSTERS_COLOR: Rgba = rgba(0.95, 0.35, 0.3)
 
-/** The size of the arena, in meters. */
-export const ARENA_SIZE = 9
-
-/** The size of the square the units and the pillars start in, in meters, in the middle of the arena. */
-const FORMATION_SIZE = 7
-
-/** How far the square the units start in stands from the walls, in meters. */
-const FORMATION_INSET = (ARENA_SIZE - FORMATION_SIZE) / 2
-
-/** How many pillars each arena holds. */
-const PILLARS = 3
-
-/** The radius of a pillar, in meters. */
-const PILLAR_RADIUS = 0.45
-
-/** How far apart two pillars stand at least, center to center, in meters: room to walk between. */
-const PILLAR_SPACING = 2
-
-/** How far a pillar stands at least from where a unit starts, beyond touching it, in meters. */
-const PILLAR_CLEARANCE = 0.2
-
 /** How many rewards are offered after a won battle. */
 const REWARD_CHOICES = 3
-
-/** How many characters of the party stand in a row at the start of a battle, and how far apart, in meters. */
-const PARTY_ROW = 3
-const PARTY_SPACING = 2
 
 /** How much gold a run starts with. */
 const STARTING_GOLD = 30
@@ -345,8 +319,8 @@ export class Run {
      */
     public newBattle(): Battle {
         const monsters = this.#monsters()
-        const starts = this.#partyStarts()
-        const pillars = this.#pillars(starts)
+        const starts = partyStarts(this.heroes.length)
+        const pillars = pillarsFor(starts, this.rng)
         const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), this.rng.int(2 ** 31))
         this.#units.clear()
         this.heroes.forEach((hero, index) => {
@@ -524,10 +498,33 @@ export class Run {
 
     /** Tame a monster as an ally, at the end of the party. */
     public tame(monster: Monster): Hero {
-        const ally = allyOf(monster, this.#freeName(`${monster.name} allié`))
+        const ally = allyOf(monster, this.#freeName(monster.name))
         this.heroes.push(ally)
         this.heroJoined.notify(ally)
         return ally
+    }
+
+    /** Recruit a monster as a hero the players plan, at the end of the party. */
+    public recruit(monster: Monster): Hero {
+        const recruit = recruitOf(monster, this.#freeName(monster.name))
+        this.heroes.push(recruit)
+        this.heroJoined.notify(recruit)
+        return recruit
+    }
+
+    /**
+     * Graft a monster on a character of the party, as the mad doctor does with two: the monster joins as an
+     * ally, then the two are merged, standing where the character stood.
+     *
+     * @throws {@link Error} When the character is not in the party.
+     */
+    public graft(hero: Hero, monster: Monster): Hero {
+        if(!this.heroes.includes(hero)) throw new Error(`${hero.name} is not in the party.`)
+        const made = merged(hero, allyOf(monster, monster.name))
+        this.heroes.splice(this.heroes.indexOf(hero), 1, made)
+        this.heroLeft.notify(hero)
+        this.heroJoined.notify(made)
+        return made
     }
 
     /**
@@ -583,7 +580,7 @@ export class Run {
 
     /** What to choose from after a won fight: better after an elite or a boss. */
     #drawRewards(): Reward[] {
-        const item = (): Reward => ({ kind: "item", item: this.rng.pick(ITEMS) ?? ITEMS[0] })
+        const item = (): Reward => ({ kind: "item", item: this.rng.pick(LOOT_ITEMS) ?? LOOT_ITEMS[0] })
         const fusion = (): Reward => ({ kind: "card", card: inventedFusion(this.rng) })
         const fight = this.fight
         if(fight === ELITE) return [{ kind: "card", card: lootCard(this.rng) }, item(), fusion()]
@@ -602,53 +599,12 @@ export class Run {
         return free
     }
 
-    /**
-     * Where each character of the party starts: rows along the bottom of the formation, from the first, the
-     * characters of a row centered across it.
-     */
-    #partyStarts(): Vector2[] {
-        const count = this.heroes.length
-        return this.heroes.map((_, index) => {
-            const row = Math.floor(index / PARTY_ROW)
-            const inRow = Math.min(PARTY_ROW, count - row * PARTY_ROW)
-            const rank = index % PARTY_ROW
-            const x = ARENA_SIZE / 2 + (rank - (inRow - 1) / 2) * PARTY_SPACING
-            return new Vector2(x, FORMATION_INSET + FORMATION_SIZE - 0.5 - row)
-        })
-    }
-
-    /**
-     * The pillars of an arena, in the middle rows, away from where the units start: the top rows of the
-     * monsters, and where the party stands.
-     */
-    #pillars(starts: readonly Vector2[]): Pillar[] {
-        const pillars: Pillar[] = []
-        const clear = PILLAR_RADIUS + UNIT_RADIUS + PILLAR_CLEARANCE
-        while(pillars.length < PILLARS){
-            const x = FORMATION_INSET + 0.5 + this.rng.next() * (FORMATION_SIZE - 1)
-            const y = FORMATION_INSET + 2.5 + this.rng.next() * (FORMATION_SIZE - 5)
-            const center = new Vector2(x, y)
-            const crowded = pillars.some(pillar => pillar.center.distance(center) < PILLAR_SPACING)
-            const onStart = starts.some(start => start.distance(center) < clear)
-            if(!crowded && !onStart) pillars.push({ center, radius: PILLAR_RADIUS })
-        }
-        return pillars
-    }
-
     /** The monsters of the current place, those of the first fight of the map when it holds none. */
     #monsters(): readonly Monster[] {
         const { place, journey } = this.travel
         const fight = [place, ...journey.places].find(each => each?.monsters.length)
         return fight?.monsters ?? []
     }
-}
-
-/** Where a monster starts: every other meter along the top rows, from the second, in the middle of each. */
-function monsterStart(index: number): Vector2 {
-    const spot = 1 + index * 2
-    const x = spot % FORMATION_SIZE + 0.5
-    const y = Math.floor(spot / FORMATION_SIZE) + 0.5
-    return new Vector2(FORMATION_INSET + x, FORMATION_INSET + y)
 }
 
 /** Throw an error on, for a run nothing listens to the errors of. */

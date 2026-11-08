@@ -2,7 +2,7 @@ import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
-import { ITEMS, USABLES } from "../../../catalog/index"
+import { LOOT_ITEMS, LOOT_USABLES } from "../../../catalog/index"
 import type { Item } from "../../../item/Item"
 import { allCards } from "../../../run/Hero"
 import { distinct, lootCards } from "../../../run/offers"
@@ -16,6 +16,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described, usableText } from "../shown"
 import { CARTE, DECK, SUPPRESSION, UNIT } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** What an item costs at the shop, in gold. */
 export const ITEM_PRICE = 50
@@ -42,10 +43,10 @@ export type Good =
 export function shopGoods(rng: Rng): Good[] {
     return [
         ...lootCards(rng, SHOP_CARDS).map(card => ({ kind: "card", card, price: card.rarity.price }) as const),
-        ...distinct(rng, USABLES, SHOP_USABLES).map(usable => {
+        ...distinct(rng, LOOT_USABLES, SHOP_USABLES).map(usable => {
             return { kind: "usable", usable, price: USABLE_PRICE } as const
         }),
-        ...distinct(rng, ITEMS, SHOP_ITEMS).map(item => ({ kind: "item", item, price: ITEM_PRICE }) as const),
+        ...distinct(rng, LOOT_ITEMS, SHOP_ITEMS).map(item => ({ kind: "item", item, price: ITEM_PRICE }) as const),
         { kind: "removal", price: REMOVAL_PRICE },
     ]
 }
@@ -55,8 +56,8 @@ export function goodShown(good: Good, cost: number = good.price): Shown {
     const price = `${cost} or`
     switch(good.kind){
         case "card": return { cards: [good.card], text: concat(price, " · ", good.card, " : ", good.card.description) }
-        case "item": return { cards: [], text: concat(price, " · ", described(good.item, good.item)) }
-        case "usable": return { cards: [], text: concat(price, " · ", usableText(good.usable)) }
+        case "item": return { cards: [], items: [good.item], text: concat(price, " · ", described(good.item, good.item)) }
+        case "usable": return { cards: [], usables: [good.usable], text: concat(price, " · ", usableText(good.usable)) }
         case "removal": return { cards: [], text: [price, " · ", SUPPRESSION.as("Retire"), " une ", CARTE, " du ", DECK, " d'une ", UNIT, "."] }
         default: throw new Error("A good of an unknown kind is sold.")
     }
@@ -151,9 +152,7 @@ export class ShopHalt extends AbstractHalt {
 export const SHOP_HALT: HaltType = {
     id: "shop",
     name: "Magasin",
-    description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],
-    code: "MA",
-    icon: "mecard/travel/shop/logo.png",
+    description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],    icon: visual("travel/shop/logo", { letter: "MA" }),
     transition: DOOR_TRANSITION,
     create: run => new ShopHalt(run),
 }

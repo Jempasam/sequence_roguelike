@@ -1,3 +1,4 @@
+import { visual } from "../../base/Visual"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Battle } from "../../battle/Battle"
@@ -5,7 +6,7 @@ import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
-import { familyType } from "../../status/Status"
+import { familyType, statusVisual } from "../../status/Status"
 import { elementVariants } from "../../status/StatusVariants"
 
 import { ContactHazard } from "./ContactHazard"
@@ -15,7 +16,7 @@ import { HAZARD_TEXT } from "./hazardText"
 const BOULDER_HEARTS = 2
 
 /** A boulder. */
-export const ROCKY = familyType("rocher", HAZARD_TEXT, "neutral", { cloned: false })
+export const ROCKY = familyType("rocher", statusVisual("rocky", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Un corps qui le touche subit un élément." })
 
 /** The kinds of boulder, one for each element. */
 export const BOULDERS = elementVariants(
@@ -36,7 +37,7 @@ export function placeBoulder(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const hearts = Heart.many(RED_HEART, BOULDER_HEARTS + owner.stats.summon.value)
-    const body = battle.summon(owner, "rock", "Rocher", at, hearts, direction)
+    const body = battle.summon(owner, visual("units/rock"), "Rocher", at, hearts, direction)
     if(body) battle.applyStatus(body, BOULDERS.of(element), 1)
     return body
 }

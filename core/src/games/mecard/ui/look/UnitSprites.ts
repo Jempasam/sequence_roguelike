@@ -1,77 +1,93 @@
 import { Atlas } from "../../../../engine/atlas"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import type { Gpu, Sprite } from "../../../../engine/gpu"
-import { ITEMS, USABLES } from "../../sim/catalog"
+import { ALL_ITEMS, ALL_USABLES } from "../../sim/catalog"
+import type { StatusType } from "../../sim/status/Status"
+import { STATUS_FAMILIES, STATUS_TYPES } from "../../sim/status/statusTypes"
 import { Rope } from "../../../../engine/ui"
 import type { NineSlice } from "../../../../engine/ui"
 import { BagView } from "../hud/BagView"
 import { loadBoosterFrame } from "../hud/BoosterView"
+import type { Visual } from "../../sim/base/Visual"
 import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
+import { loadPictures } from "./visualPath"
 
 /** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
-const SPRITE_PATHS: Readonly<Record<string, ImagePath>> = {
-    lancer: "mecard/units/lancer.png",
-    swordsman: "mecard/units/swordsman.png",
-    archer: "mecard/units/archer.png",
-    brawler: "mecard/units/brawler.png",
-    artificer: "mecard/units/artificer.png",
-    mage: "mecard/units/mage.png",
-    assassin: "mecard/units/assassin.png",
-    apothecary: "mecard/units/apothecary.png",
-    puppeteer: "mecard/units/puppeteer.png",
-    goblin: "mecard/units/goblin.png",
-    monster_archer: "mecard/units/monster_archer.png",
-    brute: "mecard/units/brute.png",
-    hunter: "mecard/units/hunter.png",
-    berserker: "mecard/units/berserker.png",
-    golem: "mecard/units/golem.png",
-    troll: "mecard/units/troll.png",
-    megalaser: "mecard/units/megalaser.png",
-    devil: "mecard/units/devil.png",
-    mechanic: "mecard/units/mechanic.png",
-    bull: "mecard/units/bull.png",
-    kamikaze_robot: "mecard/units/kamikaze_robot.png",
-    fire_mage: "mecard/units/fire_mage.png",
-    elf_assassin: "mecard/units/elf_assassin.png",
-    goblin_rider: "mecard/units/goblin_rider.png",
-    stone_golem: "mecard/units/stone_golem.png",
-    slime: "mecard/units/slime.png",
-    elf_archer: "mecard/units/elf_archer.png",
-    ice_mage: "mecard/units/ice_mage.png",
-    imp: "mecard/units/imp.png",
-    wolf: "mecard/units/wolf.png",
-    bear: "mecard/units/bear.png",
-    hawk: "mecard/units/hawk.png",
-    salamander: "mecard/units/salamander.png",
-    otter: "mecard/units/otter.png",
-    boar: "mecard/units/boar.png",
-    robot: "mecard/units/robot.png",
-    tornado: "mecard/units/tornado.png",
-    wave: "mecard/units/wave.png",
-    rock: "mecard/units/rock.png",
-    pillar: "mecard/units/pillar.png",
-    mine: "mecard/units/mine.png",
-    shadow: "mecard/units/shadow.png",
-    coin: "mecard/units/coin.png",
-    log: "mecard/units/log.png",
-    stone: "mecard/units/stone.png",
-    barrel: "mecard/units/barrel.png",
-    totem: "mecard/units/totem.png",
-    thorns: "mecard/units/thorns.png",
-    bomb: "mecard/units/bomb.png",
-    fire: "mecard/units/fire.png",
-    puddle: "mecard/units/puddle.png",
-}
+export const SPRITE_KEYS: readonly string[] = [
+    "units/lancer",
+    "units/swordsman",
+    "units/archer",
+    "units/brawler",
+    "units/artificer",
+    "units/mage",
+    "units/assassin",
+    "units/apothecary",
+    "units/puppeteer",
+    "units/goblin",
+    "units/monster_archer",
+    "units/brute",
+    "units/hunter",
+    "units/berserker",
+    "units/golem",
+    "units/troll",
+    "units/megalaser",
+    "units/devil",
+    "units/mechanic",
+    "units/bull",
+    "units/kamikaze_robot",
+    "units/fire_mage",
+    "units/elf_assassin",
+    "units/goblin_rider",
+    "units/stone_golem",
+    "units/slime",
+    "units/elf_archer",
+    "units/ice_mage",
+    "units/imp",
+    "units/wolf",
+    "units/bear",
+    "units/hawk",
+    "units/salamander",
+    "units/otter",
+    "units/boar",
+    "units/robot",
+    "units/tornado",
+    "units/wave",
+    "units/rock",
+    "units/pillar",
+    "units/mine",
+    "units/shadow",
+    "units/spirit",
+    "units/coin",
+    "units/log",
+    "units/stone",
+    "units/barrel",
+    "units/totem",
+    "units/thorns",
+    "units/bomb",
+    "units/fire",
+    "units/puddle",
+]
 
-/** The icon of each process, 7 by 7, by the name the process gives. */
-const ICON_PATHS: Readonly<Record<string, ImagePath>> = {
-    strength: "mecard/processes/strength.png",
-    horse: "mecard/processes/horse.png",
-    haste: "mecard/processes/haste.png",
-    ritual: "mecard/processes/ritual.png",
-    shadow_link: "mecard/processes/shadow_link.png",
-    vanishing: "mecard/processes/vanishing.png",
-}
+/** The icons of the processes, 7 by 7, by the key their visual gives. */
+export const ICON_KEYS: readonly string[] = [
+    "processes/strength",
+    "processes/horse",
+    "processes/haste",
+    "processes/ritual",
+    "processes/shadow_link",
+    "processes/vanishing",
+    "processes/laser_link",
+    "processes/hook",
+    "processes/iron_chain",
+    "processes/spirit_anchor",
+]
+
+/** The pictures stretched between two units tied together, by the visual of their tie. */
+export const TETHER_KEYS: readonly string[] = [
+    "tethers/laser",
+    "tethers/grapple",
+    "tethers/iron_chain",
+]
 
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
 const CARD_BACK_PATHS: readonly ImagePath[] = [
@@ -90,21 +106,26 @@ export class UnitSprites {
 
 
     /** Is every sprite loaded? */
-    public get loaded(): boolean { return this.#sprites.size > 0 }
+    public get loaded(): boolean { return this.#ready }
 
     /** The sprite a unit names, none before the sprites are loaded, or for a name with none. */
-    public of(name: string|null): Sprite|null {
-        return name ? this.#sprites.get(name) ?? null : null
+    public of(visual: Visual|null): Sprite|null {
+        return visual ? this.#pictures.get(visual.visual) ?? null : null
     }
 
-    /** The icon of a process, by the name it gives, none before they are loaded or for an unknown one. */
-    public icon(name: string): Sprite|null {
-        return this.#icons.get(name) ?? null
+    /** The icon of a process, by the visual it gives, none before they are loaded or for an unknown one. */
+    public icon(visual: Visual|null): Sprite|null {
+        return visual ? this.#pictures.get(visual.visual) ?? null : null
     }
 
-    /** The picture of an item or a usable, by the path it gives, none before it is loaded. */
-    public thing(icon: ImagePath): Sprite|null {
-        return this.#things.get(icon) ?? null
+    /** The icon of a status, shared by the variants of its family, none before they are loaded. */
+    public statusIcon(type: StatusType): Sprite|null {
+        return this.#pictures.get(type.visual.visual) ?? null
+    }
+
+    /** The picture of an item or a usable, by its visual, none before it is loaded. */
+    public thing(icon: Visual): Sprite|null {
+        return this.#pictures.get(icon.visual) ?? null
     }
 
     /** The back of the cards of a deck, by its place among the decks, none before it is loaded. */
@@ -142,6 +163,17 @@ export class UnitSprites {
         return this.#rope
     }
 
+    /** What is stretched between two units tied together, by the visual of the tie, none before it is loaded. */
+    public tether(visual: Visual): Rope|null {
+        const known = this.#tethers.get(visual.visual)
+        if(known) return known
+        const picture = this.#pictures.get(visual.visual)
+        if(!picture) return null
+        const rope = new Rope(picture)
+        this.#tethers.set(visual.visual, rope)
+        return rope
+    }
+
     /** Call something once the sprites are loaded: at once when they are already. */
     public whenLoaded(listener: () => void): void {
         if(this.loaded) listener()
@@ -154,39 +186,35 @@ export class UnitSprites {
      * @throws {@link AssetError} When a picture cannot be loaded.
      */
     public async load(gpu: Gpu, assets: Assets): Promise<void> {
-        const named = Object.entries(SPRITE_PATHS)
-        const icons = Object.entries(ICON_PATHS)
-        const paths = [...named, ...icons].map(([, path]) => path)
-        const others = [...CARD_BACK_PATHS, INVALID_CARD_PATH]
-        const things = [...new Set([...ITEMS, ...USABLES].map(thing => thing.icon))]
-        const all = [...paths, ...others, ...things, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
-        const [pictures, bag, booster] = await Promise.all([
-            Promise.all(all.map(path => assets.image(path))),
+        const statuses = [...STATUS_TYPES, ...STATUS_FAMILIES].map(type => type.visual.visual)
+        const things = [...ALL_ITEMS, ...ALL_USABLES].map(thing => thing.icon.visual)
+        const keys = [...new Set([...SPRITE_KEYS, ...ICON_KEYS, ...TETHER_KEYS, ...statuses, ...things])]
+        const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
+        const [named, fixedPictures, bag, booster] = await Promise.all([
+            loadPictures(assets, keys),
+            Promise.all(fixed.map(path => assets.image(path))),
             BagView.loadFrame(gpu, assets),
             loadBoosterFrame(gpu, assets),
         ])
         this.#bag = bag
         this.#booster = booster
         const atlas = new Atlas(gpu, { initialSize: 64 })
-        const entries = atlas.addAll(pictures.map(pixels => ({ pixels })))
-        things.forEach((path, index) => {
-            this.#things.set(path, atlas.sprite(entries[paths.length + others.length + index]))
-        })
-        named.forEach(([name], index) => this.#sprites.set(name, atlas.sprite(entries[index])))
-        icons.forEach(([name], index) => this.#icons.set(name, atlas.sprite(entries[named.length + index])))
-        const backs = entries.slice(paths.length, paths.length + CARD_BACK_PATHS.length)
-        this.#cardBacks = backs.map(entry => atlas.sprite(entry))
-        this.#invalidCard = atlas.sprite(entries[paths.length + CARD_BACK_PATHS.length])
-        this.#paper = atlas.sprite(entries[all.length - 3])
-        this.#rope = new Rope(atlas.sprite(entries[all.length - 2]))
-        this.#shade = atlas.sprite(entries[all.length - 1])
+        const entries = atlas.addAll([...named.map(({ pixels }) => ({ pixels })), ...fixedPictures.map(pixels => ({ pixels }))])
+        named.forEach(({ key }, index) => this.#pictures.set(key, atlas.sprite(entries[index])))
+        const rest = entries.slice(named.length)
+        this.#cardBacks = rest.slice(0, CARD_BACK_PATHS.length).map(entry => atlas.sprite(entry))
+        this.#invalidCard = atlas.sprite(rest[CARD_BACK_PATHS.length])
+        this.#paper = atlas.sprite(rest[rest.length - 3])
+        this.#rope = new Rope(atlas.sprite(rest[rest.length - 2]))
+        this.#shade = atlas.sprite(rest[rest.length - 1])
+        this.#ready = true
         for(const listener of this.#listeners.splice(0)) listener()
     }
 
 
-    readonly #sprites = new Map<string, Sprite>()
-    readonly #icons = new Map<string, Sprite>()
-    readonly #things = new Map<ImagePath, Sprite>()
+    readonly #pictures = new Map<string, Sprite>()
+    readonly #tethers = new Map<string, Rope>()
+    #ready = false
     readonly #listeners: (() => void)[] = []
     #cardBacks: readonly Sprite[] = []
     #invalidCard: Sprite|null = null

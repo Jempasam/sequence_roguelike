@@ -12,10 +12,13 @@ import {
 } from "../item/subs"
 
 /** Every item, for the loot. */
-export const ITEMS: readonly Item[] = [
+export const ALL_ITEMS: readonly Item[] = [
     WHETSTONE, BOOTS, FANG, SPYGLASS, BAG, SATCHEL, GRIMOIRE, AMULET, SCOPE, SLING, MED_KIT, DOLL, ALEMBIC,
     BOTTLE_BAG, DODGE_SCEPTER, POTION_BAG, ELEMENT_BAG, TACTICS_BOOK,
     STRENGTH_BELT, DEATH_BELT, BACK_EYES, TORERO_CAPE, SCARY_MASK, STICKY_SOLES, MAGNET, CHIPPED_BLADE, DEMON_FANG,
     ROSARY, HOURGLASS, GLASS_CORE, UNSTABLE_REACTOR, BLOOD_PACT, GEAR, ECHO_ITEM, FISHER_GLOVE, CELL, LEASH,
     SUMMON_HEART,
 ]
+
+/** The items found as loot: all of them for now. */
+export const LOOT_ITEMS: readonly Item[] = ALL_ITEMS

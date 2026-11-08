@@ -6,15 +6,16 @@ import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
-import { familyType } from "../../status/Status"
+import { familyType, statusVisual } from "../../status/Status"
 import { elementVariants } from "../../status/StatusVariants"
 import type { ElementType } from "../../status/StatusVariants"
 import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
+import { visual } from "../../base/Visual"
 
 /** Ground on fire. */
-export const BURNING_GROUND = familyType("sol en feu", HAZARD_TEXT, "neutral", { cloned: false })
+export const BURNING_GROUND = familyType("sol en feu", statusVisual("burning_ground", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Chaque unité qui joue un pas dessus subit le négatif d'un élément." })
 
 /** The kinds of ground on fire, one for each element. */
 export const BURNING_GROUNDS = elementVariants(
@@ -51,7 +52,7 @@ export function placeBurningGround(
     battle: Battle, owner: Unit, zone: Area, rounds: number, element: Element,
 ): Unit|null {
     return placeHazard(battle, owner, {
-        sprite: "fire", name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
+        sprite: visual("units/fire"), name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
         status: { type: BURNING_GROUNDS.of(element), level: 1 },
     })
 }

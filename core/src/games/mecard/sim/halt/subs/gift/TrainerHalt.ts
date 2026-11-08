@@ -1,9 +1,9 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
-import { COMMON_MONSTERS } from "../../../catalog/monsters"
+import { LOOT_MONSTERS } from "../../../catalog/monsters"
 import type { Monster } from "../../../catalog/monsters"
-import { PETS } from "../../../catalog/pets"
+import { LOOT_PETS } from "../../../catalog/pets"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
@@ -12,10 +12,11 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { CARTE, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The monsters a trainer offers as allies. */
 export function trainerMonsters(rng: Rng): Monster[] {
-    return [...distinct(rng, PETS, INVENTED_COUNTS - 1), ...distinct(rng, COMMON_MONSTERS, 1)]
+    return [...distinct(rng, LOOT_PETS, INVENTED_COUNTS - 1), ...distinct(rng, LOOT_MONSTERS, 1)]
 }
 
 /** The trainer: a monster among some joins the party, played by a bot. */
@@ -56,9 +57,7 @@ export class TrainerHalt extends AbstractHalt {
 export const TRAINER_HALT: HaltType = {
     id: "trainer",
     name: "Dresseur",
-    description: "Un allié parmi deux pets et un monstre, joué par un bot.",
-    code: "DR",
-    icon: "mecard/travel/trainer/logo.png",
+    description: "Un allié parmi deux pets et un monstre, joué par un bot.",    icon: visual("travel/trainer/logo", { letter: "DR" }),
     transition: DOOR_TRANSITION,
     create: run => new TrainerHalt(run),
 }

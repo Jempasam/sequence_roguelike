@@ -1,5 +1,6 @@
 import { AssetError } from "../../../../engine/assets"
-import type { Assets, ImagePath, LayeredImagePath } from "../../../../engine/assets"
+import type { Assets, LayeredImagePath } from "../../../../engine/assets"
+import type { Visual } from "../../sim/base/Visual"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import {
@@ -35,7 +36,7 @@ import { cardsOption, heroOption, unitHead } from "../hud/ChoiceOptions"
 import { BagView } from "../hud/BagView"
 import { boosterView } from "../hud/BoosterView"
 import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
-import { ThingView } from "../hud/ThingView"
+import { AbsItemIcon, THING_ICON_SIZE } from "../hud/AbsItemIcon"
 import type { Item } from "../../sim/item/Item"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
@@ -1067,15 +1068,15 @@ export class TravelScreen {
     }
 
     /** Items as pictures, the same ones in one with their count. */
-    #itemViews(items: readonly Item[]): ThingView[] {
+    #itemViews(items: readonly Item[]): AbsItemIcon[] {
         return stacked(items, item => item).map(({ first, members }) => {
             return this.#thingView(first.icon, countText(members.length), countTold(described(first, first), members.length))
         })
     }
 
     /** An item or a usable, as its picture with its uses left, lit and told on hover. */
-    #thingView(icon: ImagePath, uses: string|null, told: Text): ThingView {
-        const view = new ThingView(this.theme, this.sprites, icon, uses)
+    #thingView(icon: Visual, uses: string|null, told: Text): AbsItemIcon {
+        const view = new AbsItemIcon(this.theme, this.sprites, icon, uses ?? "", 1, THING_ICON_SIZE)
         view.onHover = over => this.#tell(over ? told : null)
         return view
     }

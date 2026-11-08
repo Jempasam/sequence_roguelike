@@ -1,16 +1,15 @@
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { frailest } from "../../battle/Unit"
 import type { Unit } from "../../battle/Unit"
 import { RoundStatus } from "../RoundStatus"
-import { StatusType } from "../Status"
+import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
 /** How far the unit goes on, in meters, before its agility. */
 export const BLOODLUST_STRIDE = 0.7
 
 /** A bloodlust: the unit goes on toward whoever is weakest. */
-export const BLOODLUST = new StatusType("soif de sang", rgba(0.85, 0.1, 0.2), "positive", level => new Bloodlust(level))
+export const BLOODLUST = new StatusType("soif de sang", statusVisual("bloodlust", 0.85, 0.1, 0.2), "positive", level => new Bloodlust(level), { description: ["Un pas qui rapproche de l'ennemi le plus fragile va une foulée plus loin, pendant ", STATUS_LEVEL, " rounds."] })
 
 /** Thirsting for blood: a step of the unit bringing it closer to the frailest enemy goes a stride further. */
 export class Bloodlust extends RoundStatus {

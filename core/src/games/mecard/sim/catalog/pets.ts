@@ -14,6 +14,7 @@ import { CONJURATION, SMALL_SPELL } from "../card/subs/spell/ElementActions"
 import { FIRE, WATER } from "../card/subs/spell/ElementCard"
 import { monster } from "./monsters"
 import type { Monster } from "./monsters"
+import { visual } from "../base/Visual"
 
 /**
  * A pet: a monster of a trainer, tamed as an ally. Defined as the monsters are, but kept apart, so
@@ -23,7 +24,7 @@ export type Pet = Monster
 
 /** The wolves: they come fast, bite, and back off. */
 export const WOLF = monster({
-    name: "Loup", sprite: "wolf", hearts: 5, draw: 3,
+    name: "Loup", sprite: visual("units/wolf"), hearts: 5, draw: 3,
     cards: [
         PATH_AIM, STEP, DAGGER,
         PATH_AIM, STEP, THRUST,
@@ -33,7 +34,7 @@ export const WOLF = monster({
 
 /** The bears: sturdy, slow, and blows all around. */
 export const BEAR = monster({
-    name: "Ours", sprite: "bear", hearts: 10, draw: 3,
+    name: "Ours", sprite: visual("units/bear"), hearts: 10, draw: 3,
     cards: [
         PATH_AIM, STEP, WAIT,
         PATH_AIM, STEP, SWEEP,
@@ -43,7 +44,7 @@ export const BEAR = monster({
 
 /** The hawks: they shoot from afar and never stay in place. */
 export const HAWK = monster({
-    name: "Faucon", sprite: "hawk", hearts: 3, draw: 3,
+    name: "Faucon", sprite: visual("units/hawk"), hearts: 3, draw: 3,
     cards: [
         AIM, SHOT, SIDESTEP,
         AIM, BACK_DASH, SHOT,
@@ -53,7 +54,7 @@ export const HAWK = monster({
 
 /** The salamanders: sparks of fire, and a step aside. */
 export const SALAMANDER = monster({
-    name: "Salamandre", sprite: "salamander", hearts: 4, draw: 3,
+    name: "Salamandre", sprite: visual("units/salamander"), hearts: 4, draw: 3,
     cards: [
         AIM, SMALL_SPELL, FIRE,
         SIDESTEP, AIM, SHOT,
@@ -63,7 +64,7 @@ export const SALAMANDER = monster({
 
 /** The otters: water on whoever comes close, then a sweep of the tail. */
 export const OTTER = monster({
-    name: "Loutre", sprite: "otter", hearts: 5, draw: 3,
+    name: "Loutre", sprite: visual("units/otter"), hearts: 5, draw: 3,
     cards: [
         AIM, SMALL_SPELL, WATER,
         PATH_AIM, STEP, SWEEP,
@@ -73,7 +74,7 @@ export const OTTER = monster({
 
 /** The boars: a fit of rage at every round, and slashes after it. */
 export const BOAR = monster({
-    name: "Sanglier", sprite: "boar", hearts: 7, draw: 3,
+    name: "Sanglier", sprite: visual("units/boar"), hearts: 7, draw: 3,
     cards: [
         RAGE_FIT, STEP, SLASH,
         PATH_AIM, STEP, SLASH,
@@ -82,4 +83,7 @@ export const BOAR = monster({
 })
 
 /** Every pet a trainer may offer. */
-export const PETS: readonly Pet[] = [WOLF, BEAR, HAWK, SALAMANDER, OTTER, BOAR]
+export const ALL_PETS: readonly Pet[] = [WOLF, BEAR, HAWK, SALAMANDER, OTTER, BOAR]
+
+/** The pets a trainer offers: all of them for now. */
+export const LOOT_PETS: readonly Pet[] = ALL_PETS

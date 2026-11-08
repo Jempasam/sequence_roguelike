@@ -7,6 +7,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { UNIT } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The mad doctor: two characters of the party merged into one. */
 export class MadDoctorHalt extends AbstractHalt {
@@ -50,9 +51,7 @@ export class MadDoctorHalt extends AbstractHalt {
 export const MAD_DOCTOR_HALT: HaltType = {
     id: "madDoctor",
     name: "Docteur Fou",
-    description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],
-    code: "DF",
-    icon: "mecard/travel/mad-doctor/logo.png",
+    description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],    icon: visual("travel/mad-doctor/logo", { letter: "DF" }),
     transition: DOOR_TRANSITION,
     create: run => new MadDoctorHalt(run),
 }

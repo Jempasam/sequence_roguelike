@@ -5,6 +5,7 @@ import type { Card } from "../card/Card"
 import type { Heart } from "../heart/Heart"
 import type { HeartKind } from "../heart/HeartKind"
 import type { Process } from "../process/Process"
+import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
 
 import type { Indicator, Pose } from "./Action"
@@ -100,10 +101,28 @@ export interface StatusSignal {
     readonly type: StatusType
 }
 
+/** A status of a unit that went to another level. */
+export interface StatusLevelSignal extends StatusSignal {
+    readonly level: number
+}
+
 /** A process started for a unit, or ended. */
 export interface ProcessSignal {
     readonly unit: Unit
     readonly process: Process
+}
+
+/** Two units tied together for a while, or untied: a laser, a chain, a hook between them. */
+export interface TetherSignal {
+    /** The tie, the same object when tied and untied. */
+    readonly tether: Tether
+}
+
+/** A tie between two units, and how it looks. */
+export interface Tether {
+    readonly from: Unit
+    readonly to: Unit
+    readonly visual: Visual
 }
 
 /** A modifier added to a stat of a unit, or taken back. */
@@ -195,10 +214,13 @@ export class BattleSignals {
     /** A unit left the battle for good: a clone vanishing, a hazard gone off. */
     public readonly vanished: Observable<UnitSignal>
 
-    public readonly statusAdded: Observable<StatusSignal>
+    public readonly statusAdded: Observable<StatusLevelSignal>
     public readonly statusRemoved: Observable<StatusSignal>
+    public readonly statusLeveled: Observable<StatusLevelSignal>
     public readonly processStarted: Observable<ProcessSignal>
     public readonly processEnded: Observable<ProcessSignal>
+    public readonly tethered: Observable<TetherSignal>
+    public readonly untethered: Observable<TetherSignal>
     public readonly modifierAdded: Observable<ModifierSignal>
     public readonly modifierRemoved: Observable<ModifierSignal>
 
@@ -241,8 +263,11 @@ export class BattleSignals {
         this.vanished = signal()
         this.statusAdded = signal()
         this.statusRemoved = signal()
+        this.statusLeveled = signal()
         this.processStarted = signal()
         this.processEnded = signal()
+        this.tethered = signal()
+        this.untethered = signal()
         this.modifierAdded = signal()
         this.modifierRemoved = signal()
         this.effect = signal()

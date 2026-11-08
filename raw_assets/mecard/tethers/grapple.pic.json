@@ -1,0 +1,18 @@
+{
+  "palette": [
+    "#a07840",
+    "#6e5028"
+  ],
+  "pixels": {
+    "materials": [
+      ".01..",
+      "..01.",
+      ".10..",
+      ".01..",
+      "..01.",
+      ".10.."
+    ]
+  },
+  "filters": ["auto_depth"],
+  "render": { "preset": "simple", "light": 135 }
+}

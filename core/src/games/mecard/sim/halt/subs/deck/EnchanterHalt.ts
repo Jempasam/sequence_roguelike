@@ -17,6 +17,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { cardShown, fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /**
  * The order an enchantment and a card of a deck fuse in: the enchantment first when it takes the card,
@@ -123,9 +124,7 @@ export class EnchanterHalt extends AbstractHalt {
 export const ENCHANTER_HALT: HaltType = {
     id: "enchanter",
     name: "Enchanteur",
-    description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],
-    code: "EN",
-    icon: "mecard/travel/enchanter/logo.png",
+    description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],    icon: visual("travel/enchanter/logo", { letter: "EN" }),
     transition: DOOR_TRANSITION,
     create: run => new EnchanterHalt(run),
 }

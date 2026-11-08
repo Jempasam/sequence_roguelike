@@ -11,6 +11,7 @@ import { shoveNow } from "../../../card/subs/tools/shoving"
 import { WAIT } from "../../../card/subs/movement/Wait"
 
 import { AbstractItem } from "../AbstractItem"
+import { visual } from "../../../base/Visual"
 
 /** How far from the unit an attacker must stand behind it, in angle, to be seen by the eyes in the back: the cosine of 130°. */
 const BEHIND_COS = Math.cos(130 * Math.PI / 180)
@@ -37,7 +38,7 @@ export class BackEyes extends AbstractItem {
 
 
     constructor(){
-        super("Yeux dans le dos", "mecard/items/scope.png", [
+        super("Yeux dans le dos", visual("items/scope"), [
             "Frappée par une ", UNIT, " qui est derrière elle (plus de 130° de son avant), l'", UNIT, " se retourne.",
         ])
     }
@@ -58,7 +59,7 @@ export class ToreroCape extends AbstractItem {
 
 
     constructor(){
-        super("Cape de torero", "mecard/items/doll.png", [
+        super("Cape de torero", visual("items/doll"), [
             "Étourdit chaque ", UNIT, " qui traverse son corps, ou passe à moins de ", meters(CAPE_REACH),
             ", en se déplaçant d'elle-même : dash, charge, blink.",
         ])
@@ -86,7 +87,7 @@ export class ScaryMask extends AbstractItem {
 
 
     constructor(){
-        super("Masque effrayant", "mecard/items/bag.png", [
+        super("Masque effrayant", visual("items/bag"), [
             "Au début de chaque round, les ", UNIT.as("unités"), " à ", meters(MASK_RADIUS),
             " autour lui tournent le dos.",
         ])
@@ -110,7 +111,7 @@ export class StickySoles extends AbstractItem {
 
 
     constructor(){
-        super("Semelles collantes", "mecard/items/boots.png", [
+        super("Semelles collantes", visual("items/boots"), [
             "Les déplacements que d'autres lui imposent sont divisés par ", String(SOLES_DIVISOR), ".",
         ])
     }
@@ -130,7 +131,7 @@ export class Magnet extends AbstractItem {
 
 
     constructor(){
-        super("Aimant", "mecard/items/alembic.png", [
+        super("Aimant", visual("items/alembic"), [
             "Au début de chaque round, tire de ", meters(MAGNET_PULL), " vers lui chaque ", UNIT, " à ",
             meters(MAGNET_RADIUS), ". Aucun dégât.",
         ])
@@ -154,7 +155,7 @@ export class ChippedBlade extends AbstractItem {
 
 
     constructor(){
-        super("Lame ébréchée", "mecard/items/whetstone.png", [
+        super("Lame ébréchée", visual("items/whetstone"), [
             "La première ", UNIT, " touchée par un coup au corps à corps gagne un round de saignement.",
         ])
     }
@@ -182,7 +183,7 @@ export class DemonFang extends AbstractItem {
 
 
     constructor(){
-        super("Croc démoniaque", "mecard/items/fang.png", [
+        super("Croc démoniaque", visual("items/fang"), [
             "Chaque ", UNIT, " tuée donne un round d'énergie démoniaque.",
         ])
     }
@@ -200,7 +201,7 @@ export class Rosary extends AbstractItem {
 
 
     constructor(){
-        super("Chapelet", "mecard/items/grimoire.png", ["Chaque Attendre donne un round de concentration."])
+        super("Chapelet", visual("items/grimoire"), ["Chaque Attendre donne un round de concentration."])
     }
 
 

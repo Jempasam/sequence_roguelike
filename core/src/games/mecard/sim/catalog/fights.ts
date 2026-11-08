@@ -1,3 +1,4 @@
+import { visual } from "../base/Visual"
 import { CAVE_TRANSITION } from "../halt/transitions"
 import type { FightType } from "../run/PlaceType"
 
@@ -6,8 +7,7 @@ export const BATTLE: FightType = {
     id: "battle",
     name: "Combat",
     description: "Des monstres. Une récompense et de l'or si tu gagnes.",
-    code: "C",
-    icon: null,
+    icon: visual("travel/fight/battle", { letter: "C" }),
     transition: CAVE_TRANSITION,
     gold: 15,
 }
@@ -17,8 +17,7 @@ export const ELITE: FightType = {
     id: "elite",
     name: "Élite",
     description: "Des monstres plus nombreux. Une meilleure récompense, plus d'or.",
-    code: "É",
-    icon: null,
+    icon: visual("travel/fight/elite", { letter: "É" }),
     transition: CAVE_TRANSITION,
     gold: 35,
 }
@@ -28,11 +27,10 @@ export const BOSS: FightType = {
     id: "boss",
     name: "Boss",
     description: "Le gardien de l'étage. Le vaincre ouvre ses sorties.",
-    code: "B",
-    icon: null,
+    icon: visual("travel/fight/boss", { letter: "B" }),
     transition: CAVE_TRANSITION,
     gold: 80,
 }
 
 /** The sorts of fight. */
-export const FIGHTS: readonly FightType[] = [BATTLE, ELITE, BOSS]
+export const ALL_FIGHTS: readonly FightType[] = [BATTLE, ELITE, BOSS]

@@ -1,4 +1,4 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
+import type { Visual } from "../../../base/Visual"
 import type { UnitContext } from "../../../battle/Action"
 import { gives } from "../../../card/Card"
 import { ELEMENT, POTION } from "../../../card/CardType"
@@ -6,6 +6,7 @@ import type { CardType } from "../../../card/CardType"
 
 import { DrawnItem } from "./DrawnItem"
 import { CARTE, DECK } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /**
  * A bag of a type of card: after each draw, when the hand holds no card giving the type, one drawn at
@@ -15,7 +16,7 @@ export class CardBag extends DrawnItem {
 
 
     constructor(
-        name: string, icon: ImagePath,
+        name: string, icon: Visual,
 
         /** The type of the cards it fetches: what they give. */
         public readonly type: CardType<unknown>,
@@ -40,5 +41,5 @@ export class CardBag extends DrawnItem {
     }
 }
 
-export const POTION_BAG = new CardBag("Sac de potions", "mecard/items/potion_bag.png", POTION)
-export const ELEMENT_BAG = new CardBag("Sac d'éléments", "mecard/items/element_bag.png", ELEMENT)
+export const POTION_BAG = new CardBag("Sac de potions", visual("items/potion_bag"), POTION)
+export const ELEMENT_BAG = new CardBag("Sac d'éléments", visual("items/element_bag"), ELEMENT)

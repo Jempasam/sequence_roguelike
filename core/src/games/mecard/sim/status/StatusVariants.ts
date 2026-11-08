@@ -56,7 +56,7 @@ class DoseTypeOf extends StatusType implements DoseType {
     constructor(
         family: StatusType, name: string, public readonly dose: Dose, make: VariantMaker<DoseType>,
     ){
-        super(name, family.color, family.polarity, (level, type) => make(type as DoseTypeOf, level), {
+        super(name, family.visual, family.polarity, (level, type) => make(type as DoseTypeOf, level), {
             family, cloned: family.cloned,
         })
     }
@@ -67,7 +67,7 @@ class ElementTypeOf extends StatusType implements ElementType {
     constructor(
         family: StatusType, name: string, public readonly element: Element, make: VariantMaker<ElementType>,
     ){
-        super(name, family.color, family.polarity, (level, type) => make(type as ElementTypeOf, level), {
+        super(name, family.visual, family.polarity, (level, type) => make(type as ElementTypeOf, level), {
             family, cloned: family.cloned,
         })
     }

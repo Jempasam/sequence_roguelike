@@ -9,6 +9,7 @@ import { AbstractHalt } from "../AbstractHalt"
 import { merchantItems } from "../gift/MerchantHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
 import { described } from "../shown"
+import { visual } from "../../../base/Visual"
 
 /** The great merchant: an item among some, for a character of the party, given three times over. */
 export class GreatMerchantHalt extends AbstractHalt {
@@ -48,8 +49,7 @@ export const GREAT_MERCHANT_HALT: HaltType = {
     id: "greatMerchant",
     name: "Grand marchand ambulant",
     description: "Un objet parmi trois, en triple.",
-    code: "MB*",
-    icon: "mecard/travel/merchant/logo.png",
+    icon: visual("travel/merchant/logo", { letter: "MB*" }),
     glow: GREAT_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new GreatMerchantHalt(run),

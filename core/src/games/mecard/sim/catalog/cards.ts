@@ -7,7 +7,7 @@ import type { Card } from "../card"
 import { Rarity } from "../card/Rarity"
 import {
     ANTIDOTE, ASSASSIN_BLOW, ASSASSIN_STEP, ASSASSINATION, BACK_DASH, BANDAGE, BARREL, BIG_BOTTLE, BLINK,
-    BODY_CARDS, BOMB, BOTTLE, CHARGE,
+    BODY_CARDS, BOMB, BOTTLE, CHARGE, LASER_LINK, HOOK_ON, IRON_CHAIN, SPIRIT_ANCHOR, SPIRIT_PROJECTION, COUNTER_CARD, WOODEN_SHIELD_CARD, SLIDING_PARRY_CARD, DISARM_CARD,
     CHARM,
     CLONE, COATED_BLADE, COIN, CONFUSION, CURSED_FLURRY, DAGGER, DISTILLATION, DOUBLE_DIAGONAL, DRAW,
     DrawnCard, EXPLOSIVE_DASH, FAR_AIM, FEAR, FIRE, FLAMETHROWER, FLASH_GRENADE, CONCENTRATION, FRENZY, GAMBLE,
@@ -38,7 +38,7 @@ import {
     BATTERING_RAM, CATCH, PROJECTION, SHOCK_WAVE, SLING_CARD, SUCTION, TIDE,
     ABOUT_FACE, ALLY_AIM, ENERGETIC_AIM, ICY_GLARE, ORIENTATION, SHOUT, STEP, TAUNT,
 } from "../card/subs"
-import { KITS } from "./kits"
+import { ALL_KITS } from "./kits"
 import { CARTE } from "../base/keywords"
 
 /**
@@ -47,10 +47,10 @@ import { CARTE } from "../base/keywords"
  */
 export const CHAOS: Card = new DrawnCard("Chaos", [
     "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
-], Rarity.EPIC, () => weighted(CARDS))
+], Rarity.EPIC, () => weighted(ALL_CARDS))
 
 /** The potions and what pours them, found as loot. */
-const POTION_CARDS: readonly Card[] = [
+export const POTION_CARDS: readonly Card[] = [
     POISON, SLOWNESS, WEAKNESS, RAGE, CONFUSION, VULNERABILITY, FRENZY, ANTIDOTE, DISTILLATION, BOTTLE,
     BIG_BOTTLE, THROWN_POTION, POTION_RAIN, BARREL, COATED_BLADE, PUDDLE, POTION_POUCH, RAGE_FIT,
 ]
@@ -90,6 +90,7 @@ export const LOOT_CARDS: readonly Card[] = [
     PROJECTION, SUCTION, CATCH, BATTERING_RAM, SLING_CARD, SHOCK_WAVE, TIDE,
     BIG_SHOTGUN, ALLY_LASSO, BLOODY_COMBO, COVERING_FIRE, BLUE_VENGEANCE, HUNTER_FUSION, DEMONIC_COMBO, SUPLEX_SURPRISE,
     SHOUT, TAUNT, ORIENTATION, ENERGETIC_AIM, ALLY_AIM, ABOUT_FACE, ICY_GLARE,
+    COUNTER_CARD, WOODEN_SHIELD_CARD, SLIDING_PARRY_CARD, DISARM_CARD, LASER_LINK, HOOK_ON, IRON_CHAIN, SPIRIT_ANCHOR, SPIRIT_PROJECTION,
     ...POTION_CARDS,
 ]
 
@@ -114,9 +115,9 @@ export const LEGENDARY_CARDS: readonly Card[] = [
 ]
 
 /** Every card of the game, each once: what the console gives by name. */
-export const CARDS: readonly Card[] = [
+export const ALL_CARDS: readonly Card[] = [
     ...new Set([
-        ...KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
-        ...COMPOUND_CARDS, SCOPED_GREAT_THRUST,
+        ...ALL_KITS.flatMap(kit => kit.cards), ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
+        ...COMPOUND_CARDS, SCOPED_GREAT_THRUST, ...LEGENDARY_CARDS,
     ]),
 ]

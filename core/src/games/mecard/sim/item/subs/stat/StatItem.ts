@@ -1,5 +1,5 @@
-import type { ImagePath } from "../../../../../../engine/assets/Assets"
-import { joinText } from "../../../../../../semantic"
+import type { Visual } from "../../../base/Visual"
+import { concat, joinText } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
 import { Add, ModifierKey } from "../../../base/Attribute"
 import type { Attribute } from "../../../base/Attribute"
@@ -30,12 +30,15 @@ export class StatItem extends AbstractItem {
 
 
     constructor(
-        name: string, icon: ImagePath,
+        name: string, icon: Visual,
 
         /** What it adds, to as many stats as it lists. */
         public readonly changes: readonly StatChange[],
     ){
-        super(name, icon, joinText(changes.map(change => ["+", change.shown ?? frenchNumber(change.amount), " ", change.text]), ", "))
+        super(name, icon, joinText(
+            changes.map(change => concat("+", change.shown ?? frenchNumber(change.amount), " ", change.text)),
+            ", ",
+        ))
     }
 
 

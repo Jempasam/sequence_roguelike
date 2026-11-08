@@ -26,13 +26,15 @@ import type { BattleState, UnitState } from "./BattleState"
 import { labelEffect, polygonEffect } from "./effects"
 import type { BattleEvent, MoveEvent, Nature } from "./events"
 import { BattleSignals } from "./signals"
-import type { Effect } from "./signals"
+import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
 import { COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, TICKS_PER_SECOND, UNBLOCK_DAMAGE } from "./rules"
 import { Unit, UNIT_RADIUS } from "./Unit"
 import type { Controller, StatBases, UnitSpec, UnitStats } from "./Unit"
 import { HERO_COLORS, MONSTER_COLORS, SUMMON_PALETTE } from "./palettes"
 import { DECK } from "../base/keywords"
+import type { Visual } from "../base/Visual"
+import { visual } from "../base/Visual"
 
 /**
  * Where a battle stands: waiting for its round to start and draw, its preparation, its execution, or its
@@ -157,6 +159,9 @@ export class Battle {
     /** One of the steps of a unit is about to play, whichever it is. */
     public readonly unitStepping: Observable<Unit>
 
+    /** One of the steps of a unit was played, whichever it is: the end of a turn. */
+    public readonly unitStepped: Observable<Unit>
+
     /** A unit won gold: the battle knows no purse, the game adds it to the one of the run. */
     public readonly onGetGold: Observable<GoldEvent>
 
@@ -232,6 +237,7 @@ export class Battle {
         this.roundEnded = new Observable(this.report)
         this.unitMoved = new Observable(this.report)
         this.unitStepping = new Observable(this.report)
+        this.unitStepped = new Observable(this.report)
         this.onGetGold = new Observable(this.report)
         this.onGetCards = new Observable(this.report)
         this.phaseChanged = new Observable(this.report)
@@ -361,7 +367,7 @@ export class Battle {
     public addPillar(center: Vector2, radius: number): Unit {
         this.scenery ??= new Team("Décor")
         const pillar = new Unit({
-            name: "Pilier", sprite: "pillar", team: this.scenery, controller: "bot", position: center,
+            name: "Pilier", sprite: visual("units/pillar"), team: this.scenery, controller: "bot", position: center,
             direction: Vector2.DOWN, hearts: [new Heart(SOLID_HEART)], decks: [], decisive: false,
             bases: { size: radius / UNIT_RADIUS, targetable: false, touchable: false, movable: false },
         }, this)
@@ -398,6 +404,21 @@ export class Battle {
     /** The living units of the other teams whose body takes room and the others aim at. */
     public enemiesOf(unit: Unit): Unit[] {
         return this.bodies.filter(other => other.team !== unit.team && other.targetable)
+    }
+
+    /** The closest living ally of a unit within a distance, from center to center, itself apart, none for none. */
+    public nearestAlly(unit: Unit, range = Infinity, from = unit.position): Unit|null {
+        let nearest: Unit|null = null
+        let best = range
+        for(const ally of this.bodies){
+            if(ally === unit || ally.team !== unit.team) continue
+            const distance = ally.position.distance(from)
+            if(distance <= best){
+                nearest = ally
+                best = distance
+            }
+        }
+        return nearest
     }
 
     /**
@@ -573,9 +594,10 @@ export class Battle {
         this.events.push({ type: "status", unit, text: [DECK, " rebattu"] })
     }
 
-    /** Fill again the charges of the usables of a unit that refill at each battle. */
+    /** Fill again the charges of the usables of a unit that refill at each battle, and tell its hearts it starts. */
     public refill(unit: Unit): void {
         for(const carried of unit.usables) carried.refill()
+        unit.hearts.battleStarted()
     }
 
     /**
@@ -881,8 +903,9 @@ export class Battle {
         } else {
             status = type.make(level, type)
             unit.statuses.set(type, status)
-            this.signals.statusAdded.notify({ unit, type })
+            this.signals.statusAdded.notify({ unit, type, level: status.level })
             status.init({ battle: this, unit })
+            this.#tellLevels(unit, status)
         }
         if(status.level > 0) this.events.push({ type: "status", unit, text: status })
         else {
@@ -931,22 +954,49 @@ export class Battle {
         const plugs = this.#processes.get(unit)
         if(!plugs) return
         this.#processes.delete(unit)
-        for(const { process, ctx, held } of plugs){
+        for(const plug of plugs) this.#endPlug(unit, plug)
+    }
+
+    /** End one process of a unit before the round does, as it would end with it. Ending one it has not does nothing. */
+    public endProcess(unit: Unit, process: Process): void {
+        const plugs = this.#processes.get(unit)
+        const at = plugs?.findIndex(plug => plug.process === process) ?? -1
+        if(!plugs || at < 0) return
+        const [plug] = plugs.splice(at, 1)
+        this.#endPlug(unit, plug)
+    }
+
+    /**
+     * Tie two units together for as long as what holds it says, for the screen: a laser, a chain between them.
+     *
+     * @returns What unties them, once only.
+     */
+    public tether(from: Unit, to: Unit, visual: Visual): () => void {
+        const tether: Tether = { from, to, visual }
+        this.signals.tethered.notify({ tether })
+        let tied = true
+        return () => {
+            if(!tied) return
+            tied = false
+            this.signals.untethered.notify({ tether })
+        }
+    }
+
+    #endPlug(unit: Unit, { process, ctx, held }: { process: Process, ctx: PlugContext, held: (() => void)[] }): void {
+        try {
+            process.dispose?.(ctx)
+        } catch(error){
+            this.report(error)
+        }
+        for(const release of held.splice(0)){
             try {
-                process.dispose?.(ctx)
+                release()
             } catch(error){
                 this.report(error)
             }
-            for(const release of held.splice(0)){
-                try {
-                    release()
-                } catch(error){
-                    this.report(error)
-                }
-            }
-            unit.processes.splice(unit.processes.indexOf(process), 1)
-            this.signals.processEnded.notify({ unit, process })
         }
+        unit.processes.splice(unit.processes.indexOf(process), 1)
+        this.signals.processEnded.notify({ unit, process })
     }
 
     /** Take a status off a unit. Taking off one it does not hold does nothing. */
@@ -1089,7 +1139,7 @@ export class Battle {
      * when the point is taken.
      */
     public summon(
-        owner: Unit, sprite: string, name: string, at: Vector2, hearts: readonly Heart[],
+        owner: Unit, sprite: Visual, name: string, at: Vector2, hearts: readonly Heart[],
         direction: Vector2 = owner.direction,
     ): Unit|null {
         const body = this.place(owner, { sprite, name, at, hearts, direction })
@@ -1111,16 +1161,19 @@ export class Battle {
         }
         const cards = body.cards ?? []
         const acting = cards.length > 0
+        const reach = {
+            targetable: body.targetable ?? true, touchable: body.touchable ?? true, movable: body.movable ?? true,
+        }
         const placed = new Unit({
             name: body.name, sprite: body.sprite, team: owner.team, controller: "bot", position: body.at,
             direction: body.direction ?? owner.direction, hearts: body.hearts, decks: acting ? [cards] : [],
             decisive: false, zone: body.zone ?? null,
             bases: acting
                 ? {
-                    size, tangible, ordered: true, draw: cards.length, firstDraw: cards.length,
+                    size, tangible, ...reach, ordered: true, draw: cards.length, firstDraw: cards.length,
                     chainSize: cards.length,
                 }
-                : { size, tangible },
+                : { size, tangible, ...reach },
         }, this)
         placed.owner = owner
         this.#enter(placed)
@@ -1166,6 +1219,31 @@ export class Battle {
         if(!last) return
         unit.steps.push(last)
         this.events.push({ type: "status", unit, text: "dernière étape doublée" })
+    }
+
+    /**
+     * Take the cards of the chain of a unit out of it, from a place to its end: they play no more this round, and
+     * go to the discard with the others at its end.
+     *
+     * @returns The cards taken out, in order.
+     */
+    public cutChain(unit: Unit, from: number): Card[] {
+        const { chain } = unit
+        const cut = chain.cards.splice(from)
+        chain.cursor = Math.min(chain.cursor, chain.cards.length)
+        if(cut.length > 0) chain.watcher?.changed()
+        return cut
+    }
+
+    /**
+     * Put a card in the place of cards of the chain of a unit, a merge or a fusion of them: the cards taken out go
+     * to the discard with the others at the end of the round.
+     */
+    public replaceInChain(unit: Unit, from: number, count: number, card: Card): void {
+        const { chain } = unit
+        chain.cards.splice(from, count, card)
+        if(chain.cursor > from) chain.cursor = Math.max(from, chain.cursor - count + 1)
+        chain.watcher?.changed()
     }
 
     /** Have a unit read a copy of what it committed: the plan stays as it was, the copy is rewritten. */
@@ -1443,8 +1521,14 @@ export class Battle {
         for(const status of state.statuses){
             unit.statuses.set(status.type, status)
             status.init({ battle: this, unit })
+            this.#tellLevels(unit, status)
         }
         return unit
+    }
+
+    /** Tell the signal of the levels each time a status of a unit goes to another one. */
+    #tellLevels(unit: Unit, status: Status): void {
+        status.onLevel = level => this.signals.statusLeveled.notify({ unit, type: status.type, level })
     }
 
     /** Plug an item into a unit, an error reported rather than thrown. */
@@ -1523,6 +1607,7 @@ export class Battle {
         this.#running = null
         this.#tellGlide()
         unit.stepEnded.notify(unit)
+        this.unitStepped.notify(unit)
         this.#checkOver()
     }
 
@@ -1672,14 +1757,19 @@ function unitState(unit: Unit): UnitState {
 
 /** A body left in the arena for a unit, by {@link Battle.place}. */
 export interface PlacedBody {
-    /** Its picture, by its name among the sprites of the units. */
-    readonly sprite: string
+    /** How it looks. */
+    readonly sprite: Visual
     readonly name: string
     readonly at: Vector2
     readonly hearts: readonly Heart[]
 
     /** Does it take room? Yes by default. */
     readonly tangible?: boolean
+
+    /** Do the cards and the bots aim at it, do blows and zones touch it, do others move it? Yes by default. */
+    readonly targetable?: boolean
+    readonly touchable?: boolean
+    readonly movable?: boolean
 
     /** Where it faces, as its owner by default. */
     readonly direction?: Vector2

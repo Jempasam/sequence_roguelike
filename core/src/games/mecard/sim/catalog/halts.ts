@@ -24,6 +24,12 @@ import { GREAT_HOSPITAL_HALT } from "../halt/subs/great/GreatHospitalHalt"
 import { GREAT_WITCH_HALT } from "../halt/subs/great/GreatWitchHalt"
 import { GREAT_MERCHANT_HALT } from "../halt/subs/great/GreatMerchantHalt"
 import { GREAT_MAGICIAN_HALT } from "../halt/subs/great/GreatMagicianHalt"
+import { DARK_MAGICIAN_HALT } from "../halt/subs/dark/DarkMagicianHalt"
+import { DARK_TAVERN_HALT } from "../halt/subs/dark/DarkTavernHalt"
+import { DARK_MAD_DOCTOR_HALT } from "../halt/subs/dark/DarkMadDoctorHalt"
+import { DARK_DEMON_HALT } from "../halt/subs/dark/DarkDemonHalt"
+import { DARK_STRATEGIST_HALT } from "../halt/subs/dark/DarkStrategistHalt"
+import { DARK_TRAINER_HALT } from "../halt/subs/dark/DarkTrainerHalt"
 import { TRAINER_HALT } from "../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
@@ -62,14 +68,22 @@ export function greatHalts(): readonly HaltType[] {
     return [GREAT_FORGE_HALT, GREAT_SHOP_HALT, GREAT_HOSPITAL_HALT, GREAT_WITCH_HALT, GREAT_MERCHANT_HALT, GREAT_MAGICIAN_HALT]
 }
 
+/** The sorts of halt of a dark one: a simple halt, working with monsters. */
+export function darkHalts(): readonly HaltType[] {
+    return [
+        DARK_MAGICIAN_HALT, DARK_TAVERN_HALT, DARK_MAD_DOCTOR_HALT, DARK_DEMON_HALT, DARK_STRATEGIST_HALT,
+        DARK_TRAINER_HALT,
+    ]
+}
+
 /** The sorts of halt a floor may lay: all but the exits, which are not its own. */
-export function layableHalts(): readonly HaltType[] {
-    return [...simpleHalts(), ...masterHalts(), ...greatHalts()]
+export function lootHalts(): readonly HaltType[] {
+    return [...simpleHalts(), ...masterHalts(), ...greatHalts(), ...darkHalts()]
 }
 
 /** Every sort of halt. */
 export function allHalts(): readonly HaltType[] {
-    return [...layableHalts(), EXIT_HALT]
+    return [...lootHalts(), EXIT_HALT]
 }
 
 /**

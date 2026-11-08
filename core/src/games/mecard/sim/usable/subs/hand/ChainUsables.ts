@@ -10,8 +10,12 @@ import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
 import { turnUnitsIn } from "../../../card/subs/tools/turning"
 import { UNIT } from "../../../base/keywords"
+import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
+import { FusionCard } from "../../../card/subs/composite/FusionCard"
+import { canMerge, MergedCard } from "../../../card/subs/composite/MergedCard"
 
 import { AbstractUsable } from "../AbstractUsable"
+import { visual } from "../../../base/Visual"
 
 /** How far around its unit the whistle reaches, in meters. */
 const WHISTLE_RADIUS = 1.5
@@ -26,7 +30,7 @@ export class EngineOil extends AbstractUsable {
 
 
     constructor(){
-        super("Huile de moteur", "mecard/usables/energizer.png", ["Ce round, chaque robot joue sa chaîne deux fois de suite."])
+        super("Huile de moteur", visual("usables/energizer"), ["Ce round, chaque robot joue sa chaîne deux fois de suite."])
     }
 
 
@@ -43,7 +47,7 @@ export class Wrench extends AbstractUsable {
 
     constructor(){
         super(
-            "Clé à molette", "mecard/usables/mixer.png",
+            "Clé à molette", visual("usables/mixer"),
             ["Ajoute à ta main un module de ta main, ton deck ou ta défausse, tiré au hasard. 2 utilisations, rechargées à chaque combat."],
             { charges: 2, refill: "battle" },
         )
@@ -66,7 +70,7 @@ export class MagicWatch extends AbstractUsable {
 
     constructor(){
         super(
-            "Montre magique", "mecard/usables/energizer.png",
+            "Montre magique", visual("usables/energizer"),
             ["La dernière étape de la chaîne est jouée une fois de plus. 2 utilisations, rechargées à chaque combat."],
             { charges: 2, refill: "battle" },
         )
@@ -85,7 +89,7 @@ export class FishingCard extends AbstractUsable {
 
 
     constructor(){
-        super("Carte de pêche", "mecard/usables/thrust_bottle.png", ["Ajoute ", FISHING, " à ta main. 2 utilisations."], { charges: 2 })
+        super("Carte de pêche", visual("usables/thrust_bottle"), ["Ajoute ", FISHING, " à ta main. 2 utilisations."], { charges: 2 })
     }
 
 
@@ -102,7 +106,7 @@ export class Whistle extends AbstractUsable {
 
     constructor(){
         super(
-            "Sifflet", "mecard/usables/energizer.png",
+            "Sifflet", visual("usables/energizer"),
             [
                 "Tourne chaque ", UNIT, " à ", meters(WHISTLE_RADIUS), " autour vers toi. 2 utilisations, rechargées à chaque combat.",
             ],
@@ -126,7 +130,7 @@ export class FoldingTurret extends AbstractUsable {
 
 
     constructor(){
-        super("Tourelle pliable", "mecard/usables/plant_bag.png", ["Pose ", TURRET, " à un mètre devant toi. 2 utilisations."], { charges: 2 })
+        super("Tourelle pliable", visual("usables/plant_bag"), ["Pose ", TURRET, " à un mètre devant toi. 2 utilisations."], { charges: 2 })
     }
 
 
@@ -143,7 +147,7 @@ export class InflatableDecoy extends AbstractUsable {
 
     constructor(){
         super(
-            "Leurre gonflable", "mecard/usables/plant_bag.png",
+            "Leurre gonflable", visual("usables/plant_bag"),
             ["Pose ", DECOY, " à un mètre devant toi. Rechargé à chaque combat."], { refill: "battle" },
         )
     }
@@ -162,7 +166,7 @@ export class Battery extends AbstractUsable {
 
     constructor(){
         super(
-            "Batterie", "mecard/usables/energizer.png",
+            "Batterie", visual("usables/energizer"),
             ["Donne un cœur de temps de plus à chaque invocation et robot qui en a. 2 utilisations, rechargées à chaque combat."],
             { charges: 2, refill: "battle" },
         )
@@ -184,7 +188,7 @@ export class LeatherBag extends AbstractUsable {
 
     constructor(){
         super(
-            "Sac en cuir", "mecard/usables/plant_bag.png",
+            "Sac en cuir", visual("usables/plant_bag"),
             ["Pour le combat : la première ", UNIT, " que tu tues te donne toutes les cartes de sa chaîne, pour de bon."],
         )
     }
@@ -200,3 +204,95 @@ export class LeatherBag extends AbstractUsable {
 }
 
 export const LEATHER_BAG = new LeatherBag()
+
+/** The cards of the chain of a unit it has not played yet, as they are once rewritten. */
+function chainLeft(unit: Unit): Card[] {
+    return unit.chain.cards.slice(unit.chain.cursor)
+}
+
+/** A mechanical clone: a module playing the chain of its unit, its own for good. */
+export class MechanicalClone extends AbstractUsable {
+
+
+    constructor(){
+        super("Clone mécanique", visual("usables/mechanical_clone"), [
+            "Ajoute pour de bon à ton deck un module qui joue ta chaîne actuelle.",
+        ])
+    }
+
+
+    protected act({ battle, unit }: UnitContext): void {
+        const cards = chainLeft(unit)
+        if(cards.length > 0) battle.giveCards(unit, [new ModuleCard("Module cloné", cards)])
+    }
+}
+
+export const MECHANICAL_CLONE = new MechanicalClone()
+
+/** A tube of glue: a collage of the chain of its unit, its own for good. */
+export class GlueTube extends AbstractUsable {
+
+
+    constructor(){
+        super("Tube de colle", visual("usables/glue_tube"), [
+            "Ajoute pour de bon à ton deck un collage de toute ta chaîne actuelle.",
+        ])
+    }
+
+
+    protected act({ battle, unit }: UnitContext): void {
+        const cards = chainLeft(unit)
+        if(cards.length >= 2) battle.giveCards(unit, [new FusionCard(cards)])
+    }
+}
+
+export const GLUE_TUBE = new GlueTube()
+
+/**
+ * Cocaine: the cards of the chain of its unit merged two by two, from left to right, wherever two that may be
+ * merged follow each other.
+ */
+export class Cocaine extends AbstractUsable {
+
+
+    constructor(){
+        super("Cocaïne", visual("usables/cocaine"), [
+            "Mélange deux par deux les cartes d'action qui se suivent dans ta chaîne. Rechargée à chaque combat.",
+        ], { refill: "battle" })
+    }
+
+
+    protected act({ battle, unit }: UnitContext): void {
+        const { chain } = unit
+        let at = chain.cursor
+        while(at + 1 < chain.cards.length){
+            const [first, second] = [chain.cards[at], chain.cards[at + 1]]
+            if(canMerge(first) && canMerge(second)) battle.replaceInChain(unit, at, 2, new MergedCard([first, second]))
+            at++
+        }
+    }
+}
+
+export const COCAINE = new Cocaine()
+
+/** A time pocket: the chain of its unit fused into one card, to its hand for the battle, and played no more. */
+export class TimePocket extends AbstractUsable {
+
+
+    constructor(){
+        super("Poche temporelle", visual("usables/time_pocket"), [
+            "Vide ta chaîne et ajoute à ta main pour ce combat une fusion de toutes ses cartes. 2 utilisations, ",
+            "rechargées à chaque combat.",
+        ], { charges: 2, refill: "battle" })
+    }
+
+
+    protected act({ battle, unit }: UnitContext): void {
+        const cards = chainLeft(unit)
+        if(cards.length === 0) return
+        battle.cutChain(unit, unit.chain.cursor)
+        battle.giveCard(unit, cards.length === 1 ? cards[0] : new FusionCard(cards))
+    }
+}
+
+export const TIME_POCKET = new TimePocket()

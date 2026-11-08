@@ -1,8 +1,8 @@
 import { CARTE } from "../../../base/keywords"
 import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
-import { BOOSTERS, openBooster } from "../../../catalog/boosters"
+import { LOOT_BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
-import { upgradeAll, upgradeFitsAll, UPGRADES } from "../../../catalog/upgrades"
+import { upgradeAll, upgradeFitsAll, LOOT_UPGRADES } from "../../../catalog/upgrades"
 import type { CardUpgrade } from "../../../catalog/upgrades"
 import { INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -12,6 +12,7 @@ import { sceneLook } from "../../SceneLook"
 import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
+import { visual } from "../../../base/Visual"
 
 /** A booster and the upgrade that comes with it, put on every card of the booster it matches. */
 interface Bet {
@@ -28,7 +29,7 @@ function betShown({ booster, upgrade }: Bet): Shown {
  * The upgrades that match every card of at least one pool of a booster.
  */
 function upgradesOf(booster: Booster): CardUpgrade[] {
-    return UPGRADES.filter(upgrade => booster.pools.some(pool => upgradeFitsAll(upgrade, pool.pool)))
+    return LOOT_UPGRADES.filter(upgrade => booster.pools.some(pool => upgradeFitsAll(upgrade, pool.pool)))
 }
 
 /**
@@ -51,7 +52,7 @@ export class MasterMagicianHalt extends CardGiftHalt {
                 item: "magicianWand"
             },
         )
-        const boosters = [...BOOSTERS]
+        const boosters = [...LOOT_BOOSTERS]
         run.rng.shuffle(boosters)
         const bets: Bet[] = []
         for(const booster of boosters){
@@ -79,8 +80,7 @@ export const MASTER_MAGICIAN_HALT: HaltType = {
     id: "masterMagician",
     name: "Maître magicien",
     description: ["Un booster parmi trois, ouvert et ses ", CARTE.as("cartes"), " améliorées."],
-    code: "MG*",
-    icon: "mecard/travel/magician/logo.png",
+    icon: visual("travel/magician/logo", { letter: "MG*" }),
     glow: MASTER_COLOR,
     transition: DOOR_TRANSITION,
     create: run => new MasterMagicianHalt(run),

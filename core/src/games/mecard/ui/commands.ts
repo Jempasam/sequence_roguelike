@@ -4,28 +4,17 @@ import { plainText } from "../../../semantic"
 import type { Arg, Command, CommandContext, Console } from "../../../engine/console"
 import { UnitStats } from "../sim/battle/Unit"
 import { Rarity } from "../sim/card/Rarity"
-import { CARDS, USABLES, ITEMS } from "../sim/catalog/index"
-import { KITS } from "../sim/catalog/kits"
-import { MONSTERS } from "../sim/catalog/monsters"
+import { ALL_CARDS, ALL_USABLES, ALL_ITEMS } from "../sim/catalog/index"
+import { ALL_KITS } from "../sim/catalog/kits"
+import { ALL_MONSTERS } from "../sim/catalog/monsters"
 import { Heart, insertHeart } from "../sim/heart/Heart"
 import { HEART_KINDS } from "../sim/save/catalogNames"
-import { BLOODLUST } from "../sim/status/subs/Bloodlust"
 import { deckName } from "../sim/run/deckName"
 import { allCards, firstDeck, hero } from "../sim/run/Hero"
-import { FLOOR_TYPES } from "../sim/catalog/floors"
-import { allHalts, layableHalts } from "../sim/catalog/halts"
+import { ALL_FLOORS } from "../sim/catalog/floors"
+import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
-import { BURN } from "../sim/status/subs/Burn"
-import { CONFUSED } from "../sim/status/subs/Confusion"
-import { DODGE } from "../sim/status/subs/Dodge"
-import { FRENZIED } from "../sim/status/subs/Frenzy"
-import { POISONED } from "../sim/status/subs/Poison"
-import { ENRAGED } from "../sim/status/subs/Rage"
-import { ROOTED } from "../sim/status/subs/Rooted"
-import { SLOWED } from "../sim/status/subs/Slowness"
-import { VULNERABLE } from "../sim/status/subs/Vulnerability"
-import { WEAKENED } from "../sim/status/subs/Weakness"
 import type { Attribute } from "../sim/base/Attribute"
 import type { Battle } from "../sim/battle/Battle"
 import type { Controller, Unit } from "../sim/battle/Unit"
@@ -43,6 +32,8 @@ import type { HaltType } from "../sim/halt/HaltType"
 import type { FloorType } from "../sim/floor/Floor"
 import type { Run } from "../sim/run/Run"
 import type { StatusType } from "../sim/status/Status"
+import { STATUS_TYPES } from "../sim/status/statusTypes"
+import { MINE_HAZARD } from "../sim/hazard/subs/Mine"
 import { Rng } from "../sim/base/Rng"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, randomSeats } from "../sync/run/Seats"
 import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
@@ -165,20 +156,10 @@ interface StatusMaker {
     readonly fallback: number
 }
 
-/** The statuses a command puts on a unit. */
-const STATUS_MAKERS: readonly StatusMaker[] = [
-    { type: BURN, amount: "rounds", fallback: 2 },
-    { type: ROOTED, amount: "étapes", fallback: 2 },
-    { type: DODGE, amount: null, fallback: 1 },
-    { type: POISONED, amount: "rounds", fallback: 2 },
-    { type: SLOWED, amount: "rounds", fallback: 2 },
-    { type: WEAKENED, amount: "rounds", fallback: 2 },
-    { type: ENRAGED, amount: "rounds", fallback: 2 },
-    { type: CONFUSED, amount: "rounds", fallback: 2 },
-    { type: VULNERABLE, amount: "rounds", fallback: 2 },
-    { type: FRENZIED, amount: "rounds", fallback: 2 },
-    { type: BLOODLUST, amount: "rounds", fallback: 3 },
-]
+/** The statuses a command puts on a unit: every kind of status, but what lies on the ground, at a level of 2. */
+const STATUS_MAKERS: readonly StatusMaker[] = STATUS_TYPES
+    .filter(type => type !== MINE_HAZARD)
+    .map(type => ({ type, amount: "niveau", fallback: 2 }))
 
 /** The name of a stat of a unit, as typed. */
 type AttributeName = keyof UnitStats
@@ -204,10 +185,10 @@ function wordOf(name: string): string {
 
 const UNIT: Arg<MecardContext, Unit> = named("l'unité", ctx => ctx.battle.living, unit => wordOf(unit.name))
 const HERO: Arg<MecardContext, Hero> = named("le héros", ctx => ctx.run.heroes, hero => wordOf(hero.name))
-const CARD: Arg<MecardContext, Card> = named("la carte", () => CARDS, card => wordOf(card.name))
-const ITEM: Arg<MecardContext, Item> = named("l'objet", () => ITEMS, item => wordOf(item.name))
+const CARD: Arg<MecardContext, Card> = named("la carte", () => ALL_CARDS, card => wordOf(card.name))
+const ITEM: Arg<MecardContext, Item> = named("l'objet", () => ALL_ITEMS, item => wordOf(item.name))
 const HEART: Arg<MecardContext, HeartKind> = named("le cœur", () => HEART_KINDS, kind => wordOf(kind.name))
-const MONSTER: Arg<MecardContext, Monster> = named("le monstre", () => MONSTERS, monster => wordOf(monster.name))
+const MONSTER: Arg<MecardContext, Monster> = named("le monstre", () => ALL_MONSTERS, monster => wordOf(monster.name))
 const RARITY: Arg<MecardContext, Rarity> = named("la rareté", () => Rarity.ALL, rarity => rarity.name)
 const STATUS: Arg<MecardContext, StatusMaker> = named("le statut", () => STATUS_MAKERS, maker => wordOf(maker.type.name))
 const ATTRIBUTE: Arg<MecardContext, AttributeName> = named("l'attribut", () => ATTRIBUTES, name => name)
@@ -253,9 +234,9 @@ function typeWord(type: PlaceType): string {
 }
 
 const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
-const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => FLOOR_TYPES, type => wordOf(type.name))
-const KIT: Arg<MecardContext, Kit> = named("le kit", () => KITS, kit => wordOf(kit.name))
-const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => USABLES, each => wordOf(each.name))
+const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => ALL_FLOORS, type => wordOf(type.name))
+const KIT: Arg<MecardContext, Kit> = named("le kit", () => ALL_KITS, kit => wordOf(kit.name))
+const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => ALL_USABLES, each => wordOf(each.name))
 
 /** Who plays a character: the players, or a bot. */
 const CONTROLLER: Arg<MecardContext, Controller> = named("le contrôle", () => ["player", "bot"] as const,
@@ -358,7 +339,7 @@ function catalogCommands(): Record<string, Command<MecardContext, unknown>> {
         card: group("card", "les cartes du jeu.", {
             list: command("card list [rareté] : liste les cartes, d'une rareté ou toutes.", [optional(RARITY, null)],
                 (ctx, rarity) => {
-                    for(const card of CARDS){
+                    for(const card of ALL_CARDS){
                         if(!rarity || card.rarity === rarity) ctx.print(`${wordOf(card.name)} (${card.rarity}) : ${plainText(card.description)}`)
                     }
                 }),
@@ -370,7 +351,7 @@ function catalogCommands(): Record<string, Command<MecardContext, unknown>> {
         }),
         item: group("item", "les objets.", {
             list: command("item list : liste les objets.", [], ctx => {
-                for(const item of ITEMS) ctx.print(`${wordOf(item.name)} : ${plainText(item.description)}`)
+                for(const item of ALL_ITEMS) ctx.print(`${wordOf(item.name)} : ${plainText(item.description)}`)
             }),
             give: command("item give <unité> <objet> : équipe une unité pour ce combat.", [UNIT, ITEM],
                 (ctx, unit, item) => {
@@ -413,7 +394,7 @@ function catalogCommands(): Record<string, Command<MecardContext, unknown>> {
         }),
         monster: group("monster", "les sortes de monstres.", {
             list: command("monster list : liste les monstres.", [], ctx => {
-                for(const monster of MONSTERS){
+                for(const monster of ALL_MONSTERS){
                     ctx.print(`${wordOf(monster.name)} : ${monster.hearts} cœurs, ${monster.draw} cartes par round`)
                 }
             }),
@@ -787,7 +768,7 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                     ctx.visit(type)
                 }),
             put: command("travel put <halte> <couche> : pose une halte sur la carte, dans la couche, reliée à celles d'avant et d'après.",
-                [named("la halte", layableHalts, typeWord), whole("la couche", 1)],
+                [named("la halte", lootHalts, typeWord), whole("la couche", 1)],
                 (ctx, type, layer) => {
                     ctx.run.travel.layHalt(type, layer - 1)
                     ctx.print(`${type.name} posé en couche ${layer}.`)

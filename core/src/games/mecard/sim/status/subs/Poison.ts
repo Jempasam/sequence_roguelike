@@ -1,11 +1,10 @@
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
-import { StatusType } from "../Status"
+import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
 /** A poison: the longer it has left, the more it hurts. */
-export const POISONED = new StatusType("poison", rgba(0.6, 0.9, 0.2), "negative", level => new Poison(level))
+export const POISONED = new StatusType("poison", statusVisual("poison", 0.6, 0.9, 0.2), "negative", level => new Poison(level), { description: ["À la fin de chaque round, perd autant de cœurs que de rounds restants (", STATUS_LEVEL, ")."] })
 
 /** Poisoned: at the end of each round, as many hearts lost as rounds it has left. */
 export class Poison extends RoundStatus {

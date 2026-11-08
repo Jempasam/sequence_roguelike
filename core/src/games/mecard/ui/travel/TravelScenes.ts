@@ -8,6 +8,7 @@ import type { PnjHatLook } from "../../sim/halt/PnjHats"
 import type { ScenePnj, SceneLook } from "../../sim/halt/SceneLook"
 
 import { engineColor } from "../look/colors"
+import { pathOf } from "../look/visualPath"
 import { Pnj } from "../pnj/Pnj"
 import { PnjActor } from "../pnj/PnjActor"
 import { PNJ_SHRINK, PnjRig } from "../pnj/PnjRig"
@@ -121,7 +122,7 @@ export class TravelScenes {
         const { look } = kept
         const paths = [look.border, ...look.layers]
         const worn = wornLooks(look.pnj)
-        for(const piece of worn) if(piece) paths.push(piece.path)
+        for(const piece of worn) if(piece) paths.push(pathOf(piece.path))
         let pictures
         let rig: PnjRig|null
         try {

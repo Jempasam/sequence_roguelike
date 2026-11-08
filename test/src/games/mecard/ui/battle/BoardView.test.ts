@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { visual } from "@game/core/mecard"
 import { Heart, placeHazard, RED_HEART, TIME_HEART, Vector2 } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 import { BattleScene, BoardView, drawOrder } from "@game/core/mecard/battle-ui"
@@ -46,7 +47,7 @@ describe("drawOrder", () => {
         const on = withPillars(battle(), { center: new Vector2(3.5, 3), radius: 0.5 })
         const near = unit(on, 3, 5)
         const far = unit(on, 3, 1, { team: MONSTERS })
-        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
         expect(drawOrder(shownOf(on)).map(shown => shown.unit)).toEqual([far, pillar, near])
     })
 
@@ -54,7 +55,7 @@ describe("drawOrder", () => {
         const on = battle()
         const hero = unit(on, 3, 2)
         const wind = on.place(hero, {
-            sprite: "tornado", name: "Tourbillon", at: new Vector2(3, 6), hearts: [new Heart(TIME_HEART)],
+            sprite: visual("units/tornado"), name: "Tourbillon", at: new Vector2(3, 6), hearts: [new Heart(TIME_HEART)],
             tangible: false,
         }) as Unit
         expect(drawOrder(shownOf(on)).map(shown => shown.unit)).toEqual([wind, hero])
@@ -64,7 +65,7 @@ describe("drawOrder", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         placeHazard(on, hero, {
-            sprite: "fire", name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1 },
+            sprite: visual("units/fire"), name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1 },
             hearts: [new Heart(TIME_HEART)],
         })
         expect(drawOrder(shownOf(on)).map(shown => shown.unit)).toEqual([hero])
@@ -76,7 +77,7 @@ describe("BoardView.unitAt", () => {
         const on = withPillars(battle(), { center: new Vector2(3.5, 3), radius: 0.5 })
         const hero = unit(on, 1, 5)
         const foe = unit(on, 6, 1, { team: MONSTERS })
-        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
         const { board, pixel } = boardOn(on)
         expect(board.unitAt(...pixel(1, 5))).toBe(hero)
         expect(board.unitAt(...pixel(6, 1))).toBe(foe)
@@ -94,7 +95,7 @@ describe("BoardView.unitAt", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         const zone = placeHazard(on, hero, {
-            sprite: "fire", name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1.2 },
+            sprite: visual("units/fire"), name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1.2 },
             hearts: [new Heart(TIME_HEART)],
         }) as Unit
         const { board, pixel } = boardOn(on)

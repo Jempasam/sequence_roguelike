@@ -121,7 +121,7 @@ describe("Collisions", () => {
     test("a pillar → a body of the battle, off the order of play, never aimed at nor touched", () => {
         const on = pillared()
         const hero = unit(on, 1, 5)
-        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
         expect(pillar.decisive).toBe(false)
         expect(pillar.radius).toBeCloseTo(0.5)
         expect(on.bodies).toContain(pillar)
@@ -143,14 +143,14 @@ describe("Collisions", () => {
     test("a push → leaves a pillar where it stands", () => {
         const on = pillared()
         const pusher = unit(on, 1, 5)
-        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
         on.push(pillar, Vector2.RIGHT, 1, pusher)
         expect(pillar.position.equals(new Vector2(3.5, 3))).toBe(true)
     })
 
     test("a pillar playing a step itself → moves", () => {
         const on = pillared()
-        const pillar = on.units.find(each => each.sprite === "pillar") as Unit
+        const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
         expect(on.move(pillar, Vector2.RIGHT, 1).distance).toBeGreaterThan(0)
     })
 
@@ -158,7 +158,7 @@ describe("Collisions", () => {
         const on = pillared()
         unit(on, 1, 5)
         const loaded = Battle.restore(on.state())
-        expect(loaded.units.filter(each => each.sprite === "pillar")).toHaveLength(1)
+        expect(loaded.units.filter(each => each.sprite?.visual === "units/pillar")).toHaveLength(1)
     })
 
     test("straight into a body → the body is struck, the true contact kept", () => {

@@ -1,7 +1,7 @@
 import { ModifierKey, Multiply } from "../../base/Attribute"
-import { rgba } from "../../base/Rgba"
 import type { PlugContext } from "../../battle/Action"
 import { AbstractProcess } from "../AbstractProcess"
+import { visual } from "../../base/Visual"
 
 /** Quickness for the round: the moves of the unit go farther, until the round ends. */
 export class Haste extends AbstractProcess {
@@ -11,7 +11,7 @@ export class Haste extends AbstractProcess {
         /** The factor it puts on the agility of the unit. */
         public readonly factor: number,
     ){
-        super("hâte", "haste", rgba(1, 0.95, 0.3))
+        super("hâte", visual("processes/haste", { color: [1, 0.95, 0.3] }))
     }
 
 

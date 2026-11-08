@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import { visual } from "@game/core/mecard"
 import {
     BOMB, BOMB_DAMAGE, Heart, loadBattle, placeBomb, placeFlames, placePuddle, POTION_LEVEL,
     saveBattle, SHIELD_HEART, SLOWED, SLOWNESS_POTION, STEP, TIME_HEART, Vector2, WAIT,
@@ -45,7 +46,7 @@ describe("Hazards, bodies lying on the ground", () => {
         on.endPreparation()
         on.playRound()
         expect(enemy.life).toBeLessThan(4)
-        expect(on.living.filter(each => each.sprite === "fire")).toEqual([])
+        expect(on.living.filter(each => each.sprite?.visual === "units/fire")).toEqual([])
     })
 
     test("a puddle → as many time hearts as its rounds, poured on whoever steps in, worn out after them", () => {
@@ -85,7 +86,7 @@ describe("Hazards playing cards", () => {
         unit(on, 6, 1, { team: MONSTERS })
         on.startRound()
         const body = on.place(owner, {
-            sprite: "stone", name: "Robot", at: new Vector2(3, 3), hearts: Heart.many(SHIELD_HEART, 2),
+            sprite: visual("units/stone"), name: "Robot", at: new Vector2(3, 3), hearts: Heart.many(SHIELD_HEART, 2),
             cards: [WAIT, STEP],
         })
         expect(on.initiative.indexOf(body!)).toBe(on.initiative.indexOf(owner) + 1)

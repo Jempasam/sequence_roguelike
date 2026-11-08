@@ -1,5 +1,6 @@
 import { Box, Image } from "../../../../engine/ui"
 import type { Component } from "../../../../engine/ui"
+import type { Visual } from "../../sim/base/Visual"
 import type { UnitSprites } from "../look/UnitSprites"
 
 /**
@@ -9,7 +10,7 @@ import type { UnitSprites } from "../look/UnitSprites"
  * @param sprite - The name of its sprite, none for a unit with none.
  */
 export function withPicture(
-    sprites: UnitSprites, sprite: string|null, content: Component, gap = 2,
+    sprites: UnitSprites, sprite: Visual|null, content: Component, gap = 2,
 ): Component {
     const picture = sprites.of(sprite)
     if(!picture) return content

@@ -1,17 +1,16 @@
 import type { Text } from "../../../../../semantic"
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
 import { BaseStatus } from "../BaseStatus"
-import { familyType } from "../Status"
+import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
 
 /** A coated blade: the blows pour a potion. */
-export const COATED = familyType("lame enduite", rgba(0.6, 0.85, 0.75), "positive")
+export const COATED = familyType("lame enduite", statusVisual("coated", 0.6, 0.85, 0.75), "positive", { description: ["Jusqu'à la fin du round, chaque attaque qui touche verse sa potion sur sa cible, au niveau ", STATUS_LEVEL, " (inversée pour un antidote)."] })
 
 /** The kinds of coat, one for each dose. */
 export const COATS = doseVariants(COATED, dose => `${COATED} (${dose.potion})`, (type, level) => new Coated(type, level))

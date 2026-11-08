@@ -7,6 +7,7 @@
 
 export * from "./BaseStatus"
 export * from "./RoundStatus"
+export * from "./Guard"
 export * from "./ScalingStatus"
 export * from "./Status"
 export * from "./StatusVariants"

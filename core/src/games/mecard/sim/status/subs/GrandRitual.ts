@@ -1,17 +1,16 @@
 import { concat } from "../../../../../semantic"
 import type { Text } from "../../../../../semantic"
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import { counted } from "../../battle/words"
 import type { Element } from "../../element/Element"
 import { RoundStatus } from "../RoundStatus"
-import { familyType } from "../Status"
+import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { elementOf, elementVariants } from "../StatusVariants"
 import type { ElementType } from "../StatusVariants"
 
 /** A grand ritual: an element kept for rounds. */
-export const GRAND_RITUAL = familyType("grand rituel", rgba(0.8, 0.6, 1), "positive")
+export const GRAND_RITUAL = familyType("grand rituel", statusVisual("grand_ritual", 0.8, 0.6, 1), "positive", { description: ["Garde un élément pendant ", STATUS_LEVEL, " rounds, pour ce qui le rencontre : un écho."] })
 
 /** The kinds of grand ritual, one for each element. */
 export const GRAND_RITUALS = elementVariants(

@@ -22,6 +22,8 @@ import { hold, SHORT_TIME } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { ring } from "../tools/targeting"
 import { summonedHearts, summonShown } from "./SummonCard"
+import type { Visual } from "../../../base/Visual"
+import { visual } from "../../../base/Visual"
 
 /** How far ahead the bodies of the cards of this file stand, in meters: at the contact. */
 const AHEAD = 1
@@ -40,7 +42,7 @@ const SENTINEL_ROUNDS = 2
 
 /** What a card of this file puts on the arena, and how it tells what its body will work on. */
 export interface ChainSummon {
-    readonly sprite: string
+    readonly sprite: Visual
     readonly name: string
 
     /** The hearts of the body, from its owner. */
@@ -122,7 +124,7 @@ export const BLACK_HOLE = new ChainSummonCard("Trou noir", [
     "Ouvre à ", meters(AHEAD), " devant un trou noir de ", new HeartCount(BLACK_HOLE_ROUNDS), " de temps : deux fois ",
     "Aspiration, de ", meters(BLACK_HOLE_RADIUS), " autour de lui.",
 ], Rarity.EPIC, {
-    sprite: "mine", name: "Trou noir", hearts: () => timed(BLACK_HOLE_ROUNDS), cards: [SUCTION, SUCTION],
+    sprite: visual("units/mine"), name: "Trou noir", hearts: () => timed(BLACK_HOLE_ROUNDS), cards: [SUCTION, SUCTION],
     radius: BLACK_HOLE_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, BLACK_HOLE_RADIUS),
 })
 
@@ -130,7 +132,7 @@ export const TURRET = new ChainSummonCard("Tourelle", [
     "Pose à ", meters(AHEAD), " devant une tourelle de ", new HeartCount(TURRET_ROUNDS), " de temps : Viser puis Tir, ",
     "vision ", meters(AIM_RANGE), ", tir ", meters(SHOT_RANGE), ".",
 ], Rarity.RARE, {
-    sprite: "robot", name: "Tourelle", hearts: () => timed(TURRET_ROUNDS), cards: [AIM, SHOT],
+    sprite: visual("units/robot"), name: "Tourelle", hearts: () => timed(TURRET_ROUNDS), cards: [AIM, SHOT],
     radius: AIM_RANGE, targets: (battle, owner, at) => nearestEnemy(battle, owner, at, AIM_RANGE),
 })
 
@@ -138,7 +140,7 @@ export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
     "Plante à ", meters(AHEAD), " devant un totem de ", new HeartCount(SHOUT_TOTEM_ROUNDS), " de temps : Cri puis ",
     "Attendre, ", meters(TOTEM_SHOUT_RADIUS), " autour de lui.",
 ], Rarity.RARE, {
-    sprite: "totem", name: "Totem de cri", hearts: () => timed(SHOUT_TOTEM_ROUNDS), cards: [SHOUT, WAIT],
+    sprite: visual("units/totem"), name: "Totem de cri", hearts: () => timed(SHOUT_TOTEM_ROUNDS), cards: [SHOUT, WAIT],
     radius: TOTEM_SHOUT_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, TOTEM_SHOUT_RADIUS),
 })
 
@@ -146,7 +148,7 @@ export const DECOY = new ChainSummonCard("Leurre", [
     "Pose à ", meters(AHEAD), " devant un leurre d'un cœur : Provocation, tourne chaque ", UNIT, " à ",
     meters(DECOY_RADIUS), " vers lui.",
 ], Rarity.COMMON, {
-    sprite: "puppeteer", name: "Leurre", hearts: owner => summonedHearts(owner, 1), cards: [TAUNT],
+    sprite: visual("units/puppeteer"), name: "Leurre", hearts: owner => summonedHearts(owner, 1), cards: [TAUNT],
     radius: DECOY_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, DECOY_RADIUS),
 })
 
@@ -154,6 +156,6 @@ export const SENTINEL = new ChainSummonCard("Sentinelle", [
     "Pose à ", meters(AHEAD), " devant une sentinelle de ", new HeartCount(SENTINEL_ROUNDS), " de temps : Visée ",
     "énergique, puis Grande estoc.",
 ], Rarity.RARE, {
-    sprite: "stone_golem", name: "Sentinelle", hearts: () => timed(SENTINEL_ROUNDS), cards: [ENERGETIC_AIM, GREAT_THRUST],
+    sprite: visual("units/stone_golem"), name: "Sentinelle", hearts: () => timed(SENTINEL_ROUNDS), cards: [ENERGETIC_AIM, GREAT_THRUST],
     radius: SENTINEL_RADIUS, targets: (battle, owner, at) => nearestEnemy(battle, owner, at, SENTINEL_RADIUS),
 })

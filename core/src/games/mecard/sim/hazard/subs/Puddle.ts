@@ -10,12 +10,13 @@ import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
-import { familyType } from "../../status/Status"
+import { STATUS_LEVEL, familyType, statusVisual } from "../../status/Status"
 import { doseVariants } from "../../status/StatusVariants"
 import type { DoseType } from "../../status/StatusVariants"
 import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
+import { visual } from "../../base/Visual"
 
 /** How many rounds the puddles of the catalog last. */
 export const PUDDLE_ROUNDS = 3
@@ -24,7 +25,7 @@ export const PUDDLE_ROUNDS = 3
 export const PUDDLE_RADIUS = 1
 
 /** A puddle of a potion. */
-export const PUDDLE_HAZARD = familyType("flaque", HAZARD_TEXT, "neutral", { cloned: false })
+export const PUDDLE_HAZARD = familyType("flaque", statusVisual("puddle", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: ["Verse sa potion sur chaque unité qui y entre, puis à la fin de chaque round sur chaque unité qui s'y trouve, au niveau ", STATUS_LEVEL, "."] })
 
 /** The kinds of puddle, one for each dose. */
 export const PUDDLES = doseVariants(
@@ -56,7 +57,7 @@ export class Puddle extends HazardStatus {
 
 
     protected plug({ battle, unit }: UnitContext): void {
-        unit.color = { ...this.dose.potion.color, a: 0.35 }
+        unit.color = this.dose.potion.color
         const zone = (): Area => unit.zone ?? { kind: "circle", center: unit.position, radius: PUDDLE_RADIUS }
         this.hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
@@ -76,7 +77,7 @@ export function placePuddle(
     battle: Battle, owner: Unit, center: Vector2, dose: Dose, level: number, rounds: number,
 ): Unit|null {
     return placeHazard(battle, owner, {
-        sprite: "puddle", name: `Flaque de ${dose.potion}`,
+        sprite: visual("units/puddle"), name: `Flaque de ${dose.potion}`,
         zone: { kind: "circle", center, radius: PUDDLE_RADIUS },
         hearts: Heart.many(TIME_HEART, rounds),
         status: { type: PUDDLES.of(dose), level: Math.abs(level) },

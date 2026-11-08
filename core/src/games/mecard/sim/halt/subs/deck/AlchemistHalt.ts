@@ -11,6 +11,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
 import { CARTE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 
 /**
@@ -63,9 +64,7 @@ export class AlchemistHalt extends DeckHalt {
 export const ALCHEMIST_HALT: HaltType = {
     id: "alchemist",
     name: "Alchimiste",
-    description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],
-    code: "AL",
-    icon: "mecard/travel/alchemist/logo.png",
+    description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],    icon: visual("travel/alchemist/logo", { letter: "AL" }),
     transition: DOOR_TRANSITION,
     create: run => new AlchemistHalt(run),
 }

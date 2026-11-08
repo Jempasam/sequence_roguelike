@@ -1,14 +1,12 @@
 import type { Text } from "../../../../../semantic"
 import { Forced, ModifierKey } from "../../base/Attribute"
-import { rgba } from "../../base/Rgba"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
-import { StatusType } from "../Status"
+import { StatusType, statusVisual } from "../Status"
 
 /** A possession: another will drives the unit. A clone of the unit is not possessed. */
-export const POSSESSED = new StatusType("possédé", rgba(0.7, 0.45, 0.95), "neutral", level => new Possessed(level), {
-    cloned: false,
-})
+export const POSSESSED = new StatusType("possédé", statusVisual("possessed", 0.7, 0.45, 0.95), "neutral", level => new Possessed(level), {
+    cloned: false, description: "Son paquet est mélangé à chaque remplissage." })
 
 /**
  * Possessed: the deck of the unit is shuffled at each refill, whatever it is.

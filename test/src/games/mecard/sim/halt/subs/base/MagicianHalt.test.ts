@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { BOOSTERS, openBooster, Rng } from "@game/core/mecard"
+import { ALL_BOOSTERS, openBooster, Rng } from "@game/core/mecard"
 
 // --- Tests ---
 
 describe("openBooster", () => {
     test("any seed → as many cards as the pools ask, each from its pool", () => {
-        for(const booster of BOOSTERS){
+        for(const booster of ALL_BOOSTERS){
             const count = booster.pools.reduce((sum, pool) => sum + pool.count, 0)
             for(let seed = 1; seed < 20; seed++){
                 const cards = openBooster(new Rng(seed), booster)

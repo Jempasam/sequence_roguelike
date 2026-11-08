@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { visual } from "@game/core/mecard"
 import {
     HORSE, saveBattle, STEP, Strength, STRENGTH_CARD, Vector2, WAIT,
 } from "@game/core/mecard"
@@ -41,7 +42,7 @@ describe("Process", () => {
         unit(on, 6, 3, { team: MONSTERS })
         const ended: string[] = []
         const process: Process = {
-            name: "témoin", icon: "strength", color: new Strength(1).color,
+            name: "témoin", icon: visual("processes/strength"), color: new Strength(1).color,
             toString: () => "témoin", toSemString: () => "témoin",
             init: ({ hold }) => hold(() => ended.push("repris")),
             dispose: () => ended.push("fini"),

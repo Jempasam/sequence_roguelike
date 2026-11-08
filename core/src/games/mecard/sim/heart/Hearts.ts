@@ -204,6 +204,19 @@ export class Hearts {
         unit.battle.events.push({ type: "status", unit, text: ["+ cœur ", heart.kind] })
     }
 
+    /** Tell the rules of the kinds the bar holds that a battle starts, an error reported rather than thrown. */
+    public battleStarted(): void {
+        const { unit } = this
+        const { battle } = unit
+        for(const kind of new Set(this.all.map(heart => heart.kind))){
+            try {
+                this.rules.get(kind)?.onBattleStart({ battle, unit })
+            } catch(error){
+                battle.report(error)
+            }
+        }
+    }
+
     /** Fill an empty heart again, as a heart coming back. Does nothing to a full one. */
     public restore(heart: Heart): void {
         const { unit } = this

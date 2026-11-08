@@ -1,12 +1,11 @@
 import type { Text } from "../../../../../semantic"
-import { rgba } from "../../base/Rgba"
 import type { Observer } from "../../base/Observable"
 import { fading, polygonOf } from "../../battle/effects"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
 import { BaseStatus } from "../BaseStatus"
-import { familyType } from "../Status"
+import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
@@ -18,7 +17,7 @@ export const SPLASH_RADIUS = 1.5
 const SPLASH_TIME = 0.4
 
 /** A barrel full of a potion, which it splashes when it breaks. */
-export const SPLASHING = familyType("tonneau", rgba(0.75, 0.5, 0.3), "neutral")
+export const SPLASHING = familyType("tonneau", statusVisual("barrel", 0.75, 0.5, 0.3), "neutral", { description: ["À sa mort, verse sa potion sur chaque unité autour, au niveau ", STATUS_LEVEL, "."] })
 
 /** The kinds of barrel, one for each dose. */
 export const BARRELS = doseVariants(SPLASHING, dose => `${SPLASHING} (${dose.potion})`, (type, level) => new Splashing(type, level))

@@ -12,6 +12,7 @@ import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { cardShown } from "../shown"
 import { CARTE, DECK, MERGE } from "../../../base/keywords"
+import { visual } from "../../../base/Visual"
 
 /** The ways the weaver ties two cards. */
 const MODES: readonly WeaveMode[] = ["merged", "random"]
@@ -78,9 +79,7 @@ export class WeaverHalt extends DeckHalt {
 export const WEAVER_HALT: HaltType = {
     id: "weaver",
     name: "Tisserand",
-    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
-    code: "TI",
-    icon: "mecard/travel/forge/logo.png",
+    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],    icon: visual("travel/forge/logo", { letter: "TI" }),
     transition: DOOR_TRANSITION,
     create: run => new WeaverHalt(run),
 }

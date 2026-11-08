@@ -1,4 +1,4 @@
-import { rgba } from "../../base/Rgba"
+import { visual } from "../../base/Visual"
 import type { PlugContext } from "../../battle/Action"
 import { DEMONIC } from "../../status/subs/DemonEnergy"
 import { AbstractProcess } from "../AbstractProcess"
@@ -11,7 +11,7 @@ export class WeakeningBlows extends AbstractProcess {
         /** How many hearts each wound adds. */
         public readonly bonus: number,
     ){
-        super(`coups affaiblissants +${bonus}`, "weakening", rgba(0.8, 0.5, 0.4))
+        super(`coups affaiblissants +${bonus}`, visual("processes/weakening_blows", { color: [0.8, 0.5, 0.4] }))
     }
 
 
@@ -28,7 +28,7 @@ export class Grievance extends AbstractProcess {
 
 
     constructor(){
-        super("rancune", "grievance", rgba(0.85, 0.2, 0.4))
+        super("rancune", visual("processes/grievance", { color: [0.85, 0.2, 0.4] }))
     }
 
 

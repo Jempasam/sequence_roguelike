@@ -10,6 +10,8 @@ export class Ritual extends AbstractProcess {
         /** The element it keeps. */
         public readonly element: Element,
     ){
-        super(`rituel de ${element}`, visual("processes/ritual", { color: [0.8, 0.6, 1] }))
+        super(`rituel de ${element}`, visual("processes/ritual", { color: [0.8, 0.6, 1] }),
+            `Garde l'élément ${element} : ce qui le rencontre y trouve un écho.`,
+        )
     }
 }

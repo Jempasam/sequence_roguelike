@@ -1,10 +1,10 @@
 import { rgba } from "../../base/Rgba"
-import { damage as damageText, meters } from "../../battle/words"
 import type { HeartLostEvent } from "../../battle/events"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
-import { UNIT } from "../../base/keywords"
+import { DISTANCE, UNIT } from "../../base/keywords"
+import { DamageType } from "../../battle/DamageType"
 
 /** How far the blast of the explosive heart of the catalog reaches, in meters. */
 const BLAST_RADIUS = 1.2
@@ -25,7 +25,7 @@ export class ExplosiveHeartKind extends AbstractHeartKind {
     ){
         super(
             "explosif",
-            ["Perdu, il explose à ", meters(radius), " autour de toi : ", damageText(blast, "physical"), " à chaque ", UNIT, ", sauf toi."],
+            ["Perdu, il explose à ", radius, " ", DISTANCE, " autour de toi : ", blast, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ", sauf toi."],
             rgba(1, 0.6, 0.15),
         )
     }

@@ -11,7 +11,9 @@ export class Haste extends AbstractProcess {
         /** The factor it puts on the agility of the unit. */
         public readonly factor: number,
     ){
-        super("hâte", visual("processes/haste", { color: [1, 0.95, 0.3] }))
+        super("hâte", visual("processes/haste", { color: [1, 0.95, 0.3] }),
+            `Ses déplacements vont ${factor} fois plus loin.`,
+        )
     }
 
 

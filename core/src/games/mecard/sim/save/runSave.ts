@@ -16,7 +16,7 @@ import { saveTravel } from "./travelSave"
 import type { TravelSave } from "./travelSave"
 
 /** The version of the shape of a run saved, raised whenever it changes, so an old one is refused clearly. */
-export const RUN_SAVE_VERSION = 2
+export const RUN_SAVE_VERSION = 3
 
 /** A character of the party, written down as a unit of a battle is. */
 export interface SavedHero {
@@ -24,6 +24,9 @@ export interface SavedHero {
     readonly sprite: VisualData|string|null
     readonly controller: Controller
     readonly decks: readonly (readonly SavedCard[])[]
+
+    /** The cards it plays as often as it wishes. */
+    readonly unlimited: readonly SavedCard[]
 
     /** Each heart, by the name of its kind, and whether it is empty. */
     readonly hearts: readonly (readonly [string, boolean])[]
@@ -91,10 +94,10 @@ export function heroesOf(save: RunSave): Hero[] {
 }
 
 
-function savedHero({ name, sprite, controller, decks, hearts, items, usables, bases }: Hero): SavedHero {
+function savedHero({ name, sprite, controller, decks, unlimited, hearts, items, usables, bases }: Hero): SavedHero {
     return {
         name, sprite: savedVisual(sprite), controller, bases,
-        decks: decks.map(deck => deck.map(savedCard)),
+        decks: decks.map(deck => deck.map(savedCard)), unlimited: unlimited.map(savedCard),
         hearts: hearts.map(heart => [heart.kind.name, heart.isEmpty]),
         items: items.map(item => item.name),
         usables: usables.map(each => [each.usable.name, each.charges]),
@@ -105,7 +108,7 @@ function loadedHero(saved: SavedHero, card: (saved: SavedCard) => Card): Hero {
     const { name, sprite, controller, bases } = saved
     return hero({
         name, sprite: loadedVisual(sprite), controller, bases,
-        decks: saved.decks.map(deck => deck.map(card)),
+        decks: saved.decks.map(deck => deck.map(card)), unlimited: saved.unlimited.map(card),
         hearts: saved.hearts.map(([kind, isEmpty]) => new Heart(HEART_NAMES.of(kind), isEmpty)),
         items: saved.items.map(item => ITEM_NAMES.of(item)),
         usables: saved.usables.map(([usable, charges]) => new Carried(USABLE_NAMES.of(usable), charges)),

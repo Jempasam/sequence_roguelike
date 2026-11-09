@@ -32,3 +32,26 @@ export const INVOCATION = new Keyword("invoquer")
 
 /** A unit made the same as another. */
 export const PERFECT_CLONE = new Keyword("clone parfait")
+
+/** The meters a length in the arena is counted in, written after its number: `2 m`. */
+export const DISTANCE = new Keyword("m")
+
+// The stats of a unit, as a text names them.
+
+/** What comes on top of the damage of the blows. */
+export const FORCE = new Keyword("force")
+
+/** What comes on top of the damage of the shots. */
+export const PRECISION = new Keyword("précision")
+
+/** What the length of the moves of a unit is multiplied by. */
+export const AGILITE = new Keyword("agilité")
+
+/** What the length of the throws and the shoves of a unit is multiplied by. */
+export const PORTEE = new Keyword("portée")
+
+/** What the length of the blows at hand of a unit is multiplied by. */
+export const ALLONGE = new Keyword("allonge")
+
+/** A unit with more of its hearts empty than full. */
+export const FEBRILE = new Keyword("fébrile")

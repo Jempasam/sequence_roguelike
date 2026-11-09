@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -7,7 +8,7 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { DAGGER_RANGE, DAGGER_WIDTH } from "./Dagger"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /** Blows to the left and to the right at once: hit on both sides, whoever is hit is stunned. */
 export class SkullBreakCard extends BlowCard {
@@ -21,14 +22,15 @@ export class SkullBreakCard extends BlowCard {
         public readonly width: number,
     ){
         super("Brisage de crâne", [
-            "Frappe à gauche et à droite, à ", meters(range), " : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, ". ",
+            "Frappe à gauche et à droite, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
+            DamageType.PHYSICAL, " à chaque ", UNIT, ". ",
             "Si les deux côtés touchent, toutes les ", UNIT.as("unités"), " touchées sont étourdies.",
         ], Rarity.RARE, BLOW_DAMAGE)
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const side = pose.direction.right.times(this.range * progress)
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const side = pose.direction.right.times(this.range * unit.stats.meleeRange.value * progress)
         return { kind: "segment", from: pose.position.minus(side), to: pose.position.plus(side), width: this.width }
     }
 

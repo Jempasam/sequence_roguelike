@@ -1,8 +1,10 @@
 import { CardChain, resolve } from "../../sim/card/CardChain"
 import { playable } from "../../sim/card/Reading"
+import { groupOf, playedUnlimited } from "../../sim/card/Card"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
+import { nearestTurn, TURNS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
 import type { CardNode } from "../../sim/card/CardNode"
 import type { CardType } from "../../sim/card/CardType"
 import type { RootPreview } from "../../sim/card/CardChain"
@@ -38,17 +40,42 @@ export class Draft {
 
     constructor(
         public readonly unit: Unit,
-    ){}
+    ){
+        this.turnStep = nearestTurn(unit.direction)
+    }
 
 
-    /** The cards of the hand not placed yet, each copy once. */
+    /**
+     * The step of the next turn the unit plays: the one facing nearest to where the unit faces at first, then
+     * the one chosen on the dial.
+     */
+    public turnStep: number
+
+    /**
+     * The cards the unit plays unlimited that are shown to place: each but the turns, and the turn of the
+     * step chosen, in the order of the unit. Placing one takes nothing from the hand.
+     */
+    public get unlimited(): Card[] {
+        const shown = TURNS[this.turnStep]
+        return this.unit.unlimited.filter(card => !(card instanceof TurnCard) || card === shown)
+    }
+
+    /** The cards of the hand not placed yet, each copy once: a card played unlimited takes none from it. */
     public get available(): Card[] {
         const left = [...this.unit.hand]
-        for(const card of this.chain.cards){
+        const free = playedUnlimited(this.chain.cards, this.unit.unlimited)
+        this.chain.cards.forEach((card, place) => {
+            if(free[place]) return
             const index = left.indexOf(card)
             if(index >= 0) left.splice(index, 1)
-        }
+        })
         return left
+    }
+
+    /** Is a card the unit plays unlimited already played so this round, itself or one of its group? */
+    public isUsed(card: Card): boolean {
+        const free = playedUnlimited(this.chain.cards, this.unit.unlimited)
+        return this.chain.cards.some((each, place) => free[place] && groupOf(each) === groupOf(card))
     }
 
     /** What the unit is to use at the start of the execution, in the order of its belt. */
@@ -118,6 +145,18 @@ export class Draft {
         if(!this.hasRoom) return "full"
         this.chain.cards.push(card)
         return "placed"
+    }
+
+    /**
+     * Change the direction of a turn of the chain, which keeps its place.
+     *
+     * @returns Was there a turn at that place, and the unit able to turn to that step?
+     */
+    public turn(place: number, step: number): boolean {
+        const turn = TURNS[step]
+        if(!(this.chain.cards[place] instanceof TurnCard) || !turn || !this.unit.unlimited.includes(turn)) return false
+        this.chain.cards[place] = turn
+        return true
     }
 
     /** Take a card of the chain back to the hand. */

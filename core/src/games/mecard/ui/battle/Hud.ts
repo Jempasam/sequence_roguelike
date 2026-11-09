@@ -22,6 +22,7 @@ import type { CardPlace } from "../hud/CardView"
 import { ChainStrip, FlatStrip, LINK_ROOM, stripOfView } from "../hud/ChainStrip"
 import type { StripCard } from "../hud/ChainStrip"
 import { CardChain } from "../../sim/card/CardChain"
+import { nearestTurn, TURNS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { DetailBox } from "../hud/DetailBox"
 import { processText, statusText, StatusProcessList } from "../hud/StatusProcessList"
@@ -140,6 +141,12 @@ export interface HudActions {
     /** Take a placed card back to the hand. */
     remove(place: number): void
 
+    /** Point the turn placed at a place of the chain to another step. */
+    turn(place: number, step: number): void
+
+    /** Point the turn of the hand to a step, placing nothing. */
+    turnTo(step: number): void
+
     /** Choose to use what lies at a place of the belt of the unit planned, or not to use it anymore. */
     toggleUsable(index: number): void
 
@@ -149,7 +156,7 @@ export interface HudActions {
 
 /** What the panels do before a screen tied them. */
 const NO_ACTIONS: HudActions = {
-    choose: () => {}, pick: () => {}, remove: () => {}, toggleUsable: () => {},
+    choose: () => {}, pick: () => {}, remove: () => {}, turn: () => {}, turnTo: () => {}, toggleUsable: () => {},
     launch: () => {}, skip: () => {},
 }
 
@@ -553,8 +560,8 @@ export class Hud {
             if(crowded) block.add(hearts)
             block.add(this.#showsHand(unit)
                 ? this.#openHand(unit, "mini")
-                : this.#looked(unit, roots, "mini"))
-            column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block)))
+                : this.#scrolled(this.#looked(unit, roots, "mini")))
+            column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block, 2, 1)))
         })
         this.#units.parent?.remove(this.#units)
         this.#units.content = column
@@ -586,6 +593,17 @@ export class Hud {
         const lit = scene.litCards?.unit === unit ? scene.litCards : null
         const marks = { cursor: shown.cursor, lit }
         return new CardChain(shown.cards).view().map(view => stripOfView(view, marks))
+    }
+
+    /**
+     * A mini chain in a horizontal scroll, as tall as the chain and the bar: a chain too long for the panel
+     * scrolls by its bar, and the wheel stays with the list of the units.
+     */
+    #scrolled(chain: Component): Component {
+        const height = CARD_LOOKS.mini.height + LINK_ROOM + this.theme.scrollbar.width
+        const scroll = new Scroll(this.theme, { axis: "horizontal", width: SCROLL_SIZE, height, wheel: false })
+        scroll.content = chain
+        return scroll
     }
 
     /**
@@ -673,6 +691,16 @@ export class Hud {
         const cards = this.host.scene.of(unit)?.hand ?? []
         const hand = new OverflowContainer({ gap: HAND_GAP })
         const deckOf = unit.decks.homeTeller()
+        // What the unit plays unlimited is in its hand from the start: the cards drawn come after it.
+        const draft = this.#draft()
+        const shownTurn = TURNS[draft?.unit === unit ? draft.turnStep : nearestTurn(unit.direction)]
+        for(const card of unit.unlimited){
+            if(card instanceof TurnCard && card !== shownTurn) continue
+            const view = new CardView(this.theme, card, "hand")
+            view.unlimited = true
+            view.onHover = over => this.#tellCard(card, over)
+            hand.add(view)
+        }
         cards.forEach((card, index) => {
             const view = new CardView(this.theme, card, "hand")
             view.deck = deckOf(card)
@@ -777,6 +805,7 @@ export class Hud {
         return new FlatStrip(this.theme, cards.map((card, place) => ({ card, active: active[place] })), draft.groups, {
             pick: place => this.actions.remove(place),
             hover: (place, over) => this.host.hoverRoot(draft.unit, draft.rootOf(place), over),
+            dial: (place, step) => this.actions.turn(place, step),
             deckOf,
         })
     }
@@ -787,6 +816,18 @@ export class Hud {
      */
     #hand(draft: Draft, deckOf: (card: Card) => number|null): Component {
         const hand = new OverflowContainer({ gap: HAND_GAP })
+        // What the unit plays unlimited comes first, edged in white: a click places a copy, the card stays.
+        for(const card of draft.unlimited){
+            const view = new CardView(this.theme, card, "hand")
+            view.unlimited = true
+            // Played already this round: greyed out, and not placed again.
+            const used = draft.isUsed(card)
+            view.dimmed = used
+            if(!used) view.onPick = () => this.actions.pick(card)
+            view.onDial = step => this.actions.turnTo(step)
+            view.onHover = over => this.host.hoverCard(card, over)
+            hand.add(view)
+        }
         for(const card of draft.available){
             const view = new CardView(this.theme, card, "hand")
             view.deck = deckOf(card)

@@ -2,8 +2,9 @@ import { describe, expect, test } from "vitest"
 import { plainText, spansOf } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    ALL_CARDS, CARTE, FUSION, CHARGE, DECK, Damage, FusionCard, allHalts, HEART, HeartCount, ALL_ITEMS,
-    MERGE, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES, UNSTABLE_THRUST,
+    AGILITE, ALLONGE, FEBRILE, ALL_CARDS, CARTE, FUSION, CHARGE, DamageType, DECK, DISTANCE, FORCE, FusionCard, allHalts, HEART,
+    HeartCount, ALL_ITEMS, MERGE, PORTEE, PRECISION, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES,
+    UNSTABLE_THRUST,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
@@ -25,10 +26,24 @@ const ALL_TEXTS: readonly (readonly [string, Text])[] = [
 // --- Tests ---
 
 describe("mecardDisplay", () => {
-    test("a damage → the number, then a half heart, the word kept as its plain string", () => {
-        const pieces = spans(new Damage(2, "physical"))
-        expect(pieces.at(-1)).toMatchObject({ kind: "svg", path: { alt: "dégâts" }, link: null })
-        expect(plainText(new Damage(2, "physical"), mecardDisplay)).toBe("2 dégâts")
+    test("a type of damage → a half heart in its color, the name kept as its plain string", () => {
+        const text = [2, " ", DamageType.PHYSICAL]
+        expect(spans(text).at(-1)).toMatchObject({ kind: "svg", path: { alt: "dégâts physiques" }, link: DamageType.PHYSICAL })
+        expect(plainText(text, mecardDisplay)).toBe("2 dégâts physiques")
+        expect(spans(DamageType.ELEMENTAL)[0].color).not.toEqual(spans(DamageType.PHYSICAL)[0].color)
+    })
+
+    test("a distance → its number, then the meters in their own color", () => {
+        const [, , unit] = spans([2, " ", DISTANCE])
+        expect(unit).toMatchObject({ kind: "string", text: "m", link: DISTANCE })
+        expect(unit.color).not.toBeNull()
+    })
+
+    test("a stat → its word, standing out, linking to it", () => {
+        for(const stat of [FORCE, PRECISION, AGILITE, PORTEE, ALLONGE, FEBRILE]){
+            expect(spans(stat)[0]).toMatchObject({ kind: "string", text: stat.name, link: stat })
+        }
+        expect(plainText([2, "+", FORCE, " ", DamageType.PHYSICAL], mecardDisplay)).toBe("2+force dégâts physiques")
     })
 
     test("a heart → drawn in the color of the text around it", () => {

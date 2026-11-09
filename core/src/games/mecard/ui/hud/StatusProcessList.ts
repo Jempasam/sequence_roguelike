@@ -21,7 +21,7 @@ export function statusText(shown: ShownStatus): Text {
 
 /** What a process is, for the player. */
 export function processText(process: Process): Text {
-    return concat("Processus ", process, " : jusqu'à la fin du round.")
+    return concat("Processus ", process, " : ", process.description, " Jusqu'à la fin du round.")
 }
 
 /** What a list of the statuses and processes of a unit does when the pointer comes over them. */

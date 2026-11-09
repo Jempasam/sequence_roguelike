@@ -9,7 +9,8 @@ import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
 
 import type { Indicator, Pose } from "./Action"
-import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent, Nature } from "./events"
+import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent } from "./events"
+import type { DamageType } from "./DamageType"
 import type { Phase } from "./Battle"
 import type { Unit, UnitStats } from "./Unit"
 
@@ -54,7 +55,7 @@ export interface HeartsSignal {
 /** A unit wounded: how many hearts it lost, and its bar after. */
 export interface DamageSignal extends HeartsSignal {
     readonly amount: number
-    readonly nature: Nature
+    readonly nature: DamageType
 }
 
 /** A unit healed: how many hearts came back, and its bar after. */

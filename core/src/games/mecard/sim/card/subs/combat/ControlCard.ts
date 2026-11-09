@@ -1,6 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -9,7 +8,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, travel, turn } from "../tools/playing"
 import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
 
 /** How far the charm and the fear of the catalog reach, in meters. */
 const CONTROL_RANGE = 3
@@ -34,8 +33,8 @@ export class ControlCard extends ActionCard {
         super(
             toward ? "Charmer" : "Effrayer",
             [
-                "L'", UNIT, " en face, jusqu'à ", meters(range), toward ? ", se tourne vers toi" : ", te tourne le dos",
-                " et avance de ", meters(walk), ".",
+                "L'", UNIT, " en face, jusqu'à ", range, " ", DISTANCE, toward ? ", se tourne vers toi" : ", te tourne le dos",
+                " et avance de ", walk, " ", DISTANCE, ".",
             ],
             Rarity.RARE, ControlCard.#controlling(toward, range, walk),
         )

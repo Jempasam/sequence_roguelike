@@ -40,7 +40,7 @@ export class ButcherHalt extends DeckHalt {
             this.impact()
             this.run.changeDeck(deck, changed => cutFusions(changed, cards))
             ctx.tell(concat("Coupées : ", joinText(cards, ", "), "."))
-        }, { among: isComposite, back })
+        }, { among: isComposite, back, unlimited: hero.unlimited, copies: false })
     }
 }
 

@@ -72,11 +72,13 @@ export const CROSSED_SPELL = new RewriteCard("Sort croisé", [
 export const REACTION = new RewriteCard("Réaction", [
     "Fin de préparation : les deux éléments à sa droite réagissent et deviennent un seul : Feu et Eau font de la Vapeur, ",
     "Feu et Pierre de la Lave, Vent et Électricité une Tempête, Eau et Pierre de la Boue, Feu et Vent un Brasier, ",
-    "Plante et Pierre des Ronces. Sans réaction, disparaît.",
-], Rarity.RARE, (_ctx, spot) => {
+    "Plante et Pierre des Ronces. Sans réaction, l'un des deux au hasard l'emporte.",
+], Rarity.RARE, (ctx, spot) => {
     const elements = nextTwo(spot)
-    const product = elements && reaction(...elements)
-    return product ? { cards: [compoundCard(product)], consumed: 2, acting: false } : NOTHING
+    if(!elements) return NOTHING
+    const product = reaction(...elements)
+    const card = product ? compoundCard(product) : ctx.pick([spot.rest[0], spot.rest[1]] as Card[])
+    return { cards: [card], consumed: 2, acting: false }
 })
 
 /** What a ritual gives: the element on its right leaves the chain, kept by what it does to the battle. */

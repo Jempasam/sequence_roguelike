@@ -1,4 +1,5 @@
-import { meters, shotDamage } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Action } from "../../../battle/Action"
@@ -8,6 +9,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
 import { polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the shotgun of the catalog reaches, in meters, before the reach of the unit. */
 const SHOTGUN_RANGE = 2.5
@@ -54,8 +56,8 @@ export class ShotgunCard extends ActionCard {
         public readonly spread: number,
     ){
         super("Pompe", [
-            "Tire ", String(pellets), " plombs devant, chacun dans un angle tiré au hasard, jusqu'à ",
-            meters(range), " × portée : ", shotDamage(pelletDamage), " chacun.",
+            "Tire ", pellets, " plombs devant, chacun dans un angle tiré au hasard, jusqu'à ", frenchNumber(range),
+            "×", PORTEE, " ", DISTANCE, " : ", pelletDamage, "+", PRECISION, " ", DamageType.PHYSICAL, " chacun.",
         ], Rarity.RARE, ShotgunCard.#firing(range, pellets, pelletDamage, spread))
     }
 
@@ -80,7 +82,8 @@ export class ShotgunCard extends ActionCard {
                     return lines.map(line => polygon(segment(line, share), PHYSICAL_COLOR))
                 })
                 for(const line of lines){
-                    battle.strike(unit, segment(line, 1), pelletDamage + unit.stats.precision.value, "physical")
+                    const pellet = pelletDamage + unit.stats.precision.value
+                    battle.strike(unit, segment(line, 1), pellet, DamageType.PHYSICAL)
                 }
                 const landed = lines.map(line => polygon(segment(line, 1), PHYSICAL_COLOR))
                 yield* hold(battle, RECOVERY_TIME, landed)

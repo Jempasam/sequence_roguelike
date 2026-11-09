@@ -10,6 +10,7 @@ import { AbstractCard } from "../AbstractCard"
 import { hold, sweep } from "../tools/playing"
 import { polygon, still } from "../tools/previews"
 import type { Rarity } from "../../Rarity"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts a blow at hand takes, before the bonus of the unit. */
 export const BLOW_DAMAGE = 2
@@ -70,7 +71,7 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
      * @returns The units it landed on.
      */
     protected land(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.strike(unit, area, this.damage + this.bonus(unit.stats), "physical")
+        return battle.strike(unit, area, this.damage + this.bonus(unit.stats), DamageType.PHYSICAL)
     }
 
 

@@ -1,5 +1,4 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { damage, meters } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
@@ -7,7 +6,9 @@ import { Rarity } from "../../Rarity"
 
 import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
 import type { Impact } from "./MoveCard"
-import { UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
+import { frenchNumber } from "../../../battle/words"
 
 /** How far the blast of the explosive dash of the catalog reaches, in meters, before the reach. */
 const DASH_BLAST_RADIUS = 1.2
@@ -29,8 +30,9 @@ export class ExplosiveDashCard extends MoveCard {
         public readonly blast: number,
     ){
         super("Dash explosif", [
-            "Fonce de ", meters(length), ". S'il percute quoi que ce soit, tout explose à ", meters(radius),
-            " × portée autour : ", damage(blast, "physical"), " à chaque ", UNIT, ", sauf toi.",
+            "Fonce de ", length, "×", AGILITE, " ", DISTANCE, ". S'il percute quoi que ce soit, tout explose à ",
+            frenchNumber(radius), "×", PORTEE, " ", DISTANCE, " autour : ", blast, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
+            ", sauf toi.",
         ], Rarity.RARE, length, speed)
     }
 

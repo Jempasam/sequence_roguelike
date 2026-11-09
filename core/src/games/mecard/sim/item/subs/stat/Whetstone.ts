@@ -1,5 +1,5 @@
 import { joinText } from "../../../../../../semantic"
-import { damage } from "../../../battle/words"
+import { FORCE } from "../../../base/keywords"
 import { SLASH } from "../../../card/subs/attack/Slash"
 import { SWEEP } from "../../../card/subs/attack/Sweep"
 import { THRUST } from "../../../card/subs/attack/Thrust"
@@ -18,7 +18,6 @@ export const WHETSTONE = new StatItem("Pierre à aiguiser", visual("items/whetst
     {
         stat: stats => stats.strength,
         amount: WHETSTONE_BONUS,
-        shown: damage(WHETSTONE_BONUS, "physical"),
-        text: ["de force : à chaque coup, ", ...joinText(BLOWS, ", ")],
+        text: [FORCE, " : à chaque coup, ", ...joinText(BLOWS, ", ")],
     },
 ])

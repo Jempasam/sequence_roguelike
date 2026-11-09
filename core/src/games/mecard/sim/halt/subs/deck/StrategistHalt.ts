@@ -161,8 +161,8 @@ export class StrategistHalt extends AbstractHalt {
                     this.run.changeDeck(second, other => swapCards(one, leaving, other, coming))
                 })
                 ctx.tell(concat("Échangées : ", joinText([...leaving, ...coming], ", "), "."), decksShown(first, second))
-            }, { back: fromFirst })
-        }, back ? { back } : {})
+            }, { back: fromFirst, unlimited: hero.unlimited, copies: false })
+        }, { ...back ? { back } : {}, unlimited: hero.unlimited, copies: false })
         fromFirst()
     }
 }

@@ -28,11 +28,11 @@ describe("catalog texts", () => {
 
     test("each weapon → its base damage", () => {
         for(const weapon of [SHOT, SLASH, THRUST, SWEEP, BOMB, FLAMETHROWER, TASER, PUSH, SPELL]){
-            expect(plainText(weapon.description), weapon.name).toMatch(/\d+ dégâts?/)
+            expect(plainText(weapon.description), weapon.name).toMatch(/\d.* dégâts (physiques|élémentaires)/)
         }
     })
 
     test("a blow → its bonus on top", () => {
-        expect(plainText(SLASH.description)).toContain("2 dégâts + force")
+        expect(plainText(SLASH.description)).toContain("2+force dégâts physiques")
     })
 })

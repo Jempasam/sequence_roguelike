@@ -4,7 +4,7 @@ import type { Vector2 } from "../../../base/Vector2"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { counted, HeartCount, meters } from "../../../battle/words"
+import { counted, frenchNumber, HeartCount } from "../../../battle/words"
 import type { Action, ActionRun, Indicator, Pose, UnitContext } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Area } from "../../../battle/Area"
@@ -20,7 +20,7 @@ import { AbstractCard } from "../AbstractCard"
 import { flight, hold, SHORT_TIME, wait } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { summonedHearts, summonShown } from "../summon/SummonCard"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 
 /** How long a potion flies when thrown, in seconds. */
 const THROW_TIME = 0.25
@@ -253,18 +253,19 @@ export const BIG_BOTTLE = new BottleCard("Grande bouteille", [
 ], Rarity.RARE, STRONG)
 
 export const THROWN_POTION = new ThrownPotionCard("Potion jetable", [
-    "Lance la potion ", meters(POTION_THROW), " × portée devant : elle éclabousse chaque ", UNIT, " à ",
-    meters(POTION_SPLASH), " autour, ", levelText(), ".",
+    "Lance la potion à ", frenchNumber(POTION_THROW), "×", PORTEE, " ", DISTANCE, " devant : elle éclabousse chaque ",
+    UNIT, " à ", POTION_SPLASH, " ", DISTANCE, " autour, ", levelText(), ".",
 ], Rarity.COMMON, POTION_THROW, POTION_SPLASH)
 
 export const POTION_RAIN = new PotionRainCard("Pluie de potion", [
-    "Fait pleuvoir la potion sur chaque ", UNIT, " à ", meters(RAIN_RADIUS), " × portée autour, toi compris, ",
+    "Fait pleuvoir la potion sur chaque ", UNIT, " à ", frenchNumber(RAIN_RADIUS), "×", PORTEE, " ", DISTANCE, " autour, toi compris, ",
     levelText(), ".",
 ], Rarity.RARE, RAIN_RADIUS)
 
 export const BARREL = new BarrelCard("Tonneau", [
-    "Pose à ", meters(BARREL_AHEAD), " devant un tonneau de ", new HeartCount(BARREL_HALVES), " + invocation, plein de ",
-    "la potion. Quand il casse, il l'éclabousse à ", meters(SPLASH_RADIUS), " autour, ", levelText(STRONG), ".",
+    "Pose à ", BARREL_AHEAD, " ", DISTANCE, " devant un tonneau de ", new HeartCount(BARREL_HALVES),
+    " + invocation, plein de la potion. Quand il casse, il l'éclabousse à ", frenchNumber(SPLASH_RADIUS), " ",
+    DISTANCE, " autour, ", levelText(STRONG), ".",
 ], Rarity.RARE, STRONG)
 
 export const COATED_BLADE = new CoatCard("Lame enduite", [
@@ -272,6 +273,6 @@ export const COATED_BLADE = new CoatCard("Lame enduite", [
 ], Rarity.RARE, 1)
 
 export const PUDDLE = new PuddleCard("Flaque", [
-    "Répand la potion à ", meters(PUDDLE_AHEAD), " × portée devant, pour ", counted(PUDDLE_ROUNDS, "round"),
+    "Répand la potion à ", frenchNumber(PUDDLE_AHEAD), "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(PUDDLE_ROUNDS, "round"),
     " : elle s'applique à qui y entre, puis en fin de round à qui s'y tient, ", levelText(), ".",
 ], Rarity.RARE, PUDDLE_ROUNDS)

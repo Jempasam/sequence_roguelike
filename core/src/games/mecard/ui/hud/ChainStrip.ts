@@ -197,6 +197,9 @@ export interface FlatStripHost {
     /** The pointer came over the card at a place, or left it. */
     hover(place: number, over: boolean): void
 
+    /** The dial of the turn at a place was clicked at a step. A turn only shows its dial when none. */
+    dial?(place: number, step: number): void
+
     /** The deck a card comes from, none for a card from elsewhere. */
     deckOf(card: Card): number|null
 }
@@ -223,6 +226,7 @@ export class FlatStrip extends Stack {
             view.deck = host.deckOf(card)
             view.onPick = () => host.pick(place)
             view.onHover = over => host.hover(place, over)
+            if(host.dial) view.onDial = step => host.dial?.(place, step)
             row.add(view)
             return view
         })

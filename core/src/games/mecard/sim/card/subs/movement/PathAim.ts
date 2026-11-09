@@ -1,50 +1,39 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { pathTo } from "../../../battle/pathfinding"
-import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
+import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, PreviewContext } from "../../../battle/Action"
-import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { arrow, label, polygon, still } from "../tools/previews"
+import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 
-/** How far the way of the catalog looks for an enemy, a factor of the vision. */
-const PATH_REACH = 0.8
-
-/** What a way to an enemy goes through from a pose, none when there is no enemy in reach. */
-function wayOf({ battle, unit, pose }: PreviewContext, reach: number): readonly Vector2[]|null {
-    const target = battle.nearestEnemy(unit, unit.stats.aimRange.value * reach, pose.position)
+/** What a way to an enemy goes through from a pose, none when there is no enemy. */
+function wayOf({ battle, unit, pose }: PreviewContext): readonly Vector2[]|null {
+    const target = battle.nearestEnemy(unit, Infinity, pose.position)
     if(!target) return null
     const path = pathTo(battle, unit, pose.position, target)
     return path.length > 0 ? path : [target.position]
 }
 
 /**
- * A turn toward the way to the closest enemy in reach, around what stands between: where to go to come
- * closer, not where the enemy is.
+ * A turn toward the way to the closest enemy, around what stands between: where to go to come closer, not
+ * where the enemy is.
  */
 export class PathAimCard extends ActionCard {
 
 
-    constructor(
-        name: string, description: Text, rarity: Rarity,
-
-        /** How far it looks, a factor of the vision of its unit. */
-        public readonly reach: number,
-    ){
-        super(name, description, rarity, PathAimCard.#aiming(reach))
+    constructor(name: string, description: Text, rarity: Rarity){
+        super(name, description, rarity, PathAimCard.#aiming())
     }
 
 
-    static #aiming(reach: number): Action {
-        const range = (unit: Unit): number => unit.stats.aimRange.value * reach
+    static #aiming(): Action {
         return {
             use: function* (ctx){
                 const { battle, unit } = ctx
-                const way = wayOf({ battle, unit, pose: unit }, reach)
+                const way = wayOf({ battle, unit, pose: unit })
                 if(way){
                     yield* turn(ctx, way[0].minus(unit.position).normalized ?? unit.direction)
                     return
@@ -53,19 +42,17 @@ export class PathAimCard extends ActionCard {
                 yield* hold(battle, WORD_TIME, [label(unit.position, "personne à viser", NOTE_COLOR)])
             },
             preview: ctx => {
-                const { unit, pose } = ctx
-                const reachShown = polygon({ kind: "circle", center: pose.position, radius: range(unit) }, RANGE_COLOR)
-                const way = wayOf(ctx, reach)
-                if(!way) return still(pose, reachShown, label(pose.position, "personne à viser", NOTE_COLOR))
+                const { pose } = ctx
+                const way = wayOf(ctx)
+                if(!way) return still(pose, label(pose.position, "personne à viser", NOTE_COLOR))
                 const direction = way[0].minus(pose.position).normalized ?? pose.direction
                 const walked = arrow([pose.position, ...way], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, direction }, reachShown, walked)
+                return still({ ...pose, direction }, walked)
             },
         }
     }
 }
 
 export const PATH_AIM = new PathAimCard("Chemin", [
-    "Se tourne vers le chemin qui mène à l'ennemi le plus proche, en contournant les obstacles, jusqu'à la vision × ",
-    frenchNumber(PATH_REACH), ".",
-], Rarity.COMMON, PATH_REACH)
+    "Se tourne vers le chemin qui mène à l'ennemi le plus proche, en contournant les obstacles.",
+], Rarity.COMMON)

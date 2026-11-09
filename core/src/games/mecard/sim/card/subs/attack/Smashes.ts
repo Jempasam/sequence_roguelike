@@ -1,14 +1,15 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts the suplex of the catalog takes, before twice the strength of the unit. */
 const SUPLEX_DAMAGE = 4
@@ -62,7 +63,8 @@ abstract class SingleBlow extends BlowCard {
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         const target = nearestOf(battle.unitsIn(area, unit), unit.position)
         if(!target) return []
-        const hit = battle.strike(unit, area, this.damage + this.bonus(unit.stats), "physical", other => {
+        const amount = this.damage + this.bonus(unit.stats)
+        const hit = battle.strike(unit, area, amount, DamageType.PHYSICAL, other => {
             return other === target ? this.scaleOf(unit, target) : 0
         })
         this.after(battle, unit, hit)
@@ -84,8 +86,8 @@ export class SuplexCard extends SingleBlow {
 
     constructor(){
         super("Suplex", [
-            "Projette l'", UNIT, " la plus proche derrière, dans un carré de ", meters(SUPLEX_SIDE), " : ",
-            blowDamage(SUPLEX_DAMAGE), " + deux fois la force, et elle est étourdie.",
+            "Projette l'", UNIT, " la plus proche derrière, dans un carré de ", SUPLEX_SIDE, "×", ALLONGE, " ", DISTANCE, " : ",
+            SUPLEX_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, ", et elle est étourdie.",
         ], Rarity.RARE, SUPLEX_DAMAGE)
     }
 
@@ -93,8 +95,8 @@ export class SuplexCard extends SingleBlow {
         return 2 * stats.strength.value
     }
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.minus(pose.direction.times(SUPLEX_SIDE * progress))
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const to = pose.position.minus(pose.direction.times(SUPLEX_SIDE * unit.stats.meleeRange.value * progress))
         return { kind: "segment", from: pose.position, to, width: SUPLEX_SIDE }
     }
 
@@ -113,17 +115,19 @@ export class GreatThrustCard extends SingleBlow {
 
     constructor(){
         super("Grande estoc", [
-            "Perce sur ", meters(GREAT_THRUST_REACH), " devant, sauf le premier mètre : ", blowDamage(1), " à l'", UNIT,
-            " la plus proche, et un de plus tous les ", meters(GREAT_THRUST_PER), " de distance.",
+            "Perce sur ", GREAT_THRUST_REACH, "×", ALLONGE, " ", DISTANCE, " devant, sauf le premier mètre (×", ALLONGE, ") : ", 1, " ",
+            DamageType.PHYSICAL, " à l'", UNIT, " la plus proche, et un de plus tous les ", GREAT_THRUST_PER, " ",
+            DISTANCE, " de distance.",
         ], Rarity.RARE, 1)
     }
 
     /** It takes no strength: the distance is what makes it hurt. */
     public override bonus(): number { return 0 }
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START))
-        const to = from.plus(pose.direction.times((GREAT_THRUST_REACH - GREAT_THRUST_START) * progress))
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const stretch = unit.stats.meleeRange.value
+        const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START * stretch))
+        const to = from.plus(pose.direction.times((GREAT_THRUST_REACH - GREAT_THRUST_START) * stretch * progress))
         return { kind: "segment", from, to, width: GREAT_THRUST_WIDTH }
     }
 
@@ -140,14 +144,15 @@ export class DemonicStrikeCard extends BlowCard {
 
     constructor(){
         super("Frappe démoniaque", [
-            "Frappe en cercle de ", meters(DEMONIC_RADIUS), " à ", meters(DEMONIC_AHEAD), " devant : ",
-            blowDamage(DEMONIC_DAMAGE), " à chaque ", UNIT, ". Chaque ", UNIT, " touchée donne un round d'énergie démoniaque.",
+            "Frappe en cercle de ", DEMONIC_RADIUS, "×", ALLONGE, " ", DISTANCE, " à ", DEMONIC_AHEAD, "×", ALLONGE, " ", DISTANCE, " devant : ",
+            DEMONIC_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ". Chaque ", UNIT, " touchée donne un round d'énergie démoniaque.",
         ], Rarity.RARE, DEMONIC_DAMAGE)
     }
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const center = pose.position.plus(pose.direction.times(DEMONIC_AHEAD))
-        return { kind: "circle", center, radius: DEMONIC_RADIUS * progress }
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const stretch = unit.stats.meleeRange.value
+        const center = pose.position.plus(pose.direction.times(DEMONIC_AHEAD * stretch))
+        return { kind: "circle", center, radius: DEMONIC_RADIUS * stretch * progress }
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
@@ -169,12 +174,13 @@ export class QuakeCard extends BlowCard {
 
     constructor(){
         super("Tremblement", [
-            "Fait trembler le sol à ", meters(QUAKE_RADIUS), " autour : ", blowDamage(1), " à chaque ", UNIT, ".",
+            "Fait trembler le sol à ", frenchNumber(QUAKE_RADIUS), "×", ALLONGE, " ", DISTANCE, " autour : ", 1, "+", FORCE, " ",
+            DamageType.PHYSICAL, " à chaque ", UNIT, ".",
         ], Rarity.COMMON, 1)
     }
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        return { kind: "circle", center: pose.position, radius: QUAKE_RADIUS * progress }
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        return { kind: "circle", center: pose.position, radius: QUAKE_RADIUS * unit.stats.meleeRange.value * progress }
     }
 
     protected override marked(battle: Battle, unit: Unit, area: Area): Unit[] {
@@ -190,8 +196,8 @@ export class SacrificeCard extends BlowCard {
 
     constructor(){
         super("Coup du sacrifice", [
-            "Perd ", String(SACRIFICE_COST), " cœur pour frapper sur 2 m devant : ", blowDamage(SACRIFICE_DAMAGE),
-            " + deux fois la force à chaque ", UNIT, ".",
+            "Perd ", new HeartCount(SACRIFICE_COST), " pour frapper sur ", 2, "×", ALLONGE, " ", DISTANCE, " devant : ",
+            SACRIFICE_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ".",
         ], Rarity.RARE, SACRIFICE_DAMAGE)
     }
 
@@ -199,12 +205,13 @@ export class SacrificeCard extends BlowCard {
         return 2 * stats.strength.value
     }
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        return { kind: "segment", from: pose.position, to: pose.position.plus(pose.direction.times(2 * progress)), width: 0.5 }
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const to = pose.position.plus(pose.direction.times(2 * unit.stats.meleeRange.value * progress))
+        return { kind: "segment", from: pose.position, to, width: 0.5 }
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
-        unit.hearts.damage(SACRIFICE_COST, "physical", null)
+        unit.hearts.damage(SACRIFICE_COST, DamageType.PHYSICAL, null)
         if(!unit.alive) return []
         return super.land(battle, unit, area)
     }

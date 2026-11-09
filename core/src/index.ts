@@ -54,7 +54,7 @@ export { BitmapFont, TextLayout } from "./engine/text"
 export type { BitmapFontOptions, Glyph, GridFontOptions } from "./engine/text"
 export {
     AnimationChain, Box, Bubble, Button, Choice, Component, Container, ContentContainer, ContextMenu,
-    CURSOR_BLINK, DirtyRegion, EMPTY_HINT, FitBox, FrameClock, Image, instant, Label, Layer,
+    CURSOR_BLINK, Dial, DirtyRegion, EMPTY_HINT, FitBox, FrameClock, Image, instant, Label, Layer,
     MAX_DIRTY_RECTS, MIN_VIRTUAL_HEIGHT, OverflowContainer,
     NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
     Slider, Stack, Tabs, TextInput, TileRun, Tilt, Tooltip, TOOLTIP_DELAY, Transition, UI_BINDINGS, uiActions,
@@ -62,7 +62,7 @@ export {
 } from "./engine/ui"
 export type {
     Align, Animation, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
-    ChoiceOptions,
+    ChoiceOptions, DialLook,
     ChoiceStep, FitMode, ImageOptions, LabelOptions, MenuEntry, NavigationAxis, NineSliceMargins,
     NineSliceOptions, NumberInputOptions, OverflowContainerOptions, PanelOptions, ParagraphOptions, ParallaxLayer, PopupAnchor, Pose,
     ScrollOptions, Size, SizeHint, SliderOptions, StackSlot, StateLooks, TabPage, TabsOptions, TextAlign,

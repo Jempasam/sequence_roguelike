@@ -34,14 +34,34 @@ export function removeCards(deck: Card[], cards: readonly Card[]): void {
 }
 
 /**
+ * Put in a deck the copies a halt needs of the cards a character plays unlimited, when the deck holds fewer
+ * than the halt takes: picking such a card at a halt gives a copy of it, which the halt then takes as any.
+ *
+ * @param cards - The cards the halt is about to take, each as many times as it takes it.
+ * @returns The deck, for a halt to go on with.
+ */
+export function withCopies(deck: Card[], cards: readonly Card[], unlimited: readonly Card[]): Card[] {
+    const needed = new Map<Card, number>()
+    for(const card of cards) needed.set(card, (needed.get(card) ?? 0) + 1)
+    for(const [card, count] of needed){
+        if(!unlimited.includes(card)) continue
+        const held = deck.filter(each => each === card).length
+        for(let copy = held; copy < count; copy++) deck.push(card)
+    }
+    return deck
+}
+
+/**
  * Sacrifice two cards of a deck at the altar, for a copy of a third: the copied card is one the deck holds
- * besides the two sacrificed.
+ * besides the two sacrificed, or one the character plays unlimited.
  *
  * @throws {@link Error} When the deck does not hold the three cards.
  */
-export function sacrifice(deck: Card[], sacrificed: readonly [Card, Card], copied: Card): void {
+export function sacrifice(
+    deck: Card[], sacrificed: readonly [Card, Card], copied: Card, unlimited: readonly Card[] = [],
+): void {
     removeCards(deck, sacrificed)
-    if(!deck.includes(copied)){
+    if(!deck.includes(copied) && !unlimited.includes(copied)){
         deck.push(...sacrificed)
         throw new Error(`${copied.name} is not in the deck besides the two sacrificed.`)
     }

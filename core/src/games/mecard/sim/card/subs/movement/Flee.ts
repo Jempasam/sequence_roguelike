@@ -1,6 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber, meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -11,8 +11,8 @@ import { arrow, label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { STEP_LENGTH } from "./Step"
 
-/** How close an enemy must stand for the flight of the catalog to go, a factor of the vision. */
-const FLEE_REACH = 0.5
+/** How close an enemy must stand for the flight of the catalog to go, in meters. */
+const FLEE_REACH = 2
 
 /** How long the unit stays still after its flight, in seconds. */
 const SETTLE_TIME = 0.08
@@ -22,7 +22,7 @@ const NOBODY = "personne de proche"
 
 /** The way away from the closest enemy too close to a pose, none when nobody is. */
 function awayFrom(battle: Battle, unit: Unit, pose: Pose, reach: number): Vector2|null {
-    const enemy = battle.nearestEnemy(unit, unit.stats.aimRange.value * reach, pose.position)
+    const enemy = battle.nearestEnemy(unit, reach, pose.position)
     if(!enemy) return null
     return pose.position.minus(enemy.position).normalized ?? pose.direction.opposite
 }
@@ -35,12 +35,12 @@ export class FleeCard extends ActionCard {
         /** How far it goes, in meters, before the agility of the unit. */
         public readonly length: number,
 
-        /** How close an enemy must stand for it to go, a factor of the vision of its unit. */
+        /** How close an enemy must stand for it to go, in meters. */
         public readonly reach: number,
     ){
         super("Fuite", [
-            "Si un ennemi est à moins de la vision × ", frenchNumber(reach), ", s'éloigne de ", meters(length),
-            " à l'opposé du plus proche, sans se retourner.",
+            "Si un ennemi est à moins de ", reach, " ", DISTANCE, ", s'éloigne de ", length, "×", AGILITE, " ",
+            DISTANCE, " à l'opposé du plus proche, sans se retourner.",
         ], Rarity.COMMON, FleeCard.#fleeing(length, reach))
     }
 
@@ -59,8 +59,7 @@ export class FleeCard extends ActionCard {
                 yield* wait(SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const radius = unit.stats.aimRange.value * reach
-                const shown = polygon({ kind: "circle", center: pose.position, radius }, RANGE_COLOR)
+                const shown = polygon({ kind: "circle", center: pose.position, radius: reach }, RANGE_COLOR)
                 const way = awayFrom(battle, unit, pose, reach)
                 if(!way) return still(pose, shown, label(pose.position, NOBODY, NOTE_COLOR))
                 const gone = battle.travel(unit, pose.position, way, length * unit.stats.move.value)

@@ -7,6 +7,7 @@ import {
 } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -18,7 +19,7 @@ describe("BACK_EYES", () => {
             team: MONSTERS,
         })
         on.equip(holder, BACK_EYES)
-        on.strike(attacker, { kind: "circle", center: holder.position, radius: 0.2 }, 1, "physical")
+        on.strike(attacker, { kind: "circle", center: holder.position, radius: 0.2 }, 1, DamageType.PHYSICAL)
         return holder.direction.y > 0
     }
 
@@ -67,7 +68,7 @@ describe("kills and waits", () => {
         on.equip(hero, DEMON_FANG)
         on.equip(hero, FISHER_GLOVE)
         on.equip(hero, ROSARY)
-        foe.hearts.damage(3, "physical", null)
+        foe.hearts.damage(3, DamageType.PHYSICAL, null)
         let gold = 0
         on.onGetGold.add(({ amount }) => { gold += amount })
         const given: unknown[] = []
@@ -93,9 +94,9 @@ describe("hearts", () => {
         const hero = unit(on, 3.5, 5, { hearts: [...Heart.many(RED_HEART, 3), ...Heart.many(BLUE_HEART, 1)] })
         const foe = unit(on, 3.5, 4.3, { team: MONSTERS })
         on.equip(hero, UNSTABLE_REACTOR)
-        hero.hearts.damage(1, "physical", null)
+        hero.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(foe.life).toBe(3)
-        hero.hearts.damage(1, "physical", null)
+        hero.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(foe.life).toBe(3)
     })
 
@@ -104,7 +105,7 @@ describe("hearts", () => {
         const hero = unit(on, 3.5, 5)
         const base = hero.stats.strength.value
         on.equip(hero, BLOOD_PACT)
-        hero.hearts.damage(2, "physical", null)
+        hero.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(hero.stats.strength.value).toBe(base + 2)
     })
 

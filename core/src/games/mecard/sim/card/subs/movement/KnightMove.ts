@@ -1,5 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
@@ -29,7 +29,8 @@ export class KnightMoveCard extends ActionCard {
         public readonly ahead: number,
     ){
         super("Cavalier", [
-            "Se décale de ", meters(side), " à droite, puis avance de ", meters(ahead), ", sans se retourner.",
+            "Se décale de ", side, "×", AGILITE, " ", DISTANCE, " à droite, puis avance de ", ahead, "×", AGILITE, " ",
+            DISTANCE, ", sans se retourner.",
         ], Rarity.COMMON, KnightMoveCard.#moving(side, ahead))
     }
 

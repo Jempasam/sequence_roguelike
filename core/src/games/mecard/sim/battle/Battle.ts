@@ -3,6 +3,7 @@ import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
 import { Vector2 } from "../base/Vector2"
 import type { ErrorSink } from "../base/Observable"
+import { playedUnlimited } from "../card/Card"
 import type { Card } from "../card/Card"
 
 import { CardChain } from "../card/CardChain"
@@ -24,7 +25,7 @@ import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
 import { labelEffect, polygonEffect } from "./effects"
-import type { BattleEvent, MoveEvent, Nature } from "./events"
+import type { BattleEvent, MoveEvent } from "./events"
 import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
@@ -35,6 +36,7 @@ import { HERO_COLORS, MONSTER_COLORS, SUMMON_PALETTE } from "./palettes"
 import { DECK } from "../base/keywords"
 import type { Visual } from "../base/Visual"
 import { visual } from "../base/Visual"
+import { DamageType } from "./DamageType"
 
 /**
  * Where a battle stands: waiting for its round to start and draw, its preparation, its execution, or its
@@ -208,6 +210,12 @@ export class Battle {
     public round = 0
 
     public phase: Phase = "draw"
+
+    /**
+     * Does the battle go on when a single team is left, for a training ground where what falls comes back?
+     * Not saved: whoever sets it up sets it again after a load.
+     */
+    public endless = false
 
     /** How many ticks of execution it played since it started: the time of what it tells. */
     public clock = 0
@@ -525,20 +533,28 @@ export class Battle {
      * Commit the chain of a unit for this round: its cards leave its hand. Committing again gives the
      * cards of the chain before back first.
      *
-     * @throws {@link Error} When it is not the preparation, the chain is not valid, or a card is not in hand.
+     * @remarks
+     * A card the unit plays unlimited is played from that, once per round (the cards of a group count as one):
+     * a second copy comes from the hand.
+     *
+     * @throws {@link Error} When it is not the preparation, the chain is not valid, or a card is neither in hand
+     *   nor one the unit plays unlimited and has not played yet this round.
      */
     public commit(unit: Unit, chain: CardChain): void {
         if(this.phase !== "preparation") throw new Error("Chains are committed during the preparation only.")
         const problems = chain.problems(unit.stats.chainSize.value)
         if(problems.length > 0) throw new Error(problems.join(" "))
         const hand = [...unit.hand, ...this.#played.get(unit) ?? []]
+        // Only what leaves the hand is kept as played: a card the unit plays unlimited goes to no discard.
         const played: Card[] = []
-        for(const card of chain.cards){
+        const free = playedUnlimited(chain.cards, unit.unlimited)
+        chain.cards.forEach((card, place) => {
+            if(free[place]) return
             const index = hand.indexOf(card)
             if(index < 0) throw new Error(`${card.name} is not in the hand of ${unit.name}.`)
             hand.splice(index, 1)
             played.push(card)
-        }
+        })
         unit.hand.splice(0, unit.hand.length, ...hand)
         this.#plans.set(unit, chain)
         this.#played.set(unit, played)
@@ -793,7 +809,7 @@ export class Battle {
         for(let reach = 2 * unit.radius; reach <= farthest; reach += unit.radius){
             if(!unit.alive || this.free(unit.position, unit)) return
             this.events.push({ type: "blocked", unit })
-            unit.hearts.damage(UNBLOCK_DAMAGE, "physical", null)
+            unit.hearts.damage(UNBLOCK_DAMAGE, DamageType.PHYSICAL, null)
             if(!unit.alive) return
             const spots = EIGHT_WAYS.map(way => {
                 return this.arena.clamped(unit.position.plus(way.times(reach)), unit.radius)
@@ -810,7 +826,7 @@ export class Battle {
      */
     public push(unit: Unit, direction: Vector2, distance: number, source: Unit): void {
         const travel = this.move(unit, direction, distance, true)
-        if(travel.distance < distance) unit.hearts.damage(PUSH_BLOCKED_DAMAGE, "physical", source)
+        if(travel.distance < distance) unit.hearts.damage(PUSH_BLOCKED_DAMAGE, DamageType.PHYSICAL, source)
     }
 
     /**
@@ -820,7 +836,7 @@ export class Battle {
      * @returns The units the damage landed on.
      */
     public strike(
-        attacker: Unit, area: Area, amount: number, nature: Nature, scale: (target: Unit) => number = () => 1,
+        attacker: Unit, area: Area, amount: number, nature: DamageType, scale: (target: Unit) => number = () => 1,
     ): Unit[] {
         attacker.attacking.notify({ attacker, area })
         this.events.push({ type: "struck", unit: attacker, area, nature })
@@ -843,7 +859,7 @@ export class Battle {
      * @returns The units the damage landed on.
      */
     public strikeMany(
-        attacker: Unit, areas: readonly Area[], amount: number, nature: Nature, scale: (target: Unit) => number = () => 1,
+        attacker: Unit, areas: readonly Area[], amount: number, nature: DamageType, scale: (target: Unit) => number = () => 1,
     ): Unit[] {
         const targets = new Set<Unit>()
         for(const area of areas){
@@ -884,7 +900,9 @@ export class Battle {
     public explode(area: Area, amount: number, source: Unit|null, except: Unit|null = null): void {
         this.events.push({ type: "exploded", area })
         this.post(polygonEffect(area, BLAST_COLOR, BLAST_TIME))
-        for(const target of this.unitsIn(area, except)) target.hearts.damage(amount, "physical", source)
+        for(const target of this.unitsIn(area, except)){
+            target.hearts.damage(amount, DamageType.PHYSICAL, source)
+        }
     }
 
     /**
@@ -1655,7 +1673,7 @@ export class Battle {
         const standing = new Set(this.living.filter(unit => unit.decisive && !unit.vanishing).map(unit => {
             return unit.team
         }))
-        if(standing.size > 1) return
+        if(standing.size > 1 || (this.endless && standing.size === 1)) return
         this.phase = "over"
         for(const unit of this.units) this.endProcesses(unit)
         for(const unit of this.units) unit.hearts.unplug()

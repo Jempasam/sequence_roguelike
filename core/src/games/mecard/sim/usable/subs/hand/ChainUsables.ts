@@ -1,7 +1,6 @@
 import type { UnitContext } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
-import { meters } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 import { MODULE } from "../../../card/CardType"
@@ -9,13 +8,14 @@ import type { Card } from "../../../card/Card"
 import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
 import { turnUnitsIn } from "../../../card/subs/tools/turning"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import { canMerge, MergedCard } from "../../../card/subs/composite/MergedCard"
 
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
+import { frenchNumber } from "../../../battle/words"
 
 /** How far around its unit the whistle reaches, in meters. */
 const WHISTLE_RADIUS = 1.5
@@ -108,7 +108,7 @@ export class Whistle extends AbstractUsable {
         super(
             "Sifflet", visual("usables/energizer"),
             [
-                "Tourne chaque ", UNIT, " à ", meters(WHISTLE_RADIUS), " autour vers toi. 2 utilisations, rechargées à chaque combat.",
+                "Tourne chaque ", UNIT, " à ", frenchNumber(WHISTLE_RADIUS), " ", DISTANCE, " autour vers toi. 2 utilisations, rechargées à chaque combat.",
             ],
             { charges: 2, refill: "battle" },
         )

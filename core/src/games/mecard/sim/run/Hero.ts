@@ -8,6 +8,7 @@ import { Team } from "../battle/Team"
 import { UnitStats } from "../battle/Unit"
 import type { Controller, StatBases } from "../battle/Unit"
 import type { Card } from "../card/Card"
+import { UNLIMITED_CARDS } from "../catalog/cards"
 import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
 import { Carried } from "../usable/Usable"
@@ -33,6 +34,9 @@ export interface Hero {
 
     /** Its decks, drawn from in turn, in order: it may have none. */
     readonly decks: Card[][]
+
+    /** The cards it plays as often as it wishes, with none in its hand: none for a monster. */
+    readonly unlimited: readonly Card[]
 
     hearts: Heart[]
     readonly items: Item[]
@@ -62,7 +66,7 @@ export function hero(spec: HeroSpec): Hero {
 export function heroOf(kit: Kit, name = kit.name): Hero {
     return hero({
         name, sprite: kit.sprite, controller: "player", decks: [[...kit.cards]],
-        hearts: Heart.groups(kit.hearts), items: [...kit.items],
+        unlimited: UNLIMITED_CARDS, hearts: Heart.groups(kit.hearts), items: [...kit.items],
         usables: kit.usables.map(usable => new Carried(usable)), bases: {},
     })
 }
@@ -74,7 +78,7 @@ export function heroOf(kit: Kit, name = kit.name): Hero {
 export function allyOf(monster: Monster, name: string): Hero {
     return hero({
         name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
-        hearts: redHearts(monster.hearts),
+        unlimited: [], hearts: redHearts(monster.hearts),
         items: [],
         usables: [], bases: { draw: monster.draw, firstDraw: monster.draw, size: monster.size ?? 1 },
     })
@@ -82,7 +86,7 @@ export function allyOf(monster: Monster, name: string): Hero {
 
 /** A kind of monster the players plan, as a hero: the ally it would be, in their hands. */
 export function recruitOf(monster: Monster, name: string): Hero {
-    return hero({ ...allyOf(monster, name), controller: "player" })
+    return hero({ ...allyOf(monster, name), controller: "player", unlimited: UNLIMITED_CARDS })
 }
 
 /**
@@ -94,7 +98,7 @@ export function statsOf(character: Hero): UnitStats {
     return battle.add({
         name: character.name, team: new Team(character.name), controller: character.controller,
         position: Vector2.ZERO, direction: Vector2.UP, hearts: character.hearts, decks: character.decks,
-        items: character.items, usables: character.usables, bases: character.bases,
+        unlimited: character.unlimited, items: character.items, usables: character.usables, bases: character.bases,
     }).stats
 }
 
@@ -150,6 +154,7 @@ export function merged(first: Hero, second: Hero): Hero {
         name: `${first.name}-${second.name}`, sprite: first.sprite ?? second.sprite,
         controller: either ? "player" : "bot",
         decks: [...first.decks, ...second.decks], hearts: [...red, ...special],
+        unlimited: [...new Set([...first.unlimited, ...second.unlimited])],
         items: [...first.items, ...second.items], usables: [...first.usables, ...second.usables],
         bases: bases as Partial<StatBases>,
     })

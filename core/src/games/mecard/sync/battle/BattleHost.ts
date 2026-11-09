@@ -131,7 +131,7 @@ export class BattleHost {
     #commit(battle: Battle, guest: string, plan: UnitPlan): void {
         const unit = battle.units.find(each => each.name === plan.unit)
         if(!unit || this.seats.holderOf(unit.name) !== guest) throw new Error(`${guest} does not play ${plan.unit}.`)
-        battle.commit(unit, new CardChain(cardsInHand(unit.hand, plan.cards)))
+        battle.commit(unit, new CardChain(cardsInHand(unit.hand, plan.cards, unit.unlimited)))
         battle.activate(unit, plan.usables.map(index => unit.usables[index]))
     }
 

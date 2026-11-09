@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -6,7 +7,7 @@ import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /** How far the thrust of the catalog goes through, in meters. */
 const THRUST_RANGE = 2
@@ -27,14 +28,17 @@ export class ThrustCard extends BlowCard {
     ){
         super(
             "Estoc",
-            ["Transperce tout sur ", meters(range), " devant : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, "."],
+            [
+                "Transperce tout sur ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+                DamageType.PHYSICAL, " à chaque ", UNIT, ".",
+            ],
             Rarity.COMMON, BLOW_DAMAGE,
         )
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(this.range * progress))
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const to = pose.position.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
         return { kind: "segment", from: pose.position, to, width: this.width }
     }
 }

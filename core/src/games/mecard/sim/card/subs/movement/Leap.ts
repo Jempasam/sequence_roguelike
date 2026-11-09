@@ -1,6 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Indicator, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -31,7 +31,7 @@ export class LeapCard extends ActionCard {
         public readonly length: number,
     ){
         super("Saut", [
-            "Saute ", meters(length), " devant, par-dessus tout. Mal retombé, tu perds 1 cœur et tu es éjecté à côté, ",
+            "Saute de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout. Mal retombé, tu perds 1 cœur et tu es éjecté à côté, ",
             "tant qu'il le faut.",
         ], Rarity.COMMON, LeapCard.#leaping(length))
     }

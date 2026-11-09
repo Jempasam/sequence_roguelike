@@ -3,6 +3,7 @@ import type { PlugContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import { DamageType } from "../../battle/DamageType"
 
 /** How wide the laser between two allies cuts, in meters. */
 const LASER_WIDTH = 0.3
@@ -24,7 +25,9 @@ export class LaserLink extends AbstractProcess {
         /** How many hearts it takes from each enemy across it, each end of a turn. */
         public readonly damage: number,
     ){
-        super("lien laser", visual("processes/laser_link", { color: [1, 0.3, 0.3] }))
+        super("lien laser", visual("processes/laser_link", { color: [1, 0.3, 0.3] }),
+            `À chaque fin de tour, un laser relie l'allié : les ennemis en travers perdent ${damage} cœur${damage > 1 ? "s" : ""}.`,
+        )
     }
 
 
@@ -34,7 +37,7 @@ export class LaserLink extends AbstractProcess {
         hold(battle.unitStepped.add(() => {
             const way = { kind: "segment", from: unit.position, to: this.ally.position, width: LASER_WIDTH } as const
             for(const target of battle.unitsIn(way, unit)){
-                if(target.team !== unit.team) target.hearts.damage(this.damage, "physical", unit)
+                if(target.team !== unit.team) target.hearts.damage(this.damage, DamageType.PHYSICAL, unit)
             }
         }))
     }
@@ -54,7 +57,9 @@ export class Hook extends AbstractProcess {
         /** How far the ally may stand from the unit, from center to center, before the hook breaks. */
         public readonly reach: number,
     ){
-        super("accroche", visual("processes/hook", { color: [0.75, 0.65, 0.45] }))
+        super("accroche", visual("processes/hook", { color: [0.75, 0.65, 0.45] }),
+            "Quand l'unité bouge ou tourne, l'allié accroché garde sa place et son orientation par rapport à elle. L'accroche se brise s'il s'éloigne trop.",
+        )
     }
 
 
@@ -106,7 +111,9 @@ export class IronChain extends AbstractProcess {
         /** How far each is pulled, in meters. */
         public readonly pull: number,
     ){
-        super("chaîne de fer", visual("processes/iron_chain", { color: [0.6, 0.6, 0.65] }))
+        super("chaîne de fer", visual("processes/iron_chain", { color: [0.6, 0.6, 0.65] }),
+            "À chaque fin de tour, si l'ennemi enchaîné est trop loin, chacun est tiré vers l'autre.",
+        )
     }
 
 

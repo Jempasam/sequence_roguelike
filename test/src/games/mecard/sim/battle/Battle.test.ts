@@ -2,11 +2,12 @@ import { describe, expect, test } from "vitest"
 import {
     Add, AIM, Arena, Battle, BLINK, BURN, Carried, CLONE, DODGE_CARD, FIRE_FLASK, FusionCard, GLASS_HEART,
     HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, SHIELD_HEART, SHOT, SLASH, STEP,
-    STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURN_RIGHT, UNIT_RADIUS, Vector2, WAIT,
+    STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURNS, UNIT_RADIUS, Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -224,7 +225,7 @@ describe("Battle.damage", () => {
         const on = battle()
         const hearts = [...Heart.many(RED_HEART, 2), ...Heart.many(SHIELD_HEART, 2)]
         const target = unit(on, 3, 3, { hearts })
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(target.hearts.all.map(heart => heart.kind)).toEqual([RED_HEART, RED_HEART])
         expect(target.life).toBe(2)
     })
@@ -233,7 +234,7 @@ describe("Battle.damage", () => {
         const on = battle()
         const hearts = [...Heart.many(RED_HEART, 2), ...Heart.many(GLASS_HEART, 2)]
         const target = unit(on, 3, 3, { hearts })
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(target.life).toBe(2)
     })
 
@@ -242,7 +243,7 @@ describe("Battle.damage", () => {
         const attacker = unit(on, 3, 4)
         const hearts = [...Heart.many(RED_HEART, 2), ...Heart.many(THORN_HEART, 2)]
         const target = unit(on, 3, 3, { team: MONSTERS, hearts })
-        target.hearts.damage(2, "physical", attacker)
+        target.hearts.damage(2, DamageType.PHYSICAL, attacker)
         expect(attacker.life).toBe(2)
     })
 
@@ -252,7 +253,7 @@ describe("Battle.damage", () => {
         const hearts = () => [...Heart.many(RED_HEART, 2), ...thorns()]
         const a = unit(on, 3, 4, { hearts: hearts() })
         const b = unit(on, 3, 3, { team: MONSTERS, hearts: hearts() })
-        b.hearts.damage(1, "physical", a)
+        b.hearts.damage(1, DamageType.PHYSICAL, a)
         expect(on.events.some(event => event.type === "error")).toBe(true)
     })
 
@@ -271,7 +272,7 @@ describe("Steps of others", () => {
         const on = battle()
         const dasher = unit(on, 3, 5)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        play(on, [[dasher, chain(STUNNING_DASH)], [target, chain(TURN_RIGHT, TURN_RIGHT)]])
+        play(on, [[dasher, chain(STUNNING_DASH)], [target, chain(TURNS[4], TURNS[8])]])
         expect(target.direction).toEqual(Vector2.DOWN)
         expect(on.events.some(event => event.type === "skipped" && event.reason === "étourdi")).toBe(true)
     })
@@ -280,7 +281,7 @@ describe("Steps of others", () => {
         const on = battle()
         const taser = unit(on, 3, 4)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        play(on, [[taser, chain(TASER)], [target, chain(TURN_RIGHT, TURN_RIGHT)]])
+        play(on, [[taser, chain(TASER)], [target, chain(TURNS[4], TURNS[4])]])
         expect(target.direction).toEqual(Vector2.RIGHT)
     })
 
@@ -439,7 +440,7 @@ describe("Battle.activate", () => {
         const potion = new Carried(HEALING_POTION)
         drinker.usables.push(potion)
         on.startRound()
-        drinker.hearts.damage(3, "physical", null)
+        drinker.hearts.damage(3, DamageType.PHYSICAL, null)
         on.activate(drinker, [potion])
         expect(drinker.life).toBe(1)
         on.endPreparation()

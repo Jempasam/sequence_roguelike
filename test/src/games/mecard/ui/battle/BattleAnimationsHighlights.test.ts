@@ -7,6 +7,7 @@ import { BattleScene, HIGHLIGHT_TIME } from "@game/core/mecard/battle-ui"
 import { Replay } from "./replay"
 
 import { chain, HEROES, MONSTERS } from "../../sim/fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** A hero and a foe in a round being prepared, watched by a replay at rest. */
 async function watched(hearts = Heart.many(RED_HEART, 3)): Promise<{
@@ -136,7 +137,7 @@ describe("BattleAnimations, the hearts", () => {
 
     test("a wound → shown at once, nothing lit, the replay not stopped", async() => {
         const { hero, scene, replay } = await watched()
-        hero.hearts.damage(2, "physical", null)
+        hero.hearts.damage(2, DamageType.PHYSICAL, null)
         await replay.frame(0)
         expect(bar(scene, hero)).toBe("xoo")
         expect(scene.litHeart).toBeNull()

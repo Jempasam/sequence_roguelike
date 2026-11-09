@@ -3,7 +3,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { EIGHT_WAYS } from "../../battle/rules"
 import type { Unit } from "../../battle/Unit"
-import { meters } from "../../battle/words"
+import { DISTANCE } from "../../base/keywords"
 import { placeWhirlwind } from "../../hazard/subs/Whirling"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
@@ -18,8 +18,8 @@ export class Wind extends AbstractElement {
     constructor(){
         super(
             "Vent", rgba(0.8, 1, 0.85), "emporté",
-            ["pousse de ", meters(WIND_PUSH), " dans une direction au hasard"],
-            ["pousse de ", meters(WIND_PUSH), " droit devant"],
+            ["pousse de ", WIND_PUSH, " ", DISTANCE, " dans une direction au hasard"],
+            ["pousse de ", WIND_PUSH, " ", DISTANCE, " droit devant"],
             "un tourbillon qui erre au hasard : au contact, il repousse et applique le négatif",
         )
     }

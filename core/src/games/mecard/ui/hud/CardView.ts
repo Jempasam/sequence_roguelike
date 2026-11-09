@@ -1,12 +1,14 @@
 import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
-import { Component, sizeHint } from "../../../../engine/ui"
+import { Component, Dial, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import { typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
+import { TEXT_OUTLINE } from "../look/theme"
 import { CompositeCard, cardCount } from "../../sim/card/subs/composite/CompositeCard"
 import type { Card } from "../../sim/card/Card"
+import { TURN_STEPS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
 
 /** Where a card is shown, which sets its size: the hand, the chain being put together, the other chains. */
 export type CardPlace = "hand"|"chain"|"mini"
@@ -52,6 +54,18 @@ const FACES_HOVERED: readonly Color[] = [
 const BACK = new Color(0.1, 0.09, 0.14)
 const EDGE = new Color(0.05, 0.04, 0.08)
 const PICKED_EDGE = new Color(1, 0.85, 0.35)
+
+/** The edge of a card played unlimited: white, under the yellow one of a card chosen. */
+const UNLIMITED_EDGE = new Color(1, 1, 1)
+
+/** The dial of a turn: its disc, its dot and its needle, and how big it is in each place, as a radius. */
+const DIAL = new Dial(TURN_STEPS, {
+    face: new Color(0.05, 0.04, 0.08), dot: new Color(0.95, 0.92, 0.86), needle: new Color(0.95, 0.92, 0.86),
+})
+/** The disc of the dial under the pointer. */
+const DIAL_HOVERED = new Color(0.22, 0.2, 0.3)
+const HAND_DIAL_RADIUS = 11
+const CHAIN_DIAL_RADIUS = 9
 const NAME = new Color(0.95, 0.92, 0.86)
 const FOOT = new Color(0.6, 0.58, 0.68)
 
@@ -95,8 +109,26 @@ export class CardView extends Component {
     /** What the pointer coming over it or leaving does, nothing when none. */
     public onHover: ((over: boolean) => void)|null = null
 
+    /**
+     * What a click on the dial of a turn does, given the step it points at, nothing when none: the dial then
+     * only shows the direction, and the click is a pick as anywhere else on the card.
+     */
+    public onDial: ((step: number) => void)|null = null
+
     /** Does it only keep its place, drawing nothing: a card still on its way there? */
     public ghost = false
+
+    /**
+     * Is it a card the unit plays as often as it wishes? It then shows a white edge. Only a look: what the
+     * simulation does with the card does not depend on it.
+     */
+    public get unlimited(): boolean { return this.#unlimited }
+
+    public set unlimited(unlimited: boolean){
+        if(unlimited === this.#unlimited) return
+        this.#unlimited = unlimited
+        this.invalidate()
+    }
 
     /** The deck it comes from, by its place, which colors its face, none for a card from elsewhere. */
     public deck: number|null = null
@@ -106,6 +138,18 @@ export class CardView extends Component {
 
     /** What crosses it out, in its middle, none for a card that is not. */
     public cross: Sprite|null = null
+
+    /**
+     * What tells it is chosen, none when it is not: a yellow edge over its own, and the text, which may be
+     * empty, in yellow on a black outline, in its top left corner. As the activation of the icon of an item.
+     */
+    public get activation(): string|null { return this.#activation }
+
+    public set activation(activation: string|null){
+        if(activation === this.#activation) return
+        this.#activation = activation
+        this.invalidate()
+    }
 
     /** Is it drawn behind a veil, since it cannot be picked? */
     public get dimmed(): boolean { return this.#dimmed }
@@ -124,9 +168,6 @@ export class CardView extends Component {
 
         /** Where it is shown. */
         public readonly place: CardPlace,
-
-        /** Is it lifted, waiting for a slot? */
-        public readonly picked = false,
     ){
         super()
         this.#text = new TextLayout(theme.font, theme.textScale)
@@ -150,7 +191,12 @@ export class CardView extends Component {
     protected paintFace(painter: Painter, width: number, height: number, card = this.card): void {
         painter.push()
         painter.setWhitePixel(this.theme.white)
-        this.#paintCard(painter, card, 0, 0, width, height, this.picked || this.lit)
+        this.#paintCard(painter, card, 0, 0, width, height)
+        if(card && card === this.card) this.#paintDial(painter, width)
+        // The edge of a card chosen or looked at goes over its own, so a frame of the color of its cards stays.
+        if(this.unlimited) this.#paintEdge(painter, width, height, UNLIMITED_EDGE)
+        if(this.#activation !== null || this.lit) this.#paintEdge(painter, width, height, PICKED_EDGE)
+        if(this.#activation) this.#text.drawOutlined(painter, this.#activation, 2, 1, PICKED_EDGE, TEXT_OUTLINE)
         if(this.dimmed){
             painter.setTint(VEIL)
             painter.rect(0, 0, width, height)
@@ -163,12 +209,41 @@ export class CardView extends Component {
     }
 
     protected override handle(event: UiEvent): void {
+        if(event.type === "pointer-move"){
+            // The dial answers the pointer only when a click on it does something of its own.
+            const over = this.onDial !== null && this.#overDialAt(event.x, event.y)
+            if(over !== this.#overDial){
+                this.#overDial = over
+                this.invalidate()
+            }
+            return
+        }
         if(event.type !== "pointer-down" || event.button !== 0) return
         event.consume()
+        if(this.onDial && this.#overDialAt(event.x, event.y)){
+            // The center of the dial points nowhere: the click is the dial's all the same, and changes nothing.
+            const step = this.#dialStepAt(event.x, event.y)
+            if(step !== null) this.onDial(step)
+            return
+        }
         this.onPick?.()
     }
 
+    /** Is a point of the card on the disc of the dial of a turn, its center included? */
+    #overDialAt(x: number, y: number): boolean {
+        const spot = this.#dialSpot()
+        return spot !== null && DIAL.contains(x - this.bounds.width / 2, y - spot.cy, spot.radius)
+    }
+
+    /** The step of the dial a point of the card points at, none at the center and off the dial. */
+    #dialStepAt(x: number, y: number): number|null {
+        const spot = this.#dialSpot()
+        if(!spot || !this.#overDialAt(x, y)) return null
+        return DIAL.stepAt(x - this.bounds.width / 2, y - spot.cy, spot.radius)
+    }
+
     protected override hoverChanged(): void {
+        if(!this.hovered) this.#overDial = false
         this.invalidate()
         this.onHover?.(this.hovered)
     }
@@ -180,6 +255,42 @@ export class CardView extends Component {
 
 
     #dimmed = false
+
+    /** Is the pointer over the dial, which then answers it instead of the card? */
+    #overDial = false
+    #unlimited = false
+    #activation: string|null = null
+
+    /**
+     * Where the dial of a turn is, and how big: centered under the one line of its name. None for a card that
+     * is not a turn, and for one too small to hold a dial.
+     */
+    #dialSpot(): { cy: number, radius: number }|null {
+        if(!(this.card instanceof TurnCard) || this.place === "mini") return null
+        const look = CARD_LOOKS[this.place]
+        const radius = this.place === "hand" ? HAND_DIAL_RADIUS : CHAIN_DIAL_RADIUS
+        const top = 1 + look.band + look.padding + this.#text.lineHeight + 1
+        return { cy: top + radius, radius }
+    }
+
+    /** Draw the dial of a turn, its needle toward the direction of the card. */
+    #paintDial(painter: Painter, width: number): void {
+        const spot = this.#dialSpot()
+        if(!spot || !(this.card instanceof TurnCard)) return
+        DIAL.draw(
+            painter, Math.round(width / 2), spot.cy, spot.radius, this.card.step,
+            this.#overDial ? DIAL_HOVERED : undefined,
+        )
+    }
+
+    /** Draw the edge of a card chosen: one pixel over the border of its rectangle. */
+    #paintEdge(painter: Painter, width: number, height: number, color: Color): void {
+        painter.setTint(color)
+        painter.rect(0, 0, width, 1)
+        painter.rect(0, height - 1, width, 1)
+        painter.rect(0, 1, 1, height - 2)
+        painter.rect(width - 1, 1, 1, height - 2)
+    }
 
     /** How wide a card holding no card is drawn, in virtual pixels: narrower among too many. */
     get #plainWidth(): number {
@@ -195,13 +306,8 @@ export class CardView extends Component {
 
     /**
      * Draw one card, none for its back, in a rectangle of the component, and the cards it holds in it.
-     *
-     * @param picked - Is it drawn lifted? Only the card of the component is: the cards it holds are not.
      */
-    #paintCard(
-        painter: Painter, card: Card|null,
-        x: number, y: number, width: number, height: number, picked: boolean,
-    ): void {
+    #paintCard(painter: Painter, card: Card|null, x: number, y: number, width: number, height: number): void {
         const look = CARD_LOOKS[this.place]
         // A card is read as its output, the back as a hidden one.
         const word = card ? card.output.name : ""
@@ -209,11 +315,11 @@ export class CardView extends Component {
         const color = card ? typeColorOf(card.output) : HIDDEN
         // A card holding cards without a name of its own is drawn as them alone, in its frame.
         const bare = card instanceof CompositeCard && !card.named
-        painter.setTint(picked ? PICKED_EDGE : contents ? color : EDGE)
+        painter.setTint(contents ? color : EDGE)
         painter.rect(x, y, width, height)
         let top = y + 1
         if(!contents || !bare){
-            const faces = this.hovered ? FACES_HOVERED : FACES
+            const faces = this.hovered && !this.#overDial ? FACES_HOVERED : FACES
             painter.setTint(card ? faces[(this.deck ?? 0) % faces.length] : BACK)
             painter.rect(x + 1, y + 1, width - 2, height - 2)
             painter.setTint(color)
@@ -248,7 +354,7 @@ export class CardView extends Component {
         const limits: number[] = []
         for(const each of contents){
             const eachWidth = this.#widthOf(each)
-            this.#paintCard(painter, each, left, top, eachWidth, y + height - 1 - top, false)
+            this.#paintCard(painter, each, left, top, eachWidth, y + height - 1 - top)
             left += eachWidth
             if(each !== contents[contents.length - 1]) limits.push(left)
         }

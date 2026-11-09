@@ -14,7 +14,9 @@ export class Vanishing extends AbstractProcess {
 
 
     constructor(){
-        super("dissipation", visual("processes/vanishing", { color: [0.7, 0.8, 0.95] }))
+        super("dissipation", visual("processes/vanishing", { color: [0.7, 0.8, 0.95] }),
+            "Disparaît du combat à la fin du round, quelle que soit sa vie.",
+        )
     }
 
 

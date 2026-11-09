@@ -1,4 +1,4 @@
-import { damage } from "../../../battle/words"
+import { PRECISION } from "../../../base/keywords"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +11,6 @@ export const SCOPE = new StatItem("Viseur", visual("items/scope"), [
     {
         stat: stats => stats.precision,
         amount: SCOPE_BONUS,
-        shown: damage(SCOPE_BONUS, "physical"),
-        text: "de précision",
+        text: [PRECISION],
     },
 ])

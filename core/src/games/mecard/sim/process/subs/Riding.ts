@@ -10,7 +10,9 @@ export class Riding extends AbstractProcess {
         /** How far it goes each time, in meters, before the move factor of the unit. */
         public readonly length: number,
     ){
-        super("cheval", visual("processes/horse", { color: [0.75, 0.55, 0.35] }))
+        super("cheval", visual("processes/horse", { color: [0.75, 0.55, 0.35] }),
+            "Avance tout droit au début du round, puis avant chacun de ses pas.",
+        )
     }
 
 

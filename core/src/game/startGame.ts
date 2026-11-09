@@ -17,8 +17,8 @@ const LOW_RES_HEIGHT = 180
 /** The color of the world behind the board, and of the screen around the upscaled world. */
 const BACKGROUND = new Color(0.05, 0.04, 0.08)
 
-/** The seed of the first run. Each new run takes the next one. */
-const FIRST_SEED = 1
+/** The seed of the first run, drawn at each launch. Each new run takes the next one. */
+const firstSeed = (): number => Math.floor(Math.random() * 0x7fffffff)
 
 /** The name of the rooms of the game, which clients are told. */
 const ROOM_NAME = "Dungeon of the Mecard"
@@ -53,8 +53,8 @@ export function startGame(platform: Platform): { dispose(): void } {
     const game = sync?.role === "viewer"
         ? new MecardViewer(theme, ui, sync, new Assets(platform.assets), toWorld, toUi, sync.link)
         : new MecardGame(
-            theme, ui, new Assets(platform.assets), FIRST_SEED, toWorld, toUi, sync ?? null,
-            networkOf(platform),
+            theme, ui, new Assets(platform.assets), firstSeed(), toWorld, toUi, sync ?? null,
+            networkOf(platform), platform.clipboard,
         )
     // The storage opens on its own time: the menu offers to go on once the run kept is read. None when
     // another instance of the game holds it, which then keeps nothing.

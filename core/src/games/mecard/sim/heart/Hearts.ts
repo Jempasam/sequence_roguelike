@@ -1,5 +1,6 @@
 import { Observable } from "../base/Observable"
-import type { HealEvent, HeartEvent, HeartLossEvent, HeartReplaceEvent, HurtEvent, IncomingDamage, Nature } from "../battle/events"
+import type { HealEvent, HeartEvent, HeartLossEvent, HeartReplaceEvent, HurtEvent, IncomingDamage } from "../battle/events"
+import type { DamageType } from "../battle/DamageType"
 import type { Unit } from "../battle/Unit"
 
 import { Heart, insertHeart } from "./Heart"
@@ -141,7 +142,7 @@ export class Hearts {
      *
      * @returns How many hearts it lost.
      */
-    public damage(amount: number, nature: Nature, source: Unit|null): number {
+    public damage(amount: number, nature: DamageType, source: Unit|null): number {
         return this.#wound(amount, nature, source, false)
     }
 
@@ -151,11 +152,11 @@ export class Hearts {
      *
      * @returns How many hearts it lost.
      */
-    public echo(amount: number, nature: Nature, source: Unit|null): number {
+    public echo(amount: number, nature: DamageType, source: Unit|null): number {
         return this.#wound(amount, nature, source, true)
     }
 
-    #wound(amount: number, nature: Nature, source: Unit|null, derived: boolean): number {
+    #wound(amount: number, nature: DamageType, source: Unit|null, derived: boolean): number {
         const { unit } = this
         const { battle } = unit
         if(this.isDead) return 0

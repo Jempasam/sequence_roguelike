@@ -1,5 +1,5 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { damage, meters } from "../../../battle/words"
+import { DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -10,6 +10,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { arrow, label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts the laser link takes from each enemy across it, each end of a turn. */
 const LASER_DAMAGE = 1
@@ -60,14 +61,14 @@ function linkAction(
 
 export const LASER_LINK = new ActionCard("Lien laser", [
     "Jusqu'à la fin du round, un laser te relie à l'allié le plus proche : à chaque fin de tour, ",
-    damage(LASER_DAMAGE, "physical"), " à chaque ennemi sur le laser.",
+    LASER_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ennemi sur le laser.",
 ], Rarity.RARE, linkAction(
     (battle, unit, pose) => battle.nearestAlly(unit, Infinity, pose.position),
     ally => new LaserLink(ally, LASER_DAMAGE), "laser",
 ))
 
 export const HOOK_ON = new ActionCard("Accroche", [
-    "S'accroche à l'allié le plus proche, à ", meters(HOOK_REACH), " au plus, jusqu'à la fin du round : quand tu ",
+    "S'accroche à l'allié le plus proche, à ", HOOK_REACH, " ", DISTANCE, " au plus, jusqu'à la fin du round : quand tu ",
     "bouges ou tournes, il te suit en gardant sa place. L'accroche casse s'il se retrouve trop loin.",
 ], Rarity.COMMON, linkAction(
     (battle, unit, pose) => battle.nearestAlly(unit, HOOK_REACH, pose.position),
@@ -75,9 +76,9 @@ export const HOOK_ON = new ActionCard("Accroche", [
 ))
 
 export const IRON_CHAIN = new ActionCard("Chaîne de fer", [
-    "Enchaîne le premier ennemi devant toi, à ", meters(CHAIN_RANGE), " au plus, jusqu'à la fin du round : à chaque ",
-    "fin de tour, s'il est à plus de ", meters(CHAIN_SLACK), ", vous êtes tirés l'un vers l'autre de ",
-    meters(CHAIN_PULL), " chacun.",
+    "Enchaîne le premier ennemi devant toi, à ", CHAIN_RANGE, " ", DISTANCE, " au plus, jusqu'à la fin du round : à chaque ",
+    "fin de tour, s'il est à plus de ", CHAIN_SLACK, " ", DISTANCE, ", vous êtes tirés l'un vers l'autre de ",
+    CHAIN_PULL, " ", DISTANCE, " chacun.",
 ], Rarity.RARE, linkAction(
     (battle, unit, pose) => {
         const hit = battle.ray(unit, CHAIN_RANGE, pose).unit

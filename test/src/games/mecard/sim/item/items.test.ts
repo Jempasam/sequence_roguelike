@@ -5,6 +5,7 @@ import {
 import type { Battle, Card, Unit } from "@game/core/mecard"
 
 import { battle, MONSTERS, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
@@ -49,7 +50,7 @@ describe("Item, unplugged", () => {
         on.equip(holder, FANG)
         const before = holder.hitting.size
         on.startRound()
-        enemy.hearts.damage(enemy.life, "physical", null)
+        enemy.hearts.damage(enemy.life, DamageType.PHYSICAL, null)
         on.endPreparation()
         on.playRound()
         expect(on.phase).toBe("over")

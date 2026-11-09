@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters, shotDamage } from "../../../battle/words"
+import { AGILITE, DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
 
@@ -9,6 +9,7 @@ import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { travel } from "../tools/playing"
 import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the harpoon of the catalog flies, in meters, before the reach of the unit. */
 const HARPOON_RANGE = 4
@@ -40,8 +41,9 @@ export class HarpoonCard extends ActionCard {
         public readonly pull: number,
     ){
         super("Harpon", [
-            "Lance un harpon droit devant, jusqu'à ", meters(range), " × portée. S'il touche : ", shotDamage(amount),
-            ", et tu es tiré de ", meters(pull), " × agilité vers la cible.",
+            "Lance un harpon droit devant, jusqu'à ", range, "×", PORTEE, " ", DISTANCE, ". S'il touche : ", amount, "+",
+            PRECISION, " ", DamageType.PHYSICAL, ", et tu es tiré de ", pull, "×", AGILITE, " ", DISTANCE,
+            " vers la cible.",
         ], Rarity.RARE, HarpoonCard.#harpooning(range, amount, pull))
     }
 
@@ -56,7 +58,7 @@ export class HarpoonCard extends ActionCard {
                 yield* fly(battle, unit.position, end, HARPOON_COLOR)
                 if(!target) return
                 const area = { kind: "segment", from: unit.position, to: end, width: BOLT_WIDTH } as const
-                battle.strike(unit, area, amount + unit.stats.precision.value, "physical")
+                battle.strike(unit, area, amount + unit.stats.precision.value, DamageType.PHYSICAL)
                 if(target.alive) yield* travel(ctx, unit.direction, pulled(unit), PULL_SPEED)
             },
             preview: ({ battle, unit, pose }) => {

@@ -1,5 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
-import { blowDamage, meters } from "../../../battle/words"
+import { AGILITE, DISTANCE, FORCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
@@ -9,6 +9,7 @@ import { hold, wait } from "../tools/playing"
 import { arrow } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { LEAP_TIME, leapShown } from "./Leap"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far each jump of the catalog goes, in meters, before the agility of the unit. */
 const HEAD_JUMP_LENGTH = 2
@@ -39,8 +40,8 @@ export class HeadJumpCard extends ActionCard {
         public readonly jumps: number,
     ){
         super("Saut sur tête", [
-            "Saute ", meters(length), " devant, par-dessus tout. Sur un corps : ", blowDamage(amount),
-            ", et tu ressautes, ", String(jumps), " sauts au plus. Mal retombé, tu perds 1 cœur et tu es éjecté.",
+            "Saute de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout. Sur un corps : ", amount, "+",
+            FORCE, " ", DamageType.PHYSICAL, ", et tu ressautes, ", jumps, " sauts au plus. Mal retombé, tu perds 1 cœur et tu es éjecté.",
         ], Rarity.RARE, HeadJumpCard.#jumping(length, amount, jumps))
     }
 
@@ -54,7 +55,7 @@ export class HeadJumpCard extends ActionCard {
                     if(!battle.leap(unit, to)) return
                     const area = under(unit)
                     if(battle.unitsIn(area, unit).length === 0) break
-                    battle.strike(unit, area, amount + unit.stats.strength.value, "physical")
+                    battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
                 }
                 battle.unblock(unit)
                 yield* wait(LEAP_TIME)

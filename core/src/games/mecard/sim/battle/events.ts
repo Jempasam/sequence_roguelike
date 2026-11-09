@@ -10,9 +10,8 @@ import type { Battle } from "./Battle"
 import type { Team } from "./Team"
 import type { Unit } from "./Unit"
 import { HeartCount } from "./words"
+import type { DamageType } from "./DamageType"
 
-/** What harm is made of: the dodge ignores the physical one. */
-export type Nature = "physical"|"elemental"
 
 /** A unit lashing out at an area, whether it touches anyone or not. */
 export interface AttackEvent {
@@ -33,7 +32,7 @@ export interface HitEvent {
 export interface IncomingDamage {
     readonly target: Unit
     readonly source: Unit|null
-    readonly nature: Nature
+    readonly nature: DamageType
 
     /** Is it an echo of another wound, which sets off nothing a wound does? */
     readonly derived: boolean
@@ -46,7 +45,7 @@ export interface IncomingDamage {
 export interface HurtEvent {
     readonly target: Unit
     readonly source: Unit|null
-    readonly nature: Nature
+    readonly nature: DamageType
 
     /** How many hearts it lost. */
     readonly amount: number
@@ -150,7 +149,7 @@ export type BattleEvent =
     | { readonly type: "moved", readonly unit: Unit, readonly from: Vector2, readonly to: Vector2 }
     | { readonly type: "turned", readonly unit: Unit }
     | { readonly type: "blocked", readonly unit: Unit }
-    | { readonly type: "struck", readonly unit: Unit|null, readonly area: Area, readonly nature: Nature }
+    | { readonly type: "struck", readonly unit: Unit|null, readonly area: Area, readonly nature: DamageType }
     | { readonly type: "exploded", readonly area: Area }
     | { readonly type: "hurt", readonly unit: Unit, readonly amount: number }
     | { readonly type: "healed", readonly unit: Unit, readonly amount: number }

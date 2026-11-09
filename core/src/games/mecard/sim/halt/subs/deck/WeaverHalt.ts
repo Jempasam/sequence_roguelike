@@ -3,7 +3,7 @@ import type { Text } from "../../../../../../semantic"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
 import type { Run } from "../../../run/Run"
-import { canWeave, weavable, weave, woven } from "../../../run/visits"
+import { canWeave, weavable, weave, withCopies, woven } from "../../../run/visits"
 import type { WeaveMode } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -68,9 +68,13 @@ export class WeaverHalt extends DeckHalt {
             }
             ctx.confirm(["La ", CARTE, " tissée :"], cardShown(woven(cards, mode), deck), "Tisser", () => {
                 this.impact()
-                ctx.tell("Tissée :", cardShown(this.run.changeDeck(deck, changed => weave(changed, cards, mode)), deck))
+                ctx.tell("Tissée :", cardShown(this.run.changeDeck(deck, changed => weave(withCopies(changed, cards, hero.unlimited), cards, mode)), deck))
             }, { back: () => pick(first) })
-        }, { among: card => weavable(card, deck, mode), back })
+        }, {
+            // A card played unlimited is not in the deck: it is weavable as a copy that the deck would hold.
+            among: card => weavable(card, deck.includes(card) ? deck : [...deck, card], mode),
+            back, unlimited: hero.unlimited,
+        })
         pick(first)
     }
 }

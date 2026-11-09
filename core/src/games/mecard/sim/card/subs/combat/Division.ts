@@ -8,6 +8,7 @@ import { hold, SHORT_TIME, WORD_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { HEART, INVOCATION, PERFECT_CLONE } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** What the division says of a unit with too few hearts to split. */
 const TOO_WEAK = "trop faible"
@@ -25,7 +26,7 @@ function said(share: number): string {
 /** A perfect clone of the unit, living on shields as many as half of its hearts left. */
 export const DIVISION = new ActionCard("Division", [
     INVOCATION.as("Invoque"), " un ", PERFECT_CLONE, " de toi, dont les seuls ", HEART.as("cœurs"), " sont des ",
-    "boucliers : la moitié de tes ", HEART.as("cœurs"), " restants, arrondie à l'inférieur. Zéro : raté.",
+    "boucliers : la moitié de tes ", HEART.as("cœurs"), " restants, arrondie à l'inférieur, que tu perds. Zéro : raté.",
 ], Rarity.EPIC, {
     use: function* ({ battle, unit }){
         const share = shareOf(unit)
@@ -35,6 +36,7 @@ export const DIVISION = new ActionCard("Division", [
             return
         }
         battle.perfectClone(unit, Heart.many(SHIELD_HEART, share))
+        unit.hearts.damage(share, DamageType.PHYSICAL, null)
         yield* hold(battle, SHORT_TIME, [label(unit.position, said(share), NOTE_COLOR)])
     },
     preview: ({ unit, pose }) => still(pose, label(pose.position, said(shareOf(unit)), NOTE_COLOR)),

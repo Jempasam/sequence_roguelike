@@ -69,7 +69,7 @@ export class AntiquarianHalt extends DeckHalt {
                     const gold = sell(this.run, deck, card)
                     ctx.tell(`Vendue ${gold} or.`)
                 }, { back: pick })
-            }, { back })
+            }, { back, unlimited: hero.unlimited, copies: false })
         pick()
     }
 }

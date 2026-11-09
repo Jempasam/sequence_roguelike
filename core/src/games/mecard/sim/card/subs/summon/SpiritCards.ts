@@ -3,9 +3,11 @@ import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SOLID_HEART } from "../../../heart/subs/SolidHeartKind"
 import { SpiritAnchor } from "../../../process/subs/SpiritAnchor"
-import { meters } from "../../../battle/words"
+import { DISTANCE } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
+import { MergedCard } from "../composite/MergedCard"
+import { RAM } from "../movement/Ram"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
@@ -30,7 +32,7 @@ export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
 })
 
 export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
-    "Invoque à ", meters(PROJECTION_AHEAD), " devant toi un esprit d'un cœur bleu, qui joue les cartes qui ",
+    "Invoque à ", PROJECTION_AHEAD, " ", DISTANCE, " devant toi un esprit d'un cœur bleu, qui joue les cartes qui ",
     "suivent dans ta chaîne. Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function* ({ battle, unit }){
@@ -46,3 +48,6 @@ export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
     },
     preview: ({ pose }) => still(pose, label(pose.position, "projection", NOTE_COLOR)),
 })
+
+/** An anchor left behind and a ram at once. */
+export const SPIRIT_DASH = new MergedCard([SPIRIT_ANCHOR, RAM], { name: "Dash spirituel", rarity: Rarity.LEGENDARY })

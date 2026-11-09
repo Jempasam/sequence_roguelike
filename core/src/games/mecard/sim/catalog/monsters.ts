@@ -298,3 +298,8 @@ export const BOSS_MONSTERS: readonly Monster[] = [GOLEM, TROLL, MEGALASER, DEVIL
 
 /** Every kind of monster. */
 export const ALL_MONSTERS: readonly Monster[] = [...LOOT_MONSTERS, ...BOSS_MONSTERS]
+
+/** The training dummy of the arena: it never plays, and is in no catalog, so no floor draws it. */
+export const MANNEQUIN = monster({
+    name: "Mannequin", sprite: visual("units/mannequin"), hearts: 10, draw: 0, cards: [],
+})

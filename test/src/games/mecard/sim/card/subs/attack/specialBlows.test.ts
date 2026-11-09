@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest"
 import {
-    Arena, ASSASSIN_BLOW, ASSASSINATION, Battle, BLOOD_AXE, BOUNCING_BOW, CROSSBOW, HARPOON, Heart,
+    Add, Arena, ModifierKey, ASSASSIN_BLOW, ASSASSINATION, Battle, BLOOD_AXE, BOUNCING_BOW, CROSSBOW, HARPOON, Heart,
     MEGA_SLASH,
-    RED_HEART, SCYTHE, SKULL_BREAK, STEP, TACKLE, Vector2,
+    RED_HEART, SCYTHE, SKULL_BREAK, STEP, TACKLE, THRUST, Vector2,
 } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
 
@@ -24,6 +24,22 @@ function wound(target: Unit, count: number): void {
 }
 
 // --- Tests ---
+
+describe("meleeRange (allonge)", () => {
+    test("a factor on the length of the blows at hand, and not on the throws", () => {
+        const on = battle()
+        const hero = unit(on, 3, 3)
+        const length = (): number => {
+            const area = THRUST.reach(on, hero, hero, 1)
+            if(area.kind !== "segment") throw new Error("a thrust is a segment")
+            return area.to.distance(area.from)
+        }
+        const base = length()
+        hero.stats.meleeRange.add(new ModifierKey("gants"), new Add(1))
+        expect(length()).toBeCloseTo(base * 2)
+        expect(hero.stats.throwRange.value).toBe(1)
+    })
+})
 
 describe("SKULL_BREAK", () => {
     test("a unit on each side → both wounded and stunned", () => {

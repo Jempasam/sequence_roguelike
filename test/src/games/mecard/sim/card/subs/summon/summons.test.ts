@@ -6,6 +6,7 @@ import {
 import type { Battle, Unit } from "@game/core/mecard"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** The summoned bodies of a battle still standing. */
 function bodies(on: Battle): Unit[] {
@@ -73,7 +74,7 @@ describe("COIN", () => {
         const thrower = unit(on, 3, 6, { hearts: [new Heart(RED_HEART)] })
         const monster = unit(on, 0.5, 0.5, { team: MONSTERS })
         play(on, [[thrower, chain(COIN)]])
-        thrower.hearts.damage(1, "physical", null)
+        thrower.hearts.damage(1, DamageType.PHYSICAL, null)
         play(on, [[monster, chain(WAIT)]])
         expect(on.phase).toBe("over")
         expect(on.winner).toBe(MONSTERS)
@@ -111,7 +112,7 @@ describe("TOTEM", () => {
         const on = battle()
         const shaman = unit(on, 3, 6)
         unit(on, 0.5, 0.5, { team: MONSTERS })
-        shaman.hearts.damage(2, "physical", null)
+        shaman.hearts.damage(2, DamageType.PHYSICAL, null)
         play(on, [[shaman, chain(TOTEM)]])
         expect(shaman.life).toBe(3)
     })

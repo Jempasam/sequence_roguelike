@@ -1,5 +1,4 @@
 import { ELEMENTAL_COLOR } from "../../../battle/previewColors"
-import { damage as damageText, meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import { placeFlames } from "../../../hazard/subs/Flames"
@@ -10,6 +9,8 @@ import { FLAMES_BURN, FLAMES_DAMAGE } from "../body/BodyCards"
 import { sweep } from "../tools/playing"
 import { polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { DISTANCE } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the flamethrower of the catalog reaches, in meters. */
 const FLAME_RANGE = 3
@@ -44,8 +45,8 @@ export class FlamethrowerCard extends ActionCard {
         public readonly burn: number,
     ){
         super("Lance-flammes", [
-            "Brûle ", meters(range), " devant : ", damageText(damage, "elemental"), " et ", new Burn(burn),
-            ". Les flammes restent un pas de plus : ", damageText(FLAMES_DAMAGE, "elemental"), " et ",
+            "Brûle ", range, " ", DISTANCE, " devant : ", damage, " ", DamageType.ELEMENTAL, " et ", new Burn(burn),
+            ". Les flammes restent un pas de plus : ", FLAMES_DAMAGE, " ", DamageType.ELEMENTAL, " et ",
             new Burn(FLAMES_BURN), " à qui s'y trouve encore.",
         ], Rarity.RARE, FlamethrowerCard.#burning(range, width, damage, burn))
     }
@@ -61,7 +62,7 @@ export class FlamethrowerCard extends ActionCard {
             use: function* ({ battle, unit }){
                 yield* sweep(battle, FLAME_TIME, share => [polygon(flames(unit, share), ELEMENTAL_COLOR)])
                 const area = flames(unit)
-                for(const target of battle.strike(unit, area, amount, "elemental")){
+                for(const target of battle.strike(unit, area, amount, DamageType.ELEMENTAL)){
                     battle.applyStatus(target, BURN, burn)
                 }
                 placeFlames(battle, unit, area)

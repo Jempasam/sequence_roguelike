@@ -10,9 +10,12 @@ import type { CardPlace } from "./CardView"
 /** The space between two cards, and between the name and the cards, in virtual pixels. */
 const CARD_GAP = 2
 
-/** What can be done with a card of a deck offered: whether it is picked, and picking it or letting it go. */
+/**
+ * What can be done with a card of a deck offered: what it shows of being picked, none when it is not, an
+ * empty text for a card picked once, a count for one that may be picked several times, and picking it.
+ */
 export interface DeckPick {
-    readonly picked: boolean
+    readonly activation: string|null
     readonly pick: () => void
 }
 
@@ -68,7 +71,8 @@ export class DeckView extends Box {
     #view(card: Card, index: number, options: DeckViewOptions): CardView {
         const { pickable, tell } = options
         const choice = pickable?.(card, index) ?? null
-        const view = new CardView(this.theme, card, options.size, choice?.picked ?? false)
+        const view = new CardView(this.theme, card, options.size)
+        view.activation = choice?.activation ?? null
         view.deck = options.deck ?? null
         if(tell) view.onHover = over => tell(over ? cardText(card) : null)
         if(choice) view.onPick = choice.pick

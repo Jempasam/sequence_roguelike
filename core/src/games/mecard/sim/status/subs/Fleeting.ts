@@ -3,6 +3,7 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { DamageType } from "../../battle/DamageType"
 
 /** How many hearts a summoned body loses at the end of each round. */
 export const FLEETING_DAMAGE = 1
@@ -21,7 +22,9 @@ export class Fleeting extends BaseStatus {
     public override toSemString(): Text { return FLEETING }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = battle.roundEnded.add(() => unit.hearts.damage(FLEETING_DAMAGE, "elemental", null))
+        this.#observer = battle.roundEnded.add(() => {
+            unit.hearts.damage(FLEETING_DAMAGE, DamageType.ELEMENTAL, null)
+        })
     }
 
     public remove(): void {

@@ -1,4 +1,4 @@
-import { meters } from "../../../battle/words"
+import { DISTANCE } from "../../../base/keywords"
 import type { Status } from "../../../status/Status"
 import { Burn } from "../../../status/subs/Burn"
 
@@ -20,7 +20,7 @@ export class FireFlask extends ThrownFlask {
     ){
         super(
             "Flasque de feu", visual("usables/fire_flask"),
-            ["L'ennemi le plus proche, à ", meters(range), " au plus, prend ", new Burn(burn), "."],
+            ["L'ennemi le plus proche, à ", range, " ", DISTANCE, " au plus, prend ", new Burn(burn), "."],
             range,
         )
     }

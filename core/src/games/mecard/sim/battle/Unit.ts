@@ -47,6 +47,9 @@ export interface UnitSpec {
     /** The cards of each of its decks, each shuffled into its draw pile: it may have none. */
     readonly decks: readonly (readonly Card[])[]
 
+    /** The cards it plays as often as it wishes, with none in its hand. None by default. */
+    readonly unlimited?: readonly Card[]
+
     readonly items?: readonly Item[]
 
     /**
@@ -97,9 +100,6 @@ export const CHAIN_SIZE = 4
 /** How many cards the hand of a unit holds at most, by default: the draw stops there. */
 export const HAND_SIZE = 8
 
-/** How far the aim looks for an enemy, in meters. */
-export const AIM_RANGE = 4
-
 /** The stats of a unit, which items and statuses change through modifiers. */
 export class UnitStats {
 
@@ -118,9 +118,12 @@ export class UnitStats {
 
     /**
      * Its reach: how much farther than their base what it throws or shoots goes, a factor: a bomb, a hook,
-     * a potion, a shot. Its blows at hand keep their shape.
+     * a potion, a shot. Its blows at hand follow its reach at hand instead.
      */
     public readonly throwRange = new Attribute(1)
+
+    /** Its reach at hand: how much farther than their base its blows at hand go, a factor: a slash, a thrust, a stab. */
+    public readonly meleeRange = new Attribute(1)
 
     /** Its healing: the hearts added to each heart its cards give. */
     public readonly heal = new Attribute(0)
@@ -130,9 +133,6 @@ export class UnitStats {
 
     /** Its alchemy: the levels added to each potion it applies. */
     public readonly alchemy = new Attribute(0)
-
-    /** Its vision: how far it aims and looks for a target, in meters. */
-    public readonly aimRange = new Attribute(AIM_RANGE)
 
     /** Can it move on its own: none or less when it is rooted. */
     public readonly mobility = new Attribute(1)
@@ -287,6 +287,9 @@ export class Unit {
     public readonly stepsPlayed: Action[] = []
 
     public readonly hand: Card[] = []
+
+    /** The cards it plays as often as it wishes, with none in its hand: told from the others by identity. */
+    public readonly unlimited: readonly Card[]
     public readonly decks: Decks
     public readonly stats = new UnitStats()
 
@@ -329,6 +332,7 @@ export class Unit {
         for(const [name, base] of Object.entries(spec.bases ?? {})){
             (this.stats[name as keyof UnitStats].base as number|boolean) = base
         }
+        this.unlimited = [...spec.unlimited ?? []]
         this.decks = new Decks(spec.decks, rng, this.stats.ordered)
     }
 

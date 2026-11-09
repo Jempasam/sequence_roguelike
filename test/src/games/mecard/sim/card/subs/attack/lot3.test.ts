@@ -5,6 +5,7 @@ import {
 } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -119,7 +120,7 @@ describe("DEATH_SCYTHE", () => {
         const reaper = unit(on, 3.5, 5)
         const weak = unit(on, 3.5, 3.8, { team: MONSTERS })
         const other = unit(on, 1, 1, { team: MONSTERS })
-        weak.hearts.damage(3, "physical", null)
+        weak.hearts.damage(3, DamageType.PHYSICAL, null)
         play(on, [[reaper, chain(DEATH_SCYTHE)]])
         expect(weak.alive).toBe(false)
         expect(other.life).toBe(3)
@@ -142,7 +143,7 @@ describe("FISHING", () => {
         const fisher = unit(on, 3.5, 5)
         const foe = unit(on, 3.5, 3.5, { team: MONSTERS })
         unit(on, 1, 1, { team: MONSTERS })
-        foe.hearts.damage(3, "physical", null)
+        foe.hearts.damage(3, DamageType.PHYSICAL, null)
         let gold = 0
         on.onGetGold.add(({ amount }) => { gold += amount })
         play(on, [[fisher, chain(FISHING)]])

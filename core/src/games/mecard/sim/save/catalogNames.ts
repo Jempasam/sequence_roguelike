@@ -5,6 +5,7 @@ import { SECRET_CARD } from "../card/subs/SecretCard"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { MergedCard } from "../card/subs/composite/MergedCard"
 import { ModuleCard } from "../card/subs/mechanic/ModuleCard"
+import { TURNS, TurnCard } from "../card/subs/movement/TurnCard"
 import { RandomCard } from "../card/subs/composite/RandomCard"
 import { ALL_FLOORS } from "../catalog/floors"
 import { ALL_CARDS, ALL_USABLES, ALL_ITEMS } from "../catalog/index"
@@ -86,7 +87,22 @@ export const CARD_CODECS: Codecs<Card> = new Codecs<Card>("card", [
     cardsCodec("merged", MergedCard, cards => new MergedCard(cards)),
     cardsCodec("random", RandomCard, cards => new RandomCard(...pair(cards))),
     moduleCodec(),
+    turnCodec(),
 ])
+
+/** The codec of a turn: its step, the card being the one of {@link TURNS}, so identity tells two turns apart. */
+function turnCodec(): Codec<Card> {
+    return {
+        prefix: "turned",
+        is: card => card instanceof TurnCard,
+        serialize: card => String((card as TurnCard).step),
+        parse: text => {
+            const turn = TURNS[Number(text)]
+            if(!turn) throw new Error(`No turn is at step "${text}": the save comes from another version.`)
+            return turn
+        },
+    }
+}
 
 /** The codec of a module made during a run, none of the catalog: its name, then its cards, each written down. */
 function moduleCodec(): Codec<Card> {

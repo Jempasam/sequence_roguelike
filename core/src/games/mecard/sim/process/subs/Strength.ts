@@ -11,7 +11,9 @@ export class Strength extends AbstractProcess {
         /** How many hearts it adds to each blow. */
         public readonly bonus: number,
     ){
-        super(`force +${bonus}`, visual("processes/strength", { color: [1, 0.45, 0.3] }))
+        super(`force +${bonus}`, visual("processes/strength", { color: [1, 0.45, 0.3] }),
+            `Chaque coup porté retire ${bonus} cœur${bonus > 1 ? "s" : ""} de plus.`,
+        )
     }
 
 

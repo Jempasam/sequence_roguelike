@@ -12,6 +12,7 @@ export abstract class AbstractProcess implements Process {
     constructor(
         public readonly name: string,
         public readonly icon: Visual,
+        public readonly description: Text,
     ){}
 
 

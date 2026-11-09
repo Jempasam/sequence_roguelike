@@ -3,7 +3,7 @@ import type { Text } from "../../../../../../semantic"
 import { Add, ModifierKey } from "../../../base/Attribute"
 import type { UnitContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
-import { damage } from "../../../battle/words"
+import { FORCE } from "../../../base/keywords"
 import { Concentration } from "../../../status/subs/Calm"
 import { HeldFury } from "../../../status/subs/Calm"
 import { DemonEnergy } from "../../../status/subs/DemonEnergy"
@@ -80,7 +80,7 @@ export class SharpeningStone extends RoundElixir {
     constructor(){
         super(
             "Pierre à aiguiser", visual("usables/strength_elixir"),
-            ["+", damage(WHETSTONE_BONUS, "physical"), " à tes coups ce round. 3 utilisations, rechargées à chaque combat."],
+            ["+", WHETSTONE_BONUS, " ", FORCE, " ce round. 3 utilisations, rechargées à chaque combat."],
             { charges: 3, refill: "battle" },
         )
     }

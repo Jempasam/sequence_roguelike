@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { appraisal, CHARGE, FusionCard, Rarity, RandomCard, sell, SHOT, SLASH, STEP, THRUST } from "@game/core/mecard"
+import { AIM, appraisal, CHARGE, FusionCard, Rarity, RandomCard, sell, SHOT, SLASH, STEP, THRUST } from "@game/core/mecard"
 import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Tests ---
@@ -34,10 +34,10 @@ describe("sell", () => {
     test("a card sold → gone from the deck, gold for it", () => {
         const run = startedRun(1)
         const hero = run.heroes[0]
-        const copies = hero.decks[0].filter(card => card === STEP).length
+        const copies = hero.decks[0].filter(card => card === AIM).length
         const gold = run.gold
-        expect(sell(run, hero.decks[0], STEP)).toBe(appraisal(STEP))
-        expect(run.gold).toBe(gold + appraisal(STEP))
-        expect(hero.decks[0].filter(card => card === STEP)).toHaveLength(copies - 1)
+        expect(sell(run, hero.decks[0], AIM)).toBe(appraisal(AIM))
+        expect(run.gold).toBe(gold + appraisal(AIM))
+        expect(hero.decks[0].filter(card => card === AIM)).toHaveLength(copies - 1)
     })
 })

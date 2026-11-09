@@ -5,6 +5,8 @@ import { AbsItemIcon, STATUS_ICON_SIZE, THING_ICON_SIZE, usesText } from "../hud
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
+import { TURNS } from "../../sim/card/subs/movement/TurnCard"
+import { STEP } from "../../sim/card/subs/movement/Step"
 import { ALL_BOOSTERS } from "../../sim/catalog/boosters"
 import { ALL_ITEMS, LOOT_CARDS, ALL_USABLES } from "../../sim/catalog/index"
 import { ALL_KITS } from "../../sim/catalog/kits"
@@ -64,8 +66,9 @@ export function sections(look: LibraryLook): Section[] {
     const { theme, sprites, onCard, perRow } = look
     return [
         {
+            // What every hero plays as often as it wishes comes first: a step, and a turn, whose dial is only shown here.
             title: "Cartes",
-            entries: () => LOOT_CARDS.map(card => {
+            entries: () => [STEP, TURNS[0], ...LOOT_CARDS].map(card => {
                 const text = concat(card, " : ", card.description)
                 return { view: cardsOption(theme, [card], card.description, { onCardHover: onCard, perRow: perRow() }), text }
             }),

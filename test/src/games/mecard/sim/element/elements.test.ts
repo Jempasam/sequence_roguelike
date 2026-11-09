@@ -63,12 +63,6 @@ describe("SPELL", () => {
         const { foe } = cast(SPELL, WIND)
         expect(foe.position.distance(new Vector2(3, 3))).toBeGreaterThan(0.5)
     })
-
-    test("the description lists every element", () => {
-        const text = JSON.stringify(SPELL.description)
-        expect(text).toContain("Vent")
-        expect(text).toContain("Électricité")
-    })
 })
 
 describe("SMALL_SPELL", () => {

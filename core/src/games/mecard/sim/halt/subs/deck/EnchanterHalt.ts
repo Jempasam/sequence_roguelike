@@ -9,7 +9,7 @@ import { allCards } from "../../../run/Hero"
 import type { Hero } from "../../../run/Hero"
 import { lootCards, INVENTED_COUNTS } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
-import { removeCards } from "../../../run/visits"
+import { removeCards, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
@@ -96,7 +96,7 @@ export class EnchanterHalt extends AbstractHalt {
             const fits = fitting(enchantment)
             ctx.hero(concat(enchantment, " : sur le ", DECK, " de qui ?"), hero => {
                 this.chooseDeck(ctx, concat(enchantment, " : sur quel ", DECK, " ?"), hero, (deck, back) => {
-                    this.#chooseTarget(ctx, enchantment, deck, back)
+                    this.#chooseTarget(ctx, enchantment, hero, deck, back)
                 }, { among: deck => deck.some(fits), back: offer })
             }, { among: hero => allCards(hero).some(fits) })
         })
@@ -108,14 +108,17 @@ export class EnchanterHalt extends AbstractHalt {
     readonly #offered: readonly Card[]
 
     /** Ask for the card of a deck to enchant, then show the fusion it would make before making it. */
-    #chooseTarget(ctx: HaltContext, enchantment: Card, deck: Card[], back?: () => void): void {
+    #chooseTarget(ctx: HaltContext, enchantment: Card, hero: Hero, deck: Card[], back?: () => void): void {
         const title = concat(enchantment, " : sur quelle ", CARTE, " ?")
         const pick = (): void => ctx.cards(title, deck, { min: 1, max: 1 }, ([target]) => {
             ctx.confirm(["Le ", FUSION, " enchanté :"], fusionShown(enchanted(enchantment, target), deck), "Enchanter", () => {
                 this.impact()
-                ctx.tell("Enchantée :", fusionShown(this.run.changeDeck(deck, changed => enchant(changed, enchantment, target)), deck))
+                const made = this.run.changeDeck(deck, changed => {
+                    return enchant(withCopies(changed, [target], hero.unlimited), enchantment, target)
+                })
+                ctx.tell("Enchantée :", fusionShown(made, deck))
             }, { back: pick })
-        }, { among: fitting(enchantment), back })
+        }, { among: fitting(enchantment), back, unlimited: hero.unlimited })
         pick()
     }
 }

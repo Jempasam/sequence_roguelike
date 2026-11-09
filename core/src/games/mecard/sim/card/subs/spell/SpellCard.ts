@@ -1,6 +1,4 @@
-import { concat } from "../../../../../../semantic"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { damage as damageText, meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 import type { Element } from "../../../element/Element"
 import { ACTION, ELEMENT } from "../../CardType"
@@ -9,8 +7,8 @@ import { AbstractCard } from "../AbstractCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { ELEMENT_CARDS } from "./ElementCard"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the spell of the catalog reaches, in meters. */
 const SPELL_RANGE = 4
@@ -36,9 +34,8 @@ export class SpellCard extends AbstractCard<readonly Action[], Element> {
         public readonly damage: number,
     ){
         super("Grand sort", [
-            ["Tire l'élément jusqu'à ", meters(range), " devant : ", damageText(damage, "elemental"),
-                " à la première ", UNIT, ", puis son négatif sur elle :"],
-            ...ELEMENT_CARDS.map(card => concat(card, " : ", card.element.negativeText)),
+            "Tire l'élément jusqu'à ", range, " ", DISTANCE, " devant : ", damage, " ", DamageType.ELEMENTAL,
+            " à la première ", UNIT, ", puis son négatif sur elle.",
         ], Rarity.RARE)
     }
 
@@ -57,7 +54,7 @@ export class SpellCard extends AbstractCard<readonly Action[], Element> {
                 const { end } = battle.ray(unit, card.range)
                 yield* fly(battle, unit.position, end, color)
                 const area = { kind: "segment", from: unit.position, to: end, width: BOLT_WIDTH } as const
-                const [hit] = battle.strike(unit, area, card.damage, "elemental")
+                const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL)
                 if(hit) element.applyNegative(ctx, hit)
             },
             preview: ctx => {

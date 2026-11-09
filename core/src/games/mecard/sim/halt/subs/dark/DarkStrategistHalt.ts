@@ -63,7 +63,7 @@ export class DarkStrategistHalt extends DeckHalt {
                 this.run.changeDeck(deck, changed => swapCards(changed, leaving, theirs, coming))
                 ctx.tell(concat("Échangées : ", joinText([...leaving, ...coming], ", "), "."))
             }, { back: fromDeck })
-        }, { back })
+        }, { back, unlimited: hero.unlimited, copies: false })
         fromDeck()
     }
 

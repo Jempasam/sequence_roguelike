@@ -1,6 +1,6 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
-import { meters, shotDamage } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -8,7 +8,7 @@ import type { Unit, UnitStats } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
 
 /** How many hearts a shot takes, before the bonus of the unit: less than a blow, for its reach. */
 export const SHOT_DAMAGE = 1
@@ -77,11 +77,12 @@ export class ShotCard extends BlowCard {
 }
 
 export const SHOT = new ShotCard("Tir", [
-    "Tire droit devant, jusqu'à ", meters(SHOT_RANGE), " × portée : ", shotDamage(SHOT_DAMAGE),
-    " à la première ", UNIT, " touchée.",
+    "Tire droit devant, jusqu'à ", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, " : ", SHOT_DAMAGE, "+", PRECISION, " ",
+    DamageType.PHYSICAL, " à la première ", UNIT, " touchée.",
 ], Rarity.COMMON, SHOT_RANGE, SHOT_WIDTH, 1)
 
 export const CROSSBOW = new ShotCard("Arbalète", [
-    "Tire droit devant, jusqu'à ", meters(SHOT_RANGE), " × portée : ", shotDamage(SHOT_DAMAGE), " à chacune des ",
-    String(CROSSBOW_PIERCE), " premières ", UNIT.as("unités"), ", que le carreau traverse.",
+    "Tire droit devant, jusqu'à ", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, " : ", SHOT_DAMAGE, "+", PRECISION, " ",
+    DamageType.PHYSICAL, " à chacune des ", CROSSBOW_PIERCE, " premières ", UNIT.as("unités"),
+    ", que le carreau traverse.",
 ], Rarity.RARE, SHOT_RANGE, SHOT_WIDTH, CROSSBOW_PIERCE)

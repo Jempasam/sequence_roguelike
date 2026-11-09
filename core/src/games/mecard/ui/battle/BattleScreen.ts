@@ -488,6 +488,8 @@ export class BattleScreen implements HudHost {
             choose: unit => this.#choose(unit),
             pick: card => this.#pick(card),
             remove: place => this.#remove(place),
+            turn: (place, step) => this.#turn(place, step),
+            turnTo: step => this.#turnTo(step),
             toggleUsable: index => this.#toggleUsable(index),
             launch: () => this.launch(),
             skip: () => this.#skip(),
@@ -514,6 +516,17 @@ export class BattleScreen implements HudHost {
 
     #remove(place: number): void {
         this.#draft()?.remove(place)
+        this.refresh()
+    }
+
+    #turn(place: number, step: number): void {
+        this.#draft()?.turn(place, step)
+        this.refresh()
+    }
+
+    #turnTo(step: number): void {
+        const draft = this.#draft()
+        if(draft) draft.turnStep = step
         this.refresh()
     }
 

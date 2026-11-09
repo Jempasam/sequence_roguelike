@@ -3,10 +3,12 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { lineEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
-import { damage, HeartCount, meters } from "../../battle/words"
+import { HeartCount } from "../../battle/words"
+import { DISTANCE } from "../../base/keywords"
 import { Poison, POISONED } from "../../status/subs/Poison"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
+import { DamageType } from "../../battle/DamageType"
 
 /** How many rounds the plant poisons a unit for. */
 const PLANT_POISON = 2
@@ -35,7 +37,7 @@ export class Plant extends AbstractElement {
             "Plante", rgba(0.4, 0.85, 0.35), "empoisonné",
             new Poison(PLANT_POISON),
             ["soigne ", new HeartCount(PLANT_HEAL), " + soin"],
-            ["une épine sur ", meters(THORN_RANGE), " : ", damage(THORN_DAMAGE, "physical"), " au premier corps, et le négatif"],
+            ["une épine sur ", THORN_RANGE, " ", DISTANCE, " : ", THORN_DAMAGE, " ", DamageType.PHYSICAL, " au premier corps, et le négatif"],
         )
     }
 
@@ -53,7 +55,7 @@ export class Plant extends AbstractElement {
         const { end, unit: hit } = battle.ray(unit, THORN_RANGE, { position: at, direction })
         battle.post(lineEffect(at, end, THORN_WIDTH, this.color, THORN_TIME))
         if(!hit) return
-        hit.hearts.damage(THORN_DAMAGE, "physical", unit)
+        hit.hearts.damage(THORN_DAMAGE, DamageType.PHYSICAL, unit)
         effect.applyNegative(ctx, hit)
     }
 }

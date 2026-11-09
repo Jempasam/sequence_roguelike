@@ -62,6 +62,12 @@ export interface Card<T = unknown, U = unknown> {
     /** The cards it holds, in order, shown inside it, none for a card holding none. */
     readonly contents?: readonly Card[]
 
+    /**
+     * What the variants of a card with a parameter have in common, none for a card that stands alone. Cards
+     * with the same group count as one when a unit may play it once per round: see {@link groupOf}.
+     */
+    readonly group?: object
+
     /** What it gives, from what the card on its right gives. It touches nothing: a preview calls it too. */
     get(input: U): T
 
@@ -70,6 +76,25 @@ export interface Card<T = unknown, U = unknown> {
 
     /** Its name in the color of its rarity. */
     toSemString(): Text
+}
+
+/** What tells a card from the others a unit plays once per round: its group, or the card itself without one. */
+export function groupOf(card: Card): object {
+    return card.group ?? card
+}
+
+/**
+ * Which cards of a chain a unit plays unlimited, in the order of the chain: the first card of each group
+ * the unit plays unlimited does, the others come from its hand.
+ */
+export function playedUnlimited(cards: readonly Card[], unlimited: readonly Card[]): boolean[] {
+    const used = new Set<object>()
+    return cards.map(card => {
+        const group = groupOf(card)
+        if(!unlimited.includes(card) || used.has(group)) return false
+        used.add(group)
+        return true
+    })
 }
 
 /** Does a card give values of a type? */

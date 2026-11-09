@@ -8,6 +8,7 @@ import {
 import type { StatusType, Unit } from "@game/core/mecard"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** Hearts enough to count every half lost. */
 function sturdy(): Heart[] {
@@ -70,7 +71,7 @@ describe("Vulnerability", () => {
         const on = battle()
         const target = unit(on, 3, 5, { team: MONSTERS, hearts: sturdy() })
         on.applyStatus(target, VULNERABLE, 2)
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(16 - target.life).toBe(3)
     })
 
@@ -81,7 +82,7 @@ describe("Vulnerability", () => {
         const b = unit(on, 3, 4, { team: MONSTERS, hearts: thorny() })
         on.applyStatus(a, VULNERABLE, 2)
         on.applyStatus(b, VULNERABLE, 2)
-        b.hearts.damage(2, "physical", a)
+        b.hearts.damage(2, DamageType.PHYSICAL, a)
         expect(a.alive && b.alive).toBe(true)
     })
 

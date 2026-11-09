@@ -10,12 +10,12 @@ import type { UnitSprites } from "../look/UnitSprites"
  * @param sprite - The name of its sprite, none for a unit with none.
  */
 export function withPicture(
-    sprites: UnitSprites, sprite: Visual|null, content: Component, gap = 2,
+    sprites: UnitSprites, sprite: Visual|null, content: Component, gap = 2, grow = 0,
 ): Component {
     const picture = sprites.of(sprite)
     if(!picture) return content
     const row = new Box("row", { gap, align: "center" })
     row.add(new Image(picture))
-    row.add(content)
+    row.add(content, { grow })
     return row
 }

@@ -1,7 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
-import { counted, damage, meters } from "../../../battle/words"
+import { counted } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -14,7 +14,9 @@ import { ActionCard } from "../ActionCard"
 import { flight } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
+import { frenchNumber } from "../../../battle/words"
 
 /** How far ahead the bombs of the catalog land, in meters, before the reach of the unit. */
 const BOMB_THROW = 2
@@ -77,16 +79,16 @@ export class BombCard extends ActionCard {
 }
 
 export const BOMB = new BombCard("Bombe", [
-    "Lance une bombe ", meters(BOMB_THROW), " × portée devant. Elle joue juste après toi, attend, puis explose : ",
-    damage(BOMB_DAMAGE, "physical"), " à chaque ", UNIT, " à ", meters(BLAST_RADIUS), " autour, toi compris.",
+    "Lance une bombe à ", BOMB_THROW, "×", PORTEE, " ", DISTANCE, " devant. Elle joue juste après toi, attend, puis explose : ",
+    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, BOMB_THROW, BLAST_RADIUS, placeBomb)
 
 export const FLASH_GRENADE = new BombCard("Grenade flash", [
-    "Lance une grenade ", meters(BOMB_THROW), " × portée devant. Elle joue juste après toi, attend, puis étourdit chaque ", UNIT, " à ",
-    meters(FLASH_RADIUS), " autour, toi compris.",
+    "Lance une grenade à ", BOMB_THROW, "×", PORTEE, " ", DISTANCE, " devant. Elle joue juste après toi, attend, puis étourdit chaque ", UNIT, " à ",
+    frenchNumber(FLASH_RADIUS), " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, BOMB_THROW, FLASH_RADIUS, placeFlashBomb)
 
 export const MINE = new BombCard("Mine", [
-    "Pose une mine ", meters(MINE_THROW), " × portée devant, pour ", counted(MINE_ROUNDS, "round"), ". Au premier contact, elle explose : ",
-    damage(BOMB_DAMAGE, "physical"), " à chaque ", UNIT, " à ", meters(BLAST_RADIUS), " autour, toi compris.",
+    "Pose une mine à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(MINE_ROUNDS, "round"), ". Au premier contact, elle explose : ",
+    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, MINE_THROW, BLAST_RADIUS, placeMine)

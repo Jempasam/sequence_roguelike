@@ -2,7 +2,8 @@ import type { Indicator, Pose } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
 import type { Battle } from "../../../battle/Battle"
 import { HAZARD_COLOR, NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
-import { meters, shotDamage } from "../../../battle/words"
+import { DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
@@ -36,8 +37,9 @@ function burst(battle: Battle, unit: Unit, pose: Pose): { line: Indicator, targe
 
 /** A shot that turns an eighth and shoots again after each hit. */
 export const MACHINE_GUN = new ActionCard("Mitraillette", [
-    "Tire comme Tir (", meters(SHOT_RANGE), " × portée, ", shotDamage(SHOT_DAMAGE), " + précision). Si le tir touche, ",
-    "se tourne d'un huitième de tour et tire de nouveau, ", String(BURST), " tirs au plus.",
+    "Tire comme Tir (", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, ", ", SHOT_DAMAGE, "+", PRECISION, " ",
+    DamageType.PHYSICAL, "). Si le tir touche, se tourne d'un huitième de tour et tire de nouveau, ", BURST,
+    " tirs au plus.",
 ], Rarity.EPIC, {
     use: function* (ctx){
         const { battle, unit } = ctx
@@ -64,8 +66,8 @@ function charge(unit: Unit): number {
 
 /** A shot repeated for the actions its unit played before it. */
 export const CHARGED_SHOT = new ActionCard("Tir chargé", [
-    "Tire comme Tir (", meters(SHOT_RANGE), " × portée, ", shotDamage(SHOT_DAMAGE), " + précision) une fois, plus une par ",
-    String(CHARGE_EVERY), " actions jouées avant elle ce round.",
+    "Tire comme Tir (", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, ", ", SHOT_DAMAGE, "+", PRECISION, " ",
+    DamageType.PHYSICAL, ") une fois, plus une par ", CHARGE_EVERY, " actions jouées avant elle ce round.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         const times = charge(unit)

@@ -1,8 +1,7 @@
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
 import { distanceToSegment } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
-import { meters } from "../../../battle/words"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { BLEEDING } from "../../../status/subs/Wounds"
 import { CONCENTRATED } from "../../../status/subs/Calm"
@@ -12,6 +11,7 @@ import { WAIT } from "../../../card/subs/movement/Wait"
 
 import { AbstractItem } from "../AbstractItem"
 import { visual } from "../../../base/Visual"
+import { frenchNumber } from "../../../battle/words"
 
 /** How far from the unit an attacker must stand behind it, in angle, to be seen by the eyes in the back: the cosine of 130°. */
 const BEHIND_COS = Math.cos(130 * Math.PI / 180)
@@ -60,7 +60,7 @@ export class ToreroCape extends AbstractItem {
 
     constructor(){
         super("Cape de torero", visual("items/doll"), [
-            "Étourdit chaque ", UNIT, " qui traverse son corps, ou passe à moins de ", meters(CAPE_REACH),
+            "Étourdit chaque ", UNIT, " qui traverse son corps, ou passe à moins de ", frenchNumber(CAPE_REACH), " ", DISTANCE,
             ", en se déplaçant d'elle-même : dash, charge, blink.",
         ])
     }
@@ -88,7 +88,7 @@ export class ScaryMask extends AbstractItem {
 
     constructor(){
         super("Masque effrayant", visual("items/bag"), [
-            "Au début de chaque round, les ", UNIT.as("unités"), " à ", meters(MASK_RADIUS),
+            "Au début de chaque round, les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
             " autour lui tournent le dos.",
         ])
     }
@@ -132,8 +132,8 @@ export class Magnet extends AbstractItem {
 
     constructor(){
         super("Aimant", visual("items/alembic"), [
-            "Au début de chaque round, tire de ", meters(MAGNET_PULL), " vers lui chaque ", UNIT, " à ",
-            meters(MAGNET_RADIUS), ". Aucun dégât.",
+            "Au début de chaque round, tire de ", frenchNumber(MAGNET_PULL), " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
+            MAGNET_RADIUS, " ", DISTANCE, ". Aucun dégât.",
         ])
     }
 

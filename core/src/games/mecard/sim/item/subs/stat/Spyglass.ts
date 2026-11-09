@@ -1,17 +1,17 @@
-import { meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
 
-/** How much farther the spyglass of the catalog lets the aim look, in meters. */
-const SPYGLASS_RANGE = 2
+/** How much farther the spyglass of the catalog lets its shots reach, as a factor. */
+const SPYGLASS_RANGE = 1
 
-/** A spyglass letting the aim look farther. */
+/** A spyglass letting the shots reach farther. */
 export const SPYGLASS = new StatItem("Longue-vue", visual("items/spyglass"), [
     {
-        stat: stats => stats.aimRange,
+        stat: stats => stats.throwRange,
         amount: SPYGLASS_RANGE,
-        shown: meters(SPYGLASS_RANGE),
-        text: ["de vision"],
+        shown: [frenchNumber(SPYGLASS_RANGE * 100), " %"],
+        text: "de portée",
     },
 ])

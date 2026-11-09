@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
     BLOODLUST, BLOODLUST_CARD, BLOODLUST_STRIDE, Heart, LEAP, loadBattle, MINE, placeMine,
     RED_HEART, saveBattle, SHADOW,
-    STEP, TURN_LEFT, Vector2, WAIT,
+    STEP, TURNS, Vector2, WAIT,
 } from "@game/core/mecard"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
@@ -31,7 +31,7 @@ describe("BLOODLUST_CARD", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         unit(on, 3, 1, { team: MONSTERS })
-        play(on, [[hero, chain(BLOODLUST_CARD, TURN_LEFT, WAIT)]])
+        play(on, [[hero, chain(BLOODLUST_CARD, TURNS[12], WAIT)]])
         expectAt(hero, 3, 3)
     })
 

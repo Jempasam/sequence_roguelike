@@ -4,6 +4,7 @@ import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 
 import { travel } from "./playing"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How fast a unit shoved by a card goes, in meters per second. */
 export const SHOVE_SPEED = 6
@@ -58,8 +59,8 @@ export function* shove(
     }
     if(gone.distance > 0) target.shoved.notify({ unit: target, from, to: target.position })
     if(gone.distance < distance && impact > 0){
-        target.hearts.damage(impact, "physical", by)
-        if(hurtsStruck && gone.struck) gone.struck.hearts.damage(impact, "physical", by)
+        target.hearts.damage(impact, DamageType.PHYSICAL, by)
+        if(hurtsStruck && gone.struck) gone.struck.hearts.damage(impact, DamageType.PHYSICAL, by)
     }
     return gone.distance
 }

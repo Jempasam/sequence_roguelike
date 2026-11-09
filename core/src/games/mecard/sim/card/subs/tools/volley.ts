@@ -7,6 +7,7 @@ import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 
 import { SHOT_DAMAGE, SHOT_RANGE } from "../attack/Shot"
 import { BOLT_WIDTH, fly } from "./bolt"
+import { DamageType } from "../../../battle/DamageType"
 
 /** Where a shot of the catalog goes from a pose: the line it covers, on to the first body it meets. */
 export function shotLine(battle: Battle, unit: Unit, pose: Pose): { area: Area, end: Vector2, target: Unit|null } {
@@ -27,5 +28,5 @@ export function shotHearts(unit: Unit): number {
 export function* fireShot(battle: Battle, unit: Unit): Generator<void, Unit[], void> {
     const { area, end } = shotLine(battle, unit, unit)
     yield* fly(battle, unit.position, end, PHYSICAL_COLOR)
-    return battle.strike(unit, area, shotHearts(unit), "physical")
+    return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL)
 }

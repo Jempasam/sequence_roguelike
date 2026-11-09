@@ -1,5 +1,5 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
-import { damage } from "../../../battle/words"
+import { FORCE } from "../../../base/keywords"
 import type { Unit } from "../../../battle/Unit"
 
 import { RoundElixir } from "./RoundElixir"
@@ -16,7 +16,7 @@ export class StrengthElixir extends RoundElixir {
         /** How many hearts it adds to each attack. */
         public readonly bonus: number,
     ){
-        super("Élixir de force", visual("usables/strength_elixir"), ["+", damage(bonus, "physical"), " à tes coups ce round."])
+        super("Élixir de force", visual("usables/strength_elixir"), ["+", bonus, " ", FORCE, " ce round."])
     }
 
 

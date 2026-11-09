@@ -8,6 +8,7 @@ import { BattleBroadcaster, BattleReceiver, LocalSync, writeBattleMessage } from
 import type { BattleDesync } from "@game/core/mecard/sync"
 import { started } from "../../sim/fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
+import { DamageType } from "@game/core/mecard"
 
 /** How many rounds a battle played to its end may last at most, before it is taken as stuck. */
 const SAFETY_ROUNDS = 1000
@@ -144,7 +145,7 @@ describe("BattleReceiver", () => {
         main.endPreparation()
         main.playRound()
         const [unit] = watched(viewer).living
-        unit.hearts.damage(1, "physical", null)
+        unit.hearts.damage(1, DamageType.PHYSICAL, null)
         main.advance()
         expect(drifts).toEqual([{ number: 1, round: main.round }])
     })

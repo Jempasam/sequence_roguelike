@@ -5,12 +5,11 @@ import { ScalingStatus } from "../ScalingStatus"
 import type { StatGain } from "../ScalingStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
-/** How many meters of vision a round of concentration gives, and how many of range per meter of vision. */
-export const CONCENTRATION_VISION = 1
+/** How much range, as a factor, a round of concentration gives. */
 export const CONCENTRATION_RANGE = 0.25
 
-/** A concentration: the vision and the range grow with the rounds left. */
-export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de vision et de portée pour chaque round restant (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
+/** A concentration: the range grows with the rounds left. */
+export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de portée pour chaque round restant (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
 
 /** Does the step a unit just played wait? */
 function waited({ unit }: UnitContext): boolean {
@@ -24,17 +23,14 @@ function onWait(ctx: UnitContext, gain: () => void): Observer {
     })
 }
 
-/** Concentrated: more vision and range for each round left, and a round more at each wait. */
+/** Concentrated: more range for each round left, and a round more at each wait. */
 export class Concentration extends ScalingStatus {
 
 
     public readonly type: StatusType = CONCENTRATED
 
     protected gains(level: number): readonly StatGain[] {
-        return [
-            { stat: stats => stats.aimRange, amount: CONCENTRATION_VISION * level },
-            { stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * CONCENTRATION_VISION * level },
-        ]
+        return [{ stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * level }]
     }
 
     protected override watch(ctx: UnitContext): Observer[] {

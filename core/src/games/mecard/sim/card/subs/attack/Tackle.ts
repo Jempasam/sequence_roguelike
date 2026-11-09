@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -6,7 +7,7 @@ import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /** How many hearts the tackle of the catalog takes, before the strength of the unit. */
 const TACKLE_DAMAGE = 1
@@ -29,15 +30,16 @@ export class TackleCard extends BlowCard {
         public readonly cosHalf: number,
     ){
         super("Tacle", [
-            "Fauche en arc devant, à ", meters(range), " : chaque ", UNIT, " touchée te tourne le dos et prend ",
-            blowDamage(TACKLE_DAMAGE), ".",
+            "Fauche en arc devant, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : chaque ", UNIT,
+            " touchée te tourne le dos et prend ", TACKLE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
         ], Rarity.RARE, TACKLE_DAMAGE)
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         return {
-            kind: "sector", center: pose.position, direction: pose.direction, radius: this.range * progress,
+            kind: "sector", center: pose.position, direction: pose.direction,
+            radius: this.range * unit.stats.meleeRange.value * progress,
             cosHalf: this.cosHalf,
         }
     }

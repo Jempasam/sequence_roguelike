@@ -5,6 +5,7 @@ import type { IncomingDamage } from "../battle/events"
 import type { Unit } from "../battle/Unit"
 
 import { BaseStatus } from "./BaseStatus"
+import { DamageType } from "../battle/DamageType"
 
 /** What a guard reacts to an attack it stopped with: the attack, and the attacker it came from. */
 export interface Parried {
@@ -34,7 +35,7 @@ export abstract class Guard extends BaseStatus {
         this.#observers.push(
             unit.stepStarted.add(() => battle.applyStatus(unit, this.type, -1)),
             unit.hearts.onIncoming.add(incoming => {
-                if(incoming.nature !== "physical" || incoming.derived || incoming.amount <= 0) return
+                if(incoming.nature !== DamageType.PHYSICAL || incoming.derived || incoming.amount <= 0) return
                 if(this.level <= 0) return
                 const amount = incoming.amount
                 incoming.amount = 0

@@ -68,8 +68,8 @@ export interface TextInputOptions {
  *
  * `enter` or losing the focus commits the text, `escape` cancels and brings back the text from before.
  * Erasing and moving the cursor repeat while their key is held, as fast as the OS repeats the characters.
- * With `ctrl`, `backspace` and `delete` erase a whole word, or all the spaces when the cursor stands
- * against spaces.
+ * With `ctrl`, `backspace` and `delete` erase, and the arrows move over, a whole word, or all the spaces
+ * when the cursor stands against spaces.
  * The text scrolls sideways to keep the cursor in view, and only the characters wholly in view are drawn.
  * There is neither input method nor virtual keyboard, since there is no DOM: typing Japanese, or on a
  * phone, does not work.
@@ -288,12 +288,14 @@ export class TextInput extends Component {
         switch(event.code){
             case "ArrowLeft": {
                 // A selection dropped puts the cursor at its edge, as text fields do.
-                const target = this.#dropsSelection(event) ? this.selectionStart : this.#cursor - 1
+                const step = event.control ? this.#runStart(this.#cursor) : this.#cursor - 1
+                const target = this.#dropsSelection(event) ? this.selectionStart : step
                 this.#moveCursor(target, event.shift)
                 break
             }
             case "ArrowRight": {
-                const target = this.#dropsSelection(event) ? this.selectionEnd : this.#cursor + 1
+                const step = event.control ? this.#runEnd(this.#cursor) : this.#cursor + 1
+                const target = this.#dropsSelection(event) ? this.selectionEnd : step
                 this.#moveCursor(target, event.shift)
                 break
             }

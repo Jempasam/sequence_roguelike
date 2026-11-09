@@ -2,8 +2,9 @@ import { rgba } from "../../../base/Rgba"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
 import { upgraded, upgradesFor } from "../../../catalog/upgrades"
+import type { Hero } from "../../../run/Hero"
 import type { Run } from "../../../run/Run"
-import { transmute } from "../../../run/visits"
+import { transmute, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
@@ -50,13 +51,20 @@ export class AlchemistHalt extends DeckHalt {
         return deck.some(card => isTwice(deck, card))
     }
 
-    protected work(ctx: HaltContext, deck: Card[], back: () => void): void {
+    protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
         ctx.cards(["Deux copies de quelle ", CARTE, " ?"], deck, { min: 1, max: 1 }, ([card]) => {
             const upgrade = upgradeOf(card, this.run.rng)
             if(!upgrade) throw new Error(`${card.name} was offered to the alchemist, who has no upgrade for it.`)
             this.impact()
-            ctx.tell("Transmutée :", fusionShown(this.run.changeDeck(deck, changed => transmute(changed, card, upgrade)), deck))
-        }, { among: card => isTwice(deck, card), back })
+            const made = this.run.changeDeck(deck, changed => {
+                return transmute(withCopies(changed, [card, card], hero.unlimited), card, upgrade)
+            })
+            ctx.tell("Transmutée :", fusionShown(made, deck))
+        }, {
+            // A card played unlimited has as many copies as the alchemist asks for.
+            among: card => isTwice(deck, card) || hero.unlimited.includes(card) && upgradesFor(card).length > 0,
+            back, unlimited: hero.unlimited,
+        })
     }
 }
 

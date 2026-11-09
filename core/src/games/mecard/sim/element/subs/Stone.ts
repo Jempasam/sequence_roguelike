@@ -2,12 +2,12 @@ import { rgba } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
-import { damage } from "../../battle/words"
 import { placeBoulder } from "../../hazard/subs/Rocky"
 import { Heart } from "../../heart/Heart"
 import { SHIELD_HEART } from "../../heart/subs/ShieldHeartKind"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
+import { DamageType } from "../../battle/DamageType"
 
 /** How many hearts the stone takes. */
 const STONE_DAMAGE = 2
@@ -19,7 +19,7 @@ export class Stone extends AbstractElement {
     constructor(){
         super(
             "Pierre", rgba(0.65, 0.62, 0.58), "écrasé",
-            damage(STONE_DAMAGE, "physical"),
+            [STONE_DAMAGE, " ", DamageType.PHYSICAL],
             ["un cœur ", SHIELD_HEART],
             "un rocher : qui le touche subit le négatif, une fois",
         )
@@ -27,7 +27,7 @@ export class Stone extends AbstractElement {
 
 
     public applyNegative({ unit }: UnitContext, target: Unit): void {
-        target.hearts.damage(STONE_DAMAGE, "physical", unit)
+        target.hearts.damage(STONE_DAMAGE, DamageType.PHYSICAL, unit)
     }
 
     public applyPositive(_ctx: UnitContext, target: Unit): void {

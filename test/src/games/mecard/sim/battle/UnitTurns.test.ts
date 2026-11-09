@@ -3,6 +3,7 @@ import { FIRE, PRAYER, REPEAT_2, REPETITION, SPELL, STEP, WAIT } from "@game/cor
 import type { Battle, Unit } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** A hero and a foe far from each other. */
 function facing(): { on: Battle, hero: Unit, foe: Unit } {
@@ -111,7 +112,7 @@ describe("Unit, its death", () => {
         on.startRound()
         on.commit(hero, plan)
         on.endPreparation()
-        hero.hearts.damage(hero.life, "physical", foe)
+        hero.hearts.damage(hero.life, DamageType.PHYSICAL, foe)
         expect(sources).toEqual([foe])
         expect(hero.steps).toHaveLength(0)
     })

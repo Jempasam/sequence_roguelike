@@ -4,6 +4,7 @@ import { Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView } from "../../../
 import type { Painter } from "../../../engine/gpu"
 import type { InputFrame } from "../../../engine/input"
 import type { Theme, UiRoot } from "../../../engine/ui"
+import type { ClipboardPort } from "../../../platform"
 import { Run } from "../sim/run/Run"
 import type { Battle } from "../sim/battle/Battle"
 import { RunBroadcaster } from "../sync/run/RunBroadcaster"
@@ -96,6 +97,9 @@ export class MecardGame {
 
         /** How it reaches the others, none in an environment without a network. */
         network: MecardNetwork|null = null,
+
+        /** The clipboard of the system, none when it has none: the battle commands copy and paste with it. */
+        clipboard: ClipboardPort|null = null,
     ){
         this.#seed = seed
         this.#network = network
@@ -133,6 +137,8 @@ export class MecardGame {
             },
             handChanged: unit => this.#screen.battleScreen.handChanged(unit),
             newBattle: () => this.#newBattle(),
+            playBattle: battle => this.#playBattle(battle),
+            clipboard,
             restart: () => this.restart(),
             go: place => {
                 this.#travelOn()
@@ -310,6 +316,13 @@ export class MecardGame {
         this.#benchesOff()
         this.run.backToMap()
         this.run.startBattle()
+    }
+
+    /** Fight a battle made apart, whatever was going on left. */
+    #playBattle(battle: Battle): void {
+        this.#benchesOff()
+        this.run.backToMap()
+        this.run.playBattle(battle)
     }
 
     /** Go back to the map, whatever was going on left, and show it. */

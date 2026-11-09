@@ -2,7 +2,7 @@ import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
-import { HeartCount, meters } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -18,7 +18,7 @@ import { WAIT } from "../movement/Wait"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
 import { summonShown } from "../summon/SummonCard"
-import { CARTE } from "../../../base/keywords"
+import { CARTE, DISTANCE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** How far ahead a robot stands, in meters. */
@@ -89,12 +89,12 @@ function slowed(cards: readonly Card[]): Card[] {
 }
 
 export const IMPROVISED_ROBOT = new RobotCard("Robot improvisé", [
-    "Invoque à ", meters(ROBOT_AHEAD), " devant un robot de ", new HeartCount(ROBOT_HEARTS), " bouclier + invocation, tourné ",
+    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS), " bouclier + invocation, tourné ",
     "comme toi. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module.",
 ], Rarity.RARE, 1, cards => cards)
 
 export const TANK_ROBOT = new RobotCard("Robot tank", [
-    "Invoque à ", meters(ROBOT_AHEAD), " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
+    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
     " bouclier, ×", String(TANK_FACTOR), " invocation comprise. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module, ",
     "en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)

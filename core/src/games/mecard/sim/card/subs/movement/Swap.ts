@@ -1,22 +1,22 @@
 import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
-import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 
 import { ActionCard } from "../ActionCard"
 import { hold, wait, WORD_TIME } from "../tools/playing"
-import { arrow, label, polygon, still } from "../tools/previews"
+import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { UNIT } from "../../../base/keywords"
 
 /** How long a swap takes to fade out and back in, in seconds. */
 const SWAP_TIME = 0.15
 
-/** The closest other unit within the vision of a unit from a point, ally or enemy, none for none. */
+/** The closest other unit from a point, ally or enemy, none for none. */
 function closest(battle: Battle, unit: Unit, from: Vector2): Unit|null {
     let found: Unit|null = null
-    let best = unit.stats.aimRange.value
+    let best = Infinity
     for(const other of battle.living){
         const distance = other.position.distance(from)
         if(other !== unit && distance <= best){
@@ -42,17 +42,16 @@ function swapping(): Action {
             yield* wait(SWAP_TIME)
         },
         preview: ({ battle, unit, pose }) => {
-            const reach = polygon({ kind: "circle", center: pose.position, radius: unit.stats.aimRange.value }, RANGE_COLOR)
             const other = closest(battle, unit, pose.position)
-            if(!other) return still(pose, reach, label(pose.position, "personne en vue", NOTE_COLOR))
+            if(!other) return still(pose, label(pose.position, "personne en vue", NOTE_COLOR))
             const there = arrow([pose.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
             const back = arrow([other.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR)
-            return still({ ...pose, position: other.position }, reach, there, back)
+            return still({ ...pose, position: other.position }, there, back)
         },
     }
 }
 
 /** A swap of places with the closest unit in vision, ally or enemy. */
 export const SWAP = new ActionCard("Échange", [
-    "Échange ta place avec l'", UNIT, " la plus proche, alliée ou ennemie, à portée de vision.",
+    "Échange ta place avec l'", UNIT, " la plus proche, alliée ou ennemie.",
 ], Rarity.RARE, swapping())

@@ -103,12 +103,15 @@ export function boosterView(theme: Theme, booster: Booster, frame: NineSlice|nul
     column.add(new Label(theme, booster.name, { color: engineColor(booster.color), outline: TEXT_OUTLINE }))
     const stack = new Stack()
     // Cards under the icon, their tops showing over it: a stack of cards in the pocket.
-    const { width, height } = CARD_LOOKS.hand
+    const icon = new CardView(theme, booster.icon, "hand")
+    const { height } = CARD_LOOKS.hand
+    // An icon holding cards is wider than a card, and an option is posed: it must not get less than it asks.
+    const width = Math.max(CARD_LOOKS.hand.width, icon.measure(Infinity).preferredWidth)
     stack.fixedSize = { width, height: height + UNDER_STEP * UNDER_CARDS }
     for(let under = 0; under < UNDER_CARDS; under++){
         stack.add(new CardView(theme, null, "hand"), { x: "start", y: "start", offsetY: under * UNDER_STEP })
     }
-    stack.add(new CardView(theme, booster.icon, "hand"), { x: "start", y: "end" })
+    stack.add(icon, { x: "start", y: "end" })
     if(frame) stack.add(new Pocket(theme, frame), { x: "stretch", y: "end" })
     const count = new Label(theme, `${boosterSize(booster)}`, { color: COUNT_COLOR, outline: TEXT_OUTLINE })
     stack.add(count, { x: "end", y: "end", offsetX: COUNT_INSET, offsetY: COUNT_INSET })

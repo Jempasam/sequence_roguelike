@@ -1,23 +1,23 @@
-import { UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Indicator, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 import { HAZARD_COLOR, MOVE_COLOR, MOVE_WIDTH, PHYSICAL_COLOR } from "../../../battle/previewColors"
-import { blowDamage, meters } from "../../../battle/words"
 
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
 import { hold, SHORT_TIME, travel } from "../tools/playing"
 import { arrow, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How wide the line a charge cuts is, in meters. */
 const CHARGE_WIDTH = 0.3
 
 /** What the slash of the catalog blinks by, in meters, before the mobility of the unit: half a step. */
-const SLASH_BLINK = 1
+const SLASH_BLINK = 2
 
 /** How wide the slash of the catalog cuts, in meters. */
 const SLASH_WIDTH = 1
@@ -39,8 +39,8 @@ function band(from: Vector2, to: Vector2, width: number): Area {
 
 /** A dash through the units on its way, each of which takes a blow along the way. */
 export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
-    "Fonce de ", meters(DASH_LENGTH), " devant en traversant les ", UNIT.as("unités"), " : ", blowDamage(1),
-    " + la force à chacune de celles sur le chemin.",
+    "Fonce de ", DASH_LENGTH, "×", AGILITE, " ", DISTANCE, " devant en traversant les ", UNIT.as("unités"), " : ", 1,
+    "+", FORCE, " ", DamageType.PHYSICAL, " à chacune de celles sur le chemin.",
 ], Rarity.RARE, {
     use: function* (ctx){
         const { battle, unit } = ctx
@@ -51,7 +51,7 @@ export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
         // Rooted, it cuts where it stands: the whole length ahead.
         const to = gone.distance > 0 ? unit.position : start.plus(unit.direction.times(length))
         const area = band(start, to, CHARGE_WIDTH)
-        battle.strike(unit, area, 1 + unit.stats.strength.value, "physical")
+        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL)
         yield* hold(battle, SHORT_TIME, [polygon(area, PHYSICAL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
@@ -91,9 +91,9 @@ function slashes(battle: Battle, unit: Unit, pose: Pose): { to: Vector2, area: A
 
 /** A slash blinking forward, again and farther for each unit it cut: three blinks at most. */
 export const DEMON_SLASH = new ActionCard("Demon Slash", [
-    "Se téléporte de ", meters(SLASH_BLINK), " devant en tranchant sur ", meters(SLASH_WIDTH), " de large : ",
-    blowDamage(1), " + la force. Pour chaque ", UNIT, " touchée, recommence, ", meters(SLASH_BLINK),
-    " plus loin chacune, ", String(SLASH_BLINKS), " fois au plus.",
+    "Se téléporte de ", SLASH_BLINK, "×", AGILITE, " ", DISTANCE, " devant en tranchant sur ", SLASH_WIDTH, " ",
+    DISTANCE, " de large : ", 1, "+", FORCE, " ", DamageType.PHYSICAL, ". Pour chaque ", UNIT, " touchée, recommence, ",
+    SLASH_BLINK, "×", AGILITE, " ", DISTANCE, " plus loin chacune, ", SLASH_BLINKS, " fois au plus.",
 ], Rarity.EPIC, {
     use: function* ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
@@ -105,7 +105,9 @@ export const DEMON_SLASH = new ActionCard("Demon Slash", [
             const area = band(from, to, SLASH_WIDTH)
             // Rooted or blocked, it cuts the same: the blink alone is lost.
             battle.blink(unit, to)
-            const hit = battle.strike(unit, area, amount, "physical", other => cut.has(other) ? 0 : 1)
+            const hit = battle.strike(
+                unit, area, amount, DamageType.PHYSICAL, other => cut.has(other) ? 0 : 1,
+            )
             for(const other of hit) cut.add(other)
             yield* hold(battle, SLASH_TIME, [polygon(area, PHYSICAL_COLOR)])
             if(hit.length === 0) break

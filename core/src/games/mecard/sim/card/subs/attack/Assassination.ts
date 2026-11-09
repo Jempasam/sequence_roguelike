@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -6,7 +7,7 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE } from "./BlowCard"
 import { BACKSTAB, DAGGER_RANGE, DAGGER_WIDTH, DaggerCard } from "./Dagger"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /**
  * A stab that plays the round over when it kills: what the unit played so far, itself included, comes again
@@ -26,6 +27,6 @@ export class AssassinationCard extends DaggerCard {
 }
 
 export const ASSASSINATION = new AssassinationCard("Assassinat", [
-    "Poignarde sur ", meters(DAGGER_RANGE), " devant : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, ", ×", String(BACKSTAB),
-    " dans le dos. Si la cible meurt, tout ce que tu as joué ce round, Assassinat compris, est rejoué juste après.",
+    "Poignarde sur ", frenchNumber(DAGGER_RANGE), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, " à chaque ", UNIT, ", ×", BACKSTAB, " dans le dos. Si la cible meurt, tout ce que tu as joué ce round, Assassinat compris, est rejoué juste après.",
 ], Rarity.EPIC, DAGGER_RANGE, DAGGER_WIDTH, BACKSTAB)

@@ -1,7 +1,6 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
-import { meters } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLACK_HEART } from "../../../heart/subs/BlackHeartKind"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
@@ -10,6 +9,7 @@ import { RoundStatus } from "../../../status/RoundStatus"
 
 import { AbstractItem } from "../AbstractItem"
 import { visual } from "../../../base/Visual"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many glass hearts the glass heart gives, and how far around the reactor wounds. */
 const GLASS_HEARTS = 2
@@ -66,7 +66,7 @@ export class UnstableReactor extends AbstractItem {
 
     constructor(){
         super("Réacteur instable", visual("items/alembic"), [
-            "Quand il perd un cœur bleu ou noir : un cœur de dégât à chaque ", UNIT, " à ", meters(REACTOR_RADIUS), " autour.",
+            "Quand il perd un cœur bleu ou noir : ", 1, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", REACTOR_RADIUS, " ", DISTANCE, " autour.",
         ])
     }
 
@@ -74,7 +74,7 @@ export class UnstableReactor extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         const burst = ({ kind }: { kind: unknown }): void => {
             if(kind !== BLUE_HEART && kind !== BLACK_HEART) return
-            battle.strike(unit, { kind: "circle", center: unit.position, radius: REACTOR_RADIUS }, 1, "physical")
+            battle.strike(unit, { kind: "circle", center: unit.position, radius: REACTOR_RADIUS }, 1, DamageType.PHYSICAL)
         }
         hold(unit.hearts.onRemove.add(burst))
         hold(unit.hearts.onWound.add(burst))
@@ -89,7 +89,7 @@ export class BloodPact extends AbstractItem {
 
 
     constructor(){
-        super("Pacte de sang", visual("items/fang"), ["+1 force par cœur manquant."])
+        super("Pacte de sang", visual("items/fang"), ["+", 1, " ", FORCE, " par cœur manquant."])
     }
 
 

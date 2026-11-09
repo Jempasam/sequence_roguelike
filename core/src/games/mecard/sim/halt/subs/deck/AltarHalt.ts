@@ -49,10 +49,11 @@ export class AltarHalt extends DeckHalt {
                 ctx.cards(["Copie une autre ", CARTE], without(deck, sacrificed), { min: 1, max: 1 }, ([copied]) => {
                     this.impact()
                     const [one, other] = sacrificed
-                    this.run.changeDeck(deck, changed => sacrifice(changed, [one, other], copied))
+                    this.run.changeDeck(deck, changed => sacrifice(changed, [one, other], copied, hero.unlimited))
                     ctx.tell(concat(joinText(sacrificed, ", "), " pour une copie de ", copied, "."))
-                }, { from: deck, back: sacrifices })
-            }, { back })
+                }, { from: deck, back: sacrifices, unlimited: hero.unlimited })
+                // What is sacrificed leaves the deck: a card played unlimited is shown, and cannot be.
+            }, { back, unlimited: hero.unlimited, copies: false })
         sacrifices()
     }
 }

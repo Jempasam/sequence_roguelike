@@ -9,6 +9,7 @@ import {
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
+import { DamageType } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
@@ -125,7 +126,7 @@ describe("saveBattle, fusions and usables", () => {
         const [hero] = original.units
         hero.usables.splice(0)
         hero.usables.push(new Carried(HEALING_POTION), new Carried(HEALING_POTION))
-        hero.hearts.damage(2, "physical", null)
+        hero.hearts.damage(2, DamageType.PHYSICAL, null)
         planAll(original)
         original.activate(hero, [hero.usables[1]])
         const copy = loadBattle(saveBattle(original))

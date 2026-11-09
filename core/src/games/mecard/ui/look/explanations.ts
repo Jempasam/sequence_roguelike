@@ -1,6 +1,10 @@
 import { concat, Keyword } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import { CARTE, FUSION, DECK, COMPOSITE, INVOCATION, MERGE, PERFECT_CLONE, RANDOM, SUPPRESSION, UNIT } from "../../sim/base/keywords"
+import {
+    AGILITE, ALLONGE, CARTE, FEBRILE, FUSION, DECK, COMPOSITE, DISTANCE, FORCE, INVOCATION, MERGE, PERFECT_CLONE, PORTEE,
+    PRECISION, RANDOM, SUPPRESSION, UNIT,
+} from "../../sim/base/keywords"
+import { DamageType } from "../../sim/battle/DamageType"
 import { AbstractCard } from "../../sim/card/subs/AbstractCard"
 import { AbstractHeartKind } from "../../sim/heart/subs/AbstractHeartKind"
 import { AbstractItem } from "../../sim/item/subs/AbstractItem"
@@ -49,6 +53,24 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
         " les mêmes stats, objets et statuts que son modèle. Seuls ses cœurs sont à lui. Il reste jusqu'à sa",
         " mort, et compte pour son équipe.",
     ]],
+    [DISTANCE, ["Des mètres dans l'arène. Une case de l'arène fait 1 ", DISTANCE, "."]],
+    [FORCE, ["Influence les ", DamageType.PHYSICAL, " des coups au corps à corps."]],
+    [PRECISION, ["Influence les ", DamageType.PHYSICAL, " des tirs."]],
+    [AGILITE, [
+        "Influence la ", DISTANCE, " des déplacements : pas, dash, téléportation. Les déplacements subis",
+        " (poussée, charme) gardent la leur.",
+    ]],
+    [PORTEE, [
+        "Influence la ", DISTANCE, " des lancers, tirs et crochets : bombe, potion, harpon.",
+    ]],
+    [ALLONGE, ["Influence la ", DISTANCE, " des coups au corps à corps : coup d'épée, estoc, dague."]],
+    [FEBRILE, ["Se dit d'une ", UNIT, " dont plus de cœurs sont vides que pleins."]],
+])
+
+/** What the interface says of each type of damage. */
+const DAMAGE_HELP: ReadonlyMap<DamageType, Text> = new Map<DamageType, Text>([
+    [DamageType.PHYSICAL, ["Des cœurs perdus, que l'esquive et la garde peuvent éviter."]],
+    [DamageType.ELEMENTAL, ["Des cœurs perdus, que l'esquive ne peut pas éviter : feu, poison, magie."]],
 ])
 
 /** A thing of the game telling what it does through a description. */
@@ -62,6 +84,7 @@ function isDescribed(value: object): value is Described {
 /** What the interface can say of an object named in a text, none when it has nothing to add to its name. */
 export function explanationOf(value: object): Text|undefined {
     if(value instanceof Keyword) return KEYWORD_HELP.get(value)
+    if(value instanceof DamageType) return DAMAGE_HELP.get(value)
     if(value instanceof AbstractHeartKind) return concat("Cœur ", value, " : ", value.description)
     return isDescribed(value) ? concat(value, " : ", value.description) : undefined
 }

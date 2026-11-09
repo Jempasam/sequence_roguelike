@@ -1,5 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
@@ -20,7 +20,7 @@ export class SidestepCard extends ActionCard {
         public readonly length: number,
     ){
         super("Pas de côté", [
-            "Se décale de ", meters(length), " à gauche ou à droite, au hasard, sans se retourner.",
+            "Se décale de ", length, "×", AGILITE, " ", DISTANCE, " à gauche ou à droite, au hasard, sans se retourner.",
         ], Rarity.COMMON, SidestepCard.#stepping(length))
     }
 

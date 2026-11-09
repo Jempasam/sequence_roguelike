@@ -1,4 +1,4 @@
-import { meters } from "../../../battle/words"
+import { DISTANCE } from "../../../base/keywords"
 import type { Status } from "../../../status/Status"
 import { Rooted } from "../../../status/subs/Rooted"
 
@@ -20,7 +20,7 @@ export class GlueFlask extends ThrownFlask {
     ){
         super(
             "Flasque de glu", visual("usables/glue_flask"),
-            ["L'ennemi le plus proche, à ", meters(range), " au plus, est ", new Rooted(root), "."],
+            ["L'ennemi le plus proche, à ", range, " ", DISTANCE, " au plus, est ", new Rooted(root), "."],
             range,
         )
     }

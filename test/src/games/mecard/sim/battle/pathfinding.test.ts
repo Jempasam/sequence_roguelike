@@ -71,12 +71,11 @@ describe("PATH_AIM", () => {
         expect(Math.abs(walker.position.x - 3.5)).toBeGreaterThan(0.1)
     })
 
-    test("no enemy within 0.8 of the vision → keeps its facing", () => {
+    test("no enemy at all → keeps its facing", () => {
         const on = among()
-        const walker = unit(on, 1, 6)
-        unit(on, 1, 2.5, { team: MONSTERS, direction: Vector2.UP })
+        const walker = unit(on, 1, 6, { direction: Vector2.RIGHT })
         play(on, [[walker, chain(PATH_AIM)]])
-        expect(walker.direction).toEqual(Vector2.UP)
+        expect(walker.direction).toEqual(Vector2.RIGHT)
     })
 
     test("its preview → the way as an arrow, and the facing it would take", () => {
@@ -84,7 +83,7 @@ describe("PATH_AIM", () => {
         const walker = unit(on, 3.5, 5)
         unit(on, 3.5, 2, { team: MONSTERS })
         const [root] = chain(PATH_AIM).preview(on, walker)
-        expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["polygon", "arrow"])
+        expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["arrow"])
         expect(root.preview?.pose.direction.x).not.toBe(0)
     })
 })

@@ -18,6 +18,9 @@ export interface Process {
     /** How its icon looks, and the color its name is written in. */
     readonly icon: Visual
 
+    /** What it does, for the player. */
+    readonly description: Text
+
     /** Its name, for the console and the log. */
     toString(): string
 

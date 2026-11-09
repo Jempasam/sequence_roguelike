@@ -102,6 +102,14 @@ export const GUIDE: readonly GuideBlock[] = [
         "Survole cette carte : sa description contient le mot-clé ", FUSION, ". Survole-le à son tour, puis clic droit.",
     )),
     quote("En cas de doute sur n'importe quoi : survole-le."),
+    subheading("Cartes infinies"),
+    paragraph(concat(
+        "Tes héros savent toujours avancer et se tourner : ", cardNamed("Avancer"), " et Tourner",
+        " ne sont dans aucun ", DECK, ". Elles sont en tête de ta main, bordées de blanc : un clic en pose une copie dans ta ",
+        "chaîne, une seule fois par tour : une fois posée, elle grise. Sur Tourner, clique le cadran pour choisir la ",
+        "direction du trait, ou clique la carte pour la poser. Dans les haltes qui montrent ton ", DECK,
+        ", elles figurent aussi, et on peut les choisir plusieurs fois.",
+    )),
 
     //// 3. A game from afar ////
     heading("Une partie, vue de loin"),
@@ -261,8 +269,8 @@ export const GUIDE: readonly GuideBlock[] = [
         stat("Force", "Ajoutée aux coups au corps à corps.", "Pierre à aiguiser"),
         stat("Précision", "Ajoutée aux tirs.", "Viseur"),
         stat("Agilité", "Règle la longueur des déplacements.", "Bottes de sept lieues"),
-        stat("Vision", "Règle la portée de Viser et de ses semblables.", "Longue-vue"),
-        stat("Portée", "Règle ce qui est lancé ou tiré.", "Fronde"),
+        stat("Portée", "Règle ce qui est lancé ou tiré.", "Fronde ou Longue-vue"),
+        { head: "Allonge", text: "Règle la longueur des coups au corps à corps." },
         stat("Soin", "Ajoutée à chaque soin.", "Trousse de soin"),
         stat("Invocation", "Ajoutée à la vie de chaque invocation.", "Poupée de chiffon"),
         stat("Alchimie", "Ajoutée au niveau de chaque potion.", "Alambic"),

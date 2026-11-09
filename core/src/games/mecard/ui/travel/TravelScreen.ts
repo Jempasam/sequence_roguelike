@@ -4,7 +4,7 @@ import type { Visual } from "../../sim/base/Visual"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import {
-    AnimationChain, Box, Bubble, Button, Choice, FrameClock, instant, Label, NineSlice, Panel, Paragraph,
+    AnimationChain, Box, Bubble, Button, Choice, FrameClock, instant, Label, NineSlice, OverflowContainer, Panel, Paragraph,
     Scroll, Stack, Tabs,
 } from "../../../../engine/ui"
 import type { ChoiceStep, Component, Layer, ParagraphOptions, Theme, UiRoot } from "../../../../engine/ui"
@@ -580,30 +580,41 @@ export class TravelScreen {
     }
 
     #showCards(dialog: CardsDialog): void {
-        const { count, pool, selectable } = dialog
+        const { count, pool, selectable, repeatable } = dialog
         // The places of the cards picked, in the order picked, so two copies are two picks.
         const picked: number[] = []
         const build = (): Component => {
             this.#hint = CARD_HINT
             const column = new Box("column", { gap: MARGIN })
+            const deck = this.#placeOf(dialog.from)
             column.add(new DeckView(this.theme, pool, {
                 room: this.#middleRoom(),
                 size: "chain",
-                deck: this.#placeOf(dialog.from),
+                deck,
                 tell: text => this.#tell(text),
                 pickable: (_, index) => {
                     if(!selectable[index]) return null
+                    const times = picked.filter(each => each === index).length
                     return {
-                        picked: picked.includes(index),
+                        // A card picked once says it with an edge; one that may be picked again, how many times.
+                        activation: times === 0 ? null : repeatable[index] ? `[${times}]` : "",
                         pick: () => {
                             const at = picked.indexOf(index)
-                            if(at >= 0) picked.splice(at, 1)
+                            if(repeatable[index]){
+                                if(picked.length < count.max) picked.push(index)
+                                else if(count.max === 1) picked.splice(0, 1, index)
+                            }
+                            else if(at >= 0) picked.splice(at, 1)
                             else if(picked.length < count.max) picked.push(index)
                             else if(count.max === 1) picked.splice(0, 1, index)
                             this.#open(build)
                         },
                     }
                 },
+            }))
+            column.add(this.#pickedRow(pool, picked, deck, at => {
+                picked.splice(at, 1)
+                this.#open(build)
             }))
             const ready = picked.length >= count.min && picked.length <= count.max
             const wanted = count.min === count.max ? `${count.min}` : `${count.min} à ${count.max}`
@@ -615,6 +626,28 @@ export class TravelScreen {
             })
         }
         this.#open(build)
+    }
+
+    /**
+     * The cards picked so far, in the order they were picked, side by side or overlapping when the room is
+     * short. A click on one lets it go.
+     *
+     * @param picked - The places in the pool of the cards picked, the same place more than once for a card
+     *   picked several times.
+     * @param leave - Called with the place in the picks of the card to let go.
+     */
+    #pickedRow(pool: readonly Card[], picked: readonly number[], deck: number|null, leave: (at: number) => void): Component {
+        if(picked.length === 0) return new Label(this.theme, "(rien de choisi)", { color: DIM_TEXT })
+        const row = new OverflowContainer({ gap: CARD_GAP })
+        picked.forEach((index, at) => {
+            const card = pool[index]
+            const view = new CardView(this.theme, card, "chain")
+            view.deck = deck
+            view.onHover = over => this.#tell(over ? cardText(card) : null)
+            view.onPick = () => leave(at)
+            row.add(view)
+        })
+        return row
     }
 
     #showConfirm(dialog: ConfirmDialog): void {

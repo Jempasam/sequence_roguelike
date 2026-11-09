@@ -8,35 +8,35 @@ import { ModifierCard } from "../ModifierCard"
 import { turn } from "../tools/playing"
 import { arrow, chained, label, still } from "../tools/previews"
 
-/** How much vision and range the telescope adds, in meters and as a factor, while its action plays. */
-const SCOPE_VISION = 2
+/** How much range and precision the telescope adds, as a factor and in hearts, while its action plays. */
 const SCOPE_RANGE = 0.5
+const SCOPE_PRECISION = 1
 
 /** Run something with the stats of a unit raised, then put them back, whatever happens. */
 function withScope<T>(unit: Unit, run: () => T): T {
     const key = new ModifierKey("lunette")
-    unit.stats.aimRange.add(key, new Add(SCOPE_VISION))
+    unit.stats.precision.add(key, new Add(SCOPE_PRECISION))
     unit.stats.throwRange.add(key, new Add(SCOPE_RANGE))
     try {
         return run()
     } finally {
-        unit.stats.aimRange.remove(key)
+        unit.stats.precision.remove(key)
         unit.stats.throwRange.remove(key)
     }
 }
 
-/** An action played, and previewed, with the vision and the range raised. */
+/** An action played, and previewed, with the range and the precision raised. */
 function scoped(action: Action): Action {
     return {
         use: function* (ctx){
             const key = new ModifierKey("lunette")
             const { unit } = ctx
-            unit.stats.aimRange.add(key, new Add(SCOPE_VISION))
+            unit.stats.precision.add(key, new Add(SCOPE_PRECISION))
             unit.stats.throwRange.add(key, new Add(SCOPE_RANGE))
             try {
                 yield* action.use(ctx)
             } finally {
-                unit.stats.aimRange.remove(key)
+                unit.stats.precision.remove(key)
                 unit.stats.throwRange.remove(key)
             }
         },
@@ -45,7 +45,7 @@ function scoped(action: Action): Action {
 }
 
 export const SPYGLASS_CARD = new ModifierCard("Lunette", [
-    "L'action est jouée avec ", String(SCOPE_VISION), " m de vision et +", String(SCOPE_RANGE), " de portée en plus.",
+    "L'action est jouée avec +", String(SCOPE_RANGE), " de portée et +", String(SCOPE_PRECISION), " de précision.",
 ], Rarity.RARE, actions => actions.map(scoped))
 
 

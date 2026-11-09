@@ -17,9 +17,9 @@ import {
     PURSUIT, RAGE, RAGE_FIT, RAMPART, REPEAT_2, REPETITION, RETREAT_SHOT, RICOCHET, SACRIFICE, SCYTHE,
     SENTINEL, SHADOW, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHOCK_WAVE, SHOT, SHOTGUN, SHOUT, SHOUT_TOTEM,
     SIDESTEP, SLASH, SLIDING_PARRY_CARD, SLOWNESS, SMALL_SPELL, SOUL_LINK, SOUL_SHIELD, SPARK, SPELL, SPIRIT_ANCHOR,
-    SPIRIT_PROJECTION, SPIT, SPYGLASS_CARD, STEAM_CARD, STEP, STONE, STONE_WALL, STORM_CARD, STUNNING_DASH,
+    SPIRIT_DASH, SPIRIT_PROJECTION, SPIT, SPYGLASS_CARD, STEAM_CARD, STONE, STONE_WALL, STORM_CARD, STUNNING_DASH,
     SUBSTITUTION, SUCTION, SUPER_REPETITION, SUPLEX, SWEEP, TACKLE, TASER, TAUNT, THORN_SHIELD, THROWN_POTION,
-    THRUSTERS, THRUST, THRUST_CHARGE, TIDE, TOTEM, TURN_LEFT, TURN_RIGHT, TURRET, VINE, VULNERABILITY, WAIT,
+    THRUSTERS, THRUST, THRUST_CHARGE, TIDE, TOTEM, TURRET, VINE, VULNERABILITY, WAIT,
     WATER, WEAKNESS, WIND, WOODEN_SHIELD_CARD,
 } from "../card/subs"
 import {
@@ -34,13 +34,13 @@ import {
 } from "../usable/subs"
 import {
     BIG_SHOTGUN, BLOODY_COMBO, BLUE_VENGEANCE, COVERING_FIRE, CRUSH, HUNTER_FUSION, MEGA_THRUST, QUAKE_SEISM,
-    SHADOW_COMBO, SPIRIT_DASH, SURPRISE_THRUST, TWIN_BLADES,
+    SHADOW_COMBO, SURPRISE_THRUST, TWIN_BLADES,
 } from "./cards"
 import type { Visual } from "../base/Visual"
 import { visual } from "../base/Visual"
 
-/** The cards every kit starts with before its attacks: moves, turns, aims and a wait. A dodge ends it. */
-const BASICS: readonly Card[] = [STEP, STEP, STEP, BACK_DASH, TURN_LEFT, TURN_RIGHT, AIM, AIM, WAIT]
+/** The cards every kit starts with before its attacks: a dash, aims and a wait. A dodge ends it. */
+const BASICS: readonly Card[] = [BACK_DASH, AIM, AIM, WAIT]
 
 /** The basics of the kits that fight up close: one of their aims finds the way to the enemy. */
 const CLOSE_BASICS: readonly Card[] = BASICS.map((card, index) => {

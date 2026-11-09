@@ -2,6 +2,7 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { DamageType } from "../../battle/DamageType"
 
 /** How many hearts a burn takes at the end of each round. */
 const BURN_DAMAGE = 1
@@ -18,7 +19,7 @@ export class Burn extends RoundStatus {
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [battle.roundEnded.add(() => {
             battle.signals.notifyStatus.notify({ unit, status: this })
-            unit.hearts.damage(BURN_DAMAGE, "elemental", null)
+            unit.hearts.damage(BURN_DAMAGE, DamageType.ELEMENTAL, null)
         })]
     }
 }

@@ -1,4 +1,4 @@
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { EXPLOSIVE_HEART } from "../../../heart/subs/ExplosiveHeartKind"
 import { Heart } from "../../../heart/Heart"
@@ -6,7 +6,7 @@ import { Grievance, WeakeningBlows } from "../../../process/subs/Grievance"
 import { BLEEDING, FRAGILE, MARKED } from "../../../status/subs/Wounds"
 import { CONCENTRATED, FURIOUS } from "../../../status/subs/Calm"
 import { PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 import type { StatusType } from "../../../status/Status"
 
@@ -38,8 +38,8 @@ function giving(type: StatusType, level: number, what: string): Action {
 }
 
 export const CONCENTRATION = new ActionCard("Concentration", [
-    "Gagne un round de concentration : chaque Attendre en ajoute un, et chaque round restant donne un mètre de ",
-    "vision et un quart de mètre de portée.",
+    "Gagne un round de concentration : chaque Attendre en ajoute un, et chaque round restant donne un quart ",
+    "de portée en plus.",
 ], Rarity.RARE, giving(CONCENTRATED, 1, "+1 concentration"))
 
 export const HELD_FURY = new ActionCard("Fureur contenue", [
@@ -55,8 +55,8 @@ export const COOL_HEAD = new ActionCard("Sang froid", [
 }, "sang froid"))
 
 export const WEAKENING_BLOWS = new ActionCard("Coups affaiblissant", [
-    "Les ", UNIT.as("unités"), " touchées sur ", meters(WEAKENING_LENGTH), " devant, jusqu'à la fin du round, ",
-    "prennent un écho de 1 + force à chaque blessure.",
+    "Les ", UNIT.as("unités"), " touchées sur ", frenchNumber(WEAKENING_LENGTH), " ", DISTANCE, " devant, jusqu'à la fin du round, ",
+    "prennent un écho de ", 1, "+", FORCE, " à chaque blessure.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         const area = ahead(unit, WEAKENING_LENGTH, WEAKENING_WIDTH)
@@ -72,28 +72,28 @@ export const WEAKENING_BLOWS = new ActionCard("Coups affaiblissant", [
 })
 
 export const MARK_CARD = new ActionCard("Marque", [
-    "Marque la première ", UNIT, " touchée sur ", meters(MARK_LENGTH), " : la prochaine attaque qui la blesse ",
+    "Marque la première ", UNIT, " touchée sur ", frenchNumber(MARK_LENGTH), " ", DISTANCE, " : la prochaine attaque qui la blesse ",
     "inflige le double.",
 ], Rarity.RARE, onFirstAhead(MARK_LENGTH, MARK_WIDTH, (battle, _unit, target) => {
     battle.applyStatus(target, MARKED, MARK_ROUNDS)
 }, "marquée"))
 
 export const FRAGILITY_CARD = new ActionCard("Fragilité", [
-    "La première ", UNIT, " touchée sur ", meters(DAGGER_LENGTH), " prend un cœur de plus à chaque blessure, ",
-    "autant de rounds que la force.",
+    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " prend un cœur de plus à chaque blessure, ",
+    "autant de rounds que de ", FORCE, ".",
 ], Rarity.RARE, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, unit, target) => {
     battle.applyStatus(target, FRAGILE, Math.max(1, unit.stats.strength.value))
 }, "fragile"))
 
 export const BLEED = new ActionCard("Saignement", [
-    "La première ", UNIT, " touchée sur ", meters(DAGGER_LENGTH), " gagne un round de saignement : chaque ",
+    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " gagne un round de saignement : chaque ",
     "déplacement lui coûte un cœur.",
 ], Rarity.COMMON, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, _unit, target) => {
     battle.applyStatus(target, BLEEDING, 1)
 }, "saigne"))
 
 export const HEMORRHAGE = new ActionCard("Hémorragie", [
-    "Double les rounds de saignement de la première ", UNIT, " touchée sur ", meters(DAGGER_LENGTH), ".",
+    "Double les rounds de saignement de la première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, ".",
 ], Rarity.RARE, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, _unit, target) => {
     const bleeding = target.statuses.get(BLEEDING)
     if(bleeding) battle.applyStatus(target, BLEEDING, bleeding.level)
@@ -108,7 +108,7 @@ export const BLOCK = new ActionCard("Blocage", [
 ], Rarity.COMMON, onSelf((_battle, unit) => unit.hearts.give(new Heart(BLUE_HEART)), "+1 cœur bleu"))
 
 export const RAMPART = new ActionCard("Rempart", [
-    "Donne un cœur bleu à chaque allié à ", meters(RAMPART_RADIUS), " autour, soi compris.",
+    "Donne un cœur bleu à chaque allié à ", frenchNumber(RAMPART_RADIUS), " ", DISTANCE, " autour, soi compris.",
 ], Rarity.RARE, onCircle(
     RAMPART_RADIUS, (unit, other) => other.team === unit.team,
     (_battle, _unit, other) => other.hearts.give(new Heart(BLUE_HEART)), "+1 cœur bleu",

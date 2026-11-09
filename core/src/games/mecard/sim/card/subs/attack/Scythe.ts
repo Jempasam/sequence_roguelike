@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -6,7 +7,7 @@ import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /** How many hearts the scythe of the catalog takes, before the strength of the unit. */
 const SCYTHE_DAMAGE = 1
@@ -35,16 +36,17 @@ export class ScytheCard extends BlowCard {
         public readonly cosHalf: number,
     ){
         super("Faux", [
-            "Fauche en arc devant, de ", meters(inner), " à ", meters(outer), " : ", blowDamage(SCYTHE_DAMAGE),
-            " à chaque ", UNIT, ". Ce qui est plus près n'est pas touché.",
+            "Fauche en arc devant, de ", frenchNumber(inner), " à ", frenchNumber(outer), " ", DISTANCE, " ×", ALLONGE, " : ",
+            SCYTHE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ". Ce qui est plus près n'est pas touché.",
         ], Rarity.RARE, SCYTHE_DAMAGE)
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const stretch = unit.stats.meleeRange.value * progress
         return {
             kind: "crescent", center: pose.position, direction: pose.direction,
-            inner: this.inner * progress, radius: this.outer * progress, cosHalf: this.cosHalf,
+            inner: this.inner * stretch, radius: this.outer * stretch, cosHalf: this.cosHalf,
         }
     }
 }

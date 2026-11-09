@@ -5,14 +5,15 @@ import { fading, polygonOf } from "../../../battle/effects"
 import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Pose } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
-import { damage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
 import { BURN, Burn } from "../../../status/subs/Burn"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, travel, WALK_SPEED } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts a blast takes from each unit in it: a bomb, a kamikaze. */
 export const BOMB_DAMAGE = 2
@@ -55,8 +56,8 @@ function groundOf(unit: Unit, pose: Pose): Area {
 
 /** Blow up: every unit around takes the damage, then the unit is gone, a bomb as a goblin. */
 export const KAMIKAZE = new ActionCard("Kamikaze", [
-    "Explose : ", damage(BOMB_DAMAGE, "physical"), " à chaque ", UNIT, " à ", meters(BLAST_RADIUS),
-    " autour. Puis meurt.",
+    "Explose : ", BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ",
+    DISTANCE, " autour. Puis meurt.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         battle.explode(around(unit, BLAST_RADIUS), BOMB_DAMAGE, sourceOf(unit), unit)
@@ -68,7 +69,7 @@ export const KAMIKAZE = new ActionCard("Kamikaze", [
 
 /** Flash: every unit around is stunned, then the unit is gone. */
 export const FLASH = new ActionCard("Flash", [
-    "Étourdit chaque ", UNIT, " à ", meters(FLASH_RADIUS), " autour. Puis meurt.",
+    "Étourdit chaque ", UNIT, " à ", frenchNumber(FLASH_RADIUS), " ", DISTANCE, " autour. Puis meurt.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         const flash = around(unit, FLASH_RADIUS)
@@ -82,11 +83,12 @@ export const FLASH = new ActionCard("Flash", [
 
 /** Blaze: every unit on the ground the unit covers is burnt, then the unit is gone, flames as a torch. */
 export const BLAZE = new ActionCard("Embrasement", [
-    "Chaque ", UNIT, " sur ta zone : ", damage(FLAMES_DAMAGE, "elemental"), " et ", new Burn(FLAMES_BURN), ". Puis meurt.",
+    "Chaque ", UNIT, " sur ta zone : ", FLAMES_DAMAGE, " ", DamageType.ELEMENTAL, " et ", new Burn(FLAMES_BURN),
+    ". Puis meurt.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         for(const target of battle.unitsIn(groundOf(unit, unit), unit)){
-            target.hearts.damage(FLAMES_DAMAGE, "elemental", sourceOf(unit))
+            target.hearts.damage(FLAMES_DAMAGE, DamageType.ELEMENTAL, sourceOf(unit))
             battle.applyStatus(target, BURN, FLAMES_BURN)
         }
         unit.hearts.slay(null)
@@ -97,7 +99,7 @@ export const BLAZE = new ActionCard("Embrasement", [
 
 /** A step any way: what wanders, a whirlwind. */
 export const RANDOM_STEP = new ActionCard("Pas au hasard", [
-    "Se tourne au hasard et avance de ", meters(WANDER_LENGTH), ".",
+    "Se tourne au hasard et avance de ", WANDER_LENGTH, "×", AGILITE, " ", DISTANCE, ".",
 ], Rarity.COMMON, {
     use: function* (ctx){
         const { battle, unit } = ctx

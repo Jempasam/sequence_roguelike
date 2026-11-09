@@ -6,6 +6,7 @@ import {
 import type { Battle, Monster, Place, PlaceType } from "@game/core/mecard"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
+import { DamageType } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
@@ -21,7 +22,9 @@ function playOut(fight: Battle): void {
 
 /** Kill every monster of a battle, then play the round out, so the party wins it. */
 function win(run: Run, fight: Battle): void {
-    for(const unit of fight.living) if(unit.team !== run.heroesTeam) unit.hearts.damage(unit.life, "physical", null)
+    for(const unit of fight.living){
+        if(unit.team !== run.heroesTeam) unit.hearts.damage(unit.life, DamageType.PHYSICAL, null)
+    }
     fight.endPreparation()
     fight.playRound()
 }
@@ -314,7 +317,9 @@ describe("Run party", () => {
 describe("Run, its phases", () => {
     /** Kill every hero of a battle, then play the round out, so the party loses it. */
     function lose(run: Run, fight: Battle): void {
-        for(const unit of fight.living) if(unit.team === run.heroesTeam) unit.hearts.damage(unit.life, "physical", null)
+        for(const unit of fight.living){
+            if(unit.team === run.heroesTeam) unit.hearts.damage(unit.life, DamageType.PHYSICAL, null)
+        }
         fight.endPreparation()
         fight.playRound()
     }

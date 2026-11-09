@@ -1,6 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
 
@@ -23,7 +23,7 @@ export class BlinkCard extends ActionCard {
         /** How far it jumps, in meters, before the move factor of the unit. */
         public readonly length: number,
     ){
-        super("Blink", ["Se téléporte ", meters(length), " devant, par-dessus tout."], Rarity.RARE, BlinkCard.#blink(length))
+        super("Blink", ["Se téléporte de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout."], Rarity.RARE, BlinkCard.#blink(length))
     }
 
 

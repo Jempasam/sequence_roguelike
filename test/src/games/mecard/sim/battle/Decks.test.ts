@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     AIM, Arena, BACK_DASH, Battle, CardChain, Heart, loadBattle, RED_HEART, saveBattle, SLASH, STEP,
-    THRUST, TURN_RIGHT, Vector2, WAIT,
+    THRUST, TURNS, Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Card, Unit } from "@game/core/mecard"
 import { HEROES, MONSTERS, unit } from "../fixtures"
@@ -120,10 +120,10 @@ describe("Decks, on their own", () => {
     })
 
     test("a card taken from a pile → its deck remembered, the turn kept", () => {
-        const { decks } = fresh([[STEP], [AIM, TURN_RIGHT]])
-        expect(decks.take(1, 0)).toBe(TURN_RIGHT)
+        const { decks } = fresh([[STEP], [AIM, TURNS[4]]])
+        expect(decks.take(1, 0)).toBe(TURNS[4])
         expect(decks.cursor).toBe(0)
-        expect(decks.homes).toEqual([[TURN_RIGHT, 1]])
+        expect(decks.homes).toEqual([[TURNS[4], 1]])
     })
 })
 

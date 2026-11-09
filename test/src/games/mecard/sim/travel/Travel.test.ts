@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BUTCHER_HALT, CHEST_HALT, LAYERS, REMOVAL_HALT } from "@game/core/mecard"
+import { BATTLE, BUTCHER_HALT, CHEST_HALT, FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
 import type { CardsDialog, Dialog, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
 
@@ -210,6 +210,61 @@ describe("Travel, visits", () => {
         expect(() => travel.takeCards(cards, [])).toThrow()
         expect(() => travel.takeCards(cards, [0, 0])).toThrow()
         expect(() => travel.takeCards(cards, [0, 1, 2, 3])).toThrow()
+    })
+
+    test("a halt showing the cards played unlimited → shown after the deck, one turn only, repeatable", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        travel.visit(FORGE_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        travel.accept(open(travel))
+        const cards = open<CardsDialog>(travel)
+        const deck = hero.decks[0]
+        expect(cards.pool.slice(0, deck.length)).toEqual(deck)
+        expect(cards.pool.slice(deck.length).map(card => card.name)).toEqual([STEP.name, "Tourner"])
+        expect(cards.repeatable.slice(0, deck.length).some(Boolean)).toBe(false)
+        expect(cards.repeatable.slice(deck.length)).toEqual([true, true])
+    })
+
+    test("an unlimited card picked twice → two copies forged into one fusion, none left in the deck", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        const before = hero.decks[0].length
+        travel.visit(FORGE_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        travel.accept(open(travel))
+        const cards = open<CardsDialog>(travel)
+        const step = cards.pool.indexOf(STEP, hero.decks[0].length)
+        travel.takeCards(cards, [step, step])
+        travel.accept(open(travel))
+        expect(hero.decks[0]).toHaveLength(before + 1)
+        expect(hero.decks[0].filter(card => card === STEP)).toHaveLength(0)
+        expect(hero.decks[0].at(-1)?.contents).toEqual([STEP, STEP])
+    })
+
+    test("cards of a deck picked twice → still refused", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        travel.visit(FORGE_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        travel.accept(open(travel))
+        expect(() => travel.takeCards(open<CardsDialog>(travel), [0, 0])).toThrow()
+    })
+
+    test("a halt that spends the cards → the unlimited ones shown, not selectable", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        travel.visit(REMOVAL_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        const cards = open<CardsDialog>(travel)
+        const deck = hero.decks[0]
+        expect(cards.pool.length).toBeGreaterThan(deck.length)
+        expect(cards.selectable.slice(deck.length).some(Boolean)).toBe(false)
+        expect(() => travel.takeCards(cards, [deck.length])).toThrow()
     })
 
     test("cards taken → by their places in the pool", () => {

@@ -81,12 +81,13 @@ describe("SHADOW_AIM", () => {
         expect(aiming.position.x).toBeGreaterThan(5)
     })
 
-    test("previewed → a reach around the unit, and one beyond each wall", () => {
+    test("previewed → the turn as an arrow, no reach drawn since the aim has none", () => {
         const on = battle()
         const aiming = unit(on, 3, 3)
         unit(on, 3, 2, { team: MONSTERS })
         const { indicators } = SHADOW_AIM.action.preview({ battle: on, unit: aiming, pose: aiming })
-        expect(indicators.filter(each => each.kind === "polygon")).toHaveLength(5)
+        expect(indicators.filter(each => each.kind === "polygon")).toHaveLength(0)
+        expect(indicators.some(each => each.kind === "arrow")).toBe(true)
     })
 
     test("the loot → holds its fusion, not the card alone", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { Console } from "@game/core"
-import { BURN, FORGE_HALT, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
+import { BURN, CardChain, FORGE_HALT, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
 import type { Battle, HaltType, Unit } from "@game/core/mecard"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
@@ -39,12 +39,21 @@ function game(): Game {
     const transitions: (readonly [string, number, boolean])[] = []
     const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
     const connections: (readonly [string, boolean])[] = []
+    const board = { text: "" }
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
         run, battle,
         print: text => made.print(text),
         refresh: () => {},
         handChanged: unit => changed.push(unit),
         newBattle: () => { battle = run.newBattle() },
+        playBattle: played => { battle = played },
+        clipboard: {
+            read: () => Promise.resolve(board.text),
+            write: text => {
+                board.text = text
+                return Promise.resolve()
+            },
+        },
         restart: () => {},
         go: place => run.travel.go(place),
         showMap: () => {},
@@ -57,7 +66,9 @@ function game(): Game {
         connect: (code, guest) => connections.push([code, guest]),
     })))
     registerCommands(made)
-    return { console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections }
+    return {
+        console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, board,
+    }
 }
 
 /** The unit of the first hero. */
@@ -212,9 +223,9 @@ describe("Mecard commands", () => {
         const { console, run } = game()
         const hero = run.heroes[0]
         const cards = hero.decks[0].length
-        console.submit("run fuse Lancier Estoc Avancer")
+        console.submit("run fuse Lancier Estoc Viser")
         expect(hero.decks[0]).toHaveLength(cards - 1)
-        expect(hero.decks[0].at(-1)?.name).toBe("Estoc + Avancer")
+        expect(hero.decks[0].at(-1)?.name).toBe("Estoc + Viser")
     })
 
     test("travel map → a line for each layer, no error", () => {
@@ -355,5 +366,124 @@ describe("Mecard commands", () => {
         console.submit("connect K7QX2M")
         expect(connections).toEqual([])
         expect(errors(console)).toHaveLength(1)
+    })
+})
+
+describe("Mecard battle commands", () => {
+    /** The first living unit named after a word. */
+    const named = (battle: Battle, word: string): Unit => {
+        const unit = battle.living.find(each => each.name.startsWith(word))
+        if(!unit) throw new Error(`No ${word} in the battle.`)
+        return unit
+    }
+
+    test("battle arena → the party and a dummy of ten hearts, an endless battle", () => {
+        const { console, battle, run } = game()
+        console.submit("battle arena")
+        expect(errors(console)).toEqual([])
+        expect(battle().endless).toBe(true)
+        expect(battle().living.filter(unit => unit.team === run.heroesTeam)).toHaveLength(run.heroes.length)
+        expect(named(battle(), "Mannequin").life).toBe(10)
+    })
+
+    test("a dummy killed in an arena → the battle goes on, a dummy back at the end of the round", () => {
+        const { console, battle } = game()
+        console.submit("battle arena")
+        const arena = battle()
+        const first = named(arena, "Mannequin")
+        first.hearts.slay(null)
+        arena.startRound()
+        for(const unit of arena.initiative) arena.commit(unit, CardChain.leftToRight([], 0))
+        arena.endPreparation()
+        arena.playRound()
+        expect(arena.phase).not.toBe("over")
+        expect(first.alive).toBe(false)
+        expect(named(arena, "Mannequin")).not.toBe(first)
+    })
+
+    test("battle win, then lose → the battle ends for good, on the right side", () => {
+        const { console, battle, run } = game()
+        console.submit("battle arena")
+        console.submit("battle win")
+        expect(battle().endless).toBe(false)
+        expect(battle().living.some(unit => unit.team !== run.heroesTeam)).toBe(false)
+        const other = game()
+        other.console.submit("battle lose")
+        const ours = other.run.heroesTeam
+        expect(other.battle().living.some(unit => unit.team === ours && unit.decisive)).toBe(false)
+    })
+
+    test("battle create → a dummy, an ally controlled by the players, a foe a bot", () => {
+        const { console, battle, run } = game()
+        console.submit("battle create 50 50")
+        const dummyUnit = named(battle(), "Mannequin")
+        expect(dummyUnit.controller).toBe("bot")
+        console.submit("battle create 10 90 Gobelin ally")
+        const ally = battle().living.find(unit => unit.name.startsWith("Gobelin") && unit.team === run.heroesTeam)
+        expect(ally?.controller).toBe("player")
+        console.submit("battle create 10 10 Gobelin enemy bot")
+        expect(errors(console)).toEqual([])
+        console.submit("battle create 101 10")
+        expect(errors(console)).toHaveLength(1)
+    })
+
+    test("battle edit → damage, hearts, items, cards, statuses of one unit", () => {
+        const { console, battle } = game()
+        const unit = lancer(battle())
+        const life = unit.life
+        console.submit("battle edit Lancier damage 1")
+        expect(unit.life).toBe(life - 1)
+        const hand = copies(unit.hand, THRUST)
+        console.submit("battle edit Lancier card add Estoc 3")
+        expect(copies(unit.hand, THRUST)).toBe(hand + 3)
+        console.submit("battle edit Lancier card remove Estoc 2")
+        expect(copies(unit.hand, THRUST)).toBe(hand + 1)
+        console.submit("battle edit Lancier card clear")
+        expect(unit.hand.length).toBe(0)
+        console.submit("battle edit Lancier item clear")
+        expect(unit.items.length).toBe(0)
+        console.submit("battle edit Lancier item add Pierre_à_aiguiser 2")
+        console.submit("battle edit Lancier status add Brûlure")
+        console.submit("battle edit Lancier status clear")
+        expect(unit.statuses.size).toBe(0)
+        const hearts = unit.hearts.all.length
+        console.submit("battle edit Lancier heart add rouge 2")
+        expect(unit.hearts.all.length).toBe(hearts + 2)
+        console.submit("battle edit Lancier heart remove rouge 1")
+        expect(errors(console)).toEqual([])
+        console.submit("battle edit Lancier remove")
+        expect(battle().units.includes(unit)).toBe(false)
+    })
+
+    test("battle edit heart clear → the unit dies, and no edit finds it afterwards", () => {
+        const { console, battle } = game()
+        const unit = lancer(battle())
+        console.submit("battle edit Lancier heart clear")
+        expect(unit.alive).toBe(false)
+        console.submit("battle edit Lancier remove")
+        expect(errors(console)).toHaveLength(1)
+    })
+
+    test("battle save then load → the same battle again, from the clipboard", async() => {
+        const { console, battle, board } = game()
+        const before = battle().living.length
+        console.submit("battle save")
+        await new Promise(resolve => setTimeout(resolve))
+        expect(JSON.parse(board.text)).toHaveProperty("units")
+        console.submit("battle edit Lancier remove")
+        console.submit("battle load")
+        await new Promise(resolve => setTimeout(resolve))
+        expect(errors(console)).toEqual([])
+        expect(battle().living).toHaveLength(before)
+    })
+
+    test("battle load of nothing readable → an error line, the battle left alone", async() => {
+        const { console, battle, board } = game()
+        const kept = battle()
+        board.text = "pas du json"
+        console.submit("battle load")
+        await new Promise(resolve => setTimeout(resolve))
+        expect(battle()).toBe(kept)
+        expect(console.lines.some(line => line.text.includes("presse-papier"))).toBe(true)
     })
 })

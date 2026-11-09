@@ -84,8 +84,10 @@ describe("wrappers", () => {
         const on = battle()
         const hero = unit(on, 3.5, 5)
         unit(on, 1, 1, { team: MONSTERS })
-        const vision = hero.stats.aimRange.value
+        const precision = hero.stats.precision.value
+        const range = hero.stats.throwRange.value
         play(on, [[hero, chain(SPYGLASS_CARD, CHARGED_SHOT)]])
-        expect(hero.stats.aimRange.value).toBe(vision)
+        expect(hero.stats.precision.value).toBe(precision)
+        expect(hero.stats.throwRange.value).toBe(range)
     })
 })

@@ -8,6 +8,7 @@ import {
 import type { Card, Unit, Usable } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
@@ -174,7 +175,7 @@ describe("leather bag", () => {
         const prey = unit(on, 3.5, 4, { team: MONSTERS })
         const bag = new Carried(LEATHER_BAG)
         hero.usables.push(bag)
-        prey.hearts.damage(3, "physical", null)
+        prey.hearts.damage(3, DamageType.PHYSICAL, null)
         const won: Card[] = []
         on.onGetCards.add(({ cards }) => won.push(...cards))
         on.startRound()

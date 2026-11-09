@@ -62,6 +62,15 @@ export interface Choosing<T> extends Way {
 export interface CardChoosing extends Choosing<Card> {
     /** The deck of the party the cards asked among come from, when they are not that deck itself. */
     readonly from?: readonly Card[]
+
+    /**
+     * The cards the character plays unlimited, shown after the others: each may be picked as many times as
+     * the count allows, none of them being in the deck.
+     */
+    readonly unlimited?: readonly Card[]
+
+    /** May the unlimited cards be picked? They are only shown when not. Yes by default. */
+    readonly copies?: boolean
 }
 
 /**

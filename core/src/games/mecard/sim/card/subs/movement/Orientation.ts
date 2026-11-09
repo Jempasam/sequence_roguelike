@@ -4,8 +4,8 @@ import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
-import { UNIT } from "../../../base/keywords"
+import { frenchNumber } from "../../../battle/words"
+import { DISTANCE, UNIT } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
@@ -65,12 +65,12 @@ function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null
 
 /** Every unit around, but the one that shouts, turns its back to it. */
 export const SHOUT = new ActionCard("Cri", [
-    "Tourne le dos à l'", UNIT, " de chaque ", UNIT, " à ", meters(SHOUT_RADIUS), " autour. Aucun dégât.",
+    "Tourne le dos à l'", UNIT, " de chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour. Aucun dégât.",
 ], Rarity.COMMON, shouting(by => awayFrom(by)))
 
 /** Every unit around turns to face the one that taunts. */
 export const TAUNT = new ActionCard("Provocation", [
-    "Tourne chaque ", UNIT, " à ", meters(SHOUT_RADIUS), " autour vers l'", UNIT, " qui provoque.",
+    "Tourne chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour vers l'", UNIT, " qui provoque.",
 ], Rarity.COMMON, shouting(by => towards(by)))
 
 
@@ -169,36 +169,42 @@ function aiming(
         },
         preview: ctx => {
             const { pose, unit } = ctx
-            const circle = polygon({ kind: "circle", center: pose.position, radius: radius(unit) }, RANGE_COLOR)
+            // A reach with no end draws no circle.
+            const circles: Indicator[] = Number.isFinite(radius(unit))
+                ? [polygon({ kind: "circle", center: pose.position, radius: radius(unit) }, RANGE_COLOR)]
+                : []
             const found = aimed(ctx)
-            if(!found) return still(pose, circle, label(pose.position, nobody, NOTE_COLOR))
+            if(!found) return still(pose, ...circles, label(pose.position, nobody, NOTE_COLOR))
             const tip = pose.position.plus(found.way.times(TURN_LENGTH))
-            const shown: Indicator[] = [circle, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)]
+            const shown: Indicator[] = [...circles, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)]
             if(startled(ctx, found)) shown.push(label(found.target.position, "étourdi", NOTE_COLOR))
             return still({ ...pose, direction: found.way }, ...shown)
         },
     }
 }
 
-/** An aim at the nearest enemy within half the vision, stunning an enemy it had to turn far to reach. */
+/** How far the energetic aim looks for an enemy, in meters. */
+const ENERGETIC_RANGE = 2
+
+/** An aim at the nearest enemy within a short reach, stunning an enemy it had to turn far to reach. */
 export const ENERGETIC_AIM = new ActionCard("Visée énergique", [
-    "Se tourne vers l'ennemi le plus proche, jusqu'à la moitié de la vision. Si cela demande plus d'un quart de tour, ",
-    "il est étourdi.",
+    "Se tourne vers l'ennemi le plus proche, jusqu'à ", ENERGETIC_RANGE, " ", DISTANCE, ". Si cela demande plus d'un quart ",
+    "de tour, il est étourdi.",
 ], Rarity.RARE, aiming(
     ({ battle, unit, pose }, range) => battle.nearestEnemy(unit, range, pose.position),
-    unit => unit.stats.aimRange.value / 2, true, "personne à viser",
+    () => ENERGETIC_RANGE, true, "personne à viser",
 ))
 
 /** An aim at the nearest ally, the unit itself apart. */
 export const ALLY_AIM = new ActionCard("Viser allié", [
-    "Se tourne vers l'allié le plus proche, jusqu'à la vision.",
+    "Se tourne vers l'allié le plus proche.",
 ], Rarity.COMMON, aiming(
     ({ battle, unit, pose }, range) => {
         const allies = battle.bodies.filter(other => other !== unit && other.team === unit.team)
         const near = closest(allies, pose.position)
         return near && near.position.distance(pose.position) <= range ? near : null
     },
-    unit => unit.stats.aimRange.value, false, "personne à viser",
+    () => Infinity, false, "personne à viser",
 ))
 
 
@@ -214,7 +220,7 @@ function behind(pose: { position: Vector2, direction: Vector2 }): Area {
 
 /** A half turn, stunning the nearest unit behind. */
 export const ABOUT_FACE = new ActionCard("Volte-face", [
-    "Fait demi-tour. L'", UNIT, " la plus proche derrière, à ", meters(ABOUT_FACE_LENGTH), ", est étourdie.",
+    "Fait demi-tour. L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", est étourdie.",
 ], Rarity.COMMON, {
     use: function* (ctx){
         const { battle, unit } = ctx
@@ -247,7 +253,7 @@ function glared(battle: Battle, unit: Unit, pose: { position: Vector2, direction
 
 /** A stare freezing whoever looks back. */
 export const ICY_GLARE = new ActionCard("Regard glaçant", [
-    "Étourdit chaque ", UNIT, " qui regarde vers elle, à ", meters(GLARE_RADIUS), " devant dans un quart de tour.",
+    "Étourdit chaque ", UNIT, " qui regarde vers elle, à ", GLARE_RADIUS, " ", DISTANCE, " devant dans un quart de tour.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         const frozen = glared(battle, unit, unit)

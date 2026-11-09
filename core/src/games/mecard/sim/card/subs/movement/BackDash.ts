@@ -1,5 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import { Rarity } from "../../Rarity"
 
@@ -10,7 +10,7 @@ export class BackDashCard extends MoveCard {
 
 
     constructor(length: number, speed: number){
-        super("Dash arrière", ["Recule de ", meters(length), " sans se retourner."], Rarity.COMMON, length, speed)
+        super("Dash arrière", ["Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner."], Rarity.COMMON, length, speed)
     }
 
 

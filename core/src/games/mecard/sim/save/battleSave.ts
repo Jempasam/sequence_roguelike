@@ -20,7 +20,7 @@ import { CARD_CODECS, HEART_NAMES, ITEM_NAMES, USABLE_NAMES } from "./catalogNam
 import { STATUS_CODECS } from "./statusCodecs"
 
 /** The version of the shape of a save, raised whenever it changes, so an old save is refused clearly. */
-export const BATTLE_SAVE_VERSION = 14
+export const BATTLE_SAVE_VERSION = 15
 
 /** A point or a direction, as `[x, y]`. */
 type SavedVector = readonly [number, number]
@@ -66,6 +66,9 @@ export interface SavedUnit {
 
     /** The deck it draws from next, by its place among them. */
     readonly cursor: number
+
+    /** The cards it plays as often as it wishes. */
+    readonly unlimited: readonly SavedCard[]
 
     /** The cards out of its decks, each with the deck it goes back to. */
     readonly homes: readonly (readonly [SavedCard, number])[]
@@ -264,14 +267,23 @@ export function savedCard(card: Card): SavedCard {
  * The cards of a hand that cards written down stand for, each card of the hand taken once. They are looked
  * for rather than loaded: a card holding cards loaded anew is another card than the one in the hand.
  *
- * @throws {@link Error} For a card the hand does not hold.
+ * A card the hand does not hold is looked for among the cards played unlimited, which any number of the cards
+ * written down may stand for.
+ *
+ * @throws {@link Error} For a card neither the hand holds nor is played unlimited.
  */
-export function cardsInHand(hand: readonly Card[], saved: readonly SavedCard[]): Card[] {
+export function cardsInHand(
+    hand: readonly Card[], saved: readonly SavedCard[], unlimited: readonly Card[] = [],
+): Card[] {
     const left = [...hand]
     const texts = left.map(card => savedCard(card))
     return saved.map(each => {
         const index = texts.indexOf(each)
-        if(index < 0) throw new Error(`The hand holds no ${each}.`)
+        if(index < 0){
+            const free = unlimited.find(card => savedCard(card) === each)
+            if(!free) throw new Error(`The hand holds no ${each}.`)
+            return free
+        }
         texts.splice(index, 1)
         return left.splice(index, 1)[0]
     })
@@ -315,7 +327,7 @@ function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[])
         name: spec.name, sprite: savedVisual(spec.sprite), team, controller: spec.controller,
         position: [spec.position.x, spec.position.y], direction: [spec.direction.x, spec.direction.y],
         hearts: spec.hearts.map(heart => [heart.kind.name, heart.isEmpty]),
-        hand: unit.hand.map(savedCard),
+        hand: unit.hand.map(savedCard), unlimited: (spec.unlimited ?? []).map(savedCard),
         decks: unit.decks.map(deck => ({ pile: pile(deck.pile), discard: deck.discard.map(savedCard) })),
         cursor: unit.cursor, homes: savedHomes(unit.homes),
         items: (spec.items ?? []).map(item => item.name),
@@ -340,7 +352,7 @@ function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: Saved
             name: unit.name, sprite: loadedVisual(unit.sprite), team: teams[unit.team], controller: unit.controller,
             position: new Vector2(...unit.position), direction: new Vector2(...unit.direction),
             hearts: unit.hearts.map(([kind, isEmpty]) => new Heart(HEART_NAMES.of(kind), isEmpty)),
-            decks: unit.decks.map(() => []), items: unit.items.map(name => ITEM_NAMES.of(name)),
+            decks: unit.decks.map(() => []), unlimited: cards(unit.unlimited), items: unit.items.map(name => ITEM_NAMES.of(name)),
             usables: unit.usables.map(([name, charges]) => new Carried(USABLE_NAMES.of(name), charges)),
             decisive: unit.decisive, zone: unit.zone ? loadedArea(unit.zone) : null,
         },

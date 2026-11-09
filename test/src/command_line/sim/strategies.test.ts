@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { AIM, FIRE, GAMBLE, Rng, SHOT, SLASH, STEP, TURN_RIGHT } from "@game/core/mecard"
+import { AIM, FIRE, GAMBLE, Rng, SHOT, SLASH, STEP, TURNS } from "@game/core/mecard"
 import type { Battle, Card, Unit } from "@game/core/mecard"
 import { parseStrategy, STRATEGIES, UsageError } from "@game/command_line/sim"
 
@@ -7,7 +7,7 @@ import { battle, HEROES, MONSTERS, unit } from "../../games/mecard/sim/fixtures"
 
 // --- Fixture builders ---
 
-const HAND: readonly Card[] = [STEP, STEP, AIM, SLASH, SHOT, FIRE, GAMBLE, TURN_RIGHT]
+const HAND: readonly Card[] = [STEP, STEP, AIM, SLASH, SHOT, FIRE, GAMBLE, TURNS[4]]
 
 /** A battle in its preparation, a hero and a monster each holding a hand. */
 function preparing(): { on: Battle, hero: Unit, monster: Unit } {

@@ -47,7 +47,7 @@ describe("DeckView", () => {
 
     test("offered → what is given nothing is dim, the rest picks", () => {
         const pick = (): void => {}
-        const view = deckView({ pickable: card => card === AIM ? null : { picked: false, pick } })
+        const view = deckView({ pickable: card => card === AIM ? null : { activation: null, pick } })
         expect(cardsOf(view).map(card => card.dimmed)).toEqual([false, true, false])
         expect(cardsOf(view).map(card => card.onPick)).toEqual([pick, null, pick])
     })

@@ -1,6 +1,5 @@
 import { PUSH_BLOCKED_DAMAGE } from "../../../battle/rules"
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { damage, meters } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
@@ -9,7 +8,8 @@ import { arrow, label, still } from "../tools/previews"
 import { shove } from "../tools/shoving"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the push of the catalog moves its target, in meters: a step. */
 const PUSH_DISTANCE = 2
@@ -29,8 +29,8 @@ export class PushCard extends ActionCard {
         public readonly speed: number,
     ){
         super("Pousser", [
-            "Repousse de ", meters(distance), " l'", UNIT, " juste devant, à ", meters(TOUCH_RANGE),
-            ". Arrêtée en route, elle prend ", damage(PUSH_BLOCKED_DAMAGE, "physical"), ".",
+            "Repousse de ", distance, " ", DISTANCE, " l'", UNIT, " juste devant, à ", TOUCH_RANGE, " ", DISTANCE,
+            ". Arrêtée en route, elle prend ", PUSH_BLOCKED_DAMAGE, " ", DamageType.PHYSICAL, ".",
         ], Rarity.COMMON, PushCard.#pushing(distance, speed))
     }
 

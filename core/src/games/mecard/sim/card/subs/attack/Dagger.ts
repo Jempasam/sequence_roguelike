@@ -1,5 +1,5 @@
 import type { Text } from "../../../../../../semantic"
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -7,7 +7,8 @@ import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the dagger of the catalog reaches, in meters: shorter than a thrust. */
 export const DAGGER_RANGE = 1.1
@@ -47,14 +48,14 @@ export class DaggerCard extends BlowCard {
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(this.range * progress))
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
+        const to = pose.position.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
         return { kind: "segment", from: pose.position, to, width: this.width }
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         const amount = this.damage + this.bonus(unit.stats)
-        return battle.strike(unit, area, amount, "physical", target => this.scale(target, unit))
+        return battle.strike(unit, area, amount, DamageType.PHYSICAL, target => this.scale(target, unit))
     }
 
     /** How many times it hurts a unit: more in the back. */
@@ -64,6 +65,6 @@ export class DaggerCard extends BlowCard {
 }
 
 export const DAGGER = new DaggerCard("Dague", [
-    "Poignarde sur ", meters(DAGGER_RANGE), " devant : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, ", ×", String(BACKSTAB),
-    " dans le dos.",
+    "Poignarde sur ", frenchNumber(DAGGER_RANGE), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, " à chaque ", UNIT, ", ×", BACKSTAB, " dans le dos.",
 ], Rarity.COMMON, DAGGER_RANGE, DAGGER_WIDTH, BACKSTAB)

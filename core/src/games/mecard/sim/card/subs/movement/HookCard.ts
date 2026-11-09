@@ -3,7 +3,6 @@ import { rgba } from "../../../base/Rgba"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { ROOTED } from "../../../status/subs/Rooted"
@@ -13,7 +12,7 @@ import { fly } from "../tools/bolt"
 import { hold, SHORT_TIME, travel } from "../tools/playing"
 import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 
 /** How far the hooks of the catalog reach, in meters, before the reach of the unit. */
 const HOOK_RANGE = 4
@@ -125,16 +124,16 @@ export class HookCard extends ActionCard {
 }
 
 export const LASSO = new HookCard("Lasso", [
-    "Lance une corde droit devant, jusqu'à ", meters(HOOK_RANGE), " × portée : la première ", UNIT, " prise est tirée ",
-    "jusqu'à toi, sans se retourner.",
+    "Lance une corde droit devant, jusqu'à ", HOOK_RANGE, "×", PORTEE, " ", DISTANCE, " : la première ", UNIT,
+    " prise est tirée jusqu'à toi, sans se retourner.",
 ], Rarity.COMMON, HOOK_RANGE, true, false, 0)
 
 export const GRAPPLE = new HookCard("Grappin", [
-    "Lance un grappin droit devant, jusqu'à ", meters(HOOK_RANGE), " × portée : tu te tires jusqu'au premier ",
+    "Lance un grappin droit devant, jusqu'à ", HOOK_RANGE, "×", PORTEE, " ", DISTANCE, " : tu te tires jusqu'au premier ",
     "pilier, mur ou corps qu'il accroche.",
 ], Rarity.COMMON, HOOK_RANGE, false, true, 0)
 
 export const VINE = new HookCard("Liane", [
-    "Lance une liane droit devant, jusqu'à ", meters(HOOK_RANGE), " × portée : une ", UNIT, " prise est tirée jusqu'à ",
-    "toi et immobilisée ", VINE_ROOT, " étape ; un pilier ou un mur te tire jusqu'à lui.",
+    "Lance une liane droit devant, jusqu'à ", HOOK_RANGE, "×", PORTEE, " ", DISTANCE, " : une ", UNIT, " prise est tirée jusqu'à toi et ",
+    "immobilisée ", VINE_ROOT, " étape ; un pilier ou un mur te tire jusqu'à lui.",
 ], Rarity.RARE, HOOK_RANGE, true, true, VINE_ROOT)

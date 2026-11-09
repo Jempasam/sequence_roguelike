@@ -4,6 +4,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { Unit } from "../../battle/Unit"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { DamageType } from "../../battle/DamageType"
 
 /** A bleeding: each move hurts. */
 export const BLEEDING = new StatusType("saignement", statusVisual("bleeding", 0.8, 0.05, 0.1), "negative", level => new Bleeding(level), { description: ["Perd exactement un cœur à chaque déplacement, par lui-même ou subi, pendant ", STATUS_LEVEL, " rounds."] })
@@ -22,7 +23,7 @@ export class Bleeding extends RoundStatus {
         const bleed = (event: { unit: Unit, from: { position: Vector2 }, to: { position: Vector2 } }): void => {
             if(event.unit !== unit || event.from.position.equals(event.to.position)) return
             battle.signals.notifyStatus.notify({ unit, status: this })
-            unit.hearts.damage(BLEEDING_DAMAGE, "physical", null)
+            unit.hearts.damage(BLEEDING_DAMAGE, DamageType.PHYSICAL, null)
         }
         return [battle.signals.moved.add(bleed), battle.signals.blinked.add(bleed)]
     }

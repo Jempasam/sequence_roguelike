@@ -1,6 +1,7 @@
 import { KeywordWord } from "../../../../semantic"
 import type { Semantic, SvgPath, Text, TextColor } from "../../../../semantic"
-import { HEART } from "../../sim/base/keywords"
+import { DISTANCE, HEART } from "../../sim/base/keywords"
+import { DamageType } from "../../sim/battle/DamageType"
 
 import { explanationOf } from "./explanations"
 
@@ -15,13 +16,29 @@ function halfHeart(word: string): SvgPath {
     return { svg: HALF_HEART_PATH, size: 16, alt: word }
 }
 
+/** The color each type of damage is drawn in. */
+const DAMAGE_COLORS: ReadonlyMap<DamageType, TextColor> = new Map<DamageType, TextColor>([
+    [DamageType.PHYSICAL, [1, 0.95, 0.85]],
+    [DamageType.ELEMENTAL, [1, 0.6, 0.25]],
+])
+
+/** The color a distance is drawn in: the one of the reach in the previews. */
+const DISTANCE_TEXT: TextColor = [0.55, 0.85, 1]
+
 /**
  * How the interface reads the texts of the simulation, which only say what they mean: a heart is drawn, a
  * keyword stands out, and what has an explanation links to itself. Anything else tells itself.
  */
 export function mecardDisplay(value: object): Text|undefined {
+    if(value instanceof DamageType){
+        const heart = { color: DAMAGE_COLORS.get(value) ?? KEYWORD_TEXT, text: halfHeart(value.label) }
+        return { link: value, text: heart }
+    }
     if(value instanceof KeywordWord){
         if(value.keyword === HEART) return halfHeart(value.form)
+        if(value.keyword === DISTANCE){
+            return { link: value.keyword, text: { color: DISTANCE_TEXT, text: value.form } }
+        }
         if(explanationOf(value.keyword) === undefined) return undefined
         return { link: value.keyword, text: { color: KEYWORD_TEXT, text: value.form } }
     }

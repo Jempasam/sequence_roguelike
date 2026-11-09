@@ -1,6 +1,6 @@
 import { Vector2 } from "../../../base/Vector2"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
+import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Arena } from "../../../battle/Arena"
 
@@ -57,8 +57,8 @@ export class ShadowStepCard extends ActionCard {
         public readonly length: number,
     ){
         super("Pas de l'ombre", [
-            "Avance de ", meters(length), ". Arrêté par un mur de l'arène, tu ressors par le mur opposé, à la ",
-            "même hauteur, et tu repars de ", meters(length), ".",
+            "Avance de ", length, "×", AGILITE, " ", DISTANCE, ". Arrêté par un mur de l'arène, tu ressors par le ",
+            "mur opposé, à la même hauteur, et tu repars de ", length, "×", AGILITE, " ", DISTANCE, ".",
         ], Rarity.RARE, ShadowStepCard.#stepping(length))
     }
 

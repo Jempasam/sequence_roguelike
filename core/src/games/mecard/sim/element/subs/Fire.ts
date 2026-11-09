@@ -2,7 +2,7 @@ import { rgba } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
-import { meters } from "../../battle/words"
+import { DISTANCE, FORCE } from "../../base/keywords"
 import { placeBurningGround } from "../../hazard/subs/BurningGround"
 import { Strength } from "../../process/subs/Strength"
 import { BURN, Burn } from "../../status/subs/Burn"
@@ -29,8 +29,8 @@ export class Fire extends AbstractElement {
         super(
             "Feu", rgba(1, 0.55, 0.15), "brûlé",
             new Burn(FIRE_BURN),
-            ["retire la brûlure, et +", String(FIRE_STRENGTH), " force ce round"],
-            ["des flammes de ", meters(FLAMES_RADIUS), " pendant ", String(FLAMES_ROUNDS), " rounds : qui y joue une étape subit le négatif"],
+            ["retire la brûlure, et +", FIRE_STRENGTH, " ", FORCE, " ce round"],
+            ["des flammes de ", FLAMES_RADIUS, " ", DISTANCE, " pendant ", String(FLAMES_ROUNDS), " rounds : qui y joue une étape subit le négatif"],
         )
     }
 

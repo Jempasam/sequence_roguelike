@@ -3,10 +3,11 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { lineEffect, polygonEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
-import { meters } from "../../battle/words"
+import { DISTANCE } from "../../base/keywords"
 import { Haste } from "../../process/subs/Haste"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
+import { frenchNumber } from "../../battle/words"
 
 /** The factor the lightning puts on the agility of a unit, for the round. */
 const LIGHTNING_HASTE = 1.5
@@ -33,8 +34,8 @@ export class Lightning extends AbstractElement {
             "étourdit, sa prochaine étape est repoussée",
             ["+", String((LIGHTNING_HASTE - 1) * 100), " % d'agilité ce round"],
             [
-                "un arc : le négatif à ", meters(ARC_RADIUS), " autour, puis il saute de corps en corps, à ",
-                meters(ARC_JUMP), ", sans jamais retoucher le même",
+                "un arc : le négatif à ", frenchNumber(ARC_RADIUS), " ", DISTANCE, " autour, puis il saute de corps en corps, à ",
+                frenchNumber(ARC_JUMP), " ", DISTANCE, ", sans jamais retoucher le même",
             ],
         )
     }

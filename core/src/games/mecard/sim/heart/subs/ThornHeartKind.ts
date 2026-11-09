@@ -1,10 +1,10 @@
 import { rgba } from "../../base/Rgba"
-import { damage as damageText } from "../../battle/words"
 import type { HeartLostEvent } from "../../battle/events"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
 import { RED_HEART } from "./RedHeartKind"
+import { DamageType } from "../../battle/DamageType"
 
 /** How many hearts the thorn heart of the catalog costs whoever breaks it. */
 const THORN_DAMAGE = 1
@@ -19,7 +19,7 @@ export class ThornHeartKind extends AbstractHeartKind {
     ){
         super(
             "épineux",
-            ["Perdu avant tout cœur ", RED_HEART, " : qui le brise prend ", damageText(damage, "physical"), "."],
+            ["Perdu avant tout cœur ", RED_HEART, " : qui le brise prend ", damage, " ", DamageType.PHYSICAL, "."],
             rgba(0.45, 0.8, 0.3),
         )
     }
@@ -42,7 +42,7 @@ class ThornHeartRule extends HeartRule {
     public override onLost({ battle, unit, heart, source }: HeartLostEvent): void {
         if(!source || source === unit) return
         battle.signals.notifyHeart.notify({ unit, heart })
-        source.hearts.damage(this.kind.damage, "physical", unit)
+        source.hearts.damage(this.kind.damage, DamageType.PHYSICAL, unit)
     }
 }
 

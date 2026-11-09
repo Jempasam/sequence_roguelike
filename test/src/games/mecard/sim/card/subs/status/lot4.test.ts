@@ -6,6 +6,7 @@ import {
 } from "@game/core/mecard"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../../../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** The kinds of status a battle gave, in order: a status of a round is gone with it. */
 function statusesGiven(on: ReturnType<typeof battle>): unknown[] {
@@ -31,7 +32,7 @@ describe("echo damage", () => {
         let echoes = 0
         target.hearts.onDamage.add(() => wounds++)
         target.hearts.onEcho.add(() => echoes++)
-        target.hearts.echo(1, "physical", null)
+        target.hearts.echo(1, DamageType.PHYSICAL, null)
         expect(target.life).toBe(3)
         expect(wounds).toBe(0)
         expect(echoes).toBe(1)
@@ -45,7 +46,7 @@ describe("soul bonds", () => {
         const b = unit(on, 5, 5, { team: MONSTERS })
         on.applyStatus(a, SOUL_LINKED, 2)
         on.applyStatus(b, SOUL_LINKED, 2)
-        a.hearts.damage(2, "physical", null)
+        a.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(a.life).toBe(2)
         expect(b.life).toBe(2)
         expect(a.statuses.has(SOUL_LINKED)).toBe(true)
@@ -57,7 +58,7 @@ describe("soul bonds", () => {
         const b = unit(on, 5, 5, { team: MONSTERS })
         on.applyStatus(a, SOUL_SHIELDED, 2)
         on.applyStatus(b, SOUL_SHIELDED, 2)
-        a.hearts.damage(2, "physical", null)
+        a.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(a.life).toBe(3)
         expect(b.life).toBe(3)
         expect(a.statuses.has(SOUL_SHIELDED)).toBe(true)
@@ -70,7 +71,7 @@ describe("weakening blows", () => {
         const hero = unit(on, 3.5, 5)
         const foe = unit(on, 3.5, 4.4, { team: MONSTERS })
         play(on, [[hero, chain(WEAKENING_BLOWS)]])
-        foe.hearts.damage(1, "physical", hero)
+        foe.hearts.damage(1, DamageType.PHYSICAL, hero)
         // The process of the round is gone: only the wound lands.
         expect(foe.life).toBe(3)
     })
@@ -107,9 +108,9 @@ describe("marks and fragility", () => {
         const hero = unit(on, 3.5, 5)
         const foe = unit(on, 3.5, 4.4, { team: MONSTERS })
         play(on, [[hero, chain(MARK_CARD)]])
-        foe.hearts.damage(1, "physical", hero)
+        foe.hearts.damage(1, DamageType.PHYSICAL, hero)
         expect(foe.life).toBe(2)
-        foe.hearts.damage(1, "physical", hero)
+        foe.hearts.damage(1, DamageType.PHYSICAL, hero)
         expect(foe.life).toBe(1)
     })
 
@@ -121,21 +122,21 @@ describe("marks and fragility", () => {
         play(on, [[hero, chain(FRAGILITY_CARD)]])
         expect(given).toContain(FRAGILE)
         on.applyStatus(foe, FRAGILE, 2)
-        foe.hearts.damage(1, "physical", hero)
+        foe.hearts.damage(1, DamageType.PHYSICAL, hero)
         expect(foe.life).toBe(2)
     })
 })
 
 describe("concentration", () => {
-    test("a wait adds a round, and the vision follows the rounds", () => {
+    test("a wait adds a round, and the range follows the rounds", () => {
         const on = battle()
         const hero = unit(on, 3.5, 5)
         unit(on, 1, 1, { team: MONSTERS })
-        const vision = hero.stats.aimRange.value
+        const range = hero.stats.throwRange.value
         play(on, [[hero, chain(CONCENTRATION, WAIT)]])
         const status = hero.statuses.get(CONCENTRATED) as Concentration
         expect(status).toBeDefined()
-        expect(hero.stats.aimRange.value).toBeGreaterThan(vision)
+        expect(hero.stats.throwRange.value).toBeGreaterThan(range)
     })
 
     test("cool head removes the negative status and gives a round each", () => {

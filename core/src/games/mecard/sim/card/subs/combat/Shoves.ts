@@ -1,17 +1,18 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, FORCE, PORTEE, UNIT } from "../../../base/keywords"
 import type { Action, Indicator, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { damage, meters } from "../../../battle/words"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, travel, WORD_TIME } from "../tools/playing"
 import { arrow, label, polygon, still } from "../tools/previews"
 import { type Shove, shove, shoveAll } from "../tools/shoving"
 import { Rarity } from "../../Rarity"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the projection of the catalog throws, in meters, before the range of the unit. */
 const PROJECTION_DISTANCE = 2.5
@@ -31,7 +32,7 @@ const CATCH_LENGTH = 2.5
 const CATCH_WIDTH = 0.5
 const CATCH_DAMAGE = 1
 
-/** How far the ram runs, in meters, before the mobility of the unit. */
+/** How far the ram runs, in meters, before the agility of the unit. */
 const RAM_LENGTH = 2
 
 /** The reach of the sling: ahead and behind, in meters before the range, and the width of each. */
@@ -95,8 +96,8 @@ function impactOf(unit: Unit): number {
 }
 
 export const PROJECTION = new ActionCard("Projection", [
-    "Projette chaque ", UNIT, " dans le secteur devant, à ", meters(PROJECTION_RADIUS), ", sur ", meters(PROJECTION_DISTANCE),
-    " × la portée. Si elle percute un mur ou une ", UNIT, ", elles prennent ", damage(IMPACT_DAMAGE, "physical"), " + la force.",
+    "Projette chaque ", UNIT, " dans le secteur devant, à ", frenchNumber(PROJECTION_RADIUS), " ", DISTANCE, ", sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE,
+    ". Si elle percute un mur ou une ", UNIT, ", elles prennent ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shoving(
     (pose: Pose) => ({
         kind: "sector", center: pose.position, direction: pose.direction,
@@ -117,7 +118,7 @@ function toward(from: Vector2, to: Vector2): Vector2|null {
 }
 
 export const SUCTION = new ActionCard("Aspiration", [
-    "Tire chaque ", UNIT, " à ", meters(SUCTION_RADIUS), " autour jusqu'au contact. Aucun dégât.",
+    "Tire chaque ", UNIT, " à ", SUCTION_RADIUS, " ", DISTANCE, " autour jusqu'au contact. Aucun dégât.",
 ], Rarity.RARE, shoving(
     (pose: Pose) => ({ kind: "circle", center: pose.position, radius: SUCTION_RADIUS }),
     (battle, unit, pose, hit) => hit.flatMap(target => {
@@ -128,15 +129,15 @@ export const SUCTION = new ActionCard("Aspiration", [
 ))
 
 export const CATCH = new ActionCard("Attrapage", [
-    "Ramène au contact devant chaque ", UNIT, " du couloir devant, sur ", meters(CATCH_LENGTH), " × la portée. ",
-    damage(CATCH_DAMAGE, "physical"), " fixe.",
+    "Ramène au contact devant chaque ", UNIT, " du couloir devant, sur ", frenchNumber(CATCH_LENGTH), "×", PORTEE, " ", DISTANCE, ". ",
+    CATCH_DAMAGE, " ", DamageType.PHYSICAL, " fixes.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
         const area = ahead(unit, CATCH_LENGTH * unit.stats.throwRange.value, CATCH_WIDTH)
         const spot = unit.position.plus(unit.direction.times(1))
         const hit = battle.unitsIn(area, unit)
         for(const target of hit){
-            target.hearts.damage(CATCH_DAMAGE, "physical", unit)
+            target.hearts.damage(CATCH_DAMAGE, DamageType.PHYSICAL, unit)
             const direction = toward(target.position, spot)
             if(!direction) continue
             yield* shove({ battle, by: unit, target, direction, distance: target.position.distance(spot) })
@@ -152,8 +153,8 @@ export const CATCH = new ActionCard("Attrapage", [
 })
 
 export const BATTERING_RAM = new ActionCard("Bélier", [
-    "Fonce de ", meters(RAM_LENGTH), " devant. La première ", UNIT, " rencontrée est projetée sur ", meters(PROJECTION_DISTANCE),
-    " × la portée, avec ", damage(IMPACT_DAMAGE, "physical"), " + la force à l'impact.",
+    "Fonce de ", RAM_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. La première ", UNIT, " rencontrée est projetée sur ", frenchNumber(PROJECTION_DISTANCE),
+    "×", PORTEE, " ", DISTANCE, ", avec ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à l'impact.",
 ], Rarity.RARE, {
     use: function* (ctx){
         const { battle, unit } = ctx
@@ -183,9 +184,9 @@ export const BATTERING_RAM = new ActionCard("Bélier", [
 })
 
 export const SLING_CARD = new ActionCard("Fronde", [
-    "Saisit la première ", UNIT, " devant, sur ", meters(SLING_LENGTH), " × la portée, et la lance derrière soi, ",
-    "en la faisant passer à travers soi, jusqu'à ", meters(SLING_LENGTH), " × la portée de l'", UNIT, ". Impact : ",
-    damage(IMPACT_DAMAGE, "physical"), " + la force.",
+    "Saisit la première ", UNIT, " devant, sur ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, ", et la lance derrière soi, ",
+    "en la faisant passer à travers soi, jusqu'à ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, " de l'", UNIT, ". Impact : ",
+    IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.EPIC, (() => {
     const slung = (battle: Battle, unit: Unit, pose: Pose): Shove|null => {
         const reach = SLING_LENGTH * unit.stats.throwRange.value
@@ -221,8 +222,8 @@ export const SLING_CARD = new ActionCard("Fronde", [
 })())
 
 export const SHOCK_WAVE = new ActionCard("Onde de choc", [
-    "Projette chaque ", UNIT, " à ", meters(WAVE_RADIUS), " autour vers l'extérieur, sur ", meters(WAVE_DISTANCE),
-    " × la portée. Impact : ", damage(IMPACT_DAMAGE, "physical"), " + la force.",
+    "Projette chaque ", UNIT, " à ", frenchNumber(WAVE_RADIUS), " ", DISTANCE, " autour vers l'extérieur, sur ", frenchNumber(WAVE_DISTANCE),
+    "×", PORTEE, " ", DISTANCE, ". Impact : ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shoving(
     (pose: Pose) => ({ kind: "circle", center: pose.position, radius: WAVE_RADIUS }),
     (battle, unit, pose, hit) => hit.flatMap(target => {
@@ -236,8 +237,8 @@ export const SHOCK_WAVE = new ActionCard("Onde de choc", [
 ))
 
 export const TIDE = new ActionCard("Marée", [
-    "Fait avancer de ", meters(TIDE_DISTANCE), " chaque ", UNIT, " du rectangle de ", meters(TIDE_LENGTH), " sur ",
-    meters(TIDE_WIDTH), " devant. Aucun dégât.",
+    "Fait avancer de ", TIDE_DISTANCE, " ", DISTANCE, " chaque ", UNIT, " du rectangle de ", TIDE_LENGTH, " ", DISTANCE, " sur ",
+    TIDE_WIDTH, " ", DISTANCE, " devant. Aucun dégât.",
 ], Rarity.RARE, shoving(
     (pose: Pose) => ahead(pose, TIDE_LENGTH, TIDE_WIDTH),
     (battle, unit, pose, hit) => hit.map(target => ({

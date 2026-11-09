@@ -1,7 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
-import { meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Element } from "../../../element/Element"
@@ -12,7 +12,7 @@ import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 
 /** How far the small spell of the catalog reaches, in meters, before the reach of the unit. */
 const SMALL_SPELL_RANGE = 6
@@ -65,7 +65,7 @@ export const AURA = new ElementActionCard("Aura", "S'applique le positif de l'é
 
 /** The negative of the element on the first body far ahead, without a wound. */
 export const SMALL_SPELL = new ElementActionCard("Petit sort", [
-    "Tire l'élément jusqu'à ", meters(SMALL_SPELL_RANGE), " × portée devant : son négatif à la première ", UNIT, ".",
+    "Tire l'élément jusqu'à ", SMALL_SPELL_RANGE, "×", PORTEE, " ", DISTANCE, " devant : son négatif à la première ", UNIT, ".",
 ], Rarity.COMMON, element => {
     const color = { ...element.color, a: BOLT_OPACITY }
     return {
@@ -87,7 +87,7 @@ export const SMALL_SPELL = new ElementActionCard("Petit sort", [
 
 /** What the element calls, a little ahead. */
 export const CONJURATION = new ElementActionCard("Conjuration", [
-    "Invoque l'élément à ", meters(CONJURATION_AHEAD), " devant.",
+    "Invoque l'élément à ", frenchNumber(CONJURATION_AHEAD), " ", DISTANCE, " devant.",
 ], Rarity.RARE, element => ({
     use: function* (ctx){
         const { position, direction } = conjured(ctx.battle, ctx.unit)

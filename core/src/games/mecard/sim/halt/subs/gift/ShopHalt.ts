@@ -138,7 +138,7 @@ export class ShopHalt extends AbstractHalt {
                         ctx.cards([SUPPRESSION.as("Retire"), " une ", CARTE, " de ", hero], deck, { min: 1, max: 1 }, cards => {
                             this.run.changeDeck(deck, changed => removeCards(changed, cards))
                             bought()
-                        }, { back })
+                        }, { back, unlimited: hero.unlimited, copies: false })
                     }, { among: deck => deck.length > 0, back: () => this.#show(ctx, null) })
                 }, { among: hero => allCards(hero).length > 0 })
                 break

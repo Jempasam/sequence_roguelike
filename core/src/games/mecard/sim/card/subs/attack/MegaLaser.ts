@@ -1,4 +1,5 @@
-import { meters, shotDamage } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -8,7 +9,7 @@ import { Rarity } from "../../Rarity"
 import { BlowCard } from "./BlowCard"
 import { SHOT_DAMAGE, SHOT_RANGE } from "./Shot"
 import { THRUST_WIDTH } from "./Thrust"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
 
 /** How wide the laser of the catalog is, in meters: two thrusts side by side. */
 const LASER_WIDTH = 2 * THRUST_WIDTH
@@ -25,8 +26,9 @@ export class MegaLaserCard extends BlowCard {
         public readonly width: number,
     ){
         super("Mégalaser", [
-            "Tire un rayon de ", meters(width), " de large droit devant, jusqu'à ", meters(range),
-            " × portée, à travers tout : ", shotDamage(SHOT_DAMAGE), " à chaque ", UNIT, ".",
+            "Tire un rayon de ", frenchNumber(width), " ", DISTANCE, " de large droit devant, jusqu'à ", range, "×",
+            PORTEE, " ", DISTANCE, ", à travers tout : ", SHOT_DAMAGE, "+", PRECISION, " ", DamageType.PHYSICAL,
+            " à chaque ", UNIT, ".",
         ], Rarity.EPIC, SHOT_DAMAGE)
     }
 

@@ -8,6 +8,7 @@ import {
 import type { Battle, HeartKind, Unit } from "@game/core/mecard"
 
 import { battle, MONSTERS, rgbaOf, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 // --- Fixture builders ---
 
@@ -49,26 +50,26 @@ describe("Heart", () => {
 describe("HeartRule, wounds", () => {
     test("a wound → the last hearts lost first, one per point", () => {
         const { target } = holding(hearts(RED_HEART, RED_HEART, SHIELD_HEART))
-        expect(target.hearts.damage(2, "physical", null)).toBe(2)
+        expect(target.hearts.damage(2, DamageType.PHYSICAL, null)).toBe(2)
         expect(bar(target)).toBe("rouge, [rouge]")
     })
 
     test("an empty red heart → never targeted: the wound goes to the full one before it", () => {
         const { target } = holding([new Heart(RED_HEART), new Heart(RED_HEART, true)])
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(bar(target)).toBe("[rouge], [rouge]")
         expect(target.alive).toBe(false)
     })
 
     test("a solid heart last → the whole wound blocked", () => {
         const { target } = holding(hearts(RED_HEART, SOLID_HEART))
-        expect(target.hearts.damage(5, "physical", null)).toBe(0)
+        expect(target.hearts.damage(5, DamageType.PHYSICAL, null)).toBe(0)
         expect(bar(target)).toBe("rouge, solide")
     })
 
     test("a time heart last → the wound blocked; the last one burns out at each end of round", () => {
         const { on, target } = holding(hearts(RED_HEART, TIME_HEART, TIME_HEART))
-        expect(target.hearts.damage(3, "physical", null)).toBe(0)
+        expect(target.hearts.damage(3, DamageType.PHYSICAL, null)).toBe(0)
         idleRound(on)
         expect(bar(target)).toBe("rouge, temps")
         idleRound(on)
@@ -83,14 +84,14 @@ describe("HeartRule, wounds", () => {
 
     test("a glass heart broken → another glass heart broken with it, no third", () => {
         const { target } = holding(hearts(RED_HEART, GLASS_HEART, GLASS_HEART, GLASS_HEART))
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(bar(target)).toBe("rouge, verre")
     })
 
     test("a thorn heart broken → its breaker wounded once per thorn heart", () => {
         const { on, target } = holding(hearts(RED_HEART, THORN_HEART, THORN_HEART))
         const attacker = unit(on, 3, 4)
-        target.hearts.damage(2, "physical", attacker)
+        target.hearts.damage(2, DamageType.PHYSICAL, attacker)
         expect(attacker.life).toBe(2)
     })
 })
@@ -106,7 +107,7 @@ describe("HeartRule, ends of round and healing", () => {
 
     test("pink hearts → left empty once lost, the last empty one back at each end of round", () => {
         const { on, target } = holding(hearts(RED_HEART, PINK_HEART, PINK_HEART))
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(bar(target)).toBe("rouge, [rose], [rose]")
         idleRound(on)
         expect(bar(target)).toBe("rouge, [rose], rose")
@@ -122,7 +123,7 @@ describe("HeartRule, ends of round and healing", () => {
 
     test("healing → the empty red hearts filled from the left", () => {
         const { target } = holding(hearts(RED_HEART, RED_HEART, RED_HEART))
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         target.hearts.heal(1)
         expect(bar(target)).toBe("rouge, rouge, [rouge]")
     })
@@ -132,7 +133,7 @@ describe("HeartRule, rules plugged", () => {
     test("the last heart of a kind gone → its rules taken back; a heart of a new kind → its rules plugged", () => {
         const { on, target } = holding(hearts(RED_HEART, SHIELD_HEART))
         expect(target.hearts.rules.has(SHIELD_HEART)).toBe(true)
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(target.hearts.rules.has(SHIELD_HEART)).toBe(false)
         target.hearts.give(new Heart(TIME_HEART))
         expect(target.hearts.rules.has(TIME_HEART)).toBe(true)
@@ -142,7 +143,7 @@ describe("HeartRule, rules plugged", () => {
 
     test("a dead unit → its rules taken back: its pink hearts never come back", () => {
         const { on, target } = holding(hearts(PINK_HEART))
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(target.alive).toBe(false)
         idleRound(on)
         expect(bar(target)).toBe("[rose]")
@@ -156,7 +157,7 @@ describe("The hearts used once", () => {
         const target = unit(on, 3, 3, { hearts })
         const near = unit(on, 3.8, 3, { team: MONSTERS })
         const far = unit(on, 6, 6, { team: MONSTERS })
-        target.hearts.damage(1, "physical", far)
+        target.hearts.damage(1, DamageType.PHYSICAL, far)
         expect(bar(target)).toBe("rouge")
         expect(near.life).toBe(3)
         expect(far.life).toBe(4)
@@ -164,16 +165,16 @@ describe("The hearts used once", () => {
 
     test("vital lost → a red heart healed, even from the last wound", () => {
         const { target } = holding([new Heart(RED_HEART, true), new Heart(VITAL_HEART)])
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(bar(target)).toBe("rouge")
         expect(target.alive).toBe(true)
     })
 
     test("quick lost → dodging what comes next this round", () => {
         const { target } = holding([new Heart(RED_HEART), new Heart(QUICK_HEART)])
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(target.statuses.has(DODGE)).toBe(true)
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         expect(bar(target)).toBe("rouge")
     })
 })

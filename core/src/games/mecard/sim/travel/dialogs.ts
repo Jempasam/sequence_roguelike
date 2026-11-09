@@ -65,6 +65,9 @@ export class CardsDialog extends Dialog {
         /** May each card of the pool be picked? */
         public readonly selectable: readonly boolean[],
 
+        /** May each card of the pool be picked any number of times, as a card played unlimited is? */
+        public readonly repeatable: readonly boolean[],
+
         /** How many are asked. */
         public readonly count: Count,
 

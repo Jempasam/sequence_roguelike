@@ -299,10 +299,16 @@ export class Run {
      */
     public startBattle(): void {
         if(this.#phase !== "travel") throw new Error(`A battle starts from the journey, not during ${this.#phase}.`)
-        const battle = this.newBattle()
-        this.#battle = battle
-        this.#enterPhase("battle")
-        this.battleStarted.notify(battle)
+        this.#enter(this.newBattle())
+    }
+
+    /**
+     * Fight a battle made elsewhere: it becomes the one being fought. The heroes are not tied to its units,
+     * so the battle gives them back nothing when it ends.
+     */
+    public playBattle(battle: Battle): void {
+        this.#units.clear()
+        this.#enter(battle)
     }
 
     /**
@@ -312,7 +318,10 @@ export class Run {
      * @throws {@link Error} When the save is of another version, or names what the catalog does not have.
      */
     public joinBattle(save: BattleSave): void {
-        const battle = loadBattle(save)
+        this.playBattle(loadBattle(save))
+    }
+
+    #enter(battle: Battle): void {
         this.#battle = battle
         this.#enterPhase("battle")
         this.battleStarted.notify(battle)
@@ -332,8 +341,8 @@ export class Run {
             const unit = battle.add({
                 name: hero.name, sprite: hero.sprite, team: this.heroesTeam, controller: hero.controller,
                 position: starts[index], direction: Vector2.UP,
-                hearts: hero.hearts, decks: hero.decks, items: hero.items, usables: hero.usables,
-                bases: hero.bases,
+                hearts: hero.hearts, decks: hero.decks, unlimited: hero.unlimited, items: hero.items,
+                usables: hero.usables, bases: hero.bases,
             })
             battle.refill(unit)
             this.#units.set(hero, unit)

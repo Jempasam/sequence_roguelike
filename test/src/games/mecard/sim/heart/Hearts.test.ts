@@ -3,6 +3,7 @@ import { Heart, PINK_HEART, RED_HEART, SHIELD_HEART } from "@game/core/mecard"
 import type { Battle, HeartKind, Unit } from "@game/core/mecard"
 
 import { battle, MONSTERS, unit } from "../fixtures"
+import { DamageType } from "@game/core/mecard"
 
 /** A unit holding hearts in a battle, an enemy across so the battle goes on. */
 function holding(hearts: Heart[]): { on: Battle, target: Unit } {
@@ -53,7 +54,7 @@ describe("Hearts, what it tells", () => {
     test("a wound → the hearts it took and the wound, never a removal", () => {
         const { target } = holding(Heart.many(RED_HEART, 3))
         const names = told(target)
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(names).toEqual(["wound", "damage"])
     })
 
@@ -100,7 +101,7 @@ describe("Hearts, what it tells", () => {
         const { target } = holding([...Heart.many(RED_HEART, 2), new Heart(SHIELD_HEART)])
         const wounds: { kind: HeartKind, indexes: readonly number[] }[] = []
         target.hearts.onWound.add(({ kind, indexes }) => wounds.push({ kind, indexes }))
-        target.hearts.damage(2, "physical", null)
+        target.hearts.damage(2, DamageType.PHYSICAL, null)
         expect(wounds).toEqual([
             { kind: SHIELD_HEART, indexes: [2] },
             { kind: RED_HEART, indexes: [1] },
@@ -132,7 +133,7 @@ describe("Hearts, what it tells", () => {
         signals.heartRemoved.add(() => names.push("removed"))
         signals.heartAdded.add(() => names.push("added"))
         signals.healed.add(() => names.push("healed"))
-        target.hearts.damage(1, "physical", null)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
         target.hearts.remove(RED_HEART, 1, null)
         target.hearts.give(new Heart(SHIELD_HEART))
         target.hearts.remove(SHIELD_HEART, 1, null)

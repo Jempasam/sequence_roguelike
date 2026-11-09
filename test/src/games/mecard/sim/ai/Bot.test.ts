@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { AIM, FIRE, GAMBLE, planFor, SLASH, STEP, TURN_RIGHT } from "@game/core/mecard"
+import { AIM, FIRE, GAMBLE, Heart, planFor, RED_HEART, SLASH, STEP, TURNS, Vector2 } from "@game/core/mecard"
 import type { Card } from "@game/core/mecard"
 
 import { battle, MONSTERS, unit } from "../fixtures"
@@ -30,7 +30,17 @@ describe("planFor", () => {
         expect(planned(FIRE, STEP)).toBe("")
     })
 
+    test("a unit playing a card unlimited → ends its chain with it once", () => {
+        const on = battle()
+        const bot = on.add({
+            name: "bot", team: MONSTERS, controller: "player", position: new Vector2(3, 3), direction: Vector2.UP,
+            hearts: Heart.many(RED_HEART, 4), decks: [[]], unlimited: [STEP],
+        })
+        bot.hand.push(AIM)
+        expect(planFor(bot).cards).toEqual([AIM, STEP])
+    })
+
     test("5 cards → the first 4", () => {
-        expect(planned(STEP, STEP, STEP, STEP, TURN_RIGHT)).toBe("Avancer > Avancer > Avancer > Avancer")
+        expect(planned(STEP, STEP, STEP, STEP, TURNS[4])).toBe("Avancer > Avancer > Avancer > Avancer")
     })
 })

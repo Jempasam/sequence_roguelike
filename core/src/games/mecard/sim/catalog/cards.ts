@@ -19,7 +19,7 @@ import {
     SWEEP, TASER, THORN_SHIELD, THROWN_POTION, THRUST, TORNADO, TOTEM, UNSTABLE_ELEMENT, UNSTABLE_THRUST,
     UNSURE_BLOW, VINE,
     VULNERABILITY, WATER, WEAK_AIM, WEAKNESS, weighted,
-    BLOOD_AXE, BLOODLUST_CARD, BOUNCE_DASH, BOUNCING_BOW, CROSSBOW, HARPOON, HEAD_JUMP, HUNT, KNIGHT_MOVE,
+    BLOOD_AXE, BLOOD_STORM, BLOODLUST_CARD, BOUNCE_DASH, BOUNCING_BOW, CROSSBOW, HARPOON, HEAD_JUMP, HUNT, KNIGHT_MOVE,
     LEAP,
     MEGA_SLASH, MINE, SCYTHE, SHADOW, SHADOW_STEP, SKULL_BREAK, TACKLE,
     AURA, BLAST_MODULE, BOW_MODULE, BULL_MODULE, COMPOUND_CARDS, CONJURATION, CROSSED_SPELL, ECHO,
@@ -36,8 +36,10 @@ import {
     CHARGED_SHOT, CROSS_CUT, DEATH_SCYTHE, DEMON_SLASH, DEMONIC_STRIKE, FISHING, GREAT_THRUST, MACHINE_GUN,
     QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
     BATTERING_RAM, CATCH, PROJECTION, SHOCK_WAVE, SLING_CARD, SUCTION, TIDE,
-    ABOUT_FACE, AIM, ALLY_AIM, DODGE_CARD, ENERGETIC_AIM, ICY_GLARE, ORIENTATION, SHOUT, STEP, TAUNT, TURN_LEFT,
-    TURN_RIGHT, WAIT,
+    ABOUT_FACE, AIM, ALLY_AIM, DODGE_CARD, ENERGETIC_AIM, ICY_GLARE, ORIENTATION, SHOUT, STEP, TAUNT, TURNS,
+    WAIT, SPIRIT_DASH, SHADOW_BLINK,
+    DOUBLE_SLASH,
+    TRIPLE_SLASH,
 } from "../card/subs"
 import { CARTE } from "../base/keywords"
 
@@ -95,7 +97,7 @@ export const LOOT_CARDS: readonly Card[] = [
 ]
 
 export const BARRAGE = new MergedCard([SHOTGUN, CROSSBOW], { name: "Barrage", rarity: Rarity.LEGENDARY })
-export const SHADOW_COMBO = new FusionCard([STRENGTH_CARD, SHADOW_AIM, SHADOW, ASSASSINATION], { name: "Combo de l'ombre", rarity: Rarity.LEGENDARY })
+export const SHADOW_COMBO = new FusionCard([STRENGTH_CARD, SHADOW_AIM, SHADOW_STEP, ASSASSINATION], { name: "Combo de l'ombre", rarity: Rarity.LEGENDARY })
 export const CRUSH = new MergedCard([HEAD_JUMP, SKULL_BREAK], { name: "Écrasement", rarity: Rarity.LEGENDARY })
 export const FORCED_SUICIDE = new FusionCard([GAMBLE, HYPNOSIS, KAMIKAZE], { name: "Forced Suicide", rarity: Rarity.LEGENDARY })
 export const TWIN_BLADES = new MergedCard([SLASH, SLASH], { name: "Lames jumelles", rarity: Rarity.LEGENDARY })
@@ -106,22 +108,28 @@ export const QUAKE_SEISM = new MergedCard([SUCTION, QUAKE, SHOCK_WAVE], { name: 
 export const BULLET_RAIN = new MergedCard([MACHINE_GUN, MACHINE_GUN], { name: "Pluie de balles", rarity: Rarity.LEGENDARY })
 export const CROSS_BOMB = new FusionCard([DOUBLE_DIAGONAL, BOMB], { name: "Bombe en croix", rarity: Rarity.LEGENDARY })
 export const JOURNEY = new MergedCard([ORIENTATION, STEP, PATH_AIM, STEP], { name: "Voyage", rarity: Rarity.RARE })
-export const SPIRIT_DASH = new MergedCard([SPIRIT_ANCHOR, RAM], { name: "Dash spirituel", rarity: Rarity.LEGENDARY })
 
 /** Rare and very powerful cards: two strong actions played at once. */
 export const LEGENDARY_CARDS: readonly Card[] = [
     BARRAGE, SHADOW_COMBO, CRUSH, FORCED_SUICIDE, TWIN_BLADES,
     CROSS_BOMB, JOURNEY, SURPRISE_THRUST, MEGA_THRUST, QUAKE_SEISM,
-    BULLET_RAIN, SPIRIT_DASH,
+    BULLET_RAIN, SPIRIT_DASH, SHADOW_BLINK,
+    DOUBLE_SLASH, TRIPLE_SLASH, BLOOD_STORM
 ]
 
-/** The cards every kit starts with: moves, turns, an aim, a wait and a dodge. Found as loot nowhere. */
-export const BASIC_CARDS: readonly Card[] = [STEP, TURN_LEFT, TURN_RIGHT, AIM, WAIT, DODGE_CARD]
+/**
+ * The cards every kit starts with: an aim, a wait and a dodge. Found as loot nowhere. The step and the turns
+ * are no card of a deck: the characters play them as often as they wish.
+ */
+export const BASIC_CARDS: readonly Card[] = [AIM, WAIT, DODGE_CARD]
+
+/** What every character of the players plays as often as it wishes, with no card of its hand: a step and the turns. */
+export const UNLIMITED_CARDS: readonly Card[] = [STEP, ...TURNS]
 
 /** Every card of the game, each once: what the console gives by name. */
 export const ALL_CARDS: readonly Card[] = [
     ...new Set([
-        ...BASIC_CARDS, ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
+        STEP, ...BASIC_CARDS, ...LOOT_CARDS, GAMBLE, SHADOW_AIM, ...BODY_CARDS,
         ...COMPOUND_CARDS, SCOPED_GREAT_THRUST, ...LEGENDARY_CARDS,
     ]),
 ]

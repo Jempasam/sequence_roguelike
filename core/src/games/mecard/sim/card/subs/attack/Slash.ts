@@ -1,4 +1,5 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -6,7 +7,7 @@ import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 
 /** How far the slash of the catalog reaches, in meters. */
 const SLASH_RANGE = 1.3
@@ -27,15 +28,19 @@ export class SlashCard extends BlowCard {
     ){
         super(
             "Coup d'épée",
-            ["Frappe en arc devant, à ", meters(range), " : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, "."],
+            [
+                "Frappe en arc devant, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
+                DamageType.PHYSICAL, " à chaque ", UNIT, ".",
+            ],
             Rarity.COMMON, BLOW_DAMAGE,
         )
     }
 
 
-    public reach(_battle: Battle, _unit: Unit, pose: Pose, progress: number): Area {
+    public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         return {
-            kind: "sector", center: pose.position, direction: pose.direction, radius: this.range * progress,
+            kind: "sector", center: pose.position, direction: pose.direction,
+            radius: this.range * unit.stats.meleeRange.value * progress,
             cosHalf: this.cosHalf,
         }
     }

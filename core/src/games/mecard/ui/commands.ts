@@ -1,4 +1,5 @@
 import type { LayeredImagePath } from "../../../engine/assets"
+import type { ClipboardPort } from "../../../platform"
 import { command, group, named, optional, whole } from "../../../engine/console"
 import { plainText } from "../../../semantic"
 import type { Arg, Command, CommandContext, Console } from "../../../engine/console"
@@ -10,7 +11,12 @@ import { ALL_MONSTERS } from "../sim/catalog/monsters"
 import { Heart, insertHeart } from "../sim/heart/Heart"
 import { HEART_KINDS } from "../sim/save/catalogNames"
 import { deckName } from "../sim/run/deckName"
-import { allCards, firstDeck, hero } from "../sim/run/Hero"
+import { allCards, allyOf, firstDeck, hero, heroOf } from "../sim/run/Hero"
+import { ARENA_SCALE, arenaBattle, arenaPoint, dummy, enterBattle, teamOf } from "../sim/run/arena"
+import type { Side } from "../sim/run/arena"
+import { loadBattle, saveBattle } from "../sim/save/battleSave"
+import type { BattleSave } from "../sim/save/battleSave"
+import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
 import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
@@ -40,6 +46,7 @@ import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 
 import { chainText, heartsText } from "./describe"
 import { placeTransitions } from "./travel/placeLooks"
+import { DamageType } from "../sim/battle/DamageType"
 
 /** What the commands of Dungeon of the Mecard run with: the run, its battle, the screen to build again. */
 export interface MecardContext extends CommandContext {
@@ -57,6 +64,12 @@ export interface MecardContext extends CommandContext {
 
     /** Fight the current floor again, in a new battle. */
     newBattle(): void
+
+    /** Fight a battle made apart, in place of the one being fought, or from the map. */
+    playBattle(battle: Battle): void
+
+    /** The clipboard of the system, none when it has none. */
+    readonly clipboard: ClipboardPort|null
 
     /** Start a new run, from its first floor. */
     restart(): void
@@ -124,6 +137,8 @@ export class LiveContext implements MecardContext {
     public refresh(): void { this.host().refresh() }
     public handChanged(unit: Unit): void { this.host().handChanged(unit) }
     public newBattle(): void { this.host().newBattle() }
+    public playBattle(battle: Battle): void { this.host().playBattle(battle) }
+    public get clipboard(): ClipboardPort|null { return this.host().clipboard }
     public restart(): void { this.host().restart() }
     public go(place: Place): void { this.host().go(place) }
     public showMap(): void { this.host().showMap() }
@@ -448,7 +463,7 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                 }),
             damage: command("unit damage <unité> <cœurs> : blesse.", [UNIT, whole("les cœurs", 1)],
                 (ctx, unit, halves) => {
-                    unit.hearts.damage(halves, "physical", null)
+                    unit.hearts.damage(halves, DamageType.PHYSICAL, null)
                     ctx.print(`${unit.name} : ${heartsText(unit)}.`)
                     ctx.refresh()
                 }),
@@ -572,19 +587,342 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                 printNames(ctx, "Initiative", battle.initiative.filter(unit => unit.alive).map(unit => wordOf(unit.name)))
                 printNames(ctx, "Dangers", battle.living.filter(unit => unit.zone).map(unit => wordOf(unit.name)))
             }),
-            win: command("battle win : tue tous les ennemis des héros.", [], ctx => {
-                for(const unit of ctx.battle.living){
-                    if(unit.team !== ctx.run.heroesTeam) unit.hearts.slay(null)
-                }
+            arena: command("battle arena : lance une arène vide, avec un mannequin qui revient à chaque round.", [],
+                (ctx: MecardContext) => {
+                    ctx.playBattle(arenaBattle(ctx.run))
+                    ctx.print("Arène : un mannequin de 10 cœurs revient à la fin du round où il tombe.")
+                }),
+            win: command("battle win : tue les ennemis qui décident de la victoire.", [], (ctx: MecardContext) => {
+                endBy(ctx, unit => !isAlly(ctx, unit))
                 ctx.print("Les ennemis sont tombés.")
-                ctx.refresh()
             }),
+            lose: command("battle lose : tue les alliés qui décident de la victoire.", [], (ctx: MecardContext) => {
+                endBy(ctx, unit => isAlly(ctx, unit))
+                ctx.print("Les alliés sont tombés.")
+            }),
+            save: command("battle save : copie le combat dans le presse-papier.", [], (ctx: MecardContext) => {
+                saveToClipboard(ctx)
+            }),
+            load: command("battle load : charge le combat du presse-papier, en lançant le combat au besoin.", [],
+                (ctx: MecardContext) => {
+                    loadFromClipboard(ctx)
+                }),
+            create: command(
+                "battle create <x> <y> [monstre|kit] [ally|enemy] [controlled|bot] : crée une unité (x et y de 0 à 100), un mannequin sans cible.",
+                [PERCENT, PERCENT, optional(FIGHTER, null), optional(SIDE, null), optional(CONTROL, null)],
+                (ctx, x, y, fighter, side, control) => {
+                    createUnit(ctx, x, y, fighter, side ?? "enemy", control)
+                }),
+            edit: onUnit(
+                "battle edit <unité> <damage|remove|item|usable|heart|card|status|process> ... : modifie une unité.",
+                [
+                    "battle edit <unité> damage <cœurs> : blesse.",
+                    "battle edit <unité> remove : retire l'unité du combat.",
+                    "battle edit <unité> item <add|remove|clear|list> [objet] [nombre]",
+                    "battle edit <unité> usable <add|remove|clear|list> [utilisable] [nombre]",
+                    "battle edit <unité> heart <add|remove|clear|list> [cœur] [nombre]",
+                    "battle edit <unité> card <add|remove|clear|list> [carte] [nombre] : la main.",
+                    "battle edit <unité> status <add|remove|clear|list> [statut] [niveau]",
+                    "battle edit <unité> process <list|clear>",
+                ],
+                unitEdits,
+            ),
             reset: command("battle reset : refait le combat de ce lieu, avec de nouveaux monstres.", [], ctx => {
                 ctx.newBattle()
                 ctx.print(`Nouveau combat, ${floorText(ctx.run)}.`)
             }),
         }),
     }
+}
+
+
+//// The battle commands: ending it, saving it, creating and editing units ////
+
+/** Is the unit on the side of the heroes? Read by the name of the team: a battle loaded has its own teams. */
+function isAlly(ctx: MecardContext, unit: Unit): boolean {
+    return unit.team.name === ctx.run.heroesTeam.name
+}
+
+/** The team of a side in the battle: the one it holds under the name of the side, else the one of the run. */
+function sideTeam(ctx: MecardContext, side: Side): Team {
+    const team = teamOf(ctx.run, side)
+    return ctx.battle.teams.find(each => each.name === team.name) ?? team
+}
+
+/** End the battle by killing the units that decide the victory and fit: an arena ends no more by itself. */
+function endBy(ctx: MecardContext, fits: (unit: Unit) => boolean): void {
+    ctx.battle.endless = false
+    for(const unit of ctx.battle.living){
+        if(unit.decisive && fits(unit)) unit.hearts.slay(null)
+    }
+    ctx.refresh()
+}
+
+/** Copy the battle into the clipboard, saying why when it cannot. */
+function saveToClipboard(ctx: MecardContext): void {
+    const { clipboard } = ctx
+    if(!clipboard){
+        ctx.print("Pas de presse-papier ici.")
+        return
+    }
+    let text: string
+    try {
+        text = JSON.stringify(saveBattle(ctx.battle))
+    } catch(error){
+        const why = error instanceof Error ? error.message : String(error)
+        ctx.print(`Le combat ne peut pas être copié (${why}). Attends la préparation du round ou la fin du combat.`)
+        return
+    }
+    clipboard.write(text).then(
+        () => ctx.print(`Combat copié dans le presse-papier (${text.length} caractères).`),
+        (error: unknown) => ctx.print(`Le presse-papier a refusé la copie : ${String(error)}`),
+    )
+}
+
+/** Fight the battle the clipboard holds, in place of the one fought, or from the map. */
+function loadFromClipboard(ctx: MecardContext): void {
+    const { clipboard } = ctx
+    if(!clipboard){
+        ctx.print("Pas de presse-papier ici.")
+        return
+    }
+    clipboard.read().then(text => {
+        let battle: Battle
+        try {
+            battle = loadBattle(JSON.parse(text) as BattleSave)
+        } catch(error){
+            const why = error instanceof Error ? error.message : String(error)
+            ctx.print(`Le presse-papier ne tient pas un combat lisible (${why}). Copie-le avec battle save.`)
+            return
+        }
+        ctx.playBattle(battle)
+        ctx.print("Combat chargé.")
+    }, (error: unknown) => ctx.print(`Le presse-papier a refusé la lecture : ${String(error)}`))
+}
+
+/** What a unit is created from: a kind of monster or a kit, by the word it is typed with. */
+interface Fighter {
+    readonly word: string
+    readonly character: () => Hero
+}
+
+/** Every kind of monster then every kit, a kit whose name a monster has left out. */
+function fighters(): Fighter[] {
+    const monsters = ALL_MONSTERS.map(monster => ({
+        word: wordOf(monster.name), character: () => allyOf(monster, monster.name),
+    }))
+    const taken = new Set(monsters.map(each => each.word.toLowerCase()))
+    const kits = ALL_KITS.map(kit => ({ word: wordOf(kit.name), character: () => heroOf(kit) }))
+    return [...monsters, ...kits.filter(each => !taken.has(each.word.toLowerCase()))]
+}
+
+const FIGHTER: Arg<MecardContext, Fighter> = named("le monstre ou le kit", fighters, each => each.word)
+const SIDE: Arg<MecardContext, Side> = named("le camp", () => ["ally", "enemy"] as const, side => side)
+const CONTROL: Arg<MecardContext, Controller> = {
+    complete: () => ["controlled", "bot"],
+    read: (_, word) => {
+        const lower = word?.toLowerCase()
+        if(lower === "controlled") return "player"
+        if(lower === "bot") return "bot"
+        return new Error("Le contrôle : controlled ou bot.")
+    },
+}
+
+/** A place along a wall of the arena, from 0 to 100. */
+const PERCENT: Arg<MecardContext, number> = {
+    complete: () => [],
+    read: (_, word) => {
+        const value = Number(word)
+        if(word === undefined || !Number.isInteger(value) || value < 0 || value > ARENA_SCALE){
+            return new Error(`La position : un nombre entier de 0 à ${ARENA_SCALE}.`)
+        }
+        return value
+    },
+}
+
+/** Bring a unit in: a dummy when no kind is told, an ally controlled by the players, a foe by a bot. */
+function createUnit(
+    ctx: MecardContext, x: number, y: number, fighter: Fighter|null, side: Side, control: Controller|null,
+): void {
+    const { battle } = ctx
+    if(battle.phase === "execution" || battle.phase === "over"){
+        ctx.print(`Pas de nouvelle unité pendant la phase ${battle.phase} : attends le round suivant.`)
+        return
+    }
+    const character = fighter ? fighter.character() : dummy()
+    const controller = control ?? (side === "ally" && fighter ? "player" : "bot")
+    const unit = enterBattle(battle, character, sideTeam(ctx, side), arenaPoint(x, y), side, controller)
+    ctx.print(`${unit.name} créé (${side === "ally" ? "allié" : "ennemi"}, ${controller === "player" ? "joueur" : "bot"}).`)
+    ctx.refresh()
+}
+
+/** A command typed after a unit, its other words read by what `edits` makes of that unit. */
+function onUnit(
+    usage: string, details: readonly string[], edits: (unit: Unit) => Command<MecardContext, unknown>,
+): Command<MecardContext, { readonly edit: Command<MecardContext, unknown>, readonly parsed: unknown }> {
+    return {
+        usage, details,
+        complete: (ctx, args) => {
+            if(args.length <= 1) return UNIT.complete(ctx, [])
+            const unit = UNIT.read(ctx, args[0], [])
+            return unit instanceof Error ? [] : edits(unit).complete(ctx, args.slice(1))
+        },
+        parse: (ctx, args) => {
+            const unit = UNIT.read(ctx, args[0], [])
+            if(unit instanceof Error) return unit
+            const edit = edits(unit)
+            const parsed = edit.parse(ctx, args.slice(1))
+            return parsed instanceof Error ? parsed : { edit, parsed }
+        },
+        execute: (ctx, { edit, parsed }) => edit.execute(ctx, parsed),
+    }
+}
+
+/** How many of something a command acts on, one when it is not said. */
+const COUNT = optional(whole<MecardContext>("le nombre", 1), 1)
+
+/** Do something count times. */
+function times(count: number, act: () => void): void {
+    for(let i = 0; i < count; i++) act()
+}
+
+/** The edits of one unit: what `battle edit <unit>` runs. */
+function unitEdits(unit: Unit): Command<MecardContext, unknown> {
+    const itemsHeld = named<MecardContext, Item>("l'objet", () => unit.items, item => wordOf(item.name))
+    const usablesHeld = named<MecardContext, Carried>("l'utilisable", () => unit.usables, each => wordOf(each.usable.name))
+    const heartsHeld = named<MecardContext, HeartKind>("le cœur",
+        () => [...new Set(unit.hearts.all.map(heart => heart.kind))], kind => wordOf(kind.name))
+    const cardsHeld = named<MecardContext, Card>("la carte", () => [...new Set(unit.hand)], card => wordOf(card.name))
+    const statusesHeld = named<MecardContext, StatusType>("le statut", () => [...unit.statuses.keys()],
+        type => wordOf(type.name))
+    const done = (ctx: MecardContext, text: string): void => {
+        ctx.print(`${unit.name} : ${text}`)
+        ctx.refresh()
+    }
+    return group(`battle edit ${wordOf(unit.name)}`, "modifie une unité.", {
+        damage: command("damage <cœurs> : blesse.", [whole<MecardContext>("les cœurs", 1)], (ctx, halves) => {
+            unit.hearts.damage(halves, DamageType.PHYSICAL, null)
+            done(ctx, heartsText(unit))
+        }),
+        remove: command("remove : retire l'unité du combat.", [], (ctx: MecardContext) => {
+            ctx.battle.vanish(unit)
+            ctx.print(`${unit.name} est retiré du combat.`)
+            ctx.refresh()
+        }),
+        item: group("item", "les objets de l'unité.", {
+            add: command("add <objet> [nombre] : équipe.", [ITEM, COUNT], (ctx, item, count) => {
+                times(count, () => ctx.battle.equip(unit, item))
+                done(ctx, `${count} × ${item.name} équipé.`)
+            }),
+            remove: command("remove <objet> [nombre] : déséquipe.", [itemsHeld, COUNT], (ctx, item, count) => {
+                const before = unit.items.length
+                times(count, () => ctx.battle.unequip(unit, item))
+                done(ctx, `${before - unit.items.length} × ${item.name} retiré.`)
+            }),
+            clear: command("clear : déséquipe tout.", [], (ctx: MecardContext) => {
+                for(const item of [...unit.items]) ctx.battle.unequip(unit, item)
+                done(ctx, "plus d'objet.")
+            }),
+            list: command("list : liste les objets.", [], (ctx: MecardContext) => {
+                printNames(ctx, unit.name, unit.items.map(item => item.name))
+            }),
+        }),
+        usable: group("usable", "les utilisables de l'unité.", {
+            add: command("add <utilisable> [nombre] : en donne.", [USABLE, COUNT], (ctx, usable, count) => {
+                times(count, () => unit.usables.push(new Carried(usable)))
+                done(ctx, `${count} × ${usable.name} donné.`)
+            }),
+            remove: command("remove <utilisable> [nombre] : en retire.", [usablesHeld, COUNT],
+                (ctx, carried, count) => {
+                    let removed = 0
+                    times(count, () => {
+                        const at = unit.usables.findIndex(each => each.usable === carried.usable)
+                        if(at >= 0){
+                            unit.usables.splice(at, 1)
+                            removed++
+                        }
+                    })
+                    done(ctx, `${removed} × ${carried.usable.name} retiré.`)
+                }),
+            clear: command("clear : retire tout.", [], (ctx: MecardContext) => {
+                unit.usables.length = 0
+                done(ctx, "plus d'utilisable.")
+            }),
+            list: command("list : liste les utilisables.", [], (ctx: MecardContext) => {
+                printNames(ctx, unit.name, unit.usables.map(String))
+            }),
+        }),
+        heart: group("heart", "les cœurs de l'unité.", {
+            add: command("add <cœur> [nombre] : en donne, pleins.", [HEART, COUNT], (ctx, kind, count) => {
+                times(count, () => unit.hearts.give(new Heart(kind)))
+                done(ctx, heartList(unit.hearts.all))
+            }),
+            remove: command("remove <cœur> [nombre] : en retire, les pleins d'abord depuis la fin.",
+                [heartsHeld, COUNT], (ctx, kind, count) => {
+                    unit.hearts.remove(kind, count, null)
+                    done(ctx, heartList(unit.hearts.all))
+                }),
+            clear: command("clear : retire tous les cœurs pleins.", [], (ctx: MecardContext) => {
+                for(const kind of new Set(unit.hearts.all.map(heart => heart.kind))){
+                    unit.hearts.remove(kind, unit.hearts.all.length, null)
+                }
+                done(ctx, heartList(unit.hearts.all))
+            }),
+            list: command("list : liste les cœurs.", [], (ctx: MecardContext) => {
+                ctx.print(`${unit.name} : ${heartList(unit.hearts.all)}.`)
+            }),
+        }),
+        card: group("card", "la main de l'unité.", {
+            add: command("add <carte> [nombre] : met dans la main.", [CARD, COUNT], (ctx, card, count) => {
+                times(count, () => unit.hand.push(card))
+                done(ctx, `${count} × ${card.name} dans la main.`)
+            }),
+            remove: command("remove <carte> [nombre] : retire de la main.", [cardsHeld, COUNT],
+                (ctx, card, count) => {
+                    let removed = 0
+                    times(count, () => {
+                        if(takeOut(unit.hand, card)) removed++
+                    })
+                    ctx.handChanged(unit)
+                    done(ctx, `${removed} × ${card.name} retirée.`)
+                }),
+            clear: command("clear : vide la main.", [], (ctx: MecardContext) => {
+                unit.hand.length = 0
+                ctx.handChanged(unit)
+                done(ctx, "main vide.")
+            }),
+            list: command("list : liste la main.", [], (ctx: MecardContext) => {
+                printNames(ctx, unit.name, countedNames(unit.hand))
+            }),
+        }),
+        status: group("status", "les statuts de l'unité.", {
+            add: command("add <statut> [niveau] : met un statut.",
+                [STATUS, optional(whole<MecardContext>("le niveau", 1), null)], (ctx, maker, amount) => {
+                    ctx.battle.applyStatus(unit, maker.type, amount ?? maker.fallback)
+                    done(ctx, unit.statusOf(maker.type)?.toString() ?? "rien")
+                }),
+            remove: command("remove <statut> : retire un statut.", [statusesHeld], (ctx, type) => {
+                ctx.battle.removeStatus(unit, type)
+                done(ctx, `plus ${type.name}.`)
+            }),
+            clear: command("clear : retire tous les statuts.", [], (ctx: MecardContext) => {
+                for(const type of [...unit.statuses.keys()]) ctx.battle.removeStatus(unit, type)
+                done(ctx, "plus de statut.")
+            }),
+            list: command("list : liste les statuts.", [], (ctx: MecardContext) => {
+                printNames(ctx, unit.name, [...unit.statuses.values()].map(String))
+            }),
+        }),
+        process: group("process", "les processus de l'unité.", {
+            list: command("list : liste les processus en cours.", [], (ctx: MecardContext) => {
+                printNames(ctx, unit.name, unit.processes.map(String))
+            }),
+            clear: command("clear : met fin aux processus.", [], (ctx: MecardContext) => {
+                ctx.battle.endProcesses(unit)
+                done(ctx, "plus de processus.")
+            }),
+        }),
+    })
 }
 
 /** The commands acting on the run, kept from one battle to the next: a change to a hero shows next battle. */
@@ -815,6 +1153,15 @@ const TRANSITION_WAYS = ["endroit", "envers"] as const
 /** The commands of the tools of the game, outside the run: `pnj`, `bras`, `catalogue`, `transition`. */
 function toolCommands(): Record<string, Command<MecardContext, unknown>> {
     return {
+        noreload: command("noreload : désactive le hot reload de vite.", [], _ => {
+            try{
+                if ((import.meta as any).hot) {
+                    (import.meta as any).hot.on('vite:beforeFullReload', () => {
+                        throw '(skipping full reload)';
+                    });
+                }
+            }catch(_){}
+        }),
         pnj: command("pnj : ouvre le banc d'essai des PNJ, leurs animations, chapeaux et vêtements.", [], ctx => {
             ctx.showPnj()
         }),

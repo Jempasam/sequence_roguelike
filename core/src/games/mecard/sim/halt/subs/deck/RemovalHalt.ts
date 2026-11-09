@@ -43,7 +43,7 @@ export class RemovalHalt extends DeckHalt {
                 const more = this.#left > 0 && this.run.heroes.some(each => each.decks.some(other => this.fits(other)))
                 if(more) this.start(ctx)
                 else ctx.tell(concat("Oubliées : ", joinText(this.#forgotten, ", "), "."))
-            }, { back })
+            }, { back, unlimited: hero.unlimited, copies: false })
     }
 
 

@@ -1,10 +1,11 @@
-import { blowDamage, meters } from "../../../battle/words"
+import { frenchNumber } from "../../../battle/words"
+import { DamageType } from "../../../battle/DamageType"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE } from "./BlowCard"
 import { BACKSTAB, DAGGER_RANGE, DAGGER_WIDTH, DaggerCard } from "./Dagger"
-import { UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FEBRILE, FORCE, UNIT } from "../../../base/keywords"
 
 /** How many times the blow of the assassin hurts a feverish unit. */
 const FEVERISH_FACTOR = 2
@@ -19,6 +20,6 @@ export class AssassinBlowCard extends DaggerCard {
 }
 
 export const ASSASSIN_BLOW = new AssassinBlowCard("Coup d'assassin", [
-    "Poignarde sur ", meters(DAGGER_RANGE), " devant : ", blowDamage(BLOW_DAMAGE), " à chaque ", UNIT, ", ×", String(BACKSTAB),
-    " dans le dos, ×", String(FEVERISH_FACTOR), " sur une ", UNIT, " fébrile (plus de cœurs vides que pleins). Les deux se cumulent.",
+    "Poignarde sur ", frenchNumber(DAGGER_RANGE), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, " à chaque ", UNIT, ", ×", BACKSTAB, " dans le dos, ×", FEVERISH_FACTOR, " sur une ", UNIT, " ", FEBRILE, ". Les deux se cumulent.",
 ], Rarity.RARE, DAGGER_RANGE, DAGGER_WIDTH, BACKSTAB)

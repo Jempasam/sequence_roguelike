@@ -1,5 +1,4 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { meters } from "../../../battle/words"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Action, Indicator, Pose, Preview, PreviewContext } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -10,7 +9,7 @@ import { ModifierCard } from "../ModifierCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { arrow, chained, label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
 
 /** How far the hypnosis of the catalog reaches, in meters: as far as a spell. */
 const HYPNOSIS_RANGE = 4
@@ -56,7 +55,7 @@ export class HypnosisCard extends ModifierCard {
         super(
             "Hypnose",
             [
-                "L'", UNIT, " la plus proche dans un cône devant, jusqu'à ", meters(range),
+                "L'", UNIT, " la plus proche dans un cône devant, jusqu'à ", range, " ", DISTANCE,
                 " à travers tout, joue l'action tout de suite, à ta place.",
             ],
             Rarity.EPIC, actions => [HypnosisCard.#hypnotizing(range, cosHalf, actions)],

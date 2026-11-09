@@ -394,11 +394,12 @@ export class Travel {
      * @throws {@link Error} When the dialog is not open, or the picks are not what it asks.
      */
     public takeCards(dialog: CardsDialog, indices: readonly number[]): void {
-        const { count, selectable } = dialog
+        const { count, selectable, repeatable } = dialog
         if(indices.length < count.min || indices.length > count.max){
             throw new Error(`The dialog asks ${count.min} to ${count.max} cards, not ${indices.length}.`)
         }
-        if(new Set(indices).size < indices.length) throw new Error("A card cannot be picked twice.")
+        const once = indices.filter(index => !repeatable[index])
+        if(new Set(once).size < once.length) throw new Error("A card cannot be picked twice.")
         if(!indices.every(index => selectable[index])) throw new Error("The dialog does not let that card be picked.")
         this.#answer(dialog, indices)
     }
@@ -469,10 +470,18 @@ export class Travel {
             pick: CardChoosing = {},
         ): void => {
             const among = pick.among ?? (() => true)
-            const selectable = pool.map(card => among(card))
+            // The cards told apart by their name only are shown once: a turn, whatever its direction.
+            const unlimited = (pick.unlimited ?? []).filter((card, index, all) => {
+                return all.findIndex(other => other.name === card.name) === index
+            })
+            const shown = [...pool, ...unlimited]
+            const selectable = shown.map((card, index) => {
+                return index < pool.length ? among(card) : pick.copies !== false && among(card)
+            })
+            const repeatable = shown.map((_, index) => index >= pool.length)
             const back = pick.back !== undefined
-            const dialog = new CardsDialog(title, back, pool, selectable, count, pick.from ?? pool)
-            this.#ask(dialog, picks => done(picks.map(index => pool[index])), pick)
+            const dialog = new CardsDialog(title, back, shown, selectable, repeatable, count, pick.from ?? pool)
+            this.#ask(dialog, picks => done(picks.map(index => shown[index])), pick)
             this.cardsAsked.notify(dialog)
         },
         confirm: (title: Text, shown: Shown, action: string, done: () => void, way: Way = {}): void => {

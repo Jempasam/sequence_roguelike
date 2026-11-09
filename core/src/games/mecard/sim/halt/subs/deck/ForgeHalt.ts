@@ -3,7 +3,7 @@ import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
 import type { Run } from "../../../run/Run"
-import { forge } from "../../../run/visits"
+import { forge, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
@@ -46,11 +46,11 @@ export class ForgeHalt extends DeckHalt {
                 { min: 2, max: 2 }, cards => {
                     ctx.confirm(["Le résultat ", FUSION.as("forgé"), " :"], fusionShown(new FusionCard(cards), deck), "Forger", () => {
                         this.impact()
-                        const made = this.run.changeDeck(deck, changed => forge(changed, cards))
+                        const made = this.run.changeDeck(deck, changed => forge(withCopies(changed, cards, hero.unlimited), cards))
                         if (n == 1 && this.fits(deck)) round(2)
                         else ctx.tell([FUSION.as("Forgée"), " :"], fusionShown(made, deck))
                     }, { back: pick })
-                }, { back: ask })
+                }, { back: ask, unlimited: hero.unlimited })
             ask()
         }
         round(1, back)

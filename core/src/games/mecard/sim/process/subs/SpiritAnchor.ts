@@ -14,7 +14,9 @@ export class SpiritAnchor extends AbstractProcess {
         /** The spirit it goes back to. */
         public readonly spirit: Unit,
     ){
-        super("ancre spirituelle", visual("processes/spirit_anchor", { color: [0.6, 0.85, 1] }))
+        super("ancre spirituelle", visual("processes/spirit_anchor", { color: [0.6, 0.85, 1] }),
+            "À la fin du round, se téléporte à l'esprit et se tourne comme lui, puis l'esprit disparaît.",
+        )
     }
 
 

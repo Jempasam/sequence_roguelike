@@ -1,11 +1,11 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { damage, meters } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import { Rarity } from "../../Rarity"
 
 import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
 import type { Impact } from "./MoveCard"
-import { UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts the ram of the catalog takes. */
 const RAM_DAMAGE = 2
@@ -21,7 +21,8 @@ export class RamCard extends MoveCard {
         public readonly amount: number,
     ){
         super("Dash dégât", [
-            "Fonce de ", meters(length), ". L'", UNIT, " percutée prend ", damage(amount, "physical"), ".",
+            "Fonce de ", length, "×", AGILITE, " ", DISTANCE, ". L'", UNIT, " percutée prend ", amount, " ",
+            DamageType.PHYSICAL, ".",
         ], Rarity.RARE, length, speed)
     }
 
@@ -34,7 +35,7 @@ export class RamCard extends MoveCard {
         return {
             word: "percuté",
             strike: (_battle, struck, mover) => {
-                if(struck) struck.hearts.damage(this.amount, "physical", mover)
+                if(struck) struck.hearts.damage(this.amount, DamageType.PHYSICAL, mover)
             },
         }
     }

@@ -13,8 +13,8 @@ export const MENU_LAYERS: readonly ImagePath[] = [
 ]
 
 /** How far the farthest and the nearest layers follow the pointer, in virtual pixels. */
-const FAR_DEPTH = 2
-const NEAR_DEPTH = 24
+const FAR_DEPTH = 10
+const NEAR_DEPTH = 60
 
 /** How far right of the middle the menu lies, as a share of the width. */
 const SIDE_SHARE = 0.16

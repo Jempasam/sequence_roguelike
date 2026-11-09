@@ -13,5 +13,9 @@ import { CardChain } from "../card/CardChain"
  * the hand.
  */
 export function planFor(unit: Unit): CardChain {
-    return CardChain.leftToRight(unit.hand, unit.stats.chainSize.value)
+    const chain = CardChain.leftToRight(unit.hand, unit.stats.chainSize.value)
+    // A unit that plays a card unlimited, a hero played by a bot, ends its chain with it, once.
+    const [free] = unit.unlimited
+    if(free && chain.size < unit.stats.chainSize.value) chain.cards.push(free)
+    return chain
 }

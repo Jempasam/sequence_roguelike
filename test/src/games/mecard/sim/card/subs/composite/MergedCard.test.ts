@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { FIRE, MergedCard, REPEAT_2, resolve, STEP, TURN_RIGHT, Vector2 } from "@game/core/mecard"
+import { FIRE, MergedCard, REPEAT_2, resolve, STEP, TURNS, Vector2 } from "@game/core/mecard"
 import type { Action, Battle, Unit } from "@game/core/mecard"
 
 import { battle, unit } from "../../../fixtures"
@@ -23,8 +23,8 @@ function stepsOf(card: MergedCard): readonly Action[] {
 
 describe("MergedCard.constructor", () => {
     test("two actions → named by both, giving one step", () => {
-        const merged = new MergedCard(STEP, TURN_RIGHT)
-        expect(merged.name).toBe(`${STEP.name} & ${TURN_RIGHT.name}`)
+        const merged = new MergedCard(STEP, TURNS[4])
+        expect(merged.name).toBe(`${STEP.name} & ${TURNS[4].name}`)
         expect(stepsOf(merged)).toHaveLength(1)
     })
 
@@ -45,7 +45,7 @@ describe("MergedCard, played", () => {
         const stepTicks = ticksOf(stepped.chain.actionsLeft(), alone, walker)
         const on = battle()
         const both = unit(on, 3, 5)
-        const ticks = ticksOf(stepsOf(new MergedCard(STEP, TURN_RIGHT)), on, both)
+        const ticks = ticksOf(stepsOf(new MergedCard(STEP, TURNS[4])), on, both)
         expect(ticks).toBe(stepTicks)
         expect(both.position).not.toEqual(new Vector2(3, 5))
         expect(both.direction).toEqual(Vector2.RIGHT)

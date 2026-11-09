@@ -1,5 +1,4 @@
 import { CONTROL_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
-import { damage as damageText, meters } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -10,7 +9,8 @@ import { hold, SHORT_TIME } from "../tools/playing"
 import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
-import { UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How many hearts the taser of the catalog takes. */
 const TASER_DAMAGE = 1
@@ -36,7 +36,7 @@ export class TaserCard extends ActionCard {
         public readonly damage: number,
     ){
         super("Taser", [
-            "Électrocute l'", UNIT, " juste devant, à ", meters(TOUCH_RANGE), " : ", damageText(damage, "physical"),
+            "Électrocute l'", UNIT, " juste devant, à ", TOUCH_RANGE, " ", DISTANCE, " : ", damage, " ", DamageType.PHYSICAL,
             ", et sa prochaine étape est perdue.",
         ], Rarity.RARE, TaserCard.#shocking(damage))
     }
@@ -46,7 +46,8 @@ export class TaserCard extends ActionCard {
         return {
             use: function* ({ battle, unit }){
                 const area = zap(battle, unit, unit)
-                for(const target of battle.strike(unit, area, amount, "physical")) battle.shock(target)
+                const struck = battle.strike(unit, area, amount, DamageType.PHYSICAL)
+                for(const target of struck) battle.shock(target)
                 yield* hold(battle, SHORT_TIME, [polygon(area, CONTROL_COLOR)])
             },
             preview: ({ battle, unit, pose }) => {

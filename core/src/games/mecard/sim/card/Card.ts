@@ -14,10 +14,13 @@ export interface RewriteContext {
 
 /** Where a card is rewritten: what lies around it in the row, and what its unit holds. */
 export interface RewriteSpot {
-    /** The card on its right, itself already rewritten, none at the end of the row. */
+    /** The card on its left, none at the start of the row. */
+    readonly previous: Card|null
+
+    /** The card on its right, as it stands when the card is rewritten, none at the end of the row. */
     readonly next: Card|null
 
-    /** Every card on its right, already rewritten, in order. */
+    /** Every card on its right, as they stand when the card is rewritten, in order. */
     readonly rest: readonly Card[]
 
     /** The cards in sight of the unit playing it: its hand, its discard and its chain, not its draw pile. */

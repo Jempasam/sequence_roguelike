@@ -1,3 +1,4 @@
+import { partsOf } from "./Text"
 import type { Semantic, Text } from "./Text"
 
 /** A notion of a game as a sentence writes it. */
@@ -46,4 +47,15 @@ export class Keyword extends KeywordWord {
     public as(form: string): KeywordWord {
         return new KeywordWord(this, form)
     }
+}
+
+/** The notions a text names, each once, in the order it first names them, whatever way it writes them. */
+export function keywordsIn(text: Text): Keyword[] {
+    const found = partsOf(text).flatMap(part => part instanceof KeywordWord ? [part.keyword] : [])
+    return [...new Set(found)]
+}
+
+/** Does a text name an object: by reference, or for a notion, in any of the ways it is written? */
+export function mentions(text: Text, part: object): boolean {
+    return partsOf(text).some(each => each === part || (each instanceof KeywordWord && each.keyword === part))
 }

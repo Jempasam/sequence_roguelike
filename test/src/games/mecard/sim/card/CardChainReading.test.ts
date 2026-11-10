@@ -24,7 +24,7 @@ class Doubling extends AbstractCard<Preparation, readonly Action[]> {
 
     public get(actions: readonly Action[]): Preparation {
         const cards = actions.map(() => THRUST as Card)
-        return { rewrite: () => ({ cards, consumed: 0, acting: false }) }
+        return { phase: "prepless", rewrite: () => ({ cards, consumed: 0, acting: false }) }
     }
 }
 
@@ -132,6 +132,7 @@ describe("A preparation taking an input", () => {
         const seen: (Card|null)[] = []
         const looking = new Doubling()
         looking.get = () => ({
+            phase: "prepless",
             rewrite: (_ctx, spot) => {
                 seen.push(spot.next)
                 return { cards: [], consumed: 0, acting: false }

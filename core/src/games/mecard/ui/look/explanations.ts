@@ -28,8 +28,8 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
     ]],
     [MERGE, [
         "Deux ", CARTE.as("cartes"), " d'action ", MERGE.as("mélangées"), " sont jouées en même temps, en une",
-        " seule étape. Seules les ", CARTE.as("cartes"), " d'action qui ne prennent rien se ",
-        MERGE.as("mélangent"), ".",
+        " seule étape. Les ", CARTE.as("cartes"), " d'action se ", MERGE.as("mélangent"),
+        " si elles ne prennent rien, ou toutes la même chose : le mélange la prend alors, et la donne à chacune.",
     ]],
     [CARTE, ["Ce qu'une ", UNIT, " pioche, pose dans sa chaîne, puis joue."]],
     [UNIT, ["Tout ce qui se tient dans l'arène : héros, monstres, dangers."]],

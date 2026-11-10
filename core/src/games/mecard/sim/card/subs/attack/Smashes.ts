@@ -160,10 +160,6 @@ export class DemonicStrikeCard extends BlowCard {
         if(hit.length > 0) battle.applyStatus(unit, DEMONIC, hit.length)
         return hit
     }
-
-    protected override marked(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.unitsIn(area, unit)
-    }
 }
 
 export const DEMONIC_STRIKE = new DemonicStrikeCard()
@@ -181,10 +177,6 @@ export class QuakeCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         return { kind: "circle", center: pose.position, radius: QUAKE_RADIUS * unit.stats.meleeRange.value * progress }
-    }
-
-    protected override marked(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.unitsIn(area, unit)
     }
 }
 
@@ -214,10 +206,6 @@ export class SacrificeCard extends BlowCard {
         unit.hearts.damage(SACRIFICE_COST, DamageType.PHYSICAL, null)
         if(!unit.alive) return []
         return super.land(battle, unit, area)
-    }
-
-    protected override marked(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.unitsIn(area, unit)
     }
 }
 

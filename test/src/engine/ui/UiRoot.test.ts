@@ -315,6 +315,24 @@ describe("UiRoot pointer", () => {
         expect(world.sample().pressed("fire")).toBe(true)
     })
 
+    test("onInteraction → hover, press, release, leave, until disposed", () => {
+        const setup = uiSetup()
+        const probe = new Probe("p", [20, 20], { interactive: true })
+        setup.main.content.add(probe, { offsetX: 10, offsetY: 10 })
+        setup.ui.render()
+        const heard: string[] = []
+        const handle = setup.ui.onInteraction((kind, component) => {
+            heard.push(`${kind} ${component === probe}`)
+        })
+        click(setup, 15, 12)
+        setup.port.send({ type: "pointer-move", x: 100, y: 100 })
+        setup.frame()
+        expect(heard).toEqual(["hover-enter true", "press true", "release true", "hover-leave true"])
+        handle.dispose()
+        click(setup, 15, 12)
+        expect(heard).toHaveLength(4)
+    })
+
     test("the scale → the pointer in virtual pixels", () => {
         const setup = uiSetup({ scale: 2 })
         const probe = new Probe("p", [20, 20], { interactive: true })

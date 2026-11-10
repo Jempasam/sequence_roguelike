@@ -1,5 +1,6 @@
 import { AssetError } from "../../../engine/assets"
 import type { Assets } from "../../../engine/assets"
+import type { SoundPlayer } from "../../../engine/audio"
 import type { Painter } from "../../../engine/gpu"
 import type { InputFrame } from "../../../engine/input"
 import { Label } from "../../../engine/ui"
@@ -12,6 +13,8 @@ import type { SyncLink, SyncSource } from "../sync/SyncChannel"
 import { UnitSprites } from "./look/UnitSprites"
 import { DIM_TEXT, WARNING_TEXT } from "./look/theme"
 import { ALL_RUN_LOCKS, RunScreen } from "./run/RunScreen"
+import { RunSoundLink } from "./sound/RunSoundLink"
+import { UiSoundLink } from "./sound/UiSoundLink"
 import type { RunLocks } from "./run/RunScreen"
 
 /** What the viewer says before the first battle comes. */
@@ -52,14 +55,19 @@ export class MecardViewer {
 
         /** The way to the host, none for a viewer that only watches. */
         link: SyncLink|null = null,
+
+        /** What plays the sounds of the run watched, none when it is watched silent. */
+        sounds: SoundPlayer|null = null,
     ){
+        this.#sound = sounds ? new RunSoundLink(this.run, sounds) : null
+        this.#uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
             if(!(error instanceof AssetError)) throw error
             this.#warn(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
         this.#screen = new RunScreen(ui, this.run, {
-            theme, assets, sprites, toWorld, toUi,
+            theme, assets, sprites, toWorld, toUi, sounds: this.#uiSound,
             locks: ALL_RUN_LOCKS,
             restart: () => {},
             ready: () => this.#guest?.ready(),
@@ -91,12 +99,16 @@ export class MecardViewer {
 
     /** Stop listening for the run. */
     public dispose(): void {
+        this.#sound?.dispose()
+        this.#uiSound?.dispose()
         this.#guest?.dispose()
         this.#receiver.dispose()
         this.#screen.dispose()
     }
 
 
+    readonly #sound: RunSoundLink|null
+    readonly #uiSound: UiSoundLink|null
     readonly #receiver: RunReceiver
     readonly #screen: RunScreen
     readonly #waiting: Label

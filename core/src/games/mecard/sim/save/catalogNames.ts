@@ -2,6 +2,7 @@ import { Codecs, routeCodec } from "../base/Codec"
 import type { Codec } from "../base/Codec"
 import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
+import { CompositeCard } from "../card/subs/composite/CompositeCard"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { MergedCard } from "../card/subs/composite/MergedCard"
 import { ModuleCard } from "../card/subs/mechanic/ModuleCard"
@@ -83,8 +84,8 @@ class Names<T extends { readonly name: string }> {
 /** The codecs of the cards: those of the catalog, the secret one among them, then the ones holding cards. */
 export const CARD_CODECS: Codecs<Card> = new Codecs<Card>("card", [
     routeCodec("card", [...ALL_CARDS, SECRET_CARD]),
-    cardsCodec("fused", FusionCard, cards => new FusionCard(cards)),
-    cardsCodec("merged", MergedCard, cards => new MergedCard(cards)),
+    cardsCodec("fused", FusionCard, (cards, name) => new FusionCard(cards, name === undefined ? {} : { name })),
+    cardsCodec("merged", MergedCard, (cards, name) => new MergedCard(cards, name === undefined ? {} : { name })),
     cardsCodec("random", RandomCard, cards => new RandomCard(...pair(cards))),
     moduleCodec(),
     turnCodec(),
@@ -122,13 +123,21 @@ function moduleCodec(): Codec<Card> {
 
 /** The codec of a kind of card holding cards: its cards, each written down, in order. */
 function cardsCodec<C extends Card>(
-    prefix: string, kind: abstract new (...args: never[]) => C, make: (cards: readonly Card[]) => C,
+    prefix: string, kind: abstract new (...args: never[]) => C, make: (cards: readonly Card[], name?: string) => C,
 ): Codec<Card> {
     return {
         prefix,
         is: card => card instanceof kind,
-        serialize: card => JSON.stringify((card.contents ?? []).map(each => CARD_CODECS.save(each))),
-        parse: text => make((JSON.parse(text) as string[]).map(each => CARD_CODECS.load(each))),
+        // Its cards, and its name with them when it was given one of its own: a fusion of a monster.
+        serialize: card => {
+            const cards = (card.contents ?? []).map(each => CARD_CODECS.save(each))
+            return JSON.stringify(card instanceof CompositeCard && card.named ? { name: card.name, cards } : cards)
+        },
+        parse: text => {
+            const saved = JSON.parse(text) as string[]|{ name: string, cards: string[] }
+            const [cards, name] = Array.isArray(saved) ? [saved, undefined] : [saved.cards, saved.name]
+            return make(cards.map(each => CARD_CODECS.load(each)), name)
+        },
     }
 }
 

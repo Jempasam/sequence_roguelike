@@ -1,5 +1,5 @@
 import type { Text } from "../../../../../../semantic"
-import { HAZARD_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
+import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -8,7 +8,7 @@ import { ACTION } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
+import { polygon, still, strike } from "../tools/previews"
 import type { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 
@@ -55,9 +55,9 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
         return [this.action]
     }
 
-    /** The units it marks in its preview as the ones it would reach: none by default, its area says it all. */
-    protected marked(_battle: Battle, _unit: Unit, _area: Area): Unit[] {
-        return []
+    /** The units it marks in its preview as the ones it would reach: every one in its area but its own. */
+    protected marked(battle: Battle, unit: Unit, area: Area): Unit[] {
+        return battle.unitsIn(area, unit)
     }
 
     /** The hearts its unit adds to it: its strength, for a blow at hand. */
@@ -87,10 +87,7 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
             },
             preview: ({ battle, unit, pose }) => {
                 const area = card.reach(battle, unit, pose, 1)
-                const marks = card.marked(battle, unit, area).map(hit => {
-                    return polygon({ kind: "circle", center: hit.position, radius: hit.radius }, HAZARD_COLOR)
-                })
-                return still(pose, polygon(area, PHYSICAL_COLOR), ...marks)
+                return still(pose, ...strike([area], card.marked(battle, unit, area)))
             },
         }
     }

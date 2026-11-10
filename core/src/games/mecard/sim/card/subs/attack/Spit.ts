@@ -5,7 +5,7 @@ import { Slowness, SLOWED } from "../../../status/subs/Slowness"
 
 import { ActionCard } from "../ActionCard"
 import { fly } from "../tools/bolt"
-import { arrow, still } from "../tools/previews"
+import { arrow, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 
@@ -44,8 +44,8 @@ export class SpitCard extends ActionCard {
                 if(hit) battle.applyStatus(hit, SLOWED, rounds)
             },
             preview: ({ battle, unit, pose }) => {
-                const { end } = battle.ray(unit, range * unit.stats.throwRange.value, pose)
-                return still(pose, arrow([pose.position, end], MOVE_WIDTH / 2, SPIT_COLOR))
+                const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value, pose)
+                return still(pose, arrow([pose.position, end], MOVE_WIDTH / 2, SPIT_COLOR), ...strike([], hit ? [hit] : []))
             },
         }
     }

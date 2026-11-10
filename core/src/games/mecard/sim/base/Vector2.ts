@@ -90,6 +90,14 @@ export class Vector2 {
         return this.plus(turned).times(Math.SQRT1_2)
     }
 
+    /**
+     * The same vector turned clockwise by an angle given by its cosine and sine, written out by the caller so
+     * the simulation computes no angle: a negative sine turns counterclockwise.
+     */
+    public rotated(cos: number, sin: number): Vector2 {
+        return new Vector2(this.x * cos - this.y * sin, this.x * sin + this.y * cos)
+    }
+
     /** Is it the same point as another? */
     public equals(other: Vector2): boolean {
         return this.x === other.x && this.y === other.y

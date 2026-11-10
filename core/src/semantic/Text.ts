@@ -126,6 +126,18 @@ export function replaceInText(text: Text, token: object, by: Text): Text {
     return text
 }
 
+/**
+ * The objects a text names, at every depth, in order: what it tells by reference, a keyword, a card, a
+ * value telling itself. Objects telling themselves in their own text are not looked into.
+ */
+export function partsOf(text: Text): object[] {
+    if(typeof text === "string" || typeof text === "number") return []
+    if(isArray(text)) return text.flatMap(partsOf)
+    if(isSvg(text)) return []
+    if(isColored(text) || isLinked(text)) return partsOf(text.text)
+    return [text]
+}
+
 /** What the parts around a part of a text hand down to it. */
 interface TextContext {
     readonly color: TextColor|null

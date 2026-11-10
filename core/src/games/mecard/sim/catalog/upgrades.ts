@@ -2,8 +2,8 @@ import type { Rng } from "../base/Rng"
 import type { Card } from "../card/Card"
 import { readsWhole, signatureOf } from "../card/CardChain"
 import type { CardType } from "../card/CardType"
-import { ACTION, ELEMENT, MODULE, POTION } from "../card/CardType"
-import { RECOVERY } from "../card/subs"
+import { ACTION, BEAST, ELEMENT, MODULE, POTION } from "../card/CardType"
+import { ADAPTATION, BEAST_ARMOR, CYBERNETIC_BEAST, ELEMENTAL, FLESH_CURSE, RECOVERY, REVERSED_ADAPTATION } from "../card/subs"
 import { DELAYED_CHARGE } from "../card/subs/modifier/Wrappers"
 import { TORNADO } from "../card/subs/modifier/Tornado"
 import { AIM } from "../card/subs/movement/Aim"
@@ -15,7 +15,7 @@ import { SLASH } from "../card/subs/attack/Slash"
 import { SWEEP } from "../card/subs/attack/Sweep"
 import { THRUST } from "../card/subs/attack/Thrust"
 import { FusionCard } from "../card/subs/composite/FusionCard"
-import { MergedCard } from "../card/subs/composite/MergedCard"
+import { mergeable, MergedCard, mergedInput } from "../card/subs/composite/MergedCard"
 import {
     ARMOR_PLATING, HOMING_HEAD, INVERTER, MODULE_CORE, MODULE_MIXER, RECYCLING, REPEATER, THRUSTERS, TURBO,
 } from "../card/subs/mechanic/ModuleModifiers"
@@ -50,25 +50,19 @@ export interface CardUpgrade {
     readonly fusion: UpgradeFusion
 }
 
-/** What a merge asks of each card: an action taking nothing. */
-const MERGED_FILTER: UpgradeFilter = { input: null, output: ACTION }
-
 /**
- * What an upgrade asks of the card it improves, if it says: the filter it was given, and for a merge, always an
- * action taking nothing, as a merge holds no other card.
+ * What an upgrade asks of the card it improves, if it says: the filter it was given, and for a merge, an
+ * action taking nothing or what the other cards of the merge take.
  */
 export function filterOf(upgrade: CardUpgrade): UpgradeFilter|undefined {
-    return upgrade.fusion === "merge" ? MERGED_FILTER : upgrade.filter
+    if(upgrade.fusion !== "merge") return upgrade.filter
+    const held = upgrade.chain.filter((card): card is Card => card !== undefined)
+    return { input: mergedInput(held), output: ACTION }
 }
 
 /** The chain with a copy of the card in each hole. */
 export function filled(upgrade: CardUpgrade, card: Card): Card[] {
     return upgrade.chain.map(held => held ?? card)
-}
-
-/** Can cards be merged: do all give actions on their own? */
-function mergeable(cards: readonly Card[]): boolean {
-    return cards.every(card => card.output === ACTION && card.input === null)
 }
 
 /** Does a card agree with a filter on what it takes and gives? */
@@ -101,9 +95,19 @@ export function upgradeMatches(upgrade: CardUpgrade, card: Card): boolean {
  * @throws {@link Error} When the upgrade does not match the card.
  */
 export function upgraded(upgrade: CardUpgrade, card: Card, rng: Rng): Card {
+    return upgradedWith(upgrade, card, options => rng.pick(options) ?? options[0])
+}
+
+/**
+ * The card an upgrade makes with a card, the chance of a random one drawn by `pick`: a rewrite draws so, its
+ * preview taking the first option.
+ *
+ * @throws {@link Error} When the upgrade does not match the card.
+ */
+export function upgradedWith(upgrade: CardUpgrade, card: Card, pick: <T>(options: readonly T[]) => T): Card {
     const ways = waysOf(upgrade, card)
     if(ways.length === 0) throw new Error(`${upgrade.name} does not match ${card.name}.`)
-    const way = ways.length === 1 ? ways[0] : rng.pick(ways) ?? ways[0]
+    const way = ways.length === 1 ? ways[0] : pick(ways)
     const cards = filled(upgrade, card)
     return way === "merge" ? new MergedCard(cards) : new FusionCard(cards)
 }
@@ -225,6 +229,15 @@ export const ALL_UPGRADES: readonly CardUpgrade[] = [
     // A modifier in front of any card giving a module, whatever it takes: the modifier modifies it.
     modifying(THRUSTERS), modifying(ARMOR_PLATING), modifying(TURBO), modifying(HOMING_HEAD), modifying(MODULE_MIXER),
     modifying(RECYCLING), modifying(REPEATER), modifying(INVERTER), modifying(MODULE_CORE),
+
+    // Behind a card giving a beast or a module, the adaptation keeps the conversion only when the card on its
+    // left takes what the conversion gives, else the conversion goes: the improved card is read as it was.
+    upgrade("Cyborg", [ADAPTATION, CYBERNETIC_BEAST, undefined], "fusion", { output: BEAST }),
+    upgrade("Circuit biologique", [ADAPTATION, FLESH_CURSE, undefined], "fusion", { output: MODULE }),
+    upgrade("Armure bestiale", [BEAST_ARMOR, undefined], "fusion", { output: BEAST }),
+    // A card taking a beast, which an element is turned into when what follows is an element.
+    upgrade("Maîtrise des arcanes", [undefined, ELEMENTAL, REVERSED_ADAPTATION], "fusion", { input: BEAST }),
+
     back("Tir", SHOT, "merge"),
     back("Taille", SLASH, "merge"),
     back("Estoc", THRUST, "merge"),

@@ -9,6 +9,7 @@ import { ALL_CARDS } from "../../sim/catalog/cards"
 
 import { ChainStrip } from "../hud/ChainStrip"
 import type { ChainStripHost, StripCard } from "../hud/ChainStrip"
+import { CardView } from "../hud/CardView"
 import { cardsOption } from "../hud/ChoiceOptions"
 import { HeartView, heartsRow } from "../hud/HeartView"
 import { typeColorOf } from "../look/colors"
@@ -76,6 +77,30 @@ export function quote(text: Text): GuideBlock {
 /** Cards in a row, in the frame an offer has, with a caption under them when there is one. */
 export function cards(shown: readonly Card[], caption: Text|null = null): GuideBlock {
     return look => captioned(look, cardsOption(look.theme, shown, null), caption)
+}
+
+/**
+ * The card that turns, as it is played unlimited: its dial answers a click, and the card shown becomes the
+ * turn to the direction clicked, so the guide can be tried as the hand is.
+ *
+ * @param turnOf The turn card of each step of the dial.
+ * @param first The step it starts at.
+ */
+export function dialCard(turnOf: (step: number) => Card, first: number, caption: Text|null = null): GuideBlock {
+    return look => {
+        const holder = new Box("column", { align: "center" })
+        let shown: CardView|null = null
+        const show = (step: number): void => {
+            if(shown) holder.remove(shown)
+            const view = new CardView(look.theme, turnOf(step), "hand")
+            view.unlimited = true
+            view.onDial = show
+            holder.add(view)
+            shown = view
+        }
+        show(first)
+        return captioned(look, holder, caption)
+    }
 }
 
 /** Hearts of a kind in a row, with a caption under them. */

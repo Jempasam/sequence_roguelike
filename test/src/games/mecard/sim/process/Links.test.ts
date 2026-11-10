@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    BLUE_HEART, Hook, IronChain, LaserLink, SPIRIT_ANCHOR, SPIRIT_PROJECTION, STEP, Vector2,
+    BLUE_HEART, Hook, IronChain, LaserLink, SHADOW, SPIRIT_ANCHOR, SPIRIT_PROJECTION, STEP, Vector2,
 } from "@game/core/mecard"
 import type { Battle, Tether, Unit } from "@game/core/mecard"
 
@@ -40,6 +40,21 @@ describe("Laser link", () => {
         on.startProcess(hero, new LaserLink(ally, 1))
         expect(tied.map(({ from, to, visual }) => [from, to, visual.visual])).toEqual([[hero, ally, "tethers/laser"]])
         on.endProcesses(hero)
+        expect(tied).toEqual([])
+    })
+})
+
+describe("Shadow", () => {
+    test("a shadow left then a step → the unit tied to its shadow, untied once the round is over", () => {
+        const on = battle()
+        const hero = unit(on, 3, 5)
+        unit(on, 1, 1, { team: MONSTERS })
+        const tied: Tether[] = []
+        const everTied: Tether[] = []
+        on.signals.tethered.add(({ tether }) => { tied.push(tether); everTied.push(tether) })
+        on.signals.untethered.add(({ tether }) => tied.splice(tied.indexOf(tether), 1))
+        play(on, [[hero, chain(SHADOW, STEP)]])
+        expect(everTied.map(({ from, to }) => [from, to.name])).toEqual([[hero, "Ombre"]])
         expect(tied).toEqual([])
     })
 })
@@ -107,6 +122,19 @@ describe("Spirits", () => {
         play(on, [[hero, chain(SPIRIT_ANCHOR, STEP)]])
         expectAt(hero, 3, 5)
         expect(on.units.some(each => each.name === "Esprit")).toBe(false)
+    })
+
+    test("an anchor then a step → the unit tied to its spirit while the round lasts, untied with it", () => {
+        const on = battle()
+        const hero = unit(on, 3, 5)
+        unit(on, 1, 1, { team: MONSTERS })
+        const tied: Tether[] = []
+        const everTied: Tether[] = []
+        on.signals.tethered.add(({ tether }) => { tied.push(tether); everTied.push(tether) })
+        on.signals.untethered.add(({ tether }) => tied.splice(tied.indexOf(tether), 1))
+        play(on, [[hero, chain(SPIRIT_ANCHOR, STEP)]])
+        expect(everTied.map(({ from, to }) => [from, to.name])).toEqual([[hero, "Esprit"]])
+        expect(tied).toEqual([])
     })
 
     test("a projection → a spirit of a blue heart plays the cards after it, the unit plays none of them", () => {

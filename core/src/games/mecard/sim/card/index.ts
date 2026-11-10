@@ -11,6 +11,7 @@
 export * from "./Card"
 export * from "./CardNode"
 export * from "./CardType"
+export * from "./describe"
 export * from "./CardChain"
 export * from "./Rarity"
 export * from "./Reading"

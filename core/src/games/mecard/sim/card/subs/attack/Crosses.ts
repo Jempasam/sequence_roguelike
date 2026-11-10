@@ -2,20 +2,15 @@ import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Indicator, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
-import { HAZARD_COLOR, NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
+import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { frenchNumber } from "../../../battle/words"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
+import { label, polygon, still, strike } from "../tools/previews"
 import { centeredSegment, cross } from "../tools/areas"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
-
-/** How hard the units a blow reaches are shown, in a preview: a ring around each. */
-function ringed(units: readonly Unit[]): Indicator[] {
-    return units.map(hit => polygon({ kind: "circle", center: hit.position, radius: hit.radius }, HAZARD_COLOR))
-}
 
 /** The two segments of the cutting cross of the catalog: an X, crossing a meter ahead. */
 const X_LENGTH = 2
@@ -46,7 +41,7 @@ export const CROSS_CUT = new ActionCard("Taille croisée", [
     preview: ({ battle, unit, pose }) => {
         const areas = xAreas(pose, unit)
         const touched = areas.flatMap(area => battle.unitsIn(area, unit))
-        return still(pose, ...areas.map(area => polygon(area, PHYSICAL_COLOR)), ...ringed(touched))
+        return still(pose, ...strike(areas, touched))
     },
 })
 
@@ -103,7 +98,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         const dies = touched.some(target => target.life <= amount * (weakened(target) ? 2 : 1))
         const extra: Indicator[] = []
         if(dies) extra.push(label(fishingCenter(pose, unit), "téléportation", NOTE_COLOR))
-        return still(pose, ...areas.map(area => polygon(area, PHYSICAL_COLOR)), ...ringed(touched), ...extra)
+        return still(pose, ...strike(areas, touched), ...extra)
     },
 })
 
@@ -148,7 +143,7 @@ export const DEATH_SCYTHE = new ActionCard("Faux de la mort", [
         const amount = 1 + unit.stats.strength.value
         const touched = battle.unitsIn(area, unit)
         const dies = touched.filter(target => target.life <= amount)
-        const shown: Indicator[] = [polygon(area, PHYSICAL_COLOR), ...ringed(touched)]
+        const shown: Indicator[] = strike([area], touched)
         if(dies.length > 0){
             shown.push(...dies.map(target => label(target.position, "mort", NOTE_COLOR)))
             shown.push(label(pose.position, "vague 2", NOTE_COLOR))

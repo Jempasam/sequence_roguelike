@@ -6,6 +6,8 @@
     "exports": {
         ".": "./src/index.ts",
         "./mecard": "./src/games/mecard/sim/index.ts",
+        "./mecard/run-sound-link": "./src/games/mecard/ui/sound/RunSoundLink.ts",
+        "./mecard/ui-sound-link": "./src/games/mecard/ui/sound/UiSoundLink.ts",
         "./mecard/commands": "./src/games/mecard/ui/commands.ts",
         "./mecard/travel-screen": "./src/games/mecard/ui/travel/TravelScreen.ts",
         "./mecard/choice-options": "./src/games/mecard/ui/hud/ChoiceOptions.ts",

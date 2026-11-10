@@ -418,6 +418,11 @@ export class Unit {
         return this.steps.length > 0
     }
 
+    /** The cards of its chain it has not started reading yet, in order: what it has yet to play. */
+    public unplayed(): Card[] {
+        return this.chain.cards.slice(this.chain.cursor)
+    }
+
     /** Read what is left of its chain: every step it gives made ready, each card that cannot play told. */
     public readChain(): void {
         const { chain } = this

@@ -6,7 +6,7 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, wait } from "../tools/playing"
-import { arrow, polygon, still } from "../tools/previews"
+import { arrow, polygon, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { MergedCard } from "../composite/MergedCard"
 import { ABOUT_FACE } from "../movement/Orientation"
@@ -60,11 +60,11 @@ export class MegaSlashCard extends ActionCard {
                 battle.unblock(unit)
                 yield* wait(SLASH_TIME)
             },
-            preview: ({ unit, pose }) => {
+            preview: ({ battle, unit, pose }) => {
                 const area = cut(unit, pose)
                 if(area.kind !== "segment") return still(pose)
                 const way = arrow([area.from, area.to], MOVE_WIDTH / 2, MOVE_COLOR)
-                return still({ ...pose, position: area.to }, polygon(area, PHYSICAL_COLOR), way)
+                return still({ ...pose, position: area.to }, ...strike([area], battle.unitsIn(area, unit)), way)
             },
         }
     }

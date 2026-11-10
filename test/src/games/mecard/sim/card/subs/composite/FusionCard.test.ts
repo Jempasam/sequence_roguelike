@@ -31,7 +31,7 @@ describe("FusionCard.constructor", () => {
     test("its value → a preparation, its cards in place of it, in order, nothing acting", () => {
         const fusion = new FusionCard([STEP, THRUST])
         expect(fusion.output).toBe(PREPARATION)
-        const spot = { next: null, rest: [], deck: [], trial: false, fits: () => true }
+        const spot = { previous: null, next: null, rest: [], deck: [], trial: false, fits: () => true }
         const rewrite = fusion.get().rewrite({ pick: options => options[0] }, spot)
         expect(rewrite).toEqual({ cards: [STEP, THRUST], consumed: 0, acting: false })
     })

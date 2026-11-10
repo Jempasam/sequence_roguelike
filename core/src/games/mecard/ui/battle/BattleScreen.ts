@@ -31,6 +31,7 @@ import type { ShownStatus } from "./BattleScene"
 import { ArenaHearts } from "../hud/ArenaHearts"
 import { heartText } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
+import type { UiSoundLink } from "../sound/UiSoundLink"
 import { CARTE } from "../../sim/base/keywords"
 
 /** How many lines of the log are kept. */
@@ -77,6 +78,9 @@ export interface BattleScreenOptions {
 
     /** What the players may not do, nothing by default. */
     readonly locks?: BattleLocks
+
+    /** What tells the speakers a unit of the arena is hovered or clicked, none when there is no sound. */
+    readonly sounds?: UiSoundLink|null
 
     /** How deep the run went. */
     depth(): number
@@ -296,7 +300,12 @@ export class BattleScreen implements HudHost {
         this.#statusList.place(room)
         // The arena takes no pointer: it is over it when over no widget.
         const { pointerX, pointerY } = this.ui
-        this.#arenaUnit = this.ui.hovered ? null : this.#board.unitAt(pointerX - left, pointerY - top)
+        const arenaUnit = this.ui.hovered ? null : this.#board.unitAt(pointerX - left, pointerY - top)
+        if(arenaUnit !== this.#arenaUnit){
+            if(this.#arenaUnit) this.options.sounds?.hover(false)
+            if(arenaUnit) this.options.sounds?.hover(true)
+        }
+        this.#arenaUnit = arenaUnit
         this.#showHighlighted()
         // The board moves at every frame: the arena draws it again, from itself, being opaque.
         this.#arenaView.invalidate()
@@ -620,7 +629,9 @@ export class BattleScreen implements HudHost {
         for(const event of input.events){
             if(event.type !== "pointer-down" || event.button !== 0 || event.consumed) continue
             const unit = this.#board.unitAt(event.x / this.ui.scale - room.left, event.y / this.ui.scale - room.top)
-            if(unit) this.#choose(unit)
+            if(!unit) continue
+            this.options.sounds?.press()
+            this.#choose(unit)
         }
     }
 

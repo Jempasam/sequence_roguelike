@@ -40,8 +40,14 @@ import {
     WAIT, SPIRIT_DASH, SHADOW_BLINK,
     DOUBLE_SLASH,
     TRIPLE_SLASH,
+    ADAPTATION, ARC_STEP, ARC_TURN, BEAST_ARMOR, BEAST_CARDS, BITE, COMBO, CYBERNETIC_BEAST, ELEMENTAL, FLESH_CURSE, HYBRIDIZATION,
+    REVERSED_ADAPTATION, ELEMENT_ON_BLADE, ELEPHANT_CARD, FURY, POSSESSION, PREPARATION_CARD, RUN,
+    SUMMONING, TIME_MANIPULATION, TOTAL_HYBRID, TOTAL_TRANSFORMATION, TURN_AROUND,
 } from "../card/subs"
 import { CARTE } from "../base/keywords"
+import { keywordsOf } from "../card/describe"
+import { RewriteCard } from "../card/subs/composite/RewriteCards"
+import { upgradedWith, upgradesFor } from "./upgrades"
 
 /**
  * Any card of the game that fits its place, drawn at the end of the preparation, the commoner more often:
@@ -50,6 +56,39 @@ import { CARTE } from "../base/keywords"
 export const CHAOS: Card = new DrawnCard("Chaos", [
     "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
 ], Rarity.EPIC, () => weighted(ALL_CARDS))
+
+/**
+ * The card on its right improved by an upgrade drawn among those it matches. Named here, where the upgrades
+ * are known: they are read only when it is rewritten.
+ */
+export const ENCHANTMENT: Card = new RewriteCard("Enchantement", [
+    "Fin de préparation : la ", CARTE, " qui la suit reçoit une amélioration tirée au hasard parmi celles qui lui vont.",
+], Rarity.RARE, (ctx, spot) => {
+    const next = spot.next
+    const fitting = next ? upgradesFor(next) : []
+    if(!next || fitting.length === 0) return { cards: [], consumed: 0, acting: false }
+    return { cards: [upgradedWith(ctx.pick(fitting), next, ctx.pick)], consumed: 1, acting: false }
+})
+
+/**
+ * The card on its right become another of the deck of its unit sharing notions with it: two if any shares as
+ * many, else one. Left as it is when none shares any.
+ */
+export const MOULT: Card = new RewriteCard("Mue", [
+    "Fin de préparation : la ", CARTE, " qui la suit devient une ", CARTE, " de ta main, ta défausse ou ta chaîne ",
+    "qui partage deux mots-clés avec elle, à défaut un.",
+], Rarity.RARE, (ctx, spot) => {
+    const next = spot.next
+    if(!next || spot.trial) return { cards: [], consumed: 0, acting: false }
+    const own = keywordsOf(next)
+    const shared = (card: Card): number => [...keywordsOf(card)].filter(keyword => own.has(keyword)).length
+    const others = [...new Set(spot.deck)].filter(card => card !== next && spot.fits(card))
+    for(const least of [2, 1]){
+        const close = others.filter(card => shared(card) >= least)
+        if(close.length > 0) return { cards: [ctx.pick(close)], consumed: 1, acting: false }
+    }
+    return { cards: [], consumed: 0, acting: false }
+})
 
 /** The potions and what pours them, found as loot. */
 export const POTION_CARDS: readonly Card[] = [
@@ -66,6 +105,9 @@ export const BLUE_VENGEANCE = new FusionCard([GRUDGE, BLOCK], { name: "Vengeance
 export const HUNTER_FUSION = new FusionCard([FAR_AIM, SPYGLASS_CARD, CHARGED_SHOT], { name: "Chasseur", rarity: Rarity.RARE })
 export const DEMONIC_COMBO = new FusionCard([DEMON_SLASH, ENERGETIC_AIM, DEMONIC_STRIKE], { name: "Combo démoniaque", rarity: Rarity.RARE })
 export const SUPLEX_SURPRISE = new FusionCard([ABOUT_FACE, SUPLEX], { name: "Surprise Suplex", rarity: Rarity.RARE })
+
+/** A slash with the element on its right on the blade, at once: the blow applies its negative. */
+export const ENCHANTED_BLADE = new MergedCard([ELEMENT_ON_BLADE, SLASH], { name: "Lame enchantée", rarity: Rarity.RARE })
 
 /** The cards found as loot, the rare ones less often. */
 export const LOOT_CARDS: readonly Card[] = [
@@ -93,6 +135,9 @@ export const LOOT_CARDS: readonly Card[] = [
     BIG_SHOTGUN, ALLY_LASSO, BLOODY_COMBO, COVERING_FIRE, BLUE_VENGEANCE, HUNTER_FUSION, DEMONIC_COMBO, SUPLEX_SURPRISE,
     SHOUT, TAUNT, ORIENTATION, ENERGETIC_AIM, ALLY_AIM, ABOUT_FACE, ICY_GLARE,
     COUNTER_CARD, WOODEN_SHIELD_CARD, SLIDING_PARRY_CARD, DISARM_CARD, LASER_LINK, HOOK_ON, IRON_CHAIN, SPIRIT_ANCHOR, SPIRIT_PROJECTION,
+    TURN_AROUND, ARC_STEP, ARC_TURN, TIME_MANIPULATION, PREPARATION_CARD, ENCHANTMENT, MOULT, COMBO, ELEPHANT_CARD,
+    POSSESSION, ...BEAST_CARDS, BITE, RUN, FURY, SUMMONING, TOTAL_TRANSFORMATION, ELEMENT_ON_BLADE, ENCHANTED_BLADE,
+    CYBERNETIC_BEAST, FLESH_CURSE, BEAST_ARMOR, ELEMENTAL, HYBRIDIZATION, ADAPTATION, REVERSED_ADAPTATION,
     ...POTION_CARDS,
 ]
 
@@ -108,13 +153,16 @@ export const QUAKE_SEISM = new MergedCard([SUCTION, QUAKE, SHOCK_WAVE], { name: 
 export const BULLET_RAIN = new MergedCard([MACHINE_GUN, MACHINE_GUN], { name: "Pluie de balles", rarity: Rarity.LEGENDARY })
 export const CROSS_BOMB = new FusionCard([DOUBLE_DIAGONAL, BOMB], { name: "Bombe en croix", rarity: Rarity.LEGENDARY })
 export const JOURNEY = new MergedCard([ORIENTATION, STEP, PATH_AIM, STEP], { name: "Voyage", rarity: Rarity.RARE })
+export const THRUST_COMBO = new MergedCard([THRUST, ARC_STEP, TURN_AROUND, THRUST], { name: "Combo d'estoc", rarity: Rarity.LEGENDARY })
+export const STORM_BLADE = new MergedCard([ELEMENT_ON_BLADE, SLASH, SWEEP], { name: "Lame des tempêtes", rarity: Rarity.LEGENDARY })
 
 /** Rare and very powerful cards: two strong actions played at once. */
 export const LEGENDARY_CARDS: readonly Card[] = [
     BARRAGE, SHADOW_COMBO, CRUSH, FORCED_SUICIDE, TWIN_BLADES,
     CROSS_BOMB, JOURNEY, SURPRISE_THRUST, MEGA_THRUST, QUAKE_SEISM,
     BULLET_RAIN, SPIRIT_DASH, SHADOW_BLINK,
-    DOUBLE_SLASH, TRIPLE_SLASH, BLOOD_STORM
+    DOUBLE_SLASH, TRIPLE_SLASH, BLOOD_STORM,
+    THRUST_COMBO, STORM_BLADE, TOTAL_HYBRID,
 ]
 
 /**

@@ -9,6 +9,15 @@ import type { Focus } from "./Focus"
 import { isInside } from "./Focus"
 import type { RoutedEvent } from "./UiEvent"
 
+/** What happened to an interactive component under the pointer. */
+export type PointerInteractionKind = "hover-enter" | "hover-leave" | "press" | "release"
+
+/**
+ * Hears what the pointer does to the interactive components: coming over one, leaving it, pressing it,
+ * releasing it. The button is `-1` for a hover.
+ */
+export type PointerInteractionListener = (kind: PointerInteractionKind, component: Component, button: number) => void
+
 /**
  * Where the pointer is, what it is over, and who holds it.
  *
@@ -25,9 +34,10 @@ import type { RoutedEvent } from "./UiEvent"
 export class PointerRouting {
 
 
-    constructor(layers: () => readonly Layer[], focus: Focus){
+    constructor(layers: () => readonly Layer[], focus: Focus, listener: PointerInteractionListener){
         this.#layers = layers
         this.#focus = focus
+        this.#listener = listener
     }
 
 
@@ -76,9 +86,11 @@ export class PointerRouting {
                     this.#captureButton = event.button
                 }
                 this.#focus.set(hit ? nearestFocusable(hit) : null)
+                if(holder ?? hit) this.#listener("press", (holder ?? hit)!, event.button)
                 this.#send(holder ?? hit, routed.reset("pointer-down", null), event.button)
                 break
             case "pointer-up":
+                if(holder ?? hit) this.#listener("release", (holder ?? hit)!, event.button)
                 this.#send(holder ?? hit, routed.reset("pointer-up", null), event.button)
                 if(holder && event.button === this.#captureButton) this.#captured = null
                 break
@@ -103,6 +115,7 @@ export class PointerRouting {
 
     readonly #layers: () => readonly Layer[]
     readonly #focus: Focus
+    readonly #listener: PointerInteractionListener
     #x = 0
     #y = 0
     #hovered: Component|null = null
@@ -133,8 +146,14 @@ export class PointerRouting {
         const old = this.#hovered
         if(component === old) return
         this.#hovered = component
-        if(old) internals.hoverChanged(old)
-        if(component) internals.hoverChanged(component)
+        if(old){
+            internals.hoverChanged(old)
+            this.#listener("hover-leave", old, -1)
+        }
+        if(component){
+            internals.hoverChanged(component)
+            this.#listener("hover-enter", component, -1)
+        }
     }
 
     /** Send an event of the pointer to a component, then to its containers until one consumes it. */

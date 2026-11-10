@@ -25,7 +25,7 @@ import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
 import { labelEffect, polygonEffect } from "./effects"
-import type { BattleEvent, MoveEvent } from "./events"
+import type { BattleEvent, DeathEvent, MoveEvent } from "./events"
 import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
@@ -146,6 +146,9 @@ export class Battle {
     /** A unit built its preparations, its chain rewritten. */
     public readonly unitPrepared: Observable<Unit>
 
+    /** A unit died, whichever it is. */
+    public readonly unitDied: Observable<DeathEvent>
+
     /** A pass of the execution starts. */
     public readonly passStarted: Observable<number>
 
@@ -240,6 +243,7 @@ export class Battle {
         this.roundStarted = new Observable(this.report)
         this.prepEnded = new Observable(this.report)
         this.unitPrepared = new Observable(this.report)
+        this.unitDied = new Observable(this.report)
         this.passStarted = new Observable(this.report)
         this.roundEnding = new Observable(this.report)
         this.roundEnded = new Observable(this.report)
@@ -603,7 +607,7 @@ export class Battle {
      */
     public reshuffle(unit: Unit): void {
         const count = unit.hand.length
-        for(const card of unit.hand) unit.decks.discard(card)
+        for(const card of unit.hand) if(!this.#spend(unit, card)) unit.decks.discard(card)
         unit.hand.length = 0
         unit.decks.recycle(this.rng)
         this.drawCards(unit, count)
@@ -1152,6 +1156,39 @@ export class Battle {
     }
 
     /**
+     * Put a fleeting card in the hand of a unit, when its hand has room: once played, it goes to no discard,
+     * and is gone.
+     */
+    public giveFleetingCard(unit: Unit, card: Card): boolean {
+        if(!this.giveCard(unit, card)) return false
+        this.#fleeting.add(card)
+        this.signals.fleetingGiven.notify({ unit, card, deck: -1 })
+        return true
+    }
+
+    /** Is a card fleeting: gone once played, rather than discarded? */
+    public isFleeting(card: Card): boolean {
+        return this.#fleeting.has(card)
+    }
+
+    /** Spend a fleeting card leaving the hand of a unit: is it one? It is then gone. */
+    #spend(unit: Unit, card: Card): boolean {
+        if(!this.#fleeting.delete(card)) return false
+        this.signals.fleetingSpent.notify({ unit, card, deck: -1 })
+        return true
+    }
+
+    /**
+     * Put cards at the end of the chain of a unit: they play after the others, this round, and go to no
+     * discard, as they never left a hand.
+     */
+    public appendToChain(unit: Unit, cards: readonly Card[]): void {
+        if(cards.length === 0) return
+        unit.chain.cards.push(...cards)
+        unit.chain.watcher?.changed()
+    }
+
+    /**
      * Summon a body for a unit, of its team, where there is room: a body with no deck, out of the order of
      * play, lasting as long as its hearts, which it loses one by one at the end of each round. Does nothing
      * when the point is taken.
@@ -1321,6 +1358,9 @@ export class Battle {
     /** The cards that left the hand of each unit for its chain, to the discard at the end of the round. */
     readonly #played = new Map<Unit, Card[]>()
 
+    /** The cards given fleeting, gone once played: each one made for the purpose, so told by identity. */
+    readonly #fleeting = new WeakSet<Card>()
+
     /** The items plugged into each unit, with what each kept, to take back. */
     readonly #plugs = new Map<Unit, Plug[]>()
 
@@ -1456,6 +1496,7 @@ export class Battle {
         unit.onCardInvalid.add(event => signals.cardInvalid.notify(event))
         unit.onChainChange.add(event => signals.chainChanged.notify(event))
         unit.onPrep.add(prepared => this.unitPrepared.notify(prepared))
+        unit.onDeath.add(event => this.unitDied.notify(event))
     }
 
     /** Stand where a state has it, nothing in it yet. */
@@ -1639,6 +1680,7 @@ export class Battle {
         this.roundEnded.notify(this.round)
         for(const [unit, cards] of this.#played){
             for(const card of cards){
+                if(this.#spend(unit, card)) continue
                 const deck = unit.decks.discard(card)
                 if(deck !== null) this.signals.discarded.notify({ unit, card, deck })
             }

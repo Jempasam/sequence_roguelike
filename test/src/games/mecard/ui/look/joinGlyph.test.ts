@@ -8,7 +8,7 @@ describe("the glyph over the limit between held cards", () => {
     test("each way of holding cards has its own", () => {
         const glyphs = [
             joinGlyph(new FusionCard([STEP, THRUST])),
-            joinGlyph(new MergedCard(STEP, THRUST)),
+            joinGlyph(new MergedCard([STEP, THRUST])),
             joinGlyph(new RandomCard(FIRE, WATER)),
         ]
         expect(new Set(glyphs).size).toBe(3)

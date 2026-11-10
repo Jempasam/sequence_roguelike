@@ -61,7 +61,7 @@ describe("CardView, the dial of a turn", () => {
         const { cx, cy, radius } = dialAt(view)
         click(setup, view, cx + radius * 0.8, cy)
         click(setup, view, cx, cy + radius * 0.8)
-        expect(picked).toEqual(["dial 4", "dial 8"])
+        expect(picked).toEqual(["dial 8", "dial 16"])
     })
 
     test("the pointer over the dial → the dial lights, not the card; elsewhere the card does", () => {

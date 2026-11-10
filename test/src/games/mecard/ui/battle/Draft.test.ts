@@ -23,8 +23,8 @@ function draftOf(direction = Vector2.UP): Draft {
 describe("Draft, the cards played unlimited", () => {
     test("the turn shown → the one facing nearest to the unit at first", () => {
         expect(draftOf(Vector2.UP).turnStep).toBe(0)
-        expect(draftOf(Vector2.RIGHT).turnStep).toBe(4)
-        expect(draftOf(Vector2.DOWN).unlimited).toEqual([STEP, TURNS[8]])
+        expect(draftOf(Vector2.RIGHT).turnStep).toBe(8)
+        expect(draftOf(Vector2.DOWN).unlimited).toEqual([STEP, TURNS[16]])
     })
 
     test("a step and one turn shown, in the order of the unit", () => {

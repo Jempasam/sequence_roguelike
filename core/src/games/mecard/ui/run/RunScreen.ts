@@ -20,6 +20,7 @@ import { CHOSEN_TEXT, WARNING_TEXT } from "../look/theme"
 import { NO_TRAVEL_LOCKS, TravelScreen } from "../travel/TravelScreen"
 import type { TravelLocks } from "../travel/TravelScreen"
 import { PlaceTransitions } from "./PlaceTransitions"
+import type { UiSoundLink } from "../sound/UiSoundLink"
 
 /** The size the scroll of the rewards asks for: it takes whatever room its panel gives it. */
 const SCROLL_SIZE = 40
@@ -58,6 +59,9 @@ export interface RunScreenOptions {
 
     /** What the players may not do, nothing by default. */
     readonly locks?: RunLocks
+
+    /** What tells the speakers what the pointer does to what is no component, none when there is no sound. */
+    readonly sounds?: UiSoundLink|null
 
     /** Where a point of the interface, in virtual pixels, lies in the world, in its pixels. */
     toWorld(x: number, y: number): readonly [number, number]
@@ -151,6 +155,7 @@ export class RunScreen {
         // The battle screen always holds a battle, for the console: the first fight of the run, until then.
         this.battleScreen = new BattleScreen(ui, engine.newBattle(), {
             theme, sprites, toWorld, toUi, report,
+            sounds: options.sounds,
             locks: this.#locks.battle,
             depth: () => this.#engine.travel.depth,
             over: battle => this.#seeOut(battle),
@@ -158,6 +163,7 @@ export class RunScreen {
         })
         this.travelScreen = new TravelScreen(ui, engine.travel, {
             theme, assets, sprites, report,
+            sounds: options.sounds,
             locks: this.#locks.travel,
             enter: path => this.transitions.enter(path),
         })

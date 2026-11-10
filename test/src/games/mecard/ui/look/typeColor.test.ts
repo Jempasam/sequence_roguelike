@@ -1,16 +1,22 @@
 import { describe, expect, test } from "vitest"
-import { ACTION, CardType, ELEMENT, MODULE, POTION, PREPARATION } from "@game/core/mecard"
+import { ACTION, BEAST, CardType, ELEMENT, MODULE, POTION, PREPARATION } from "@game/core/mecard"
 import { typeColorOf } from "@game/core/mecard/colors"
 
 // --- Tests ---
 
 describe("a card type's color", () => {
     test("each known type has its own", () => {
-        const colors = [ACTION, PREPARATION, ELEMENT, POTION, MODULE].map(type => {
+        const colors = [ACTION, PREPARATION, ELEMENT, POTION, MODULE, BEAST].map(type => {
             const { r, g, b } = typeColorOf(type)
             return `${r},${g},${b}`
         })
         expect(new Set(colors).size).toBe(colors.length)
+    })
+
+    test("the spirits of nature are brown", () => {
+        const { r, g, b } = typeColorOf(BEAST)
+        expect(r).toBeGreaterThan(g)
+        expect(g).toBeGreaterThan(b)
     })
 
     test("an unknown type → a color hashed from its name, the same each time", () => {

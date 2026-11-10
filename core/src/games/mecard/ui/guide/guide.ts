@@ -2,6 +2,7 @@ import { Label } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import { CARTE, COMPOSITE, DECK, FUSION, INVOCATION, SUPPRESSION, UNIT } from "../../sim/base/keywords"
 import { ALL_MONSTERS } from "../../sim/catalog/monsters"
+import { TURN_STEPS, TURNS } from "../../sim/card/subs/movement/TurnCard"
 import { RED_HEART } from "../../sim/heart/subs/RedHeartKind"
 import { BURN } from "../../sim/status/subs/Burn"
 import { DODGE } from "../../sim/status/subs/Dodge"
@@ -10,7 +11,7 @@ import { SLOWED } from "../../sim/status/subs/Slowness"
 
 import { engineColor } from "../look/colors"
 import {
-    cardNamed, cards, chain, component, heading, hearts, note, paragraph, plug, quote, subheading,
+    cardNamed, cards, chain, component, dialCard, heading, hearts, note, paragraph, plug, quote, subheading,
     terms, together, transform,
 } from "./GuideBlocks"
 import type { GuideBlock, Term } from "./GuideBlocks"
@@ -106,10 +107,15 @@ export const GUIDE: readonly GuideBlock[] = [
     paragraph(concat(
         "Tes héros savent toujours avancer et se tourner : ", cardNamed("Avancer"), " et Tourner",
         " ne sont dans aucun ", DECK, ". Elles sont en tête de ta main, bordées de blanc : un clic en pose une copie dans ta ",
-        "chaîne, une seule fois par tour : une fois posée, elle grise. Sur Tourner, clique le cadran pour choisir la ",
-        "direction du trait, ou clique la carte pour la poser. Dans les haltes qui montrent ton ", DECK,
+        "chaîne, une seule fois par tour : une fois posée, elle grise. Dans les haltes qui montrent ton ", DECK,
         ", elles figurent aussi, et on peut les choisir plusieurs fois.",
     )),
+    cards([AVANCER], "Avancer : un pas dans la direction où l'unité regarde."),
+    paragraph(concat(
+        "Tourner a un cadran de ", String(TURN_STEPS), " directions, le haut étant devant toi. Clique la carte pour la ",
+        "poser, ou clique le cadran pour choisir la direction du trait : la carte change avec lui. Essaie ici.",
+    )),
+    dialCard(step => TURNS[step], 0, "Tourner : clique le cadran pour choisir une direction. En bataille, clique la carte pour la poser."),
 
     //// 3. A game from afar ////
     heading("Une partie, vue de loin"),

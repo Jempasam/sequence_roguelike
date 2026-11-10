@@ -12,7 +12,7 @@ import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
 import { ActionCard } from "../ActionCard"
-import { RewriteCard } from "../composite/RewriteCards"
+import { InputRewriteCard, RewriteCard } from "../composite/RewriteCards"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { polygon, still } from "../tools/previews"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -81,25 +81,21 @@ export const REACTION = new RewriteCard("Réaction", [
     return { cards: [card], consumed: 2, acting: false }
 })
 
-/** What a ritual gives: the element on its right leaves the chain, kept by what it does to the battle. */
-function keeping(_ctx: unknown, spot: RewriteSpot): Rewrite {
-    return elementOf(spot.next) ? { cards: [], consumed: 1, acting: true } : NOTHING
-}
+/** What a ritual gives: nothing in its place, what it took kept by what it does to the battle. */
+const KEPT: Rewrite = { cards: [], consumed: 0, acting: true }
 
-/** The element on its right kept for the round. */
-export const RITUAL = new RewriteCard("Rituel", [
-    "Fin de préparation : garde l'élément à sa droite jusqu'à la fin du round. Un Écho s'y mêle.",
-], Rarity.RARE, keeping, ({ battle, unit, spot }) => {
-    const element = elementOf(spot.next)
-    if(element) battle.startProcess(unit, new Ritual(element))
+/** The element it takes, kept for the round. */
+export const RITUAL = new InputRewriteCard("Rituel", [
+    "Fin de préparation : garde son élément jusqu'à la fin du round. Un Écho s'y mêle.",
+], Rarity.RARE, ELEMENT, () => KEPT, ({ battle, unit }, element) => {
+    battle.startProcess(unit, new Ritual(element))
 })
 
-/** The element on its right kept for rounds. */
-export const GRAND_RITUAL_CARD = new RewriteCard("Grand rituel", [
-    "Fin de préparation : garde l'élément à sa droite pendant ", counted(GRAND_RITUAL_ROUNDS, "round"), ". Un Écho s'y mêle.",
-], Rarity.EPIC, keeping, ({ battle, unit, spot }) => {
-    const element = elementOf(spot.next)
-    if(element) battle.applyStatus(unit, ritualType(element), GRAND_RITUAL_ROUNDS)
+/** The element it takes, kept for rounds. */
+export const GRAND_RITUAL_CARD = new InputRewriteCard("Grand rituel", [
+    "Fin de préparation : garde son élément pendant ", counted(GRAND_RITUAL_ROUNDS, "round"), ". Un Écho s'y mêle.",
+], Rarity.EPIC, ELEMENT, () => KEPT, ({ battle, unit }, element) => {
+    battle.applyStatus(unit, ritualType(element), GRAND_RITUAL_ROUNDS)
 })
 
 /** An element meeting the ritual going on, when it plays: what they give as they react. */

@@ -90,14 +90,14 @@ describe("IMPROVISED_WEAPON", () => {
         expect(cards).toContain(THRUST)
     })
 
-    test("anything else on its right → nothing", () => {
+    test("anything else on its right → it stays, taking nothing", () => {
         const { cards } = resolve([IMPROVISED_WEAPON, THRUST], { pick: options => options[0] })
-        expect(cards).toEqual([THRUST])
+        expect(cards).toEqual([IMPROVISED_WEAPON, THRUST])
     })
 
-    test("a part that needs a module on its right, with no module → nothing, no error", () => {
+    test("a part that needs a module on its right, with no module → it stays, no error", () => {
         const { cards } = resolve([IMPROVISED_WEAPON, REPEATER], { pick: options => options[0] })
-        expect(cards).toEqual([REPEATER])
+        expect(cards).toEqual([IMPROVISED_WEAPON, REPEATER])
     })
 
     test("a part, then a module → the weapon still gets nothing from the part", () => {

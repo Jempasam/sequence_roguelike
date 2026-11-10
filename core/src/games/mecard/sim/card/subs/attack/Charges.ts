@@ -1,15 +1,15 @@
 import { AGILITE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
-import type { Indicator, Pose } from "../../../battle/Action"
+import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
-import { HAZARD_COLOR, MOVE_COLOR, MOVE_WIDTH, PHYSICAL_COLOR } from "../../../battle/previewColors"
+import { MOVE_COLOR, MOVE_WIDTH, PHYSICAL_COLOR } from "../../../battle/previewColors"
 
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
 import { hold, SHORT_TIME, travel } from "../tools/playing"
-import { arrow, polygon, still } from "../tools/previews"
+import { arrow, polygon, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 
@@ -27,10 +27,6 @@ const SLASH_BLINKS = 3
 
 /** How long a blink of the slash takes to fade, in seconds. */
 const SLASH_TIME = 0.15
-
-function ringed(units: readonly Unit[]): Indicator[] {
-    return units.map(hit => polygon({ kind: "circle", center: hit.position, radius: hit.radius }, HAZARD_COLOR))
-}
 
 /** A line of a width from a point to another. */
 function band(from: Vector2, to: Vector2, width: number): Area {
@@ -61,8 +57,8 @@ export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
         const area = band(pose.position, trip.to, CHARGE_WIDTH)
         return still(
             { position: trip.to, direction: pose.direction },
-            arrow([pose.position, trip.to], MOVE_WIDTH, MOVE_COLOR), polygon(area, PHYSICAL_COLOR),
-            ...ringed(battle.unitsIn(area, unit)),
+            arrow([pose.position, trip.to], MOVE_WIDTH, MOVE_COLOR),
+            ...strike([area], battle.unitsIn(area, unit)),
         )
     },
 })
@@ -119,8 +115,7 @@ export const DEMON_SLASH = new ActionCard("Demon Slash", [
         const last = steps.length > 0 ? steps[steps.length - 1].to : pose.position
         return still(
             { position: last, direction: pose.direction },
-            ...steps.map(step => polygon(step.area, PHYSICAL_COLOR)),
-            ...steps.flatMap(step => ringed(step.hit)),
+            ...steps.flatMap(step => strike([step.area], step.hit)),
         )
     },
 })

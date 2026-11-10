@@ -25,6 +25,13 @@ export class RandomCard extends CompositeCard<Preparation> {
     public readonly input = null
 
     /** @throws {@link Error} When the two cards do not take and give the same. */
+    /** @throws {@link Error} For other than two cards. */
+    public with(cards: readonly Card[]): RandomCard {
+        if(cards.length !== 2) throw new Error(`A draw is between two cards, not ${cards.length}.`)
+        return new RandomCard(cards[0], cards[1], this.look)
+    }
+
+
     constructor(first: Card, second: Card, look: CompositeLook = {}){
         const one = signatureOf(first)
         const other = signatureOf(second)
@@ -35,6 +42,7 @@ export class RandomCard extends CompositeCard<Preparation> {
             return [RANDOM.as("Hasard"), ". Fin de préparation : devient ", one, " ou ", other, ", tirée au sort."]
         }, look)
         this.#preparation = {
+            phase: "prepfull",
             rewrite: ctx => ({ cards: [ctx.pick(this.contents)], consumed: 0, acting: false }),
         }
     }

@@ -6,6 +6,7 @@ import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Element } from "../../../element/Element"
 import { ACTION, ELEMENT } from "../../CardType"
+import { enchantmentOf } from "../../../status/subs/EnchantedBlade"
 
 import { AbstractCard } from "../AbstractCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
@@ -61,6 +62,17 @@ export const AURA = new ElementActionCard("Aura", "S'applique le positif de l'é
         yield* hold(ctx.battle, SHORT_TIME, [label(ctx.unit.position, element.name, NOTE_COLOR)])
     },
     preview: ({ pose }) => still(pose, label(pose.position, element.name, NOTE_COLOR)),
+}))
+
+/** The element on the blade of the unit for the round: each blow that lands applies its negative. */
+export const ELEMENT_ON_BLADE = new ElementActionCard("Élément sur lame", [
+    "Jusqu'à la fin du round, chacune de tes attaques qui touche applique le négatif de l'élément.",
+], Rarity.RARE, element => ({
+    use: function* (ctx){
+        ctx.battle.applyStatus(ctx.unit, enchantmentOf(element), 1)
+        yield* hold(ctx.battle, SHORT_TIME, [label(ctx.unit.position, element.name, NOTE_COLOR)])
+    },
+    preview: ({ pose }) => still(pose, label(pose.position, `lame : ${element.name}`, NOTE_COLOR)),
 }))
 
 /** The negative of the element on the first body far ahead, without a wound. */

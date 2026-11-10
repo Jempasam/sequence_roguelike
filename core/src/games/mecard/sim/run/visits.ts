@@ -1,10 +1,9 @@
 import type { Rng } from "../base/Rng"
 import { readsWhole, signatureOf } from "../card/CardChain"
 import type { Card } from "../card/Card"
-import { ACTION } from "../card/CardType"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { cut } from "../card/subs/composite/CompositeCard"
-import { MergedCard } from "../card/subs/composite/MergedCard"
+import { mergeable, MergedCard } from "../card/subs/composite/MergedCard"
 import { RandomCard } from "../card/subs/composite/RandomCard"
 
 import type { Hero } from "./Hero"
@@ -84,13 +83,13 @@ export function forge(deck: Card[], cards: readonly Card[]): Card {
 export type WeaveMode = "merged"|"random"
 
 /**
- * Can two cards be tied by the weaver: at once, two cards giving actions and taking nothing; drawn, two
- * cards taking and giving the same.
+ * Can two cards be tied by the weaver: at once, two cards that may be merged (giving actions, and taking
+ * nothing or the same kind of thing); drawn, two cards taking and giving the same.
  */
 export function canWeave(cards: readonly Card[], mode: WeaveMode): boolean {
     if(cards.length !== 2) return false
     const [first, second] = cards
-    if(mode === "merged") return cards.every(card => card.output === ACTION && card.input === null)
+    if(mode === "merged") return mergeable(cards)
     const one = signatureOf(first)
     const other = signatureOf(second)
     return one.output === other.output && one.input === other.input

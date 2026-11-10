@@ -6,6 +6,12 @@
 
 export { AssetError, Assets, MemoryAssets } from "./engine/assets"
 export type { AssetErrorReason, AssetPath, ImagePath, LayeredImagePath } from "./engine/assets"
+export {
+    AllPass, BandPass, BiquadFilter, Compressor, Delay, Distortion, Gain, HighPass, HighShelf, LowPass, LowShelf,
+    NullAudioPort, Notch, Pan, Peaking, Reverb, SOUND_SETTINGS_FORMAT, SOUND_SLOT_KEY, SoundPlayer,
+    SoundSettings,
+} from "./engine/audio"
+export type { SoundFilter, SoundOptions, SoundPath, SoundSettingsSave } from "./engine/audio"
 export { Atlas, AtlasEntry, Packer, PagedAtlas, RenderAtlas } from "./engine/atlas"
 export type {
     AtlasEntryOptions, AtlasImageItem, AtlasImageOptions, AtlasItem, AtlasOptions, AtlasRect, AtlasRegion,
@@ -80,7 +86,7 @@ export type {
 export { startGame } from "./game"
 export { GAMEPAD_BUTTONS } from "./platform"
 export type {
-    AssetsPort, ClipboardPort, GamepadAxis, GamepadButton, GamepadState, GfxPort, InputPort, LoopPort,
+    AssetsPort, AudioPort, AudioStage, BiquadKind, ClipboardPort, FilterContext, PlayOptions, Sound, GamepadAxis, GamepadButton, GamepadState, GfxPort, InputPort, LoopPort,
     NetPort, Platform, PlayerStorage, RawInputEvent, StoragePort, SyncLink, SyncPeer, SyncPort, SyncRole,
     SyncRoom,
 } from "./platform"

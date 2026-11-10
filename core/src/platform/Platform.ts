@@ -1,4 +1,5 @@
 import type { AssetsPort } from "./AssetsPort"
+import type { AudioPort } from "./AudioPort"
 import type { ClipboardPort } from "./ClipboardPort"
 import type { GfxPort } from "./GfxPort"
 import type { InputPort } from "./InputPort"
@@ -18,6 +19,9 @@ export interface Platform {
     readonly clipboard: ClipboardPort
     readonly assets: AssetsPort
     readonly storage: StoragePort
+
+    /** The speakers, none in an environment without any: the game is then played silent. */
+    readonly audio?: AudioPort
 
     /** The network, none in an environment without one. */
     readonly net?: NetPort

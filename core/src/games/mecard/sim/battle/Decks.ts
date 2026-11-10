@@ -83,6 +83,24 @@ export class Decks {
     }
 
     /**
+     * Take a copy of a card out of the decks, from a draw pile or else a discard, without drawing.
+     *
+     * @returns The deck it came from, none when no deck holds it.
+     */
+    public takeCard(card: Card): number|null {
+        for(const [index, deck] of this.all.entries()){
+            for(const list of [deck.pile, deck.discard]){
+                const place = list.indexOf(card)
+                if(place < 0) continue
+                list.splice(place, 1)
+                this.remember(card, index)
+                return index
+            }
+        }
+        return null
+    }
+
+    /**
      * Take a card out of a draw pile, at a place of it, without drawing: the turn of the decks does not move.
      *
      * @throws {@link Error} When the pile holds no card there.

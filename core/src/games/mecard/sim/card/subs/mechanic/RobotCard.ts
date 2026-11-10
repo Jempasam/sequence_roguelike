@@ -7,13 +7,12 @@ import type { Action, Pose } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 import type { Card } from "../../Card"
-import { gives } from "../../Card"
 import { ACTION, MODULE } from "../../CardType"
 import type { Module } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
-import { RewriteCard } from "../composite/RewriteCards"
+import { InputRewriteCard } from "../composite/RewriteCards"
 import { WAIT } from "../movement/Wait"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { label, still } from "../tools/previews"
@@ -99,13 +98,9 @@ export const TANK_ROBOT = new RobotCard("Robot tank", [
     "en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)
 
-/**
- * The cards of the module on its right, in its place. A module that takes another module to be built (a part
- * fitted on a machine) is not one yet: the weapon has none.
- */
-export const IMPROVISED_WEAPON = new RewriteCard("Arme improvisée", [
-    "Fin de préparation : se remplace par les ", CARTE.as("cartes"), " du module à sa droite.",
-], Rarity.COMMON, (ctx, { next }) => {
-    if(!next || !gives(next, MODULE) || next.input !== null) return { cards: [], consumed: 0, acting: false }
-    return { cards: next.get(undefined).cards(options => ctx.pick(options)), consumed: 1, acting: false }
+/** The cards of the module it takes, in its place. */
+export const IMPROVISED_WEAPON = new InputRewriteCard("Arme improvisée", [
+    "Fin de préparation : se remplace par les ", CARTE.as("cartes"), " de son module.",
+], Rarity.COMMON, MODULE, (ctx, _spot, module) => {
+    return { cards: module.cards(options => ctx.pick(options)), consumed: 0, acting: false }
 })

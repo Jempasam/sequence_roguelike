@@ -44,6 +44,12 @@ export interface TravelState {
     readonly depth: number
 }
 
+/** A dialog answered, and the indices of what was picked in it, none for a dialog only gone on with. */
+export interface Answer<D extends Dialog> {
+    readonly dialog: D
+    readonly picks: readonly number[]
+}
+
 /** What a journey waits for from the players. */
 export interface TravelAwaited {
     /** The places they may go to, none out of the map. */
@@ -101,6 +107,12 @@ export class Travel {
     /** The party came to a fight. Nothing goes on until the run fought it. */
     public readonly fightReached: Observable<Place>
 
+    /** The fight reached is fought: its battle starts. */
+    public readonly fightEntered: Observable<Place>
+
+    /** The fight left, back to the map, however it ended. */
+    public readonly fightLeft: Observable<Place>
+
     /** Things are offered. */
     public readonly offerAsked: Observable<OfferDialog>
 
@@ -115,6 +127,21 @@ export class Travel {
 
     /** What came of the visit is told. */
     public readonly told: Observable<TellDialog>
+
+    /** One of the things offered was taken, before what it does. */
+    public readonly offerTaken: Observable<Answer<OfferDialog>>
+
+    /** A character asked for was taken, before what it does. */
+    public readonly heroTaken: Observable<Answer<HeroDialog>>
+
+    /** The cards asked for were taken, before what it does. */
+    public readonly cardsTaken: Observable<Answer<CardsDialog>>
+
+    /** What a dialog showed was gone on with, before what it does. */
+    public readonly confirmAccepted: Observable<Answer<ConfirmDialog>>
+
+    /** A dialog was gone back from, to the one before it. */
+    public readonly wentBack: Observable<Dialog>
 
     /** The character of the halt visited reacts to a moment of the visit. */
     public readonly reacted: Observable<HaltMoment>
@@ -148,11 +175,18 @@ export class Travel {
         this.visitStarted = new Observable(report)
         this.visitEnded = new Observable(report)
         this.fightReached = new Observable(report)
+        this.fightEntered = new Observable(report)
+        this.fightLeft = new Observable(report)
         this.offerAsked = new Observable(report)
         this.heroAsked = new Observable(report)
         this.cardsAsked = new Observable(report)
         this.confirmAsked = new Observable(report)
         this.told = new Observable(report)
+        this.offerTaken = new Observable(report)
+        this.heroTaken = new Observable(report)
+        this.cardsTaken = new Observable(report)
+        this.confirmAccepted = new Observable(report)
+        this.wentBack = new Observable(report)
         this.reacted = new Observable(report)
         this.loaded = new Observable(report)
         this.floor = floor
@@ -305,6 +339,15 @@ export class Travel {
     }
 
     /**
+     * Tell the fight reached is fought. The run calls it as its battle starts; nothing is told when the party
+     * is in no fight, as when a battle is only watched.
+     */
+    public startFight(): void {
+        const place = this.#place
+        if(this.#phase === "fight" && place) this.fightEntered.notify(place)
+    }
+
+    /**
      * Visit a new halt of a sort where the party stands, without going anywhere. It belongs to no place, so
      * nothing of it stays once left.
      *
@@ -323,12 +366,14 @@ export class Travel {
         if(this.#phase === "entering") return
         if(this.#halt?.locked) return
         const halt = this.#halt
+        const fought = this.#phase === "fight" ? this.#place : null
         this.#steps.length = 0
         // Forgotten first, so the visit is over for whatever the halt does as it stops.
         this.#halt = null
         halt?.stop(this.#context)
         this.#enterPhase("map")
         if(halt) this.visitEnded.notify(halt)
+        if(fought) this.fightLeft.notify(fought)
     }
 
     /** Stand the party on any place, without entering it. */
@@ -374,7 +419,7 @@ export class Travel {
      */
     public takeOffer(dialog: OfferDialog, index: number): void {
         if(index < 0 || index >= dialog.offers.length) throw new Error(`The dialog offers nothing at ${index}.`)
-        this.#answer(dialog, [index])
+        this.#answer(dialog, [index], this.offerTaken)
     }
 
     /**
@@ -385,7 +430,7 @@ export class Travel {
     public takeHero(dialog: HeroDialog, hero: Hero): void {
         const index = dialog.heroes.indexOf(hero)
         if(index < 0) throw new Error(`${hero.name} cannot be taken here.`)
-        this.#answer(dialog, [index])
+        this.#answer(dialog, [index], this.heroTaken)
     }
 
     /**
@@ -401,7 +446,7 @@ export class Travel {
         const once = indices.filter(index => !repeatable[index])
         if(new Set(once).size < once.length) throw new Error("A card cannot be picked twice.")
         if(!indices.every(index => selectable[index])) throw new Error("The dialog does not let that card be picked.")
-        this.#answer(dialog, indices)
+        this.#answer(dialog, indices, this.cardsTaken)
     }
 
     /**
@@ -410,7 +455,7 @@ export class Travel {
      * @throws {@link Error} When the dialog is not open.
      */
     public accept(dialog: ConfirmDialog): void {
-        this.#answer(dialog, [])
+        this.#answer(dialog, [], this.confirmAccepted)
     }
 
     /**
@@ -423,6 +468,7 @@ export class Travel {
         const { back } = this.#steps[at]
         if(!back) throw new Error("The dialog has no way back: it is left by leaving the place.")
         this.#steps.length = at + 1
+        this.wentBack.notify(dialog)
         this.#context.react("refuse")
         back()
     }
@@ -447,7 +493,7 @@ export class Travel {
             title: Text, offers: readonly T[], show: (offer: T) => Shown, done: (offer: T) => void,
             way: Way = {},
         ): void => {
-            const dialog = new OfferDialog(title, way.back !== undefined, offers.map(show))
+            const dialog = new OfferDialog(title, way.back !== undefined, offers.map(offer => show(offer)))
             this.#ask(dialog, ([index]) => done(offers[index]), way)
             this.offerAsked.notify(dialog)
         },
@@ -543,10 +589,11 @@ export class Travel {
     }
 
     /** Answer a dialog, the steps after it taken back. */
-    #answer(dialog: Dialog, picks: readonly number[]): void {
+    #answer<D extends Dialog>(dialog: D, picks: readonly number[], taken: Observable<Answer<D>>): void {
         const at = this.#indexOf(dialog)
         const step = this.#steps[at]
         this.#steps.length = at + 1
+        taken.notify({ dialog, picks })
         this.#context.react("pick")
         this.#picking = true
         try {

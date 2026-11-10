@@ -11,7 +11,7 @@ import { turnUnitsIn } from "../../../card/subs/tools/turning"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
-import { canMerge, MergedCard } from "../../../card/subs/composite/MergedCard"
+import { mergeable, MergedCard } from "../../../card/subs/composite/MergedCard"
 
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
@@ -267,7 +267,7 @@ export class Cocaine extends AbstractUsable {
         let at = chain.cursor
         while(at + 1 < chain.cards.length){
             const [first, second] = [chain.cards[at], chain.cards[at + 1]]
-            if(canMerge(first) && canMerge(second)) battle.replaceInChain(unit, at, 2, new MergedCard([first, second]))
+            if(mergeable([first, second])) battle.replaceInChain(unit, at, 2, new MergedCard([first, second]))
             at++
         }
     }

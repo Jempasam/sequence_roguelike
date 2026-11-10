@@ -52,12 +52,12 @@ describe("Chain usables", () => {
     test("cocaine → the actions merged two by two, what cannot be merged left as it is", () => {
         const { on, hero } = committed(THRUST, STEP, THRUST, SPELL)
         use(COCAINE, on, hero)
-        // The thrust after the merge has only a spell next to it: it stays alone.
+        // The spell and the thrust before it may be merged too: the merge takes an element, as the spell does.
         const { cards } = hero.chain
-        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[THRUST, STEP], THRUST, SPELL])
+        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[THRUST, STEP], [THRUST, SPELL]])
     })
 
-    test("cocaine → nothing merged across a card taking an input", () => {
+    test("cocaine → nothing merged across an element, that does not give actions", () => {
         const { on, hero } = committed(SPELL, FIRE, THRUST, THRUST)
         use(COCAINE, on, hero)
         const { cards } = hero.chain

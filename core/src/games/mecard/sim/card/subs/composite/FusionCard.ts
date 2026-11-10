@@ -33,7 +33,12 @@ export class FusionCard extends CompositeCard<Preparation> {
         super(cards, FUSION_JOIN, contents => {
             return [FUSION.as("Collage"), ". Fin de préparation : se remplace par ", ...joinText(contents, ", "), ", dans l'ordre."]
         }, look)
-        this.#preparation = { rewrite: () => ({ cards: this.contents, consumed: 0, acting: false }) }
+        this.#preparation = { phase: "prepfull", rewrite: () => ({ cards: this.contents, consumed: 0, acting: false }) }
+    }
+
+
+    public with(cards: readonly Card[]): FusionCard {
+        return new FusionCard(cards, this.look)
     }
 
 

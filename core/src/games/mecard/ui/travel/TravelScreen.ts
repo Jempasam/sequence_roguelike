@@ -54,6 +54,7 @@ import { ShownParty } from "./ShownParty"
 import { CUE_ANIMATIONS } from "./travelLooks"
 import { TravelScenes } from "./TravelScenes"
 import type { TravelScene } from "./TravelScenes"
+import type { UiSoundLink } from "../sound/UiSoundLink"
 
 /** The share of the width the column of the party takes, on the left. */
 const SIDE_SHARE = 0.3
@@ -126,6 +127,9 @@ export interface TravelScreenOptions {
 
     /** What the players may not do, nothing by default. */
     readonly locks?: TravelLocks
+
+    /** What tells the speakers a place of the map is hovered or clicked, none when there is no sound. */
+    readonly sounds?: UiSoundLink|null
 
     /** Play a transition into a place over the screen, done at its middle, at once when it cannot be. */
     enter(path: LayeredImagePath): Promise<void>
@@ -393,6 +397,9 @@ export class TravelScreen {
 
     /** What the map is drawn with, none before it is loaded: the panels and the codes show meanwhile. */
     #mapArt: MapArt|null = null
+
+    /** The place of the map the pointer is over, as the sounds heard it. */
+    #soundPlace: Place|null = null
     #bagFrame: NineSlice|null = null
 
     /** The map shown, none while a dialog is. */
@@ -544,7 +551,10 @@ export class TravelScreen {
 
     /** Tie the map to what the players do: going to the place they click. */
     #connectInputs(view: JourneyView): void {
-        view.onPick = place => this.go(place)
+        view.onPick = place => {
+            this.options.sounds?.press()
+            this.go(place)
+        }
     }
 
 
@@ -929,6 +939,9 @@ export class TravelScreen {
         this.#mapView = view
         this.#connectInputs(view)
         view.onHover = place => {
+            if(this.#soundPlace) this.options.sounds?.hover(false)
+            if(place) this.options.sounds?.hover(true)
+            this.#soundPlace = place
             const info = place && infoOf(place)
             this.#tell(info ? concat(info.name, " : ", info.description) : null)
         }

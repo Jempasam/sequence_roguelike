@@ -57,6 +57,9 @@ export interface ChainSummon {
 
     /** The units the body would work on from a point, for the preview. */
     targets(battle: Battle, owner: Unit, at: Vector2): Unit[]
+
+    /** What it does once its body is set down, nothing by default: it may remember the body. */
+    placed?(body: Unit): void
 }
 
 /** Where the body of a summon stands, from a pose. */
@@ -110,10 +113,12 @@ export class ChainSummonCard extends ActionCard {
 
 /** Set down the body of a summon a meter ahead of its owner, none when there is no room. */
 export function placeChainSummon(battle: Battle, owner: Unit, summon: ChainSummon): Unit|null {
-    return battle.place(owner, {
+    const body = battle.place(owner, {
         sprite: summon.sprite, name: summon.name, at: spotOf(owner), direction: owner.direction,
         hearts: summon.hearts(owner), cards: summon.cards,
     })
+    if(body) summon.placed?.(body)
+    return body
 }
 
 /** Time hearts for a number of rounds. */

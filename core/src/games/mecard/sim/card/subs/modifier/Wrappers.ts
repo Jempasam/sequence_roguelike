@@ -1,9 +1,12 @@
-import { Add, ModifierKey } from "../../../base/Attribute"
+import { Add, ModifierKey, Multiply } from "../../../base/Attribute"
+import type { Attribute, Modifier } from "../../../base/Attribute"
+import { ALLONGE } from "../../../base/keywords"
 import type { Action, UnitContext } from "../../../battle/Action"
-import type { Unit } from "../../../battle/Unit"
+import type { Unit, UnitStats } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
 import { Rarity } from "../../Rarity"
 
+import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
 import { turn } from "../tools/playing"
 import { arrow, chained, label, still } from "../tools/previews"
@@ -12,45 +15,74 @@ import { arrow, chained, label, still } from "../tools/previews"
 const SCOPE_RANGE = 0.5
 const SCOPE_PRECISION = 1
 
-/** Run something with the stats of a unit raised, then put them back, whatever happens. */
-function withScope<T>(unit: Unit, run: () => T): T {
-    const key = new ModifierKey("lunette")
-    unit.stats.precision.add(key, new Add(SCOPE_PRECISION))
-    unit.stats.throwRange.add(key, new Add(SCOPE_RANGE))
-    try {
-        return run()
-    } finally {
-        unit.stats.precision.remove(key)
-        unit.stats.throwRange.remove(key)
-    }
+/** A raise of stats of a unit, for a while: each modifier with the stat it goes on, in the order they go. */
+type Boost = (stats: UnitStats) => (readonly [Attribute<number>, Modifier<number>])[]
+
+/**
+ * Raise the stats of a unit: each modifier under a key of its own, as a key holds one modifier per stat.
+ *
+ * @returns What takes them back.
+ */
+function raise(unit: Unit, name: string, boost: Boost): () => void {
+    const raised = boost(unit.stats).map(([stat, modifier]) => {
+        const key = new ModifierKey(name)
+        stat.add(key, modifier)
+        return () => stat.remove(key)
+    })
+    return () => { for(const back of raised) back() }
 }
 
-/** An action played, and previewed, with the range and the precision raised. */
-function scoped(action: Action): Action {
+/** An action played, and previewed, with stats of its unit raised, put back whatever happens. */
+function boosted(action: Action, name: string, boost: Boost): Action {
     return {
         use: function* (ctx){
-            const key = new ModifierKey("lunette")
-            const { unit } = ctx
-            unit.stats.precision.add(key, new Add(SCOPE_PRECISION))
-            unit.stats.throwRange.add(key, new Add(SCOPE_RANGE))
+            const back = raise(ctx.unit, name, boost)
             try {
                 yield* action.use(ctx)
             } finally {
-                unit.stats.precision.remove(key)
-                unit.stats.throwRange.remove(key)
+                back()
             }
         },
-        preview: ctx => withScope(ctx.unit, () => action.preview(ctx)),
+        preview: ctx => {
+            const back = raise(ctx.unit, name, boost)
+            try {
+                return action.preview(ctx)
+            } finally {
+                back()
+            }
+        },
     }
 }
 
+/** What the telescope raises: the range and the precision. */
+const SCOPE: Boost = stats => [
+    [stats.precision, new Add(SCOPE_PRECISION)],
+    [stats.throwRange, new Add(SCOPE_RANGE)],
+]
+
 export const SPYGLASS_CARD = new ModifierCard("Lunette", [
     "L'action est jouée avec +", String(SCOPE_RANGE), " de portée et +", String(SCOPE_PRECISION), " de précision.",
-], Rarity.RARE, actions => actions.map(scoped))
+], Rarity.RARE, actions => actions.map(action => boosted(action, "lunette", SCOPE)))
+
+/** What the elephant adds to the reaches, before it multiplies them. */
+const ELEPHANT_ADD = 1
+
+/** What the elephant multiplies the reaches by, once added to. */
+const ELEPHANT_FACTOR = 2
+
+/** What the elephant raises: the melee reach, one added then doubled. */
+const ELEPHANT: Boost = stats => [
+    [stats.meleeRange, new Add(ELEPHANT_ADD)],
+    [stats.meleeRange, new Multiply(ELEPHANT_FACTOR)],
+]
+
+export const ELEPHANT_CARD = new ModifierCard("Éléphant", [
+    "L'action est jouée avec (", ALLONGE, " + ", ELEPHANT_ADD, ") × ", ELEPHANT_FACTOR, ".",
+], Rarity.RARE, actions => actions.map(action => boosted(action, "éléphant", ELEPHANT)))
 
 
 /** A half turn, as a step of its own. */
-const HALF_TURN: Action = {
+export const HALF_TURN: Action = {
     use: function* (ctx: UnitContext){
         yield* turn(ctx, ctx.unit.direction.opposite)
     },
@@ -60,6 +92,9 @@ const HALF_TURN: Action = {
         return still({ ...pose, direction: away }, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))
     },
 }
+
+/** A half turn alone. */
+export const TURN_AROUND = new ActionCard("Retournement", "Fait demi-tour.", Rarity.COMMON, HALF_TURN)
 
 export const MIRROR = new ModifierCard("Miroir", [
     "Joue l'action, fait demi-tour, puis la rejoue.",

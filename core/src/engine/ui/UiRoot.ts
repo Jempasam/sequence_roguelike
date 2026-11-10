@@ -8,6 +8,7 @@ import type { Component, ComponentHost } from "./Component"
 import { DirtyRegion } from "./DirtyRegion"
 import { Focus } from "./input/Focus"
 import { bubble, PointerRouting } from "./input/PointerRouting"
+import type { PointerInteractionListener } from "./input/PointerRouting"
 import { uiActions } from "./input/UiAction"
 import type { UiAction } from "./input/UiAction"
 import { RoutedEvent } from "./input/UiEvent"
@@ -90,7 +91,9 @@ export class UiRoot {
         this.#painter = new Painter(gpu, this.#surface, { blends: UI_BLENDS })
         this.#repaint = new Repaint(this.#painter, this.debug)
         this.#focus = new Focus(() => this.#scope())
-        this.#pointer = new PointerRouting(() => this.#layers, this.#focus)
+        this.#pointer = new PointerRouting(() => this.#layers, this.#focus, (kind, component, button) => {
+            for(const listener of [...this.#interactionListeners]) listener(kind, component, button)
+        })
         this.#region.resize(this.#texture.width, this.#texture.height)
     }
 
@@ -249,6 +252,16 @@ export class UiRoot {
     }
 
     /**
+     * Call a function when the pointer comes over an interactive component, leaves it, presses it or
+     * releases it, until the returned handle is disposed: what the sounds of the buttons listen to. The
+     * component is the interactive one hit, a {@link Button} for instance, and the listener filters.
+     */
+    public onInteraction(listener: PointerInteractionListener): { dispose(): void } {
+        this.#interactionListeners.add(listener)
+        return { dispose: () => this.#interactionListeners.delete(listener) }
+    }
+
+    /**
      * Lay out what was marked, draw again the zones that changed into the texture, then lay the texture on
      * the screen in one quad, scaled up.
      */
@@ -271,6 +284,7 @@ export class UiRoot {
     /** Free the texture. Disposing twice does nothing. */
     public dispose(): void {
         this.#listeners.clear()
+        this.#interactionListeners.clear()
         this.#texture.dispose()
     }
 
@@ -285,6 +299,7 @@ export class UiRoot {
     readonly #routed = new RoutedEvent()
     readonly #ticking = new Set<Component>()
     readonly #listeners = new Set<(dt: number) => void>()
+    readonly #interactionListeners = new Set<PointerInteractionListener>()
     #texture: RenderTexture
     #surface: TextureSurface
     #scale: number

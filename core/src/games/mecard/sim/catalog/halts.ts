@@ -36,6 +36,9 @@ import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../halt/subs/party/NecromancerHalt"
 import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
+import { MASTER_CHEST_HALT } from "../halt/subs/master/MasterChestHalt"
+import { GREAT_CHEST_HALT } from "../halt/subs/great/GreatChestHalt"
+import { NECRO_CHEST_HALT } from "../halt/subs/dark/NecroChestHalt"
 
 
 /**
@@ -60,19 +63,22 @@ export function simpleHalts(): readonly HaltType[] {
  * reward with upgrades.
  * */
 export function masterHalts(): readonly HaltType[] {
-    return [MASTER_TRAINER_HALT, MASTER_MAGICIAN_HALT, MASTER_INVENTOR_HALT]
+    return [MASTER_TRAINER_HALT, MASTER_MAGICIAN_HALT, MASTER_INVENTOR_HALT, MASTER_CHEST_HALT]
 }
 
 /** The sorts of halt of a great one: a simple halt, working further. */
 export function greatHalts(): readonly HaltType[] {
-    return [GREAT_FORGE_HALT, GREAT_SHOP_HALT, GREAT_HOSPITAL_HALT, GREAT_WITCH_HALT, GREAT_MERCHANT_HALT, GREAT_MAGICIAN_HALT]
+    return [
+        GREAT_FORGE_HALT, GREAT_SHOP_HALT, GREAT_HOSPITAL_HALT, GREAT_WITCH_HALT, GREAT_MERCHANT_HALT,
+        GREAT_MAGICIAN_HALT, GREAT_CHEST_HALT,
+    ]
 }
 
 /** The sorts of halt of a dark one: a simple halt, working with monsters. */
 export function darkHalts(): readonly HaltType[] {
     return [
         DARK_MAGICIAN_HALT, DARK_TAVERN_HALT, DARK_MAD_DOCTOR_HALT, DARK_DEMON_HALT, DARK_STRATEGIST_HALT,
-        DARK_TRAINER_HALT,
+        DARK_TRAINER_HALT, NECRO_CHEST_HALT,
     ]
 }
 

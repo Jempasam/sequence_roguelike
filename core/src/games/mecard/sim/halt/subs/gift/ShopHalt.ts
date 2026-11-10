@@ -93,7 +93,7 @@ export class ShopHalt extends AbstractHalt {
     #show(ctx: HaltContext, warning: string|null): void {
         const { run } = this
         const title = `${run.gold} or${warning ? `. ${warning}` : ""}`
-        ctx.offer(title, this.#goods, goodShown, good => {
+        ctx.offer(title, this.#goods, good => goodShown(good), good => {
             if(good.price > run.gold){
                 this.#show(ctx, "Pas assez d'or.")
                 ctx.react("refuse")

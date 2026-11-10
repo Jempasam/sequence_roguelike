@@ -1,6 +1,7 @@
 import { AssetError } from "../../../engine/assets"
 import type { Assets } from "../../../engine/assets"
 import { Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView } from "../../../engine/console"
+import type { SoundPlayer } from "../../../engine/audio"
 import type { Painter } from "../../../engine/gpu"
 import type { InputFrame } from "../../../engine/input"
 import type { Theme, UiRoot } from "../../../engine/ui"
@@ -24,6 +25,8 @@ import { GuideScreen } from "./guide/GuideScreen"
 import { MainMenuScreen } from "./menu/MainMenuScreen"
 import { PnjScreen } from "./pnj/PnjScreen"
 import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
+import { RunSoundLink } from "./sound/RunSoundLink"
+import { UiSoundLink } from "./sound/UiSoundLink"
 import { ArmScreen } from "./travel/ArmScreen"
 
 /** The share of the height of the screen the console takes, from the top. */
@@ -100,12 +103,18 @@ export class MecardGame {
 
         /** The clipboard of the system, none when it has none: the battle commands copy and paste with it. */
         clipboard: ClipboardPort|null = null,
+
+        /** What plays the sounds of the run, none when the game is played silent. */
+        sounds: SoundPlayer|null = null,
     ){
         this.#seed = seed
         this.#network = network
         this.run = this.#newRun()
         // Made before the screen, so it hears each battle before the screen starts its first round.
         this.#broadcaster = viewers ? new RunBroadcaster(this.run, viewers) : null
+        this.#sound = sounds ? new RunSoundLink(this.run, sounds) : null
+        // Listens to the interface for as long as the game lives: nothing to let go of.
+        const uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
@@ -118,7 +127,7 @@ export class MecardGame {
         }, assets)
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#travelOn() }, sprites)
         this.#screen = new RunScreen(ui, this.run, {
-            theme, assets, sprites, toWorld, toUi,
+            theme, assets, sprites, toWorld, toUi, sounds: uiSound,
             // The party fell: its save is gone, back to the menu to start again.
             restart: () => this.#menuOn(),
             ready: () => this.#host?.ready(),
@@ -243,6 +252,7 @@ export class MecardGame {
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
         if(this.#saver) this.#saver.engine = this.run
+        if(this.#sound) this.#sound.engine = this.run
         this.#screen.engine = this.run
         this.#travelOn()
     }
@@ -257,6 +267,7 @@ export class MecardGame {
     readonly #arm: ArmScreen
     readonly #library: LibraryScreen
     readonly #broadcaster: RunBroadcaster|null
+    readonly #sound: RunSoundLink|null
     readonly #console: Console<MecardContext>
     readonly #consoleView: ConsoleView<MecardContext>
     readonly #network: MecardNetwork|null

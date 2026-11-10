@@ -7,7 +7,7 @@ import type { Area } from "../../../battle/Area"
 
 import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
+import { polygon, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 
@@ -89,12 +89,11 @@ export class ShotgunCard extends ActionCard {
                 yield* hold(battle, RECOVERY_TIME, landed)
             },
             // The pellets are drawn when they fire: the preview shows where they may go.
-            preview: ({ unit, pose }) => {
+            preview: ({ battle, unit, pose }) => {
                 const radius = range * unit.stats.throwRange.value
                 const cosHalf = 1 / Math.sqrt(1 + spread * spread)
-                return still(pose, polygon({
-                    kind: "sector", center: pose.position, direction: pose.direction, radius, cosHalf,
-                }, PHYSICAL_COLOR))
+                const area: Area = { kind: "sector", center: pose.position, direction: pose.direction, radius, cosHalf }
+                return still(pose, ...strike([area], battle.unitsIn(area, unit)))
             },
         }
     }

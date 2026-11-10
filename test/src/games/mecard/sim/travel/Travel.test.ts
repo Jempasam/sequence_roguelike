@@ -25,6 +25,8 @@ function logOf(travel: Travel): string[] {
     travel.visitStarted.add(halt => log.push(`visit ${halt.title}`))
     travel.visitEnded.add(halt => log.push(`end ${halt.title}`))
     travel.fightReached.add(place => log.push(`fight ${place.type.id}`))
+    travel.fightEntered.add(place => log.push(`fought ${place.type.id}`))
+    travel.fightLeft.add(place => log.push(`left ${place.type.id}`))
     travel.offerAsked.add(() => log.push("offer"))
     travel.heroAsked.add(dialog => log.push(dialog.follows ? "hero follows" : "hero"))
     travel.cardsAsked.add(() => log.push("cards"))
@@ -102,6 +104,36 @@ describe("Travel, fights", () => {
         expect(travel.phase).toBe("fight")
         expect(run.battle).toBeNull()
         expect(run.phase).toBe("travel")
+    })
+
+    test("a fight reached, then fought, then left → each told once, in order", () => {
+        const run = startedRun(1)
+        const { travel } = run
+        const place = placeOf(BATTLE)
+        travel.jump(place)
+        travel.journey.link(place, place)
+        travel.go(place)
+        travel.enter()
+        const log = logOf(travel)
+        run.startBattle()
+        expect(log).toEqual(["fought battle"])
+        run.backToMap()
+        expect(log).toEqual(["fought battle", "phase map", "left battle"])
+    })
+
+    test("a battle only watched → no fight is told, since the party is in none", () => {
+        const run = startedRun(1)
+        const log = logOf(run.travel)
+        run.playBattle(run.newBattle())
+        expect(log).toEqual([])
+    })
+
+    test("a visit left → no fight is told as it ends", () => {
+        const { travel } = startedRun(3)
+        const log = logOf(travel)
+        travel.visit(CHEST_HALT)
+        travel.leave()
+        expect(log.filter(line => line.startsWith("left") || line.startsWith("fought"))).toEqual([])
     })
 })
 

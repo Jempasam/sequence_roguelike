@@ -20,11 +20,11 @@ export const SHADOW = new ActionCard("Ombre", [
     SHADOW_LINK_DAMAGE, " ", DamageType.PHYSICAL, " à chaque corps sur le chemin, quelles que soient tes stats.",
 ], Rarity.RARE, {
     use: function* ({ battle, unit }){
-        placeHazard(battle, unit, {
+        const shadow = placeHazard(battle, unit, {
             sprite: visual("units/shadow"), name: "Ombre", hearts: [new Heart(TIME_HEART)],
             zone: { kind: "circle", center: unit.position, radius: UNIT_RADIUS },
         })
-        battle.startProcess(unit, new ShadowLink())
+        battle.startProcess(unit, new ShadowLink(shadow))
         yield* hold(battle, SHORT_TIME, [label(unit.position, "ombre", NOTE_COLOR)])
     },
     preview: ({ pose }) => still(pose, label(pose.position, "ombre", NOTE_COLOR)),

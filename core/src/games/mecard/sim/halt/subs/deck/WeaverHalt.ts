@@ -19,7 +19,9 @@ const MODES: readonly WeaveMode[] = ["merged", "random"]
 
 /** What each way of the weaver ties, as the players are told. */
 const WEAVE_TEXTS: Readonly<Record<WeaveMode, Text>> = {
-    merged: [MERGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions qui ne prennent rien, jouées en même temps, en une seule étape."],
+    merged: [
+        MERGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions, jouées en même temps, en une seule étape. Si les deux prennent quelque chose, elles prennent la même chose.",
+    ],
     random: ["Au hasard : deux ", CARTE.as("cartes"), " qui prennent et donnent la même chose ; l'une des deux est tirée à chaque combat."],
 }
 
@@ -63,7 +65,9 @@ export class WeaverHalt extends DeckHalt {
         const count = { min: 2, max: 2 }
         const pick = (title: Text): void => ctx.cards(title, deck, count, cards => {
             if(!canWeave(cards, mode)){
-                pick(["Ces deux ", CARTE.as("cartes"), " ne prennent ni ne donnent la même chose : choisis-en deux autres"])
+                pick(mode === "merged"
+                    ? ["Ces deux ", CARTE.as("cartes"), " ne donnent pas des actions, ou ne prennent pas la même chose : choisis-en deux autres"]
+                    : ["Ces deux ", CARTE.as("cartes"), " ne prennent ni ne donnent la même chose : choisis-en deux autres"])
                 return
             }
             ctx.confirm(["La ", CARTE, " tissée :"], cardShown(woven(cards, mode), deck), "Tisser", () => {

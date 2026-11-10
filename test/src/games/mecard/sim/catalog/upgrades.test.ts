@@ -22,9 +22,10 @@ describe("upgradeMatches", () => {
         expect(upgradeMatches(ECHO, FIRE)).toBe(false)
     })
 
-    test("a merge → only a card giving actions on its own", () => {
+    test("a merge → only a card giving actions, whether it takes something or not", () => {
         expect(upgradeMatches(LUNGE, SLASH)).toBe(true)
-        expect(upgradeMatches(LUNGE, SPELL)).toBe(false)
+        expect(upgradeMatches(LUNGE, SPELL)).toBe(true)
+        expect(upgradeMatches(LUNGE, FIRE)).toBe(false)
     })
 })
 
@@ -78,10 +79,11 @@ describe("upgraded", () => {
         expect(upgraded(reactives[0], WATER, new Rng(1)).contents).toEqual([REACTION, FIRE, WATER])
     })
 
-    test("the aim → merged, only with an action taking nothing", () => {
+    test("the aim → merged, with an action, not with an element", () => {
         const aim = ALL_UPGRADES.find(upgrade => upgrade.name === "Visée")!
         expect(upgradeMatches(aim, SLASH)).toBe(true)
-        expect(upgradeMatches(aim, SPELL)).toBe(false)
+        expect(upgradeMatches(aim, SPELL)).toBe(true)
+        expect(upgradeMatches(aim, FIRE)).toBe(false)
     })
 
     test("a spell → followed by a Réaction and an element, one upgrade per element", () => {

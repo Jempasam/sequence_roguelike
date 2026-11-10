@@ -1,4 +1,4 @@
-import type { UnitContext } from "../../battle/Action"
+import type { PlugContext, UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
@@ -28,10 +28,18 @@ function closestShadow({ battle, unit }: UnitContext): Unit|null {
 export class ShadowLink extends AbstractProcess {
 
 
-    constructor(){
+    constructor(
+        /** The shadow it was started with, tied to the unit as long as the process lasts. */
+        public readonly shadow: Unit|null = null,
+    ){
         super("lien d'ombre", visual("processes/shadow_link", { color: [0.5, 0.4, 0.7] }),
             "À la fin du round, saute jusqu'à l'ombre la plus proche, qui disparaît, et blesse les unités sur le chemin.",
         )
+    }
+
+
+    public override init({ battle, unit, hold }: PlugContext): void {
+        if(this.shadow) hold(battle.tether(unit, this.shadow, visual("tethers/laser", { color: [0.5, 0.4, 0.7] })))
     }
 
 

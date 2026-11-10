@@ -44,7 +44,15 @@ export abstract class CompositeCard<T, U = undefined> extends AbstractCard<T, U>
         )
         this.contents = contents
         this.named = look.name !== undefined
+        this.look = look
     }
+
+
+    /** What it was called by, beyond its cards: kept by {@link with}. */
+    public readonly look: CompositeLook
+
+    /** A composite of the same kind and look, holding other cards: nested ones stay nested. */
+    public abstract with(cards: readonly Card[]): CompositeCard<T, U>
 }
 
 /** Is a card made of other cards, of any kind: a collage, a mélange or a draw between two? */

@@ -21,11 +21,12 @@ import {
     SUBSTITUTION, SUCTION, SUPER_REPETITION, SUPLEX, SWEEP, TACKLE, TASER, TAUNT, THORN_SHIELD, THROWN_POTION,
     THRUSTERS, THRUST, THRUST_CHARGE, TIDE, TOTEM, TURRET, VINE, VULNERABILITY, WAIT,
     WATER, WEAKNESS, WIND, WOODEN_SHIELD_CARD,
+    BEAR_CARD, BITE, ELEMENT_ON_BLADE, FOX_CARD, FURY, HAWK_CARD, REACTION, RUN, SUMMONING, WOLF_CARD,
 } from "../card/subs"
 import {
     BACK_EYES, ALEMBIC, BOOTS, BLOOD_PACT, CHIPPED_BLADE, DEMON_FANG, DODGE_SCEPTER, DOLL, ECHO_ITEM, ELEMENT_BAG,
     FANG, FISHER_GLOVE, GEAR, GRIMOIRE, HOURGLASS, MAGNET, ROSARY, SCARY_MASK, SCOPE, SPYGLASS, STICKY_SOLES,
-    STRENGTH_BELT, TORERO_CAPE, WHETSTONE,
+    STRENGTH_BELT, TORERO_CAPE, WHETSTONE, FANG_NECKLACE,
 } from "../item/subs"
 import {
     BLOOD_FLASK, CALM_INFUSION, COCAINE, COOL_SYRUP, DEMON_ELIXIR, ENERGIZER, FIRE_FLASK, FISHING_CARD,
@@ -34,7 +35,7 @@ import {
 } from "../usable/subs"
 import {
     BIG_SHOTGUN, BLOODY_COMBO, BLUE_VENGEANCE, COVERING_FIRE, CRUSH, HUNTER_FUSION, MEGA_THRUST, QUAKE_SEISM,
-    SHADOW_COMBO, SURPRISE_THRUST, TWIN_BLADES,
+    SHADOW_COMBO, SURPRISE_THRUST, TWIN_BLADES, ENCHANTED_BLADE,
 } from "./cards"
 import type { Visual } from "../base/Visual"
 import { visual } from "../base/Visual"
@@ -449,6 +450,25 @@ export const SHADOW_SAMURAI_KIT: Kit = {
     hearts: [reds(6)],
 }
 
+export const SHAMAN_KIT: Kit = {
+    name: "Chaman",
+    sprite: visual("units/shaman"),
+    cards: deckAround(WOLF_CARD, HAWK_CARD, BEAR_CARD, FOX_CARD, BITE, BITE, RUN, RUN, SUMMONING, FURY),
+    items: [FANG_NECKLACE],
+    usables: [],
+    hearts: [reds(4)],
+}
+
+/** Wind and lightning only: few elements leave the others to find, and these two react into a storm. */
+export const SPELLBLADE_KIT: Kit = {
+    name: "Lame-mage",
+    sprite: visual("units/spellblade"),
+    cards: closeDeckAround(ENCHANTED_BLADE, ENCHANTED_BLADE, ELEMENT_ON_BLADE, SLASH, WIND, LIGHTNING, REACTION),
+    items: [],
+    usables: [SHARPENING_STONE],
+    hearts: [reds(4), blacks(1)],
+}
+
 /** The kits a run starts with. */
 export const STARTING_KITS: readonly Kit[] = []
 
@@ -459,7 +479,7 @@ export const ALL_KITS: readonly Kit[] = [
     SPIRITIST_KIT, BULLFIGHTER_KIT, CHRONOMANCER_KIT, RIDER_KIT, MARTYR_KIT, EXPLOSIVE_GOBLIN_KIT,
     GRAVITATIONIST_KIT, DRUID_KIT, GUNNER_KIT, HYPNOTIST_KIT, KNIGHT_KIT, SHADOW_THIEF_KIT, TEMPEST_MAGE_KIT,
     DEMONIST_KIT, ACROBAT_KIT, BLACK_KNIGHT_KIT, BLEEDER_KIT, TURRET_ENGINEER_KIT, DUELIST_KIT,
-    SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT,
+    SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT, SHAMAN_KIT, SPELLBLADE_KIT,
 ]
 
 /** How many things of one list a second list shares, each one counted as many times as both hold it. */

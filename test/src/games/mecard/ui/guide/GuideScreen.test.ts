@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { Label, concat, plainText } from "@game/core"
 import type { Box } from "@game/core"
-import { DECK } from "@game/core/mecard"
+import { DECK, TURNS } from "@game/core/mecard"
+import { CardView } from "@game/core/mecard/card-view"
 import { GuideScreen } from "@game/core/mecard/guide"
 import { GUIDE } from "@game/core/mecard/guide-content"
-import { cardNamed } from "@game/core/mecard/guide-blocks"
+import { cardNamed, dialCard } from "@game/core/mecard/guide-blocks"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 
@@ -64,6 +65,32 @@ describe("GuideScreen", () => {
         screen.visible = false
         screen.visible = true
         expect(screen.scroll.offset).toBe(0)
+    })
+})
+
+describe("dialCard", () => {
+    test("the dial turned → the card shown is the turn to that step, alone", () => {
+        const setup = uiSetup({}, 320, 180)
+        const block = dialCard(step => TURNS[step], 0)
+        const holder = (block({ theme: setup.theme, hearLink: () => {} }) as Box).children[0] as Box
+        const first = holder.children[0] as CardView
+        expect(first.card).toBe(TURNS[0])
+        first.onDial!(3)
+        expect(holder.children).toHaveLength(1)
+        const next = holder.children[0] as CardView
+        expect(next.card).toBe(TURNS[3])
+        expect(next.onDial).not.toBeNull()
+    })
+
+    test("the guide of the game → names the infinite cards with a card to try", () => {
+        const { screen } = guide()
+        const found: CardView[] = []
+        const visit = (component: unknown): void => {
+            if(component instanceof CardView && component.card === TURNS[0]) found.push(component)
+            for(const child of (component as Box).children ?? []) visit(child)
+        }
+        visit(screen.scroll.content)
+        expect(found.length).toBeGreaterThan(0)
     })
 })
 

@@ -123,11 +123,11 @@ describe("resolve", () => {
     })
 
     test("a merged card → one step", () => {
-        expect(resolve([new MergedCard(STEP, THRUST)], drawing(0)).chain.actionsLeft()).toHaveLength(1)
+        expect(resolve([new MergedCard([STEP, THRUST])], drawing(0)).chain.actionsLeft()).toHaveLength(1)
     })
 
     test("a merged card of a preparation → an error: it plays actions only", () => {
-        expect(() => new MergedCard(STEP, new FusionCard([THRUST, SWEEP]))).toThrow()
+        expect(() => new MergedCard([STEP, new FusionCard([THRUST, SWEEP])])).toThrow()
     })
 })
 

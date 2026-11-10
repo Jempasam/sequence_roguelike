@@ -1,7 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import type { Card, RewriteContext, RewriteSpot } from "../../Card"
 import { POTION, PREPARATION } from "../../CardType"
-import type { PrepareContext, Preparation, Rewrite } from "../../CardType"
+import type { CardType, PrepareContext, PrepPhase, Preparation, Rewrite } from "../../CardType"
 import { signatureOf } from "../../CardChain"
 import { Rarity } from "../../Rarity"
 
@@ -27,9 +27,12 @@ export class RewriteCard extends AbstractCard<Preparation> {
 
         /** What it does to the battle, at the real end of a preparation only, before its rewrite. */
         prepare?: (ctx: PrepareContext) => void,
+
+        /** When it is rewritten: before the cards on its right are, by default. */
+        phase: PrepPhase = "prepfull",
     ){
         super(name, description, rarity)
-        this.#preparation = prepare ? { rewrite, prepare } : { rewrite }
+        this.#preparation = prepare ? { phase, rewrite, prepare } : { phase, rewrite }
     }
 
 
@@ -39,6 +42,41 @@ export class RewriteCard extends AbstractCard<Preparation> {
 
 
     readonly #preparation: Preparation
+}
+
+/**
+ * A preparation taking something from the card on its right, as any card does, and rewriting itself at the end
+ * of the preparation from it: a beast, an element, a module. What it takes leaves the chain with it.
+ */
+export class InputRewriteCard<U> extends AbstractCard<Preparation, U> {
+
+
+    public readonly output = PREPARATION
+
+
+    constructor(
+        name: string, description: Text, rarity: Rarity,
+
+        /** What it takes. */
+        public readonly input: CardType<U>,
+
+        /** What it is replaced by, from what it took. Pure: previews call it. */
+        private readonly rewrite: (ctx: RewriteContext, spot: RewriteSpot, input: U) => Rewrite,
+
+        /** What it does to the battle, from what it took, at the real end of a preparation only. */
+        private readonly prepare?: (ctx: PrepareContext, input: U) => void,
+    ){
+        super(name, description, rarity)
+    }
+
+
+    public get(input: U): Preparation {
+        const { rewrite, prepare } = this
+        const rewriting = (ctx: RewriteContext, spot: RewriteSpot): Rewrite => rewrite(ctx, spot, input)
+        // What it takes is the result of the cards on its right: it is rewritten after them.
+        const phase = "prepless"
+        return prepare ? { phase, rewrite: rewriting, prepare: ctx => prepare(ctx, input) } : { phase, rewrite: rewriting }
+    }
 }
 
 /**

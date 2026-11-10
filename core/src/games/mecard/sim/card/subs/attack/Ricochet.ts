@@ -8,7 +8,7 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
+import { polygon, still, strike } from "../tools/previews"
 import { reflected } from "../tools/reflection"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
@@ -125,8 +125,10 @@ export class RicochetCard extends ActionCard {
                 yield* hold(battle, RECOVERY_TIME, path.map(line => polygon(segment(line), PHYSICAL_COLOR)))
             },
             preview: ({ battle, unit, pose }) => {
-                const path = lines(battle, unit, pose, bouncing(unit))
-                return still(pose, ...path.map(line => polygon(segment(line), PHYSICAL_COLOR)))
+                const path = lines(battle, unit, pose, bouncing(unit)).map(line => segment(line))
+                // As it plays: the first line to reach someone lands, the ones after it do not.
+                const touched = path.map(area => battle.unitsIn(area, unit)).find(hit => hit.length > 0) ?? []
+                return still(pose, ...strike(path, touched))
             },
         }
     }

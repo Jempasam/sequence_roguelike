@@ -16,6 +16,7 @@ import type { DoseType, ElementType } from "../status/StatusVariants"
 import { BARRELS, SPLASHING } from "../status/subs/Splashing"
 import { COATED, COATS } from "../status/subs/Coated"
 import { GRAND_RITUAL, GRAND_RITUALS } from "../status/subs/GrandRitual"
+import { ENCHANTED, ENCHANTMENTS } from "../status/subs/EnchantedBlade"
 
 import { ELEMENT_NAMES, POTION_NAMES } from "./catalogNames"
 
@@ -71,6 +72,7 @@ export const STATUS_CODECS = new Codecs<StatusType>("status", [
     doseCodec("barrel", SPLASHING, BARRELS),
     doseCodec("puddle", PUDDLE_HAZARD, PUDDLES),
     elementCodec("ritual", GRAND_RITUAL, GRAND_RITUALS),
+    elementCodec("enchanted", ENCHANTED, ENCHANTMENTS),
     elementCodec("burning", BURNING_GROUND, BURNING_GROUNDS),
     elementCodec("whirling", WHIRLING, WHIRLWINDS),
     elementCodec("surging", SURGING, WAVES),

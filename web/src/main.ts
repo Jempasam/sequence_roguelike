@@ -1,7 +1,7 @@
 import { NetSync, startGame } from "@game/core"
 import type { SyncPort } from "@game/core"
 
-import { BrowserNet, FetchAssets, IndexedDbStorage, TabSync, WebClipboard, WebGfx, WebInput, WebLoop } from "./platform"
+import { BrowserNet, FetchAssets, IndexedDbStorage, TabSync, WebAudio, WebClipboard, WebGfx, WebInput, WebLoop } from "./platform"
 
 /** The port of the signaling server when `?signal` gives no other address: the one `npm run server` uses. */
 const SIGNALING_PORT = 8787
@@ -23,6 +23,7 @@ startGame({
     loop: new WebLoop(),
     input: new WebInput(canvas),
     clipboard: new WebClipboard(navigator.clipboard),
+    audio: new WebAudio(new AudioContext()),
     assets: new FetchAssets(import.meta.env.BASE_URL, BUILD_ID),
     storage: new IndexedDbStorage(indexedDB, navigator.locks, () => navigator.storage.persist()),
     net,

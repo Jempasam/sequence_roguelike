@@ -177,6 +177,13 @@ export class BattleSignals {
 
     public readonly drawn: Observable<CardSignal>
     public readonly discarded: Observable<CardSignal>
+
+    /** A fleeting card came into a hand: gone once played. */
+    public readonly fleetingGiven: Observable<CardSignal>
+
+    /** A fleeting card was played, or thrown, and is gone: it went to no discard. */
+    public readonly fleetingSpent: Observable<CardSignal>
+
     public readonly reshuffled: Observable<DeckSignal>
 
     public readonly moved: Observable<MoveSignal>
@@ -246,6 +253,8 @@ export class BattleSignals {
         this.phase = signal()
         this.drawn = signal()
         this.discarded = signal()
+        this.fleetingGiven = signal()
+        this.fleetingSpent = signal()
         this.reshuffled = signal()
         this.moved = signal()
         this.blinked = signal()

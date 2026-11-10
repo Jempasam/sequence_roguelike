@@ -237,7 +237,7 @@ class OptionRow extends ContentContainer {
  * An option of a choice: its content, leaning side to side, grown under the pointer, picked by click,
  * framed once picked.
  */
-class ChoiceOption extends Tilt {
+export class ChoiceOption extends Tilt {
 
 
     /** What a click does, nothing when none. */

@@ -24,6 +24,7 @@ export class PrepCard extends AbstractCard<Preparation> {
     ){
         super(name, description, rarity)
         this.#preparation = {
+            phase: "prepfull",
             rewrite: () => ({ cards: [], consumed: 0, acting: true }),
             prepare: effect,
         }

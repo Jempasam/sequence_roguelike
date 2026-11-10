@@ -7,7 +7,7 @@ import type { Unit } from "../../../battle/Unit"
 import { ActionCard } from "../ActionCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { travel } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
+import { arrow, label, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 
@@ -67,7 +67,7 @@ export class HarpoonCard extends ActionCard {
                 if(!target) return still(pose, rope, label(end, "raté", NOTE_COLOR))
                 const gone = battle.travel(unit, pose.position, pose.direction, pulled(unit))
                 const pull = arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, position: gone.to }, rope, pull)
+                return still({ ...pose, position: gone.to }, rope, pull, ...strike([], [target]))
             },
         }
     }

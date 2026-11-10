@@ -4,6 +4,8 @@ import {
     Heart, IMPROVISED_WEAPON, LOOT_CARDS, loadBattle, MISSILE, planFor, POTION, POTION_POUCH,
     PREPARATION,
     REACTION, RED_HEART, RITUAL, saveBattle, signatureOf, SPELL, Team, Vector2,
+    ADAPTATION, BEAST_CARDS, BEAST_USES, BeastCard, BITE, CYBERNETIC_BEAST, ELEMENTAL, HYBRIDIZATION, REVERSED_ADAPTATION,
+    TOTAL_HYBRID,
 } from "@game/core/mecard"
 import type { Card, CardType } from "@game/core/mecard"
 
@@ -66,6 +68,13 @@ function rewritten(card: Card, index: number): Card[]|null {
     if(card === CROSSED_SPELL) return [card, nth(ELEMENT_CARDS, index), nth(ELEMENT_CARDS, index + 1)]
     if(card === RITUAL || card === GRAND_RITUAL_CARD) return [card, nth(ELEMENT_CARDS, index)]
     if(card === IMPROVISED_WEAPON) return [card, MISSILE]
+    if(card === TOTAL_HYBRID) return [card, nth(BEAST_CARDS, index), nth(BEAST_CARDS, index + 1), nth(BEAST_CARDS, index + 2)]
+    // The cards leaving nothing of themselves play inside a chain that plays: a bite of what they arrange.
+    if(card === HYBRIDIZATION) return [BITE, card, nth(BEAST_CARDS, index), nth(BEAST_CARDS, index + 1)]
+    if(card === ADAPTATION) return [BITE, card, CYBERNETIC_BEAST, nth(BEAST_CARDS, index)]
+    if(card === REVERSED_ADAPTATION) return [BITE, ELEMENTAL, card, nth(ELEMENT_CARDS, index)]
+    if(BEAST_USES.includes(card)) return [card, nth(BEAST_CARDS, index)]
+    if(card instanceof BeastCard) return [nth(BEAST_USES, index), card]
     return null
 }
 

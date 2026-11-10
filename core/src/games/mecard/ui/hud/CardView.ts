@@ -6,6 +6,7 @@ import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import { typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
 import { TEXT_OUTLINE } from "../look/theme"
+import { topMark } from "../look/topMark"
 import { CompositeCard, cardCount } from "../../sim/card/subs/composite/CompositeCard"
 import type { Card } from "../../sim/card/Card"
 import { TURN_STEPS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
@@ -34,8 +35,8 @@ interface CardLook {
 
 /** How a card is drawn in each place. */
 export const CARD_LOOKS: Readonly<Record<CardPlace, CardLook>> = {
-    hand: { width: 44, height: 56, padding: 3, band: 4, lines: 4, foot: true },
-    chain: { width: 40, height: 50, padding: 3, band: 4, lines: 3, foot: true },
+    hand: { width: 44, height: 56, padding: 3, band: 5, lines: 4, foot: true },
+    chain: { width: 40, height: 50, padding: 3, band: 5, lines: 3, foot: true },
     mini: { width: 32, height: 24, padding: 2, band: 2, lines: 2, foot: false },
 }
 
@@ -67,6 +68,31 @@ const DIAL_HOVERED = new Color(0.22, 0.2, 0.3)
 const HAND_DIAL_RADIUS = 11
 const CHAIN_DIAL_RADIUS = 9
 const NAME = new Color(0.95, 0.92, 0.86)
+
+/** How much of its color the mark on the band of a card keeps: the same color, darker. */
+const MARK_SHADE = 0.45
+
+/** The colors of the marks found already, by the color of the band they are on, which is shared. */
+const MARK_COLORS = new WeakMap<Color, Color>()
+
+/** The color of the mark on a band of a color: the same, darker. */
+function darker(band: Color): Color {
+    let mark = MARK_COLORS.get(band)
+    if(!mark){
+        mark = new Color(band.r * MARK_SHADE, band.g * MARK_SHADE, band.b * MARK_SHADE, band.a)
+        MARK_COLORS.set(band, mark)
+    }
+    return mark
+}
+
+/**
+ * How high the triangle of a mark on the band of a card is, in virtual pixels: all of the band. Odd, so its
+ * tip is on one row: its columns are as high as this, then two less, and so on down to one.
+ */
+const MARK_HEIGHT = 5
+
+/** How long the line of a mark is, 1 pixel thick, on the middle row of the band, before its triangle. */
+const MARK_LINE = 4
 const FOOT = new Color(0.6, 0.58, 0.68)
 
 /** The color of the frame of a card the viewer may not see. */
@@ -301,7 +327,7 @@ export class CardView extends Component {
     /** How wide a card is drawn, none for its back, in virtual pixels: the cards it holds side by side. */
     #widthOf(card: Card|null): number {
         if(!card?.contents) return this.#plainWidth
-        return card.contents.reduce((width, each) => width + this.#widthOf(each), 2)
+        return card.contents.reduce((width, each) => width + this.#widthOf(each), 2 + (card.input ? INPUT_STRIP : 0))
     }
 
     /**
@@ -324,9 +350,11 @@ export class CardView extends Component {
             painter.rect(x + 1, y + 1, width - 2, height - 2)
             painter.setTint(color)
             painter.rect(x + 1, y + 1, width - 2, look.band)
-            // What a card takes is the strip down its right side. A card holding cards has none: they fill it.
-            const input = !contents && card?.input ? card.input : null
-            if(input){
+            this.#paintBandMark(painter, card, x, y, width, darker(color))
+            // What a card takes is the strip down its right side. A card holding cards has it from its band to
+            // its foot, as the cards it holds keep to their own, in the frame; the strip of its band is drawn after.
+            const input = card?.input ?? null
+            if(input && !contents){
                 painter.setTint(typeColorOf(input))
                 painter.rect(x + width - 1 - INPUT_STRIP, y + 1 + look.band, INPUT_STRIP, height - 2 - look.band)
             }
@@ -350,6 +378,11 @@ export class CardView extends Component {
             }
         }
         if(!contents) return
+        // What the cards held take together, as the merge takes it: the same strip, down the right of its frame.
+        if(card.input){
+            painter.setTint(typeColorOf(card.input))
+            painter.rect(x + width - 1 - INPUT_STRIP, y + 1, INPUT_STRIP, height - 2)
+        }
         let left = x + 1
         const limits: number[] = []
         for(const each of contents){
@@ -360,6 +393,27 @@ export class CardView extends Component {
         }
         const glyph = joinGlyph(card!)
         if(glyph) for(const at of limits) this.#paintGlyph(painter, glyph, at, top + (y + height - 1 - top) / 2)
+    }
+
+    /**
+     * Draw the mark of a card in black on its band, none in the small places. A mark must not be taller than
+     * the band, its first row on the first row of the band.
+     */
+    #paintBandMark(painter: Painter, card: Card|null, x: number, y: number, width: number, color: Color): void {
+        const mark = card && this.place !== "mini" ? topMark(card) : ""
+        if(!mark) return
+        painter.setTint(color)
+        // A line and a triangle as high as the band at its end, the whole centered on the card: pointing right
+        // for →, left for ←. The triangle is drawn by columns, each two rows shorter than the one before, so
+        // its edges are sharp.
+        const head = (MARK_HEIGHT + 1) / 2
+        const left = x + Math.round((width - head - MARK_LINE) / 2)
+        const right = mark === "→"
+        painter.rect(right ? left : left + head, y + 1 + (MARK_HEIGHT - 1) / 2, MARK_LINE, 1)
+        for(let column = 0; column < head; column++){
+            const at = right ? left + MARK_LINE + column : left + head - 1 - column
+            painter.rect(at, y + 1 + column, 1, MARK_HEIGHT - 2 * column)
+        }
     }
 
     /** Draw a glyph centered on a point: white, over a black outline. */

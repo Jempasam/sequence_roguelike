@@ -8,16 +8,26 @@ import { arrow, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 
 /** How many directions a turn can face: a full turn cut in as many steps, the first one straight up. */
-export const TURN_STEPS = 16
+export const TURN_STEPS = 32
 
 /** The unit vectors of the steps, clockwise from up, written out so the simulation computes no angle. */
 const DIRECTIONS: readonly Vector2[] = [
-    new Vector2(0, -1), new Vector2(0.3826834, -0.9238795), new Vector2(0.7071068, -0.7071068),
-    new Vector2(0.9238795, -0.3826834), new Vector2(1, 0), new Vector2(0.9238795, 0.3826834),
-    new Vector2(0.7071068, 0.7071068), new Vector2(0.3826834, 0.9238795), new Vector2(0, 1),
-    new Vector2(-0.3826834, 0.9238795), new Vector2(-0.7071068, 0.7071068), new Vector2(-0.9238795, 0.3826834),
-    new Vector2(-1, 0), new Vector2(-0.9238795, -0.3826834), new Vector2(-0.7071068, -0.7071068),
-    new Vector2(-0.3826834, -0.9238795),
+    new Vector2(0, -1), new Vector2(0.1950903, -0.9807853),
+    new Vector2(0.3826834, -0.9238795), new Vector2(0.5555702, -0.8314696),
+    new Vector2(0.7071068, -0.7071068), new Vector2(0.8314696, -0.5555702),
+    new Vector2(0.9238795, -0.3826834), new Vector2(0.9807853, -0.1950903),
+    new Vector2(1, 0), new Vector2(0.9807853, 0.1950903),
+    new Vector2(0.9238795, 0.3826834), new Vector2(0.8314696, 0.5555702),
+    new Vector2(0.7071068, 0.7071068), new Vector2(0.5555702, 0.8314696),
+    new Vector2(0.3826834, 0.9238795), new Vector2(0.1950903, 0.9807853),
+    new Vector2(0, 1), new Vector2(-0.1950903, 0.9807853),
+    new Vector2(-0.3826834, 0.9238795), new Vector2(-0.5555702, 0.8314696),
+    new Vector2(-0.7071068, 0.7071068), new Vector2(-0.8314696, 0.5555702),
+    new Vector2(-0.9238795, 0.3826834), new Vector2(-0.9807853, 0.1950903),
+    new Vector2(-1, 0), new Vector2(-0.9807853, -0.1950903),
+    new Vector2(-0.9238795, -0.3826834), new Vector2(-0.8314696, -0.5555702),
+    new Vector2(-0.7071068, -0.7071068), new Vector2(-0.5555702, -0.8314696),
+    new Vector2(-0.3826834, -0.9238795), new Vector2(-0.1950903, -0.9807853),
 ]
 
 /** What every turn has in common: a unit plays one turn per round, whichever way it faces. */

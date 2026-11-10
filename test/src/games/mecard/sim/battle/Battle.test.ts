@@ -272,7 +272,7 @@ describe("Steps of others", () => {
         const on = battle()
         const dasher = unit(on, 3, 5)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        play(on, [[dasher, chain(STUNNING_DASH)], [target, chain(TURNS[4], TURNS[8])]])
+        play(on, [[dasher, chain(STUNNING_DASH)], [target, chain(TURNS[8], TURNS[16])]])
         expect(target.direction).toEqual(Vector2.DOWN)
         expect(on.events.some(event => event.type === "skipped" && event.reason === "étourdi")).toBe(true)
     })
@@ -281,7 +281,7 @@ describe("Steps of others", () => {
         const on = battle()
         const taser = unit(on, 3, 4)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        play(on, [[taser, chain(TASER)], [target, chain(TURNS[4], TURNS[4])]])
+        play(on, [[taser, chain(TASER)], [target, chain(TURNS[8], TURNS[8])]])
         expect(target.direction).toEqual(Vector2.RIGHT)
     })
 

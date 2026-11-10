@@ -68,7 +68,7 @@ describe("unlimited cards", () => {
 
     test("a turn → the unit faces its direction", () => {
         const { on, hero } = unlimitedUnit()
-        on.commit(hero, chain(TURNS[4]))
+        on.commit(hero, chain(TURNS[8]))
         on.endPreparation()
         on.playRound()
         expect(hero.direction.x).toBeCloseTo(1)

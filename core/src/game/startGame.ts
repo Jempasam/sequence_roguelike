@@ -1,4 +1,6 @@
 import { Assets } from "../engine/assets"
+import { SOUND_SETTINGS_FORMAT, SOUND_SLOT_KEY, SoundPlayer, SoundSettings } from "../engine/audio"
+import type { SoundSettingsSave } from "../engine/audio"
 import { Gpu, Painter, RenderTexture, ScreenSurface, TextureSurface } from "../engine/gpu"
 import { InputSystem } from "../engine/input"
 import { Color } from "../engine/math"
@@ -50,11 +52,17 @@ export function startGame(platform: Platform): { dispose(): void } {
     ] as const
     const theme = mecardTheme(gpu)
     const sync = platform.sync
+    const assets = new Assets(platform.assets)
+    const soundSettings = new SoundSettings()
+    // Silent on a platform without speakers.
+    const sounds = platform.audio
+        ? new SoundPlayer(soundSettings, platform.audio, assets, text => console.warn(text))
+        : null
     const game = sync?.role === "viewer"
-        ? new MecardViewer(theme, ui, sync, new Assets(platform.assets), toWorld, toUi, sync.link)
+        ? new MecardViewer(theme, ui, sync, assets, toWorld, toUi, sync.link, sounds)
         : new MecardGame(
-            theme, ui, new Assets(platform.assets), firstSeed(), toWorld, toUi, sync ?? null,
-            networkOf(platform), platform.clipboard,
+            theme, ui, assets, firstSeed(), toWorld, toUi, sync ?? null,
+            networkOf(platform), platform.clipboard, sounds,
         )
     // The storage opens on its own time: the menu offers to go on once the run kept is read. None when
     // another instance of the game holds it, which then keeps nothing.
@@ -69,6 +77,8 @@ export function startGame(platform: Platform): { dispose(): void } {
             }
             storage = opened
             game.keep(new SaveSlot(opened, RUN_SLOT_KEY, RUN_SAVE_FORMAT))
+            const soundSlot = new SaveSlot(opened, SOUND_SLOT_KEY, SOUND_SETTINGS_FORMAT)
+            keepSoundSettings(soundSettings, soundSlot, text => game.report(text))
         }, (error: unknown) => game.report(`Les sauvegardes ne sont pas disponibles : ${String(error)}`))
     }
 
@@ -110,4 +120,19 @@ export function startGame(platform: Platform): { dispose(): void } {
 function networkOf({ net, signaling, connect }: Platform): MecardNetwork|null {
     if(!net || signaling === undefined || !connect) return null
     return { open: () => NetSync.host(net, signaling, ROOM_NAME), connect }
+}
+
+/** Read the sound settings kept, and keep them from then on each time they change. */
+function keepSoundSettings(
+    settings: SoundSettings, slot: SaveSlot<SoundSettingsSave>, report: (text: string) => void,
+): void {
+    slot.load().then(
+        save => {
+            if(save) settings.restore(save)
+            settings.onChanged = changed => {
+                slot.save(changed.save()).catch((error: unknown) => report(`Les r�glages du son n'ont pas pu �tre sauvegard�s : ${String(error)}`))
+            }
+        },
+        (error: unknown) => report(`Les r�glages du son n'ont pas pu �tre lus : ${String(error)}`),
+    )
 }

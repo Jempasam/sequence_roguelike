@@ -1,9 +1,13 @@
 import type { Rng } from "../base/Rng"
 import { ACTION, PREPARATION } from "../card/CardType"
-import { signatureOf } from "../card/CardChain"
+import { CardChain, signatureOf } from "../card/CardChain"
 import type { Card } from "../card/Card"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { LOOT_CARDS } from "../catalog/index"
+import type { Monster } from "../catalog/monsters"
+import { AimCard } from "../card/subs/movement/Aim"
+import { STEP } from "../card/subs/movement/Step"
+import { CHAIN_SIZE } from "../battle/Unit"
 
 /** How many things a place offers to choose from. */
 export const INVENTED_COUNTS = 3
@@ -72,6 +76,40 @@ export function inventedFusion(rng: Rng): Card {
     const trees = [standingTree(rng)]
     if(trees[0].length < 2 || rng.chance(SECOND_TREE)) trees.push(standingTree(rng))
     return new FusionCard(trees.flat())
+}
+
+/** Is a card one that only goes or aims: no card a fusion of a monster is named after? */
+function plain(card: Card): boolean {
+    return card === STEP || card instanceof AimCard
+}
+
+/**
+ * The chains a monster plays, round after round: its deck, kept in order, cut in hands of what it draws, each
+ * read from left to right as a bot reads it. Every start of a hand in its deck once.
+ */
+export function monsterChains(monster: Monster): Card[][] {
+    const { cards, draw } = monster
+    if(cards.length === 0 || draw <= 0) return []
+    const chains: Card[][] = []
+    const seen = new Set<number>()
+    for(let start = 0; !seen.has(start); start = (start + draw) % cards.length){
+        seen.add(start)
+        const hand = Array.from({ length: Math.min(draw, cards.length) }, (_, index) => cards[(start + index) % cards.length])
+        chains.push([...CardChain.leftToRight(hand, CHAIN_SIZE).cards])
+    }
+    return chains
+}
+
+/**
+ * A fusion of a monster: one of the chains it plays, in order, named after its rarest card that does more than
+ * go or aim and after the monster, "Estoc de Gobelin". None when it plays only steps and aims.
+ */
+export function monsterFusion(monster: Monster, rng: Rng): Card|null {
+    const chains = monsterChains(monster).filter(chain => chain.length >= 2 && chain.some(card => !plain(card)))
+    const chain = rng.pick(chains)
+    if(!chain) return null
+    const main = chain.filter(card => !plain(card)).reduce((best, card) => card.rarity.rank > best.rarity.rank ? card : best)
+    return new FusionCard(chain, { name: `${main.name} de ${monster.name}` })
 }
 
 /** A tree of the loot that is played on its own: not an element alone. */

@@ -2,6 +2,8 @@ import type { Action, UnitContext } from "../battle/Action"
 import type { Unit } from "../battle/Unit"
 import type { Element } from "../element/Element"
 import type { Dose } from "../potion/Potion"
+import type { Visual } from "../base/Visual"
+import type { HeartKind } from "../heart/HeartKind"
 
 import type { Card, RewriteContext, RewriteSpot } from "./Card"
 
@@ -38,7 +40,18 @@ export interface Rewrite {
      * plays even when it gives nothing.
      */
     readonly acting: boolean
+
+    /** How many cards on its left the cards replace too, none by default: the card before it goes with it. */
+    readonly before?: number
 }
+
+/**
+ * When a preparation is rewritten, and so what it reads: `prepfull` ones go first, from left to right, and
+ * read preparations not rewritten yet, the cards on their right as they are written. `prepless` ones go
+ * after, from right to left, and read what the cards on their right have become: nothing there is left to
+ * rewrite.
+ */
+export type PrepPhase = "prepfull"|"prepless"
 
 /**
  * What a preparation card gives: a rewrite of the chain at the end of the preparation, and maybe an effect
@@ -48,8 +61,14 @@ export interface Rewrite {
  * Its rewrite touches nothing but the chain: a preview, the screen, a search for a card that fits all play
  * it on a copy of the chain, to see what the chain becomes and what reads in it. Its effect on the battle is
  * done once, at the real end of a preparation, never otherwise.
+ *
+ * Its phase never depends on what the card takes: it is told by building the preparation, which only builds
+ * it and rewrites nothing.
  */
 export interface Preparation {
+    /** When it is rewritten. */
+    readonly phase: PrepPhase
+
     /** What it is replaced by, from where it stands. Pure: it changes nothing. */
     rewrite(ctx: RewriteContext, spot: RewriteSpot): Rewrite
 
@@ -86,3 +105,38 @@ export interface Module {
 
 /** The cards of a machine, for a card building it or putting them in the chain. */
 export const MODULE = new CardType<Module>("module")
+
+/** A group of hearts of a kind, as a body has them. */
+export interface BeastHearts {
+    readonly kind: HeartKind
+    readonly count: number
+}
+
+/** A part of the chain a body plays: a card, or the place of the run or of the bite it is given. */
+export type BodyPart = Card|"run"|"bite"
+
+/**
+ * A spirit of nature: how it runs, how it bites, and the body it is summoned in. Only data: each places its
+ * run and its bite in its body its own way, told by `body`.
+ */
+export interface Beast {
+    readonly name: string
+
+    /** How its body looks, summoned. */
+    readonly sprite: Visual
+
+    /** Its run: the cards it moves with. */
+    readonly run: readonly Card[]
+
+    /** Its bite: the cards it attacks with. */
+    readonly bite: readonly Card[]
+
+    /** The hearts of its body, before what the summoning of its owner adds to the first group. */
+    readonly hearts: readonly BeastHearts[]
+
+    /** The chain its body plays round after round, where the run and the bite given, its own or another beast's, stand. */
+    readonly body: readonly BodyPart[]
+}
+
+/** A spirit of nature, for a card using its run, its bite or its body. */
+export const BEAST = new CardType<Beast>("bête")

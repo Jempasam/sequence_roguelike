@@ -21,7 +21,7 @@ function missing(text: Text): string[] {
 
 describe("pixelFont", () => {
     test("two cards tied → their name fully drawn", () => {
-        expect(missing(new MergedCard(STEP, THRUST).name)).toEqual([])
+        expect(missing(new MergedCard([STEP, THRUST]).name)).toEqual([])
         expect(missing(new RandomCard(FIRE, WATER).name)).toEqual([])
     })
 

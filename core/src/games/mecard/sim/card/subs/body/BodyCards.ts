@@ -34,7 +34,7 @@ export const FLAMES_BURN = 1
 const WANDER_LENGTH = 1
 
 /** The color of the flash. */
-const FLASH_COLOR = rgba(1, 1, 0.85, 0.7)
+const FLASH_COLOR = rgba(1, 0.85, 0.15, 0.55)
 
 /** How long the flash shows, in seconds. */
 const FLASH_TIME = 0.4

@@ -324,6 +324,7 @@ export class Run {
     #enter(battle: Battle): void {
         this.#battle = battle
         this.#enterPhase("battle")
+        this.travel.startFight()
         this.battleStarted.notify(battle)
     }
 

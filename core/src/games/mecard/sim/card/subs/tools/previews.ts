@@ -3,6 +3,8 @@ import type { Vector2 } from "../../../base/Vector2"
 import { outline } from "../../../battle/Area"
 import type { Indicator, Pose, Preview } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
+import type { Unit } from "../../../battle/Unit"
+import { HIT_COLOR, MARK_COLOR, MISS_COLOR } from "../../../battle/previewColors"
 
 /** A preview leaving the unit as it was. */
 export function still(pose: Pose, ...indicators: Indicator[]): Preview {
@@ -30,4 +32,16 @@ export function arrow(points: readonly Vector2[], width: number, color: Rgba): I
 /** The outline of an area, filled. */
 export function polygon(area: Area, color: Rgba): Indicator {
     return { kind: "polygon", points: outline(area), color }
+}
+
+/**
+ * The preview of an attack: its areas in red when it would reach someone, in pastel blue when nobody, and
+ * a red disc over each unit it would reach, each once.
+ */
+export function strike(areas: readonly Area[], touched: readonly Unit[]): Indicator[] {
+    const color = touched.length > 0 ? HIT_COLOR : MISS_COLOR
+    const marks = [...new Set(touched)].map(hit => {
+        return polygon({ kind: "circle", center: hit.position, radius: hit.radius }, MARK_COLOR)
+    })
+    return [...areas.map(area => polygon(area, color)), ...marks]
 }

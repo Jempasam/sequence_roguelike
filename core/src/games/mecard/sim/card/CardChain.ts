@@ -7,7 +7,7 @@ import type { Unit } from "../battle/Unit"
 import type { Card, RewriteContext, RewriteSpot } from "./Card"
 import type { CardNode } from "./CardNode"
 import { ACTION, PREPARATION } from "./CardType"
-import type { CardType, Preparation } from "./CardType"
+import type { CardType, PrepPhase, Preparation } from "./CardType"
 import { read, takes } from "./Reading"
 import type { Reading } from "./Reading"
 
@@ -195,12 +195,15 @@ export class CardChain {
     }
 
     /**
-     * Build the preparations of the row and rewrite it, from left to right, the cursor left where it is: a
-     * preparation sees the cards on its right as they are, its effect on the battle done just before when the
-     * battle plays, and what a rewrite gives is read again in its place, so a fusion unfolding into a
-     * preparation rewrites it in turn. A card a preparation gave is never rewritten again by that same card,
-     * so `Répétition, Répétition` ends: such a card is dropped. A preparation missing its input stays in the
-     * row, greyed out.
+     * Build the preparations of the row and rewrite it, the cursor left where it is, in rounds, each in two
+     * phases. The prepfull preparations go first, from left to right: one sees the cards on its right as they
+     * are written, its effect on the battle done just before when the battle plays, and what a rewrite gives
+     * is read again in its place, so a fusion unfolding into a preparation rewrites it in turn. Then the
+     * prepless one furthest on the right goes, which sees what the cards on its right became, and the round
+     * ends: the next one starts over, so what it gave is first rewritten by the prepfull ones. It ends when a
+     * round rewrites nothing. A card a preparation gave is never rewritten again by that same card, so
+     * `Répétition, Répétition` ends: such a card is dropped. A preparation that could not be built in any
+     * round, missing its input, stays in the row, greyed out.
      *
      * @param ctx - What chances are drawn with, none for a preview, which draws the first of each and marks
      * what hangs on it as guessed.
@@ -218,28 +221,25 @@ export class CardChain {
         // The preparations whose rewrite gave each card, which never rewrite it again.
         const lineage: ReadonlySet<Card>[] = cards.map(() => new Set())
         const acted: number[] = []
-        let at = 0
-        while(at < cards.length){
+
+        /** Drop the card at a place, a preparation it gave itself: it is never rewritten again by it. */
+        const drop = (at: number): void => {
+            for(const each of [cards, sources, drawn, lineage]) each.splice(at, 1)
+            this.watcher?.changed()
+        }
+
+        /**
+         * Rewrite the preparation built at a place, and the cards it takes and consumes with it.
+         *
+         * @returns Where what it gave starts, to be read again from there: a preparation among it is rewritten in turn.
+         */
+        const rewriteAt = (at: number, built: Built): number => {
             const card = cards[at]
-            if(card.output !== PREPARATION){
-                at++
-                continue
-            }
-            if(lineage[at].has(card)){
-                for(const each of [cards, sources, drawn, lineage]) each.splice(at, 1)
-                this.watcher?.changed()
-                continue
-            }
-            const built = this.get(at)
-            if(!built){
-                this.watcher?.invalid(at)
-                at++
-                continue
-            }
             const { last } = built
             this.watcher?.activated(at, last)
             let guessing = false
             const spot: RewriteSpot = {
+                previous: cards[at - 1] ?? null,
                 next: cards[last + 1] ?? null,
                 rest: cards.slice(last + 1),
                 deck,
@@ -260,7 +260,9 @@ export class CardChain {
                     return options[0]
                 },
             }, spot)
-            // The tree goes, and the cards on its right it consumed.
+            // The tree goes, the cards on its right it consumed, and the cards on its left it took with it.
+            const before = Math.min(Math.max(0, rewrite.before ?? 0), at)
+            const start = at - before
             const replaced = last - at + 1 + Math.min(Math.max(0, rewrite.consumed), cards.length - last - 1)
             const taken: (Card|null)[] = cards.slice(at + 1, at + replaced)
             const takenFrom = sources.slice(at + 1, at + replaced)
@@ -271,17 +273,66 @@ export class CardChain {
                 return found
             })
             // A card the preparation gave stands for it and for the cards it took away, not given back.
-            const gone = [...sources[at], ...taken.flatMap((each, index) => each ? takenFrom[index] : [])]
+            const gone = [
+                ...sources.slice(start, at).flat(), ...sources[at],
+                ...taken.flatMap((each, index) => each ? takenFrom[index] : []),
+            ]
             const from = rewrite.cards.map((_, index) => kept[index] >= 0 ? takenFrom[kept[index]] : gone)
             if(rewrite.acting) acted.push(...gone)
-            const wasDrawn = drawn.slice(at, at + replaced).some(Boolean) || guessing
+            const wasDrawn = drawn.slice(start, at + replaced).some(Boolean) || guessing
             const gave = new Set([...lineage[at], card])
-            cards.splice(at, replaced, ...rewrite.cards)
-            sources.splice(at, replaced, ...from)
-            drawn.splice(at, replaced, ...rewrite.cards.map(() => wasDrawn))
-            lineage.splice(at, replaced, ...rewrite.cards.map(() => gave))
+            cards.splice(start, before + replaced, ...rewrite.cards)
+            sources.splice(start, before + replaced, ...from)
+            drawn.splice(start, before + replaced, ...rewrite.cards.map(() => wasDrawn))
+            lineage.splice(start, before + replaced, ...rewrite.cards.map(() => gave))
             this.watcher?.changed()
-            // What it gave is read again from its place: a preparation among it is rewritten in turn.
+            return start
+        }
+
+        // Until a whole round rewrites nothing: what a rewrite gives, or takes away, may let a card that
+        // found no input build, or give it another card to read.
+        for(let again = true; again;){
+            again = false
+
+            // The prepfull ones, from left to right: they read preparations not rewritten yet, as they are written.
+            let at = 0
+            while(at < cards.length){
+                if(cards[at].output !== PREPARATION){
+                    at++
+                } else if(lineage[at].has(cards[at])){
+                    drop(at)
+                    again = true
+                } else {
+                    const built = this.get(at)
+                    if((built?.value as Preparation|undefined)?.phase === "prepfull"){
+                        at = rewriteAt(at, built!)
+                        again = true
+                    } else {
+                        at++
+                    }
+                }
+            }
+
+            // The prepless ones, from right to left, the first rewrite ending the round: they read what the cards
+            // on their right became, so what it gave is first rewritten by the prepfull ones.
+            for(let place = cards.length - 1; place >= 0; place--){
+                if(cards[place].output !== PREPARATION) continue
+                if(lineage[place].has(cards[place])){
+                    drop(place)
+                    again = true
+                    break
+                }
+                const built = this.get(place)
+                if((built?.value as Preparation|undefined)?.phase !== "prepless") continue
+                rewriteAt(place, built!)
+                again = true
+                break
+            }
+        }
+
+        // What no round could build, a preparation missing its input, stays in the row, greyed out.
+        for(let at = 0; at < cards.length; at++){
+            if(cards[at].output === PREPARATION && !this.get(at)) this.watcher?.invalid(at)
         }
         return { sources, drawn, acted }
     }
@@ -483,6 +534,14 @@ function fitsAt(
     const active = activityOf(resolved(row, null, deck, null, true), row.length)
     const left = row[index - 1] as Card|undefined
     return active[index] && (!left?.input || active[index - 1])
+}
+
+/**
+ * When a card rewrites the chain, none for a card that is not a preparation. Told by building its
+ * preparation, which touches nothing, with no input: its phase never depends on it.
+ */
+export function phaseOf(card: Card): PrepPhase|null {
+    return card.output === PREPARATION ? (card.get(undefined) as Preparation).phase : null
 }
 
 /** What a card truly takes and gives, once rewritten: a preparation is read as the cards it becomes. */

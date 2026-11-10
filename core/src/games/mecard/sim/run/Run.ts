@@ -214,9 +214,9 @@ export class Run {
         this.rng = new Rng(seed)
         this.heroes = STARTING_KITS.map(kit => heroOf(kit))
         this.travel = new Travel(this, FIRST_FLOOR.create(1))
-        // The party starts alone: a tavern to hire, a free halt, a tavern again, before the floor itself.
+        // The party starts alone: a tavern to hire, a tavern again, a free halt, before the floor itself.
         const bonus = this.rng.pick(freeHalts()) ?? TAVERN_HALT
-        this.travel.journey.addEntries([TAVERN_HALT, bonus, TAVERN_HALT])
+        this.travel.journey.addEntries([TAVERN_HALT, TAVERN_HALT, bonus])
     }
 
 

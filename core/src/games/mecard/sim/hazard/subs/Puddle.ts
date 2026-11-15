@@ -2,7 +2,7 @@ import type { Text } from "../../../../../semantic"
 import { colored } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
-import { touches } from "../../battle/Area"
+import * as Areas from "../../battle/area/Areas"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
@@ -58,16 +58,16 @@ export class Puddle extends HazardStatus {
 
     protected plug({ battle, unit }: UnitContext): void {
         unit.color = this.dose.potion.color
-        const zone = (): Area => unit.zone ?? { kind: "circle", center: unit.position, radius: PUDDLE_RADIUS }
+        const zone = (): Area => unit.zone ?? Areas.circle(unit.position, PUDDLE_RADIUS)
         this.hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
-            if(touches(zone(), to, mover.radius) && !touches(zone(), from, mover.radius)){
+            if(Areas.checkCircle(zone(), to, mover.radius) && !Areas.checkCircle(zone(), from, mover.radius)){
                 pour(battle, this.dose, mover, this.poured)
             }
         }))
         this.hold(battle.roundEnding.add(() => {
             if(!unit.alive) return
-            for(const target of battle.unitsIn(zone())) pour(battle, this.dose, target, this.poured)
+            for(const target of battle.fetch(zone())) pour(battle, this.dose, target, this.poured)
         }))
     }
 }
@@ -78,7 +78,7 @@ export function placePuddle(
 ): Unit|null {
     return placeHazard(battle, owner, {
         sprite: visual("units/puddle"), name: `Flaque de ${dose.potion}`,
-        zone: { kind: "circle", center, radius: PUDDLE_RADIUS },
+        at: center, zone: Areas.circle(center, PUDDLE_RADIUS),
         hearts: Heart.many(TIME_HEART, rounds),
         status: { type: PUDDLES.of(dose), level: Math.abs(level) },
     })

@@ -7,7 +7,7 @@ import {
 } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { Areas, DamageType } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -19,7 +19,7 @@ describe("BACK_EYES", () => {
             team: MONSTERS,
         })
         on.equip(holder, BACK_EYES)
-        on.strike(attacker, { kind: "circle", center: holder.position, radius: 0.2 }, 1, DamageType.PHYSICAL)
+        on.strike(attacker, Areas.circle(holder.position, 0.2), 1, DamageType.PHYSICAL)
         return holder.direction.y > 0
     }
 

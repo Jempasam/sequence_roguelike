@@ -7,7 +7,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described } from "../shown"
 import { visual } from "../../../base/Visual"
@@ -24,7 +23,7 @@ export class MerchantHalt extends AbstractHalt {
     constructor(run: Run){
         super(MERCHANT_HALT, run,
             "J'ai trois objets pour toi. Prends-en un !",
-            sceneLook(33, 23, 20, "mecard/travel/merchant"),
+            sceneLook(33, 23, 20, "merchant"),
             {
                 hat: "featherToque"
             },
@@ -53,6 +52,6 @@ export const MERCHANT_HALT: HaltType = {
     id: "merchant",
     name: "Marchand ambulant",
     description: "Un objet parmi trois.",    icon: visual("travel/merchant/logo", { letter: "MB" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/stone-bridge"),
     create: run => new MerchantHalt(run),
 }

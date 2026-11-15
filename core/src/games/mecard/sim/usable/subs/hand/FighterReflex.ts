@@ -17,7 +17,7 @@ export class FighterReflex extends AbstractUsable {
 
 
     constructor(){
-        super("Réflexe de combattant", visual("usables/strength_elixir"), [
+        super("Réflexe de combattant", visual("usables/strength_elixir", { coloration: [0.9, 0.75, 0.2] }), [
             "Pioche une ", CARTE, " au hasard dans ta pioche ou ta défausse dont la description parle de ",
             DamageType.PHYSICAL, " et de ", FORCE, `. ${REFLEX_CHARGES} fois par combat.`,
         ], { charges: REFLEX_CHARGES, refill: "battle" })

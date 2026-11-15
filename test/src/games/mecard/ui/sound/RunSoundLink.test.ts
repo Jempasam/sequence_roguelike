@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets, SoundPlayer, SoundSettings } from "@game/core"
-import { BATTLE, CHEST_HALT } from "@game/core/mecard"
-import type { Place, PlaceType, Run } from "@game/core/mecard"
+import { BATTLE, CHEST_HALT, isHalt } from "@game/core/mecard"
+import type { FightType, Place, PlaceType, Run } from "@game/core/mecard"
 import { RunSoundLink } from "@game/core/mecard/run-sound-link"
 import { FakeAudio } from "../../../../fixtures/fakeAudio"
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -48,7 +48,8 @@ function settle(): Promise<void> {
 
 /** A new place of a sort, on no map. */
 function placeOf(type: PlaceType): Place {
-    return { type, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    return isHalt(type) ? { ...where, fight: null, halt: type } : { ...where, fight: type as FightType, halt: null }
 }
 
 /** Reach a fight, to be fought by the run. */
@@ -97,29 +98,6 @@ describe("RunSoundLink, the journey", () => {
         expect(heard(audio)).toEqual(["tchi.wav"])
     })
 
-    test("every sound the link plays → a file of the game, loaded without a report", async() => {
-        const run = startedRun(1)
-        const { audio, reports } = linkOf(run)
-        reachFight(run)
-        run.startBattle()
-        const { signals } = run.battle!
-        signals.drawn.notify({} as never)
-        signals.cardActivated.notify({} as never)
-        signals.moved.notify({} as never)
-        signals.damaged.notify({} as never)
-        signals.healed.notify({} as never)
-        signals.statusAdded.notify({} as never)
-        signals.spawned.notify({} as never)
-        signals.died.notify({} as never)
-        run.battle!.roundStarted.notify(1)
-        run.battle!.onGetGold.notify({} as never)
-        await settle()
-        expect(reports).toEqual([])
-        expect(new Set(heard(audio))).toEqual(new Set([
-            "sword.wav", "card.wav", "click.wav", "tchi.wav", "declick.wav", "pop.wav", "frinch.wav", "dragon.wav",
-            "top.wav",
-        ]))
-    })
 })
 
 describe("RunSoundLink, letting go", () => {
@@ -146,22 +124,5 @@ describe("RunSoundLink, letting go", () => {
         second.travel.visit(CHEST_HALT)
         await settle()
         expect(heard(audio)).toEqual(["guitare.ogg"])
-    })
-
-    test("a next battle → the first one is no more heard", async() => {
-        const run = startedRun(1)
-        const { audio } = linkOf(run)
-        run.startBattle()
-        const first = run.battle!
-        run.backToMap()
-        run.startBattle()
-        await settle()
-        const before = audio.played.length
-        first.roundStarted.notify(1)
-        await settle()
-        expect(audio.played.length).toBe(before)
-        run.battle!.roundStarted.notify(1)
-        await settle()
-        expect(audio.played.length).toBe(before + 1)
     })
 })

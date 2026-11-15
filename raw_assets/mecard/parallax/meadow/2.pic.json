@@ -1,0 +1,11 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": ["#3a8a48", "#68c250", "#9ae060", "#d4f48c"],
+    "shapes": [
+        {"polygon": [[0, 100], [30, 84], [64, 78], [100, 88], [140, 98], [180, 90], [224, 80], [262, 76], [288, 82], [288, 164], [0, 164]], "material": 1, "depth": [2, 4], "relief": "round-y"},
+        {"picture": "parts/tree.pic.json", "at": [196, 44], "materials": [0, 1], "depth": 4},
+        {"polygon": [[0, 118], [44, 104], [96, 108], [150, 116], [210, 104], [260, 100], [288, 104], [288, 164], [0, 164]], "material": 2, "depth": [3, 5], "relief": "round-y"},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "noise", "density": 0.05, "radius": 1, "materials": [null, 3]}}
+    ]
+}

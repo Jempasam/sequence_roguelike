@@ -5,11 +5,10 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { goodShown, shopGoods } from "../gift/ShopHalt"
 import type { Good } from "../gift/ShopHalt"
-import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { GREAT_COLOR, GREAT_COLORATION, GREAT_HAT } from "../halt_common"
 import { visual } from "../../../base/Visual"
 
 /** The share of every price the great shop takes off. */
@@ -33,7 +32,7 @@ export class GreatShopHalt extends AbstractHalt {
     constructor(run: Run){
         super(GREAT_SHOP_HALT, run,
             [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, et un quart moins cher !"],
-            sceneLook(36, 28, 15, "mecard/travel/shop"),
+            sceneLook(36, 28, 15, "shop", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.35, 0.55, 1),
@@ -121,6 +120,6 @@ export const GREAT_SHOP_HALT: HaltType = {
     description: [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, un quart moins cher."],
     icon: visual("travel/shop/logo", { letter: "MA*" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/warm-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatShopHalt(run),
 }

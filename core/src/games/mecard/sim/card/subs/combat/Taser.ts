@@ -6,11 +6,12 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the taser of the catalog takes. */
 const TASER_DAMAGE = 1
@@ -24,7 +25,7 @@ const TASER_WIDTH = 0.1
 /** The line the taser follows, from a pose, up to the first body. */
 function zap(battle: Battle, unit: Unit, pose: Pose): Area {
     const { end } = battle.ray(unit, TOUCH_RANGE, pose)
-    return { kind: "segment", from: pose.position, to: end, width: TASER_WIDTH }
+    return Areas.line(pose.position, end, TASER_WIDTH)
 }
 
 /** A shock to the unit just ahead, losing it its next step. */
@@ -44,17 +45,17 @@ export class TaserCard extends ActionCard {
 
     static #shocking(amount: number): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const area = zap(battle, unit, unit)
                 const struck = battle.strike(unit, area, amount, DamageType.PHYSICAL)
                 for(const target of struck) battle.shock(target)
-                yield* hold(battle, SHORT_TIME, [polygon(area, CONTROL_COLOR)])
+                hold(battle, SHORT_TIME, [Previews.polygon(area, CONTROL_COLOR)])
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
-                const shown = polygon(zap(battle, unit, pose), CONTROL_COLOR)
-                if(!target) return still(pose, touchZone(pose), shown)
-                return still(pose, touchZone(pose), shown, label(target.position, "électrocuté", NOTE_COLOR))
+                const shown = Previews.polygon(zap(battle, unit, pose), CONTROL_COLOR)
+                if(!target) return Previews.still(pose, touchZone(pose), shown)
+                return Previews.still(pose, touchZone(pose), shown, Previews.label(target.position, "électrocuté", NOTE_COLOR))
             },
         }
     }

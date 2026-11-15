@@ -1,0 +1,22 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": [
+        "#d2b078",
+        "#7a5a3a",
+        {"color": "#fff4c0", "light": 0.55},
+        "#8c6a44"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "planks", "width": 7, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": 3},
+        {"box": [0, 106, 288, 5], "material": 1, "depth": [4, 5], "relief": "round-y"},
+        {"box": [0, 111, 288, 53], "fill": {"pattern": "planks", "width": 6, "axis": "x", "joint": 1, "seams": 0.7, "materials": [3, 1]}, "depth": 2},
+
+        {"box": [52, 30, 48, 48], "material": 1, "depth": [3, 5], "relief": "bevel", "bevel": 2},
+        {"box": [56, 34, 40, 40], "material": 2, "depth": 1},
+        {"box": [74, 34, 4, 40], "material": 1, "depth": 4},
+        {"box": [56, 52, 40, 4], "material": 1, "depth": 4},
+
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "noise", "density": 0.01, "radius": 1, "materials": [null, 1]}}
+    ]
+}

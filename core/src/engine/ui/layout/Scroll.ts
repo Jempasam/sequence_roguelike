@@ -125,12 +125,15 @@ export class Scroll extends ContentContainer {
         const content = this.content
         const bar = this.theme.scrollbar.width
         const isVertical = this.axis === "vertical"
+        const hadBar = this.#hasBar
+        const hadMax = this.#maxOffset
         if(!content?.visible){
             this.#overflows = false
             this.#hasBar = false
             this.#maxOffset = 0
             this.#viewport.set(0, 0, width, height)
             this.#offset = 0
+            if(hadBar) this.invalidate()
             return
         }
         const full = isVertical
@@ -154,6 +157,9 @@ export class Scroll extends ContentContainer {
         // Set again, so it is clamped to what the content overflows by now.
         this.offset = this.#toEnd ? this.#maxOffset : this.#offset
         this.#toEnd = false
+        // The bar is drawn by the scroll itself: a content laid out again inside it, bounds unchanged, does not
+        // draw it again.
+        if(this.#hasBar !== hadBar || this.#maxOffset !== hadMax) this.invalidate()
     }
 
     protected paint(painter: Painter): void {

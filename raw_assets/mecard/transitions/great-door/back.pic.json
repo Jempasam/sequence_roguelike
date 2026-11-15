@@ -1,0 +1,10 @@
+{
+    "size": [272, 148],
+    "seed": 5,
+    "palette": ["#7c7c88", "#2a2a34", "#9a9aa6"],
+    "shapes": [
+        {"box": [0, 0, 272, 148], "fill": {"pattern": "tiles", "cell": [20, 10], "grout": 1, "offset": 0.5, "odd": 0.25, "materials": [0, 1, 2]}, "depth": 2},
+        {"ellipse": [68, -12, 136, 60], "erase": true},
+        {"box": [68, 18, 136, 130], "erase": true}
+    ]
+}

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    AIM, BACK_DASH, GOBLIN, Heart, planFor, RED_HEART, STEP, TURNS, Vector2,
+    AIM, BACK_DASH, BATTLE, GOBLIN, Heart, StandardFight, DeckAi, RED_HEART, STEP, TURNS, Vector2,
 } from "@game/core/mecard"
 
-import { battle, MONSTERS, started, unit } from "../fixtures"
+import { battle, MONSTERS, unit } from "../fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Tests ---
@@ -21,7 +21,7 @@ describe("Deck, ordered", () => {
         for(let round = 0; round < 3; round++){
             on.startRound()
             hands.push(bot.hand.map(card => card.name).join(", "))
-            on.commit(bot, planFor(bot))
+            on.commit(bot, new DeckAi().decide(bot).chain)
             on.endPreparation()
             on.playRound()
         }
@@ -29,10 +29,10 @@ describe("Deck, ordered", () => {
     })
 
     test("a goblin → plays each round of its deck in turn", () => {
-        const run = startedRun(1)
-        const fight = started(run)
+        const fight = new StandardFight(BATTLE, startedRun(1), [GOBLIN]).battle
+        fight.startRound()
         const goblin = fight.units.find(candidate => candidate.name.startsWith(GOBLIN.name))
-        if(!goblin) throw new Error("The first floor has no goblin.")
+        if(!goblin) throw new Error("The fight has no goblin.")
         expect(goblin.hand).toEqual(GOBLIN.cards.slice(0, GOBLIN.draw))
     })
 })

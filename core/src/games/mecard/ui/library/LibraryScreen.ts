@@ -220,7 +220,7 @@ export class LibraryScreen {
         // The cards of the old list are gone, and their pointer leaving will never be heard.
         this.#card = null
         const entries = this.#sections[this.#selected].entries()
-            .filter(entry => this.#query === "" || simplified(plainText(entry.text)).includes(this.#query))
+            .filter(entry => this.#query === "" || simplified(plainText(entry.search ?? entry.text)).includes(this.#query))
         this.#count.text = `${entries.length}`
         for(const entry of entries){
             const holder = new Panel(this.theme, { background: null, padding: 0, interactive: false })

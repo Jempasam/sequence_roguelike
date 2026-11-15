@@ -30,8 +30,8 @@ export class HeartView extends Component {
     /** What the pointer coming over it or leaving does, nothing when none. */
     public onHover: ((over: boolean) => void)|null = null
 
-    /** Is it being looked at? */
-    public lit = false
+    /** The color of the edge it is outlined in while it is looked at, none when it is not. */
+    public edge: Color|null = null
 
     constructor(
         public readonly theme: Theme,
@@ -57,8 +57,8 @@ export class HeartView extends Component {
         painter.push()
         painter.setWhitePixel(this.theme.white)
         const top = Math.floor((this.bounds.height - HEART_HEIGHT) / 2)
-        if(this.lit){
-            painter.setTint(LIT_EDGE)
+        if(this.edge){
+            painter.setTint(this.edge)
             painter.rect(-1, top - 1, HEART_WIDTH + 2, HEART_HEIGHT + 2)
         }
         painter.setTint(heartColorOf(kind))
@@ -81,16 +81,17 @@ export function heartText(heart: Heart): Text {
  * panels or over the arena.
  *
  * @param lit - The places of the hearts being looked at, none by default.
+ * @param edge - The color they are outlined in.
  */
 export function heartsRow(
     theme: Theme, hearts: readonly Heart[], onHover: (heart: Heart, over: boolean) => void,
-    lit: readonly number[] = [],
+    lit: readonly number[] = [], edge: Color = LIT_EDGE,
 ): Box {
     const row = new Box("row", { gap: HEART_GAP })
     hearts.forEach((heart, index) => {
         const view = new HeartView(theme, heart)
         view.onHover = over => onHover(heart, over)
-        view.lit = lit.includes(index)
+        view.edge = lit.includes(index) ? edge : null
         row.add(view)
     })
     return row

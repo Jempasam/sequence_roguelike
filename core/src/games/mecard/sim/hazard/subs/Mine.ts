@@ -1,6 +1,6 @@
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
-import { touches } from "../../battle/Area"
+import * as Areas from "../../battle/area/Areas"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
 import { BLAST_RADIUS, BOMB_DAMAGE } from "../../card/subs/body/BodyCards"
@@ -30,9 +30,9 @@ export class Mined extends HazardStatus {
     protected plug({ battle, unit }: UnitContext): void {
         this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
-            const zone = unit.zone ?? { kind: "circle", center: unit.position, radius: MINE_RADIUS }
-            if(!touches(zone, to, mover.radius)) return
-            const blast = { kind: "circle", center: unit.position, radius: BLAST_RADIUS } as const
+            const zone = unit.zone ?? Areas.circle(unit.position, MINE_RADIUS)
+            if(!Areas.checkCircle(zone, to, mover.radius)) return
+            const blast = Areas.circle(unit.position, BLAST_RADIUS)
             battle.explode(blast, BOMB_DAMAGE, unit.owner ?? unit, unit)
             unit.hearts.slay(null)
         }))
@@ -42,7 +42,7 @@ export class Mined extends HazardStatus {
 /** Leave a mine laid by a unit, lying there for some rounds. */
 export function placeMine(battle: Battle, owner: Unit, center: Vector2): Unit|null {
     return placeHazard(battle, owner, {
-        sprite: visual("units/mine"), name: "Mine", zone: { kind: "circle", center, radius: MINE_RADIUS },
+        sprite: visual("units/mine"), name: "Mine", at: center, zone: Areas.circle(center, MINE_RADIUS),
         hearts: Heart.many(TIME_HEART, MINE_ROUNDS), status: { type: MINE_HAZARD, level: 1 },
     })
 }

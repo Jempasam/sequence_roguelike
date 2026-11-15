@@ -4,7 +4,7 @@ import type { Monster } from "../catalog/monsters"
 import type { Floor, FloorContext } from "../floor/Floor"
 import type { HaltType } from "../halt/HaltType"
 
-import type { FightType, PlaceType } from "./PlaceType"
+import type { FightType } from "../fight/FightType"
 
 /** What the players are told of a sort of place: its name, and what it does. */
 export interface PlaceInfo {
@@ -23,8 +23,11 @@ export interface Spot {
 
 /** A place of the journey: what it holds, where it lies, and where it leads. */
 export interface Place extends Spot {
-    /** What it holds: a fight of some sort, or a halt. */
-    readonly type: PlaceType
+    /** The fight it holds, fought first, none when it holds none. */
+    readonly fight: FightType|null
+
+    /** The halt it holds, visited after its fight when it has one, none when it holds none. */
+    readonly halt: HaltType|null
 
     /** The places it leads to, from left to right. */
     readonly next: Place[]
@@ -84,14 +87,17 @@ export class Journey implements FloorContext {
         return this.#places.filter(place => !reached.has(place))
     }
 
-    /** Lay a fight on the map, with its monsters. */
-    public addFight(type: FightType, monsters: readonly Monster[], at: Spot): Place {
-        return this.#add({ ...at, type, next: [], exitTo: null, monsters })
+    /**
+     * Lay a fight on the map, with its monsters, and the halt visited once it is won, none to go back to the map.
+     * What a won fight gives is the halt's: nothing is given where none is laid.
+     */
+    public addFight(type: FightType, monsters: readonly Monster[], at: Spot, halt: HaltType|null = null): Place {
+        return this.#add({ ...at, fight: type, halt, next: [], exitTo: null, monsters })
     }
 
     /** Lay a halt on the map. */
     public addHalt(type: HaltType, at: Spot): Place {
-        return this.#add({ ...at, type, next: [], exitTo: null, monsters: [] })
+        return this.#add({ ...at, fight: null, halt: type, next: [], exitTo: null, monsters: [] })
     }
 
     /**
@@ -129,7 +135,7 @@ export class Journey implements FloorContext {
         this.exits = floors
         floors.forEach((exitTo, index) => {
             const across = (index + 0.5) / floors.length
-            const place = this.#add({ type: exit, layer, across, next: [], exitTo, monsters: [] })
+            const place = this.#add({ fight: null, halt: exit, layer, across, next: [], exitTo, monsters: [] })
             for(const end of ends) this.link(end, place)
         })
     }

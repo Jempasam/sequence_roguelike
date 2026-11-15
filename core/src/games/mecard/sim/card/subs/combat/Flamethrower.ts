@@ -7,10 +7,11 @@ import { BURN, Burn } from "../../../status/subs/Burn"
 import { ActionCard } from "../ActionCard"
 import { FLAMES_BURN, FLAMES_DAMAGE } from "../body/BodyCards"
 import { sweep } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the flamethrower of the catalog reaches, in meters. */
 const FLAME_RANGE = 3
@@ -56,18 +57,18 @@ export class FlamethrowerCard extends ActionCard {
         // The band it burns from a pose, as long as a share of its reach.
         const flames = (pose: Pose, share = 1): Area => {
             const to = pose.position.plus(pose.direction.times(range * share))
-            return { kind: "segment", from: pose.position, to, width }
+            return Areas.line(pose.position, to, width)
         }
         return {
-            use: function* ({ battle, unit }){
-                yield* sweep(battle, FLAME_TIME, share => [polygon(flames(unit, share), ELEMENTAL_COLOR)])
+            use: function ({ battle, unit }){
+                sweep(battle, FLAME_TIME, share => [Previews.polygon(flames(unit, share), ELEMENTAL_COLOR)])
                 const area = flames(unit)
                 for(const target of battle.strike(unit, area, amount, DamageType.ELEMENTAL)){
                     battle.applyStatus(target, BURN, burn)
                 }
-                placeFlames(battle, unit, area)
+                placeFlames(battle, unit, unit.position.plus(unit.direction.times(range / 2)), area)
             },
-            preview: ({ pose }) => still(pose, polygon(flames(pose), ELEMENTAL_COLOR)),
+            preview: ({ pose }) => Previews.still(pose, Previews.polygon(flames(pose), ELEMENTAL_COLOR)),
         }
     }
 }

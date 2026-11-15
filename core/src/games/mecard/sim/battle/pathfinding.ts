@@ -58,10 +58,17 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
         standing.set(cell, can)
         return can
     }
-    const left = (cell: number): number => Math.max(0, pointOf(cell).distance(target.position) - contact)
+    const lefts = new Map<number, number>()
+    const left = (cell: number): number => {
+        const known = lefts.get(cell)
+        if(known !== undefined) return known
+        const value = Math.max(0, pointOf(cell).distance(target.position) - contact)
+        lefts.set(cell, value)
+        return value
+    }
     const costs = new Map<number, number>()
     const cameFrom = new Map<number, number>()
-    const open = new Set<number>()
+    const open = new OpenCells()
     const startColumn = Math.round(from.x / CELL)
     const startRow = Math.round(from.y / CELL)
     const span = Math.ceil(START_REACH / CELL)
@@ -72,13 +79,11 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
             const cost = pointOf(cell).distance(from)
             if(cost > START_REACH || !canStand(cell)) continue
             costs.set(cell, cost)
-            open.add(cell)
+            open.add(cell, cost + left(cell))
         }
     }
     let best: number|null = null
-    while(open.size > 0){
-        const cell = cheapest(open, each => (costs.get(each) ?? Infinity) + left(each))
-        open.delete(cell)
+    for(let cell = open.pop(); cell !== null; cell = open.pop()){
         if(best === null || left(cell) < left(best)) best = cell
         if(left(cell) === 0) break
         const column = cell % columns
@@ -92,7 +97,7 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
             if(cost >= (costs.get(next) ?? Infinity) || !canStand(next)) continue
             costs.set(next, cost)
             cameFrom.set(next, cell)
-            open.add(next)
+            open.add(next, cost + left(next))
         }
     }
     if(best === null || pointOf(best).distance(target.position) >= from.distance(target.position)) return []
@@ -101,18 +106,82 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
     return way.map(pointOf)
 }
 
-/** The cell that costs the least, the first of the ties by its place in the grid. */
-function cheapest(cells: ReadonlySet<number>, cost: (cell: number) => number): number {
-    let found = -1
-    let lowest = Infinity
-    for(const cell of cells){
-        const value = cost(cell)
-        if(value < lowest || (value === lowest && cell < found)){
-            found = cell
-            lowest = value
+/**
+ * The cells left to search, each with what it is thought to cost: taken out the cheapest first, the first of
+ * the ties by its place in the grid.
+ *
+ * @remarks
+ * A binary heap. A cell given a lower cost is put in again, and what it held before is skipped when it comes
+ * out: only the entry with its last cost stands for it.
+ */
+class OpenCells {
+
+    readonly #costs = new Map<number, number>()
+    readonly #heap: number[] = []
+    readonly #heapCosts: number[] = []
+
+    /** Put a cell in, or give it another cost. */
+    public add(cell: number, cost: number): void {
+        this.#costs.set(cell, cost)
+        this.#heap.push(cell)
+        this.#heapCosts.push(cost)
+        this.#up(this.#heap.length - 1)
+    }
+
+    /** Take out the cheapest cell, none when there is none left. */
+    public pop(): number|null {
+        while(this.#heap.length > 0){
+            const cell = this.#heap[0]
+            const cost = this.#heapCosts[0]
+            const lastCell = this.#heap.pop()!
+            const lastCost = this.#heapCosts.pop()!
+            if(this.#heap.length > 0){
+                this.#heap[0] = lastCell
+                this.#heapCosts[0] = lastCost
+                this.#down(0)
+            }
+            if(this.#costs.get(cell) !== cost) continue
+            this.#costs.delete(cell)
+            return cell
+        }
+        return null
+    }
+
+    #before(first: number, second: number): boolean {
+        const a = this.#heapCosts[first]
+        const b = this.#heapCosts[second]
+        return a < b || (a === b && this.#heap[first] < this.#heap[second])
+    }
+
+    #swap(first: number, second: number): void {
+        const heap = this.#heap
+        const costs = this.#heapCosts;
+        [heap[first], heap[second]] = [heap[second], heap[first]];
+        [costs[first], costs[second]] = [costs[second], costs[first]]
+    }
+
+    #up(index: number): void {
+        while(index > 0){
+            const parent = (index - 1) >> 1
+            if(!this.#before(index, parent)) return
+            this.#swap(index, parent)
+            index = parent
         }
     }
-    return found
+
+    #down(index: number): void {
+        const size = this.#heap.length
+        for(;;){
+            const left = index * 2 + 1
+            const right = left + 1
+            let first = index
+            if(left < size && this.#before(left, first)) first = left
+            if(right < size && this.#before(right, first)) first = right
+            if(first === index) return
+            this.#swap(index, first)
+            index = first
+        }
+    }
 }
 
 /** A way with only the points it turns at: from each, the farthest one it walks to in a straight line. */
@@ -137,6 +206,6 @@ function walks(battle: Battle, unit: Unit, from: Vector2, to: Vector2, target: U
     const direction = to.minus(from).normalized
     if(!direction) return true
     const length = from.distance(to)
-    const gone = battle.travel(unit, from, direction, length)
+    const gone = battle.moveSpot(unit, from, direction, length)
     return gone.struck === target || gone.distance >= length - REACHED
 }

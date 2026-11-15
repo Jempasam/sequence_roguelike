@@ -1,8 +1,12 @@
 import type { PlugContext, UnitContext } from "../../battle/Action"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
+import * as Areas from "../../battle/area/Areas"
 
 /** How many hearts a unit going back to its shadow takes from each body on the way, whatever its stats. */
 export const SHADOW_LINK_DAMAGE = 1
@@ -43,6 +47,14 @@ export class ShadowLink extends AbstractProcess {
     }
 
 
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const shadow = closestShadow({ battle, unit })
+        if(!shadow) return Previews.still(pose)
+        const way = Areas.line(unit.position, shadow.position, SHADOW_LINK_WIDTH)
+        return Previews.still(pose, ...Previews.strike([way], battle.fetch(way, unit)))
+    }
+
+
     public dispose(ctx: UnitContext): void {
         const { battle, unit } = ctx
         if(!unit.alive || battle.phase === "over") return
@@ -52,8 +64,8 @@ export class ShadowLink extends AbstractProcess {
         const to = shadow.position
         if(!battle.leap(unit, to)) return
         shadow.hearts.slay(null)
-        const way = { kind: "segment", from, to, width: SHADOW_LINK_WIDTH } as const
-        for(const target of battle.unitsIn(way, unit)){
+        const way = Areas.line(from, to, SHADOW_LINK_WIDTH)
+        for(const target of battle.fetch(way, unit)){
             target.hearts.damage(SHADOW_LINK_DAMAGE, DamageType.PHYSICAL, unit)
         }
         battle.unblock(unit)

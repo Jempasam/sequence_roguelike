@@ -10,6 +10,7 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { MergedCard } from "../composite/MergedCard"
 import { SHOCK_WAVE, SUCTION } from "../combat/Shoves"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the axe of the catalog reaches all around, in meters. */
 const AXE_RANGE = 1.2
@@ -37,7 +38,7 @@ export class BloodAxeCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return { kind: "circle", center: pose.position, radius: this.range * unit.stats.meleeRange.value * progress }
+        return Areas.circle(pose.position, this.range * unit.stats.meleeRange.value * progress)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

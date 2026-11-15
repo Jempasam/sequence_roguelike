@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    Arena, Battle, BOUNCE_DASH, HEAD_JUMP, Heart, HUNT, KNIGHT_MOVE, LEAP, RED_HEART, ROOTED,
+    ANGEL_FLIGHT, Arena, Battle, BOUNCE_DASH, HEAD_JUMP, Heart, HUNT, KNIGHT_MOVE, LEAP, RED_HEART, ROOTED,
     SHADOW_STEP, Vector2,
 } from "@game/core/mecard"
 
@@ -39,12 +39,12 @@ describe("LEAP", () => {
         expect(hero.life).toBe(4)
     })
 
-    test("landing on a pillar → thrown aside for a heart", () => {
+    test("landing on a pillar → thrown aside, at no cost", () => {
         const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.3 })
         const hero = unit(on, 3, 6)
         unit(on, 6, 1, { team: MONSTERS })
         play(on, [[hero, chain(LEAP)]])
-        expect(hero.life).toBe(3)
+        expect(hero.life).toBe(4)
         expect(on.free(hero.position, hero)).toBe(true)
     })
 
@@ -115,13 +115,13 @@ describe("HEAD_JUMP", () => {
         expect(hero.life).toBe(4)
     })
 
-    test("the jumps used up on bodies → thrown aside for a heart", () => {
+    test("the jumps used up on bodies → thrown aside, at no cost", () => {
         const on = battle()
         const hero = unit(on, 3, 6.5, { hearts: Heart.many(RED_HEART, 8) })
         const hearts = Heart.many(RED_HEART, 8)
         for(const y of [4.5, 2.5, 0.5]) unit(on, 3, y, { team: MONSTERS, hearts })
         play(on, [[hero, chain(HEAD_JUMP)]])
-        expect(hero.life).toBe(7)
+        expect(hero.life).toBe(8)
         expect(on.free(hero.position, hero)).toBe(true)
     })
 })
@@ -159,6 +159,37 @@ describe("SHADOW_STEP", () => {
         unit(on, 6, 1, { team: MONSTERS })
         play(on, [[hero, chain(SHADOW_STEP)]])
         expect(hero.position.y).toBeCloseTo(3 + 0.5 + hero.radius, 1)
+    })
+})
+
+describe("ANGEL_FLIGHT", () => {
+    test("jumps before the farthest ally in the circle, facing its way", () => {
+        const on = battle()
+        const hero = unit(on, 3, 6)
+        unit(on, 3, 4)
+        const far = unit(on, 1, 0.5, { direction: Vector2.RIGHT })
+        unit(on, 6, 3, { team: MONSTERS })
+        play(on, [[hero, chain(ANGEL_FLIGHT)]])
+        expect(hero.direction.equals(Vector2.RIGHT)).toBe(true)
+        expect(hero.position.x).toBeGreaterThan(far.position.x)
+        expect(hero.position.y).toBeCloseTo(far.position.y, 0)
+    })
+
+    test("an ally beyond the circle is ignored", () => {
+        const on = battle()
+        const hero = unit(on, 0, 6.9)
+        unit(on, 6.9, 0)
+        unit(on, 6, 6, { team: MONSTERS })
+        play(on, [[hero, chain(ANGEL_FLIGHT)]])
+        expectAt(hero, 0, 6.9)
+    })
+
+    test("no ally → the unit stays", () => {
+        const on = battle()
+        const hero = unit(on, 1, 6)
+        unit(on, 5, 1, { team: MONSTERS })
+        play(on, [[hero, chain(ANGEL_FLIGHT)]])
+        expectAt(hero, 1, 6)
     })
 })
 

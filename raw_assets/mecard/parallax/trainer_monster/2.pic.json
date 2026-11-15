@@ -1,0 +1,28 @@
+{
+    "size": [288, 164],
+    "seed": 12,
+    "palette": ["#14121a", {"color": "#7a7690", "reflection": 0.3}, "#6a5470", {"color": "#ff9a30", "light": 0.55}],
+    "shapes": [
+        {"box": [24, 24, 240, 7], "material": 0, "depth": [4, 5], "relief": "round-y"},
+        {"box": [24, 100, 240, 7], "material": 0, "depth": [4, 5], "relief": "round-y"},
+        {"box": [30, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [50, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [70, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [90, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [194, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [214, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [234, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [254, 26, 4, 80], "material": 1, "depth": [3, 5], "relief": "round-x"},
+        {"box": [24, 62, 240, 4], "material": 0, "depth": [4, 5], "relief": "round-y"},
+        {"box": [28, 100, 6, 6], "material": 2, "depth": 5, "relief": "dome"},
+        {"box": [258, 100, 6, 6], "material": 2, "depth": 5, "relief": "dome"},
+        {"box": [104, 36, 6, 70], "material": 2, "depth": [4, 5], "relief": "round-x"},
+        {"box": [182, 36, 6, 70], "material": 2, "depth": [4, 5], "relief": "round-x"},
+        {"box": [38, 38, 4, 14], "material": 2, "depth": [5, 6], "relief": "round-x"},
+        {"polygon": [[36, 38], [44, 38], [46, 34], [34, 34]], "material": 0, "depth": 6},
+        {"polygon": [[40, 30], [36, 22], [42, 24], [44, 18], [46, 26], [48, 30]], "material": 3, "depth": [6, 8], "relief": "dome"},
+        {"box": [246, 38, 4, 14], "material": 2, "depth": [5, 6], "relief": "round-x"},
+        {"polygon": [[244, 38], [252, 38], [254, 34], [242, 34]], "material": 0, "depth": 6},
+        {"polygon": [[248, 30], [244, 22], [250, 24], [252, 18], [254, 26], [256, 30]], "material": 3, "depth": [6, 8], "relief": "dome"}
+    ]
+}

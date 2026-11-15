@@ -1,0 +1,30 @@
+{
+    "size": [288, 164],
+    "seed": 13,
+    "palette": ["#1a1018", "#a8607c", "#f0cfd8", {"color": "#9a98b0", "reflection": 0.3}],
+    "shapes": [
+        {"ellipse": [112, 118, 64, 14], "material": 0, "depth": 3, "relief": "dome"},
+        {"picture": "parts/bear.pic.json", "at": [122, 36], "materials": [0, 1, 2], "depth": 6},
+        {"ellipse": [137, 45, 4, 3], "material": 0, "depth": 9},
+        {"ellipse": [148, 45, 4, 3], "material": 0, "depth": 9},
+        {"ellipse": [130, 63, 28, 9], "material": 3, "depth": [6, 9], "relief": "round-y"},
+        {"ellipse": [135, 65, 18, 4], "material": 0, "depth": 5, "erase": true},
+        {"box": [140, 71, 8, 7], "material": 3, "depth": [7, 9], "relief": "dome"},
+        {"line": [130, 67, 104, 44], "width": 2, "material": 3, "depth": 8},
+        {"line": [104, 44, 90, 60], "width": 2, "material": 3, "depth": 8},
+        {"line": [90, 60, 80, 48], "width": 2, "material": 3, "depth": 8},
+        {"line": [158, 67, 184, 44], "width": 2, "material": 3, "depth": 8},
+        {"line": [184, 44, 198, 60], "width": 2, "material": 3, "depth": 8},
+        {"line": [198, 60, 208, 48], "width": 2, "material": 3, "depth": 8},
+        {"ellipse": [76, 44, 9, 9], "material": 3, "depth": [6, 9], "relief": "round-x"},
+        {"ellipse": [78, 46, 5, 5], "material": 0, "depth": 5, "erase": true},
+        {"ellipse": [204, 44, 9, 9], "material": 3, "depth": [6, 9], "relief": "round-x"},
+        {"ellipse": [206, 46, 5, 5], "material": 0, "depth": 5, "erase": true},
+        {"line": [138, 106, 128, 122], "width": 2, "material": 3, "depth": 8},
+        {"line": [128, 122, 118, 128], "width": 2, "material": 3, "depth": 8},
+        {"line": [160, 106, 168, 122], "width": 2, "material": 3, "depth": 8},
+        {"line": [168, 122, 178, 128], "width": 2, "material": 3, "depth": 8},
+        {"ellipse": [112, 124, 9, 6], "material": 3, "depth": [6, 9], "relief": "dome"},
+        {"ellipse": [174, 124, 9, 6], "material": 3, "depth": [6, 9], "relief": "dome"}
+    ]
+}

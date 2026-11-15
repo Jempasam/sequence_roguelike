@@ -1,6 +1,6 @@
 import { NetSync } from "@game/core"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
-import { planFor } from "@game/core/mecard"
+import { DeckAi } from "@game/core/mecard"
 import {
     COOP_SEATS, FIXED_SEATS, RunBroadcaster, RunGuest, RunHost, RunReceiver,
 } from "@game/core/mecard/sync"
@@ -57,9 +57,9 @@ describe("RunGuest over the network", () => {
         battle.advance()
         await until(() => viewer.battle?.phase === "preparation")
         const unit = unitOf(viewer.battle, guest.units[0])
-        viewer.battle?.commit(unit, planFor(unit))
+        viewer.battle?.commit(unit, new DeckAi().decide(unit).chain)
         guest.ready()
-        for(const each of battle.awaited.units) if(!host.isGuests(each)) battle.commit(each, planFor(each))
+        for(const each of battle.awaited.units) if(!host.isGuests(each)) battle.commit(each, new DeckAi().decide(each).chain)
         host.ready()
         await until(() => told === 1)
         battle.advance()

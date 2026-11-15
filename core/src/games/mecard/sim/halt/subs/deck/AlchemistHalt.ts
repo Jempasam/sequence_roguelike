@@ -8,7 +8,6 @@ import { transmute, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
 import { CARTE } from "../../../base/keywords"
@@ -36,7 +35,7 @@ export class AlchemistHalt extends DeckHalt {
     constructor(run: Run){
         super(ALCHEMIST_HALT, run,
             ["Deux copies d'une ", CARTE, " ? J'en fais une seule, améliorée."],
-            sceneLook(15, 33, 23, "mecard/travel/alchemist"),
+            sceneLook(15, 33, 23, "alchemist"),
             {
                 hat: "turban",
                 clothes: rgba(0.35, 0.9, 0.45),
@@ -72,7 +71,8 @@ export class AlchemistHalt extends DeckHalt {
 export const ALCHEMIST_HALT: HaltType = {
     id: "alchemist",
     name: "Alchimiste",
-    description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],    icon: visual("travel/alchemist/logo", { letter: "AL" }),
-    transition: DOOR_TRANSITION,
+    description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],
+    icon: visual("travel/alchemist/logo", { letter: "AL" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new AlchemistHalt(run),
 }

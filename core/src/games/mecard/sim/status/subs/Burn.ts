@@ -18,7 +18,7 @@ export class Burn extends RoundStatus {
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [battle.roundEnded.add(() => {
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             unit.hearts.damage(BURN_DAMAGE, DamageType.ELEMENTAL, null)
         })]
     }

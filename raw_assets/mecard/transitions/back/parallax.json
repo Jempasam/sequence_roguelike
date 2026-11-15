@@ -1,0 +1,27 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#6a5a42"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#c8a050", "amount": 0.12}
+        ]
+    },
+    "anim": [
+        "global: y=-1.2 > y=0 m > y=1.2",
+        "route:  y=-0.04 > y=0 m > y=0.04"
+    ],
+    "layers": [
+        {"name": "route", "tag": "object", "picture": "route.pic.json", "at": [0, 0]},
+        {"name": "land", "tag": "object", "picture": "land.pic.json", "at": [0, 0]},
+        {"name": "paper", "tag": "object", "picture": "paper.pic.json", "at": [0, -72]}
+    ]
+}

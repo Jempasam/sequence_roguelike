@@ -6,6 +6,7 @@
  * status.
  */
 
+export * from "./BearTrap"
 export * from "./Bomb"
 export * from "./BurningGround"
 export * from "./ContactHazard"

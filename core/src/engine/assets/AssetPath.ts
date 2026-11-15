@@ -2,18 +2,76 @@
 
 /** The path of a file shipped with the game, under assets/. */
 export type AssetPath =
+    | "mecard/border/alchemist.png"
+    | "mecard/border/altar.png"
+    | "mecard/border/antiquarian.png"
+    | "mecard/border/butcher.png"
+    | "mecard/border/castle.png"
+    | "mecard/border/chest.png"
+    | "mecard/border/demon.png"
+    | "mecard/border/dojo.png"
+    | "mecard/border/enchanter.png"
+    | "mecard/border/factory.png"
+    | "mecard/border/forest.png"
+    | "mecard/border/forge.png"
+    | "mecard/border/graveyard.png"
+    | "mecard/border/harbor.png"
+    | "mecard/border/hell.png"
+    | "mecard/border/hospital.png"
+    | "mecard/border/inventor.png"
+    | "mecard/border/mad-doctor.png"
+    | "mecard/border/magician.png"
+    | "mecard/border/map.png"
+    | "mecard/border/merchant.png"
+    | "mecard/border/mine.png"
+    | "mecard/border/necromancer.png"
+    | "mecard/border/removal.png"
+    | "mecard/border/shop.png"
+    | "mecard/border/strategist.png"
+    | "mecard/border/swamp.png"
+    | "mecard/border/tavern.png"
+    | "mecard/border/trainer.png"
+    | "mecard/border/trainer_monster.png"
+    | "mecard/border/tundra.png"
+    | "mecard/border/volcano.png"
+    | "mecard/border/weaver.png"
+    | "mecard/border/witch.png"
     | "mecard/cards/back.png"
     | "mecard/cards/back_2.png"
     | "mecard/cards/back_3.png"
     | "mecard/cards/back_4.png"
     | "mecard/cards/invalid.png"
+    | "mecard/floors/castle/armor.png"
+    | "mecard/floors/castle/banner.png"
+    | "mecard/floors/castle/barrel.png"
+    | "mecard/floors/castle/border.png"
+    | "mecard/floors/castle/logo.png"
+    | "mecard/floors/castle/torch.png"
+    | "mecard/floors/castle/tower.png"
+    | "mecard/floors/cave/bigshroom.png"
     | "mecard/floors/cave/bones.png"
     | "mecard/floors/cave/logo.png"
     | "mecard/floors/cave/mouth.png"
     | "mecard/floors/cave/mushroom.png"
     | "mecard/floors/cave/pebbles.png"
     | "mecard/floors/cave/stalagmite.png"
+    | "mecard/floors/dojo/bamboo.png"
+    | "mecard/floors/dojo/bonsai.png"
+    | "mecard/floors/dojo/border.png"
+    | "mecard/floors/dojo/gate.png"
+    | "mecard/floors/dojo/lantern.png"
+    | "mecard/floors/dojo/logo.png"
+    | "mecard/floors/dojo/stone.png"
     | "mecard/floors/exit.png"
+    | "mecard/floors/factory/border.png"
+    | "mecard/floors/factory/crate.png"
+    | "mecard/floors/factory/factory.png"
+    | "mecard/floors/factory/gear.png"
+    | "mecard/floors/factory/lamp.png"
+    | "mecard/floors/factory/logo.png"
+    | "mecard/floors/factory/pipe.png"
+    | "mecard/floors/factory/press.png"
+    | "mecard/floors/factory/small_gear.png"
     | "mecard/floors/forest/1.png"
     | "mecard/floors/forest/2.png"
     | "mecard/floors/forest/3.png"
@@ -26,6 +84,22 @@ export type AssetPath =
     | "mecard/floors/forest/logo.png"
     | "mecard/floors/forest/stump.png"
     | "mecard/floors/forest/tree.png"
+    | "mecard/floors/graveyard/border.png"
+    | "mecard/floors/graveyard/candle.png"
+    | "mecard/floors/graveyard/cross.png"
+    | "mecard/floors/graveyard/crypt.png"
+    | "mecard/floors/graveyard/deadtree.png"
+    | "mecard/floors/graveyard/logo.png"
+    | "mecard/floors/graveyard/tombstone.png"
+    | "mecard/floors/harbor/anchor.png"
+    | "mecard/floors/harbor/border.png"
+    | "mecard/floors/harbor/buoy.png"
+    | "mecard/floors/harbor/cask.png"
+    | "mecard/floors/harbor/crate.png"
+    | "mecard/floors/harbor/logo.png"
+    | "mecard/floors/harbor/mast.png"
+    | "mecard/floors/harbor/small_wave.png"
+    | "mecard/floors/harbor/wave.png"
     | "mecard/floors/hell/1.png"
     | "mecard/floors/hell/2.png"
     | "mecard/floors/hell/3.png"
@@ -50,26 +124,73 @@ export type AssetPath =
     | "mecard/floors/mine/logo.png"
     | "mecard/floors/mine/mountain.png"
     | "mecard/floors/mine/ore.png"
+    | "mecard/floors/swamp/bigshroom.png"
+    | "mecard/floors/swamp/border.png"
+    | "mecard/floors/swamp/bubbles.png"
+    | "mecard/floors/swamp/lily.png"
+    | "mecard/floors/swamp/logo.png"
+    | "mecard/floors/swamp/mushroom.png"
+    | "mecard/floors/swamp/reed.png"
+    | "mecard/floors/swamp/small_reed.png"
+    | "mecard/floors/swamp/stump.png"
+    | "mecard/floors/tundra/border.png"
+    | "mecard/floors/tundra/crystal.png"
+    | "mecard/floors/tundra/iceblock.png"
+    | "mecard/floors/tundra/igloo.png"
+    | "mecard/floors/tundra/logo.png"
+    | "mecard/floors/tundra/pine.png"
+    | "mecard/floors/tundra/snow.png"
+    | "mecard/floors/tundra/snowman.png"
+    | "mecard/floors/volcano/bones.png"
+    | "mecard/floors/volcano/border.png"
+    | "mecard/floors/volcano/geyser.png"
+    | "mecard/floors/volcano/lava.png"
+    | "mecard/floors/volcano/logo.png"
+    | "mecard/floors/volcano/obsidian.png"
+    | "mecard/floors/volcano/rock.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
     | "mecard/items/alembic.png"
     | "mecard/items/amulet.png"
+    | "mecard/items/ashtray.png"
     | "mecard/items/bag.png"
+    | "mecard/items/battery.png"
+    | "mecard/items/belt.png"
+    | "mecard/items/blood_pact.png"
     | "mecard/items/boots.png"
     | "mecard/items/bottle_bag.png"
+    | "mecard/items/demon_fang.png"
     | "mecard/items/dodge_scepter.png"
     | "mecard/items/doll.png"
+    | "mecard/items/echo.png"
     | "mecard/items/element_bag.png"
     | "mecard/items/fang.png"
+    | "mecard/items/fang_necklace.png"
+    | "mecard/items/flower_crown.png"
+    | "mecard/items/gear.png"
+    | "mecard/items/glass_heart.png"
     | "mecard/items/grimoire.png"
+    | "mecard/items/horseshoe.png"
+    | "mecard/items/hourglass.png"
+    | "mecard/items/king_crown.png"
+    | "mecard/items/magnet.png"
     | "mecard/items/med_kit.png"
     | "mecard/items/potion_bag.png"
+    | "mecard/items/reactor.png"
+    | "mecard/items/roller.png"
+    | "mecard/items/rosary.png"
     | "mecard/items/satchel.png"
+    | "mecard/items/scary_mask.png"
     | "mecard/items/scope.png"
     | "mecard/items/sling.png"
+    | "mecard/items/soul_lantern.png"
+    | "mecard/items/spurs.png"
     | "mecard/items/spyglass.png"
+    | "mecard/items/sticky_soles.png"
+    | "mecard/items/summon_heart.png"
     | "mecard/items/tactics_book.png"
     | "mecard/items/whetstone.png"
+    | "mecard/items/wings.png"
     | "mecard/menu/1.png"
     | "mecard/menu/2.png"
     | "mecard/menu/3.png"
@@ -79,25 +200,93 @@ export type AssetPath =
     | "mecard/menu/7.png"
     | "mecard/menu/8.png"
     | "mecard/menu/9.png"
+    | "mecard/parallax/alchemist.ora"
+    | "mecard/parallax/alley.ora"
+    | "mecard/parallax/altar.ora"
+    | "mecard/parallax/antiquarian.ora"
+    | "mecard/parallax/arms-master.ora"
+    | "mecard/parallax/bag.ora"
+    | "mecard/parallax/butcher.ora"
+    | "mecard/parallax/castle.ora"
+    | "mecard/parallax/chest.ora"
+    | "mecard/parallax/creature.ora"
+    | "mecard/parallax/demon.ora"
+    | "mecard/parallax/dojo.ora"
+    | "mecard/parallax/enchanter.ora"
+    | "mecard/parallax/enchanter2.ora"
+    | "mecard/parallax/factory.ora"
+    | "mecard/parallax/forest.ora"
+    | "mecard/parallax/forge.ora"
+    | "mecard/parallax/general-store.ora"
+    | "mecard/parallax/graveyard.ora"
+    | "mecard/parallax/harbor.ora"
+    | "mecard/parallax/hell.ora"
+    | "mecard/parallax/hospital.ora"
+    | "mecard/parallax/inventor.ora"
+    | "mecard/parallax/mad-doctor.ora"
+    | "mecard/parallax/magician.ora"
+    | "mecard/parallax/map.ora"
+    | "mecard/parallax/meadow.ora"
+    | "mecard/parallax/merchant.ora"
+    | "mecard/parallax/mine.ora"
+    | "mecard/parallax/necromancer.ora"
+    | "mecard/parallax/removal.ora"
+    | "mecard/parallax/shop.ora"
+    | "mecard/parallax/space.ora"
+    | "mecard/parallax/spotlight-barrel.ora"
+    | "mecard/parallax/stone-room.ora"
+    | "mecard/parallax/strategist.ora"
+    | "mecard/parallax/swamp.ora"
+    | "mecard/parallax/tavern.ora"
+    | "mecard/parallax/trainer.ora"
+    | "mecard/parallax/trainer_monster.ora"
+    | "mecard/parallax/treasure.ora"
+    | "mecard/parallax/tundra.ora"
+    | "mecard/parallax/underwater.ora"
+    | "mecard/parallax/volcano.ora"
+    | "mecard/parallax/weapon.ora"
+    | "mecard/parallax/weaver.ora"
+    | "mecard/parallax/witch.ora"
+    | "mecard/parallax/wooden-door.ora"
+    | "mecard/parallax/workshop.ora"
+    | "mecard/pnj/hats/alchemist.png"
+    | "mecard/pnj/hats/altar.png"
+    | "mecard/pnj/hats/antiquarian.png"
     | "mecard/pnj/hats/beret.png"
     | "mecard/pnj/hats/bicorne.png"
+    | "mecard/pnj/hats/butcher.png"
     | "mecard/pnj/hats/chef-toque.png"
     | "mecard/pnj/hats/coif.png"
+    | "mecard/pnj/hats/demon.png"
     | "mecard/pnj/hats/doctor-hat.png"
+    | "mecard/pnj/hats/enchanter.png"
     | "mecard/pnj/hats/feather-toque.png"
+    | "mecard/pnj/hats/forge.png"
     | "mecard/pnj/hats/fur-toque.png"
     | "mecard/pnj/hats/goggles.png"
     | "mecard/pnj/hats/hood.png"
     | "mecard/pnj/hats/horned-crown.png"
+    | "mecard/pnj/hats/hospital.png"
     | "mecard/pnj/hats/hunting-hat.png"
+    | "mecard/pnj/hats/inventor.png"
+    | "mecard/pnj/hats/mad-doctor.png"
+    | "mecard/pnj/hats/magician.png"
+    | "mecard/pnj/hats/merchant.png"
     | "mecard/pnj/hats/mitre.png"
+    | "mecard/pnj/hats/necromancer.png"
+    | "mecard/pnj/hats/removal.png"
+    | "mecard/pnj/hats/shop.png"
     | "mecard/pnj/hats/skull-hood.png"
     | "mecard/pnj/hats/skullcap.png"
     | "mecard/pnj/hats/star-cone.png"
+    | "mecard/pnj/hats/strategist.png"
+    | "mecard/pnj/hats/tavern.png"
     | "mecard/pnj/hats/top-hat.png"
+    | "mecard/pnj/hats/trainer.png"
     | "mecard/pnj/hats/turban.png"
     | "mecard/pnj/hats/velvet-toque.png"
     | "mecard/pnj/hats/witch-hat.png"
+    | "mecard/pnj/hats/witch.png"
     | "mecard/pnj/items/bow.png"
     | "mecard/pnj/items/cleaver.png"
     | "mecard/pnj/items/demon-fork.png"
@@ -120,13 +309,17 @@ export type AssetPath =
     | "mecard/pnj/masks/venetian.png"
     | "mecard/pnj/masks/wolf.png"
     | "mecard/pnj/merchant.ora"
+    | "mecard/processes/ethereal.png"
+    | "mecard/processes/exo_nerf.png"
     | "mecard/processes/haste.png"
+    | "mecard/processes/haunting.png"
     | "mecard/processes/hook.png"
     | "mecard/processes/horse.png"
     | "mecard/processes/iron_chain.png"
     | "mecard/processes/laser_link.png"
-    | "mecard/processes/ritual.png"
+    | "mecard/processes/parrot.png"
     | "mecard/processes/shadow_link.png"
+    | "mecard/processes/skewer.png"
     | "mecard/processes/spirit_anchor.png"
     | "mecard/processes/strength.png"
     | "mecard/processes/vanishing.png"
@@ -138,6 +331,7 @@ export type AssetPath =
     | "mecard/sounds/frinch.wav"
     | "mecard/sounds/guitare.ogg"
     | "mecard/sounds/guitare_grave.ogg"
+    | "mecard/sounds/liquide.wav"
     | "mecard/sounds/pop.wav"
     | "mecard/sounds/sword.wav"
     | "mecard/sounds/tchi.wav"
@@ -148,6 +342,7 @@ export type AssetPath =
     | "mecard/statuses/bloodlust.png"
     | "mecard/statuses/burn.png"
     | "mecard/statuses/burning_ground.png"
+    | "mecard/statuses/chess_piece.png"
     | "mecard/statuses/coated.png"
     | "mecard/statuses/concentration.png"
     | "mecard/statuses/confusion.png"
@@ -159,21 +354,27 @@ export type AssetPath =
     | "mecard/statuses/fragile.png"
     | "mecard/statuses/frenzy.png"
     | "mecard/statuses/furious.png"
-    | "mecard/statuses/grand_ritual.png"
     | "mecard/statuses/healing.png"
     | "mecard/statuses/mark.png"
     | "mecard/statuses/mine.png"
+    | "mecard/statuses/momentum.png"
+    | "mecard/statuses/overheat.png"
     | "mecard/statuses/poison.png"
     | "mecard/statuses/possessed.png"
     | "mecard/statuses/puddle.png"
     | "mecard/statuses/rage.png"
+    | "mecard/statuses/ritual.png"
     | "mecard/statuses/rocky.png"
     | "mecard/statuses/rooted.png"
     | "mecard/statuses/sliding_parry.png"
     | "mecard/statuses/slow.png"
     | "mecard/statuses/soul_link.png"
     | "mecard/statuses/soul_shield.png"
+    | "mecard/statuses/stench.png"
     | "mecard/statuses/surging.png"
+    | "mecard/statuses/swallow.png"
+    | "mecard/statuses/swift.png"
+    | "mecard/statuses/vigor.png"
     | "mecard/statuses/vulnerable.png"
     | "mecard/statuses/weakened.png"
     | "mecard/statuses/whirling.png"
@@ -181,8 +382,20 @@ export type AssetPath =
     | "mecard/tethers/grapple.png"
     | "mecard/tethers/iron_chain.png"
     | "mecard/tethers/laser.png"
+    | "mecard/transitions/back.ora"
+    | "mecard/transitions/cage-door.ora"
+    | "mecard/transitions/cave-exit.ora"
     | "mecard/transitions/cave.ora"
-    | "mecard/transitions/door.ora"
+    | "mecard/transitions/dungeon-door.ora"
+    | "mecard/transitions/gilded-door.ora"
+    | "mecard/transitions/great-door.ora"
+    | "mecard/transitions/house-door.ora"
+    | "mecard/transitions/photo-cave.ora"
+    | "mecard/transitions/photo-door.ora"
+    | "mecard/transitions/portal.ora"
+    | "mecard/transitions/spiral-stairs.ora"
+    | "mecard/transitions/stone-bridge.ora"
+    | "mecard/transitions/warm-door.ora"
     | "mecard/travel/alchemist/1.png"
     | "mecard/travel/alchemist/2.png"
     | "mecard/travel/alchemist/3.png"
@@ -218,6 +431,7 @@ export type AssetPath =
     | "mecard/travel/chest/5.png"
     | "mecard/travel/chest/border.png"
     | "mecard/travel/chest/logo.png"
+    | "mecard/travel/deadly-fight/logo.png"
     | "mecard/travel/demon/1.png"
     | "mecard/travel/demon/2.png"
     | "mecard/travel/demon/3.png"
@@ -232,6 +446,7 @@ export type AssetPath =
     | "mecard/travel/enchanter/5.png"
     | "mecard/travel/enchanter/border.png"
     | "mecard/travel/enchanter/logo.png"
+    | "mecard/travel/fight/logo.png"
     | "mecard/travel/forge/1.png"
     | "mecard/travel/forge/2.png"
     | "mecard/travel/forge/3.png"
@@ -323,13 +538,17 @@ export type AssetPath =
     | "mecard/travel/witch/border.png"
     | "mecard/travel/witch/logo.png"
     | "mecard/units/acrobat.png"
+    | "mecard/units/amog.png"
     | "mecard/units/apothecary.png"
     | "mecard/units/archer.png"
     | "mecard/units/artificer.png"
     | "mecard/units/assassin.png"
     | "mecard/units/barrel.png"
     | "mecard/units/bear.png"
+    | "mecard/units/beast_warrior.png"
     | "mecard/units/berserker.png"
+    | "mecard/units/big_bad_wolf.png"
+    | "mecard/units/bishop.png"
     | "mecard/units/black_knight.png"
     | "mecard/units/bleeder.png"
     | "mecard/units/boar.png"
@@ -338,57 +557,96 @@ export type AssetPath =
     | "mecard/units/brute.png"
     | "mecard/units/bull.png"
     | "mecard/units/bullfighter.png"
+    | "mecard/units/chess_knight.png"
+    | "mecard/units/chess_player.png"
     | "mecard/units/chronomancer.png"
     | "mecard/units/coin.png"
+    | "mecard/units/dark_lord.png"
     | "mecard/units/demonist.png"
     | "mecard/units/devil.png"
     | "mecard/units/druid.png"
     | "mecard/units/duelist.png"
+    | "mecard/units/elemental.png"
     | "mecard/units/elf_archer.png"
     | "mecard/units/elf_assassin.png"
     | "mecard/units/explosive_goblin.png"
     | "mecard/units/fire.png"
+    | "mecard/units/fire_lizard.png"
     | "mecard/units/fire_mage.png"
     | "mecard/units/fisher.png"
     | "mecard/units/fox.png"
     | "mecard/units/frog.png"
+    | "mecard/units/frost_giant.png"
+    | "mecard/units/garrison_goblin.png"
+    | "mecard/units/geomancer.png"
+    | "mecard/units/ghost.png"
+    | "mecard/units/ghost_shogun.png"
+    | "mecard/units/glass_man.png"
     | "mecard/units/goblin.png"
+    | "mecard/units/goblin_mecha.png"
+    | "mecard/units/goblin_pilot.png"
     | "mecard/units/goblin_rider.png"
+    | "mecard/units/goblin_wrestler.png"
     | "mecard/units/golem.png"
     | "mecard/units/gravitationist.png"
     | "mecard/units/gunner.png"
     | "mecard/units/hand.png"
+    | "mecard/units/harpoon_pirate.png"
+    | "mecard/units/haunting_ghost.png"
     | "mecard/units/hawk.png"
+    | "mecard/units/horse.png"
     | "mecard/units/hunter.png"
+    | "mecard/units/hydra.png"
     | "mecard/units/hypnotist.png"
     | "mecard/units/ice_mage.png"
     | "mecard/units/imp.png"
+    | "mecard/units/iron_knight.png"
     | "mecard/units/kamikaze_robot.png"
     | "mecard/units/knight.png"
+    | "mecard/units/kraken_captain.png"
     | "mecard/units/lancer.png"
+    | "mecard/units/lich_king.png"
     | "mecard/units/log.png"
+    | "mecard/units/mad_alchemist.png"
     | "mecard/units/mage.png"
+    | "mecard/units/magma_dragon.png"
     | "mecard/units/martyr.png"
     | "mecard/units/mechanic.png"
     | "mecard/units/megalaser.png"
+    | "mecard/units/mind_controller.png"
     | "mecard/units/mine.png"
     | "mecard/units/monster_archer.png"
+    | "mecard/units/mouse.png"
+    | "mecard/units/ogre_crusher.png"
+    | "mecard/units/orc_battle_shaman.png"
     | "mecard/units/otter.png"
+    | "mecard/units/pawn.png"
+    | "mecard/units/pikeman.png"
     | "mecard/units/pillar.png"
+    | "mecard/units/plant_mage.png"
+    | "mecard/units/prestidigitator.png"
     | "mecard/units/priest.png"
     | "mecard/units/puddle.png"
     | "mecard/units/puppeteer.png"
     | "mecard/units/pyromancer.png"
+    | "mecard/units/queen.png"
     | "mecard/units/ram.png"
     | "mecard/units/rider.png"
     | "mecard/units/robot.png"
+    | "mecard/units/robot2.png"
     | "mecard/units/rock.png"
+    | "mecard/units/rook.png"
     | "mecard/units/salamander.png"
     | "mecard/units/shadow.png"
     | "mecard/units/shadow_samurai.png"
     | "mecard/units/shadow_thief.png"
     | "mecard/units/shaman.png"
+    | "mecard/units/shield_guard.png"
+    | "mecard/units/skeleton_reaper.png"
     | "mecard/units/slime.png"
+    | "mecard/units/snake.png"
+    | "mecard/units/sniper.png"
+    | "mecard/units/spectre.png"
     | "mecard/units/spellblade.png"
     | "mecard/units/spirit.png"
     | "mecard/units/spiritist.png"
@@ -397,24 +655,726 @@ export type AssetPath =
     | "mecard/units/swamp_sorcerer.png"
     | "mecard/units/swordsman.png"
     | "mecard/units/tempest_mage.png"
+    | "mecard/units/thorn_tank.png"
     | "mecard/units/thorns.png"
     | "mecard/units/tornado.png"
     | "mecard/units/totem.png"
+    | "mecard/units/toxic_toad.png"
     | "mecard/units/troll.png"
     | "mecard/units/turret_engineer.png"
+    | "mecard/units/vengeful_spirit.png"
+    | "mecard/units/wandering_samurai.png"
     | "mecard/units/wave.png"
+    | "mecard/units/werewolf.png"
+    | "mecard/units/witcher.png"
     | "mecard/units/wolf.png"
     | "mecard/usables/cocaine.png"
     | "mecard/usables/energizer.png"
     | "mecard/usables/fire_flask.png"
+    | "mecard/usables/glass_flask.png"
     | "mecard/usables/glue_flask.png"
     | "mecard/usables/glue_tube.png"
     | "mecard/usables/haste_elixir.png"
     | "mecard/usables/healing_potion.png"
+    | "mecard/usables/iron_magnet.png"
+    | "mecard/usables/kite.png"
     | "mecard/usables/mechanical_clone.png"
     | "mecard/usables/mixer.png"
+    | "mecard/usables/pawn_powder.png"
     | "mecard/usables/plant_bag.png"
     | "mecard/usables/shield_flask.png"
+    | "mecard/usables/silence_jar.png"
+    | "mecard/usables/spring.png"
     | "mecard/usables/strength_elixir.png"
     | "mecard/usables/thrust_bottle.png"
     | "mecard/usables/time_pocket.png"
+
+/** Every file shipped with the game, sorted: what the interface looks up to know which exist. */
+export const ASSET_PATHS: readonly AssetPath[] = [
+    "mecard/border/alchemist.png",
+    "mecard/border/altar.png",
+    "mecard/border/antiquarian.png",
+    "mecard/border/butcher.png",
+    "mecard/border/castle.png",
+    "mecard/border/chest.png",
+    "mecard/border/demon.png",
+    "mecard/border/dojo.png",
+    "mecard/border/enchanter.png",
+    "mecard/border/factory.png",
+    "mecard/border/forest.png",
+    "mecard/border/forge.png",
+    "mecard/border/graveyard.png",
+    "mecard/border/harbor.png",
+    "mecard/border/hell.png",
+    "mecard/border/hospital.png",
+    "mecard/border/inventor.png",
+    "mecard/border/mad-doctor.png",
+    "mecard/border/magician.png",
+    "mecard/border/map.png",
+    "mecard/border/merchant.png",
+    "mecard/border/mine.png",
+    "mecard/border/necromancer.png",
+    "mecard/border/removal.png",
+    "mecard/border/shop.png",
+    "mecard/border/strategist.png",
+    "mecard/border/swamp.png",
+    "mecard/border/tavern.png",
+    "mecard/border/trainer.png",
+    "mecard/border/trainer_monster.png",
+    "mecard/border/tundra.png",
+    "mecard/border/volcano.png",
+    "mecard/border/weaver.png",
+    "mecard/border/witch.png",
+    "mecard/cards/back.png",
+    "mecard/cards/back_2.png",
+    "mecard/cards/back_3.png",
+    "mecard/cards/back_4.png",
+    "mecard/cards/invalid.png",
+    "mecard/floors/castle/armor.png",
+    "mecard/floors/castle/banner.png",
+    "mecard/floors/castle/barrel.png",
+    "mecard/floors/castle/border.png",
+    "mecard/floors/castle/logo.png",
+    "mecard/floors/castle/torch.png",
+    "mecard/floors/castle/tower.png",
+    "mecard/floors/cave/bigshroom.png",
+    "mecard/floors/cave/bones.png",
+    "mecard/floors/cave/logo.png",
+    "mecard/floors/cave/mouth.png",
+    "mecard/floors/cave/mushroom.png",
+    "mecard/floors/cave/pebbles.png",
+    "mecard/floors/cave/stalagmite.png",
+    "mecard/floors/dojo/bamboo.png",
+    "mecard/floors/dojo/bonsai.png",
+    "mecard/floors/dojo/border.png",
+    "mecard/floors/dojo/gate.png",
+    "mecard/floors/dojo/lantern.png",
+    "mecard/floors/dojo/logo.png",
+    "mecard/floors/dojo/stone.png",
+    "mecard/floors/exit.png",
+    "mecard/floors/factory/border.png",
+    "mecard/floors/factory/crate.png",
+    "mecard/floors/factory/factory.png",
+    "mecard/floors/factory/gear.png",
+    "mecard/floors/factory/lamp.png",
+    "mecard/floors/factory/logo.png",
+    "mecard/floors/factory/pipe.png",
+    "mecard/floors/factory/press.png",
+    "mecard/floors/factory/small_gear.png",
+    "mecard/floors/forest/1.png",
+    "mecard/floors/forest/2.png",
+    "mecard/floors/forest/3.png",
+    "mecard/floors/forest/4.png",
+    "mecard/floors/forest/5.png",
+    "mecard/floors/forest/border.png",
+    "mecard/floors/forest/bush.png",
+    "mecard/floors/forest/cabin.png",
+    "mecard/floors/forest/grass.png",
+    "mecard/floors/forest/logo.png",
+    "mecard/floors/forest/stump.png",
+    "mecard/floors/forest/tree.png",
+    "mecard/floors/graveyard/border.png",
+    "mecard/floors/graveyard/candle.png",
+    "mecard/floors/graveyard/cross.png",
+    "mecard/floors/graveyard/crypt.png",
+    "mecard/floors/graveyard/deadtree.png",
+    "mecard/floors/graveyard/logo.png",
+    "mecard/floors/graveyard/tombstone.png",
+    "mecard/floors/harbor/anchor.png",
+    "mecard/floors/harbor/border.png",
+    "mecard/floors/harbor/buoy.png",
+    "mecard/floors/harbor/cask.png",
+    "mecard/floors/harbor/crate.png",
+    "mecard/floors/harbor/logo.png",
+    "mecard/floors/harbor/mast.png",
+    "mecard/floors/harbor/small_wave.png",
+    "mecard/floors/harbor/wave.png",
+    "mecard/floors/hell/1.png",
+    "mecard/floors/hell/2.png",
+    "mecard/floors/hell/3.png",
+    "mecard/floors/hell/4.png",
+    "mecard/floors/hell/5.png",
+    "mecard/floors/hell/border.png",
+    "mecard/floors/hell/crack.png",
+    "mecard/floors/hell/flame.png",
+    "mecard/floors/hell/logo.png",
+    "mecard/floors/hell/skull.png",
+    "mecard/floors/hell/spike.png",
+    "mecard/floors/hell/statue.png",
+    "mecard/floors/mine/1.png",
+    "mecard/floors/mine/2.png",
+    "mecard/floors/mine/3.png",
+    "mecard/floors/mine/4.png",
+    "mecard/floors/mine/5.png",
+    "mecard/floors/mine/beam.png",
+    "mecard/floors/mine/border.png",
+    "mecard/floors/mine/cart.png",
+    "mecard/floors/mine/gravel.png",
+    "mecard/floors/mine/logo.png",
+    "mecard/floors/mine/mountain.png",
+    "mecard/floors/mine/ore.png",
+    "mecard/floors/swamp/bigshroom.png",
+    "mecard/floors/swamp/border.png",
+    "mecard/floors/swamp/bubbles.png",
+    "mecard/floors/swamp/lily.png",
+    "mecard/floors/swamp/logo.png",
+    "mecard/floors/swamp/mushroom.png",
+    "mecard/floors/swamp/reed.png",
+    "mecard/floors/swamp/small_reed.png",
+    "mecard/floors/swamp/stump.png",
+    "mecard/floors/tundra/border.png",
+    "mecard/floors/tundra/crystal.png",
+    "mecard/floors/tundra/iceblock.png",
+    "mecard/floors/tundra/igloo.png",
+    "mecard/floors/tundra/logo.png",
+    "mecard/floors/tundra/pine.png",
+    "mecard/floors/tundra/snow.png",
+    "mecard/floors/tundra/snowman.png",
+    "mecard/floors/volcano/bones.png",
+    "mecard/floors/volcano/border.png",
+    "mecard/floors/volcano/geyser.png",
+    "mecard/floors/volcano/lava.png",
+    "mecard/floors/volcano/logo.png",
+    "mecard/floors/volcano/obsidian.png",
+    "mecard/floors/volcano/rock.png",
+    "mecard/hud/bag.png",
+    "mecard/hud/booster.png",
+    "mecard/items/alembic.png",
+    "mecard/items/amulet.png",
+    "mecard/items/ashtray.png",
+    "mecard/items/bag.png",
+    "mecard/items/battery.png",
+    "mecard/items/belt.png",
+    "mecard/items/blood_pact.png",
+    "mecard/items/boots.png",
+    "mecard/items/bottle_bag.png",
+    "mecard/items/demon_fang.png",
+    "mecard/items/dodge_scepter.png",
+    "mecard/items/doll.png",
+    "mecard/items/echo.png",
+    "mecard/items/element_bag.png",
+    "mecard/items/fang.png",
+    "mecard/items/fang_necklace.png",
+    "mecard/items/flower_crown.png",
+    "mecard/items/gear.png",
+    "mecard/items/glass_heart.png",
+    "mecard/items/grimoire.png",
+    "mecard/items/horseshoe.png",
+    "mecard/items/hourglass.png",
+    "mecard/items/king_crown.png",
+    "mecard/items/magnet.png",
+    "mecard/items/med_kit.png",
+    "mecard/items/potion_bag.png",
+    "mecard/items/reactor.png",
+    "mecard/items/roller.png",
+    "mecard/items/rosary.png",
+    "mecard/items/satchel.png",
+    "mecard/items/scary_mask.png",
+    "mecard/items/scope.png",
+    "mecard/items/sling.png",
+    "mecard/items/soul_lantern.png",
+    "mecard/items/spurs.png",
+    "mecard/items/spyglass.png",
+    "mecard/items/sticky_soles.png",
+    "mecard/items/summon_heart.png",
+    "mecard/items/tactics_book.png",
+    "mecard/items/whetstone.png",
+    "mecard/items/wings.png",
+    "mecard/menu/1.png",
+    "mecard/menu/2.png",
+    "mecard/menu/3.png",
+    "mecard/menu/4.png",
+    "mecard/menu/5.png",
+    "mecard/menu/6.png",
+    "mecard/menu/7.png",
+    "mecard/menu/8.png",
+    "mecard/menu/9.png",
+    "mecard/parallax/alchemist.ora",
+    "mecard/parallax/alley.ora",
+    "mecard/parallax/altar.ora",
+    "mecard/parallax/antiquarian.ora",
+    "mecard/parallax/arms-master.ora",
+    "mecard/parallax/bag.ora",
+    "mecard/parallax/butcher.ora",
+    "mecard/parallax/castle.ora",
+    "mecard/parallax/chest.ora",
+    "mecard/parallax/creature.ora",
+    "mecard/parallax/demon.ora",
+    "mecard/parallax/dojo.ora",
+    "mecard/parallax/enchanter.ora",
+    "mecard/parallax/enchanter2.ora",
+    "mecard/parallax/factory.ora",
+    "mecard/parallax/forest.ora",
+    "mecard/parallax/forge.ora",
+    "mecard/parallax/general-store.ora",
+    "mecard/parallax/graveyard.ora",
+    "mecard/parallax/harbor.ora",
+    "mecard/parallax/hell.ora",
+    "mecard/parallax/hospital.ora",
+    "mecard/parallax/inventor.ora",
+    "mecard/parallax/mad-doctor.ora",
+    "mecard/parallax/magician.ora",
+    "mecard/parallax/map.ora",
+    "mecard/parallax/meadow.ora",
+    "mecard/parallax/merchant.ora",
+    "mecard/parallax/mine.ora",
+    "mecard/parallax/necromancer.ora",
+    "mecard/parallax/removal.ora",
+    "mecard/parallax/shop.ora",
+    "mecard/parallax/space.ora",
+    "mecard/parallax/spotlight-barrel.ora",
+    "mecard/parallax/stone-room.ora",
+    "mecard/parallax/strategist.ora",
+    "mecard/parallax/swamp.ora",
+    "mecard/parallax/tavern.ora",
+    "mecard/parallax/trainer.ora",
+    "mecard/parallax/trainer_monster.ora",
+    "mecard/parallax/treasure.ora",
+    "mecard/parallax/tundra.ora",
+    "mecard/parallax/underwater.ora",
+    "mecard/parallax/volcano.ora",
+    "mecard/parallax/weapon.ora",
+    "mecard/parallax/weaver.ora",
+    "mecard/parallax/witch.ora",
+    "mecard/parallax/wooden-door.ora",
+    "mecard/parallax/workshop.ora",
+    "mecard/pnj/hats/alchemist.png",
+    "mecard/pnj/hats/altar.png",
+    "mecard/pnj/hats/antiquarian.png",
+    "mecard/pnj/hats/beret.png",
+    "mecard/pnj/hats/bicorne.png",
+    "mecard/pnj/hats/butcher.png",
+    "mecard/pnj/hats/chef-toque.png",
+    "mecard/pnj/hats/coif.png",
+    "mecard/pnj/hats/demon.png",
+    "mecard/pnj/hats/doctor-hat.png",
+    "mecard/pnj/hats/enchanter.png",
+    "mecard/pnj/hats/feather-toque.png",
+    "mecard/pnj/hats/forge.png",
+    "mecard/pnj/hats/fur-toque.png",
+    "mecard/pnj/hats/goggles.png",
+    "mecard/pnj/hats/hood.png",
+    "mecard/pnj/hats/horned-crown.png",
+    "mecard/pnj/hats/hospital.png",
+    "mecard/pnj/hats/hunting-hat.png",
+    "mecard/pnj/hats/inventor.png",
+    "mecard/pnj/hats/mad-doctor.png",
+    "mecard/pnj/hats/magician.png",
+    "mecard/pnj/hats/merchant.png",
+    "mecard/pnj/hats/mitre.png",
+    "mecard/pnj/hats/necromancer.png",
+    "mecard/pnj/hats/removal.png",
+    "mecard/pnj/hats/shop.png",
+    "mecard/pnj/hats/skull-hood.png",
+    "mecard/pnj/hats/skullcap.png",
+    "mecard/pnj/hats/star-cone.png",
+    "mecard/pnj/hats/strategist.png",
+    "mecard/pnj/hats/tavern.png",
+    "mecard/pnj/hats/top-hat.png",
+    "mecard/pnj/hats/trainer.png",
+    "mecard/pnj/hats/turban.png",
+    "mecard/pnj/hats/velvet-toque.png",
+    "mecard/pnj/hats/witch-hat.png",
+    "mecard/pnj/hats/witch.png",
+    "mecard/pnj/items/bow.png",
+    "mecard/pnj/items/cleaver.png",
+    "mecard/pnj/items/demon-fork.png",
+    "mecard/pnj/items/hammer.png",
+    "mecard/pnj/items/magician-wand.png",
+    "mecard/pnj/items/pitchfork.png",
+    "mecard/pnj/items/potion.png",
+    "mecard/pnj/items/scepter.png",
+    "mecard/pnj/items/sword.png",
+    "mecard/pnj/items/whip.png",
+    "mecard/pnj/items/witch-wand.png",
+    "mecard/pnj/items/wrench.png",
+    "mecard/pnj/masks/beard.png",
+    "mecard/pnj/masks/domino.png",
+    "mecard/pnj/masks/hooked-nose.png",
+    "mecard/pnj/masks/nerd.png",
+    "mecard/pnj/masks/skeleton.png",
+    "mecard/pnj/masks/skull.png",
+    "mecard/pnj/masks/sunglasses.png",
+    "mecard/pnj/masks/venetian.png",
+    "mecard/pnj/masks/wolf.png",
+    "mecard/pnj/merchant.ora",
+    "mecard/processes/ethereal.png",
+    "mecard/processes/exo_nerf.png",
+    "mecard/processes/haste.png",
+    "mecard/processes/haunting.png",
+    "mecard/processes/hook.png",
+    "mecard/processes/horse.png",
+    "mecard/processes/iron_chain.png",
+    "mecard/processes/laser_link.png",
+    "mecard/processes/parrot.png",
+    "mecard/processes/shadow_link.png",
+    "mecard/processes/skewer.png",
+    "mecard/processes/spirit_anchor.png",
+    "mecard/processes/strength.png",
+    "mecard/processes/vanishing.png",
+    "mecard/sounds/card.wav",
+    "mecard/sounds/card_hover.wav",
+    "mecard/sounds/click.wav",
+    "mecard/sounds/declick.wav",
+    "mecard/sounds/dragon.wav",
+    "mecard/sounds/frinch.wav",
+    "mecard/sounds/guitare.ogg",
+    "mecard/sounds/guitare_grave.ogg",
+    "mecard/sounds/liquide.wav",
+    "mecard/sounds/pop.wav",
+    "mecard/sounds/sword.wav",
+    "mecard/sounds/tchi.wav",
+    "mecard/sounds/top.wav",
+    "mecard/sounds/vent.wav",
+    "mecard/statuses/barrel.png",
+    "mecard/statuses/bleeding.png",
+    "mecard/statuses/bloodlust.png",
+    "mecard/statuses/burn.png",
+    "mecard/statuses/burning_ground.png",
+    "mecard/statuses/chess_piece.png",
+    "mecard/statuses/coated.png",
+    "mecard/statuses/concentration.png",
+    "mecard/statuses/confusion.png",
+    "mecard/statuses/counter.png",
+    "mecard/statuses/demonic.png",
+    "mecard/statuses/disarm.png",
+    "mecard/statuses/dodge.png",
+    "mecard/statuses/fleeting.png",
+    "mecard/statuses/fragile.png",
+    "mecard/statuses/frenzy.png",
+    "mecard/statuses/furious.png",
+    "mecard/statuses/healing.png",
+    "mecard/statuses/mark.png",
+    "mecard/statuses/mine.png",
+    "mecard/statuses/momentum.png",
+    "mecard/statuses/overheat.png",
+    "mecard/statuses/poison.png",
+    "mecard/statuses/possessed.png",
+    "mecard/statuses/puddle.png",
+    "mecard/statuses/rage.png",
+    "mecard/statuses/ritual.png",
+    "mecard/statuses/rocky.png",
+    "mecard/statuses/rooted.png",
+    "mecard/statuses/sliding_parry.png",
+    "mecard/statuses/slow.png",
+    "mecard/statuses/soul_link.png",
+    "mecard/statuses/soul_shield.png",
+    "mecard/statuses/stench.png",
+    "mecard/statuses/surging.png",
+    "mecard/statuses/swallow.png",
+    "mecard/statuses/swift.png",
+    "mecard/statuses/vigor.png",
+    "mecard/statuses/vulnerable.png",
+    "mecard/statuses/weakened.png",
+    "mecard/statuses/whirling.png",
+    "mecard/statuses/wooden_shield.png",
+    "mecard/tethers/grapple.png",
+    "mecard/tethers/iron_chain.png",
+    "mecard/tethers/laser.png",
+    "mecard/transitions/back.ora",
+    "mecard/transitions/cage-door.ora",
+    "mecard/transitions/cave-exit.ora",
+    "mecard/transitions/cave.ora",
+    "mecard/transitions/dungeon-door.ora",
+    "mecard/transitions/gilded-door.ora",
+    "mecard/transitions/great-door.ora",
+    "mecard/transitions/house-door.ora",
+    "mecard/transitions/photo-cave.ora",
+    "mecard/transitions/photo-door.ora",
+    "mecard/transitions/portal.ora",
+    "mecard/transitions/spiral-stairs.ora",
+    "mecard/transitions/stone-bridge.ora",
+    "mecard/transitions/warm-door.ora",
+    "mecard/travel/alchemist/1.png",
+    "mecard/travel/alchemist/2.png",
+    "mecard/travel/alchemist/3.png",
+    "mecard/travel/alchemist/4.png",
+    "mecard/travel/alchemist/5.png",
+    "mecard/travel/alchemist/border.png",
+    "mecard/travel/alchemist/logo.png",
+    "mecard/travel/altar/1.png",
+    "mecard/travel/altar/2.png",
+    "mecard/travel/altar/3.png",
+    "mecard/travel/altar/4.png",
+    "mecard/travel/altar/5.png",
+    "mecard/travel/altar/border.png",
+    "mecard/travel/altar/logo.png",
+    "mecard/travel/antiquarian/1.png",
+    "mecard/travel/antiquarian/2.png",
+    "mecard/travel/antiquarian/3.png",
+    "mecard/travel/antiquarian/4.png",
+    "mecard/travel/antiquarian/5.png",
+    "mecard/travel/antiquarian/border.png",
+    "mecard/travel/antiquarian/logo.png",
+    "mecard/travel/butcher/1.png",
+    "mecard/travel/butcher/2.png",
+    "mecard/travel/butcher/3.png",
+    "mecard/travel/butcher/4.png",
+    "mecard/travel/butcher/5.png",
+    "mecard/travel/butcher/border.png",
+    "mecard/travel/butcher/logo.png",
+    "mecard/travel/chest/1.png",
+    "mecard/travel/chest/2.png",
+    "mecard/travel/chest/3.png",
+    "mecard/travel/chest/4.png",
+    "mecard/travel/chest/5.png",
+    "mecard/travel/chest/border.png",
+    "mecard/travel/chest/logo.png",
+    "mecard/travel/deadly-fight/logo.png",
+    "mecard/travel/demon/1.png",
+    "mecard/travel/demon/2.png",
+    "mecard/travel/demon/3.png",
+    "mecard/travel/demon/4.png",
+    "mecard/travel/demon/5.png",
+    "mecard/travel/demon/border.png",
+    "mecard/travel/demon/logo.png",
+    "mecard/travel/enchanter/1.png",
+    "mecard/travel/enchanter/2.png",
+    "mecard/travel/enchanter/3.png",
+    "mecard/travel/enchanter/4.png",
+    "mecard/travel/enchanter/5.png",
+    "mecard/travel/enchanter/border.png",
+    "mecard/travel/enchanter/logo.png",
+    "mecard/travel/fight/logo.png",
+    "mecard/travel/forge/1.png",
+    "mecard/travel/forge/2.png",
+    "mecard/travel/forge/3.png",
+    "mecard/travel/forge/4.png",
+    "mecard/travel/forge/5.png",
+    "mecard/travel/forge/border.png",
+    "mecard/travel/forge/logo.png",
+    "mecard/travel/hand.png",
+    "mecard/travel/hospital/1.png",
+    "mecard/travel/hospital/2.png",
+    "mecard/travel/hospital/3.png",
+    "mecard/travel/hospital/4.png",
+    "mecard/travel/hospital/5.png",
+    "mecard/travel/hospital/border.png",
+    "mecard/travel/hospital/logo.png",
+    "mecard/travel/inventor/1.png",
+    "mecard/travel/inventor/2.png",
+    "mecard/travel/inventor/3.png",
+    "mecard/travel/inventor/4.png",
+    "mecard/travel/inventor/5.png",
+    "mecard/travel/inventor/border.png",
+    "mecard/travel/inventor/logo.png",
+    "mecard/travel/mad-doctor/1.png",
+    "mecard/travel/mad-doctor/2.png",
+    "mecard/travel/mad-doctor/3.png",
+    "mecard/travel/mad-doctor/4.png",
+    "mecard/travel/mad-doctor/5.png",
+    "mecard/travel/mad-doctor/border.png",
+    "mecard/travel/mad-doctor/logo.png",
+    "mecard/travel/magician/1.png",
+    "mecard/travel/magician/2.png",
+    "mecard/travel/magician/3.png",
+    "mecard/travel/magician/4.png",
+    "mecard/travel/magician/5.png",
+    "mecard/travel/magician/border.png",
+    "mecard/travel/magician/logo.png",
+    "mecard/travel/map/1.png",
+    "mecard/travel/map/2.png",
+    "mecard/travel/map/3.png",
+    "mecard/travel/map/4.png",
+    "mecard/travel/map/5.png",
+    "mecard/travel/map/border.png",
+    "mecard/travel/map/circle.png",
+    "mecard/travel/map/paper.png",
+    "mecard/travel/map/path.png",
+    "mecard/travel/map/shade.png",
+    "mecard/travel/merchant/1.png",
+    "mecard/travel/merchant/2.png",
+    "mecard/travel/merchant/3.png",
+    "mecard/travel/merchant/4.png",
+    "mecard/travel/merchant/5.png",
+    "mecard/travel/merchant/border.png",
+    "mecard/travel/merchant/logo.png",
+    "mecard/travel/necromancer/logo.png",
+    "mecard/travel/removal/1.png",
+    "mecard/travel/removal/2.png",
+    "mecard/travel/removal/3.png",
+    "mecard/travel/removal/4.png",
+    "mecard/travel/removal/5.png",
+    "mecard/travel/removal/border.png",
+    "mecard/travel/removal/logo.png",
+    "mecard/travel/shop/1.png",
+    "mecard/travel/shop/2.png",
+    "mecard/travel/shop/3.png",
+    "mecard/travel/shop/4.png",
+    "mecard/travel/shop/5.png",
+    "mecard/travel/shop/border.png",
+    "mecard/travel/shop/logo.png",
+    "mecard/travel/strategist/logo.png",
+    "mecard/travel/tavern/1.png",
+    "mecard/travel/tavern/2.png",
+    "mecard/travel/tavern/3.png",
+    "mecard/travel/tavern/4.png",
+    "mecard/travel/tavern/5.png",
+    "mecard/travel/tavern/border.png",
+    "mecard/travel/tavern/logo.png",
+    "mecard/travel/trainer/1.png",
+    "mecard/travel/trainer/2.png",
+    "mecard/travel/trainer/3.png",
+    "mecard/travel/trainer/4.png",
+    "mecard/travel/trainer/5.png",
+    "mecard/travel/trainer/border.png",
+    "mecard/travel/trainer/logo.png",
+    "mecard/travel/witch/1.png",
+    "mecard/travel/witch/2.png",
+    "mecard/travel/witch/3.png",
+    "mecard/travel/witch/4.png",
+    "mecard/travel/witch/5.png",
+    "mecard/travel/witch/border.png",
+    "mecard/travel/witch/logo.png",
+    "mecard/units/acrobat.png",
+    "mecard/units/amog.png",
+    "mecard/units/apothecary.png",
+    "mecard/units/archer.png",
+    "mecard/units/artificer.png",
+    "mecard/units/assassin.png",
+    "mecard/units/barrel.png",
+    "mecard/units/bear.png",
+    "mecard/units/beast_warrior.png",
+    "mecard/units/berserker.png",
+    "mecard/units/big_bad_wolf.png",
+    "mecard/units/bishop.png",
+    "mecard/units/black_knight.png",
+    "mecard/units/bleeder.png",
+    "mecard/units/boar.png",
+    "mecard/units/bomb.png",
+    "mecard/units/brawler.png",
+    "mecard/units/brute.png",
+    "mecard/units/bull.png",
+    "mecard/units/bullfighter.png",
+    "mecard/units/chess_knight.png",
+    "mecard/units/chess_player.png",
+    "mecard/units/chronomancer.png",
+    "mecard/units/coin.png",
+    "mecard/units/dark_lord.png",
+    "mecard/units/demonist.png",
+    "mecard/units/devil.png",
+    "mecard/units/druid.png",
+    "mecard/units/duelist.png",
+    "mecard/units/elemental.png",
+    "mecard/units/elf_archer.png",
+    "mecard/units/elf_assassin.png",
+    "mecard/units/explosive_goblin.png",
+    "mecard/units/fire.png",
+    "mecard/units/fire_lizard.png",
+    "mecard/units/fire_mage.png",
+    "mecard/units/fisher.png",
+    "mecard/units/fox.png",
+    "mecard/units/frog.png",
+    "mecard/units/frost_giant.png",
+    "mecard/units/garrison_goblin.png",
+    "mecard/units/geomancer.png",
+    "mecard/units/ghost.png",
+    "mecard/units/ghost_shogun.png",
+    "mecard/units/glass_man.png",
+    "mecard/units/goblin.png",
+    "mecard/units/goblin_mecha.png",
+    "mecard/units/goblin_pilot.png",
+    "mecard/units/goblin_rider.png",
+    "mecard/units/goblin_wrestler.png",
+    "mecard/units/golem.png",
+    "mecard/units/gravitationist.png",
+    "mecard/units/gunner.png",
+    "mecard/units/hand.png",
+    "mecard/units/harpoon_pirate.png",
+    "mecard/units/haunting_ghost.png",
+    "mecard/units/hawk.png",
+    "mecard/units/horse.png",
+    "mecard/units/hunter.png",
+    "mecard/units/hydra.png",
+    "mecard/units/hypnotist.png",
+    "mecard/units/ice_mage.png",
+    "mecard/units/imp.png",
+    "mecard/units/iron_knight.png",
+    "mecard/units/kamikaze_robot.png",
+    "mecard/units/knight.png",
+    "mecard/units/kraken_captain.png",
+    "mecard/units/lancer.png",
+    "mecard/units/lich_king.png",
+    "mecard/units/log.png",
+    "mecard/units/mad_alchemist.png",
+    "mecard/units/mage.png",
+    "mecard/units/magma_dragon.png",
+    "mecard/units/martyr.png",
+    "mecard/units/mechanic.png",
+    "mecard/units/megalaser.png",
+    "mecard/units/mind_controller.png",
+    "mecard/units/mine.png",
+    "mecard/units/monster_archer.png",
+    "mecard/units/mouse.png",
+    "mecard/units/ogre_crusher.png",
+    "mecard/units/orc_battle_shaman.png",
+    "mecard/units/otter.png",
+    "mecard/units/pawn.png",
+    "mecard/units/pikeman.png",
+    "mecard/units/pillar.png",
+    "mecard/units/plant_mage.png",
+    "mecard/units/prestidigitator.png",
+    "mecard/units/priest.png",
+    "mecard/units/puddle.png",
+    "mecard/units/puppeteer.png",
+    "mecard/units/pyromancer.png",
+    "mecard/units/queen.png",
+    "mecard/units/ram.png",
+    "mecard/units/rider.png",
+    "mecard/units/robot.png",
+    "mecard/units/robot2.png",
+    "mecard/units/rock.png",
+    "mecard/units/rook.png",
+    "mecard/units/salamander.png",
+    "mecard/units/shadow.png",
+    "mecard/units/shadow_samurai.png",
+    "mecard/units/shadow_thief.png",
+    "mecard/units/shaman.png",
+    "mecard/units/shield_guard.png",
+    "mecard/units/skeleton_reaper.png",
+    "mecard/units/slime.png",
+    "mecard/units/snake.png",
+    "mecard/units/sniper.png",
+    "mecard/units/spectre.png",
+    "mecard/units/spellblade.png",
+    "mecard/units/spirit.png",
+    "mecard/units/spiritist.png",
+    "mecard/units/stone.png",
+    "mecard/units/stone_golem.png",
+    "mecard/units/swamp_sorcerer.png",
+    "mecard/units/swordsman.png",
+    "mecard/units/tempest_mage.png",
+    "mecard/units/thorn_tank.png",
+    "mecard/units/thorns.png",
+    "mecard/units/tornado.png",
+    "mecard/units/totem.png",
+    "mecard/units/toxic_toad.png",
+    "mecard/units/troll.png",
+    "mecard/units/turret_engineer.png",
+    "mecard/units/vengeful_spirit.png",
+    "mecard/units/wandering_samurai.png",
+    "mecard/units/wave.png",
+    "mecard/units/werewolf.png",
+    "mecard/units/witcher.png",
+    "mecard/units/wolf.png",
+    "mecard/usables/cocaine.png",
+    "mecard/usables/energizer.png",
+    "mecard/usables/fire_flask.png",
+    "mecard/usables/glass_flask.png",
+    "mecard/usables/glue_flask.png",
+    "mecard/usables/glue_tube.png",
+    "mecard/usables/haste_elixir.png",
+    "mecard/usables/healing_potion.png",
+    "mecard/usables/iron_magnet.png",
+    "mecard/usables/kite.png",
+    "mecard/usables/mechanical_clone.png",
+    "mecard/usables/mixer.png",
+    "mecard/usables/pawn_powder.png",
+    "mecard/usables/plant_bag.png",
+    "mecard/usables/shield_flask.png",
+    "mecard/usables/silence_jar.png",
+    "mecard/usables/spring.png",
+    "mecard/usables/strength_elixir.png",
+    "mecard/usables/thrust_bottle.png",
+    "mecard/usables/time_pocket.png",
+]

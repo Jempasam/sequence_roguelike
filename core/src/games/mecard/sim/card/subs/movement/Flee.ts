@@ -1,5 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
@@ -7,9 +7,10 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, travel, wait, WALK_SPEED, WORD_TIME } from "../tools/playing"
-import { arrow, label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { STEP_LENGTH } from "./Step"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How close an enemy must stand for the flight of the catalog to go, in meters. */
 const FLEE_REACH = 2
@@ -47,24 +48,24 @@ export class FleeCard extends ActionCard {
 
     static #fleeing(length: number, reach: number): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const way = awayFrom(battle, unit, unit, reach)
                 if(!way){
                     battle.events.push({ type: "skipped", unit, reason: NOBODY })
-                    yield* hold(battle, WORD_TIME, [label(unit.position, NOBODY, NOTE_COLOR)])
+                    hold(battle, WORD_TIME, [Previews.label(unit.position, NOBODY, NOTE_COLOR)])
                     return
                 }
-                yield* travel(ctx, way, length * unit.stats.move.value, WALK_SPEED)
-                yield* wait(SETTLE_TIME)
+                travel(ctx, way, length * unit.stats.move.value, WALK_SPEED)
+                wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const shown = polygon({ kind: "circle", center: pose.position, radius: reach }, RANGE_COLOR)
+                const shown = Previews.polygon(Areas.circle(pose.position, reach), RANGE_COLOR)
                 const way = awayFrom(battle, unit, pose, reach)
-                if(!way) return still(pose, shown, label(pose.position, NOBODY, NOTE_COLOR))
-                const gone = battle.travel(unit, pose.position, way, length * unit.stats.move.value)
-                const fled = arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, position: gone.to }, shown, fled)
+                if(!way) return Previews.still(pose, shown, Previews.label(pose.position, NOBODY, NOTE_COLOR))
+                const gone = battle.moveSpot(unit, pose.position, way, length * unit.stats.move.value)
+                const full = pose.position.plus(way.times(length * unit.stats.move.value))
+                return Previews.still({ ...pose, position: gone.to }, shown, ...Previews.moving(unit, pose.position, full, gone.to, MOVE_WIDTH))
             },
         }
     }

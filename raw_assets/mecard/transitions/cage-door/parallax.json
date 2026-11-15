@@ -1,0 +1,64 @@
+{
+ "size": [
+  816,
+  444
+ ],
+ "render": {
+  "light": 270,
+  "steps": [
+   "occlusion",
+   "shadow",
+   "reflection",
+   {
+    "id": "contrast",
+    "between": 0.7,
+    "towards": "#5a5a4a"
+   },
+   "alpha_thickness",
+   {
+    "id": "outer_outline",
+    "different_mat": true
+   },
+   "casted_shadow",
+   "gloom",
+   "smooth",
+   {
+    "id": "tint",
+    "color": "#4a7a30",
+    "amount": 0.1
+   }
+  ]
+ },
+ "anim": [
+  "global: y=0.15 a=0 > y=0.05 a=0.7 > y=0 a=1 m > hold > hold > z*9 on=0.5;0.55 a=0",
+  "bars: > > m > y-1 > hold > hold",
+  "wall: > > m > hold > hold > hold",
+  "dark: > > m > a=0 > hold > hold"
+ ],
+ "layers": [
+  {
+   "name": "bars", "tag": "object",
+   "picture": "bars.pic.json",
+   "at": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "wall", "tag": "border",
+   "picture": "wall.pic.json",
+   "at": [
+    0,
+    0
+   ]
+  },
+  {
+   "name": "dark", "tag": "border",
+   "picture": "dark.pic.json",
+   "at": [
+    0,
+    0
+   ]
+  }
+ ]
+}

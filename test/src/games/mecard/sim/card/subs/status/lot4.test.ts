@@ -139,6 +139,15 @@ describe("concentration", () => {
         expect(hero.stats.throwRange.value).toBeGreaterThan(range)
     })
 
+    test("the concentration lengthens the blows at hand as it does the throws", () => {
+        const on = battle()
+        const hero = unit(on, 3.5, 5)
+        unit(on, 1, 1, { team: MONSTERS })
+        const reach = hero.stats.meleeRange.value
+        play(on, [[hero, chain(CONCENTRATION, WAIT)]])
+        expect(hero.stats.meleeRange.value).toBeGreaterThan(reach)
+    })
+
     test("cool head removes the negative status and gives a round each", () => {
         const on = battle()
         const hero = unit(on, 3.5, 5)

@@ -66,7 +66,7 @@ export class ArenaHearts {
             // What holds only solid hearts, a pillar, has no life to show.
             if(onlySolid(unit)) continue
             const lit = litHeart?.unit === unit ? litHeart.indexes : []
-            const row = heartsRow(this.theme, hearts, (heart, over) => this.onHover(unit, heart, over), lit)
+            const row = heartsRow(this.theme, hearts, (heart, over) => this.onHover(unit, heart, over), lit, litHeart?.edge)
             this.#rows.set(unit, row)
             content.add(row)
         }

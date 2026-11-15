@@ -1,3 +1,4 @@
+import { composable } from "../../Card"
 import type { Card } from "../../Card"
 import { Rarity } from "../../Rarity"
 import { CARTE, FUSION, MERGE } from "../../../base/keywords"
@@ -13,9 +14,16 @@ function mergeableRun(rest: readonly Card[]): readonly Card[] {
     return rest.slice(0, end)
 }
 
-/** One card standing for cards in order: a collage of them, the card itself when alone. */
-export function collageOf(cards: readonly Card[]): Card {
-    return cards.length === 1 ? cards[0] : new FusionCard(cards)
+/**
+ * One card standing for cards in order: a collage of them, the card itself when alone. A card with variants
+ * to choose from cannot be held by a collage, and is left out.
+ *
+ * @returns None when no card is left.
+ */
+export function collageOf(cards: readonly Card[]): Card|null {
+    const held = cards.filter(composable)
+    if(held.length === 0) return null
+    return held.length === 1 ? held[0] : new FusionCard(held)
 }
 
 /**
@@ -42,5 +50,6 @@ export const PREPARATION_CARD = new RewriteCard("Préparation", [
     const { rest } = spot
     return { cards: [], consumed: rest.length, acting: rest.length > 0 }
 }, ({ battle, unit, spot }) => {
-    if(spot.rest.length > 0) battle.giveFleetingCard(unit, collageOf(spot.rest))
+    const collage = collageOf(spot.rest)
+    if(collage) battle.giveFleetingCard(unit, collage)
 })

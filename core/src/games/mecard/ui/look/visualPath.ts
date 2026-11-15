@@ -1,6 +1,7 @@
-import { AssetError } from "../../../../engine/assets"
-import type { Assets, ImagePath } from "../../../../engine/assets"
+import { ASSET_PATHS, AssetError } from "../../../../engine/assets"
+import type { AssetPath, Assets, ImagePath, LayeredImagePath } from "../../../../engine/assets"
 import type { PixelData } from "../../../../engine/image"
+import { Color } from "../../../../engine/math"
 import type { Visual } from "../../sim/base/Visual"
 
 /**
@@ -10,6 +11,71 @@ import type { Visual } from "../../sim/base/Visual"
 export function pathOf(visual: Visual|string): ImagePath {
     const key = typeof visual === "string" ? visual : visual.visual
     return `mecard/${key}.png` as ImagePath
+}
+
+/** The painting of the transition a visual names: where its key becomes a path, the file may not exist. */
+export function transitionPath(visual: Visual|string): LayeredImagePath {
+    const key = typeof visual === "string" ? visual : visual.visual
+    return `mecard/${key}.ora` as LayeredImagePath
+}
+
+/** The keys of the transitions the game ships, one for each `.ora` under `mecard/transitions/`. */
+export function shippedTransitions(shipped: readonly AssetPath[] = ASSET_PATHS): string[] {
+    const keys: string[] = []
+    for(const path of shipped){
+        const match = /^mecard\/(transitions\/[^/]+)\.ora$/.exec(path)
+        if(match) keys.push(match[1])
+    }
+    return keys.sort()
+}
+
+/** How a transition of a visual is played: the hue its coloration gives to every picture, none for none. */
+export function transitionTintOf(visual: Visual): Color|null {
+    const coloration = visual.coloration
+    return coloration ? new Color(...coloration) : null
+}
+
+/** Where the layers of a parallax come from: pictures apart, the farthest first, or one layered painting. */
+export type ParallaxSource =
+    | { readonly images: readonly ImagePath[] }
+    | { readonly painting: LayeredImagePath }
+
+/** The number a picture of a parallax is named with, to sort them: `2.png` before `10.png`. */
+function rankOf(path: string): number {
+    const name = path.slice(path.lastIndexOf("/") + 1, -".png".length)
+    const rank = Number(name)
+    return Number.isFinite(rank) ? rank : Number.POSITIVE_INFINITY
+}
+
+/**
+ * The files of the parallax a visual names: `mecard/<key>.ora` when the game ships it, else the pictures
+ * right in the folder `mecard/<key>/`, by the number they are named with, the first the farthest.
+ *
+ * @param shipped - The files the game ships, all of them unless a test says otherwise.
+ * @throws {@link AssetError} When the game ships neither, naming both.
+ */
+export function parallaxSource(visual: Visual|string, shipped: readonly AssetPath[] = ASSET_PATHS): ParallaxSource {
+    const key = typeof visual === "string" ? visual : visual.visual
+    const painting = `mecard/${key}.ora`
+    if(shipped.includes(painting as AssetPath)) return { painting: painting as LayeredImagePath }
+    const folder = `mecard/${key}/`
+    const images = shipped.filter((path): path is ImagePath => {
+        return path.startsWith(folder) && path.endsWith(".png") && !path.slice(folder.length).includes("/")
+    })
+    if(images.length === 0){
+        throw new AssetError(folder, "unreadable", `ni ${painting}, ni image .png dans ${folder} : ajoute l'un ou l'autre sous assets/ puis lance npm run assets`)
+    }
+    return { images: [...images].sort((a, b) => rankOf(a) - rankOf(b) || a.localeCompare(b)) }
+}
+
+/** The keys of the parallaxes the game ships: each `.ora` and each folder of pictures under `mecard/parallax/`. */
+export function shippedParallaxes(shipped: readonly AssetPath[] = ASSET_PATHS): string[] {
+    const keys = new Set<string>()
+    for(const path of shipped){
+        const match = /^mecard\/(parallax\/[^/]+?)(?:\.ora|\/[^/]+\.png)$/.exec(path)
+        if(match) keys.add(match[1])
+    }
+    return [...keys].sort()
 }
 
 /** Each distinct picture of some visuals, once, by its key. */

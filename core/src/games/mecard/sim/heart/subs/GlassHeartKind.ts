@@ -23,7 +23,7 @@ class GlassHeartRule extends HeartRule {
     public override onLost({ battle, unit, heart, source }: HeartLostEvent): void {
         if(this.#breaking) return
         if(!this.lastOf(unit, each => !each.isEmpty)) return
-        battle.signals.notifyHeart.notify({ unit, heart })
+        battle.signals.notifyHeart.notify({ unit, target: heart })
         this.#breaking = true
         try {
             unit.hearts.remove(this.kind, 1, source)

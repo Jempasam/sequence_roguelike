@@ -1,0 +1,37 @@
+{
+    "size": [288, 164],
+    "seed": 24,
+    "palette": [
+        "#a09a88",
+        "#1e1c18",
+        "#6a5230",
+        "#7c9a5c"
+    ],
+    "shapes": [
+        {"ellipse": [20, 120, 34, 20], "material": 0, "depth": [6, 9], "relief": "dome"},
+        {"ellipse": [42, 128, 30, 14], "material": 0, "depth": [6, 8], "relief": "dome"},
+        {"ellipse": [12, 132, 24, 12], "material": 1, "depth": [6, 8], "relief": "dome"},
+        {"picture": "parts/leaf1.pic.json", "at": [26, 112], "materials": [1, 3, 3]},
+
+        {"ellipse": [236, 124, 40, 18], "material": 0, "depth": [6, 9], "relief": "dome"},
+        {"ellipse": [220, 132, 26, 12], "material": 1, "depth": [6, 8], "relief": "dome"},
+        {"polygon": [[196, 136], [252, 118], [256, 124], [200, 142]], "fill": {"pattern": "planks", "width": 2, "axis": "x", "materials": [2, 1]}, "depth": [6, 8]},
+        {"picture": "parts/leaf2.pic.json", "at": [244, 116], "materials": [1, 3, 3]},
+
+        {"line": [22, 23, 62, 23], "material": 0, "depth": 6},
+        {"line": [22, 23, 56, 40], "material": 0, "depth": 6},
+        {"line": [22, 23, 42, 54], "material": 0, "depth": 6},
+        {"line": [22, 23, 24, 60], "material": 0, "depth": 6},
+        {"line": [36, 23, 38, 32], "material": 0, "depth": 6},
+        {"line": [36, 32, 44, 30], "material": 0, "depth": 6},
+        {"line": [24, 38, 34, 42], "material": 0, "depth": 6},
+        {"line": [34, 42, 40, 38], "material": 0, "depth": 6},
+        {"line": [24, 38, 30, 48], "material": 0, "depth": 6},
+
+        {"line": [214, 40, 211, 62], "material": 2, "depth": 6},
+        {"line": [222, 38, 226, 58], "material": 2, "depth": 6},
+        {"line": [208, 42, 202, 56], "material": 2, "depth": 6},
+        {"picture": "parts/leaf2.pic.json", "at": [202, 58], "materials": [1, 3, 3]},
+        {"picture": "parts/leaf2.pic.json", "at": [218, 56], "materials": [1, 3, 3], "flip": true}
+    ]
+}

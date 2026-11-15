@@ -67,9 +67,9 @@ export interface PnjViewOptions {
 
     /**
      * How far it moves against the pointer going from the middle to an edge, in virtual pixels, as a layer of
-     * a parallax: none by default. It needs a pointer to read.
+     * a parallax, one number for both axes or one for each: none by default. It needs a pointer to read.
      */
-    readonly depth?: number
+    readonly depth?: number|{ readonly x: number, readonly y: number }
 
     /** Is it hit by the pointer? It is by default, to follow it; one behind panels is not. */
     readonly interactive?: boolean
@@ -102,7 +102,8 @@ export class PnjView extends Component {
         super()
         this.#centerShare = options.centerShare ?? 0.5
         this.#pointer = options.pointer ?? null
-        this.#depth = options.depth ?? 0
+        const depth = options.depth ?? 0
+        this.#depth = typeof depth === "number" ? { x: depth, y: depth } : depth
         this.#interactive = options.interactive ?? true
     }
 
@@ -263,7 +264,7 @@ export class PnjView extends Component {
 
     readonly #centerShare: number
     readonly #pointer: PnjPointer|null
-    readonly #depth: number
+    readonly #depth: { readonly x: number, readonly y: number }
     readonly #interactive: boolean
     #hat: PnjHat|null = null
     #hatColor: Color|null = null
@@ -303,7 +304,7 @@ export class PnjView extends Component {
         const along = (at: number, length: number) => {
             return Math.max(-1, Math.min(1, (at - length / 2) / (length / 2)))
         }
-        this.#shiftX = -Math.round(along(pointer.pointerX, width) * this.#depth)
-        this.#shiftY = -Math.round(along(pointer.pointerY, height) * this.#depth)
+        this.#shiftX = -Math.round(along(pointer.pointerX, width) * this.#depth.x)
+        this.#shiftY = -Math.round(along(pointer.pointerY, height) * this.#depth.y)
     }
 }

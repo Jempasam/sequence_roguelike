@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    BOW_MODULE, CardChain, CONJURATION, FIRE, IMPROVISED_ROBOT, planFor, Run, saveBattle, SECRET_CARD, SHADOW,
+    BOW_MODULE, CardChain, CONJURATION, FIRE, IMPROVISED_ROBOT, DeckAi, Run, saveBattle, SECRET_CARD, SHADOW,
     splitDeck, STONE, WATER, WIND,
 } from "@game/core/mecard"
 import type { Battle, Card } from "@game/core/mecard"
@@ -41,7 +41,7 @@ function session(
  * out and start the next one, as its screen does once it showed the round.
  */
 function playMain(main: Battle): void {
-    for(const unit of main.initiative) if(!main.planOf(unit)) main.commit(unit, planFor(unit))
+    for(const unit of main.initiative) if(!main.planOf(unit)) main.commit(unit, new DeckAi().decide(unit).chain)
     main.endPreparation()
     main.playRound()
     if(main.waiting) main.advance()
@@ -93,7 +93,7 @@ describe("BattleReceiver", () => {
             const row = rows[round % rows.length]
             hero.hand.push(...row)
             main.commit(hero, new CardChain([...row]))
-            for(const unit of main.initiative) if(!main.planOf(unit)) main.commit(unit, planFor(unit))
+            for(const unit of main.initiative) if(!main.planOf(unit)) main.commit(unit, new DeckAi().decide(unit).chain)
             main.endPreparation()
             main.playRound()
             if(main.waiting) main.advance()
@@ -116,7 +116,7 @@ describe("BattleReceiver", () => {
     test.each([false, true])("a preparation told, secret %s → the chains of the bots with it, no drift", secret => {
         const { main, viewers: [viewer], drifts } = session({ secret })
         playMain(main)
-        const bots = watched(viewer).initiative.filter(unit => unit.controller === "bot")
+        const bots = watched(viewer).initiative.filter(unit => unit.controller !== "player")
         expect(bots.length).toBeGreaterThan(0)
         for(const bot of bots) expect(watched(viewer).planOf(bot)?.cards.length).toBeGreaterThan(0)
         expect(drifts).toEqual([])
@@ -133,7 +133,7 @@ describe("BattleReceiver", () => {
 
     test("a launch → the round played out at once, whatever shows it", () => {
         const { main, viewers: [viewer] } = session()
-        for(const unit of main.initiative) main.commit(unit, planFor(unit))
+        for(const unit of main.initiative) main.commit(unit, new DeckAi().decide(unit).chain)
         main.endPreparation()
         expect(watched(viewer).executing).toBe(false)
         expect(watched(viewer).round).toBe(main.round)
@@ -141,7 +141,7 @@ describe("BattleReceiver", () => {
 
     test("a viewer whose round went otherwise → a drift told", () => {
         const { main, viewers: [viewer], drifts } = session()
-        for(const unit of main.initiative) main.commit(unit, planFor(unit))
+        for(const unit of main.initiative) main.commit(unit, new DeckAi().decide(unit).chain)
         main.endPreparation()
         main.playRound()
         const [unit] = watched(viewer).living

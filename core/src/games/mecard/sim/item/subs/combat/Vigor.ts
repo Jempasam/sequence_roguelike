@@ -10,6 +10,7 @@ import { RoundStatus } from "../../../status/RoundStatus"
 import { AbstractItem } from "../AbstractItem"
 import { visual } from "../../../base/Visual"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many glass hearts the glass heart gives, and how far around the reactor wounds. */
 const GLASS_HEARTS = 2
@@ -23,7 +24,7 @@ export class Hourglass extends AbstractItem {
 
 
     constructor(){
-        super("Sablier", visual("items/bottle_bag"), [
+        super("Sablier", visual("items/hourglass"), [
             "Ses status positifs ne perdent un round qu'un round sur deux.",
         ])
     }
@@ -49,7 +50,7 @@ export class GlassCore extends AbstractItem {
 
 
     constructor(){
-        super("Cœur de verre", visual("items/amulet"), ["Début du combat : gagne ", String(GLASS_HEARTS), " cœurs de verre."])
+        super("Cœur de verre", visual("items/glass_heart"), ["Début du combat : gagne ", String(GLASS_HEARTS), " cœurs de verre."])
     }
 
 
@@ -65,7 +66,7 @@ export class UnstableReactor extends AbstractItem {
 
 
     constructor(){
-        super("Réacteur instable", visual("items/alembic"), [
+        super("Réacteur instable", visual("items/reactor"), [
             "Quand il perd un cœur bleu ou noir : ", 1, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", REACTOR_RADIUS, " ", DISTANCE, " autour.",
         ])
     }
@@ -74,7 +75,7 @@ export class UnstableReactor extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         const burst = ({ kind }: { kind: unknown }): void => {
             if(kind !== BLUE_HEART && kind !== BLACK_HEART) return
-            battle.strike(unit, { kind: "circle", center: unit.position, radius: REACTOR_RADIUS }, 1, DamageType.PHYSICAL)
+            battle.strike(unit, Areas.circle(unit.position, REACTOR_RADIUS), 1, DamageType.PHYSICAL)
         }
         hold(unit.hearts.onRemove.add(burst))
         hold(unit.hearts.onWound.add(burst))
@@ -89,7 +90,7 @@ export class BloodPact extends AbstractItem {
 
 
     constructor(){
-        super("Pacte de sang", visual("items/fang"), ["+", 1, " ", FORCE, " par cœur manquant."])
+        super("Pacte de sang", visual("items/blood_pact"), ["+", 1, " ", FORCE, " par cœur manquant."])
     }
 
 
@@ -112,7 +113,7 @@ export class EchoItem extends AbstractItem {
 
 
     constructor(){
-        super("Écho", visual("items/spyglass"), ["À la fin de la préparation, la dernière étape de la chaîne est jouée deux fois."])
+        super("Écho", visual("items/echo"), ["À la fin de la préparation, la dernière étape de la chaîne est jouée deux fois."])
     }
 
 

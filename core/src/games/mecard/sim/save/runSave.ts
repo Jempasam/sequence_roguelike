@@ -1,7 +1,7 @@
 import type { ErrorSink } from "../base/Observable"
 import { loadedVisual, savedVisual } from "../base/Visual"
 import type { VisualData } from "../base/Visual"
-import type { Controller, StatBases } from "../battle/Unit"
+import type { StatBases } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import { Heart } from "../heart/Heart"
 import { hero } from "../run/Hero"
@@ -9,8 +9,8 @@ import type { Hero } from "../run/Hero"
 import { Run } from "../run/Run"
 import { Carried } from "../usable/Usable"
 
-import { cardLoader, savedCard } from "./battleSave"
-import type { SavedCard } from "./battleSave"
+import { cardLoader, savedCard, savedController } from "./battleSave"
+import type { SavedCard, SavedController } from "./battleSave"
 import { HEART_NAMES, ITEM_NAMES, USABLE_NAMES } from "./catalogNames"
 import { saveTravel } from "./travelSave"
 import type { TravelSave } from "./travelSave"
@@ -22,7 +22,7 @@ export const RUN_SAVE_VERSION = 3
 export interface SavedHero {
     readonly name: string
     readonly sprite: VisualData|string|null
-    readonly controller: Controller
+    readonly controller: SavedController
     readonly decks: readonly (readonly SavedCard[])[]
 
     /** The cards it plays as often as it wishes. */
@@ -96,7 +96,7 @@ export function heroesOf(save: RunSave): Hero[] {
 
 function savedHero({ name, sprite, controller, decks, unlimited, hearts, items, usables, bases }: Hero): SavedHero {
     return {
-        name, sprite: savedVisual(sprite), controller, bases,
+        name, sprite: savedVisual(sprite), controller: savedController(controller), bases,
         decks: decks.map(deck => deck.map(savedCard)), unlimited: unlimited.map(savedCard),
         hearts: hearts.map(heart => [heart.kind.name, heart.isEmpty]),
         items: items.map(item => item.name),

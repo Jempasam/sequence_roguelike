@@ -1,0 +1,13 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": ["#1e2432", "#0e121a", "#2a3040", "#eaf2ff"],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "tiles", "cell": [14, 8], "grout": 1, "offset": 0.5, "materials": [0, 1]}, "depth": 2},
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "noise", "density": 0.02, "radius": 2, "materials": [null, 1]}},
+        {"box": [0, 106, 288, 6], "material": 1, "depth": [2, 3], "relief": "bevel", "bevel": 1},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "planks", "width": 8, "axis": "x", "joint": 1, "seams": 0.4, "materials": [2, 1]}, "depth": 3},
+        {"polygon": [[132, 30], [156, 30], [232, 128], [56, 128]], "material": 3, "depth": 3},
+        {"ellipse": [52, 112, 184, 34], "material": 3, "depth": 3}
+    ]
+}

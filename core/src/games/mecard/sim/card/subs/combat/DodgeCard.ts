@@ -4,17 +4,17 @@ import { COUNTER, DISARM, DODGE, SLIDING_PARRY, WOODEN_SHIELD } from "../../../s
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** A card putting a guard on its unit, at a level: a dodge, a counter... */
 function guardCard(name: string, type: StatusType, level: number, rarity: Rarity): ActionCard {
     return new ActionCard(name, ["Prend ", type.make(level, type), "."], rarity, {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             battle.applyStatus(unit, type, level)
-            yield* hold(battle, SHORT_TIME, [label(unit.position, type.name, NOTE_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.label(unit.position, type.name, NOTE_COLOR)])
         },
-        preview: ({ pose }) => still(pose, label(pose.position, type.name, NOTE_COLOR)),
+        preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, type.name, NOTE_COLOR)),
     })
 }
 

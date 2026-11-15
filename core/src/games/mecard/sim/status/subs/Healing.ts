@@ -4,6 +4,7 @@ import { HeartCount } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import * as Areas from "../../battle/area/Areas"
 
 /** How far a totem heals, in meters. */
 export const TOTEM_RADIUS = 1.5
@@ -26,9 +27,9 @@ export class Healing extends BaseStatus {
 
     public init({ battle, unit }: UnitContext): void {
         this.#observer = battle.roundEnded.add(() => {
-            const area = { kind: "circle", center: unit.position, radius: TOTEM_RADIUS } as const
-            const allies = battle.unitsIn(area, unit).filter(ally => ally.team === unit.team)
-            if(allies.length > 0) battle.signals.notifyStatus.notify({ unit, status: this })
+            const area = Areas.circle(unit.position, TOTEM_RADIUS)
+            const allies = battle.fetch(area, unit).filter(ally => ally.team === unit.team)
+            if(allies.length > 0) battle.signals.notifyStatus.notify({ unit, target: this })
             for(const ally of allies) ally.hearts.heal(this.level)
         })
     }

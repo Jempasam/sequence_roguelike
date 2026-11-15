@@ -10,6 +10,7 @@ import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many hearts the suplex of the catalog takes, before twice the strength of the unit. */
 const SUPLEX_DAMAGE = 4
@@ -61,7 +62,7 @@ abstract class SingleBlow extends BlowCard {
     protected abstract scaleOf(unit: Unit, target: Unit): number
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
-        const target = nearestOf(battle.unitsIn(area, unit), unit.position)
+        const target = nearestOf(battle.fetch(area, unit), unit.position)
         if(!target) return []
         const amount = this.damage + this.bonus(unit.stats)
         const hit = battle.strike(unit, area, amount, DamageType.PHYSICAL, other => {
@@ -75,7 +76,7 @@ abstract class SingleBlow extends BlowCard {
     protected after(_battle: Battle, _unit: Unit, _hit: Unit[]): void {}
 
     protected override marked(battle: Battle, unit: Unit, area: Area): Unit[] {
-        const target = nearestOf(battle.unitsIn(area, unit), unit.position)
+        const target = nearestOf(battle.fetch(area, unit), unit.position)
         return target ? [target] : []
     }
 }
@@ -97,7 +98,7 @@ export class SuplexCard extends SingleBlow {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const to = pose.position.minus(pose.direction.times(SUPLEX_SIDE * unit.stats.meleeRange.value * progress))
-        return { kind: "segment", from: pose.position, to, width: SUPLEX_SIDE }
+        return Areas.line(pose.position, to, SUPLEX_SIDE)
     }
 
     protected scaleOf(): number { return 1 }
@@ -128,7 +129,7 @@ export class GreatThrustCard extends SingleBlow {
         const stretch = unit.stats.meleeRange.value
         const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START * stretch))
         const to = from.plus(pose.direction.times((GREAT_THRUST_REACH - GREAT_THRUST_START) * stretch * progress))
-        return { kind: "segment", from, to, width: GREAT_THRUST_WIDTH }
+        return Areas.line(from, to, GREAT_THRUST_WIDTH)
     }
 
     protected scaleOf(unit: Unit, target: Unit): number {
@@ -152,7 +153,7 @@ export class DemonicStrikeCard extends BlowCard {
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value
         const center = pose.position.plus(pose.direction.times(DEMONIC_AHEAD * stretch))
-        return { kind: "circle", center, radius: DEMONIC_RADIUS * stretch * progress }
+        return Areas.circle(center, DEMONIC_RADIUS * stretch * progress)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
@@ -176,7 +177,7 @@ export class QuakeCard extends BlowCard {
     }
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return { kind: "circle", center: pose.position, radius: QUAKE_RADIUS * unit.stats.meleeRange.value * progress }
+        return Areas.circle(pose.position, QUAKE_RADIUS * unit.stats.meleeRange.value * progress)
     }
 }
 
@@ -199,7 +200,7 @@ export class SacrificeCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const to = pose.position.plus(pose.direction.times(2 * unit.stats.meleeRange.value * progress))
-        return { kind: "segment", from: pose.position, to, width: 0.5 }
+        return Areas.line(pose.position, to, 0.5)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

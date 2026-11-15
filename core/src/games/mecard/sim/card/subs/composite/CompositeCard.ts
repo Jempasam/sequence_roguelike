@@ -1,4 +1,5 @@
 import type { Text } from "../../../../../../semantic"
+import { composable } from "../../Card"
 import type { Card } from "../../Card"
 import { Rarity } from "../../Rarity"
 
@@ -36,6 +37,7 @@ export abstract class CompositeCard<T, U = undefined> extends AbstractCard<T, U>
         cards: readonly Card[], joiner: string,
         description: (cards: readonly Card[]) => Text, look: CompositeLook,
     ){
+        requireComposable(cards)
         const contents = [...cards]
         super(
             look.name ?? contents.map(each => each.name).join(joiner),
@@ -53,6 +55,16 @@ export abstract class CompositeCard<T, U = undefined> extends AbstractCard<T, U>
 
     /** A composite of the same kind and look, holding other cards: nested ones stay nested. */
     public abstract with(cards: readonly Card[]): CompositeCard<T, U>
+}
+
+/**
+ * Check that cards can all be held by a composite.
+ *
+ * @throws {@link Error} For a card with variants to choose from.
+ */
+export function requireComposable(cards: readonly Card[]): void {
+    const unplaceable = cards.find(card => !composable(card))
+    if(unplaceable) throw new Error(`${unplaceable.name} has variants to choose from: it cannot be held by a card made of cards.`)
 }
 
 /** Is a card made of other cards, of any kind: a collage, a mélange or a draw between two? */

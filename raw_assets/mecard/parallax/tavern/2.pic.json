@@ -1,0 +1,32 @@
+{
+    "size": [288, 164],
+    "seed": 4,
+    "palette": [
+        "#7a5030",
+        "#2a1a10",
+        "#8a8078",
+        {"color": "#ffa040", "light": 1}
+    ],
+    "shapes": [
+        {"box": [20, 108, 64, 4], "material": 1, "depth": [3, 4], "relief": "round-y"},
+        {"box": [24, 76, 4, 32], "material": 1, "depth": 3},
+        {"box": [76, 76, 4, 32], "material": 1, "depth": 3},
+        {"box": [20, 74, 64, 4], "material": 0, "depth": [3, 5], "relief": "round-y"},
+        {"ellipse": [22, 84, 20, 22], "fill": {"pattern": "planks", "width": 3, "axis": "y", "seams": 0, "materials": [0, 1]}, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [42, 84, 20, 22], "fill": {"pattern": "planks", "width": 3, "axis": "y", "seams": 0, "materials": [0, 1]}, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [62, 84, 20, 22], "fill": {"pattern": "planks", "width": 3, "axis": "y", "seams": 0, "materials": [0, 1]}, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [32, 54, 20, 22], "fill": {"pattern": "planks", "width": 3, "axis": "y", "seams": 0, "materials": [0, 1]}, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [52, 54, 20, 22], "fill": {"pattern": "planks", "width": 3, "axis": "y", "seams": 0, "materials": [0, 1]}, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [30, 93, 4, 4], "material": 1, "depth": [6, 7], "relief": "dome"},
+        {"ellipse": [50, 93, 4, 4], "material": 1, "depth": [6, 7], "relief": "dome"},
+        {"ellipse": [70, 93, 4, 4], "material": 1, "depth": [6, 7], "relief": "dome"},
+        {"ellipse": [40, 63, 4, 4], "material": 1, "depth": [6, 7], "relief": "dome"},
+        {"ellipse": [60, 63, 4, 4], "material": 1, "depth": [6, 7], "relief": "dome"},
+
+        {"box": [206, 50, 56, 82], "fill": {"pattern": "tiles", "cell": [8, 5], "grout": 1, "offset": 0.5, "odd": 0.2, "materials": [2, 1, 0]}, "depth": 3},
+        {"box": [202, 46, 64, 6], "material": 0, "depth": [4, 6], "relief": "round-y"},
+        {"polygon": [[218, 132], [218, 92], [224, 86], [244, 86], [250, 92], [250, 132]], "material": 1, "depth": 1},
+        {"polygon": [[222, 132], [226, 116], [230, 124], [234, 104], [238, 120], [242, 112], [246, 132]], "material": 3, "depth": [2, 3]},
+        {"box": [220, 126, 28, 6], "fill": {"pattern": "noise", "density": 0.5, "radius": 1, "materials": [0, 1]}, "depth": [3, 4], "relief": "round-y"}
+    ]
+}

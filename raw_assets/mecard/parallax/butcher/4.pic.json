@@ -1,0 +1,23 @@
+{
+    "size": [288, 164],
+    "seed": 2,
+    "palette": [
+        "#7a5030",
+        "#2e2018",
+        {"color": "#b8bcc4", "reflection": 0.8},
+        {"color": "#ffd890", "light": 0.9}
+    ],
+    "shapes": [
+        {"line": [150, 0, 150, 22], "material": 1, "depth": 7},
+        {"polygon": [[140, 22], [160, 22], [168, 32], [132, 32]], "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"ellipse": [145, 30, 10, 6], "material": 3, "depth": [7, 9], "relief": "dome"},
+
+        {"box": [206, 116, 54, 40], "fill": {"pattern": "stripes", "width": 3, "axis": "y", "materials": [0, 0, 1], "depths": [0, 0, -1]}, "depth": [4, 8], "relief": "round-x"},
+        {"ellipse": [204, 110, 58, 12], "fill": {"pattern": "noise", "density": 0.25, "radius": 1, "materials": [0, 1]}, "depth": [6, 7], "relief": "dome"},
+        {"box": [208, 152, 6, 10], "material": 1, "depth": 5},
+        {"box": [252, 152, 6, 10], "material": 1, "depth": 5},
+        {"polygon": [[218, 88], [240, 88], [242, 114], [220, 114]], "material": 2, "depth": [7, 8], "relief": "bevel", "bevel": 1},
+        {"line": [229, 88, 229, 70], "width": 3, "material": 1, "depth": [7, 9]},
+        {"ellipse": [231, 92, 4, 4], "erase": true}
+    ]
+}

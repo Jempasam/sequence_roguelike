@@ -15,6 +15,12 @@ export interface HaltType extends PlaceType {
     /** The picture of its token on the map. */
     readonly icon: Visual
 
+    /**
+     * Does the map draw its token beside the fight of its place? Yes by default; the halt that pays for a fight
+     * says no, the token of the fight telling enough.
+     */
+    readonly onMap?: boolean
+
     /** Make a halt of this sort for a run, what it offers drawn from the random numbers of the run. */
     create(run: Run): Halt
 }

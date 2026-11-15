@@ -5,6 +5,7 @@ import { counted } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
+import { BEAR_TRAP_DAMAGE, BEAR_TRAP_RADIUS, BEAR_TRAP_ROUNDS, placeBearTrap } from "../../../hazard/subs/BearTrap"
 import { placeBomb } from "../../../hazard/subs/Bomb"
 import { placeFlashBomb } from "../../../hazard/subs/FlashBomb"
 import { MINE_ROUNDS, placeMine } from "../../../hazard/subs/Mine"
@@ -12,11 +13,12 @@ import { BLAST_RADIUS, BOMB_DAMAGE, FLASH_RADIUS } from "../body/BodyCards"
 
 import { ActionCard } from "../ActionCard"
 import { flight } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import { frenchNumber } from "../../../battle/words"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead the bombs of the catalog land, in meters, before the reach of the unit. */
 const BOMB_THROW = 2
@@ -58,21 +60,21 @@ export class BombCard extends ActionCard {
             return pose.position.plus(pose.direction.times(throwLength * unit.stats.throwRange.value))
         }
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const from = unit.position
                 const point = landing(unit, unit)
                 if(!battle.arena.inside(point)) return
-                yield* flight(battle, THROW_TIME, share => {
+                flight(battle, THROW_TIME, share => {
                     const center = from.plus(point.minus(from).times(share))
-                    return [polygon({ kind: "circle", center, radius: BOMB_SIZE }, HAZARD_COLOR)]
+                    return [Previews.polygon(Areas.circle(center, BOMB_SIZE), HAZARD_COLOR)]
                 })
                 const bomb = place(battle, unit, point)
                 if(bomb) battle.events.push({ type: "status", unit, text: ["lance ", bomb] })
             },
             preview: ({ battle, unit, pose }) => {
                 const point = landing(unit, pose)
-                if(!battle.arena.inside(point)) return still(pose, label(point, "hors de l'arène", NOTE_COLOR))
-                return still(pose, polygon({ kind: "circle", center: point, radius }, HAZARD_COLOR))
+                if(!battle.arena.inside(point)) return Previews.still(pose, Previews.label(point, "hors de l'arène", NOTE_COLOR))
+                return Previews.still(pose, Previews.polygon(Areas.circle(point, radius), HAZARD_COLOR))
             },
         }
     }
@@ -92,3 +94,9 @@ export const MINE = new BombCard("Mine", [
     "Pose une mine à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(MINE_ROUNDS, "round"), ". Au premier contact, elle explose : ",
     BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, MINE_THROW, BLAST_RADIUS, placeMine)
+
+export const BEAR_TRAP = new BombCard("Piège à ours", [
+    "Pose un piège à ours à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(BEAR_TRAP_ROUNDS, "round"),
+    ". Au premier contact : ", BEAR_TRAP_DAMAGE, " ", DamageType.PHYSICAL, " et la prochaine étape de l'", UNIT,
+    " est perdue.",
+], Rarity.RARE, MINE_THROW, BEAR_TRAP_RADIUS, placeBearTrap)

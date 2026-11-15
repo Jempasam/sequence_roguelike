@@ -26,6 +26,10 @@ const LOGO_SCALE = 2
 const TOKEN_WIDTH = 13 * LOGO_SCALE + 2
 const TOKEN_HEIGHT = 13 * LOGO_SCALE + 2
 
+/** How big the badge of the halt of a fight is: the scale of its logo, and how far it lies from the center of the token. */
+const BADGE_SCALE = LOGO_SCALE / 2
+const BADGE_SHIFT = 12
+
 /** How far apart two rows of the map are, from middle to middle, in virtual pixels. */
 const ROW_STEP = TOKEN_HEIGHT + 6
 
@@ -390,22 +394,36 @@ export class JourneyView extends Component {
         const passed = this.here !== null && place.layer <= this.here.layer && place !== this.here && !open
         const shade = passed ? BEHIND : 1
         const art = this.#art
-        const icon = place.exitTo?.type.icon ?? place.type.icon
-        const logo = art?.logos.get(icon.visual)
         if(art) this.#paintUnder(painter, art.shade, x, y, NO_TINT)
         if(art && place === this.#hovered){
             const circle = open ? OPEN_PATH : HOVERED_CIRCLE
             this.#paintUnder(painter, art.circle, x, y, circle)
         }
-        const glow = place.type.glow
+        // A fight is what the token shows, its halt a small badge on a corner when the halt wants to be seen.
+        const main = place.exitTo?.type ?? place.fight ?? place.halt!
+        this.#paintIcon(painter, main, x, y, shade, LOGO_SCALE)
+        const badge = place.fight && place.halt && place.halt.onMap !== false ? place.halt : null
+        if(badge) this.#paintIcon(painter, badge, x + BADGE_SHIFT, y + BADGE_SHIFT, shade, BADGE_SCALE)
+    }
+
+    /**
+     * The icon of a sort of place, centered on a point: its logo, or its letters where the logo is not
+     * loaded, with its glow. The letters are only written at full scale.
+     */
+    #paintIcon(
+        painter: Painter, type: { readonly icon: Visual, readonly glow?: Rgba },
+        x: number, y: number, shade: number, scale: number,
+    ): void {
+        const { icon, glow } = type
+        const logo = this.#art?.logos.get(icon.visual)
         if(!logo){
-            this.#paintCode(painter, icon.letter, x, y, shade, glow)
+            if(scale === LOGO_SCALE) this.#paintCode(painter, icon.letter, x, y, shade, glow)
             return
         }
         painter.push()
-        const logoLeft = x - Math.floor(logo.width * LOGO_SCALE / 2)
-        painter.translate(logoLeft, y - Math.floor(logo.height * LOGO_SCALE / 2))
-        painter.scale(LOGO_SCALE)
+        const logoLeft = x - Math.floor(logo.width * scale / 2)
+        painter.translate(logoLeft, y - Math.floor(logo.height * scale / 2))
+        painter.scale(scale)
         if(glow){
             painter.setColorMode("mask")
             painter.setTint(new Color(glow.r * shade, glow.g * shade, glow.b * shade, glow.a))

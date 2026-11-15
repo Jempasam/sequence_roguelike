@@ -1,6 +1,6 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
-import { HAZARD_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -9,8 +9,8 @@ import { ACTION } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
 import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
-import { arrow, label, polygon } from "../tools/previews"
 import type { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the dashes of the catalog go, in meters, before the move factor of the unit: beyond a step. */
 export const DASH_LENGTH = 3
@@ -41,10 +41,10 @@ export interface Impact {
 }
 
 /**
- * A card moving its unit a little at each tick, as far as it goes before something is in the way. Each move
+ * A card moving its unit a little at each stride, as far as it goes before something is in the way. Each move
  * says which way it goes, and what befalls the unit it runs into.
  */
-export abstract class MoveCard extends AbstractCard<readonly Action[]> {
+export abstract class MoveCard extends AbstractCard<Action> {
 
 
     public readonly output = ACTION
@@ -75,41 +75,42 @@ export abstract class MoveCard extends AbstractCard<readonly Action[]> {
         return null
     }
 
-    public get(): readonly Action[] {
-        return [this.action]
+    public get(): Action {
+        return this.action
     }
 
 
     static #moving(card: MoveCard): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const distance = card.length * ctx.unit.stats.move.value
-                const gone = yield* travel(ctx, card.way(ctx.unit), distance, card.speed)
+                const gone = travel(ctx, card.way(ctx.unit), distance, card.speed)
                 const impact = card.impact()
                 const stopped = gone.distance < distance - TRAVEL_SLACK && ctx.unit.stats.mobility.value > 0
                 if(impact && (gone.struck || (impact.anything && stopped))){
                     impact.strike(ctx.battle, gone.struck, ctx.unit)
                 }
-                yield* wait(SETTLE_TIME)
+                wait(ctx.battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = card.length * unit.stats.move.value
-                const travelled = battle.travel(unit, pose.position, card.way(pose), distance)
+                const travelled = battle.moveSpot(unit, pose.position, card.way(pose), distance)
                 const stop = { position: travelled.to, direction: pose.direction }
                 const blocked = travelled.distance < distance - TRAVEL_SLACK
                 const impact = card.impact()
                 const stopped = travelled.struck !== null || (impact?.anything === true && blocked)
                 const hits = impact !== null && stopped
-                const indicators = [arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)]
+                const potential = pose.position.plus(card.way(pose).times(distance))
+                const indicators = Previews.moving(unit, pose.position, potential, travelled.to, MOVE_WIDTH)
                 // What it would reach shows even with nothing in the way yet: anyone may stand there by then.
                 if(impact?.area){
                     const color = hits ? HAZARD_COLOR : RANGE_COLOR
-                    indicators.unshift(polygon(impact.area(unit, stop), color))
+                    indicators.unshift(Previews.polygon(impact.area(unit, stop), color))
                 }
-                if(blocked) indicators.push(label(travelled.to, "bloqué", NOTE_COLOR))
+                if(blocked) indicators.push(Previews.label(travelled.to, "bloqué", NOTE_COLOR))
                 if(hits){
                     const at = travelled.struck?.position ?? travelled.to
-                    indicators.push(label(at, impact.word, NOTE_COLOR))
+                    indicators.push(Previews.label(at, impact.word, NOTE_COLOR))
                 }
                 return { indicators, pose: stop }
             },

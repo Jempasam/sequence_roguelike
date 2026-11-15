@@ -3,7 +3,7 @@ import { parseArgs } from "node:util"
 import { video } from "@kmamal/sdl"
 import { NetSync, startGame } from "@game/core"
 
-import { assetsDirectory, saveDirectory } from "./directories"
+import { assetsDirectories, saveDirectory } from "./directories"
 import { FsAssets, FsStorage, NodeNet, SdlClipboard, SdlGfx, SdlInput, SdlLoop } from "./platform"
 
 /** The signaling server when `--signal` names no other: the one `npm run server` starts on this host. */
@@ -32,7 +32,7 @@ const game = startGame({
     loop: new SdlLoop(window),
     input: new SdlInput(window),
     clipboard: new SdlClipboard(),
-    assets: new FsAssets(assetsDirectory()),
+    assets: new FsAssets(assetsDirectories()),
     storage: new FsStorage(saveDirectory()),
     net,
     signaling,

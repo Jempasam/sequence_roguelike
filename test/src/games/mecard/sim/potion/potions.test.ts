@@ -3,7 +3,7 @@ import {
     ANTIDOTE, Arena, Battle, BIG_BOTTLE, BOTTLE, COATED_BLADE, CONFUSED, CONFUSION, DISTILLATION, ENRAGED,
     Heart, POISON, POISONED, POTION_LEVEL, POTION_RAIN, PUDDLE, RAGE, RAGE_FIT,
     RED_HEART, SLASH, SLOWED, SLOWNESS, STEP, THORN_HEART, THROWN_POTION, Vector2, VULNERABILITY,
-    VULNERABLE, WAIT,
+    VULNERABLE, WAIT, POISONED_BLADE, SWALLOWED, SWIFTNESS, VIGOR, VIGOROUS,
 } from "@game/core/mecard"
 import type { StatusType, Unit } from "@game/core/mecard"
 
@@ -158,5 +158,53 @@ describe("PUDDLE", () => {
         play(on, [[pourer, chain(WAIT)]])
         expect(on.units.some(each => each.sprite?.visual === "units/puddle")).toBe(false)
         expectAt(pourer, 3, 6)
+    })
+})
+
+describe("the buff potions", () => {
+    test("vigor → a heart more on each blow while it lasts", () => {
+        const on = battle()
+        const drinker = unit(on, 3, 5)
+        unit(on, 0.5, 0.5, { team: MONSTERS })
+        play(on, [[drinker, chain(BOTTLE, VIGOR)]])
+        expect(drinker.stats.strength.value).toBe(1)
+        play(on, [[drinker, chain(WAIT)]])
+        expect(drinker.statusOf(VIGOROUS)).toBeUndefined()
+        expect(drinker.stats.strength.value).toBe(0)
+    })
+
+    test("swiftness → the moves twice as long while it lasts", () => {
+        const on = battle()
+        const drinker = unit(on, 3, 5)
+        unit(on, 0.5, 0.5, { team: MONSTERS })
+        const before = drinker.stats.move.value
+        play(on, [[drinker, chain(BOTTLE, SWIFTNESS)]])
+        expect(drinker.stats.move.value).toBe(before * 2)
+    })
+
+    test("swallow → healed at the end of each round, gone as soon as the unit is hurt", () => {
+        const on = battle()
+        const drinker = unit(on, 3, 5, { hearts: sturdy() })
+        const player = unit(on, 0.5, 0.5, { team: MONSTERS })
+        drinker.hearts.damage(4, DamageType.PHYSICAL, null)
+        const hurt = drinker.life
+        on.applyStatus(drinker, SWALLOWED, 3)
+        play(on, [[player, chain(WAIT)]])
+        expect(drinker.life).toBe(hurt + 1)
+        drinker.hearts.damage(1, DamageType.PHYSICAL, null)
+        expect(drinker.statusOf(SWALLOWED)).toBeUndefined()
+        const after = drinker.life
+        play(on, [[player, chain(WAIT)]])
+        expect(drinker.life).toBe(after)
+    })
+})
+
+describe("POISONED_BLADE", () => {
+    test("one fusion → the blade coated with poison, the slash that follows poisons", () => {
+        const on = battle()
+        const coater = unit(on, 3, 5)
+        const target = unit(on, 3, 4, { team: MONSTERS, hearts: sturdy() })
+        play(on, [[coater, chain(POISONED_BLADE, SLASH)]])
+        expect(roundsOf(target, POISONED)).toBe(POTION_LEVEL - 1)
     })
 })

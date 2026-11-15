@@ -6,9 +6,8 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
-import { DARK_COLOR, DARK_MASK } from "../halt_common"
+import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
 
 /** The monster surgeon: a character of the party grafted with a monster among some, as the mad doctor grafts two. */
@@ -18,7 +17,7 @@ export class DarkMadDoctorHalt extends AbstractHalt {
     constructor(run: Run){
         super(DARK_MAD_DOCTOR_HALT, run,
             ["Une ", UNIT, " et un monstre ? Sur ma table, ils n'en feront plus qu'un !"],
-            sceneLook(13, 31, 23, "mecard/travel/mad-doctor"),
+            sceneLook(13, 31, 23, "mad-doctor", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "doctorHat",
                 clothes: DARK_COLOR,
@@ -55,6 +54,6 @@ export const DARK_MAD_DOCTOR_HALT: HaltType = {
     description: ["Greffe une ", UNIT, " avec un monstre parmi trois."],
     icon: visual("travel/mad-doctor/logo", { letter: "DF!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new DarkMadDoctorHalt(run),
 }

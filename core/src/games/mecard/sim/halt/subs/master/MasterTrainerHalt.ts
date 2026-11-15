@@ -1,6 +1,6 @@
 import { concat } from "../../../../../../semantic"
 import { CARTE, DECK } from "../../../base/keywords"
-import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
+import { MASTER_COLOR, MASTER_MASK, MASTER_TRANSITION } from "../halt_common"
 import type { Monster } from "../../../catalog/monsters"
 import { upgradeAll, upgradeMatches, LOOT_UPGRADES } from "../../../catalog/upgrades"
 import type { CardUpgrade } from "../../../catalog/upgrades"
@@ -8,7 +8,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { trainerMonsters } from "../gift/TrainerHalt"
 import { visual } from "../../../base/Visual"
@@ -23,7 +22,7 @@ export class MasterTrainerHalt extends AbstractHalt {
     constructor(run: Run){
         super(MASTER_TRAINER_HALT, run,
             "Une de mes trois bêtes améliorées, te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, "mecard/travel/trainer"),
+            sceneLook(23, 28, 15, "trainer", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "huntingHat",
                 mask: MASTER_MASK,
@@ -71,6 +70,6 @@ export const MASTER_TRAINER_HALT: HaltType = {
     description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
     icon: visual("travel/trainer/logo", { letter: "D*" }),
     glow: MASTER_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: MASTER_TRANSITION,
     create: run => new MasterTrainerHalt(run),
 }

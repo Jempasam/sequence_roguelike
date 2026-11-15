@@ -1,13 +1,13 @@
 import { Worker } from "node:worker_threads"
 
-import type { CellId, CellResult } from "./cells"
+import type { CellResult, Slice } from "./cells"
 
-/** What a worker thread answers to a cell: the result, or what stopped it. */
+/** What a worker thread answers to a slice: the result, or what stopped it. */
 type Answer = { readonly result: CellResult }|{ readonly error: string }
 
-/** A cell waiting for a free worker, and how to answer whoever asked. */
+/** A slice waiting for a free worker, and how to answer whoever asked. */
 interface Job {
-    readonly cell: CellId
+    readonly cell: Slice
     readonly resolve: (result: CellResult) => void
     readonly reject: (error: Error) => void
 }
@@ -32,8 +32,8 @@ export class WorkerPool {
     }
 
 
-    /** Play a cell on the first thread free. */
-    public run(cell: CellId): Promise<CellResult> {
+    /** Play a slice of a cell on the first thread free. */
+    public run(cell: Slice): Promise<CellResult> {
         return new Promise((resolve, reject) => {
             const job: Job = { cell, resolve, reject }
             const idle = this.#idle.pop()
@@ -60,7 +60,9 @@ export class WorkerPool {
     readonly #playing = new Map<Worker, Job>()
 
     #start(args: readonly string[]): void {
-        const worker = new Worker(WorkerPool.#entry(), { eval: true, workerData: args })
+        const worker = WorkerPool.#bundled()
+            ? new Worker(new URL("./worker.mjs", import.meta.url), { workerData: args })
+            : new Worker(WorkerPool.#entry(), { eval: true, workerData: args })
         worker.on("message", (answer: Answer) => this.#answered(worker, answer))
         worker.on("error", error => this.#failed(worker, error))
         this.#workers.push(worker)
@@ -92,7 +94,15 @@ export class WorkerPool {
     }
 
     /**
-     * What a thread runs first: it registers `tsx`, then loads `worker.ts`. A worker does not read TypeScript
+     * Does it run from the bundle `npm run build` makes? `worker.mjs` then stands next to it, and needs no
+     * `tsx`: the bundle is JavaScript already.
+     */
+    static #bundled(): boolean {
+        return !import.meta.url.endsWith(".ts")
+    }
+
+    /**
+     * What a thread runs first when it runs from the sources: it registers `tsx`, then loads `worker.ts`. A worker does not read TypeScript
      * by itself, and the hooks `tsx` registered in this process do not reach it, so it would not find the
      * modules imported without their extension. `--import tsx` in its options did not give it the hooks.
      */

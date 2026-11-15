@@ -1,0 +1,29 @@
+{
+    "size": [288, 164],
+    "seed": 9,
+    "palette": ["#6a4228", "#2a1a14", "#d03a58", "#f6efd8"],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [20, 20, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 143, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 20, 1, 124], "material": 1, "depth": 4},
+        {"box": [267, 20, 1, 124], "material": 1, "depth": 4},
+
+        {"box": [9, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "round-x"},
+        {"box": [271, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "round-x"},
+        {"box": [9, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "round-x"},
+        {"box": [271, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "round-x"},
+        {"box": [9, 8, 8, 2], "material": 3, "depth": 10},
+        {"box": [271, 8, 8, 2], "material": 3, "depth": 10},
+        {"box": [9, 154, 8, 2], "material": 3, "depth": 10},
+        {"box": [271, 154, 8, 2], "material": 3, "depth": 10},
+
+        {"line": [60, 12, 228, 12], "material": 3, "depth": 8},
+        {"line": [60, 15, 228, 15], "material": 2, "depth": 8},
+        {"box": [128, 8, 32, 10], "material": 1, "depth": [7, 9], "relief": "bevel", "bevel": 1},
+        {"box": [132, 9, 24, 8], "fill": {"pattern": "stripes", "width": 2, "axis": "y", "materials": [2, 3]}, "depth": [8, 10], "relief": "round-x"}
+    ]
+}

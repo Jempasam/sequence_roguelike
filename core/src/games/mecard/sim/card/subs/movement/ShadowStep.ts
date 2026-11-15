@@ -6,9 +6,9 @@ import type { Arena } from "../../../battle/Arena"
 
 import { ActionCard } from "../ActionCard"
 import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
-import { arrow } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DASH_SPEED } from "./MoveCard"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the shadow step of the catalog goes, in meters, before the agility of the unit. */
 const SHADOW_STEP_LENGTH = 2
@@ -65,29 +65,29 @@ export class ShadowStepCard extends ActionCard {
 
     static #stepping(length: number): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const distance = length * unit.stats.move.value
-                const gone = yield* travel(ctx, unit.direction, distance, DASH_SPEED)
+                const gone = travel(ctx, unit.direction, distance, DASH_SPEED)
                 const { position, direction, radius } = unit
                 const wall = gone.struck ? null : across(battle.arena, position, direction, radius)
                 if(wall && gone.distance < distance - TRAVEL_SLACK && battle.leap(unit, wall)){
                     battle.unblock(unit)
-                    yield* wait(JUMP_TIME)
-                    yield* travel(ctx, unit.direction, distance, DASH_SPEED)
+                    wait(battle, JUMP_TIME)
+                    travel(ctx, unit.direction, distance, DASH_SPEED)
                 }
-                yield* wait(JUMP_TIME)
+                wait(battle, JUMP_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = length * unit.stats.move.value
-                const gone = battle.travel(unit, pose.position, pose.direction, distance)
-                const shown = [arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
+                const gone = battle.moveSpot(unit, pose.position, pose.direction, distance)
+                const shown = [Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
                 const wall = gone.struck ? null : across(battle.arena, gone.to, pose.direction, unit.radius)
                 if(!wall || gone.distance >= distance){
                     return { indicators: shown, pose: { ...pose, position: gone.to } }
                 }
-                const again = battle.travel(unit, wall, pose.direction, distance)
-                shown.push(arrow([wall, again.to], MOVE_WIDTH, MOVE_COLOR))
+                const again = battle.moveSpot(unit, wall, pose.direction, distance)
+                shown.push(Previews.arrow([wall, again.to], MOVE_WIDTH, MOVE_COLOR))
                 return { indicators: shown, pose: { ...pose, position: again.to } }
             },
         }

@@ -1,0 +1,35 @@
+{
+    "size": [288, 164],
+    "seed": 23,
+    "palette": [
+        "#e0d8c0",
+        "#2a1c12",
+        "#6a9a58",
+        {"color": "#ffe0a0", "light": 0.9}
+    ],
+    "shapes": [
+        {"line": [66, 50, 100, 58], "material": 1, "depth": 6},
+        {"line": [100, 58, 140, 64], "material": 1, "depth": 6},
+        {"line": [140, 64, 182, 60], "material": 1, "depth": 6},
+        {"line": [182, 60, 218, 52], "material": 1, "depth": 6},
+        {"polygon": [[84, 55], [98, 58], [98, 76], [92, 74], [86, 78], [84, 70]], "material": 0, "depth": [5, 6], "relief": "bevel"},
+        {"polygon": [[112, 61], [130, 64], [128, 74], [124, 90], [114, 90], [112, 74]], "material": 0, "depth": [5, 6], "relief": "bevel"},
+        {"polygon": [[150, 64], [168, 63], [170, 72], [166, 74], [166, 82], [152, 82], [152, 74], [148, 72]], "material": 0, "depth": [5, 6], "relief": "bevel"},
+        {"polygon": [[186, 59], [200, 56], [200, 70], [194, 68], [188, 72]], "material": 0, "depth": [5, 6], "relief": "bevel"},
+
+        {"line": [212, 62, 196, 62], "material": 1, "width": 2, "depth": 7},
+        {"line": [196, 62, 196, 66], "material": 1, "depth": 7},
+        {"line": [212, 62, 212, 80], "material": 1, "depth": 7},
+        {"box": [190, 70, 22, 14], "material": 1, "depth": [7, 8], "relief": "bevel"},
+        {"ellipse": [196, 73, 10, 8], "material": 0, "depth": [8, 9], "relief": "dome"},
+
+        {"line": [66, 78, 74, 78], "material": 1, "width": 2, "depth": 7},
+        {"line": [70, 78, 70, 84], "material": 1, "depth": 7},
+        {"box": [66, 84, 8, 11], "material": 1, "depth": 6},
+        {"box": [67, 86, 6, 7], "material": 3, "depth": 8, "relief": "dome"},
+        {"box": [65, 83, 10, 2], "material": 1, "depth": 8},
+
+        {"box": [28, 94, 24, 6], "material": 1, "depth": [6, 7], "relief": "bevel"},
+        {"picture": "parts/pot.pic.json", "at": [31, 78], "materials": [2], "depth": 6}
+    ]
+}

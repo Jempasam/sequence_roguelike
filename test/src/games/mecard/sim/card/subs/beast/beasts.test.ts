@@ -29,7 +29,7 @@ describe("the beasts", () => {
     test("the bear → aims, waits, bites, waits, runs", () => {
         expect(shape("Ours")).toMatchObject({
             run: [STEP, WAIT], bite: [AIM, WAIT, SLASH, SWEEP], body: [AIM, WAIT, "bite", WAIT, "run"],
-            hearts: [{ kind: RED_HEART, count: 4 }, { kind: PINK_HEART, count: 1 }],
+            hearts: [{ kind: BLUE_HEART, count: 4 }, { kind: PINK_HEART, count: 1 }],
         })
     })
 

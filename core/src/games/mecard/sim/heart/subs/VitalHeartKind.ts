@@ -34,7 +34,7 @@ class VitalHeartRule extends HeartRule {
 
 
     public override onLost({ battle, unit, heart }: HeartLostEvent): void {
-        battle.signals.notifyHeart.notify({ unit, heart })
+        battle.signals.notifyHeart.notify({ unit, target: heart })
         unit.hearts.heal(this.kind.healed)
     }
 }

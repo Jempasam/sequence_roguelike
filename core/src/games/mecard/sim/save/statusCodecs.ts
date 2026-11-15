@@ -15,10 +15,11 @@ import type { StatusVariants } from "../status/StatusVariants"
 import type { DoseType, ElementType } from "../status/StatusVariants"
 import { BARRELS, SPLASHING } from "../status/subs/Splashing"
 import { COATED, COATS } from "../status/subs/Coated"
-import { GRAND_RITUAL, GRAND_RITUALS } from "../status/subs/GrandRitual"
+import { SOAKED, SOAKS } from "../status/subs/Soaked"
+import { RITUAL_STATUS, RITUAL_STATUSES } from "../status/subs/RitualStatus"
 import { ENCHANTED, ENCHANTMENTS } from "../status/subs/EnchantedBlade"
 
-import { ELEMENT_NAMES, POTION_NAMES } from "./catalogNames"
+import { ELEMENT_CODECS, POTION_NAMES } from "./catalogNames"
 
 /**
  * The codec of the variants of a kind of status made for a dose: the dose, as {@link doseKey} writes it, read
@@ -46,7 +47,7 @@ function doseCodec(
     }
 }
 
-/** The codec of the variants of a kind of status made for an element: the element, by its name. */
+/** The codec of the variants of a kind of status made for an element: the element, as it is written by its codecs. */
 function elementCodec(
     prefix: string, family: StatusType, variants: StatusVariants<Element, ElementType>,
 ): Codec<StatusType> {
@@ -56,9 +57,9 @@ function elementCodec(
         serialize: type => {
             const element = elementOf(type, family)
             if(!element) throw new Error(`${type} is no variant of ${family} made for an element.`)
-            return element.name
+            return ELEMENT_CODECS.save(element)
         },
-        parse: name => variants.of(ELEMENT_NAMES.of(name)),
+        parse: text => variants.of(ELEMENT_CODECS.load(text)),
     }
 }
 
@@ -69,9 +70,10 @@ function elementCodec(
 export const STATUS_CODECS = new Codecs<StatusType>("status", [
     routeCodec("status", STATUS_TYPES),
     doseCodec("coated", COATED, COATS),
+    doseCodec("soaked", SOAKED, SOAKS),
     doseCodec("barrel", SPLASHING, BARRELS),
     doseCodec("puddle", PUDDLE_HAZARD, PUDDLES),
-    elementCodec("ritual", GRAND_RITUAL, GRAND_RITUALS),
+    elementCodec("ritual", RITUAL_STATUS, RITUAL_STATUSES),
     elementCodec("enchanted", ENCHANTED, ENCHANTMENTS),
     elementCodec("burning", BURNING_GROUND, BURNING_GROUNDS),
     elementCodec("whirling", WHIRLING, WHIRLWINDS),

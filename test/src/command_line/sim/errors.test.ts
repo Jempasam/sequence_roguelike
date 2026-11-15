@@ -6,7 +6,7 @@ import { closest, normalize, unknownName } from "@game/command_line/sim"
 describe("normalize", () => {
     test("case, accents and spaces → ignored", () => {
         expect(normalize("  Épéiste  ")).toBe("epeiste")
-        expect(normalize("Coup   d'épée")).toBe("coup d'epee")
+        expect(normalize("Coup   d'épée")).toBe("coupd'epee")
     })
 })
 

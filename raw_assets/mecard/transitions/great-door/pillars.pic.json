@@ -1,0 +1,19 @@
+{
+    "size": [272, 148],
+    "seed": 9,
+    "palette": ["#b4b4be", "#3a3a46", "#8a8a98", "#d4d4dc"],
+    "shapes": [
+        {"box": [10, 20, 40, 112], "material": 0, "depth": [3, 9], "relief": "round-x"},
+        {"box": [222, 20, 40, 112], "material": 0, "depth": [3, 9], "relief": "round-x"},
+        {"box": [10, 46, 40, 2], "material": 1, "depth": 2},
+        {"box": [10, 76, 40, 2], "material": 1, "depth": 2},
+        {"box": [10, 106, 40, 2], "material": 1, "depth": 2},
+        {"box": [222, 46, 40, 2], "material": 1, "depth": 2},
+        {"box": [222, 76, 40, 2], "material": 1, "depth": 2},
+        {"box": [222, 106, 40, 2], "material": 1, "depth": 2},
+        {"box": [2, 8, 56, 14], "material": 3, "depth": [6, 9], "relief": "bevel", "bevel": 2},
+        {"box": [214, 8, 56, 14], "material": 3, "depth": [6, 9], "relief": "bevel", "bevel": 2},
+        {"box": [2, 130, 56, 18], "material": 2, "depth": [6, 9], "relief": "bevel", "bevel": 2},
+        {"box": [214, 130, 56, 18], "material": 2, "depth": [6, 9], "relief": "bevel", "bevel": 2}
+    ]
+}

@@ -8,6 +8,7 @@ import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many hearts the tackle of the catalog takes, before the strength of the unit. */
 const TACKLE_DAMAGE = 1
@@ -37,15 +38,11 @@ export class TackleCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return {
-            kind: "sector", center: pose.position, direction: pose.direction,
-            radius: this.range * unit.stats.meleeRange.value * progress,
-            cosHalf: this.cosHalf,
-        }
+        return Areas.arc(pose.position, pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
-        for(const target of battle.unitsIn(area, unit)){
+        for(const target of battle.fetch(area, unit)){
             const away = target.position.minus(unit.position).normalized
             if(away) battle.turn(target, away)
         }

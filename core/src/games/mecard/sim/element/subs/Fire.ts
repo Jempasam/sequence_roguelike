@@ -8,6 +8,7 @@ import { Strength } from "../../process/subs/Strength"
 import { BURN, Burn } from "../../status/subs/Burn"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
+import * as Areas from "../../battle/area/Areas"
 
 /** How many rounds the fire burns a unit for. */
 const FIRE_BURN = 2
@@ -45,7 +46,7 @@ export class Fire extends AbstractElement {
     }
 
     public invoke({ battle, unit }: UnitContext, at: Vector2, _direction: Vector2, effect: Element): void {
-        placeBurningGround(battle, unit, { kind: "circle", center: at, radius: FLAMES_RADIUS }, FLAMES_ROUNDS, effect)
+        placeBurningGround(battle, unit, at, Areas.circle(at, FLAMES_RADIUS), FLAMES_ROUNDS, effect)
     }
 }
 

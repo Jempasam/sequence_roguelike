@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest"
 import { freeHalts, lootHalts, Run, SHOP_HALT, TAVERN_HALT } from "@game/core/mecard"
+import type { Place, PlaceType } from "@game/core/mecard"
+
+/** The sort of fight or of halt a place holds, the fight first. */
+function typeOf(place: Place): PlaceType {
+    return place.fight ?? place.halt!
+}
 
 describe("the start of a run", () => {
 
@@ -7,17 +13,17 @@ describe("the start of a run", () => {
         expect(new Run(1).heroes).toEqual([])
     })
 
-    test("a new run → a tavern, a free halt, a tavern, then the fights of the floor", () => {
+    test("a new run → a tavern, a tavern, a free halt, then the fights of the floor", () => {
         for(let seed = 0; seed < 30; seed++){
             const { layers, entries } = new Run(seed).travel.journey
-            expect(entries.map(place => place.type)).toEqual([TAVERN_HALT])
-            expect(layers[0].map(place => place.type)).toEqual([TAVERN_HALT])
-            expect(layers[1]).toHaveLength(1)
-            expect(freeHalts()).toContain(layers[1][0].type)
-            expect(layers[1][0].type).not.toBe(SHOP_HALT)
-            expect(layers[2].map(place => place.type)).toEqual([TAVERN_HALT])
+            expect(entries.map(place => typeOf(place))).toEqual([TAVERN_HALT])
+            expect(layers[0].map(place => typeOf(place))).toEqual([TAVERN_HALT])
+            expect(layers[1].map(place => typeOf(place))).toEqual([TAVERN_HALT])
+            expect(layers[2]).toHaveLength(1)
+            expect(freeHalts()).toContain(typeOf(layers[2][0]))
+            expect(typeOf(layers[2][0])).not.toBe(SHOP_HALT)
             expect(layers[3].length).toBeGreaterThan(0)
-            expect(layers[3].every(place => !("create" in place.type))).toBe(true)
+            expect(layers[3].every(place => !("create" in typeOf(place)))).toBe(true)
         }
     })
 

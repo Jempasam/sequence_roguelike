@@ -31,8 +31,8 @@ describe("meleeRange (allonge)", () => {
         const hero = unit(on, 3, 3)
         const length = (): number => {
             const area = THRUST.reach(on, hero, hero, 1)
-            if(area.kind !== "segment") throw new Error("a thrust is a segment")
-            return area.to.distance(area.from)
+            // A thrust is a band: its first side runs its length, and half its width past each end.
+            return area[0].distance(area[1]) - THRUST.width
         }
         const base = length()
         hero.stats.meleeRange.add(new ModifierKey("gants"), new Add(1))
@@ -53,7 +53,7 @@ describe("SKULL_BREAK", () => {
         on.endPreparation()
         const stunned: string[] = []
         for(let tick = 0; tick < 200 && on.executing; tick++){
-            on.tick()
+            on.playStep()
             if(left.steps.length > 0) stunned.push("gauche")
             if(right.steps.length > 0) stunned.push("droite")
         }
@@ -95,21 +95,21 @@ describe("MEGA_SLASH", () => {
         expect(hero.life).toBe(4)
     })
 
-    test("landing in a body → thrown aside for a heart", () => {
+    test("landing in a body → thrown aside, at no cost", () => {
         const on = battle()
         const hero = unit(on, 3, 6)
         unit(on, 3, 3, { team: MONSTERS, hearts: sturdy() })
         play(on, [[hero, chain(MEGA_SLASH)]])
-        expect(hero.life).toBe(3)
+        expect(hero.life).toBe(4)
         expect(on.free(hero.position, hero)).toBe(true)
     })
 
-    test("going past a wall → back within the walls, for one heart", () => {
+    test("going past a wall → back within the walls, at no cost", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
         unit(on, 6, 6, { team: MONSTERS })
         play(on, [[hero, chain(MEGA_SLASH)]])
-        expect(hero.life).toBe(3)
+        expect(hero.life).toBe(4)
         expect(on.arena.inside(hero.position, hero.radius)).toBe(true)
     })
 })
@@ -147,7 +147,7 @@ describe("ASSASSINATION", () => {
         on.endPreparation()
         let most = 0
         for(let tick = 0; tick < 500 && on.executing; tick++){
-            on.tick()
+            on.playStep()
             most = Math.max(most, hero.steps.length)
         }
         expect(victims[0].alive).toBe(false)

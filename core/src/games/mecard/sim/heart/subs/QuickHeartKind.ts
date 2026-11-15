@@ -22,7 +22,7 @@ class QuickHeartRule extends HeartRule {
 
 
     public override onLost({ battle, unit, heart }: HeartLostEvent): void {
-        battle.signals.notifyHeart.notify({ unit, heart })
+        battle.signals.notifyHeart.notify({ unit, target: heart })
         battle.applyStatus(unit, DODGE, 1)
     }
 }

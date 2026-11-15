@@ -1,5 +1,6 @@
 import type { UnitContext } from "../../battle/Action"
-import { touches } from "../../battle/Area"
+import * as Areas from "../../battle/area/Areas"
+import type { Vector2 } from "../../base/Vector2"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
@@ -41,7 +42,7 @@ export class BurningGround extends HazardStatus {
     protected plug({ battle, unit }: UnitContext): void {
         this.hold(battle.unitStepping.add(stepping => {
             if(!unit.alive || stepping === unit || !stepping.tangible || !unit.zone) return
-            if(!touches(unit.zone, stepping.position, stepping.radius)) return
+            if(!Areas.checkCircle(unit.zone, stepping.position, stepping.radius)) return
             this.element.applyNegative({ battle, unit: unit.owner ?? unit }, stepping)
         }))
     }
@@ -49,10 +50,10 @@ export class BurningGround extends HazardStatus {
 
 /** Leave flames burning for rounds, for whoever plays a step in them. */
 export function placeBurningGround(
-    battle: Battle, owner: Unit, zone: Area, rounds: number, element: Element,
+    battle: Battle, owner: Unit, at: Vector2, zone: Area, rounds: number, element: Element,
 ): Unit|null {
     return placeHazard(battle, owner, {
-        sprite: visual("units/fire"), name: "Flammes", zone, hearts: Heart.many(TIME_HEART, rounds),
+        sprite: visual("units/fire"), name: "Flammes", at, zone, hearts: Heart.many(TIME_HEART, rounds),
         status: { type: BURNING_GROUNDS.of(element), level: 1 },
     })
 }

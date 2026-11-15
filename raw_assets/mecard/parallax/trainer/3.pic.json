@@ -1,0 +1,15 @@
+{
+    "size": [288, 164],
+    "seed": 7,
+    "palette": ["#1e1620", {"color": "#d8b870", "reflection": 0.1}, "#a884cc", "#f4e4ff"],
+    "shapes": [
+        {"box": [102, 62, 88, 68], "material": 0, "depth": 3},
+        {"picture": "parts/beast.pic.json", "at": [101, 76], "materials": [0, 2, 3]},
+
+        {"box": [98, 58, 8, 76], "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"box": [186, 58, 8, 76], "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"box": [124, 60, 6, 72], "material": 1, "depth": [5, 7], "relief": "round-x"},
+        {"box": [162, 60, 6, 72], "material": 1, "depth": [5, 7], "relief": "round-x"},
+        {"box": [96, 74, 100, 6], "material": 1, "depth": [6, 8], "relief": "round-y"},
+        {"box": [96, 106, 100, 6], "material": 1, "depth": [6, 8], "relief": "round-y"}    ]
+}

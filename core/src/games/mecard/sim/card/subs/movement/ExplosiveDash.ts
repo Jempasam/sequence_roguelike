@@ -9,6 +9,7 @@ import type { Impact } from "./MoveCard"
 import { AGILITE, DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import { frenchNumber } from "../../../battle/words"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the blast of the explosive dash of the catalog reaches, in meters, before the reach. */
 const DASH_BLAST_RADIUS = 1.2
@@ -55,7 +56,7 @@ export class ExplosiveDashCard extends MoveCard {
     /** What its blast reaches, for a unit stopped at a pose: around the front of its body. */
     #blastArea(unit: Unit, stop: Pose): Area {
         const center = stop.position.plus(stop.direction.times(unit.radius))
-        return { kind: "circle", center, radius: this.radius * unit.stats.throwRange.value }
+        return Areas.circle(center, this.radius * unit.stats.throwRange.value)
     }
 }
 

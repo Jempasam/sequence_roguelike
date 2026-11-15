@@ -3,8 +3,8 @@ import { Vector2 } from "../base/Vector2"
 /** How many hearts a unit pushed into something before the whole distance takes. */
 export const PUSH_BLOCKED_DAMAGE = 1
 
-/** How many hearts a unit loses each time it is found where it has no room, and thrown aside. */
-export const UNBLOCK_DAMAGE = 1
+/** How far beyond its point a blink looks for a free spot when the point is taken, in meters. */
+export const BLINK_OVERSHOOT = 1
 
 /** The eight ways around a unit, a meter long: where it may be thrown, or wander. */
 export const EIGHT_WAYS: readonly Vector2[] = [
@@ -18,5 +18,8 @@ export const EIGHT_WAYS: readonly Vector2[] = [
  */
 export const COLLISION_SLACK = 0.08
 
-/** How many ticks the simulation plays in a second: what the actions count their time in. */
-export const TICKS_PER_SECOND = 60
+/**
+ * How many strides a moving unit takes in a second: between two of them, what lies in its way is checked, and
+ * what it passes over told. The simulation itself has no time, a move only tells how long it is shown taking.
+ */
+export const STRIDES_PER_SECOND = 60

@@ -7,7 +7,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { DARK_COLOR, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
@@ -28,7 +27,7 @@ export class DarkTrainerHalt extends AbstractHalt {
     constructor(run: Run){
         super(DARK_TRAINER_HALT, run,
             "J'ai brisé ces boss. L'un d'eux te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, "mecard/travel/trainer"),
+            sceneLook(28, 18, 31, "trainer_monster"),
             {
                 hat: "huntingHat",
                 clothes: DARK_COLOR,
@@ -64,6 +63,6 @@ export const DARK_TRAINER_HALT: HaltType = {
     description: "Un boss affaibli parmi trois, joué par un bot.",
     icon: visual("travel/trainer/logo", { letter: "DR!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/cage-door"),
     create: run => new DarkTrainerHalt(run),
 }

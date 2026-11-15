@@ -4,10 +4,9 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { merchantItems } from "../gift/MerchantHalt"
-import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { GREAT_COLOR, GREAT_COLORATION, GREAT_HAT } from "../halt_common"
 import { described } from "../shown"
 import { visual } from "../../../base/Visual"
 
@@ -18,7 +17,7 @@ export class GreatMerchantHalt extends AbstractHalt {
     constructor(run: Run){
         super(GREAT_MERCHANT_HALT, run,
             "J'ai trois objets pour toi. Prends-en un : tu en auras trois !",
-            sceneLook(33, 23, 20, "mecard/travel/merchant"),
+            sceneLook(33, 23, 20, "merchant", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 hatColor: GREAT_COLOR
@@ -51,6 +50,6 @@ export const GREAT_MERCHANT_HALT: HaltType = {
     description: "Un objet parmi trois, en triple.",
     icon: visual("travel/merchant/logo", { letter: "MB*" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/stone-bridge", { coloration: GREAT_COLORATION }),
     create: run => new GreatMerchantHalt(run),
 }

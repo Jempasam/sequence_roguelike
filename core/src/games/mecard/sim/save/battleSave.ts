@@ -1,3 +1,4 @@
+import { Rng } from "../base/Rng"
 import { rgba } from "../base/Rgba"
 import { Vector2 } from "../base/Vector2"
 import { loadedVisual, savedVisual } from "../base/Visual"
@@ -10,6 +11,7 @@ import type { Area } from "../battle/Area"
 import type { BattleState, UnitState } from "../battle/BattleState"
 import type { Controller, StatBases } from "../battle/Unit"
 import { CardChain } from "../card/CardChain"
+import { handIndexOf } from "../card/Card"
 import type { Card } from "../card/Card"
 import { SECRET_CARD } from "../card/subs/SecretCard"
 import { Heart } from "../heart/Heart"
@@ -27,6 +29,17 @@ type SavedVector = readonly [number, number]
 
 /** A color, as `[r, g, b, a]`. */
 type SavedColor = readonly [number, number, number, number]
+
+/**
+ * Who plans a unit, as a save writes it: a player or a bot. An AI of its own is not written down: its unit
+ * loads as a bot, played as the battle says.
+ */
+export type SavedController = "player"|"bot"
+
+/** A controller, as a save writes it. */
+export function savedController(controller: Controller): SavedController {
+    return controller === "player" ? "player" : "bot"
+}
 
 /** A card, as {@link CARD_CODECS} writes it: by its name in the catalog, or by its kind and its cards. */
 export type SavedCard = string
@@ -51,7 +64,7 @@ export interface SavedUnit {
     /** Its team, by its index in {@link BattleSave.teams}. */
     readonly team: number
 
-    readonly controller: Controller
+    readonly controller: SavedController
     readonly position: SavedVector
     readonly direction: SavedVector
 
@@ -90,18 +103,8 @@ export interface SavedUnit {
     readonly zone: SavedArea|null
 }
 
-/** A zone of the arena, written down: its kind, and its points as pairs. */
-export type SavedArea =
-    | { readonly kind: "circle", readonly center: SavedVector, readonly radius: number }
-    | {
-        readonly kind: "sector", readonly center: SavedVector, readonly direction: SavedVector,
-        readonly radius: number, readonly cosHalf: number,
-    }
-    | { readonly kind: "segment", readonly from: SavedVector, readonly to: SavedVector, readonly width: number }
-    | {
-        readonly kind: "crescent", readonly center: SavedVector, readonly direction: SavedVector,
-        readonly inner: number, readonly radius: number, readonly cosHalf: number,
-    }
+/** A zone of the arena, written down: its points as pairs, in turn. */
+export type SavedArea = readonly SavedVector[]
 
 /**
  * A battle at a rest, written down as JSON: what {@link BattleState} holds, every card, item, heart and
@@ -148,6 +151,81 @@ export interface SaveOptions {
      * draws next? Nothing draws during an execution, so a viewer still plays the round the same.
      */
     readonly secret?: boolean
+}
+
+/** What a viewer knows of a pile of cards: all of it, its cards without their order, or nothing. */
+export type PileView = "show"|"shuffle"|"secret"
+
+/** What a viewer knows of a hand: all of it, or nothing. */
+export type HandView = "show"|"secret"
+
+/** What {@link secretizeSave} hides from a viewer, each field optional. */
+export interface SecretOptions {
+    /** The draw piles of the viewer and its team, "shuffle" by default: the cards are known, not their order. */
+    readonly allyDeck?: PileView
+
+    /** The draw piles of the other teams, "secret" by default. */
+    readonly otherDeck?: PileView
+
+    /**
+     * The hands of the viewer and its team, "show" by default. A hand hidden hides the chain the unit
+     * committed from it too, and where its cards go back.
+     */
+    readonly allyHand?: HandView
+
+    /** The hands of the other teams, "show" by default. */
+    readonly otherHand?: HandView
+
+    /** Is the state of the random numbers hidden, so the draws to come stay unknown? True by default. */
+    readonly rng?: boolean
+
+    /** The seed of the shuffles and of the random numbers that replace the real ones, to make them repeatable. */
+    readonly seed?: number
+}
+
+/**
+ * A save as a viewer may know it: what it must not see replaced by the secret card, the piles it must not
+ * see in order shuffled, the random numbers replaced by others. The save given is left as it is.
+ *
+ * @param viewer The unit that looks, by its index: its team is the "ally".
+ */
+export function secretizeSave(save: BattleSave, viewer: number, options: SecretOptions = {}): BattleSave {
+    const {
+        allyDeck = "shuffle", otherDeck = "secret", allyHand = "show", otherHand = "show", rng: hideRng = true,
+    } = options
+    const team = save.units[viewer].team
+    const hidden = new Rng(options.seed ?? Math.floor(Math.random() * 2 ** 32))
+    const secret = savedCard(SECRET_CARD)
+    const pileOf = (cards: readonly SavedCard[], view: PileView): readonly SavedCard[] => {
+        if(view === "secret") return cards.map(() => secret)
+        if(view === "show") return cards
+        const shuffled = [...cards]
+        hidden.shuffle(shuffled)
+        return shuffled
+    }
+    const secretHand = (index: number) => {
+        const unit = save.units[index]
+        return (unit.team === team ? allyHand : otherHand) === "secret"
+    }
+    const secretCards = (cards: readonly SavedCard[]) => cards.map(() => secret)
+    const hiddenOf = (cards: readonly { readonly unit: number, readonly cards: readonly SavedCard[] }[]) => {
+        return cards.map(each => secretHand(each.unit) ? { unit: each.unit, cards: secretCards(each.cards) } : each)
+    }
+    const units = save.units.map((unit, index) => {
+        const view = unit.team === team ? allyDeck : otherDeck
+        const decks = unit.decks.map(deck => ({ pile: pileOf(deck.pile, view), discard: deck.discard }))
+        if(!secretHand(index)) return { ...unit, decks }
+        return {
+            ...unit, decks, hand: secretCards(unit.hand),
+            homes: unit.homes.map(([, deck]) => [secret, deck] as const),
+        }
+    })
+    return {
+        ...save, units,
+        rng: hideRng ? hidden.int(2 ** 32) : save.rng,
+        plans: hiddenOf(save.plans),
+        played: hiddenOf(save.played),
+    }
 }
 
 /**
@@ -223,39 +301,12 @@ function colorOf({ r, g, b, a }: Rgba): SavedColor {
 
 /** A zone of the arena, written down. */
 function savedArea(area: Area): SavedArea {
-    const pair = (point: Vector2): SavedVector => [point.x, point.y]
-    switch(area.kind){
-        case "circle": return { kind: "circle", center: pair(area.center), radius: area.radius }
-        case "sector": return {
-            kind: "sector", center: pair(area.center), direction: pair(area.direction), radius: area.radius,
-            cosHalf: area.cosHalf,
-        }
-        case "segment": return { kind: "segment", from: pair(area.from), to: pair(area.to), width: area.width }
-        case "crescent": return {
-            kind: "crescent", center: pair(area.center), direction: pair(area.direction), inner: area.inner,
-            radius: area.radius, cosHalf: area.cosHalf,
-        }
-        default: throw new Error("An area of an unknown kind was saved.")
-    }
+    return area.map((point): SavedVector => [point.x, point.y])
 }
 
 /** A zone of the arena, read back. */
 function loadedArea(saved: SavedArea): Area {
-    switch(saved.kind){
-        case "circle": return { kind: "circle", center: new Vector2(...saved.center), radius: saved.radius }
-        case "sector": return {
-            kind: "sector", center: new Vector2(...saved.center), direction: new Vector2(...saved.direction),
-            radius: saved.radius, cosHalf: saved.cosHalf,
-        }
-        case "segment": return {
-            kind: "segment", from: new Vector2(...saved.from), to: new Vector2(...saved.to), width: saved.width,
-        }
-        case "crescent": return {
-            kind: "crescent", center: new Vector2(...saved.center), direction: new Vector2(...saved.direction),
-            inner: saved.inner, radius: saved.radius, cosHalf: saved.cosHalf,
-        }
-        default: throw new Error("An area of an unknown kind was loaded: the save is corrupted.")
-    }
+    return saved.map(([x, y]) => new Vector2(x, y))
 }
 
 /** @throws {@link Error} For a card neither of the catalog nor holding cards. */
@@ -281,8 +332,14 @@ export function cardsInHand(
         const index = texts.indexOf(each)
         if(index < 0){
             const free = unlimited.find(card => savedCard(card) === each)
-            if(!free) throw new Error(`The hand holds no ${each}.`)
-            return free
+            if(free) return free
+            // A variant of a card the hand holds stands for it: the card of the hand is taken, the variant kept.
+            const variant = CARD_CODECS.load(each)
+            const standing = handIndexOf(left, variant)
+            if(standing < 0) throw new Error(`The hand holds no ${each}.`)
+            texts.splice(standing, 1)
+            left.splice(standing, 1)
+            return variant
         }
         texts.splice(index, 1)
         return left.splice(index, 1)[0]
@@ -324,7 +381,7 @@ function savedHomes(homes: UnitState["homes"]): (readonly [SavedCard, number])[]
 function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[]) => SavedCard[]): SavedUnit {
     const { spec } = unit
     return {
-        name: spec.name, sprite: savedVisual(spec.sprite), team, controller: spec.controller,
+        name: spec.name, sprite: savedVisual(spec.sprite), team, controller: savedController(spec.controller),
         position: [spec.position.x, spec.position.y], direction: [spec.direction.x, spec.direction.y],
         hearts: spec.hearts.map(heart => [heart.kind.name, heart.isEmpty]),
         hand: unit.hand.map(savedCard), unlimited: (spec.unlimited ?? []).map(savedCard),

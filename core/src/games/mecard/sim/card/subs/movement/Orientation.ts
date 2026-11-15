@@ -1,5 +1,7 @@
 import type { Vector2 } from "../../../base/Vector2"
-import type { Action, Indicator, PreviewContext } from "../../../battle/Action"
+import type { Action } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
@@ -9,9 +11,10 @@ import { DISTANCE, UNIT } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { arrow, label, polygon, still } from "../tools/previews"
 import { turning, turnsIn, turnUnitsIn } from "../tools/turning"
 import { Rarity } from "../../Rarity"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the shout and the taunt reach, in meters. */
 const SHOUT_RADIUS = 1.5
@@ -45,20 +48,20 @@ function towards(to: Vector2): (unit: Unit) => Vector2|null {
 /** An action turning the units around its unit, each toward a direction of its own. */
 function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null): Action {
     const area = (pose: { position: Vector2 }): Area => {
-        return { kind: "circle", center: pose.position, radius: SHOUT_RADIUS }
+        return Areas.circle(pose.position, SHOUT_RADIUS)
     }
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             const turned = turnUnitsIn(battle, area(unit), unit, directionOf(unit.position))
-            yield* hold(battle, WORD_TIME, [polygon(area(unit), CONTROL_COLOR), ...turned.map(other => {
-                return arrow(
+            hold(battle, WORD_TIME, [Previews.polygon(area(unit), CONTROL_COLOR), ...turned.map(other => {
+                return Previews.arrow(
                     [other.position, other.position.plus(other.direction.times(TURN_LENGTH))], MOVE_WIDTH, CONTROL_COLOR,
                 )
             })])
         },
         preview: ({ battle, unit, pose }) => {
             const turnings = turnsIn(battle, area(pose), unit, directionOf(pose.position))
-            return still(pose, polygon(area(pose), RANGE_COLOR), ...turnings.map(turning))
+            return Previews.still(pose, Previews.polygon(area(pose), RANGE_COLOR), ...turnings.map(turning))
         },
     }
 }
@@ -97,27 +100,22 @@ function sideTurn(battle: Battle, unit: Unit, pose: { position: Vector2, directi
 export const ORIENTATION = new ActionCard("Orientation", [
     "Tourne d'un huitième de tour du côté de l'axe où il y a le plus d'ennemis. Rien à égalité.",
 ], Rarity.RARE, {
-    use: function* (ctx){
+    use: function (ctx){
         const { battle, unit } = ctx
         const way = sideTurn(battle, unit, unit)
         if(way){
-            yield* turn(ctx, way)
+            turn(ctx, way)
             return
         }
         battle.events.push({ type: "skipped", unit, reason: "autant d'ennemis de chaque côté" })
-        yield* hold(battle, WORD_TIME, [label(unit.position, "égalité", NOTE_COLOR)])
+        hold(battle, WORD_TIME, [Previews.label(unit.position, "égalité", NOTE_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        const split = polygon({
-            kind: "segment",
-            from: pose.position.minus(pose.direction.times(SPLIT_LENGTH)),
-            to: pose.position.plus(pose.direction.times(SPLIT_LENGTH)),
-            width: 0,
-        }, RANGE_COLOR)
+        const split = Previews.polygon(Areas.line(pose.position.minus(pose.direction.times(SPLIT_LENGTH)), pose.position.plus(pose.direction.times(SPLIT_LENGTH)), 0), RANGE_COLOR)
         const way = sideTurn(battle, unit, pose)
-        if(!way) return still(pose, split, label(pose.position, "égalité", NOTE_COLOR))
+        if(!way) return Previews.still(pose, split, Previews.label(pose.position, "égalité", NOTE_COLOR))
         const tip = pose.position.plus(way.times(TURN_LENGTH))
-        return still({ ...pose, direction: way }, split, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))
+        return Previews.still({ ...pose, direction: way }, split, Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))
     },
 })
 
@@ -155,30 +153,30 @@ function aiming(
     // A turn of more than a quarter of a turn takes the target by surprise.
     const startled = (ctx: PreviewContext, { way }: Aimed) => stuns && ctx.pose.direction.dot(way) < 0
     return {
-        use: function* (ctx){
+        use: function (ctx){
             const { battle, unit } = ctx
             const found = aimed({ battle, unit, pose: unit })
             if(!found){
                 battle.events.push({ type: "skipped", unit, reason: nobody })
-                yield* hold(battle, WORD_TIME, [label(unit.position, nobody, NOTE_COLOR)])
+                hold(battle, WORD_TIME, [Previews.label(unit.position, nobody, NOTE_COLOR)])
                 return
             }
             const stun = startled({ battle, unit, pose: unit }, found)
-            yield* turn(ctx, found.way)
+            turn(ctx, found.way)
             if(stun) battle.stun(found.target)
         },
         preview: ctx => {
             const { pose, unit } = ctx
             // A reach with no end draws no circle.
             const circles: Indicator[] = Number.isFinite(radius(unit))
-                ? [polygon({ kind: "circle", center: pose.position, radius: radius(unit) }, RANGE_COLOR)]
+                ? [Previews.polygon(Areas.circle(pose.position, radius(unit)), RANGE_COLOR)]
                 : []
             const found = aimed(ctx)
-            if(!found) return still(pose, ...circles, label(pose.position, nobody, NOTE_COLOR))
+            if(!found) return Previews.still(pose, ...circles, Previews.label(pose.position, nobody, NOTE_COLOR))
             const tip = pose.position.plus(found.way.times(TURN_LENGTH))
-            const shown: Indicator[] = [...circles, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)]
-            if(startled(ctx, found)) shown.push(label(found.target.position, "étourdi", NOTE_COLOR))
-            return still({ ...pose, direction: found.way }, ...shown)
+            const shown: Indicator[] = [...circles, Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)]
+            if(startled(ctx, found)) shown.push(Previews.label(found.target.position, "étourdi", NOTE_COLOR))
+            return Previews.still({ ...pose, direction: found.way }, ...shown)
         },
     }
 }
@@ -210,42 +208,34 @@ export const ALLY_AIM = new ActionCard("Viser allié", [
 
 /** Where the about-face stuns: just behind the unit. */
 function behind(pose: { position: Vector2, direction: Vector2 }): Area {
-    return {
-        kind: "segment",
-        from: pose.position,
-        to: pose.position.minus(pose.direction.times(ABOUT_FACE_LENGTH)),
-        width: ABOUT_FACE_WIDTH,
-    }
+    return Areas.line(pose.position, pose.position.minus(pose.direction.times(ABOUT_FACE_LENGTH)), ABOUT_FACE_WIDTH)
 }
 
 /** A half turn, stunning the nearest unit behind. */
 export const ABOUT_FACE = new ActionCard("Volte-face", [
     "Fait demi-tour. L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", est étourdie.",
 ], Rarity.COMMON, {
-    use: function* (ctx){
+    use: function (ctx){
         const { battle, unit } = ctx
-        const hit = closest(battle.unitsIn(behind(unit), unit), unit.position)
-        yield* turn(ctx, unit.direction.opposite)
+        const hit = closest(battle.fetch(behind(unit), unit), unit.position)
+        turn(ctx, unit.direction.opposite)
         if(hit) battle.stun(hit)
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = polygon(behind(pose), RANGE_COLOR)
+        const zone = Previews.polygon(behind(pose), RANGE_COLOR)
         const away = pose.direction.opposite
-        const half = arrow([pose.position, pose.position.plus(away.times(TURN_LENGTH))], MOVE_WIDTH, MOVE_COLOR)
-        const hit = closest(battle.unitsIn(behind(pose), unit), pose.position)
-        const stunned = hit ? [label(hit.position, "étourdi", NOTE_COLOR)] : []
-        return still({ ...pose, direction: away }, zone, half, ...stunned)
+        const half = Previews.arrow([pose.position, pose.position.plus(away.times(TURN_LENGTH))], MOVE_WIDTH, MOVE_COLOR)
+        const hit = closest(battle.fetch(behind(pose), unit), pose.position)
+        const stunned = hit ? [Previews.label(hit.position, "étourdi", NOTE_COLOR)] : []
+        return Previews.still({ ...pose, direction: away }, zone, half, ...stunned)
     },
 })
 
 
 /** The units of a sector that face its apex within an eighth of a turn each way: those the glare freezes. */
 function glared(battle: Battle, unit: Unit, pose: { position: Vector2, direction: Vector2 }): Unit[] {
-    const area: Area = {
-        kind: "sector", center: pose.position, direction: pose.direction,
-        radius: GLARE_RADIUS, cosHalf: GLARE_COS_HALF,
-    }
-    return battle.unitsIn(area, unit).filter(other => {
+    const area: Area = Areas.arc(pose.position, pose.direction, GLARE_RADIUS, GLARE_COS_HALF)
+    return battle.fetch(area, unit).filter(other => {
         const toward = pose.position.minus(other.position).normalized
         return toward !== null && other.direction.dot(toward) >= GLARE_FACING
     })
@@ -255,21 +245,15 @@ function glared(battle: Battle, unit: Unit, pose: { position: Vector2, direction
 export const ICY_GLARE = new ActionCard("Regard glaçant", [
     "Étourdit chaque ", UNIT, " qui regarde vers elle, à ", GLARE_RADIUS, " ", DISTANCE, " devant dans un quart de tour.",
 ], Rarity.RARE, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const frozen = glared(battle, unit, unit)
         for(const other of frozen) battle.stun(other)
-        yield* hold(battle, WORD_TIME, [polygon({
-            kind: "sector", center: unit.position, direction: unit.direction,
-            radius: GLARE_RADIUS, cosHalf: GLARE_COS_HALF,
-        }, CONTROL_COLOR)])
+        hold(battle, WORD_TIME, [Previews.polygon(Areas.arc(unit.position, unit.direction, GLARE_RADIUS, GLARE_COS_HALF), CONTROL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = polygon({
-            kind: "sector", center: pose.position, direction: pose.direction,
-            radius: GLARE_RADIUS, cosHalf: GLARE_COS_HALF,
-        }, RANGE_COLOR)
-        return still(pose, zone, ...glared(battle, unit, pose).map(other => {
-            return label(other.position, "étourdi", NOTE_COLOR)
+        const zone = Previews.polygon(Areas.arc(pose.position, pose.direction, GLARE_RADIUS, GLARE_COS_HALF), RANGE_COLOR)
+        return Previews.still(pose, zone, ...glared(battle, unit, pose).map(other => {
+            return Previews.label(other.position, "étourdi", NOTE_COLOR)
         }))
     },
 })

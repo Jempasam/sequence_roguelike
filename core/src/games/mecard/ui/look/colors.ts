@@ -7,6 +7,18 @@ import type { HeartKind } from "../../sim/heart/HeartKind"
 /** The edge around what is being looked at: a heart, a process. */
 export const LIT_EDGE = new Color(1, 0.95, 0.6)
 
+/** The edge around the cards of a chain being read: pale green. */
+export const FOCUS_EDGE = new Color(0.65, 1, 0.7)
+
+/** The edge around what was just added: pale green. */
+export const ADDED_EDGE = new Color(0.65, 1, 0.7)
+
+/** The edge around what is about to be taken away: pale red. */
+export const REMOVED_EDGE = new Color(1, 0.6, 0.6)
+
+/** The edge around what is notified, a status or a heart about to act: pale blue. */
+export const NOTICE_EDGE = new Color(0.6, 0.8, 1)
+
 /** The engine color of a color of the sim. */
 export function engineColor({ r, g, b, a }: Rgba): Color {
     return new Color(r, g, b, a)
@@ -20,6 +32,8 @@ const TYPE_COLORS: Readonly<Record<string, readonly [number, number, number]>> =
     "potion": [0.6, 0.9, 0.2],
     "module": [0.6, 0.7, 0.75],
     "bête": [0.6, 0.4, 0.2],
+    // A grey close to the background, a little lighter.
+    "carte": [0.3, 0.29, 0.38],
     "secret": [1, 1, 1],
 }
 

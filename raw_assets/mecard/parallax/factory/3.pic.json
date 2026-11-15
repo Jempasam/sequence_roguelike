@@ -1,0 +1,150 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 227,
+    "palette": [
+        "#7a6a50",
+        "#3a3020",
+        "#a8a090",
+        {
+            "color": "#ff9a3a",
+            "light": 1
+        }
+    ],
+    "shapes": [
+        {
+            "ellipse": [
+                88,
+                28,
+                112,
+                112
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                108,
+                48,
+                72,
+                72
+            ],
+            "material": 1,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                130,
+                70,
+                28,
+                28
+            ],
+            "material": 3,
+            "depth": 6,
+            "relief": "dome"
+        },
+        {
+            "box": [
+                138,
+                14,
+                14,
+                16
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "box": [
+                138,
+                140,
+                14,
+                16
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "box": [
+                74,
+                78,
+                14,
+                16
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "box": [
+                204,
+                78,
+                14,
+                16
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "box": [
+                230,
+                20,
+                24,
+                126
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                7
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                226,
+                14,
+                32,
+                10
+            ],
+            "material": 0,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "ellipse": [
+                236,
+                2,
+                18,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                3,
+                4
+            ],
+            "relief": "dome"
+        }
+    ]
+}

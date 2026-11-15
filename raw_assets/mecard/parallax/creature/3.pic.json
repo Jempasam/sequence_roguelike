@@ -1,0 +1,11 @@
+{
+    "size": [288, 164],
+    "seed": 23,
+    "palette": ["#1a1620", "#c4c0d8", "#fffefa", "#ffe566"],
+    "shapes": [
+        {"ellipse": [104, 116, 80, 14], "material": 0, "depth": 3, "relief": "dome"},
+        {"picture": "parts/werewolf.pic.json", "at": [106, 50], "materials": [0, 1, 2], "depth": 6},
+        {"ellipse": [147, 70, 5, 3], "material": 3, "depth": 9},
+        {"box": [143, 77, 12, 3], "material": 2, "depth": 9}
+    ]
+}

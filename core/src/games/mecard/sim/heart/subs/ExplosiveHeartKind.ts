@@ -5,6 +5,7 @@ import { HeartRule } from "../HeartRule"
 import { AbstractHeartKind } from "./AbstractHeartKind"
 import { DISTANCE, UNIT } from "../../base/keywords"
 import { DamageType } from "../../battle/DamageType"
+import * as Areas from "../../battle/area/Areas"
 
 /** How far the blast of the explosive heart of the catalog reaches, in meters. */
 const BLAST_RADIUS = 1.2
@@ -46,8 +47,8 @@ class ExplosiveHeartRule extends HeartRule {
 
 
     public override onLost({ battle, unit, heart, source }: HeartLostEvent): void {
-        battle.signals.notifyHeart.notify({ unit, heart })
-        const area = { kind: "circle", center: unit.position, radius: this.kind.radius } as const
+        battle.signals.notifyHeart.notify({ unit, target: heart })
+        const area = Areas.circle(unit.position, this.kind.radius)
         battle.explode(area, this.kind.blast, source === unit ? null : unit, unit)
     }
 }

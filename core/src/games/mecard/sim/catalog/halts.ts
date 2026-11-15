@@ -30,6 +30,9 @@ import { DARK_MAD_DOCTOR_HALT } from "../halt/subs/dark/DarkMadDoctorHalt"
 import { DARK_DEMON_HALT } from "../halt/subs/dark/DarkDemonHalt"
 import { DARK_STRATEGIST_HALT } from "../halt/subs/dark/DarkStrategistHalt"
 import { DARK_TRAINER_HALT } from "../halt/subs/dark/DarkTrainerHalt"
+import { MONSTER_MAGE_HALT } from "../halt/subs/monster/MonsterMageHalt"
+import { MONSTER_MECHANIC_HALT } from "../halt/subs/monster/MonsterMechanicHalt"
+import { MONSTER_SHAMAN_HALT } from "../halt/subs/monster/MonsterShamanHalt"
 import { TRAINER_HALT } from "../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
@@ -39,6 +42,10 @@ import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
 import { MASTER_CHEST_HALT } from "../halt/subs/master/MasterChestHalt"
 import { GREAT_CHEST_HALT } from "../halt/subs/great/GreatChestHalt"
 import { NECRO_CHEST_HALT } from "../halt/subs/dark/NecroChestHalt"
+import { BATTLE_REWARD_HALT } from "../halt/subs/reward/BattleRewardHalt"
+import { BOSS_REWARD_HALT } from "../halt/subs/reward/BossRewardHalt"
+import { ELITE_REWARD_HALT } from "../halt/subs/reward/EliteRewardHalt"
+import { MONSTER_LOOTING_REWARD_HALT } from "../halt/subs/reward/MonsterLootingRewardHalt"
 
 
 /**
@@ -78,7 +85,7 @@ export function greatHalts(): readonly HaltType[] {
 export function darkHalts(): readonly HaltType[] {
     return [
         DARK_MAGICIAN_HALT, DARK_TAVERN_HALT, DARK_MAD_DOCTOR_HALT, DARK_DEMON_HALT, DARK_STRATEGIST_HALT,
-        DARK_TRAINER_HALT, NECRO_CHEST_HALT,
+        DARK_TRAINER_HALT, NECRO_CHEST_HALT, MONSTER_MECHANIC_HALT, MONSTER_SHAMAN_HALT, MONSTER_MAGE_HALT,
     ]
 }
 
@@ -92,9 +99,17 @@ export function freeHalts(): readonly HaltType[] {
     return lootHalts().filter(type => type !== SHOP_HALT)
 }
 
+/**
+ * The sorts of halt that pay for a won fight: laid after a fight by whoever lays it, never drawn as a halt
+ * of their own.
+ */
+export function rewardHalts(): readonly HaltType[] {
+    return [BATTLE_REWARD_HALT, ELITE_REWARD_HALT, BOSS_REWARD_HALT, MONSTER_LOOTING_REWARD_HALT]
+}
+
 /** Every sort of halt. */
 export function allHalts(): readonly HaltType[] {
-    return [...lootHalts(), EXIT_HALT]
+    return [...lootHalts(), ...rewardHalts(), EXIT_HALT]
 }
 
 /**

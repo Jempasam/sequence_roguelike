@@ -5,10 +5,10 @@ import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, WORD_TIME } from "../tools/playing"
-import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { HEART, INVOCATION, PERFECT_CLONE } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** What the division says of a unit with too few hearts to split. */
 const TOO_WEAK = "trop faible"
@@ -28,16 +28,16 @@ export const DIVISION = new ActionCard("Division", [
     INVOCATION.as("Invoque"), " un ", PERFECT_CLONE, " de toi, dont les seuls ", HEART.as("cœurs"), " sont des ",
     "boucliers : la moitié de tes ", HEART.as("cœurs"), " restants, arrondie à l'inférieur, que tu perds. Zéro : raté.",
 ], Rarity.EPIC, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const share = shareOf(unit)
         if(share <= 0){
             battle.events.push({ type: "skipped", unit, reason: TOO_WEAK })
-            yield* hold(battle, WORD_TIME, [label(unit.position, TOO_WEAK, NOTE_COLOR)])
+            hold(battle, WORD_TIME, [Previews.label(unit.position, TOO_WEAK, NOTE_COLOR)])
             return
         }
         battle.perfectClone(unit, Heart.many(SHIELD_HEART, share))
         unit.hearts.damage(share, DamageType.PHYSICAL, null)
-        yield* hold(battle, SHORT_TIME, [label(unit.position, said(share), NOTE_COLOR)])
+        hold(battle, SHORT_TIME, [Previews.label(unit.position, said(share), NOTE_COLOR)])
     },
-    preview: ({ unit, pose }) => still(pose, label(pose.position, said(shareOf(unit)), NOTE_COLOR)),
+    preview: ({ unit, pose }) => Previews.still(pose, Previews.label(pose.position, said(shareOf(unit)), NOTE_COLOR)),
 })

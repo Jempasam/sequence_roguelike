@@ -8,6 +8,7 @@ import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many hearts the scythe of the catalog takes, before the strength of the unit. */
 const SCYTHE_DAMAGE = 1
@@ -44,10 +45,7 @@ export class ScytheCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value * progress
-        return {
-            kind: "crescent", center: pose.position, direction: pose.direction,
-            inner: this.inner * stretch, radius: this.outer * stretch, cosHalf: this.cosHalf,
-        }
+        return Areas.crescent(pose.position, pose.direction, this.inner * stretch, this.outer * stretch, this.cosHalf)
     }
 }
 

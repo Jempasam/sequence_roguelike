@@ -7,7 +7,6 @@ import type { HeartLoot, Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { visual } from "../../../base/Visual"
 
@@ -18,7 +17,7 @@ export class HospitalHalt extends AbstractHalt {
     constructor(run: Run){
         super(HOSPITAL_HALT, run,
             "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec des cœurs de plus.",
-            sceneLook(18, 33, 41, "mecard/travel/hospital"),
+            sceneLook(18, 33, 41, "hospital"),
             {
                 hat: "coif",
                 clothes: rgba(0.9, 0.95, 1)
@@ -56,7 +55,8 @@ export class HospitalHalt extends AbstractHalt {
 export const HOSPITAL_HALT: HaltType = {
     id: "hospital",
     name: "Hôpital",
-    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",    icon: visual("travel/hospital/logo", { letter: "H" }),
-    transition: DOOR_TRANSITION,
+    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",
+    icon: visual("travel/hospital/logo", { letter: "H" }),
+    transition: visual("transitions/warm-door"),
     create: run => new HospitalHalt(run),
 }

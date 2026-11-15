@@ -1,0 +1,30 @@
+{
+    "size": [288, 164],
+    "seed": 4,
+    "palette": [
+        {"color": "#d8d2c0", "reflection": 0.3},
+        "#5a3a24",
+        "#2e2018",
+        "#a83a30"
+    ],
+    "shapes": [
+        {"box": [12, 46, 52, 4], "material": 1, "depth": [3, 5], "relief": "round-y"},
+        {"box": [14, 50, 48, 82], "material": 2, "depth": 3},
+        {"box": [16, 52, 21, 66], "fill": {"pattern": "planks", "width": 7, "axis": "y", "seams": 0, "materials": [1, 2]}, "depth": [3, 5], "relief": "bevel", "bevel": 2},
+        {"box": [39, 52, 21, 66], "fill": {"pattern": "planks", "width": 7, "axis": "y", "seams": 0, "materials": [1, 2]}, "depth": [3, 5], "relief": "bevel", "bevel": 2},
+        {"ellipse": [33, 82, 3, 3], "material": 0, "depth": [5, 7], "relief": "dome"},
+        {"ellipse": [40, 82, 3, 3], "material": 0, "depth": [5, 7], "relief": "dome"},
+        {"box": [16, 120, 44, 10], "material": 1, "depth": [3, 5], "relief": "bevel", "bevel": 1},
+        {"box": [36, 124, 4, 2], "material": 2, "depth": 6},
+
+        {"box": [104, 96, 96, 36], "fill": {"pattern": "tiles", "cell": [6, 6], "grout": 1, "materials": [0, 2]}, "depth": 4},
+        {"box": [100, 92, 104, 5], "material": 0, "depth": [5, 7], "relief": "round-y"},
+        {"box": [100, 92, 104, 40], "fill": {"pattern": "noise", "density": 0.05, "radius": 1, "materials": [null, 3]}},
+        {"ellipse": [112, 84, 22, 9], "material": 3, "depth": [6, 8], "relief": "dome"},
+        {"ellipse": [118, 86, 6, 3], "material": 0, "depth": [7, 8], "relief": "dome"},
+        {"ellipse": [140, 86, 16, 7], "material": 3, "depth": [6, 8], "relief": "dome"},
+        {"box": [166, 76, 4, 16], "material": 2, "depth": [6, 7], "relief": "round-x"},
+        {"box": [160, 72, 16, 4], "material": 0, "depth": [6, 8], "relief": "round-y"},
+        {"ellipse": [176, 84, 18, 8], "material": 1, "depth": [5, 7], "relief": "dome"}
+    ]
+}

@@ -37,7 +37,7 @@ class BlackHeartRule extends KeptHeartRule {
         this.atRoundEnd(ctx, () => {
             const last = this.lastOf(ctx.unit, heart => !heart.isEmpty)
             if(!last) return
-            ctx.battle.signals.notifyHeart.notify({ unit: ctx.unit, heart: last })
+            ctx.battle.signals.notifyHeart.notify({ unit: ctx.unit, target: last })
             ctx.unit.hearts.remove(this.kind, 1, null)
         })
     }

@@ -1,0 +1,260 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 126,
+    "palette": [
+        "#6a4a2a",
+        "#e8e0c8",
+        "#1c3c58",
+        "#0c1c2c"
+    ],
+    "shapes": [
+        {
+            "box": [
+                40,
+                20,
+                5,
+                120
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 2,
+                "axis": "y",
+                "seams": 0,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "polygon": [
+                [
+                    45,
+                    30
+                ],
+                [
+                    76,
+                    80
+                ],
+                [
+                    45,
+                    80
+                ]
+            ],
+            "material": 1,
+            "depth": [
+                3,
+                5
+            ]
+        },
+        {
+            "box": [
+                30,
+                28,
+                25,
+                3
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                110,
+                20,
+                5,
+                120
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 2,
+                "axis": "y",
+                "seams": 0,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "polygon": [
+                [
+                    115,
+                    30
+                ],
+                [
+                    146,
+                    80
+                ],
+                [
+                    115,
+                    80
+                ]
+            ],
+            "material": 1,
+            "depth": [
+                3,
+                5
+            ]
+        },
+        {
+            "box": [
+                100,
+                28,
+                25,
+                3
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                186,
+                20,
+                5,
+                120
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 2,
+                "axis": "y",
+                "seams": 0,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "polygon": [
+                [
+                    191,
+                    30
+                ],
+                [
+                    222,
+                    80
+                ],
+                [
+                    191,
+                    80
+                ]
+            ],
+            "material": 1,
+            "depth": [
+                3,
+                5
+            ]
+        },
+        {
+            "box": [
+                176,
+                28,
+                25,
+                3
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                246,
+                20,
+                5,
+                120
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 2,
+                "axis": "y",
+                "seams": 0,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "polygon": [
+                [
+                    251,
+                    30
+                ],
+                [
+                    282,
+                    80
+                ],
+                [
+                    251,
+                    80
+                ]
+            ],
+            "material": 1,
+            "depth": [
+                3,
+                5
+            ]
+        },
+        {
+            "box": [
+                236,
+                28,
+                25,
+                3
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                0,
+                140,
+                288,
+                24
+            ],
+            "material": 2,
+            "depth": [
+                2,
+                3
+            ]
+        }
+    ]
+}

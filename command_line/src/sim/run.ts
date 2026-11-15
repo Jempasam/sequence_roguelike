@@ -1,12 +1,11 @@
 import { availableParallelism } from "node:os"
 import { createInterface } from "node:readline/promises"
 
-import { applies, distinctAtoms, playCell } from "./cells"
-import type { CellId, CellResult } from "./cells"
+import { playCell } from "./cells"
+import type { CellId, CellResult, Slice } from "./cells"
 import type { Plan } from "./options"
 import type { Matrix } from "./report"
 import { mergeTallies } from "./stats"
-import type { Tally } from "./stats"
 import { WorkerPool } from "./WorkerPool"
 
 /** Above this many battles, a run asks before it starts. */
@@ -56,26 +55,53 @@ export interface RunResult {
 
     /** Did the user refuse to play as many battles? */
     readonly cancelled: boolean
+
+    /** The journal of every battle, in the order of the tables, for `--log`: empty without it. */
+    readonly logs: readonly (readonly string[])[]
 }
 
-/** Every cell the plan asks for, in the order of the tables: by AI, by subject, by kind of battle. */
+/** Above this many battles, `--log` warns that its file will be big. */
+const LOG_WARN_ABOVE = 50
+
+/** Every cell the plan asks for, in the order of the tables: by AI, by row. */
 function cellsOf(plan: Plan): CellId[] {
-    const atoms = distinctAtoms(plan)
     const cells: CellId[] = []
     plan.variants.forEach((_, variant) => {
-        plan.subjects.forEach((subject, index) => {
-            atoms.forEach((atom, at) => {
-                if(applies(subject, atom)) cells.push({ variant, subject: index, atom: at })
-            })
-        })
+        plan.rows.forEach((__, row) => cells.push({ variant, row }))
     })
     return cells
 }
 
-/** How many threads play the battles: those asked for, or by the size of the run, at most one per cell. */
-function threadsFor(plan: Plan, cells: number, battles: number): number {
+/** How many threads play the battles: those asked for, or by the size of the run, at most one per battle. */
+function threadsFor(plan: Plan, battles: number): number {
     const wanted = plan.jobs === "auto" ? (battles > PARALLEL_ABOVE ? availableParallelism() : 1) : plan.jobs
-    return Math.max(1, Math.min(wanted, cells))
+    return Math.max(1, Math.min(wanted, battles))
+}
+
+/** Each thread is given about this many slices, so that the last battles do not leave most threads idle. */
+const SLICES_PER_THREAD = 3
+
+/**
+ * The battles of a cell cut into slices, so that a few cells still keep every thread busy: a cell is not
+ * played by one thread from its first battle to its last.
+ */
+function slicesOf(plan: Plan, id: CellId, cells: number, threads: number): Slice[] {
+    const parts = Math.max(1, Math.min(plan.games, Math.ceil(threads * SLICES_PER_THREAD / cells)))
+    const size = Math.ceil(plan.games / parts)
+    const slices: Slice[] = []
+    for(let from = 0; from < plan.games; from += size) slices.push({ ...id, from, to: Math.min(from + size, plan.games) })
+    return slices
+}
+
+/** The slices of a cell gathered back into the cell, in the order of the battles. */
+function gather(parts: readonly CellResult[]): CellResult {
+    const failures = new Map<string, number>()
+    for(const part of parts) for(const [message, count] of part.failures) failures.set(message, (failures.get(message) ?? 0) + count)
+    return {
+        tally: mergeTallies(parts.map(part => part.tally)),
+        failures: [...failures],
+        logs: parts.flatMap(part => part.logs),
+    }
 }
 
 /**
@@ -88,23 +114,37 @@ export async function run(plan: Plan, io: Console): Promise<RunResult> {
     const total = ids.length * plan.games
     if(!plan.quiet && total > ANNOUNCE_ABOVE) io.error(`sim : ${total.toLocaleString("fr-FR")} combats à jouer.`)
     if(!plan.quiet && total > CONFIRM_ABOVE && !await io.confirm(`Jouer ${total.toLocaleString("fr-FR")} combats ?`)){
-        return { matrices: [], failures: new Map(), cancelled: true }
+        return { matrices: [], failures: new Map(), cancelled: true, logs: [] }
+    }
+    if(!plan.quiet && plan.log !== null && total > LOG_WARN_ABOVE){
+        io.error(`sim : --log écrit ${total.toLocaleString("fr-FR")} combats en entier : le fichier sera gros (réduire --games, --of ou --out).`)
     }
 
     const started = Date.now()
     let done = 0
-    const played = (): void => {
-        done += plan.games
-        if(!plan.quiet && io.interactive) process.stderr.write(`\r  ${done}/${total} combats`)
+    // The last tenth of the run told, so each 10 % is told once, as a line, whether anybody watches or not.
+    let toldTenth = 0
+    const played = (battles: number): void => {
+        done += battles
+        if(plan.quiet) return
+        const tenth = Math.floor(done * 10 / total)
+        if(tenth <= toldTenth) return
+        toldTenth = tenth
+        const seconds = ((Date.now() - started) / 1000).toFixed(1)
+        io.error(`sim : ${tenth * 10} % (${done.toLocaleString("fr-FR")}/${total.toLocaleString("fr-FR")} combats, ${seconds} s)`)
     }
     const results: CellResult[] = new Array<CellResult>(ids.length)
-    const threads = threadsFor(plan, ids.length, total)
+    const threads = threadsFor(plan, total)
     if(threads > 1){
         const pool = new WorkerPool(plan.args, threads)
         try {
             await Promise.all(ids.map(async(id, index) => {
-                results[index] = await pool.run(id)
-                played()
+                const parts = await Promise.all(slicesOf(plan, id, ids.length, threads).map(async slice => {
+                    const part = await pool.run(slice)
+                    played(slice.to - slice.from)
+                    return part
+                }))
+                results[index] = gather(parts)
             }))
         }
         finally {
@@ -114,7 +154,7 @@ export async function run(plan: Plan, io: Console): Promise<RunResult> {
     else {
         ids.forEach((id, index) => {
             results[index] = playCell(plan, id)
-            played()
+            played(plan.games)
         })
     }
 
@@ -122,42 +162,17 @@ export async function run(plan: Plan, io: Console): Promise<RunResult> {
     for(const { failures: found } of results) for(const [message, count] of found) {
         failures.set(message, (failures.get(message) ?? 0) + count)
     }
-    const atoms = distinctAtoms(plan)
-    const matrices: Matrix[] = []
-    let next = 0
-    for(const variant of plan.variants){
-        const rows: string[] = []
-        const table: (Tally|null)[][] = []
-        for(const subject of plan.subjects){
-            const tallies = new Map<string, Tally|null>()
-            for(const atom of atoms){
-                tallies.set(atom.key, applies(subject, atom) ? results[next++].tally : null)
-            }
-            rows.push(subject.name)
-            table.push(plan.columns.map(column => {
-                if(column.total){
-                    const seen = [...tallies.values()].filter((tally): tally is Tally => tally !== null)
-                    return seen.length === 0 ? null : mergeTallies(seen)
-                }
-                const own = column.atoms.map(atom => tallies.get(atom.key) ?? null)
-                if(own.some(tally => tally === null)) return null
-                return mergeTallies(own as Tally[])
-            }))
-        }
-        matrices.push({
-            title: plan.variants.length > 1 ? `IA : ${variant.name}` : null,
-            rows,
-            columns: plan.columns.map(column => column.label),
-            cells: table,
-        })
-    }
+    const matrices: Matrix[] = plan.variants.map((variant, at) => ({
+        title: plan.variants.length > 1 ? `IA : ${variant.name}` : null,
+        rows: plan.rows.map(row => row.label),
+        tallies: plan.rows.map((_, row) => results[at * plan.rows.length + row].tally),
+    }))
     if(!plan.quiet){
-        if(io.interactive) process.stderr.write("\r")
         const seconds = ((Date.now() - started) / 1000).toFixed(1)
         if(total > ANNOUNCE_ABOVE) {
             const on = threads > 1 ? ` sur ${threads} threads` : ""
             io.error(`sim : ${done.toLocaleString("fr-FR")} combats en ${seconds} s${on}.`)
         }
     }
-    return { matrices, failures, cancelled: false }
+    return { matrices, failures, cancelled: false, logs: results.flatMap(result => result.logs) }
 }

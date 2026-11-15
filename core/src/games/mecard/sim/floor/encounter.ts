@@ -1,7 +1,7 @@
 import type { Rng } from "../base/Rng"
 import type { Monster } from "../catalog/monsters"
-import { BOSS, ELITE } from "../catalog/fights"
-import type { FightType } from "../run/PlaceType"
+import { BOSS, ELITE } from "../fight/fights"
+import type { FightType } from "../fight/FightType"
 
 /** How many monsters a battle of the first layer of a floor of level 1 holds. */
 const FIRST_MONSTERS = 2
@@ -14,6 +14,31 @@ const ELITE_EXTRA = 2
 
 /** How many monsters a battle holds at most: what the top rows of the arena have room for. */
 const MAX_MONSTERS = 7
+
+/** The layer the middle monsters of a floor start at. */
+const MIDDLE_LAYER = 4
+
+/** The layer the deep monsters of a floor start at. */
+const DEEP_LAYER = 8
+
+/** The monsters of a floor by depth: those met at its start, in its middle, and deep down or in an elite. */
+export interface Tiers {
+    readonly shallow: readonly Monster[]
+    readonly middle: readonly Monster[]
+    readonly deep: readonly Monster[]
+}
+
+/**
+ * Like {@link encounter}, but the pool changes with the depth: light monsters first, the heavy ones in the
+ * deeper layers and in the elites, so the fights of a floor are not all alike.
+ */
+export function tieredEncounter(
+    tiers: Tiers, boss: Monster, fight: FightType, layer: number, level: number, rng: Rng,
+): Monster[] {
+    const pool = fight === ELITE || layer >= DEEP_LAYER ? tiers.deep
+        : layer >= MIDDLE_LAYER ? [...tiers.shallow, ...tiers.middle, ...tiers.deep] : tiers.shallow
+    return encounter(pool, boss, fight, layer, level, rng)
+}
 
 /**
  * The monsters of a fight of a floor, drawn among those living there: more the higher its level and the

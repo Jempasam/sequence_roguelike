@@ -6,14 +6,15 @@ import { fileURLToPath } from "node:url"
 const APP_DIRECTORY = "Roguelike"
 
 /**
- * The folder the files shipped with the game are read from. In the release, assets/ sits next to the
- * bundle, whether it runs as main.cjs or injected in the executable. In dev, this file is run from
- * desktop/src/, and the assets are the repo's.
+ * The folders the files shipped with the game are read from, seen as one. In the release, assets/ sits next
+ * to the bundle, whether it runs as main.cjs or injected in the executable, and holds both. In dev, this
+ * file is run from desktop/src/, and they are the repo's assets/ and generated_assets/.
  */
-export function assetsDirectory(): string {
+export function assetsDirectories(): string[] {
     // The bundle turns import.meta.url into the URL of __filename, which a SEA sets to the executable.
     const here = dirname(fileURLToPath(import.meta.url))
-    return import.meta.env.DEV ? resolve(here, "..", "..", "assets") : join(here, "assets")
+    if(!import.meta.env.DEV) return [join(here, "assets")]
+    return [resolve(here, "..", "..", "assets"), resolve(here, "..", "..", "generated_assets")]
 }
 
 /** The folder the data of the player is kept in, in the data folder of the user. */

@@ -6,7 +6,7 @@ import type { Rarity } from "../Rarity"
 import { AbstractCard } from "./AbstractCard"
 
 /** An action card: no input, one action. */
-export class ActionCard extends AbstractCard<readonly Action[]> {
+export class ActionCard extends AbstractCard<Action> {
 
 
     public readonly output = ACTION
@@ -22,7 +22,7 @@ export class ActionCard extends AbstractCard<readonly Action[]> {
     }
 
 
-    public get(): readonly Action[] {
-        return [this.action]
+    public get(): Action {
+        return this.action
     }
 }

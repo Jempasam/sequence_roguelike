@@ -4,12 +4,12 @@ import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { shove } from "../tools/shoving"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the push of the catalog moves its target, in meters: a step. */
 const PUSH_DISTANCE = 2
@@ -37,24 +37,24 @@ export class PushCard extends ActionCard {
 
     static #pushing(distance: number, speed: number): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE)
                 if(!target){
                     battle.events.push({ type: "skipped", unit, reason: "personne à pousser" })
-                    yield* hold(battle, SHORT_TIME, [label(unit.position, "personne à pousser", NOTE_COLOR)])
+                    hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne à pousser", NOTE_COLOR)])
                     return
                 }
                 // Pushed into something before the whole distance, it takes the damage of a blocked push.
-                yield* shove({
+                shove({
                     battle, by: unit, target, direction: unit.direction, distance, speed, impact: PUSH_BLOCKED_DAMAGE,
                 })
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
                 const zone = touchZone(pose)
-                if(!target) return still(pose, zone, label(pose.position, "personne à pousser", NOTE_COLOR))
-                const pushed = battle.travel(target, target.position, pose.direction, distance)
-                return still(pose, zone, arrow([target.position, pushed.to], MOVE_WIDTH, CONTROL_COLOR))
+                if(!target) return Previews.still(pose, zone, Previews.label(pose.position, "personne à pousser", NOTE_COLOR))
+                const pushed = battle.moveSpot(target, target.position, pose.direction, distance)
+                return Previews.still(pose, zone, ...Previews.strike([], [target]), Previews.arrow([target.position, pushed.to], MOVE_WIDTH, CONTROL_COLOR))
             },
         }
     }

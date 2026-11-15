@@ -17,7 +17,9 @@ npm run cli -- --help
 
 `sim` est documenté à part dans [SIM.md](SIM.md) ; `npm run cli -- sim --help` en donne le résumé.
 
-Astuce : `npm run cli --silent -- list cards` supprime les lignes d'en-tête de npm (`> cli`, `> tsx ...`).
+Astuce : `npm run cli --silent -- list cards` supprime les lignes d'en-tête de npm (`> cli`, `> node ...`).
+
+`npm run cli` construit d'abord un bundle JavaScript avec esbuild (`command_line/dist/`, moins d'une seconde), puis le lance : deux fois plus rapide que de lire les sources TypeScript avec tsx, `sim` surtout. Les threads de `--jobs` lancent `dist/worker.mjs`. `npm run start:tsx -w @game/command_line -- …` lance encore les sources directement.
 
 ## Catalogues
 

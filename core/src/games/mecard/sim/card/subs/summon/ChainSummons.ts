@@ -19,11 +19,12 @@ import { ENERGETIC_AIM, SHOUT, TAUNT } from "../movement/Orientation"
 import { WAIT } from "../movement/Wait"
 import { SUCTION } from "../combat/Shoves"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
 import { ring } from "../tools/targeting"
 import { summonedHearts, summonShown } from "./SummonCard"
 import type { Visual } from "../../../base/Visual"
 import { visual } from "../../../base/Visual"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead the bodies of the cards of this file stand, in meters: at the contact. */
 const AHEAD = 1
@@ -95,15 +96,15 @@ export class ChainSummonCard extends ActionCard {
 
     static #summoning(summon: ChainSummon): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 placeChainSummon(battle, unit, summon)
-                yield* hold(battle, SHORT_TIME)
+                hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const spot = spotOf(pose)
-                if(!battle.free(spot, unit, UNIT_RADIUS)) return still(pose, label(spot, "pas de place", NOTE_COLOR))
-                return still(
-                    pose, summonShown(spot), polygon({ kind: "circle", center: spot, radius: summon.radius }, RANGE_COLOR),
+                if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+                return Previews.still(
+                    pose, summonShown(spot), Previews.polygon(Areas.circle(spot, summon.radius), RANGE_COLOR),
                     ...summon.targets(battle, unit, spot).map(ring),
                 )
             },

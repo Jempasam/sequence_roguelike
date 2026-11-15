@@ -1,0 +1,29 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": ["#ffa048", "#4a2a60", "#c060a8", "#fffdf0"],
+    "shapes": [
+        {"ellipse": [88, 104, 120, 44], "material": 1, "depth": [3, 5], "relief": "dome"},
+        {"ellipse": [100, 96, 40, 26], "material": 2, "depth": [4, 7], "relief": "dome"},
+        {"ellipse": [152, 98, 48, 28], "material": 0, "depth": [4, 7], "relief": "dome"},
+        {"ellipse": [128, 110, 34, 22], "material": 2, "depth": [4, 7], "relief": "dome"},
+
+        {"line": [110, 98, 104, 82], "width": 3, "material": 0, "depth": [5, 7], "relief": "round-x"},
+        {"line": [104, 82, 98, 72], "width": 2, "material": 0, "depth": [5, 7], "relief": "round-x"},
+        {"line": [104, 82, 112, 74], "width": 2, "material": 0, "depth": [5, 7], "relief": "round-x"},
+        {"line": [172, 100, 176, 80], "width": 3, "material": 2, "depth": [5, 7], "relief": "round-x"},
+        {"line": [176, 80, 170, 70], "width": 2, "material": 2, "depth": [5, 7], "relief": "round-x"},
+        {"line": [176, 80, 184, 72], "width": 2, "material": 2, "depth": [5, 7], "relief": "round-x"},
+        {"line": [184, 98, 192, 86], "width": 3, "material": 0, "depth": [5, 7], "relief": "round-x"},
+        {"line": [192, 86, 198, 80], "width": 2, "material": 0, "depth": [5, 7], "relief": "round-x"},
+
+        {"ellipse": [92, 118, 18, 12], "material": 0, "depth": [5, 7], "relief": "dome"},
+        {"ellipse": [186, 118, 20, 14], "material": 2, "depth": [5, 7], "relief": "dome"},
+
+        {"picture": "parts/jelly.pic.json", "at": [124, 34], "materials": [1, 2, 3]},
+
+        {"picture": "parts/goldfish.pic.json", "at": [50, 52], "materials": [1, 0, 3]},
+        {"picture": "parts/goldfish.pic.json", "at": [66, 76], "materials": [1, 0, 3]},
+        {"picture": "parts/goldfish.pic.json", "at": [218, 62], "materials": [1, 0, 3], "flip": true}
+    ]
+}

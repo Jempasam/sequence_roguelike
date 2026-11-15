@@ -178,7 +178,7 @@ export class RunHost {
         this.#seats.mode.enterBattle(this.#seats)
         this.#reseat()
         for(const unit of battle.units){
-            if(!this.isGuests(unit) || unit.controller !== "bot") continue
+            if(!this.isGuests(unit) || unit.controller === "player") continue
             battle.control(unit, "player")
             battle.applyStatus(unit, POSSESSED, 1)
             battle.reshuffle(unit)

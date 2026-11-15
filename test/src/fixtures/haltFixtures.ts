@@ -1,7 +1,7 @@
 import { plainText } from "@game/core"
 import type { Text } from "@game/core"
-import { deckNameOf, forge, Run, SLASH, STEP, THRUST } from "@game/core/mecard"
-import type { Card, Choosing, Count, HaltContext, HaltMoment, Hero, Shown, Way } from "@game/core/mecard"
+import { deckNameOf, forge, GOBLIN, Run, SLASH, STEP, THRUST } from "@game/core/mecard"
+import type { Card, Choosing, Count, Fight, HaltContext, HaltMoment, Hero, Shown, Way } from "@game/core/mecard"
 import { startedRun } from "./startedRun"
 
 /** How many answers a play gives at most, so a shop that can always be asked again ends. */
@@ -20,6 +20,9 @@ export class ScriptedPlayer implements HaltContext {
 
     /** What the dialogs showed and the halt did, in order. */
     public readonly log: string[] = []
+
+    /** The fight the visit follows: one against a goblin, so the halts that read it have something to read. */
+    public readonly fight = { monsters: [GOBLIN] } as unknown as Fight
 
     constructor(
         /** The run played. */

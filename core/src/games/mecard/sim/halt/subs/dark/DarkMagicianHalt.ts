@@ -7,10 +7,9 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
-import { DARK_COLOR, DARK_MASK } from "../halt_common"
+import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { offeredMonsters } from "./monster_pool"
 
 /** How many cards a booster of a monster gives. */
@@ -33,7 +32,7 @@ export class DarkMagicianHalt extends CardGiftHalt {
     constructor(run: Run){
         super(DARK_MAGICIAN_HALT, run,
             ["Trois boosters, arrachés aux monstres : leurs ", CARTE.as("cartes"), " sont à toi."],
-            sceneLook(26, 13, 41, "mecard/travel/magician"),
+            sceneLook(26, 13, 41, "magician", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "topHat",
                 clothes: DARK_COLOR,
@@ -67,6 +66,6 @@ export const DARK_MAGICIAN_HALT: HaltType = {
     description: ["Un booster parmi trois, tirés dans les ", CARTE.as("cartes"), " des monstres."],
     icon: visual("travel/magician/logo", { letter: "MG!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/portal", { coloration: DARK_COLORATION }),
     create: run => new DarkMagicianHalt(run),
 }

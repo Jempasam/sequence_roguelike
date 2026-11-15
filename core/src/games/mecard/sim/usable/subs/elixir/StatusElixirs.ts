@@ -7,6 +7,7 @@ import { FORCE } from "../../../base/keywords"
 import { Concentration } from "../../../status/subs/Calm"
 import { HeldFury } from "../../../status/subs/Calm"
 import { DemonEnergy } from "../../../status/subs/DemonEnergy"
+import { MOMENTUM, Momentum } from "../../../status/subs/Momentum"
 import type { Status } from "../../../status/Status"
 
 import { AbstractUsable } from "../AbstractUsable"
@@ -35,17 +36,24 @@ export class StatusElixir extends AbstractUsable {
 }
 
 export const DEMON_ELIXIR = new StatusElixir(
-    "Élixir démoniaque", visual("usables/strength_elixir"), ["Donne 3 rounds d'énergie démoniaque."], {},
+    "Élixir démoniaque", visual("usables/strength_elixir", { coloration: [0.6, 0.1, 0.7] }), ["Donne 3 rounds d'énergie démoniaque."], {},
     () => new DemonEnergy(3),
 )
 
 export const CALM_INFUSION = new StatusElixir(
-    "Infusion de calme", visual("usables/haste_elixir"), ["Donne 3 rounds de concentration."], {},
+    "Infusion de calme", visual("usables/haste_elixir", { coloration: [0.4, 0.8, 0.9] }), ["Donne 3 rounds de concentration."], {},
     () => new Concentration(3),
 )
 
+/** Boots with a spring in them: a push forward, twice, each combat. */
+export const REACTION_BOOTS = new StatusElixir(
+    "Bottes à réaction", visual("usables/spring"), ["Donne +2 ", MOMENTUM, ". 2 utilisations par combat."],
+    { charges: 2, refill: "battle" },
+    () => new Momentum(2),
+)
+
 export const FURY_ELIXIR = new StatusElixir(
-    "Élixir de fureur", visual("usables/strength_elixir"), ["Donne 2 rounds de fureur contenue."], {},
+    "Élixir de fureur", visual("usables/strength_elixir", { coloration: [0.95, 0.45, 0.1] }), ["Donne 2 rounds de fureur contenue."], {},
     () => new HeldFury(2),
 )
 
@@ -79,7 +87,7 @@ export class SharpeningStone extends RoundElixir {
 
     constructor(){
         super(
-            "Pierre à aiguiser", visual("usables/strength_elixir"),
+            "Pierre à aiguiser", visual("usables/strength_elixir", { coloration: [0.6, 0.6, 0.65] }),
             ["+", WHETSTONE_BONUS, " ", FORCE, " ce round. 3 utilisations, rechargées à chaque combat."],
             { charges: 3, refill: "battle" },
         )

@@ -107,11 +107,20 @@ export interface CardInvalidEvent {
     readonly index: number
 }
 
+/** The chain of a unit grew too long: it holds these cards, and is about to be emptied. */
+export interface ChainOverflowEvent {
+    readonly unit: Unit
+    readonly cards: readonly Card[]
+}
+
 /** The chain of a unit as it is once it changed: a copy of its cards, and where its reading stands. */
 export interface ChainChangeEvent {
     readonly unit: Unit
     readonly cards: readonly Card[]
     readonly cursor: number
+
+    /** The places of the cards another unit put in its chain. */
+    readonly borrowed: readonly number[]
 }
 
 /** A unit changing cell. */

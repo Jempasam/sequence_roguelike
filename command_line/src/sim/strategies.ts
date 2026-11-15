@@ -1,11 +1,14 @@
-import { CardChain, loadBattle, planFor, saveBattle } from "@game/core/mecard"
-import type { Battle, BattleSave, Card, Rng, Team, Unit } from "@game/core/mecard"
+import {
+    AHEAD_CHAINS, DeckAi, DEFAULT_CANDIDATES, DEPTH_AIS, depthAi, LATEST_SMART, LookaheadAi, RandomAi, ShuffleAi,
+    SMART_VARIANTS,
+} from "@game/core/mecard"
+import type { DepthAi, Rng, UnitController, Variant } from "@game/core/mecard"
 
 import { UsageError } from "./errors"
 
-/** How a unit plays its rounds: the chain it commits from its hand. */
+/** How a unit plays its rounds: the AI that decides its chain from what the unit may know. */
 export interface Strategy {
-    /** How it is written in `--ai`, `deck`, `lookahead:6-usables`. */
+    /** How it is written in `--ai`, `deck`, `smart3:6-usables`. */
     readonly name: string
 
     /** Does it use the usables of its units, every round? */
@@ -14,20 +17,18 @@ export interface Strategy {
     /** Is it the AI of the game, which a bot unit plays on its own? */
     readonly deck: boolean
 
-    /** The chain a unit commits first, from its hand. */
-    plan(unit: Unit, battle: Battle, rng: Rng): CardChain
+    /** The AI that decides for a unit, once per battle, drawing its random numbers from `rng`. */
+    ai(rng: Rng): UnitController
 
     /**
-     * Think again about the chain of a unit once every unit has committed one: it may commit another. Called
-     * for one unit after the other, in the order of the initiative.
-     *
-     * @returns Did it think? False when it could not, and the chain stays as it was.
+     * Does it choose the usables of its units itself, in its plan? Otherwise, when {@link usables}, each
+     * usable ready is used every round.
      */
-    refine?(unit: Unit, battle: Battle, rng: Rng): boolean
+    readonly choosesUsables?: boolean
 }
 
 /** What is told when a strategy could not think about a round. */
-export const REFINE_FAILED = "lookahead : le combat n'a pas pu être copié (un processus est en cours), la chaîne du deck est jouée"
+export const REFINE_FAILED = "IA : le combat n'a pas pu être copié (un processus est en cours), la chaîne du deck est jouée"
 
 /** One AI the user may choose. */
 export interface StrategyKind {
@@ -38,101 +39,64 @@ export interface StrategyKind {
     create(argument: number|null, usables: boolean): Strategy
 }
 
-/** How many chains `lookahead` tries each round, by default. */
-const DEFAULT_CANDIDATES = 6
-
-/** The cards of a unit it may play this round: its hand, and what it committed already. */
-function available(unit: Unit, battle: Battle): Card[] {
-    return [...unit.hand, ...battle.planOf(unit)?.cards ?? []]
-}
-
-/** What a battle gives a team now: its life left against the others', a win or a loss weighing a lot. */
-function score(battle: Battle, team: Team): number {
-    let total = 0
-    for(const unit of battle.units) if(unit.decisive) total += (unit.team === team ? 1 : -1) * unit.life
-    if(battle.phase === "over") total += battle.winner === team ? 1000 : battle.winner === null ? 0 : -1000
-    return total
-}
-
-/** The positions in a list of the cards a chain holds, each position used once. */
-function positionsOf(cards: readonly Card[], chain: CardChain): number[] {
-    const used = new Set<number>()
-    return chain.cards.map(card => {
-        const at = cards.findIndex((each, index) => each === card && !used.has(index))
-        used.add(at)
-        return at
-    })
-}
-
 /** The deck AI: the hand read from left to right, as the monsters do. */
 function deck(usables: boolean, name: string): Strategy {
-    return { name, usables, deck: true, plan: unit => planFor(unit) }
+    return { name, usables, deck: true, ai: () => new DeckAi() }
 }
 
 /** The hand shuffled, then read from left to right: any order, always a valid chain. */
 function random(usables: boolean, name: string): Strategy {
+    return { name, usables, deck: false, ai: rng => new RandomAi(rng) }
+}
+
+/** The first lookahead, which tries hands only. */
+function shuffle(candidates: number, usables: boolean, name: string): Strategy {
+    return { name, usables, deck: false, ai: rng => new ShuffleAi(rng, candidates, 1) }
+}
+
+/** The lookahead AIs, set apart by their variant, at depth 1. */
+function lookahead(candidates: number, usables: boolean, name: string, variant: Variant): Strategy {
     return {
-        name, usables, deck: false,
-        plan(unit, _battle, rng){
-            const hand = [...unit.hand]
-            rng.shuffle(hand)
-            return CardChain.leftToRight(hand, unit.stats.chainSize.value)
+        name, usables, deck: false, choosesUsables: variant.heuristics && usables,
+        ai: rng => new LookaheadAi(rng, candidates, usables, variant, 1),
+    }
+}
+
+/** What a `smart9` or `smart10` changes of `smart8`, told in words. */
+function setupText(setup: DepthAi): string {
+    const told: string[] = []
+    const combined = setup.combine === "safe" ? "garde le pire score" : setup.combine === "unsafe" ? "garde le meilleur score" : "fait la moyenne des scores"
+    told.push(`prédit les autres unités à la depth ${setup.depths.join(", ")} et ${combined}, chaque unité décidée une seule fois par niveau`)
+    if(setup.hiddenDecks) told.push("ne compte que sur les cartes en main (pioches et défausses vues comme des cartes cachées)")
+    const positions = setup.variant?.positions
+    if(positions) told.push(`compte la position face aux ennemis (${positions.exposed} cœur devant un ennemi, ${positions.aim} avec un ennemi devant soi)`)
+    if(setup.variant?.aheadChains) told.push(`rejoue ses ${setup.variant.aheadChains} meilleures chaînes sur deux rounds`)
+    if(setup.future) told.push(`joue le 2e round des essais avec ${setup.future} en depth 0`)
+    return told.join(" ; ")
+}
+
+/** A `smart9` or `smart10`: `smart8` changed by the setup of its name. */
+function depthKind(name: keyof typeof DEPTH_AIS): StrategyKind {
+    const setup: DepthAi = DEPTH_AIS[name]
+    return {
+        name,
+        description: `smart8 (${name}:K pour K), qui ${setupText(setup)}`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `${name}:${candidates}`
+            return {
+                name: usables ? base : `${base}-usables`, usables, deck: false, choosesUsables: usables,
+                ai: rng => depthAi(setup, rng, candidates, usables),
+            }
         },
     }
 }
 
-/**
- * Tries chains and keeps the one that goes best: the chain of the deck AI and some drawn at random are each
- * played out on a copy of the battle, and the one leaving its team the most life, against the others', is
- * committed.
- */
-function lookahead(candidates: number, usables: boolean, name: string): Strategy {
-    return {
-        name, usables, deck: false,
-        plan: unit => planFor(unit),
-        refine(unit, battle, rng){
-            const cards = available(unit, battle)
-            const size = unit.stats.chainSize.value
-            const tried = new Map<string, number[]>()
-            const current = battle.planOf(unit)
-            if(current) tried.set(current.cards.map(card => card.name).join("|"), positionsOf(cards, current))
-            for(let index = 1; index < candidates; index++){
-                const order = cards.map((_, position) => position)
-                rng.shuffle(order)
-                const chain = CardChain.leftToRight(order.map(position => cards[position]), size)
-                const shuffled = order.map(position => cards[position])
-                const positions = positionsOf(shuffled, chain).map(at => order[at])
-                const key = positions.map(position => cards[position].name).join("|")
-                if(!tried.has(key)) tried.set(key, positions)
-            }
-            let save: BattleSave
-            try {
-                save = saveBattle(battle)
-            }
-            catch{
-                // A battle is not saved while a process goes on: the chain it has is kept, and it is told.
-                return false
-            }
-            let best: number[]|null = null
-            let bestScore = -Infinity
-            for(const positions of tried.values()){
-                const copy = loadBattle(save)
-                const mine = copy.units[battle.units.indexOf(unit)]
-                const copied = available(mine, copy)
-                copy.commit(mine, new CardChain(positions.map(position => copied[position])))
-                copy.endPreparation()
-                copy.playRound()
-                const value = score(copy, mine.team)
-                if(value > bestScore){
-                    best = positions
-                    bestScore = value
-                }
-            }
-            if(best) battle.commit(unit, new CardChain(best.map(position => cards[position])))
-            return true
-        },
-    }
-}
+/** The alias of the latest `smartN`, the default AI: it is set to the last version at each new one. */
+export const SMART = "smart"
+
+/** The AI that {@link SMART} stands for. */
+const LATEST = LATEST_SMART
 
 /** The AIs, in the order `--ai` lists them. */
 export const STRATEGIES: readonly StrategyKind[] = [
@@ -147,35 +111,109 @@ export const STRATEGIES: readonly StrategyKind[] = [
         create: (_, usables) => random(usables, usables ? "random" : "random-usables"),
     },
     {
-        name: "lookahead",
-        description: `essaie ${DEFAULT_CANDIDATES} chaînes (lookahead:K pour K) jouées sur une copie du combat, garde la meilleure`,
+        name: "smart1",
+        description: `essaie ${DEFAULT_CANDIDATES} mains mélangées (smart1:K pour K) sur une copie du combat, sans jouer pas ni rotation de lui-même`,
         create: (argument, usables) => {
             const candidates = argument ?? DEFAULT_CANDIDATES
-            const base = `lookahead:${candidates}`
-            return lookahead(candidates, usables, usables ? base : `${base}-usables`)
+            const base = `smart1:${candidates}`
+            return shuffle(candidates, usables, usables ? base : `${base}-usables`)
         },
+    },
+    {
+        name: "smart2",
+        description: `essaie ${DEFAULT_CANDIDATES} mains (smart2:K pour K), puis où avancer, puis où et vers où se tourner, sur une copie du combat, garde la chaîne qui laisse le plus de vie`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart2:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart2)
+        },
+    },
+    {
+        name: "smart3",
+        description: `smart2 (smart3:K pour K), dont le score compte aussi les cartes en main, les statuts gagnés et les processus lancés, et qui choisit ses usables`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart3:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart3)
+        },
+    },
+    {
+        name: "smart4",
+        description: `smart3 (smart4:K pour K), qui essaie aussi de jouer moins de cartes : retire des cartes de la chaîne tant que ça va mieux, jusqu'à ne rien jouer de la main`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart4:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart4)
+        },
+    },
+    {
+        name: "smart5",
+        description: `smart4 (smart5:K pour K), qui compte les statuts de toute unité selon leur durée au-delà d'un tour, sans bonus de processus`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart5:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart5)
+        },
+    },
+    {
+        name: "smart6",
+        description: `smart5 (smart6:K pour K), dont la main est cherchée pas à pas (échanges, déplacements, une carte de plus ou de moins) au lieu de l'élagage : à l'essai`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart6:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart6)
+        },
+    },
+    {
+        name: "smart7",
+        description: `smart6 (smart7:K pour K), qui compte un statut à partir de 3 rounds (au lieu de 2) et départage ses ${AHEAD_CHAINS} meilleures chaînes en jouant deux rounds sur la copie`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart7:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart7)
+        },
+    },
+    {
+        name: "smart8",
+        description: `smart7 (smart8:K pour K), qui écarte sans les jouer les chaînes dont les préparations ne se réécrivent pas entières (entrée manquante, carte grisée), vues par leurs seules réécritures`,
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart8:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart8)
+        },
+    },
+    ...(Object.keys(DEPTH_AIS) as (keyof typeof DEPTH_AIS)[]).map(depthKind),
+    {
+        name: SMART,
+        description: `alias du dernier smartN, ${LATEST} aujourd'hui (smart:K pour K)`,
+        create: (argument, usables) => STRATEGIES.find(kind => kind.name === LATEST)!.create(argument, usables),
     },
 ]
 
+/** The AIs that take a number of chains to try. */
+const COUNTED = new Set([
+    "smart1", "smart2", "smart3", "smart4", "smart5", "smart6", "smart7", "smart8", ...Object.keys(DEPTH_AIS), SMART,
+])
+
 /**
- * Read an AI: `deck`, `random`, `lookahead` or `lookahead:K`, followed by `-usables` to leave the usables
- * unused.
+ * Read an AI: `deck`, `random`, `smart1`, `smart2`, `smart3`, `smart4`, `smart` (the latest `smartN`), or `smartN:K`, followed by `-usables` to leave the
+ * usables unused.
  *
  * @param option - How an error names where the text came from.
  * @throws {@link UsageError} On an AI that does not exist or an argument that is no number from 2.
  */
 export function parseStrategy(text: string, option: string): Strategy {
-    const match = /^([a-z]+)(?::(\d+))?(-usables)?$/.exec(text.trim())
+    const match = /^([a-z][a-z\d_]*)(?::(\d+))?(-usables)?$/.exec(text.trim())
     const kind = match ? STRATEGIES.find(candidate => candidate.name === match[1]) : undefined
     if(!match || !kind){
         const listed = STRATEGIES.map(each => `${each.name} (${each.description})`).join(" ; ")
         throw new UsageError(`${option} : IA invalide « ${text} ». IA disponibles : ${listed}. Suffixe -usables pour ne pas les utiliser.`)
     }
-    if(match[2] !== undefined && kind.name !== "lookahead"){
-        throw new UsageError(`${option} : « ${kind.name} » ne prend pas d'argument (seul lookahead:K en prend un).`)
+    if(match[2] !== undefined && !COUNTED.has(kind.name)){
+        throw new UsageError(`${option} : « ${kind.name} » ne prend pas d'argument (seuls ${[...COUNTED].map(each => `${each}:K`).join(", ")} en prennent un).`)
     }
     if(match[2] !== undefined && Number(match[2]) < 2){
-        throw new UsageError(`${option} : lookahead:${match[2]} : au moins 2 chaînes à essayer.`)
+        throw new UsageError(`${option} : ${kind.name}:${match[2]} : au moins 2 chaînes à essayer.`)
     }
     return kind.create(match[2] === undefined ? null : Number(match[2]), match[3] === undefined)
 }

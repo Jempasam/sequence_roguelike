@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { AIM, Arena, Battle, Heart, RED_HEART, STEP, Vector2 } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
-import { BattleScene, DRAW_PAUSE, DRAW_TIME } from "@game/core/mecard/battle-ui"
-import { Replay } from "./replay"
+import { BattleScene, DRAW_TIME } from "@game/core/mecard/battle-ui"
+import { BEAT, Replay } from "./replay"
 import { HEROES, MONSTERS } from "../../sim/fixtures"
 
 // --- Fixture builders ---
@@ -44,7 +44,7 @@ describe("BattleAnimations, the draw", () => {
         const { on, hero, scene, replay } = watched()
         on.startRound()
         await replay.frame(0)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         expect(scene.flight).toMatchObject({ unit: hero, card: STEP, deck: 0 })
         expect(scene.of(hero)?.decks.map(deck => deck.pile)).toEqual([1, 1])
         expect(scene.of(hero)?.cursor).toBe(1)
@@ -55,7 +55,7 @@ describe("BattleAnimations, the draw", () => {
         const { on, scene, replay } = watched()
         on.startRound()
         await replay.frame(0)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         await replay.frame(DRAW_TIME / 2)
         expect(scene.flight?.share).toBeCloseTo(0.5)
     })
@@ -64,11 +64,11 @@ describe("BattleAnimations, the draw", () => {
         const { on, hero, scene, replay } = watched()
         on.startRound()
         await replay.frame(0)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         await replay.frame(DRAW_TIME)
         expect(scene.flight).toBeNull()
         expect(scene.drawer).toBe(hero)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         expect(scene.flight).toMatchObject({ card: AIM, deck: 1 })
     })
 
@@ -76,12 +76,12 @@ describe("BattleAnimations, the draw", () => {
         const { on, hero, scene, replay } = watched()
         on.startRound()
         await replay.frame(0)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         await replay.frame(DRAW_TIME)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         await replay.frame(DRAW_TIME)
         expect(scene.drawer).toBe(hero)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         expect(scene.drawer).toBeNull()
     })
 
@@ -98,7 +98,7 @@ describe("BattleAnimations, the draw", () => {
         const { on, scene, replay } = watched()
         on.startRound()
         await replay.frame(0)
-        await replay.frame(DRAW_PAUSE)
+        await replay.frame(BEAT)
         await replay.finish()
         expect(scene.flight).toBeNull()
         expect(scene.drawer).toBeNull()

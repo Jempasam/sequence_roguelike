@@ -1,13 +1,15 @@
 import { rgba } from "../../../base/Rgba"
 import { MOVE_WIDTH } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import type { Area } from "../../../battle/Area"
 import { Slowness, SLOWED } from "../../../status/subs/Slowness"
 
 import { ActionCard } from "../ActionCard"
-import { fly } from "../tools/bolt"
-import { arrow, still, strike } from "../tools/previews"
+import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the spit of the catalog flies, in meters, before the reach of the unit. */
 const SPIT_RANGE = 3
@@ -38,14 +40,15 @@ export class SpitCard extends ActionCard {
 
     static #spitting(range: number, rounds: number): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value)
-                yield* fly(battle, unit.position, end, SPIT_COLOR)
+                fly(battle, unit.position, end, SPIT_COLOR)
                 if(hit) battle.applyStatus(hit, SLOWED, rounds)
             },
             preview: ({ battle, unit, pose }) => {
                 const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value, pose)
-                return still(pose, arrow([pose.position, end], MOVE_WIDTH / 2, SPIT_COLOR), ...strike([], hit ? [hit] : []))
+                const area: Area = Areas.line(pose.position, end, BOLT_WIDTH)
+                return Previews.still(pose, ...Previews.strike([area], hit ? [hit] : []), Previews.arrow([pose.position, end], MOVE_WIDTH / 2, SPIT_COLOR))
             },
         }
     }

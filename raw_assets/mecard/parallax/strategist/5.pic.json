@@ -1,0 +1,35 @@
+{
+    "size": [288, 164],
+    "seed": 9,
+    "palette": [
+        "#4a4434",
+        "#1c1810",
+        {"color": "#a8aeb8", "reflection": 0.7},
+        "#b83a30"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [20, 20, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 143, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 20, 1, 124], "material": 1, "depth": 4},
+        {"box": [267, 20, 1, 124], "material": 1, "depth": 4},
+
+        {"box": [9, 9, 12, 5], "material": 2, "depth": [8, 9], "relief": "round-y"},
+        {"box": [267, 9, 12, 5], "material": 2, "depth": [8, 9], "relief": "round-y"},
+        {"box": [9, 150, 12, 5], "material": 2, "depth": [8, 9], "relief": "round-y"},
+        {"box": [267, 150, 12, 5], "material": 2, "depth": [8, 9], "relief": "round-y"},
+        {"ellipse": [9, 9, 6, 6], "material": 3, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [273, 9, 6, 6], "material": 3, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [9, 149, 6, 6], "material": 3, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [273, 149, 6, 6], "material": 3, "depth": [8, 10], "relief": "dome"},
+
+        {"line": [124, 10, 164, 28], "material": 2, "width": 2, "depth": 8},
+        {"line": [164, 10, 124, 28], "material": 2, "width": 2, "depth": 8},
+        {"polygon": [[132, 10], [156, 10], [156, 20], [144, 29], [132, 20]], "material": 3, "depth": [8, 10], "relief": "bevel"},
+        {"box": [142, 13, 4, 10], "material": 2, "depth": 10},
+        {"box": [138, 16, 12, 3], "material": 2, "depth": 10}
+    ]
+}

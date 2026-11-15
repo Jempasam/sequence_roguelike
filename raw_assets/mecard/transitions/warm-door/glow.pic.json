@@ -1,0 +1,9 @@
+{
+    "size": [272, 148],
+    "seed": 2,
+    "palette": [{"color": "#ffc050", "light": 0.55}, {"color": "#fff0a0", "light": 0.9}, "#4a3020", "#4a3020"],
+    "shapes": [
+        {"polygon": [[108, 136], [164, 136], [196, 148], [76, 148]], "material": 0, "depth": 2},
+        {"box": [108, 132, 56, 4], "material": 1, "depth": 2}
+    ]
+}

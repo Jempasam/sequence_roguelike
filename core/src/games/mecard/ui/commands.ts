@@ -1,18 +1,23 @@
-import type { LayeredImagePath } from "../../../engine/assets"
 import type { ClipboardPort } from "../../../platform"
 import { command, group, named, optional, whole } from "../../../engine/console"
 import { plainText } from "../../../semantic"
 import type { Arg, Command, CommandContext, Console } from "../../../engine/console"
+import { AI_NAMES, aiNamed } from "../sim/ai/catalog"
+import type { AiName } from "../sim/ai/catalog"
+import { LookaheadAi } from "../sim/ai/LookaheadAi"
+import type { Prediction } from "../sim/ai/LookaheadAi"
+import type { BattlePlan } from "../sim/ai/UnitController"
 import { UnitStats } from "../sim/battle/Unit"
 import { Rarity } from "../sim/card/Rarity"
 import { ALL_CARDS, ALL_USABLES, ALL_ITEMS } from "../sim/catalog/index"
 import { ALL_KITS } from "../sim/catalog/kits"
 import { ALL_MONSTERS } from "../sim/catalog/monsters"
+import { ALL_PETS } from "../sim/catalog/pets"
 import { Heart, insertHeart } from "../sim/heart/Heart"
 import { HEART_KINDS } from "../sim/save/catalogNames"
 import { deckName } from "../sim/run/deckName"
-import { allCards, allyOf, firstDeck, hero, heroOf } from "../sim/run/Hero"
-import { ARENA_SCALE, arenaBattle, arenaPoint, dummy, enterBattle, teamOf } from "../sim/run/arena"
+import { allCards, allyOf, firstDeck, foeOf, hero, heroOf } from "../sim/run/Hero"
+import { ARENA_SCALE, arenaBattle, arenaPoint, dummy, duelBattle, enterBattle, teamOf } from "../sim/run/arena"
 import type { Side } from "../sim/run/arena"
 import { loadBattle, saveBattle } from "../sim/save/battleSave"
 import type { BattleSave } from "../sim/save/battleSave"
@@ -46,6 +51,9 @@ import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 
 import { chainText, heartsText } from "./describe"
 import { placeTransitions } from "./travel/placeLooks"
+import { shippedParallaxes } from "./look/visualPath"
+import { visual } from "../sim/base/Visual"
+import type { Visual } from "../sim/base/Visual"
 import { DamageType } from "../sim/battle/DamageType"
 
 /** What the commands of Dungeon of the Mecard run with: the run, its battle, the screen to build again. */
@@ -92,8 +100,11 @@ export interface MecardContext extends CommandContext {
     /** Open the catalogue of the cards, hearts, monsters and the rest of the game. */
     showLibrary(): void
 
+    /** Open the bench of the parallaxes, on the one a visual names, for a try. */
+    showParallax(parallax: Visual): void
+
     /** Play a transition over the screen, for a try, telling its middle and its end. */
-    playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void
+    playTransition(transition: Visual, duration: number, reverse: boolean): void
 
     /**
      * Open the game to others, printing the code they connect with.
@@ -146,8 +157,9 @@ export class LiveContext implements MecardContext {
     public showPnj(): void { this.host().showPnj() }
     public showArm(): void { this.host().showArm() }
     public showLibrary(): void { this.host().showLibrary() }
-    public playTransition(path: LayeredImagePath, duration: number, reverse: boolean): void {
-        this.host().playTransition(path, duration, reverse)
+    public showParallax(parallax: Visual): void { this.host().showParallax(parallax) }
+    public playTransition(transition: Visual, duration: number, reverse: boolean): void {
+        this.host().playTransition(transition, duration, reverse)
     }
     public hostGame(mode: SeatMode|null, policy: SeatPolicy): void { this.host().hostGame(mode, policy) }
     public connect(code: string, guest: boolean): void { this.host().connect(code, guest) }
@@ -158,6 +170,24 @@ export class LiveContext implements MecardContext {
 
 /** How many hearts a heal gives when none is said: a heart. */
 const DEFAULT_HEAL = 2
+
+/** A plan as the console says it: its cards, then its usables. */
+function planText(plan: BattlePlan): string {
+    const cards = plan.chain.cards.map(card => card.name).join(", ") || "rien"
+    const usables = (plan.usables ?? []).map(carried => carried.usable.name)
+    return usables.length > 0 ? `${cards} (usables : ${usables.join(", ")})` : cards
+}
+
+/** What a lookahead guessed of the others and chose, a line per group of levels. */
+function predictionLines({ unit, view, groups, plan }: Prediction): string[] {
+    const lines = [`IA de ${unit.name} (round ${view.round}) : joue ${planText(plan)}`]
+    for(const group of groups){
+        const levels = group.levels.length > 1 ? `niveaux ${group.levels.join(", ")}` : `niveau ${group.levels[0]}`
+        const others = [...group.plans].map(([index, guessed]) => `${view.units[index].name} → ${planText(guessed)}`)
+        lines.push(`  prédit (${levels}) : ${others.join(" ; ") || "personne"}`)
+    }
+    return lines
+}
 
 /** How many names a line of a list holds, so it stays within the console. */
 const NAMES_PER_LINE = 6
@@ -251,11 +281,15 @@ function typeWord(type: PlaceType): string {
 const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
 const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => ALL_FLOORS, type => wordOf(type.name))
 const KIT: Arg<MecardContext, Kit> = named("le kit", () => ALL_KITS, kit => wordOf(kit.name))
+const PET: Arg<MecardContext, Monster> = named("le familier", () => ALL_PETS, pet => wordOf(pet.name))
 const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => ALL_USABLES, each => wordOf(each.name))
 
 /** Who plays a character: the players, or a bot. */
 const CONTROLLER: Arg<MecardContext, Controller> = named("le contrôle", () => ["player", "bot"] as const,
     controller => controller === "player" ? "joueur" : "bot")
+
+/** An AI of the catalog, as `battle bot` takes it. */
+const AI: Arg<MecardContext, AiName> = named("l'IA", () => AI_NAMES, name => name)
 
 /** What the others are given to play in a game hosted, none when they only watch. */
 const HOST_MODE = named("le mode", () => [
@@ -592,6 +626,14 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                     ctx.playBattle(arenaBattle(ctx.run))
                     ctx.print("Arène : un mannequin de 10 cœurs revient à la fin du round où il tombe.")
                 }),
+            duel: group("battle duel", "lance un duel : l'équipe contre une seule unité.", {
+                monster: command("battle duel monster <monstre> : l'équipe contre ce monstre.", [MONSTER],
+                    (ctx: MecardContext, monster) => duel(ctx, foeOf(monster, monster.name))),
+                kit: command("battle duel kit <kit> : l'équipe contre un héros de ce kit.", [KIT],
+                    (ctx: MecardContext, kit) => duel(ctx, heroOf(kit))),
+                pet: command("battle duel pet <familier> : l'équipe contre ce familier.", [PET],
+                    (ctx: MecardContext, pet) => duel(ctx, allyOf(pet, pet.name))),
+            }),
             win: command("battle win : tue les ennemis qui décident de la victoire.", [], (ctx: MecardContext) => {
                 endBy(ctx, unit => !isAlly(ctx, unit))
                 ctx.print("Les ennemis sont tombés.")
@@ -614,10 +656,13 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                     createUnit(ctx, x, y, fighter, side ?? "enemy", control)
                 }),
             edit: onUnit(
-                "battle edit <unité> <damage|remove|item|usable|heart|card|status|process> ... : modifie une unité.",
+                "battle edit <unité> <damage|remove|kit|monster|pet|item|usable|heart|card|status|process> ... : modifie une unité.",
                 [
                     "battle edit <unité> damage <cœurs> : blesse.",
                     "battle edit <unité> remove : retire l'unité du combat.",
+                    "battle edit <unité> kit <kit> : la change en ce kit.",
+                    "battle edit <unité> monster <monstre> : la change en ce monstre.",
+                    "battle edit <unité> pet <familier> : la change en ce familier.",
                     "battle edit <unité> item <add|remove|clear|list> [objet] [nombre]",
                     "battle edit <unité> usable <add|remove|clear|list> [utilisable] [nombre]",
                     "battle edit <unité> heart <add|remove|clear|list> [cœur] [nombre]",
@@ -637,6 +682,12 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
 
 
 //// The battle commands: ending it, saving it, creating and editing units ////
+
+/** Fight the party against one foe, in an empty arena. */
+function duel(ctx: MecardContext, foe: Hero): void {
+    ctx.playBattle(duelBattle(ctx.run, foe))
+    ctx.print(`Duel : l'équipe contre ${foe.name}.`)
+}
 
 /** Is the unit on the side of the heroes? Read by the name of the team: a battle loaded has its own teams. */
 function isAlly(ctx: MecardContext, unit: Unit): boolean {
@@ -709,7 +760,7 @@ interface Fighter {
 /** Every kind of monster then every kit, a kit whose name a monster has left out. */
 function fighters(): Fighter[] {
     const monsters = ALL_MONSTERS.map(monster => ({
-        word: wordOf(monster.name), character: () => allyOf(monster, monster.name),
+        word: wordOf(monster.name), character: () => foeOf(monster, monster.name),
     }))
     const taken = new Set(monsters.map(each => each.word.toLowerCase()))
     const kits = ALL_KITS.map(kit => ({ word: wordOf(kit.name), character: () => heroOf(kit) }))
@@ -753,6 +804,21 @@ function createUnit(
     const controller = control ?? (side === "ally" && fighter ? "player" : "bot")
     const unit = enterBattle(battle, character, sideTeam(ctx, side), arenaPoint(x, y), side, controller)
     ctx.print(`${unit.name} créé (${side === "ally" ? "allié" : "ennemi"}, ${controller === "player" ? "joueur" : "bot"}).`)
+    ctx.refresh()
+}
+
+/** Make a unit another character: it leaves and the character enters in its place, team, side and controller kept. */
+function become(ctx: MecardContext, unit: Unit, character: Hero): void {
+    const { battle } = ctx
+    if(battle.phase === "execution" || battle.phase === "over"){
+        ctx.print(`Pas de transformation pendant la phase ${battle.phase} : attends le round suivant.`)
+        return
+    }
+    const side: Side = isAlly(ctx, unit) ? "ally" : "enemy"
+    const { team, position, controller } = unit
+    battle.vanish(unit)
+    const next = enterBattle(battle, character, team, position, side, controller)
+    ctx.print(`${unit.name} devient ${next.name}.`)
     ctx.refresh()
 }
 
@@ -809,6 +875,11 @@ function unitEdits(unit: Unit): Command<MecardContext, unknown> {
             ctx.print(`${unit.name} est retiré du combat.`)
             ctx.refresh()
         }),
+        kit: command("kit <kit> : devient ce kit.", [KIT], (ctx, kit) => become(ctx, unit, heroOf(kit))),
+        monster: command("monster <monstre> : devient ce monstre.", [MONSTER],
+            (ctx, monster) => become(ctx, unit, foeOf(monster, monster.name))),
+        pet: command("pet <familier> : devient ce familier.", [PET],
+            (ctx, pet) => become(ctx, unit, allyOf(pet, pet.name))),
         item: group("item", "les objets de l'unité.", {
             add: command("add <objet> [nombre] : équipe.", [ITEM, COUNT], (ctx, item, count) => {
                 times(count, () => ctx.battle.equip(unit, item))
@@ -934,13 +1005,13 @@ function runCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.print(`${floorText(ctx.run)}, profondeur ${ctx.run.travel.depth}, ${ctx.run.gold} or.`)
                 for(const each of ctx.run.heroes){
                     const carried = [...each.items, ...each.usables].map(String).join(", ")
-                    const bot = each.controller === "bot" ? " (bot)" : ""
+                    const bot = each.controller !== "player" ? " (bot)" : ""
                     ctx.print(`${wordOf(each.name)}${bot} : ${heartList(each.hearts)} · ${allCards(each).length} cartes${carried ? ` · ${carried}` : ""}`)
                 }
             }),
             hero: command("run hero <héros> : décrit un héros, son deck, ses objets et ses utilisables.", [HERO],
                 (ctx, hero) => {
-                    ctx.print(`${hero.name}${hero.controller === "bot" ? " (bot)" : ""} : ${heartList(hero.hearts)}.`)
+                    ctx.print(`${hero.name}${hero.controller !== "player" ? " (bot)" : ""} : ${heartList(hero.hearts)}.`)
                     hero.decks.forEach((deck, index) => {
                         printNames(ctx, `${deckName(index, hero.decks.length)} (${deck.length})`, countedNames(deck))
                     })
@@ -1035,6 +1106,16 @@ function runCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.print(`${hero.name} quitte l'équipe ${nextBattle}.`)
                 ctx.refresh()
             }),
+            bot: command("run bot <ia> : change l'IA de base qui joue les bots, dans ce combat dès le prochain round et dans tous les suivants (deck, random, smart1 à smart8, smart9_2, smart9_1_2, smart9_1_2_3, smart10, smart10_blind, smart10_position, smart10_future, smart10_smartfuture, smart10_safe, smart10_unsafe, smart).",
+                [AI], (ctx, name) => {
+                    const ai = aiNamed(name, new Rng(ctx.run.rng.state), 1)
+                    if(ai instanceof LookaheadAi) ai.predicted.add(prediction => {
+                        for(const line of predictionLines(prediction)) ctx.print(line)
+                    })
+                    ctx.run.bot = ai
+                    ctx.battle.bot = ai
+                    ctx.print(`Les bots sont joués par « ${name} », dans ce combat et les suivants.`)
+                }),
             control: command("run control <héros> <joueur|bot> : qui joue une unité.", [HERO, CONTROLLER],
                 (ctx, chosen, controller) => {
                     const { heroes } = ctx.run
@@ -1150,7 +1231,7 @@ const DEFAULT_TRANSITION = 1500
 /** The ways a transition is played, as typed. */
 const TRANSITION_WAYS = ["endroit", "envers"] as const
 
-/** The commands of the tools of the game, outside the run: `pnj`, `bras`, `catalogue`, `transition`. */
+/** The commands of the tools of the game, outside the run: `pnj`, `bras`, `catalogue`, `debug`. */
 function toolCommands(): Record<string, Command<MecardContext, unknown>> {
     return {
         noreload: command("noreload : désactive le hot reload de vite.", [], _ => {
@@ -1171,19 +1252,26 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
         catalogue: command("catalogue : ouvre le catalogue des cartes, cœurs, monstres et autres.", [], ctx => {
             ctx.showLibrary()
         }),
-        transition: command(
-            "transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"
-                + ` ${DEFAULT_TRANSITION} ms par défaut, et dit quand elle passe son milieu et sa fin.`,
-            [
-                named("la transition", () => [...placeTransitions().keys()], name => name),
-                optional(whole("la durée en millisecondes", 1), DEFAULT_TRANSITION),
-                optional(named("le sens", () => TRANSITION_WAYS, way => way), "endroit"),
-            ],
-            (ctx, name, duration, way) => {
-                const path = placeTransitions().get(name)
-                if(path) ctx.playTransition(path, duration / 1000, way === "envers")
-            },
-        ),
+        debug: group("debug", "les bancs d'essai des visuels.", {
+            parallax: command(
+                "debug parallax <id> : ouvre le banc d'essai d'une parallaxe, parallax/<id>.ora sinon les png de parallax/<id>/.",
+                [named("la parallaxe", () => shippedParallaxes().map(key => key.slice("parallax/".length)), id => id)],
+                (ctx, id) => ctx.showParallax(visual(`parallax/${id}`)),
+            ),
+            transition: command(
+                "debug transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"
+                    + ` ${DEFAULT_TRANSITION} ms par défaut, et dit quand elle passe son milieu et sa fin.`,
+                [
+                    named("la transition", () => [...placeTransitions().keys()], name => name),
+                    optional(whole("la durée en millisecondes", 1), DEFAULT_TRANSITION),
+                    optional(named("le sens", () => TRANSITION_WAYS, way => way), "endroit"),
+                ],
+                (ctx, name, duration, way) => {
+                    const transition = placeTransitions().get(name)
+                    if(transition) ctx.playTransition(transition, duration / 1000, way === "envers")
+                },
+            ),
+        }),
     }
 }
 
@@ -1199,6 +1287,19 @@ export function registerCommands(console: Console<MecardContext>): void {
             for(const line of chosen?.details ?? []) ctx.print(`  ${line}`)
         }))
     console.register("clear", command("clear : vide la console.", [], () => console.clear()))
+    console.register("copy", command("copy : copie le contenu de la console dans le presse-papier.", [], ctx => {
+        const { clipboard } = ctx
+        if(!clipboard){
+            ctx.print("Pas de presse-papier ici.")
+            return
+        }
+        // The line "copy" just typed is left out: it is not what was wanted.
+        const text = console.lines.slice(0, -1).map(line => line.text).join("\n")
+        clipboard.write(text).then(
+            () => ctx.print(`Console copiée dans le presse-papier (${text.length} caractères).`),
+            (error: unknown) => ctx.print(`Le presse-papier a refusé la copie : ${String(error)}`),
+        )
+    }))
     const all = {
         ...catalogCommands(), ...battleCommands(), ...runCommands(), ...travelCommands(), ...toolCommands(),
         ...networkCommands(),

@@ -2,7 +2,7 @@ import type { Rng } from "../../base/Rng"
 import { ARCHER, BRUTE, GOBLIN, GOLEM, SLIME } from "../../catalog/monsters"
 import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
-import type { FightType } from "../../run/PlaceType"
+import type { FightType } from "../../fight/FightType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
@@ -29,9 +29,9 @@ export const CAVE_FLOOR: FloorType = {
     name: "Grotte",
     description: "Des gobelins et leurs amis, gardés par un golem runique. Un peu de tout sur le chemin.",
     icon: visual("floors/cave/logo"),
-    look: sceneLook(20, 18, 31, "mecard/travel/map"),
+    look: sceneLook(20, 18, 31, "map"),
     decorations: [
-        { picture: visual("floors/cave/mouth"), size: 2 },
+        { picture: visual("floors/cave/bigshroom"), size: 2 },
         { picture: visual("floors/cave/stalagmite"), size: 2 },
         { picture: visual("floors/cave/mushroom"), size: 2 },
         { picture: visual("floors/cave/bones"), size: 2 },

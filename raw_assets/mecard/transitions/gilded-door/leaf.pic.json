@@ -1,0 +1,14 @@
+{
+    "size": [272, 148],
+    "seed": 5,
+    "palette": ["#d6dce2", "#6a747e", {"color": "#e8b830", "reflection": 0.35}, "#8a6414"],
+    "shapes": [
+        {"polygon": [[108, 44], [88, 34], [88, 146], [108, 136]], "fill": {"pattern": "tiles", "cell": [20, 46], "grout": 1, "materials": [0, 1, 0]}, "depth": [4, 6]},
+        {"line": [108, 48, 90, 39], "width": 2, "material": 2, "depth": [6, 7]},
+        {"line": [108, 132, 90, 141], "width": 2, "material": 2, "depth": [6, 7]},
+        {"line": [90, 39, 90, 141], "width": 2, "material": 2, "depth": [6, 7]},
+        {"polygon": [[98, 70], [104, 90], [98, 110], [92, 90]], "material": 2, "depth": [6, 8], "relief": "bevel", "bevel": 1},
+        {"polygon": [[88, 34], [84, 37], [84, 143], [88, 146]], "material": 3, "depth": [6, 7]},
+        {"ellipse": [91, 86, 6, 6], "material": 2, "depth": [7, 9], "relief": "dome"}
+    ]
+}

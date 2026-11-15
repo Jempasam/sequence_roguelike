@@ -6,10 +6,10 @@ import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
-import { arrow } from "../tools/previews"
 import { reflected } from "../tools/reflection"
 import { Rarity } from "../../Rarity"
 import { DASH_SPEED } from "./MoveCard"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far each leg of the dash of the catalog goes, in meters, before the agility of the unit. */
 const BOUNCE_LENGTH = 1.5
@@ -43,11 +43,11 @@ export class BounceDashCard extends ActionCard {
 
     static #dashing(length: number, bounces: number): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const leg = length * unit.stats.move.value
                 for(let bounce = 0; bounce <= bounces && unit.alive; bounce++){
-                    const gone = yield* travel(ctx, unit.direction, leg, DASH_SPEED)
+                    const gone = travel(ctx, unit.direction, leg, DASH_SPEED)
                     const stopped = gone.distance < leg - TRAVEL_SLACK && unit.stats.mobility.value > 0
                     if(!stopped || bounce === bounces) break
                     const { position, direction, radius } = unit
@@ -55,14 +55,14 @@ export class BounceDashCard extends ActionCard {
                     if(!way) break
                     battle.turn(unit, way)
                 }
-                yield* wait(SETTLE_TIME)
+                wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const leg = length * unit.stats.move.value
                 const points: Vector2[] = [pose.position]
                 let { position, direction } = pose
                 for(let bounce = 0; bounce <= bounces; bounce++){
-                    const gone = battle.travel(unit, position, direction, leg)
+                    const gone = battle.moveSpot(unit, position, direction, leg)
                     position = gone.to
                     points.push(position)
                     if(gone.distance >= leg - TRAVEL_SLACK || bounce === bounces) break
@@ -70,7 +70,7 @@ export class BounceDashCard extends ActionCard {
                     if(!way) break
                     direction = way
                 }
-                return { indicators: [arrow(points, MOVE_WIDTH, MOVE_COLOR)], pose: { position, direction } }
+                return { indicators: [Previews.arrow(points, MOVE_WIDTH, MOVE_COLOR)], pose: { position, direction } }
             },
         }
     }

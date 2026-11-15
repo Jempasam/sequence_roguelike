@@ -1,0 +1,29 @@
+{
+    "size": [288, 164],
+    "seed": 14,
+    "palette": [
+        "#7a5030",
+        "#2a1c14",
+        "#4a8a30",
+        "#d8a850"
+    ],
+    "shapes": [
+        {"box": [10, 80, 46, 66], "material": 0, "depth": [6, 8], "relief": "round-x"},
+        {"box": [10, 80, 46, 66], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "materials": [0, 1, 0]}, "depth": [6, 8], "relief": "round-x"},
+        {"box": [9, 92, 48, 4], "material": 1, "depth": [8, 9], "relief": "round-y"},
+        {"box": [9, 128, 48, 4], "material": 1, "depth": [8, 9], "relief": "round-y"},
+        {"ellipse": [10, 76, 46, 10], "material": 1, "depth": [6, 8], "relief": "dome"},
+
+        {"polygon": [[58, 146], [60, 120], [68, 108], [78, 112], [84, 126], [84, 146]], "material": 3, "depth": [5, 9], "relief": "dome"},
+        {"polygon": [[66, 108], [70, 102], [76, 104], [78, 112]], "material": 3, "depth": [5, 8], "relief": "dome"},
+        {"line": [66, 114, 76, 114], "width": 1, "material": 1, "depth": 7},
+        {"line": [62, 130, 80, 130], "width": 1, "material": 1, "depth": 7},
+
+        {"box": [226, 112, 48, 34], "fill": {"pattern": "planks", "width": 7, "axis": "x", "joint": 1, "materials": [0, 1, 0]}, "depth": [6, 8], "relief": "bevel"},
+        {"line": [227, 113, 273, 145], "width": 1, "material": 1, "depth": 8},
+        {"line": [273, 113, 227, 145], "width": 1, "material": 1, "depth": 8},
+        {"picture": "parts/basket.pic.json", "at": [232, 78], "materials": [1, 0, 2, 3]},
+        {"box": [214, 126, 12, 20], "material": 0, "depth": [6, 8], "relief": "bevel"},
+        {"line": [214, 133, 225, 133], "width": 1, "material": 1, "depth": 8}
+    ]
+}

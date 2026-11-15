@@ -1,0 +1,34 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#2a2630"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#403060", "amount": 0.12}
+        ]
+    },
+    "anim": [
+        "r1: z=0.35 a=0 > z=0.59 a=1 > z=1 m > z*1.7 > z*1.7 a=0.5 > z*1.7 a=0",
+        "r2: z=0.42 a=0 > z=0.65 a=1 > z=1 m > z*1.55 > z*1.55 > z*1.55 a=0",
+        "r3: z=0.51 a=0 > z=0.71 a=1 > z=1 m > z*1.4 > z*1.4 > z*1.4 a=0",
+        "r4: z=0.61 a=0 > z=0.78 a=1 > z=1 m > z*1.28 > z*1.28 > z*1.28 a=0",
+        "r5: z=0.72 a=0 > z=0.85 a=1 > z=1 m > z*1.18 > z*1.18 > z*1.18 a=0",
+        "black: a=0 > a=1 > a=1 m > hold > hold > a=0"
+    ],
+    "layers": [
+        {"name": "r1", "tag": "border", "picture": "r1.pic.json", "at": [-816, -444]},
+        {"name": "r2", "tag": "border", "picture": "r2.pic.json", "at": [-816, -444]},
+        {"name": "r3", "tag": "border", "picture": "r3.pic.json", "at": [-816, -444]},
+        {"name": "r4", "tag": "border", "picture": "r4.pic.json", "at": [-816, -444]},
+        {"name": "r5", "tag": "border", "picture": "r5.pic.json", "at": [-816, -444]},
+        {"name": "black", "tag": "border", "picture": "black.pic.json", "at": [-816, -444]}
+    ]
+}

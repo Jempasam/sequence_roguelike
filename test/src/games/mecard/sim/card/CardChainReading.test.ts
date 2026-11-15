@@ -10,8 +10,8 @@ import { battle, chain, MONSTERS, unit } from "../fixtures"
 /** A chain reading its first option of each chance. */
 const FIRST: RewriteContext = { pick: options => options[0] }
 
-/** A preparation taking actions: replaced by a thrust for each action it was given. */
-class Doubling extends AbstractCard<Preparation, readonly Action[]> {
+/** A preparation taking an action: replaced by two thrusts, whatever the action it was given. */
+class Doubling extends AbstractCard<Preparation, Action> {
 
 
     public readonly output = PREPARATION
@@ -22,8 +22,8 @@ class Doubling extends AbstractCard<Preparation, readonly Action[]> {
     }
 
 
-    public get(actions: readonly Action[]): Preparation {
-        const cards = actions.map(() => THRUST as Card)
+    public get(): Preparation {
+        const cards: Card[] = [THRUST, THRUST]
         return { phase: "prepless", rewrite: () => ({ cards, consumed: 0, acting: false }) }
     }
 }
@@ -48,7 +48,7 @@ describe("CardChain.get", () => {
     test("a card and what it takes → what the first gives, and the last of the tree", () => {
         const built = chain(SPELL, FIRE, STEP).get(0)
         expect(built?.last).toBe(1)
-        expect(built?.value).toHaveLength(1)
+        expect(built?.value).toBeDefined()
     })
 
     test("a card taking nothing → itself alone", () => {
@@ -69,21 +69,21 @@ describe("CardChain.get", () => {
 describe("CardChain.next", () => {
     test("a tree → what it gives, the cursor after its last card", () => {
         const read = chain(SPELL, FIRE, STEP)
-        expect(read.next(ACTION)).toHaveLength(1)
+        expect(read.next(ACTION)).not.toBeNull()
         expect(read.cursor).toBe(2)
     })
 
     test("a card of another type → skipped unbuilt, nothing told, the reading goes on", () => {
         const read = chain(FIRE, STEP)
         const told = watched(read)
-        expect(read.next(ACTION)).toHaveLength(1)
+        expect(read.next(ACTION)).not.toBeNull()
         expect(told).toEqual(["changed 1", "activated 1-1", "changed 2"])
     })
 
     test("a card of the type that cannot be built → told invalid, the reading goes on in the same call", () => {
         const read = chain(SPELL, STEP)
         const told = watched(read)
-        expect(read.next(ACTION)).toHaveLength(1)
+        expect(read.next(ACTION)).not.toBeNull()
         expect(told).toEqual(["invalid 0", "changed 1", "activated 1-1", "changed 2"])
     })
 
@@ -113,7 +113,7 @@ describe("CardChain.copy", () => {
     })
 
     test("what is left counted → nothing told, the cursor where it was", () => {
-        const read = chain(REPEAT_2, STEP, SPELL)
+        const read = chain(REPEAT_2, STEP, STEP, SPELL)
         const told = watched(read)
         expect(read.actionsLeft()).toHaveLength(2)
         expect(read.cursor).toBe(0)
@@ -148,7 +148,7 @@ describe("A preparation taking an input", () => {
         read.prepare(FIRST)
         expect(read.cards).toEqual([DOUBLING, FIRE, STEP])
         expect(told).toEqual(["invalid 0"])
-        expect(read.next(ACTION)).toHaveLength(1)
+        expect(read.next(ACTION)).not.toBeNull()
         expect(read.cursor).toBe(3)
     })
 
@@ -178,7 +178,7 @@ describe("CardChain.prepare", () => {
         on.startRound()
         on.commit(hero, chain(DOUBLING, STEP))
         on.endPreparation()
-        expect(hero.chain.cards).toEqual([THRUST])
+        expect(hero.chain.cards).toEqual([THRUST, THRUST])
         expect(on.planOf(hero)?.cards).toEqual([DOUBLING, STEP])
     })
 })

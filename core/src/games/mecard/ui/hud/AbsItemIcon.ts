@@ -135,6 +135,15 @@ export class AbsItemIcon extends Component {
         this.invalidate()
     }
 
+    /** The color it is outlined in whatever else outlines it, none when it is not. */
+    public get edge(): Color|null { return this.#edge }
+
+    public set edge(edge: Color|null){
+        if(edge === this.#edge) return
+        this.#edge = edge
+        this.invalidate()
+    }
+
     /** Is it spent, its picture dim? */
     public get spent(): boolean { return this.#spent }
 
@@ -168,7 +177,8 @@ export class AbsItemIcon extends Component {
         const visual = this.#visual
         const [r, g, b] = visual.coloration ?? [1, 1, 1]
         const shade = this.#spent ? SPENT_TINT : 1
-        const edge = this.hovered || this.#lit ? HOVER_EDGE : this.#activation !== null ? CHOSEN_TEXT : null
+        const edge = this.#edge
+            ?? (this.hovered || this.#lit ? HOVER_EDGE : this.#activation !== null ? CHOSEN_TEXT : null)
         const picture = this.sprites.thing(visual)
         const size = iconSize * scale
         painter.push()
@@ -180,6 +190,8 @@ export class AbsItemIcon extends Component {
                 for(const [dx, dy] of AROUND) painter.sprite(picture, dx, dy)
                 painter.setColorMode("modulate")
             }
+            // A coloration gives the picture its hue, as for clothes: its light and saturation stay.
+            if(visual.coloration) painter.setColorMode("hue")
             painter.setTint(new Color(r * shade, g * shade, b * shade))
             painter.sprite(picture, 0, 0)
             painter.pop()
@@ -238,5 +250,6 @@ export class AbsItemIcon extends Component {
     #iconSize: number
     #activation: string|null = null
     #lit = false
+    #edge: Color|null = null
     #spent = false
 }

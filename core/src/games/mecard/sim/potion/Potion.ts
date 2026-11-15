@@ -2,6 +2,7 @@ import type { Text } from "../../../../semantic"
 import type { Rgba } from "../base/Rgba"
 import type { Battle } from "../battle/Battle"
 import type { Unit } from "../battle/Unit"
+import type { Polarity } from "../status/Status"
 
 /**
  * A potion: what it does to a unit at a level, a number of rounds for most. A level below zero is the
@@ -16,6 +17,9 @@ export interface Potion {
 
     /** What it does at a level, for the player. */
     readonly description: Text
+
+    /** What it is to the unit it is poured on: what water washes off is negative. */
+    readonly polarity: Polarity
 
     /** Pour it on a unit at a level, below zero for it turned around. */
     apply(battle: Battle, target: Unit, level: number): void

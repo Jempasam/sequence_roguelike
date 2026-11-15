@@ -8,6 +8,7 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the slash of the catalog reaches, in meters. */
 const SLASH_RANGE = 1.3
@@ -38,11 +39,7 @@ export class SlashCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return {
-            kind: "sector", center: pose.position, direction: pose.direction,
-            radius: this.range * unit.stats.meleeRange.value * progress,
-            cosHalf: this.cosHalf,
-        }
+        return Areas.arc(pose.position, pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
     }
 }
 

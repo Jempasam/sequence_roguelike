@@ -1,14 +1,14 @@
 // Builds the desktop release for the current OS and architecture, in dist/<platform>-<arch>/:
 //   roguelike(.exe)  Node SEA: a copy of this node binary with the bundled game injected
 //   native/          the .node addons and the libraries they load (SDL2, ANGLE)
-//   assets/          a copy of the repo's assets/
+//   assets/          a copy of the repo's assets/ and generated_assets/, merged
 // With --no-sea, the bundle stays there as main.cjs instead of the executable, to run with
 // `node main.cjs`. Same bundle, same layout, so it tells a bundling problem from a SEA one.
 // Cross-building is not supported: SEA injects into the running node binary, and the addons are the
 // prebuilt ones npm installed for this machine.
 
 import { execFileSync } from "node:child_process"
-import { copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { inject } from "postject"
@@ -25,7 +25,10 @@ const SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2"
 
 // Writes main.cjs and native/ into OUT, see vite.config.ts.
 await build({ root: DESKTOP, logLevel: "warn" })
-cpSync(join(REPO, "assets"), join(OUT, "assets"), { recursive: true })
+// generated_assets/ is not committed: it holds what npm run art makes, and is shipped as if it was in assets/.
+for(const folder of ["assets", "generated_assets"]){
+    if(existsSync(join(REPO, folder))) cpSync(join(REPO, folder), join(OUT, "assets"), { recursive: true })
+}
 if(SEA) await seaInject()
 console.log(`Built ${relative(REPO, SEA ? EXE : MAIN)}`)
 

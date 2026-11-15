@@ -1,0 +1,21 @@
+{
+    "size": [288, 164],
+    "seed": 21,
+    "palette": ["#5a5a72", "#22222e", "#2a60b8", {"color": "#70d8ff", "light": 0.55}],
+    "shapes": [
+        {"polygon": [[26, 112], [40, 104], [58, 108], [66, 122], [56, 134], [36, 136], [24, 126]], "material": 0, "depth": [5, 8], "relief": "dome"},
+        {"polygon": [[26, 112], [40, 104], [58, 108], [66, 122], [56, 134], [36, 136], [24, 126]], "fill": {"pattern": "noise", "density": 0.06, "radius": 2, "materials": [null, 1]}},
+        {"ellipse": [40, 114, 8, 6], "material": 1, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[232, 30], [250, 26], [262, 36], [256, 50], [238, 52], [230, 42]], "material": 0, "depth": [5, 8], "relief": "dome"},
+        {"polygon": [[232, 30], [250, 26], [262, 36], [256, 50], [238, 52], [230, 42]], "fill": {"pattern": "noise", "density": 0.06, "radius": 2, "materials": [null, 1]}},
+        {"ellipse": [242, 34, 7, 5], "material": 1, "depth": [4, 6], "relief": "dome"},
+
+        {"box": [210, 104, 24, 14], "material": 0, "depth": [5, 7], "relief": "bevel"},
+        {"box": [196, 108, 14, 6], "material": 0, "depth": [5, 6]},
+        {"box": [234, 108, 14, 6], "material": 0, "depth": [5, 6]},
+        {"box": [152, 100, 44, 14], "fill": {"pattern": "tiles", "cell": [8, 6], "grout": 1, "materials": [2, 1]}, "depth": [5, 6]},
+        {"box": [248, 100, 40, 14], "fill": {"pattern": "tiles", "cell": [8, 6], "grout": 1, "materials": [2, 1]}, "depth": [5, 6]},
+        {"box": [219, 109, 4, 4], "material": 3, "depth": 6},
+        {"box": [220, 98, 3, 6], "material": 0, "depth": 6}
+    ]
+}

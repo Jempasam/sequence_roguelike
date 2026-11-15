@@ -2,6 +2,7 @@ import { joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 
 import type { Card } from "./Card"
+import { CARD } from "./CardType"
 
 /**
  * A card of a chain as it reads, with the card it takes in its slot: a tree whose root is a head of the
@@ -52,7 +53,7 @@ export class CardNode {
 
     /** Can a card be plugged into a slot of this node: is the slot empty, and of the type the card gives? */
     public accepts(slot: number, card: Card): boolean {
-        return this.inputs[slot] === null && this.card.input === card.output
+        return this.inputs[slot] === null && (this.card.input === CARD || this.card.input === card.output)
     }
 
     /** The tree on one line, an empty slot as `_`: `Sort(_)`. */

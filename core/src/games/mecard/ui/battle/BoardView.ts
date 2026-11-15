@@ -3,13 +3,13 @@ import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import type { BitmapFont } from "../../../../engine/text"
-import { touches } from "../../sim/battle/Area"
+import * as Areas from "../../sim/battle/area/Areas"
 import { Vector2 } from "../../sim/base/Vector2"
-import type { Indicator } from "../../sim/battle/Action"
+import type { Indicator } from "../../sim/battle/preview/Preview"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 
-import { colorOf } from "../look/colors"
+import { colorOf, NOTICE_EDGE } from "../look/colors"
 import type { BattleScene, SceneUnit } from "./BattleScene"
 import type { UnitSprites } from "../look/UnitSprites"
 
@@ -39,7 +39,10 @@ const ACTING = new Color(1, 1, 1)
 const HIGHLIGHTED = new Color(0.45, 0.75, 1)
 const HITBOX_FILL = new Color(1, 1, 1, 0.08)
 const HITBOX_EDGE = new Color(1, 1, 1, 0.4)
-const NOTICED = new Color(1, 0.95, 0.5)
+const NOTICED = NOTICE_EDGE
+
+/** The disc of a thing without a team in the tactical view: pillars and the ground. */
+const TACTICAL_MARK = new Color(1, 1, 1, 0.6)
 
 /** How opaque the disc of the team under a sprite is: the body it takes, seen through. */
 const SPRITE_DISC_ALPHA = 0.45
@@ -109,6 +112,9 @@ export class BoardView {
     /** What the action hovered would do, drawn over the arena, none when nothing is hovered. */
     public indicators: readonly Indicator[] = []
 
+    /** Is the arena drawn as a plan: no shade, no picture, each body as its disc alone? */
+    public tactical = false
+
     constructor(
         font: BitmapFont, white: Sprite,
 
@@ -145,7 +151,7 @@ export class BoardView {
      */
     public heartsAnchor(unit: Unit): readonly [number, number] {
         const [cx, cy] = this.#pixels(this.scene.of(unit)?.position ?? unit.position)
-        const sprite = this.sprites.of(unit.sprite)
+        const sprite = this.tactical ? null : this.sprites.of(unit.sprite)
         if(sprite){
             const scale = this.#spriteScale(unit.stats.size.value)
             return [cx, cy + (FEET_DROP - sprite.height) * scale - 1]
@@ -174,7 +180,7 @@ export class BoardView {
             const { unit } = shown
             const [cx, cy] = this.#pixels(shown.position)
             const onBody = Math.hypot(x - cx, y - cy) <= unit.radius * meter + 1
-            const onZone = unit.zone !== null && touches(unit.zone, at, 0)
+            const onZone = unit.zone !== null && Areas.checkPoint(unit.zone, at)
             if(!onBody && !onZone) continue
             // A body lying on the ground comes after one standing, of the same size.
             const rank = (onBody ? 0 : ZONE_RANK) + unit.radius + (unit.tangible ? 0 : GROUND_RANK)
@@ -283,7 +289,7 @@ export class BoardView {
     /** The darker spot under a thing of the arena, centered on it, as wide as 1.5 times its size in pixels. */
     #drawShade(painter: Painter, cx: number, cy: number, size: number, opacity = 1): void {
         const shade = this.sprites.shade
-        if(!shade) return
+        if(!shade || this.tactical) return
         const scale = size * SHADE_SIZE / shade.width
         painter.setBlend("alpha")
         painter.setTint(this.#faded.set(1, 1, 1, opacity))
@@ -305,6 +311,13 @@ export class BoardView {
         for(const { unit, position } of this.scene.living){
             if(!unit.zone) continue
             const [x, y] = this.#pixels(position)
+            if(this.tactical){
+                painter.setBlend("alpha")
+                painter.setTint(TACTICAL_MARK)
+                painter.circle(x, y, Math.max(3, unit.radius * this.#meter))
+                painter.setBlend("cutout")
+                continue
+            }
             const sprite = this.sprites.of(unit.sprite)
             if(!sprite){
                 const [r, g, b] = unit.sprite?.color ?? [1, 1, 1]
@@ -344,6 +357,10 @@ export class BoardView {
             painter.circle(cx, cy, radius + 1.5)
         }
         const { r, g, b, a } = colorOf(unit)
+        if(this.tactical){
+            this.#drawTactical(painter, shown, cx, cy, radius)
+            return
+        }
         const sprite = this.sprites.of(unit.sprite)
         if(sprite){
             this.#drawSprite(painter, shown, sprite, cx, cy, radius)
@@ -364,28 +381,47 @@ export class BoardView {
     }
 
     /**
+     * A unit as a plan: the disc of its body in the color of its team and a tick where it faces, a white disc
+     * where it has no team, as the pillars, and no picture.
+     */
+    #drawTactical(painter: Painter, shown: SceneUnit, cx: number, cy: number, radius: number): void {
+        painter.setBlend("alpha")
+        if(shown.unit.targetable){
+            this.#drawTeamDisc(painter, shown, cx, cy, radius)
+        } else {
+            painter.setTint(this.#faded.set(1, 1, 1, TACTICAL_MARK.a * shown.opacity))
+            painter.circle(cx, cy, radius)
+        }
+        painter.setBlend("cutout")
+    }
+
+    /** The disc of a body in the color of its team, seen through, with a tick where it faces. */
+    #drawTeamDisc(painter: Painter, shown: SceneUnit, cx: number, cy: number, radius: number): void {
+        const { r, g, b, a } = colorOf(shown.unit)
+        const ahead = shown.direction
+        painter.setTint(this.#faded.set(r, g, b, a * SPRITE_DISC_ALPHA * shown.opacity))
+        painter.circle(cx, cy, radius)
+        const side = ahead.right
+        const tip = radius + 2
+        painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
+        painter.triangle(
+            cx + ahead.x * tip, cy + ahead.y * tip,
+            cx + ahead.x * radius + side.x * 1.5, cy + ahead.y * radius + side.y * 1.5,
+            cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
+        )
+    }
+
+    /**
      * A unit as its sprite: the disc of its body in the color of its team, seen through, a tick where it
      * faces, then the sprite standing on it, turned the way it faces, fading as it blinks.
      */
     #drawSprite(
         painter: Painter, shown: SceneUnit, sprite: Sprite, cx: number, cy: number, radius: number,
     ): void {
-        const { r, g, b, a } = colorOf(shown.unit)
         const ahead = shown.direction
         painter.setBlend("alpha")
         // Scenery has no team disc and faces nowhere: its picture alone stands there.
-        if(shown.unit.targetable){
-            painter.setTint(this.#faded.set(r, g, b, a * SPRITE_DISC_ALPHA * shown.opacity))
-            painter.circle(cx, cy, radius)
-            const side = ahead.right
-            const tip = radius + 2
-            painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
-            painter.triangle(
-                cx + ahead.x * tip, cy + ahead.y * tip,
-                cx + ahead.x * radius + side.x * 1.5, cy + ahead.y * radius + side.y * 1.5,
-                cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
-            )
-        }
+        if(shown.unit.targetable) this.#drawTeamDisc(painter, shown, cx, cy, radius)
         painter.setTint(this.#coloredBy(shown.unit.sprite, shown.opacity))
         const scale = this.#spriteScale(shown.unit.stats.size.value)
         const width = sprite.width * scale
@@ -404,7 +440,7 @@ export class BoardView {
         return size * this.#meter / SPRITE_METER
     }
 
-    /** The tint to draw the picture of a visual with: its coloration multiplies it, none leaves it as it is. */
+    /** The tint to draw the picture of a visual with: its coloration multiplies it here, none leaves it as it is. */
     #coloredBy(visual: Visual|null, opacity: number): Color {
         const [r, g, b] = visual?.coloration ?? [1, 1, 1]
         return this.#faded.set(r, g, b, opacity)

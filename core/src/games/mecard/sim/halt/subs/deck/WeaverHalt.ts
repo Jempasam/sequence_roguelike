@@ -8,7 +8,6 @@ import type { WeaveMode } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { cardShown } from "../shown"
 import { CARTE, DECK, MERGE } from "../../../base/keywords"
@@ -38,7 +37,7 @@ export class WeaverHalt extends DeckHalt {
         super(WEAVER_HALT, run,
             ["Je lie deux ", CARTE.as("cartes"), " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],
             // Waiting for its own art: the scene of the forge.
-            sceneLook(41, 18, 10, "mecard/travel/forge"),
+            sceneLook(36, 20, 26, "weaver"),
             {
                 hat: "skullcap",
                 clothes: rgba(0.3, 0.85, 0.9),
@@ -88,6 +87,6 @@ export const WEAVER_HALT: HaltType = {
     id: "weaver",
     name: "Tisserand",
     description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],    icon: visual("travel/forge/logo", { letter: "TI" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/house-door"),
     create: run => new WeaverHalt(run),
 }

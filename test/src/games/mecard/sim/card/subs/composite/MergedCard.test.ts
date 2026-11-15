@@ -1,18 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { ELEMENT, ELEMENT_ON_BLADE, FIRE, mergeable, MergedCard, REPEAT_2, resolve, SPELL, STEP, TURN_STEPS, TURNS, Vector2 } from "@game/core/mecard"
-import type { Action, Battle, Unit } from "@game/core/mecard"
+import {
+    ActionCard, ELEMENT, ELEMENT_ON_BLADE, FIRE, mergeable, MergedCard, Rarity, REPEAT_2, resolve, SPELL, STEP, TURN_STEPS, TURNS,
+    Vector2,
+} from "@game/core/mecard"
+import type { Action } from "@game/core/mecard"
 
 import { battle, unit } from "../../../fixtures"
 
-/** How many ticks actions take, played one after the other for a unit. */
-function ticksOf(actions: readonly Action[], on: Battle, player: Unit): number {
-    let ticks = 0
-    for(const action of actions){
-        const run = action.use({ battle: on, unit: player })
-        while(!run.next().done) ticks++
-    }
-    return ticks
-}
+/** A turn to the right that is a card of its own, since a card to choose a direction of cannot be merged. */
+const QUARTER_TURN = new ActionCard("Quart de tour", "Se tourne à droite.", Rarity.COMMON, TURNS[TURN_STEPS / 4].action)
 
 /** The actions a card gives at the end of the preparation. */
 function stepsOf(card: MergedCard): readonly Action[] {
@@ -23,8 +19,8 @@ function stepsOf(card: MergedCard): readonly Action[] {
 
 describe("MergedCard.constructor", () => {
     test("two actions → named by both, giving one step", () => {
-        const merged = new MergedCard([STEP, TURNS[4]])
-        expect(merged.name).toBe(`${STEP.name} & ${TURNS[4].name}`)
+        const merged = new MergedCard([STEP, QUARTER_TURN])
+        expect(merged.name).toBe(`${STEP.name} & ${QUARTER_TURN.name}`)
         expect(stepsOf(merged)).toHaveLength(1)
         expect(merged.input).toBeNull()
     })
@@ -46,21 +42,28 @@ describe("MergedCard.constructor", () => {
 
     test("a merge → handed what it takes, each card taking something playing it", () => {
         const merged = new MergedCard([ELEMENT_ON_BLADE, SPELL, STEP])
-        expect(merged.get(FIRE.get())).toHaveLength(1)
+        expect(merged.get(FIRE.get())).toBeDefined()
     })
 })
 
 describe("MergedCard, played", () => {
-    test("two rows at once → as long as the longest of them, both done", () => {
-        const alone = battle()
-        const walker = unit(alone, 3, 5)
-        const stepped = resolve([STEP], { pick: options => options[0] })
-        const stepTicks = ticksOf(stepped.chain.actionsLeft(), alone, walker)
+    test("two cards → one after the other, in one step", () => {
         const on = battle()
         const both = unit(on, 3, 5)
-        const ticks = ticksOf(stepsOf(new MergedCard([STEP, TURNS[TURN_STEPS / 4]])), on, both)
-        expect(ticks).toBe(stepTicks)
-        expect(both.position).not.toEqual(new Vector2(3, 5))
+        const steps = stepsOf(new MergedCard([STEP, QUARTER_TURN]))
+        expect(steps).toHaveLength(1)
+        steps[0].use({ battle: on, unit: both })
+        expect(both.position.x).toBeCloseTo(3)
+        expect(both.position.y).toBeCloseTo(3)
         expect(both.direction).toEqual(Vector2.RIGHT)
+    })
+
+    test("two cards → previewed one after the other, the second from where the first leaves the unit", () => {
+        const on = battle()
+        const both = unit(on, 3, 5)
+        const [step] = stepsOf(new MergedCard([STEP, QUARTER_TURN]))
+        const shown = step.preview({ battle: on, unit: both, pose: both })
+        expect(shown.pose.direction).toEqual(Vector2.RIGHT)
+        expect(shown.pose.position.y).toBeCloseTo(3)
     })
 })

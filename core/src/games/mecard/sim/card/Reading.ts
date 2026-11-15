@@ -1,6 +1,6 @@
 import type { Card } from "./Card"
 import { CardNode } from "./CardNode"
-import { ACTION, PREPARATION } from "./CardType"
+import { ACTION, CARD, PREPARATION } from "./CardType"
 
 /** What cards in a row give, read from left to right: the trees they make, and which cards play. */
 export interface Reading {
@@ -19,9 +19,19 @@ export function playable(card: Card): boolean {
     return card.output === ACTION || card.output === PREPARATION
 }
 
-/** Does a card take what the card after it gives? */
+/**
+ * Does a card take what the card after it gives? A card taking {@link CARD} takes any card, as it is.
+ */
 export function takes(card: Card, next: Card|undefined): boolean {
-    return card.input !== null && next !== undefined && next.output === card.input
+    if(card.input === null || next === undefined) return false
+    return card.input === CARD || next.output === card.input
+}
+
+/** Where the tree of the card at a place ends: the last card it spans, whether its slots are filled or not. */
+export function treeEnd(cards: readonly Card[], first: number): number {
+    let last = first
+    while(takes(cards[last], cards[last + 1])) last++
+    return last
 }
 
 /**
@@ -33,7 +43,8 @@ export function supplied(cards: readonly Card[]): boolean[] {
     const ok: boolean[] = new Array<boolean>(cards.length)
     for(let index = cards.length - 1; index >= 0; index--){
         const card = cards[index]
-        ok[index] = card.input === null || (takes(card, cards[index + 1]) && ok[index + 1])
+        // A card taking a card as it is does not wait for the tree on its right to be given its own.
+        ok[index] = card.input === null || (takes(card, cards[index + 1]) && (card.input === CARD || ok[index + 1]))
     }
     return ok
 }

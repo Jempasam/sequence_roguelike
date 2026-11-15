@@ -4,7 +4,7 @@
  * {@link startGame} with it.
  */
 
-export { AssetError, Assets, MemoryAssets } from "./engine/assets"
+export { ASSET_PATHS, AssetError, Assets, MemoryAssets } from "./engine/assets"
 export type { AssetErrorReason, AssetPath, ImagePath, LayeredImagePath } from "./engine/assets"
 export {
     AllPass, BandPass, BiquadFilter, Compressor, Delay, Distortion, Gain, HighPass, HighShelf, LowPass, LowShelf,
@@ -40,7 +40,7 @@ export type {
     DeviceKind, Direction, InputEvent, InputEventType, InputFrame, PadControl, Side,
 } from "./engine/input"
 export {
-    command, Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView, group, MAX_CONSOLE_LINES, named, optional, tokensOf, whole,
+    command, Console, CONSOLE_KEY, CONSOLE_SECOND_KEY, ConsoleView, expandLine, group, lexLine, MAX_CONSOLE_LINES, named, optional, tokensOf, whole,
 } from "./engine/console"
 export type {
     Arg, Command, CommandContext, ConsoleLine, ConsoleLineKind, GroupParsed, LineCheck, ValuesOf,
@@ -62,16 +62,16 @@ export {
     AnimationChain, Box, Bubble, Button, Choice, Component, Container, ContentContainer, ContextMenu,
     CURSOR_BLINK, Dial, DirtyRegion, EMPTY_HINT, FitBox, FrameClock, Image, instant, Label, Layer,
     MAX_DIRTY_RECTS, MIN_VIRTUAL_HEIGHT, OverflowContainer,
-    NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
-    Slider, Stack, Tabs, TextInput, TileRun, Tilt, Tooltip, TOOLTIP_DELAY, Transition, UI_BINDINGS, uiActions,
+    Fade, NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
+    RangeSlider, Slider, Stack, Tabs, warpedSpans, WARP_FLOOR, TextInput, TileRun, Tilt, Tooltip, TOOLTIP_DELAY, Transition, UI_BINDINGS, uiActions,
     UiRoot, WHEEL_STEP, WrapBox,
 } from "./engine/ui"
 export type {
     Align, Animation, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
     ChoiceOptions, DialLook,
     ChoiceStep, FitMode, ImageOptions, LabelOptions, MenuEntry, NavigationAxis, NineSliceMargins,
-    NineSliceOptions, NumberInputOptions, OverflowContainerOptions, PanelOptions, ParagraphOptions, ParallaxLayer, PopupAnchor, Pose,
-    ScrollOptions, Size, SizeHint, SliderOptions, StackSlot, StateLooks, TabPage, TabsOptions, TextAlign,
+    NineSliceOptions, NumberInputOptions, OverflowContainerOptions, PanelOptions, ParagraphOptions, ParallaxAxes, ParallaxLayer, ParallaxOptions, ParallaxPlace, PopupAnchor, Pose,
+    ScrollOptions, Size, SizeHint, RangeSliderOptions, SliderOptions, StackSlot, StateLooks, TabPage, TabsOptions, TextAlign,
     TextInputOptions, Theme, Tiling, TiltLimits,
     TransitionFrame, TransitionPicture, TransitionPlay, TransitionScript, UiAction, UiEvent, UiEventType,
     UiRootOptions,

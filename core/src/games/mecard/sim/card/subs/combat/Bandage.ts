@@ -4,8 +4,8 @@ import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { SHORT_TIME, wait } from "../tools/playing"
-import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the bandage of the catalog heals, before the healing of the unit. */
 const BANDAGE_HEAL = 2
@@ -27,11 +27,11 @@ export class BandageCard extends ActionCard {
 
     static #healing(halves: number): Action {
         return {
-            use: function* ({ unit }){
+            use: ({ battle, unit }) => {
                 unit.hearts.heal(halves + unit.stats.heal.value)
-                yield* wait(SHORT_TIME)
+                wait(battle, SHORT_TIME)
             },
-            preview: ({ unit, pose }) => still(pose, label(pose.position, `+${halves + unit.stats.heal.value}`, HEAL_COLOR)),
+            preview: ({ unit, pose }) => Previews.still(pose, Previews.label(pose.position, `+${halves + unit.stats.heal.value}`, HEAL_COLOR)),
         }
     }
 }

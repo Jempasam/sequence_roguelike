@@ -1,0 +1,17 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": ["#c03a50", "#3a62a8", "#f0c040", "#5a3a24"],
+    "shapes": [
+        {"box": [26, 34, 48, 4], "material": 3, "depth": [4, 5], "relief": "round-y"},
+        {"box": [30, 38, 40, 52], "fill": {"pattern": "stripes", "width": 4, "axis": "x", "materials": [0, 2, 1, 2]}, "depth": 3},
+        {"box": [38, 46, 24, 36], "fill": {"pattern": "tiles", "cell": [6, 6], "grout": 0, "odd": 0.5, "materials": [1, 2, 0]}, "depth": [3, 4], "relief": "bevel"},
+        {"polygon": [[30, 90], [34, 98], [38, 90], [42, 98], [46, 90], [50, 98], [54, 90], [58, 98], [62, 90], [66, 98], [70, 90]], "material": 2, "depth": 3},
+
+        {"box": [214, 34, 52, 4], "material": 3, "depth": [4, 5], "relief": "round-y"},
+        {"box": [218, 38, 44, 46], "fill": {"pattern": "stripes", "width": 3, "axis": "y", "materials": [1, 0, 2, 0]}, "depth": 3},
+        {"polygon": [[240, 44], [256, 61], [240, 78], [224, 61]], "material": 2, "depth": [3, 4], "relief": "bevel"},
+        {"polygon": [[240, 51], [249, 61], [240, 71], [231, 61]], "material": 0, "depth": 4},
+        {"polygon": [[218, 84], [224, 92], [230, 84], [236, 92], [242, 84], [248, 92], [254, 84], [260, 92], [262, 84]], "material": 2, "depth": 3}
+    ]
+}

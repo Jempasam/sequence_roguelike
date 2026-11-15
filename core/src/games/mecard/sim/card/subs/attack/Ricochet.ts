@@ -8,11 +8,12 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still, strike } from "../tools/previews"
 import { reflected } from "../tools/reflection"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the ricochet of the catalog flies, bounce included, in meters, before the reach of the unit. */
 const RICOCHET_RANGE = 6
@@ -106,29 +107,29 @@ export class RicochetCard extends ActionCard {
             return { range: range * unit.stats.throwRange.value, bounces, renewing }
         }
         const segment = (line: Line, share = 1): Area => {
-            return { kind: "segment", from: line.from, to: line.from.plus(line.to.minus(line.from).times(share)), width: RICOCHET_WIDTH }
+            return Areas.line(line.from, line.from.plus(line.to.minus(line.from).times(share)), RICOCHET_WIDTH)
         }
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const path = lines(battle, unit, unit, bouncing(unit))
-                yield* sweep(battle, FLIGHT_TIME, flown => {
+                sweep(battle, FLIGHT_TIME, flown => {
                     // Each line flies over an equal share of the flight.
                     const share = flown * path.length
                     return path.map((line, index) => {
-                        return polygon(segment(line, Math.min(1, Math.max(0, share - index))), PHYSICAL_COLOR)
+                        return Previews.polygon(segment(line, Math.min(1, Math.max(0, share - index))), PHYSICAL_COLOR)
                     })
                 })
                 for(const line of path){
                     const shot = amount + unit.stats.precision.value
                     if(battle.strike(unit, segment(line), shot, DamageType.PHYSICAL).length > 0) break
                 }
-                yield* hold(battle, RECOVERY_TIME, path.map(line => polygon(segment(line), PHYSICAL_COLOR)))
+                hold(battle, RECOVERY_TIME, path.map(line => Previews.polygon(segment(line), PHYSICAL_COLOR)))
             },
             preview: ({ battle, unit, pose }) => {
                 const path = lines(battle, unit, pose, bouncing(unit)).map(line => segment(line))
                 // As it plays: the first line to reach someone lands, the ones after it do not.
-                const touched = path.map(area => battle.unitsIn(area, unit)).find(hit => hit.length > 0) ?? []
-                return still(pose, ...strike(path, touched))
+                const touched = path.map(area => battle.fetch(area, unit)).find(hit => hit.length > 0) ?? []
+                return Previews.still(pose, ...Previews.strike(path, touched))
             },
         }
     }

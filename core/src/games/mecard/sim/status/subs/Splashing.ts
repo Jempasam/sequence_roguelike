@@ -9,6 +9,7 @@ import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
+import * as Areas from "../../battle/area/Areas"
 
 /** How far a barrel splashes its potion when it breaks, in meters. */
 export const SPLASH_RADIUS = 1.5
@@ -43,12 +44,12 @@ export class Splashing extends BaseStatus {
 
     public init({ battle, unit }: UnitContext): void {
         this.#observer = unit.onDeath.add(() => {
-            const area = { kind: "circle", center: unit.position, radius: SPLASH_RADIUS } as const
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            const area = Areas.circle(unit.position, SPLASH_RADIUS)
+            battle.signals.notifyStatus.notify({ unit, target: this })
             battle.post(fading(SPLASH_TIME, [polygonOf(area, { ...this.dose.potion.color, a: 0.5 })]))
             battle.events.push({ type: "status", unit, text: ["éclabousse ", this.dose.potion] })
             const level = this.dose.sign * this.level
-            for(const target of battle.unitsIn(area)) pour(battle, this.dose, target, level)
+            for(const target of battle.fetch(area)) pour(battle, this.dose, target, level)
         })
     }
 

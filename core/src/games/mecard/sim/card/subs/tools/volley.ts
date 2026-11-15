@@ -8,11 +8,12 @@ import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { SHOT_DAMAGE, SHOT_RANGE } from "../attack/Shot"
 import { BOLT_WIDTH, fly } from "./bolt"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
 
 /** Where a shot of the catalog goes from a pose: the line it covers, on to the first body it meets. */
 export function shotLine(battle: Battle, unit: Unit, pose: Pose): { area: Area, end: Vector2, target: Unit|null } {
     const { end, unit: target } = battle.ray(unit, SHOT_RANGE * unit.stats.throwRange.value, pose)
-    return { area: { kind: "segment", from: pose.position, to: end, width: BOLT_WIDTH }, end, target }
+    return { area: Areas.line(pose.position, end, BOLT_WIDTH), end, target }
 }
 
 /** How many hearts a shot takes: the hearts of a shot of the catalog, the precision of the unit added. */
@@ -25,8 +26,8 @@ export function shotHearts(unit: Unit): number {
  *
  * @returns The units it hit.
  */
-export function* fireShot(battle: Battle, unit: Unit): Generator<void, Unit[], void> {
+export function fireShot(battle: Battle, unit: Unit): Unit[] {
     const { area, end } = shotLine(battle, unit, unit)
-    yield* fly(battle, unit.position, end, PHYSICAL_COLOR)
+    fly(battle, unit.position, end, PHYSICAL_COLOR)
     return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL)
 }

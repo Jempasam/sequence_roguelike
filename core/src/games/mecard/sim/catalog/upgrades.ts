@@ -24,7 +24,7 @@ import { REPEAT_2 } from "../card/subs/modifier/RepeatCard"
 import { STEP } from "../card/subs/movement/Step"
 import { FIRE, LIGHTNING, PLANT, STONE, WATER, WIND } from "../card/subs/spell/ElementCard"
 import { REACTION } from "../card/subs/spell/ElementRewrites"
-import { LOOT_CARDS } from "./index"
+import { LOOT_CARDS } from "./cards"
 
 /** How an upgrade and its card become one: a fusion, a merge, or one of the two, by chance. */
 export type UpgradeFusion = "fusion"|"merge"|"random"

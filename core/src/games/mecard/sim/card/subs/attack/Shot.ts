@@ -9,6 +9,7 @@ import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
 import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many hearts a shot takes, before the bonus of the unit: less than a blow, for its reach. */
 export const SHOT_DAMAGE = 1
@@ -60,7 +61,7 @@ export class ShotCard extends BlowCard {
         // While it flies, only its trail shows; landed, it covers its whole line, to hit what it met.
         const trail = Math.max(0, progress - SHOT_TRAIL)
         const from = progress < 1 ? along(pose.position, end, trail) : pose.position
-        return { kind: "segment", from, to: along(pose.position, end, progress), width: this.width }
+        return Areas.line(from, along(pose.position, end, progress), this.width)
     }
 
 

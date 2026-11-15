@@ -1,0 +1,27 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": [
+        "#6a4428",
+        "#2e1e12",
+        "#8a6a40",
+        {"color": "#ffd890", "light": 0.9}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "planks", "width": 7, "axis": "y", "joint": 1, "seams": 0.3, "odd": 0.15, "materials": [0, 1, 2]}, "depth": 2},
+        {"box": [0, 26, 288, 6], "material": 1, "depth": [3, 5], "relief": "round-y"},
+        {"box": [0, 106, 288, 6], "material": 0, "depth": [3, 4], "relief": "round-y"},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "planks", "width": 6, "axis": "x", "joint": 1, "seams": 0.8, "materials": [2, 1]}, "depth": 2},
+        {"line": [60, 32, 60, 106], "width": 5, "material": 1, "depth": [3, 4]},
+        {"line": [228, 32, 228, 106], "width": 5, "material": 1, "depth": [3, 4]},
+
+        {"box": [96, 40, 24, 30], "material": 1, "depth": 1},
+        {"box": [99, 43, 18, 24], "material": 3, "depth": 0},
+        {"line": [108, 43, 108, 67], "material": 1, "depth": 2},
+        {"line": [99, 55, 117, 55], "material": 1, "depth": 2},
+        {"box": [168, 40, 24, 30], "material": 1, "depth": 1},
+        {"box": [171, 43, 18, 24], "material": 3, "depth": 0},
+        {"line": [180, 43, 180, 67], "material": 1, "depth": 2},
+        {"line": [171, 55, 189, 55], "material": 1, "depth": 2}
+    ]
+}

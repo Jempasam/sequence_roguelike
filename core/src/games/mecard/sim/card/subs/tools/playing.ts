@@ -1,11 +1,12 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { TICKS_PER_SECOND } from "../../../battle/rules"
-import { still } from "../../../battle/effects"
-import type { ActionRun, Indicator, UnitContext } from "../../../battle/Action"
+import { STRIDES_PER_SECOND } from "../../../battle/rules"
+import { sampled, still } from "../../../battle/effects"
+import type { UnitContext } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 
-/** What an action shows on a tick. */
+/** What an action shows at a moment. */
 type Shown = readonly Indicator[]
 
 /** How fast a unit walks, in meters per second. */
@@ -23,73 +24,63 @@ export const SHORT_TIME = 0.3
 /** How long a word about an action stays, in seconds: blocked, missed, nobody there. */
 export const WORD_TIME = 0.35
 
-/** Seconds as ticks of the simulation, at least one. */
-export function ticks(seconds: number): number {
-    return Math.max(1, Math.round(seconds * TICKS_PER_SECOND))
+/** The strides a move of a length of time is made of, at least one. */
+export function strides(seconds: number): number {
+    return Math.max(1, Math.round(seconds * STRIDES_PER_SECOND))
 }
 
-/** Let a number of seconds go by: a pause in an action. */
-export function* wait(seconds: number): ActionRun {
-    for(let tick = ticks(seconds); tick > 0; tick--) yield
+/** Let a number of seconds go by on the screen, nothing shown: a pause in an action. */
+export function wait(battle: Battle, seconds: number): void {
+    battle.post(still(seconds, []))
 }
 
-/** Show something for a number of seconds while they go by, nothing by default: a pause in an action. */
-export function* hold(battle: Battle, seconds: number, shown: readonly Indicator[] = []): ActionRun {
-    if(shown.length > 0) battle.post(still(ticks(seconds) / TICKS_PER_SECOND, shown))
-    yield* wait(seconds)
+/** Show something for a number of seconds, nothing by default: a pause in an action. */
+export function hold(battle: Battle, seconds: number, shown: readonly Indicator[] = []): void {
+    battle.post(still(seconds, shown))
 }
 
 /**
- * Show something changing over a number of seconds while they go by, tick after tick: a slash sweeping, a
- * shot flying. What each tick shows is computed on that tick, so it follows the unit moving meanwhile.
+ * Show something changing over a number of seconds: a slash sweeping, a shot flying. What it shows at each
+ * moment is computed now, where the battle stands.
  *
- * @param at - What it shows once a share of the time went by, from more than 0 to less than 1.
+ * @param at - What it shows once a share of the time went by, from 0 to 1.
  */
-export function* sweep(battle: Battle, seconds: number, at: (share: number) => Shown): ActionRun {
-    const count = ticks(seconds)
-    for(let tick = 1; tick < count; tick++){
-        battle.post(still(1 / TICKS_PER_SECOND, at(tick / count)))
-        yield
-    }
+export function sweep(battle: Battle, seconds: number, at: (share: number) => Shown): void {
+    battle.post(sampled(seconds, at))
 }
 
 /**
- * Show something thrown flying over a number of seconds, tick after tick, until it lands, its last tick
- * showing it there: a bomb, a potion.
+ * Show something thrown flying over a number of seconds, until it lands, its last moment showing it there: a
+ * bomb, a potion.
  *
- * @param at - What it shows once a share of the flight went by, from more than 0 to 1.
+ * @param at - What it shows once a share of the flight went by, from 0 to 1.
  */
-export function* flight(battle: Battle, seconds: number, at: (share: number) => Shown): ActionRun {
-    const count = ticks(seconds)
-    for(let tick = 1; tick <= count; tick++){
-        battle.post(still(1 / TICKS_PER_SECOND, at(tick / count)))
-        yield
-    }
+export function flight(battle: Battle, seconds: number, at: (share: number) => Shown): void {
+    battle.post(sampled(seconds, at))
 }
 
 /**
- * Move a unit along a direction a little at each tick, at a speed, until it has gone the whole distance or
- * something stops it. The strides are told as one move.
+ * Move a unit along a direction a little at a time, at a speed, until it has gone the whole distance or
+ * something stops it. The strides are told as one move, lasting as long as they take at that speed.
  *
  * @param speed - How fast it goes, in meters per second, a walk by default.
  * @param forced - Is it moved by another, whatever its mobility?
  * @param through - The bodies it goes through, none by default.
  * @returns How far it went, and the unit it ran into, none when none.
  */
-export function* travel(
+export function travel(
     { battle, unit }: UnitContext, direction: Vector2, distance: number, speed = WALK_SPEED, forced = false,
     through: readonly Unit[] = [],
-): Generator<void, Gone, void> {
-    const count = ticks(distance / speed)
+): Gone {
+    const count = strides(distance / speed)
     const stride = distance / count
     let gone = 0
-    battle.startGlide(unit)
+    battle.startGlide(unit, speed)
     try {
-        for(let tick = 0; tick < count && unit.alive; tick++){
+        for(let done = 0; done < count && unit.alive; done++){
             const moved = battle.move(unit, direction, stride, forced, through)
             gone += moved.distance
             if(moved.distance < stride - TRAVEL_SLACK) return { distance: gone, struck: moved.struck }
-            yield
         }
         return { distance: gone, struck: null }
     } finally {
@@ -103,16 +94,7 @@ export interface Gone {
     readonly struck: Unit|null
 }
 
-/** Turn a unit toward a direction over a few ticks, through its right when it faces straight away. */
-export function* turn({ battle, unit }: UnitContext, direction: Vector2): ActionRun {
-    const from = unit.direction
-    const count = ticks(TURN_TIME)
-    for(let tick = 1; tick < count; tick++){
-        const blend = from.plus(direction.minus(from).times(tick / count))
-        // Facing straight away, the blend goes through nothing halfway: the unit turns through its right.
-        unit.direction = blend.normalized ?? from.right
-        yield
-    }
-    battle.turn(unit, direction, count / TICKS_PER_SECOND, from)
-    yield
+/** Turn a unit toward a direction, shown over a few moments. */
+export function turn({ battle, unit }: UnitContext, direction: Vector2): void {
+    battle.turn(unit, direction, TURN_TIME, unit.direction)
 }

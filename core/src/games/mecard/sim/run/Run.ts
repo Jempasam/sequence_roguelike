@@ -3,18 +3,18 @@ import type { Text } from "../../../../semantic"
 import { Observable } from "../base/Observable"
 import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
-import { Vector2 } from "../base/Vector2"
 import type { ErrorSink } from "../base/Observable"
 import type { Rgba } from "../base/Rgba"
-import { Arena } from "../battle/Arena"
+import { DeckAi } from "../ai/Bot"
+import type { UnitController } from "../ai/UnitController"
 import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
-import type { Unit } from "../battle/Unit"
 import type { Card } from "../card/Card"
-import { BATTLE, BOSS, ELITE } from "../catalog/fights"
+import type { Fight } from "../fight/Fight"
+import { BATTLE } from "../fight/fights"
+import { StandardFight } from "../fight/StandardFight"
 import { FIRST_FLOOR } from "../catalog/floors"
 import { freeHalts } from "../catalog/halts"
-import { LOOT_ITEMS } from "../catalog/index"
 import { TAVERN_HALT } from "../halt/subs/gift/TavernHalt"
 import { STARTING_KITS } from "../catalog/kits"
 import type { Kit } from "../catalog/kits"
@@ -40,29 +40,13 @@ import { Travel } from "../travel/Travel"
 import { Carried } from "../usable/Usable"
 import type { Usable } from "../usable/Usable"
 
-import { ARENA_SIZE, monsterStart, partyStarts, pillarsFor } from "./formation"
-import { allyOf, firstDeck, HERO_COLOR, heroOf, merged, recruitOf, redHearts } from "./Hero"
+import { allyOf, HERO_COLOR, heroOf, merged, recruitOf } from "./Hero"
 import type { Hero } from "./Hero"
-import type { FightType } from "./PlaceType"
-import { inventedFusion, lootCard, lootCards } from "./offers"
-import { CARTE } from "../base/keywords"
-
-/** Something to take after a won battle. */
-export type Reward =
-    | { readonly kind: "card", readonly card: Card }
-    | { readonly kind: "item", readonly item: Item }
-    | { readonly kind: "heart", readonly loot: HeartLoot }
 
 /** Hearts found as loot: a kind, and how many of it, which balances the kind. */
 export interface HeartLoot {
     readonly heart: HeartKind
     readonly count: number
-}
-
-/** What a run waits for from the players. */
-export interface RunAwaited {
-    /** The rewards to choose from, none out of the rewards. */
-    readonly rewards: readonly Reward[]
 }
 
 /** Something a character of the party was given. */
@@ -71,37 +55,19 @@ export interface Gain<T> {
     readonly gained: T
 }
 
-/**
- * Where a run stands: on its journey, in a battle, the rewards of a won one to take, or over, the party
- * fallen.
- */
-export type RunPhase = "travel"|"battle"|"rewards"|"over"
+/** Where a run stands: on its journey, in a battle, or over, the party fallen. */
+export type RunPhase = "travel"|"battle"|"over"
 
 /** What hearts found as loot are, for the player: their kind, how many, and what they do. */
 export function heartLootText({ heart, count }: HeartLoot): Text {
     return concat("Cœur ", heart, " ×", String(count), " : ", heart.description)
 }
 
-/** What a reward is, for the player: its kind, its name, and what it does. */
-export function rewardText(reward: Reward): Text {
-    switch(reward.kind){
-        case "card": return concat(CARTE.as("Carte"), " ", reward.card, " : ", reward.card.description)
-        case "item": return concat("Objet ", reward.item, " : ", reward.item.description)
-        case "heart": return heartLootText(reward.loot)
-    }
-}
-
 /** The color the name of the team of the monsters is written in. */
 const MONSTERS_COLOR: Rgba = rgba(0.95, 0.35, 0.3)
 
-/** How many rewards are offered after a won battle. */
-const REWARD_CHOICES = 3
-
 /** How much gold a run starts with. */
 const STARTING_GOLD = 30
-
-/** How much more gold than its sort gives a won fight gives at random, at most. */
-const GOLD_SPREAD = 10
 
 /** The hearts won at the end of a fight: those that come back, so they last the whole run. */
 export const KEPT_LOOT_HEARTS: readonly HeartLoot[] = [
@@ -135,13 +101,14 @@ export class Run {
     public readonly phaseChanged: Observable<RunPhase>
 
     /** A battle starts, its first round left for whoever shows it to start. */
+    /**
+     * What plays the bots of every battle of the run, the AI of the game by default: each battle fought is given
+     * it as its {@link Battle.bot}. Change it to change how the monsters play, from the next battle on.
+     * Not saved: a run loaded plays its bots with the AI of the game.
+     */
+    public bot: UnitController = new DeckAi()
+
     public readonly battleStarted: Observable<Battle>
-
-    /** A battle was won: these are its rewards. */
-    public readonly rewardsOffered: Observable<readonly Reward[]>
-
-    /** A character took a reward. */
-    public readonly rewardClaimed: Observable<Gain<Reward>>
 
     /** The party fell: the run is over. */
     public readonly defeated: Observable<Run>
@@ -199,8 +166,6 @@ export class Run {
     ){
         this.phaseChanged = new Observable(report)
         this.battleStarted = new Observable(report)
-        this.rewardsOffered = new Observable(report)
-        this.rewardClaimed = new Observable(report)
         this.defeated = new Observable(report)
         this.goldChanged = new Observable(report)
         this.heroJoined = new Observable(report)
@@ -225,20 +190,12 @@ export class Run {
     /** The battle being fought, none out of one. */
     public get battle(): Battle|null { return this.#battle }
 
-    /** What the party may take of the battle it won, none out of the rewards. */
-    public get rewards(): readonly Reward[] { return this.#rewards }
-
     public get gold(): number { return this.#gold }
 
     public set gold(gold: number){
         if(gold === this.#gold) return
         this.#gold = gold
         this.goldChanged.notify(gold)
-    }
-
-    /** What it waits for from the players: a reward to take. Its journey and its battle tell their own. */
-    public get awaited(): RunAwaited {
-        return { rewards: this.#rewards }
     }
 
     /** Does it only wait to be told to go on: a fight reached, or the battle being fought over? */
@@ -275,8 +232,7 @@ export class Run {
         this.#gold = save.gold
         this.#phase = "travel"
         this.#battle = null
-        this.#rewards = []
-        this.#units.clear()
+        this.#fight = null
         this.travel.load(save.travel)
         // Last: laying the map out drew numbers.
         this.rng.state = save.rng
@@ -286,20 +242,17 @@ export class Run {
 
     //// Fights ////
 
-    /** The sort of the fight of the place, a battle when the place holds none. */
-    public get fight(): FightType {
-        const type = this.travel.place?.type
-        return type === ELITE ? ELITE : type === BOSS ? BOSS : BATTLE
-    }
-
     /**
-     * Fight the current place: its battle becomes the one being fought.
+     * Fight the fight of the place the party reached, or a battle against the monsters of the place the party
+     * stands on, the first of the map when it holds none, where it reached none: that battle becomes the one
+     * being fought.
      *
      * @throws {@link Error} Out of the journey.
      */
     public startBattle(): void {
         if(this.#phase !== "travel") throw new Error(`A battle starts from the journey, not during ${this.#phase}.`)
-        this.#enter(this.newBattle())
+        this.#fight = this.#fightReached ? this.travel.fight : this.#standIn()
+        this.#enter(this.#fight!.battle)
     }
 
     /**
@@ -307,7 +260,7 @@ export class Run {
      * so the battle gives them back nothing when it ends.
      */
     public playBattle(battle: Battle): void {
-        this.#units.clear()
+        this.#fight = null
         this.#enter(battle)
     }
 
@@ -323,127 +276,47 @@ export class Run {
 
     #enter(battle: Battle): void {
         this.#battle = battle
+        battle.bot = this.bot
         this.#enterPhase("battle")
         this.travel.startFight()
         this.battleStarted.notify(battle)
     }
 
     /**
-     * The battle of the current place, its first round left for the screen to start, to show its draw. The
-     * run does not fight it: {@link Run.startBattle} does.
+     * A new battle against the monsters of the current place, its first round left for the screen to start,
+     * to show its draw. The run does not fight it: {@link Run.startBattle} fights that of the fight reached.
      */
     public newBattle(): Battle {
-        const monsters = this.#monsters()
-        const starts = partyStarts(this.heroes.length)
-        const pillars = pillarsFor(starts, this.rng)
-        const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), this.rng.int(2 ** 31))
-        this.#units.clear()
-        this.heroes.forEach((hero, index) => {
-            const unit = battle.add({
-                name: hero.name, sprite: hero.sprite, team: this.heroesTeam, controller: hero.controller,
-                position: starts[index], direction: Vector2.UP,
-                hearts: hero.hearts, decks: hero.decks, unlimited: hero.unlimited, items: hero.items,
-                usables: hero.usables, bases: hero.bases,
-            })
-            battle.refill(unit)
-            this.#units.set(hero, unit)
-        })
-        monsters.forEach((monster, index) => {
-            battle.add({
-                name: `${monster.name} ${index + 1}`, sprite: monster.sprite, team: this.monstersTeam,
-                controller: "bot",
-                position: monsterStart(index), direction: Vector2.DOWN,
-                hearts: redHearts(monster.hearts + this.travel.floor.level - 1), decks: [monster.cards],
-                bases: {
-                    draw: monster.draw, firstDraw: monster.draw, ordered: true, size: monster.size ?? 1,
-                },
-            })
-        })
-        for(const { center, radius } of pillars) battle.addPillar(center, radius)
-        // The battle knows no purse: what the heroes win in it goes to the one of the run.
-        battle.onGetGold.add(({ unit, amount }) => {
-            if(unit.team === this.heroesTeam) this.gold += amount
-        })
-        battle.onGetCards.add(({ unit, cards }) => {
-            const hero = this.heroes.find(each => this.#units.get(each) === unit)
-            if(hero) this.changeDeck(firstDeck(hero), deck => deck.push(...cards))
-        })
-        return battle
+        return this.#standIn().battle
     }
 
     /**
      * Take the party back from the battle fought, once over: their hearts and what they carry, as the
-     * battle left them. A character who fell in a won battle stands up again with one heart. A won fight
-     * gives gold and rewards to take; a lost one ends the run. Whoever shows the battle calls it once it
-     * showed its end.
+     * battle left them. A won fight leads to the halt of its place, or back to the map where there is none; a
+     * lost one ends the run. Whoever shows the battle calls it once it showed its end.
      *
      * @throws {@link Error} When no battle is being fought, or it is not over.
      */
     public endBattle(): void {
         const battle = this.#battle
         if(!battle || battle.phase !== "over") throw new Error("Only a battle fought and over ends.")
-        const won = battle.winner === this.heroesTeam
-        for(const hero of this.heroes){
-            const unit = this.#units.get(hero)
-            if(unit){
-                hero.hearts = keptHearts(unit)
-                hero.usables.splice(0, hero.usables.length, ...unit.usables)
-            }
-            const fell = !hero.hearts.some(heart => !heart.isEmpty)
-            if(won && fell) hero.hearts[0] = new Heart(RED_HEART)
-        }
+        const result = this.#fight?.finish()
+        const won = result ? result === "won" : battle.winner === this.heroesTeam
         this.#battle = null
+        this.#fight = null
         if(!won){
             this.#enterPhase("over")
             this.defeated.notify(this)
             return
         }
-        this.gold += this.fight.gold + this.rng.int(GOLD_SPREAD + 1)
-        this.#rewards = this.#drawRewards()
-        this.#enterPhase("rewards")
-        this.rewardsOffered.notify(this.#rewards)
-    }
-
-    /**
-     * Give a reward offered to a character of the party, then go back to the map.
-     *
-     * @param deck - The deck a card goes to, the first by default.
-     * @throws {@link Error} Out of the rewards, or when the reward is not one offered.
-     */
-    public claim(reward: Reward, hero: Hero, deck: Card[] = firstDeck(hero)): void {
-        if(this.#phase !== "rewards") throw new Error(`Rewards are taken after a won battle, not during ${this.#phase}.`)
-        if(!this.#rewards.includes(reward)) throw new Error("That reward is not one offered.")
-        switch(reward.kind){
-            case "card":
-                this.changeDeck(deck, changed => changed.push(reward.card))
-                break
-            case "item":
-                this.giveItem(hero, reward.item)
-                break
-            case "heart":
-                this.giveHearts(hero, reward.loot)
-                break
-            default:
-                throw new Error("A reward of an unknown kind was claimed.")
-        }
-        this.rewardClaimed.notify({ hero, gained: reward })
-        this.backToMap()
-    }
-
-    /**
-     * Take none of the rewards offered, and go back to the map.
-     *
-     * @throws {@link Error} Out of the rewards.
-     */
-    public skipReward(): void {
-        if(this.#phase !== "rewards") throw new Error(`Rewards are left after a won battle, not during ${this.#phase}.`)
-        this.backToMap()
+        this.travel.endFight()
+        this.#enterPhase("travel")
     }
 
     /** Back to the map from wherever the run stands: the battle fought and the visit open are left. */
     public backToMap(): void {
         this.#battle = null
-        this.#rewards = []
+        this.#fight = null
         this.travel.leave()
         this.#enterPhase("travel")
     }
@@ -576,11 +449,10 @@ export class Run {
 
     #phase: RunPhase = "travel"
     #battle: Battle|null = null
-    #rewards: readonly Reward[] = []
     #gold = STARTING_GOLD
 
-    /** The unit of each character in the battle being fought. */
-    readonly #units = new Map<Hero, Unit>()
+    /** The fight being fought, none out of one or for a battle made elsewhere. */
+    #fight: Fight|null = null
 
     /** Did the journey come to a fight no battle was started for yet? */
     get #fightReached(): boolean {
@@ -593,17 +465,11 @@ export class Run {
         this.phaseChanged.notify(phase)
     }
 
-    /** What to choose from after a won fight: better after an elite or a boss. */
-    #drawRewards(): Reward[] {
-        const item = (): Reward => ({ kind: "item", item: this.rng.pick(LOOT_ITEMS) ?? LOOT_ITEMS[0] })
-        const fusion = (): Reward => ({ kind: "card", card: inventedFusion(this.rng) })
-        const fight = this.fight
-        if(fight === ELITE) return [{ kind: "card", card: lootCard(this.rng) }, item(), fusion()]
-        if(fight === BOSS) return [item(), item(), fusion()]
-        const rewards: Reward[] = lootCards(this.rng, REWARD_CHOICES - 1).map(card => ({ kind: "card", card }))
-        if(this.rng.chance(0.5)) rewards.push(item())
-        else rewards.push({ kind: "heart", loot: this.rng.pick(KEPT_LOOT_HEARTS) ?? KEPT_LOOT_HEARTS[0] })
-        return rewards
+    /** A fight against the monsters of the current place, the first of the map when it holds none. */
+    #standIn(): Fight {
+        const { place, journey } = this.travel
+        const fight = [place, ...journey.places].find(each => each?.monsters.length)
+        return new StandardFight(BATTLE, this, fight?.monsters ?? [])
     }
 
     /** A name no character of the party has: the name, or the name and a number. */
@@ -613,21 +479,9 @@ export class Run {
         for(let count = 2; taken(free); count++) free = `${name} ${count}`
         return free
     }
-
-    /** The monsters of the current place, those of the first fight of the map when it holds none. */
-    #monsters(): readonly Monster[] {
-        const { place, journey } = this.travel
-        const fight = [place, ...journey.places].find(each => each?.monsters.length)
-        return fight?.monsters ?? []
-    }
 }
 
 /** Throw an error on, for a run nothing listens to the errors of. */
 function rethrow(error: unknown): void {
     throw error
-}
-
-/** The hearts a unit leaves its battle with: those left, even empty. */
-function keptHearts(unit: Unit): Heart[] {
-    return Heart.copies(unit.hearts.all)
 }

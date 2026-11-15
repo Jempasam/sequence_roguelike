@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     ALL_CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
-    HEART_KINDS, ALL_ITEMS, loadBattle, MergedCard, planFor, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
+    HEART_KINDS, ALL_ITEMS, loadBattle, MergedCard, DeckAi, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
     REPEAT_2, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
     ALL_USABLES,
     Vector2, VULNERABLE, WATER, WHETSTONE,
@@ -20,7 +20,7 @@ function firstBattle(seed = 3): Battle {
 
 /** Commit what the bot would play for every unit, players included. */
 function planAll(battle: Battle): void {
-    for(const unit of battle.initiative) battle.commit(unit, planFor(unit))
+    for(const unit of battle.initiative) battle.commit(unit, new DeckAi().decide(unit).chain)
 }
 
 /** Play the round committed to its end. */
@@ -173,6 +173,8 @@ describe("summoned bodies, potions and puddles", () => {
     test("a coin, a barrel of poison, a puddle and potion statuses → loaded back, playing the same", () => {
         const original = firstBattle(1)
         const [hero] = original.units
+        // The pillars are drawn from the seed: taken away, none stands in the way of what it throws.
+        for(const pillar of original.units.filter(unit => unit.name === "Pilier")) original.vanish(pillar)
         // In the open, facing the right wall, so there is room for what it throws.
         hero.position = new Vector2(1, 3.5)
         hero.direction = Vector2.RIGHT

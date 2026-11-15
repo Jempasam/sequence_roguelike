@@ -1,9 +1,12 @@
 /** A mistake in what the user typed: printed as it is, never with a stack, the exit code 1. */
 export class UsageError extends Error {}
 
-/** A text as it is compared: no case, no accent, spaces collapsed. */
+/**
+ * A text as it is compared: no case, no accent, no blank at all, so that a name written on one line out of a
+ * file (`Gobelincavalier`) is the name written with its spaces.
+ */
 export function normalize(text: string): string {
-    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim()
+    return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, "")
 }
 
 /** How many edits turn a text into another. */

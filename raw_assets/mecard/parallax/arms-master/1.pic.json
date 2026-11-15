@@ -1,0 +1,21 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": [
+        "#7a7a82",
+        "#2e2e38",
+        "#9a9aa2",
+        "#9a7448"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "tiles", "cell": [16, 8], "grout": 1, "offset": 0.5, "odd": 0.2, "materials": [0, 1, 2]}, "depth": 2},
+        {"box": [0, 26, 288, 5], "material": 1, "depth": [3, 4], "relief": "round-y"},
+        {"box": [0, 104, 288, 8], "material": 0, "depth": [3, 5], "relief": "round-y"},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "planks", "width": 7, "axis": "x", "joint": 1, "seams": 0.5, "odd": 0.1, "materials": [3, 1, 0]}, "depth": 2},
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "noise", "density": 0.012, "radius": 2, "materials": [null, 1]}},
+        {"box": [30, 40, 18, 24], "material": 1, "depth": 1},
+        {"box": [33, 43, 12, 18], "material": 2, "depth": 0},
+        {"box": [240, 40, 18, 24], "material": 1, "depth": 1},
+        {"box": [243, 43, 12, 18], "material": 2, "depth": 0}
+    ]
+}

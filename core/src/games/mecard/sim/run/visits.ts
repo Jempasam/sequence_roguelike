@@ -1,6 +1,8 @@
 import type { Rng } from "../base/Rng"
 import { readsWhole, signatureOf } from "../card/CardChain"
+import { composable } from "../card/Card"
 import type { Card } from "../card/Card"
+import type { CardType } from "../card/CardType"
 import { FusionCard } from "../card/subs/composite/FusionCard"
 import { cut } from "../card/subs/composite/CompositeCard"
 import { mergeable, MergedCard } from "../card/subs/composite/MergedCard"
@@ -16,6 +18,23 @@ export const MAX_CUT = 2
 
 /** How many cards of each deck the strategist swaps at most. */
 export const MAX_SWAPPED = 5
+
+/**
+ * Put a key card in a deck that holds none: a card using a kind of thing, which takes it and gives another
+ * kind, such as a robot for a module.
+ *
+ * @param family - The kind of thing the key uses.
+ * @returns Was the key given, because the deck held no card using that kind?
+ */
+export function giveKeyIfLacking(deck: Card[], family: CardType<unknown>, key: Card): boolean {
+    const uses = (card: Card): boolean => {
+        const { input, output } = signatureOf(card)
+        return input === family && output !== family
+    }
+    if(deck.some(uses)) return false
+    deck.push(key)
+    return true
+}
 
 /**
  * Take cards out of a deck, a copy for each.
@@ -87,7 +106,7 @@ export type WeaveMode = "merged"|"random"
  * nothing or the same kind of thing); drawn, two cards taking and giving the same.
  */
 export function canWeave(cards: readonly Card[], mode: WeaveMode): boolean {
-    if(cards.length !== 2) return false
+    if(cards.length !== 2 || !cards.every(composable)) return false
     const [first, second] = cards
     if(mode === "merged") return mergeable(cards)
     const one = signatureOf(first)

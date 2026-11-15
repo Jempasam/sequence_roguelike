@@ -1,6 +1,7 @@
 import type { Visual } from "../base/Visual"
 import type { Text } from "../../../../semantic"
 import type { UnitContext } from "../battle/Action"
+import type { Previewable } from "../battle/preview/Previewable"
 import type { Unit } from "../battle/Unit"
 
 /**
@@ -12,7 +13,7 @@ import type { Unit } from "../battle/Unit"
  * Its use is chosen with the chains, so it travels with them to the viewers, who play it the same: it acts
  * at a fixed moment of the round, never at the click.
  */
-export interface Usable {
+export interface Usable extends Partial<Previewable> {
     readonly name: string
 
     /** Its picture. */

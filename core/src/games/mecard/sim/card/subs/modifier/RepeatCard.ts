@@ -1,23 +1,18 @@
-import type { Action } from "../../../battle/Action"
-
 import { ModifierCard } from "../ModifierCard"
+import { repeated } from "../tools/sequence"
 import { Rarity } from "../../Rarity"
 
-/** A card repeating the actions a number of times, each a step of its own. */
+/** A card repeating the action a number of times, all in the step of the action. */
 export class RepeatCard extends ModifierCard {
 
 
     constructor(
-        /** How many times the actions are played. */
+        /** How many times the action is played. */
         public readonly times: number,
 
         rarity: Rarity,
     ){
-        super(`Répéter ×${times}`, `L'action est jouée ${times} fois, une étape chacune.`, rarity, actions => {
-            const repeated: Action[] = []
-            for(let i = 0; i < times; i++) repeated.push(...actions)
-            return repeated
-        })
+        super(`Répéter ×${times}`, `L'action est jouée ${times} fois, en une seule étape.`, rarity, action => repeated(action, times))
     }
 }
 

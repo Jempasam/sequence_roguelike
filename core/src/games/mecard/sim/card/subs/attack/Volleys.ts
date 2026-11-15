@@ -1,4 +1,5 @@
-import type { Indicator, Pose } from "../../../battle/Action"
+import type { Pose } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
 import type { Unit } from "../../../battle/Unit"
 import type { Battle } from "../../../battle/Battle"
 import { NOTE_COLOR } from "../../../battle/previewColors"
@@ -7,10 +8,10 @@ import { DamageType } from "../../../battle/DamageType"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { label, still, strike } from "../tools/previews"
 import { fireShot, shotLine } from "../tools/volley"
 import { SHOT_DAMAGE, SHOT_RANGE } from "./Shot"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many shots the machine gun of the catalog fires at most. */
 const BURST = 10
@@ -24,7 +25,7 @@ function burst(battle: Battle, unit: Unit, pose: Pose): Indicator[] {
     let direction = pose.direction
     for(let count = 0; count < BURST; count++){
         const { area, target } = shotLine(battle, unit, { position: pose.position, direction })
-        shots.push(...strike([area], target ? [target] : []))
+        shots.push(...Previews.strike([area], target ? [target] : []))
         if(!target) break
         direction = direction.eighth(1)
     }
@@ -37,16 +38,16 @@ export const MACHINE_GUN = new ActionCard("Mitraillette", [
     DamageType.PHYSICAL, "). Si le tir touche, se tourne d'un huitième de tour et tire de nouveau, ", BURST,
     " tirs au plus.",
 ], Rarity.EPIC, {
-    use: function* (ctx){
+    use: function (ctx){
         const { battle, unit } = ctx
         for(let count = 0; count < BURST && unit.alive; count++){
-            const hit = yield* fireShot(battle, unit)
+            const hit = fireShot(battle, unit)
             if(hit.length === 0) return
-            yield* turn(ctx, unit.direction.eighth(1))
+            turn(ctx, unit.direction.eighth(1))
         }
     },
     preview: ({ battle, unit, pose }) => {
-        return still(pose, ...burst(battle, unit, pose))
+        return Previews.still(pose, ...burst(battle, unit, pose))
     },
 })
 
@@ -61,17 +62,17 @@ export const CHARGED_SHOT = new ActionCard("Tir chargé", [
     "Tire comme Tir (", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, ", ", SHOT_DAMAGE, "+", PRECISION, " ",
     DamageType.PHYSICAL, ") une fois, plus une par ", CHARGE_EVERY, " actions jouées avant elle ce round.",
 ], Rarity.RARE, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const times = charge(unit)
         for(let count = 0; count < times && unit.alive; count++){
-            yield* fireShot(battle, unit)
-            if(count < times - 1) yield* hold(battle, WORD_TIME / 4)
+            fireShot(battle, unit)
+            if(count < times - 1) hold(battle, WORD_TIME / 4)
         }
     },
     preview: ({ battle, unit, pose }) => {
         const { area, end, target } = shotLine(battle, unit, pose)
-        return still(
-            pose, ...strike([area], target ? [target] : []), label(end, `× ${charge(unit)}`, NOTE_COLOR),
+        return Previews.still(
+            pose, ...Previews.strike([area], target ? [target] : []), Previews.label(end, `× ${charge(unit)}`, NOTE_COLOR),
         )
     },
 })

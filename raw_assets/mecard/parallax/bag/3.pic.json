@@ -1,0 +1,13 @@
+{
+    "size": [288, 164],
+    "seed": 3,
+    "palette": [
+        "#2a1808",
+        "#8a5a24",
+        "#f2c060",
+        "#fff0a8"
+    ],
+    "shapes": [
+        {"picture": "parts/purse.pic.json", "at": [125, 66], "materials": [0, 1, 2, 3], "depth": [5, 8]}
+    ]
+}

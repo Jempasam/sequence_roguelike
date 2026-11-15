@@ -76,8 +76,8 @@ export interface Preparation {
     prepare?(ctx: PrepareContext): void
 }
 
-/** Actions: the steps they put in the queue, one or more. */
-export const ACTION = new CardType<readonly Action[]>("action")
+/** Actions: the step they put in the queue, one for each. */
+export const ACTION = new CardType<Action>("action")
 
 /** What rewrites the chain at the end of the preparation, and maybe acts then. */
 export const PREPARATION = new CardType<Preparation>("préparation")
@@ -87,6 +87,12 @@ export const ELEMENT = new CardType<Element>("élément")
 
 /** A dose of a potion, for a card pouring it. */
 export const POTION = new CardType<Dose>("potion")
+
+/**
+ * A card as it is, with the tree it heads: nothing gives it, so a card taking it takes whatever card stands
+ * on its right, built or not, and is given the cards themselves rather than what they give.
+ */
+export const CARD = new CardType<readonly Card[]>("carte")
 
 /** What is not known: the type of a card standing for any card, pictured only. */
 export const SECRET = new CardType<unknown>("secret")

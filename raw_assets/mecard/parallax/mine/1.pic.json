@@ -1,0 +1,22 @@
+{
+    "size": [288, 164],
+    "seed": 7,
+    "palette": [
+        "#5a5048",
+        "#26211e",
+        "#7a6e62",
+        {"color": "#30b8e0", "light": 0.55}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "fill": {"pattern": "noise", "density": 0.25, "radius": 3, "bump": 1, "materials": [0, 2, 1]}, "depth": 2},
+        {"box": [0, 0, 288, 164], "fill": {"pattern": "noise", "density": 0.03, "radius": 5, "materials": [null, 1]}},
+        {"box": [0, 130, 288, 34], "fill": {"pattern": "noise", "density": 0.3, "radius": 1, "materials": [1, 0, 2]}, "depth": 1},
+        {"box": [0, 126, 288, 4], "material": 1, "depth": [2, 3], "relief": "round-y"},
+
+        {"polygon": [[136, 42], [144, 52], [138, 64], [130, 52]], "material": 3, "depth": [3, 5], "relief": "bevel"},
+        {"polygon": [[144, 52], [152, 58], [146, 68], [138, 64]], "material": 3, "depth": [3, 5], "relief": "bevel"},
+        {"polygon": [[190, 60], [198, 70], [192, 84], [184, 72]], "material": 3, "depth": [3, 5], "relief": "bevel"},
+        {"polygon": [[96, 98], [102, 108], [96, 118], [90, 108]], "material": 3, "depth": [3, 5], "relief": "bevel"},
+        {"polygon": [[246, 100], [253, 109], [247, 118], [240, 109]], "material": 3, "depth": [3, 5], "relief": "bevel"}
+    ]
+}

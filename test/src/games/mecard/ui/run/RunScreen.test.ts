@@ -12,7 +12,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
-/** Pictures that never load, whatever is asked for: no transition plays, what it hides changes at once. */
+/** Pictures that never load, whatever is asked for: a fade plays in place of the transition. */
 const NO_ASSETS = new Proxy({}, {
     get: () => (path: string) => Promise.reject(new AssetError(path, "unreadable", "none in the tests")),
 }) as unknown as Assets
@@ -20,6 +20,7 @@ const NO_ASSETS = new Proxy({}, {
 /** Units with no pictures. */
 const NO_SPRITES = {
     of: () => null,
+    thing: () => null,
     cardBack: () => null,
     whenLoaded: () => {},
     load: () => Promise.resolve(),
@@ -35,26 +36,33 @@ function shown(locks?: RunLocks) {
         restart: () => {},
         report: () => {},
     })
-    return { run, screen }
+    return { run, screen, setup }
+}
+
+/** Let the fade that hides the change of screen reach its middle, where the screens change. */
+async function crossed(setup: ReturnType<typeof uiSetup>): Promise<void> {
+    await settled()
+    setup.ui.update(0.8)
+    await settled()
 }
 
 // --- Tests ---
 
 describe("RunScreen", () => {
     test("a battle told by the run → shown, from the observable alone", async() => {
-        const { run, screen } = shown()
+        const { run, screen, setup } = shown()
         run.startBattle()
         expect(screen.battleScreen.visible).toBe(false)
-        await settled()
+        await crossed(setup)
         expect(screen.battleScreen.engine).toBe(run.battle)
         expect(screen.battleScreen.visible).toBe(true)
         expect(screen.travelScreen.visible).toBe(false)
     })
 
     test("a battle joined by a viewer → shown the same way, nothing started by the screen", async() => {
-        const { run, screen } = shown(ALL_RUN_LOCKS)
+        const { run, screen, setup } = shown(ALL_RUN_LOCKS)
         run.joinBattle(started(startedRun(5)).save())
-        await settled()
+        await crossed(setup)
         expect(screen.battleScreen.engine).toBe(run.battle)
         expect(screen.battleScreen.visible).toBe(true)
     })

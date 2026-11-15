@@ -1,0 +1,166 @@
+{
+ "size": [
+  288,
+  164
+ ],
+ "seed": 11,
+ "palette": [
+  "#34444a",
+  "#10181c",
+  "#4e6266",
+  "#1c2a2e"
+ ],
+ "shapes": [
+  {
+   "box": [
+    0,
+    0,
+    288,
+    164
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     14,
+     7
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "odd": 0.2,
+    "materials": [
+     0,
+     1,
+     2
+    ]
+   },
+   "depth": 2
+  },
+  {
+   "box": [
+    0,
+    0,
+    288,
+    164
+   ],
+   "fill": {
+    "pattern": "noise",
+    "density": 0.015,
+    "radius": 2,
+    "materials": [
+     null,
+     3
+    ]
+   }
+  },
+  {
+   "box": [
+    0,
+    124,
+    288,
+    40
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     24,
+     10
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     3,
+     1,
+     0
+    ]
+   },
+   "depth": [
+    3,
+    4
+   ],
+   "relief": "bevel",
+   "bevel": 1
+  },
+  {
+   "box": [
+    0,
+    120,
+    288,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    3,
+    5
+   ],
+   "relief": "round-y"
+  },
+  {
+   "box": [
+    96,
+    22,
+    10,
+    100
+   ],
+   "material": 2,
+   "depth": [
+    3,
+    4
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    182,
+    22,
+    10,
+    100
+   ],
+   "material": 2,
+   "depth": [
+    3,
+    4
+   ],
+   "relief": "round-x"
+  },
+  {
+   "ellipse": [
+    110,
+    36,
+    68,
+    70
+   ],
+   "material": 1,
+   "depth": 1
+  },
+  {
+   "box": [
+    110,
+    70,
+    68,
+    52
+   ],
+   "material": 1,
+   "depth": 1
+  },
+  {
+   "ellipse": [
+    118,
+    42,
+    52,
+    56
+   ],
+   "material": 3,
+   "depth": 1
+  },
+  {
+   "box": [
+    118,
+    70,
+    52,
+    52
+   ],
+   "material": 3,
+   "depth": 1
+  }
+ ]
+}

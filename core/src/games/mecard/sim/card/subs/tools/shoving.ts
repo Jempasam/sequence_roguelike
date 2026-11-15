@@ -1,5 +1,4 @@
 import type { Vector2 } from "../../../base/Vector2"
-import type { ActionRun } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 
@@ -42,9 +41,9 @@ export interface Shove {
  *
  * @returns How far it went.
  */
-export function* shove(
+export function shove(
     { battle, by, target, direction, distance: asked, impact = 0, hurtsStruck = false, through = [], speed = SHOVE_SPEED }: Shove,
-): Generator<void, number, void> {
+): number {
     const incoming = { target, by, direction, distance: asked }
     target.incomingShove.notify(incoming)
     const distance = incoming.distance
@@ -53,7 +52,7 @@ export function* shove(
     target.shoving = true
     let gone
     try {
-        gone = yield* travel({ battle, unit: target }, direction, distance, speed, true, through)
+        gone = travel({ battle, unit: target }, direction, distance, speed, true, through)
     } finally {
         target.shoving = false
     }
@@ -66,7 +65,7 @@ export function* shove(
 }
 
 /**
- * Shove a unit at once, in one stride, rather than over the ticks of an action: what an item does at the start
+ * Shove a unit at once, in one stride, rather than stride after stride: what an item does at the start
  * of a round. Told as a shove all the same.
  *
  * @returns How far it went.
@@ -87,6 +86,6 @@ export function shoveNow(battle: Battle, by: Unit, target: Unit, direction: Vect
 }
 
 /** Shove several units one after the other, each by its own way. */
-export function* shoveAll(shoves: readonly Shove[]): ActionRun {
-    for(const one of shoves) yield* shove(one)
+export function shoveAll(shoves: readonly Shove[]): void {
+    for(const one of shoves) shove(one)
 }

@@ -1,5 +1,7 @@
 import type { Text } from "../../../../semantic"
 
+import type { Unit } from "../battle/Unit"
+
 import type { CardType } from "./CardType"
 import type { Rarity } from "./Rarity"
 
@@ -71,8 +73,27 @@ export interface Card<T = unknown, U = unknown> {
      */
     readonly group?: object
 
-    /** What it gives, from what the card on its right gives. It touches nothing: a preview calls it too. */
-    get(input: U): T
+    /**
+     * The cards a player may choose in its place, itself among them, each named by what it chooses: a text,
+     * whose kind tells a reader how to offer the choice. None for a card with nothing to choose, which is the
+     * case of almost every card.
+     *
+     * @remarks
+     * A card with variants is one value of a parameter: one card exists per value, all alike but for it, and
+     * sharing a {@link Card.group}. It cannot be held by a composite, whose cards are played as written.
+     */
+    variants(): ReadonlyMap<Text, Card>
+
+    /** The variant a unit would choose without choosing, the card itself by default. */
+    variantFor(unit: Unit): Card
+
+    /**
+     * What it gives, from what the card on its right gives. It touches nothing: a preview calls it too.
+     *
+     * @param tree - The cards of the tree that gave the input, the card on its right first, none when it
+     * takes nothing. Most cards care for what the input is, not for what gave it.
+     */
+    get(input: U, tree?: readonly Card[]): T
 
     /** Its name. */
     toString(): string
@@ -81,9 +102,27 @@ export interface Card<T = unknown, U = unknown> {
     toSemString(): Text
 }
 
+/**
+ * Can a card be held by a composite? Every card can but one with variants to choose from, whose value is
+ * chosen when it is placed in the chain, which a card inside another never is.
+ */
+export function composable(card: Card): boolean {
+    return card.variants().size === 0
+}
+
 /** What tells a card from the others a unit plays once per round: its group, or the card itself without one. */
 export function groupOf(card: Card): object {
     return card.group ?? card
+}
+
+/**
+ * Where in a hand a card of a chain comes from: the card itself, else the card of its family the hand holds,
+ * which stands for every variant of it. -1 when the hand holds neither.
+ */
+export function handIndexOf(hand: readonly Card[], card: Card): number {
+    const exact = hand.indexOf(card)
+    if(exact >= 0 || card.variants().size === 0) return exact
+    return hand.findIndex(each => each.variants().size > 0 && groupOf(each) === groupOf(card))
 }
 
 /**

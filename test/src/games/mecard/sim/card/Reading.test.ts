@@ -1,9 +1,47 @@
 import { describe, expect, test } from "vitest"
 import {
-    FIRE, PRAYER, GAMBLE, read, readsWhole, REPEAT_2, SPELL, STEP, supplied, THRUST,
+    AbstractCard, CARD, CardChain, CardType, FIRE, PRAYER, GAMBLE, ModifierCard, Rarity, read, readsWhole, REPEAT_2,
+    SPELL, STEP, supplied, THRUST,
 } from "@game/core/mecard"
+import type { Card } from "@game/core/mecard"
+
+/** A card taking the cards on its right as they are, and giving them back as what it saw. */
+class SeerCard extends AbstractCard<readonly Card[], readonly Card[]> {
+    public readonly output = new CardType<readonly Card[]>("vu")
+    public readonly input = CARD
+    public get(cards: readonly Card[], tree: readonly Card[] = []): readonly Card[] {
+        expect(tree).toEqual(cards)
+        return cards
+    }
+}
+
+const SEER = new SeerCard("Voyant", "voit", Rarity.COMMON)
 
 // --- Tests ---
+
+describe("a card taking a card as it is", () => {
+    test("takes whatever stands on its right, built or not, and is given its tree", () => {
+        // A modifier with nothing to take at the end of the row: the tree is not given its input.
+        const cards = [SEER, REPEAT_2, GAMBLE]
+        expect(supplied(cards)).toEqual([true, false, false])
+        expect(new CardChain(cards).get(0)?.value).toEqual([REPEAT_2, GAMBLE])
+    })
+
+    test("takes nothing at the end of the row", () => {
+        expect(supplied([SEER])).toEqual([false])
+        expect(new CardChain([SEER]).get(0)).toBeNull()
+    })
+
+    test("a card taking an action is given the cards that gave it", () => {
+        let seen: readonly Card[] = []
+        const watcher = new ModifierCard("Témoin", "voit", Rarity.COMMON, (actions, tree) => {
+            seen = tree
+            return actions
+        })
+        new CardChain([watcher, REPEAT_2, THRUST]).get(0)
+        expect(seen).toEqual([REPEAT_2, THRUST])
+    })
+})
 
 describe("supplied", () => {
     test("a modifier of a modifier of an action → all given their input", () => {

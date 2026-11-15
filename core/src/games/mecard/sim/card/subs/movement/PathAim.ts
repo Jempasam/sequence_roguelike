@@ -2,12 +2,12 @@ import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { pathTo } from "../../../battle/pathfinding"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import type { Action, PreviewContext } from "../../../battle/Action"
-
+import type { Action } from "../../../battle/Action"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** What a way to an enemy goes through from a pose, none when there is no enemy. */
 function wayOf({ battle, unit, pose }: PreviewContext): readonly Vector2[]|null {
@@ -31,23 +31,23 @@ export class PathAimCard extends ActionCard {
 
     static #aiming(): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const way = wayOf({ battle, unit, pose: unit })
                 if(way){
-                    yield* turn(ctx, way[0].minus(unit.position).normalized ?? unit.direction)
+                    turn(ctx, way[0].minus(unit.position).normalized ?? unit.direction)
                     return
                 }
                 battle.events.push({ type: "skipped", unit, reason: "personne à viser" })
-                yield* hold(battle, WORD_TIME, [label(unit.position, "personne à viser", NOTE_COLOR)])
+                hold(battle, WORD_TIME, [Previews.label(unit.position, "personne à viser", NOTE_COLOR)])
             },
             preview: ctx => {
                 const { pose } = ctx
                 const way = wayOf(ctx)
-                if(!way) return still(pose, label(pose.position, "personne à viser", NOTE_COLOR))
+                if(!way) return Previews.still(pose, Previews.label(pose.position, "personne à viser", NOTE_COLOR))
                 const direction = way[0].minus(pose.position).normalized ?? pose.direction
-                const walked = arrow([pose.position, ...way], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, direction }, walked)
+                const walked = Previews.arrow([pose.position, ...way], MOVE_WIDTH, MOVE_COLOR)
+                return Previews.still({ ...pose, direction }, walked)
             },
         }
     }

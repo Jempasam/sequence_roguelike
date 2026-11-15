@@ -33,8 +33,11 @@ export interface StripCard {
     /** Does it play, rather than being greyed out? */
     readonly active: boolean
 
-    /** Is it being looked at? */
-    readonly lit: boolean
+    /** Was it put there by another unit? */
+    readonly borrowed: boolean
+
+    /** The color of the edge it is outlined in while it is looked at, none when it is not. */
+    readonly edge: Color|null
 
     /** Is it crossed out, since it could not be built? */
     readonly crossed: boolean
@@ -53,13 +56,22 @@ export interface StripMarks {
         readonly first: number
         readonly last: number
 
+        /** Only these places between the first and the last, all of them when none are told. */
+        readonly indexes?: readonly number[]
+
+        /** The color they are outlined in. */
+        readonly edge: Color
+
         /** Could they not be built? */
         readonly invalid: boolean
     }|null
+
+    /** The places of the cards another unit put in the chain: they stay edged, and are never greyed out. */
+    readonly borrowed: readonly number[]
 }
 
 /** Nothing to mark. */
-const NO_MARKS: StripMarks = { cursor: 0, lit: null }
+const NO_MARKS: StripMarks = { cursor: 0, lit: null, borrowed: [] }
 
 /**
  * A chain a team sees whole, as a strip shows it. Each card of the strip is noted with its node, so a click
@@ -70,7 +82,8 @@ export function stripOf(node: CardNode, nodes: Map<StripCard, CardNode>): StripC
         card: node.card,
         inputs: node.inputs.map(input => input ? stripOf(input, nodes) : null),
         active: node.active,
-        lit: false,
+        borrowed: false,
+        edge: null,
         crossed: false,
         links: node.card.input ? [linkOf(node.card.input)] : [],
     }
@@ -81,13 +94,16 @@ export function stripOf(node: CardNode, nodes: Map<StripCard, CardNode>): StripC
 /** A chain as a viewer sees it, as a strip shows it. Only the cards it read already are greyed out. */
 export function stripOfView(view: ChainView, marks: StripMarks = NO_MARKS): StripCard {
     const type = view.card.input
-    const { cursor, lit } = marks
+    const { cursor, lit, borrowed } = marks
     const looked = lit !== null && view.index >= lit.first && view.index <= lit.last
+        && (lit.indexes?.includes(view.index) ?? true)
+    const given = borrowed.includes(view.index)
     return {
         card: view.card,
         inputs: view.inputs.map(input => input ? stripOfView(input, marks) : null),
-        active: view.index >= cursor,
-        lit: looked,
+        active: given || view.index >= cursor,
+        borrowed: given,
+        edge: looked ? lit.edge : null,
         crossed: looked && lit.invalid,
         links: type ? view.inputs.map(() => linkOf(type)) : [],
     }
@@ -99,7 +115,7 @@ export interface ChainStripHost {
     pick(card: StripCard): void
 
     /** The pointer came over the cards of a root, or left them. */
-    hoverRoot(index: number, over: boolean): void
+    hoverRoot(index: number, over: boolean, card?: Card): void
 
     /** The deck a card comes from, none for a card from elsewhere. */
     deckOf(card: Card): number|null
@@ -143,11 +159,12 @@ export class ChainStrip extends Stack {
         const links: Link[] = []
         roots.forEach((root, index) => {
             if(index > 0) row.add(new Label(theme, ">"), { align: "center" })
-            const hover = (over: boolean) => host.hoverRoot(index, over)
             const add = (strip: StripCard): Component => {
+                const hover = (over: boolean) => host.hoverRoot(index, over, strip.card ?? undefined)
                 const card = new CardView(theme, strip.card, cardPlace)
                 card.dimmed = !strip.active
-                card.lit = strip.lit
+                card.edge = strip.edge
+                card.borrowed = strip.borrowed
                 card.cross = strip.crossed ? host.cross ?? null : null
                 card.deck = strip.card ? host.deckOf(strip.card) : null
                 card.onPick = () => host.pick(strip)
@@ -197,8 +214,8 @@ export interface FlatStripHost {
     /** The pointer came over the card at a place, or left it. */
     hover(place: number, over: boolean): void
 
-    /** The dial of the turn at a place was clicked at a step. A turn only shows its dial when none. */
-    dial?(place: number, step: number): void
+    /** A variant was chosen for the card at a place. A card only offers its variants when this is set. */
+    variant?(place: number, variant: Card): void
 
     /** The deck a card comes from, none for a card from elsewhere. */
     deckOf(card: Card): number|null
@@ -226,7 +243,7 @@ export class FlatStrip extends Stack {
             view.deck = host.deckOf(card)
             view.onPick = () => host.pick(place)
             view.onHover = over => host.hover(place, over)
-            if(host.dial) view.onDial = step => host.dial?.(place, step)
+            if(host.variant) view.onVariant = variant => host.variant?.(place, variant)
             row.add(view)
             return view
         })

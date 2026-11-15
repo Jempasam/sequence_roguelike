@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises"
-import { resolve } from "node:path"
-import { pathToFileURL } from "node:url"
 import {
     ALL_CARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES, HEART_KINDS, KIT_HEARTS, monster, RED_HEART,
     visual,
@@ -24,20 +21,6 @@ export interface DefinedKit {
     readonly kit: Kit
     readonly hearts: number
     readonly bonus: readonly HeartGroup[]
-}
-
-/** Every kit and monster the user defined. */
-export interface Definitions {
-    readonly kits: readonly DefinedKit[]
-    readonly monsters: readonly Monster[]
-}
-
-export const NO_DEFINITIONS: Definitions = { kits: [], monsters: [] }
-
-/** The definitions gathered so far while they are read. */
-interface Collected {
-    readonly kits: DefinedKit[]
-    readonly monsters: Monster[]
 }
 
 /**
@@ -76,81 +59,57 @@ interface Base {
     readonly monster: Monster|null
 }
 
-/** What the definitions read so far hold, for a later one to start from. */
-class Known {
-
-    public readonly kits: DefinedKit[] = []
-    public readonly monsters: Monster[] = []
-
-    /** Add a definition, refusing a name that one before already took. */
-    public add(name: string, where: string): void {
-        const wanted = normalize(name)
-        const taken = [...this.kits.map(defined => defined.kit.name), ...this.monsters.map(each => each.name)]
-        if(taken.some(each => normalize(each) === wanted)){
-            throw new UsageError(`${where} : le nom « ${name} » est déjà défini par une autre définition.`)
+/**
+ * What `@name` stands for in a definition: a kit of the game, else a monster or a pet.
+ *
+ * @throws {@link UsageError} When nothing has the name, or a kit and a monster do.
+ */
+function baseOf(text: string, where: string): Base {
+    const typed = /^(kit|monster|pet):(.*)$/i.exec(text)
+    const kind = typed?.[1].toLowerCase() ?? null
+    const name = (typed?.[2] ?? text).trim()
+    const wanted = normalize(name)
+    const found: Base[] = []
+    const kitBase = (kit: Kit, hearts: number, bonus: readonly HeartGroup[]): Base => ({
+        name: kit.name,
+        cards: kit.cards,
+        items: kit.items,
+        usables: kit.usables,
+        hearts,
+        bonus,
+        sprite: kit.sprite,
+        monster: null,
+    })
+    const monsterBase = (each: Monster): Base => ({
+        name: each.name,
+        cards: each.cards,
+        items: [],
+        usables: [],
+        hearts: each.hearts,
+        bonus: [],
+        sprite: each.sprite,
+        monster: each,
+    })
+    if(kind === null || kind === "kit"){
+        const official = ALL_KITS.find(each => normalize(each.name) === wanted)
+        if(official){
+            const { hearts, bonus } = heartsOfKit(official)
+            found.push(kitBase(official, hearts, bonus))
         }
     }
-
-    /**
-     * What `@name` stands for: a definition made before, else a kit of the game, else a monster or a pet.
-     *
-     * @throws {@link UsageError} When nothing has the name, or a kit and a monster do.
-     */
-    public base(text: string, where: string): Base {
-        const typed = /^(kit|monster|pet):(.*)$/i.exec(text)
-        const kind = typed?.[1].toLowerCase() ?? null
-        const name = (typed?.[2] ?? text).trim()
-        const wanted = normalize(name)
-        const found: Base[] = []
-        const kitBase = (kit: Kit, hearts: number, bonus: readonly HeartGroup[]): Base => ({
-            name: kit.name,
-            cards: kit.cards,
-            items: kit.items,
-            usables: kit.usables,
-            hearts,
-            bonus,
-            sprite: kit.sprite,
-            monster: null,
-        })
-        const monsterBase = (each: Monster): Base => ({
-            name: each.name,
-            cards: each.cards,
-            items: [],
-            usables: [],
-            hearts: each.hearts,
-            bonus: [],
-            sprite: each.sprite,
-            monster: each,
-        })
-        const defined = [...this.kits.map(each => each.kit.name), ...this.monsters.map(each => each.name)]
-        if(kind === null || kind === "kit"){
-            const own = this.kits.find(each => normalize(each.kit.name) === wanted)
-            const official = ALL_KITS.find(each => normalize(each.name) === wanted)
-            if(own) found.push(kitBase(own.kit, own.hearts, own.bonus))
-            else if(official){
-                const { hearts, bonus } = heartsOfKit(official)
-                found.push(kitBase(official, hearts, bonus))
-            }
-        }
-        if(kind === null || kind === "monster" || kind === "pet"){
-            const own = this.monsters.find(each => normalize(each.name) === wanted)
-            const pool = kind === "pet" ? ALL_PETS : kind === "monster" ? ALL_MONSTERS : [...ALL_MONSTERS, ...ALL_PETS]
-            const official = pool.find(each => normalize(each.name) === wanted)
-            if(own) found.push(monsterBase(own))
-            else if(official) found.push(monsterBase(official))
-        }
-        if(found.length === 0){
-            const names = [
-                ...defined, ...ALL_KITS.map(kit => kit.name), ...ALL_MONSTERS.map(each => each.name),
-                ...ALL_PETS.map(each => each.name),
-            ]
-            throw new UsageError(`${where} : ${unknownName("base @", name, names).message}`)
-        }
-        if(found.length > 1){
-            throw new UsageError(`${where} : « ${name} » existe comme kit et comme monstre : écrire @kit:${name} ou @monster:${name}.`)
-        }
-        return found[0]
+    if(kind === null || kind === "monster" || kind === "pet"){
+        const pool = kind === "pet" ? ALL_PETS : kind === "monster" ? ALL_MONSTERS : [...ALL_MONSTERS, ...ALL_PETS]
+        const official = pool.find(each => normalize(each.name) === wanted)
+        if(official) found.push(monsterBase(official))
     }
+    if(found.length === 0){
+        const names = [...ALL_KITS.map(kit => kit.name), ...ALL_MONSTERS.map(each => each.name), ...ALL_PETS.map(each => each.name)]
+        throw new UsageError(`${where} : ${unknownName("base @", name, names).message}`)
+    }
+    if(found.length > 1){
+        throw new UsageError(`${where} : « ${name} » existe comme kit et comme monstre : écrire @kit:${name} ou @monster:${name}.`)
+    }
+    return found[0]
 }
 
 /** An element, `Name` or `Name*3`. */
@@ -211,23 +170,22 @@ interface Draft {
  * Read one definition, `Name=element,element`, into a kit or a monster.
  *
  * @param text - The definition.
- * @param where - How an error names it: `--def « Name »`, or the line of the file.
+ * @param label - How an error names where it is written: `--match`.
  * @throws {@link UsageError} On whatever is wrong with it, said with the name and the thing at fault.
  */
-function parseDefinition(text: string, label: string, known: Known): DefinedKit|Monster {
+export function parseDefinition(text: string, label: string): DefinedKit|Monster {
     const equals = text.indexOf("=")
     if(equals < 0) throw new UsageError(`${label} « ${text} » : une définition s'écrit Nom=élément,élément (le = manque).`)
     const name = text.slice(0, equals).trim()
     if(name === "") throw new UsageError(`${label} « ${text} » : le nom avant le = est vide.`)
     const where = `${label} « ${name} »`
-    known.add(name, where)
     const elements = text.slice(equals + 1).split(",").map(element => element.trim())
     if(elements.some(element => element === "")) throw new UsageError(`${where} : élément vide (virgule en trop ?).`)
     if(elements.length === 0) throw new UsageError(`${where} : aucun élément.`)
 
     const baseTexts = elements.filter(element => element.startsWith("@"))
     if(baseTexts.length > 1) throw new UsageError(`${where} : une seule base @ est permise, reçu ${baseTexts.join(" et ")}.`)
-    const base = baseTexts.length === 1 ? known.base(baseTexts[0].slice(1), where) : null
+    const base = baseTexts.length === 1 ? baseOf(baseTexts[0].slice(1), where) : null
     const rest = elements.filter(element => !element.startsWith("@"))
     const owner = base ? `@${base.name}` : "la définition"
 
@@ -349,94 +307,4 @@ function applyElement(
         throw new UsageError(`${where} : ${unknownName(space.what, name, space.all.map(each => each.name)).message}`)
     }
     for(let index = 0; index < count; index++) list.push(found)
-}
-
-/** Read the definitions of a text: one per line or separated by `;`, `#` starting a comment line. */
-function parseText(text: string, label: (line: number) => string, known: Known, out: Collected): void {
-    text.split(/\r?\n/).forEach((line, index) => {
-        if(line.trim().startsWith("#")) return
-        for(const part of line.split(";")){
-            if(part.trim() === "") continue
-            const made = parseDefinition(part, label(index + 1), known)
-            if("kit" in made){
-                known.kits.push(made)
-                out.kits.push(made)
-            }
-            else {
-                known.monsters.push(made)
-                out.monsters.push(made)
-            }
-        }
-    })
-}
-
-/** What a module gives: its kits and monsters. */
-function fromModule(exported: Record<string, unknown>, path: string, known: Known, out: Collected): void {
-    const kits = exported["kits"] ?? []
-    const monsters = exported["monsters"] ?? []
-    if(!Array.isArray(kits) || !Array.isArray(monsters)){
-        throw new UsageError(`--def ${path} : le module doit exporter kits et/ou monsters sous forme de listes.`)
-    }
-    for(const kit of kits as Kit[]){
-        if(typeof kit?.name !== "string" || !Array.isArray(kit.cards)) throw new UsageError(`--def ${path} : un kit exporté n'a pas de name et de cards.`)
-        known.add(kit.name, `--def ${path} « ${kit.name} »`)
-        const defined: DefinedKit = {
-            kit: {
-                ...kit,
-                sprite: kit.sprite ?? CUSTOM_SPRITE,
-                items: kit.items ?? [],
-                usables: kit.usables ?? [],
-                hearts: kit.hearts ?? [{ kind: RED_HEART, count: KIT_HEARTS }],
-            },
-            ...heartsOfKit({ ...kit, hearts: kit.hearts ?? [{ kind: RED_HEART, count: KIT_HEARTS }] }),
-        }
-        known.kits.push(defined)
-        out.kits.push(defined)
-    }
-    for(const each of monsters as Monster[]){
-        if(typeof each?.name !== "string" || !Array.isArray(each.cards)) throw new UsageError(`--def ${path} : un monstre exporté n'a pas de name et de cards.`)
-        known.add(each.name, `--def ${path} « ${each.name} »`)
-        known.monsters.push(each)
-        out.monsters.push(each)
-    }
-}
-
-/**
- * Read every `--def` value: a definition or several separated by `;`, or `@file` (`.txt`, one definition per
- * line; `.ts`, `.js` or `.mjs` exporting `kits` and `monsters`).
- *
- * @throws {@link UsageError} On a definition or a file that is wrong, said with where.
- */
-export async function loadDefinitions(values: readonly string[]): Promise<Definitions> {
-    const known = new Known()
-    const out = { kits: [] as DefinedKit[], monsters: [] as Monster[] }
-    for(const value of values){
-        if(!value.startsWith("@")){
-            parseText(value, () => "--def", known, out)
-            continue
-        }
-        const path = value.slice(1)
-        const absolute = resolve(path)
-        if(/\.(ts|js|mjs)$/i.test(path)){
-            let loaded: Record<string, unknown>
-            try {
-                loaded = await import(pathToFileURL(absolute).href) as Record<string, unknown>
-            }
-            catch(error){
-                throw new UsageError(`--def @${path} : module illisible (${error instanceof Error ? error.message : String(error)}).`)
-            }
-            fromModule(loaded, `@${path}`, known, out)
-            continue
-        }
-        let text: string
-        try {
-            text = await readFile(absolute, "utf8")
-        }
-        catch(error){
-            const code = (error as { code?: string }).code
-            throw new UsageError(`--def @${path} : fichier ${code === "ENOENT" ? "introuvable" : "illisible"} (${absolute}).`)
-        }
-        parseText(text, line => `--def @${path} ligne ${line}`, known, out)
-    }
-    return out
 }

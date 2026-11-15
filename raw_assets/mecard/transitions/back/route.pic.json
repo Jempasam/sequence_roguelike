@@ -1,0 +1,17 @@
+{
+    "size": [272, 148],
+    "seed": 7,
+    "palette": [
+        {"color": "#a83a30", "reflection": 0.2}
+    ],
+    "shapes": [
+        {"line": [62, 78, 88, 54], "material": 0, "depth": 5},
+        {"line": [88, 54, 116, 68], "material": 0, "depth": 5},
+        {"line": [116, 68, 150, 64], "material": 0, "depth": 5},
+        {"line": [150, 64, 180, 80], "material": 0, "depth": 5},
+        {"line": [180, 80, 196, 104], "material": 0, "depth": 5},
+        {"line": [196, 104, 214, 104], "material": 0, "depth": 5},
+        {"line": [208, 98, 220, 110], "width": 2, "material": 0, "depth": 6},
+        {"line": [220, 98, 208, 110], "width": 2, "material": 0, "depth": 6}
+    ]
+}

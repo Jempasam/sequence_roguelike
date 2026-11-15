@@ -1,0 +1,14 @@
+{
+    "size": [272, 148],
+    "seed": 11,
+    "palette": ["#b4b8ac", "#3c4040", "#7c8478", "#6a8a3c"],
+    "shapes": [
+        {"box": [0, 0, 272, 148], "fill": {"pattern": "tiles", "cell": [18, 10], "grout": 1, "offset": 0.5, "odd": 0.3, "materials": [2, 1, 0]}, "depth": 3},
+        {"ellipse": [94, 26, 84, 72], "fill": {"pattern": "tiles", "cell": [10, 8], "grout": 1, "offset": 0.5, "odd": 0.1, "materials": [0, 1, 0]}, "depth": [5, 6], "relief": "bevel", "bevel": 1},
+        {"box": [94, 62, 84, 86], "fill": {"pattern": "tiles", "cell": [10, 8], "grout": 1, "offset": 0.5, "odd": 0.1, "materials": [0, 1, 0]}, "depth": [5, 6], "relief": "bevel", "bevel": 1},
+        {"box": [0, 0, 272, 148], "fill": {"pattern": "noise", "density": 0.03, "radius": 2, "materials": [null, 3]}},
+        {"box": [0, 118, 272, 30], "fill": {"pattern": "noise", "density": 0.08, "radius": 2, "materials": [null, 3]}},
+        {"ellipse": [106, 34, 60, 56], "erase": true},
+        {"box": [106, 62, 60, 76], "erase": true}
+    ]
+}

@@ -6,9 +6,9 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, travel, turn } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the charm and the fear of the catalog reach, in meters. */
 const CONTROL_RANGE = 3
@@ -51,23 +51,23 @@ export class ControlCard extends ActionCard {
             return { target, facing: toward ? toCaster : toCaster.opposite }
         }
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const controlling = controlled(battle, unit, unit)
                 if(!controlling){
                     battle.events.push({ type: "skipped", unit, reason: "personne en face" })
-                    yield* hold(battle, SHORT_TIME, [label(unit.position, "personne en face", NOTE_COLOR)])
+                    hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne en face", NOTE_COLOR)])
                     return
                 }
                 const theirs = { battle, unit: controlling.target }
-                yield* turn(theirs, controlling.facing)
-                yield* travel(theirs, controlling.facing, walk)
+                turn(theirs, controlling.facing)
+                travel(theirs, controlling.facing, walk)
             },
             preview: ({ battle, unit, pose }) => {
                 const controlling = controlled(battle, unit, pose)
-                if(!controlling) return still(pose, label(pose.position, "personne en face", NOTE_COLOR))
+                if(!controlling) return Previews.still(pose, Previews.label(pose.position, "personne en face", NOTE_COLOR))
                 const { target, facing } = controlling
-                const walked = battle.travel(target, target.position, facing, walk)
-                return still(pose, arrow([target.position, walked.to], MOVE_WIDTH, CONTROL_COLOR))
+                const walked = battle.moveSpot(target, target.position, facing, walk)
+                return Previews.still(pose, ...Previews.strike([], [target]), Previews.arrow([target.position, walked.to], MOVE_WIDTH, CONTROL_COLOR))
             },
         }
     }

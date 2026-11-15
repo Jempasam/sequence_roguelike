@@ -1,0 +1,28 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.5, "towards": "#7a7a78"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#c0a040", "amount": 0.06}
+        ]
+    },
+    "anim": [
+        "global: y=0.15 a=0 > y=0.05 a=0.7 > y=0 a=1 m > hold > hold > z*3 > z*2.666667 a=0",
+        "leaf:   a=0 > hold > hold m > a=0.5 > a=1 > hold > hold",
+        "door:   a=1 > hold > hold m > a=0.5 > a=0 > hold > hold"
+    ],
+    "layers": [
+        {"name": "leaf", "tag": "object", "picture": "leaf.pic.json", "at": [0, 0]},
+        {"name": "door", "tag": "object", "picture": "door.pic.json", "at": [0, 0]},
+        {"name": "wall", "tag": "border", "picture": "wall.pic.json", "at": [0, 0]}
+    ]
+}

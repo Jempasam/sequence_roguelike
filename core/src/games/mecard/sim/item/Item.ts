@@ -1,12 +1,13 @@
 import type { Visual } from "../base/Visual"
 import type { Text } from "../../../../semantic"
 import type { PlugContext } from "../battle/Action"
+import type { Previewable } from "../battle/preview/Previewable"
 
 /**
  * Something a character carries through the run, which changes it for good: a stat, a reaction to a hit.
  * Plugged in at the start of each battle, through observers and modifiers only, as a status is.
  */
-export interface Item {
+export interface Item extends Partial<Previewable> {
     readonly name: string
 
     /** Its picture. */

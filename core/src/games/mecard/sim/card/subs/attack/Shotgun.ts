@@ -7,9 +7,10 @@ import type { Area } from "../../../battle/Area"
 
 import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still, strike } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the shotgun of the catalog reaches, in meters, before the reach of the unit. */
 const SHOTGUN_RANGE = 2.5
@@ -64,7 +65,7 @@ export class ShotgunCard extends ActionCard {
 
     static #firing(range: number, pellets: number, pelletDamage: number, spread: number): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const reach = range * unit.stats.throwRange.value
                 const lines: { from: Vector2, to: Vector2 }[] = []
                 for(let i = 0; i < pellets; i++){
@@ -76,24 +77,24 @@ export class ShotgunCard extends ActionCard {
                 }
                 const segment = (line: typeof lines[number], share: number): Area => {
                     const to = line.from.plus(line.to.minus(line.from).times(share))
-                    return { kind: "segment", from: line.from, to, width: PELLET_WIDTH }
+                    return Areas.line(line.from, to, PELLET_WIDTH)
                 }
-                yield* sweep(battle, BLAST_TIME, share => {
-                    return lines.map(line => polygon(segment(line, share), PHYSICAL_COLOR))
+                sweep(battle, BLAST_TIME, share => {
+                    return lines.map(line => Previews.polygon(segment(line, share), PHYSICAL_COLOR))
                 })
                 for(const line of lines){
                     const pellet = pelletDamage + unit.stats.precision.value
                     battle.strike(unit, segment(line, 1), pellet, DamageType.PHYSICAL)
                 }
-                const landed = lines.map(line => polygon(segment(line, 1), PHYSICAL_COLOR))
-                yield* hold(battle, RECOVERY_TIME, landed)
+                const landed = lines.map(line => Previews.polygon(segment(line, 1), PHYSICAL_COLOR))
+                hold(battle, RECOVERY_TIME, landed)
             },
             // The pellets are drawn when they fire: the preview shows where they may go.
             preview: ({ battle, unit, pose }) => {
                 const radius = range * unit.stats.throwRange.value
                 const cosHalf = 1 / Math.sqrt(1 + spread * spread)
-                const area: Area = { kind: "sector", center: pose.position, direction: pose.direction, radius, cosHalf }
-                return still(pose, ...strike([area], battle.unitsIn(area, unit)))
+                const area: Area = Areas.arc(pose.position, pose.direction, radius, cosHalf)
+                return Previews.still(pose, ...Previews.strike([area], battle.fetch(area, unit)))
             },
         }
     }

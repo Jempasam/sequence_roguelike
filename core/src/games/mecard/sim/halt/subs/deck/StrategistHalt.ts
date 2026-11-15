@@ -10,7 +10,6 @@ import { joinDecks, MAX_SWAPPED, splitDeck, swapCards } from "../../../run/visit
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { decksShown } from "../shown"
 import { CARTE, DECK } from "../../../base/keywords"
@@ -52,7 +51,7 @@ export class StrategistHalt extends AbstractHalt {
         super(STRATEGIST_HALT, run,
             ["Deux ", DECK.as("decks"), " valent mieux qu'un. Je divise, je trie, je fusionne, ou je t'apprends à piocher."],
             // Waiting for its own art: the scene of the antiquarian.
-            sceneLook(31, 26, 23, "mecard/travel/antiquarian"),
+            sceneLook(28, 30, 16, "strategist"),
             {
                 hat: "bicorne",
                 clothes: rgba(0.9, 0.75, 0.2),
@@ -171,7 +170,8 @@ export class StrategistHalt extends AbstractHalt {
 export const STRATEGIST_HALT: HaltType = {
     id: "strategist",
     name: "Stratège",
-    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],    icon: visual("travel/strategist/logo", { letter: "ST" }),
-    transition: DOOR_TRANSITION,
+    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],
+    icon: visual("travel/strategist/logo", { letter: "ST" }),
+    transition: visual("transitions/house-door"),
     create: run => new StrategistHalt(run),
 }

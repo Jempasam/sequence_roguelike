@@ -1,7 +1,7 @@
 import type { Place, PlaceInfo } from "../run/Journey"
 import type { PlaceType } from "../run/PlaceType"
 
-import { ALL_FIGHTS } from "./fights"
+import { ALL_FIGHTS } from "../fight/fights"
 import { allHalts } from "./halts"
 
 /**
@@ -15,7 +15,7 @@ export function allPlaceTypes(): readonly PlaceType[] {
 }
 
 /**
- * The sort of place with an id, from a save or a command.
+ * The sort of place with an id, from a command.
  *
  * @throws {@link Error} When the catalog has none.
  */
@@ -25,7 +25,10 @@ export function placeTypeById(id: string): PlaceType {
     return type
 }
 
-/** What the players are told of a place: of the floor it leads to for an exit, else of its sort. */
+/**
+ * What the players are told of a place: of the floor it leads to for an exit, else of its fight, else of its
+ * halt.
+ */
 export function infoOf(place: Place): PlaceInfo {
-    return place.exitTo?.type ?? place.type
+    return place.exitTo?.type ?? place.fight ?? place.halt!
 }

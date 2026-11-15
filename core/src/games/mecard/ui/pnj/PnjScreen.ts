@@ -1,16 +1,20 @@
-import { AssetError } from "../../../../engine/assets"
+import { ASSET_PATHS, AssetError } from "../../../../engine/assets"
 import type { Assets, LayeredImagePath } from "../../../../engine/assets"
 import { Sprite, Texture } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, Panel, Scroll, Slider } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
 
+import { visual } from "../../sim/base/Visual"
 import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "../../sim/halt/PnjHats"
 import type { PnjHatLook } from "../../sim/halt/PnjHats"
 
 import { DIM_TEXT } from "../look/theme"
 import { pathOf } from "../look/visualPath"
 import { Pnj } from "./Pnj"
+import { PixelArtActor } from "./PixelArtActor"
+import { PixelArtPnj } from "./PixelArtPnj"
+import { PixelArtView } from "./PixelArtView"
 import { PnjActor } from "./PnjActor"
 import type { PartPlace } from "./PnjPose"
 import { PNJ_ANIMATIONS } from "./PnjAnimation"
@@ -20,6 +24,12 @@ import type { PnjAccessory, PnjHat } from "./PnjView"
 
 /** The character shown on the bench. */
 const PNJ_PATH: LayeredImagePath = "mecard/pnj/merchant.ora"
+
+/** The keys of the units whose sprite a character can be drawn from, as the game ships them. */
+const UNITS: readonly string[] = ASSET_PATHS
+    .map(path => /^mecard\/(units\/[^/]+)\.png$/.exec(path)?.[1])
+    .filter((key): key is string => key !== undefined)
+    .sort()
 
 /** The hats tried on, by their name on the buttons, and how large each is worn. */
 const HATS: readonly PnjHatLook[] = Object.values(PNJ_HATS)
@@ -63,18 +73,32 @@ interface PoseSetting {
     /** The highest value, 1 when none. */
     readonly max?: number
 
-    read(pnj: Pnj): number
-    write(pnj: Pnj, value: number): void
+    /** Does only a painted character, with a head, have it? */
+    readonly painted?: true
+
+    read(pnj: Character): number
+    write(pnj: Character, value: number): void
 }
+
+/** A character of the bench: painted, with a head, or drawn from the sprite of a unit. */
+type Character = Pnj|PixelArtPnj
+
+/** What shows a character of the bench. */
+type CharacterView = PnjView|PixelArtView
 
 /** The settings of the pose the sliders move by hand. */
 const POSE_SETTINGS: readonly PoseSetting[] = [
     { label: "Orientation", min: -1, read: pnj => pnj.orientation, write: (pnj, value) => { pnj.orientation = value } },
     {
-        label: "Rotation tête", min: -1,
-        read: pnj => pnj.headTurn, write: (pnj, value) => { pnj.headTurn = value },
+        label: "Rotation tête", min: -1, painted: true,
+        read: pnj => pnj instanceof Pnj ? pnj.headTurn : 0,
+        write: (pnj, value) => { if(pnj instanceof Pnj) pnj.headTurn = value },
     },
-    { label: "Tête", min: -1, read: pnj => pnj.head, write: (pnj, value) => { pnj.head = value } },
+    {
+        label: "Tête", min: -1, painted: true,
+        read: pnj => pnj instanceof Pnj ? pnj.head : 0,
+        write: (pnj, value) => { if(pnj instanceof Pnj) pnj.head = value },
+    },
     { label: "Penchage", min: -1, read: pnj => pnj.lean, write: (pnj, value) => { pnj.lean = value } },
     { label: "Écrasement", min: 0, read: pnj => pnj.squash, write: (pnj, value) => { pnj.squash = value } },
 ]
@@ -108,6 +132,7 @@ export class PnjScreen {
         this.#maskLabel = new Label(theme, "", { color: DIM_TEXT })
         this.#itemLabel = new Label(theme, "", { color: DIM_TEXT })
         this.#modeButton = new Button(theme, "")
+        this.#unitLabel = new Label(theme, "Marchand peint", { color: DIM_TEXT })
     }
 
 
@@ -133,8 +158,15 @@ export class PnjScreen {
     readonly #maskLabel: Label
     readonly #itemLabel: Label
     readonly #modeButton: Button
+    readonly #unitLabel: Label
     #loading: Promise<void>|null = null
-    #view: PnjView|null = null
+    #view: CharacterView|null = null
+
+    /** What the character shown owns on the GPU, freed when another replaces it. */
+    #owned: { dispose(): void }|null = null
+
+    /** The unit drawn from its sprite, by its place among {@link UNITS}, none for the painted merchant. */
+    #unit: number|null = null
     #hats: PnjHat[] = []
     #masks: PnjAccessory[] = []
     #items: PnjAccessory[] = []
@@ -167,6 +199,17 @@ export class PnjScreen {
         this.#hats = hats
         this.#masks = masks
         this.#items = items
+        this.#owned = rig
+        this.#view = this.#paintedViewOf(rig, null)
+        this.#view.hat = this.#hats[0]
+        this.#build()
+    }
+
+    /**
+     * The view of the painted merchant, wearing what the character it replaces wore, so trying another
+     * character keeps the hat, the mask, the object and the colors tried on.
+     */
+    #paintedViewOf(rig: PnjRig, old: CharacterView|null): PnjView {
         const pnj = new Pnj(rig)
         const tell = (label: Label, name: string) => (place: Readonly<PartPlace>) => {
             const angle = Math.round(place.angle * 180 / Math.PI)
@@ -175,9 +218,67 @@ export class PnjScreen {
         pnj.onHatMove(tell(this.#hatLabel, "Chapeau"))
         pnj.onMaskMove(tell(this.#maskLabel, "Masque"))
         pnj.onItemMove(tell(this.#itemLabel, "Objet"))
-        this.#view = new PnjView(new PnjActor(pnj))
-        this.#view.hat = this.#hats[0]
+        return this.#worn(new PnjView(new PnjActor(pnj)), old)
+    }
+
+    /** The view of a character drawn from a sprite, wearing what the one it replaces wore. */
+    #pixelViewOf(pnj: PixelArtPnj, old: CharacterView|null): PixelArtView {
+        // It has no place of its own to tell, as the labels tell those of the painted one.
+        for(const label of [this.#hatLabel, this.#maskLabel, this.#itemLabel]) label.text = ""
+        return this.#worn(new PixelArtView(new PixelArtActor(pnj)), old)
+    }
+
+    /** A view wearing what another wore: its clothes, its hat, its mask, its object and their colors. */
+    #worn<View extends CharacterView>(view: View, old: CharacterView|null): View {
+        if(!old) return view
+        view.actor.pnj.clothes = old.actor.pnj.clothes
+        view.hat = old.hat
+        view.hatColor = old.hatColor
+        view.mask = old.mask
+        view.maskColor = old.maskColor
+        view.item = old.item
+        view.itemColor = old.itemColor
+        view.animated = old.animated
+        view.followsPointer = old.followsPointer
+        return view
+    }
+
+    /**
+     * Try another character: the painted merchant for `null`, else the sprite of a unit.
+     *
+     * @param index - The place of the unit among {@link UNITS}, `null` for the merchant.
+     */
+    async #tryCharacter(index: number|null): Promise<void> {
+        const old = this.#view
+        if(!old) return
+        const key = index === null ? null : UNITS[index]
+        let owned: PnjRig|PixelArtPnj
+        let view: CharacterView
+        try {
+            if(key === null){
+                owned = await PnjRig.load(this.ui.gpu, this.assets, PNJ_PATH, PNJ_SHRINK)
+                view = this.#paintedViewOf(owned, old)
+            } else {
+                owned = await PixelArtPnj.load(this.ui.gpu, this.assets, visual(key))
+                view = this.#pixelViewOf(owned, old)
+            }
+        } catch(error){
+            if(!(error instanceof Error)) throw error
+            this.host.report(`Ce personnage n'a pas pu être chargé : ${error.message}`)
+            return
+        }
+        this.#unit = index
+        this.#unitLabel.text = key === null ? "Marchand peint" : key
+        this.#owned?.dispose()
+        this.#owned = owned
+        this.#view = view
         this.#build()
+    }
+
+    /** The settings of the pose the character shown has, a unit having no head. */
+    get #settings(): readonly PoseSetting[] {
+        const isPainted = this.#view?.actor.pnj instanceof Pnj
+        return POSE_SETTINGS.filter(setting => isPainted || !setting.painted)
     }
 
     /** Build the panels again: the character on the left, the controls on the right. */
@@ -185,7 +286,10 @@ export class PnjScreen {
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
         // Kept from one build to the next, so taken out of the panels of the last one first.
-        for(const kept of [this.#view, this.#hatLabel, this.#maskLabel, this.#itemLabel, this.#modeButton]){
+        const keptParts = [
+            this.#view, this.#hatLabel, this.#maskLabel, this.#itemLabel, this.#modeButton, this.#unitLabel,
+        ]
+        for(const kept of keptParts){
             kept?.parent?.remove(kept)
         }
         const row = new Box("row", { gap: MARGIN, padding: MARGIN, align: "stretch" })
@@ -204,9 +308,22 @@ export class PnjScreen {
 
     //// Controls ////
 
-    #controls(view: PnjView): Component {
+    #controls(view: CharacterView): Component {
         const column = new Box("column", { gap: MARGIN, align: "stretch" })
         column.add(this.#leaveButton())
+        column.add(this.#title("Personnage"))
+        column.add(this.#unitLabel)
+        column.add(this.#buttons([
+            { label: "Marchand", action: () => { void this.#tryCharacter(null) } },
+            {
+                label: "Suivant",
+                action: () => { void this.#tryCharacter(((this.#unit ?? -1) + 1) % UNITS.length) },
+            },
+            {
+                label: "Précédent",
+                action: () => { void this.#tryCharacter(((this.#unit ?? 0) + UNITS.length - 1) % UNITS.length) },
+            },
+        ]))
         column.add(this.#title("Animations"))
         column.add(this.#buttons(PNJ_ANIMATIONS.map(animation => ({
             label: animation.label,
@@ -244,7 +361,7 @@ export class PnjScreen {
         column.add(this.#title("Pose"))
         this.#modeButton.onActivate = () => this.#setManual(view, view.animated)
         column.add(this.#modeButton)
-        this.#sliders = POSE_SETTINGS.map(setting => {
+        this.#sliders = this.#settings.map(setting => {
             const label = new Label(this.theme, "", { color: DIM_TEXT })
             const slider = new Slider(this.theme, {
                 min: setting.min * SLIDER_STEPS, max: (setting.max ?? 1) * SLIDER_STEPS,
@@ -267,13 +384,13 @@ export class PnjScreen {
      * Pose the character by hand, its gaze and its animations paused, the sliders starting from its pose; or
      * give it back to its actor, looking at the pointer.
      */
-    #setManual(view: PnjView, manual: boolean): void {
+    #setManual(view: CharacterView, manual: boolean): void {
         view.animated = !manual
         view.followsPointer = !manual
         this.#modeButton.content = new Label(this.theme, manual ? "Pose à la main" : "Suit la souris", { align: "center" })
         if(!manual) return
         view.actor.stop()
-        POSE_SETTINGS.forEach((setting, index) => {
+        this.#settings.forEach((setting, index) => {
             const slider = this.#sliders[index]
             if(slider) slider.value = Math.round(setting.read(view.actor.pnj) * SLIDER_STEPS)
         })

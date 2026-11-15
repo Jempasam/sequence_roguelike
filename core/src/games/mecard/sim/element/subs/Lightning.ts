@@ -8,6 +8,7 @@ import { Haste } from "../../process/subs/Haste"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
 import { frenchNumber } from "../../battle/words"
+import * as Areas from "../../battle/area/Areas"
 
 /** The factor the lightning puts on the agility of a unit, for the round. */
 const LIGHTNING_HASTE = 1.5
@@ -51,9 +52,9 @@ export class Lightning extends AbstractElement {
 
     public invoke(ctx: UnitContext, at: Vector2, _direction: Vector2, effect: Element): void {
         const { battle, unit } = ctx
-        const area = { kind: "circle", center: at, radius: ARC_RADIUS } as const
+        const area = Areas.circle(at, ARC_RADIUS)
         battle.post(polygonEffect(area, { ...this.color, a: 0.4 }, ARC_TIME))
-        const touched = battle.unitsIn(area, unit)
+        const touched = battle.fetch(area, unit)
         // Read before any of it acts, so the arc follows the bodies as they stood when it struck.
         for(let index = 0; index < touched.length; index++){
             const from = touched[index]

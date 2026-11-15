@@ -1,0 +1,15 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": ["#7a6040", "#2a1e14", "#e0c068", "#5a4430"],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "fill": {"pattern": "planks", "width": 9, "axis": "y", "joint": 1, "seams": 0.2, "materials": [0, 1, 3], "odd": 0.2}, "depth": 2},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "planks", "width": 7, "axis": "x", "joint": 1, "seams": 0.4, "materials": [3, 1]}, "depth": 3},
+        {"box": [0, 110, 288, 3], "material": 1, "depth": 3, "relief": "round-y"},
+        {"box": [0, 113, 288, 51], "fill": {"pattern": "noise", "density": 0.07, "radius": 1, "materials": [null, 2]}},
+        {"line": [20, 130, 36, 126], "width": 1, "material": 2, "depth": 4},
+        {"line": [120, 138, 138, 134], "width": 1, "material": 2, "depth": 4},
+        {"line": [210, 128, 228, 132], "width": 1, "material": 2, "depth": 4},
+        {"box": [0, 150, 288, 14], "fill": {"pattern": "noise", "density": 0.12, "radius": 1, "materials": [null, 2]}}
+    ]
+}

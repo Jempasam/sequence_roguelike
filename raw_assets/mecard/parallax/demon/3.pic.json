@@ -1,0 +1,29 @@
+{
+    "size": [288, 164],
+    "seed": 13,
+    "palette": [
+        "#2a1216",
+        "#6a3036",
+        {"color": "#ff3a10", "light": 1},
+        {"color": "#ffb040", "light": 1}
+    ],
+    "shapes": [
+        {"ellipse": [84, 104, 120, 30], "material": 0, "depth": [2, 3]},
+        {"ellipse": [88, 107, 112, 24], "material": 2, "depth": 3},
+        {"ellipse": [92, 110, 104, 18], "material": 0, "depth": 3},
+        {"polygon": [[144, 105], [160, 125], [128, 125]], "material": 2, "depth": 4},
+        {"polygon": [[144, 129], [128, 111], [160, 111]], "material": 2, "depth": 4},
+        {"line": [144, 111, 170, 125], "material": 3, "depth": 4},
+        {"line": [170, 125, 102, 116], "material": 3, "depth": 4},
+        {"line": [102, 116, 186, 116], "material": 3, "depth": 4},
+        {"line": [186, 116, 118, 125], "material": 3, "depth": 4},
+        {"line": [118, 125, 144, 111], "material": 3, "depth": 4},
+        {"ellipse": [138, 114, 12, 6], "material": 0, "depth": 3},
+        {"polygon": [[144, 76], [149, 90], [157, 84], [153, 100], [158, 108], [144, 112], [130, 108], [135, 100], [131, 84], [139, 90]], "material": 2, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[144, 90], [147, 100], [144, 108], [141, 100]], "material": 3, "depth": [5, 6]},
+        {"ellipse": [84, 110, 8, 6], "material": 1, "depth": [5, 6], "relief": "dome"},
+        {"ellipse": [196, 110, 8, 6], "material": 1, "depth": [5, 6], "relief": "dome"},
+        {"polygon": [[88, 98], [92, 106], [84, 106]], "material": 3, "depth": 6},
+        {"polygon": [[200, 98], [204, 106], [196, 106]], "material": 3, "depth": 6}
+    ]
+}

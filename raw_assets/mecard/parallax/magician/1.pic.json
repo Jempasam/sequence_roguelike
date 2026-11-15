@@ -1,0 +1,17 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": [
+        "#3c2658",
+        "#1a1030",
+        "#6a4430",
+        {"color": "#ffe8a0", "light": 0.9}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "stripes", "width": 12, "axis": "y", "materials": [0, 0, 1], "depths": [0, 1, 0]}, "depth": 2},
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "noise", "density": 0.004, "radius": 0, "materials": [null, 3]}, "depth": 2},
+        {"polygon": [[144, 26], [148, 36], [158, 36], [150, 42], [153, 52], [144, 46], [135, 52], [138, 42], [130, 36], [140, 36]], "material": 3, "depth": [1, 2]},
+        {"box": [0, 108, 288, 6], "material": 1, "depth": [3, 4], "relief": "round-y"},
+        {"box": [0, 114, 288, 50], "fill": {"pattern": "planks", "width": 7, "axis": "x", "joint": 1, "seams": 0.7, "materials": [2, 1]}, "depth": 2}
+    ]
+}

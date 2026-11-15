@@ -6,11 +6,12 @@ import type { Unit } from "../../../battle/Unit"
 import { HAZARD_COLOR, NOTE_COLOR, PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 
 import { SHORT_TIME, hold } from "./playing"
-import { label, polygon, still } from "./previews"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** A segment ahead of a pose, from its center. */
 export function ahead(pose: Pose, length: number, width: number): Area {
-    return { kind: "segment", from: pose.position, to: pose.position.plus(pose.direction.times(length)), width }
+    return Areas.line(pose.position, pose.position.plus(pose.direction.times(length)), width)
 }
 
 /** The unit of some the nearest to a point, none for none. */
@@ -29,7 +30,7 @@ export function nearest(units: readonly Unit[], from: Vector2): Unit|null {
 
 /** A ring around a unit, in a preview. */
 export function ring(unit: Unit) {
-    return polygon({ kind: "circle", center: unit.position, radius: unit.radius }, HAZARD_COLOR)
+    return Previews.polygon(Areas.circle(unit.position, unit.radius), HAZARD_COLOR)
 }
 
 /**
@@ -40,16 +41,16 @@ export function onFirstAhead(
     length: number, width: number, effect: (battle: Battle, unit: Unit, target: Unit) => void, what: string,
 ): Action {
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             const area = ahead(unit, length, width)
-            const target = nearest(battle.unitsIn(area, unit), unit.position)
+            const target = nearest(battle.fetch(area, unit), unit.position)
             if(target) effect(battle, unit, target)
-            yield* hold(battle, SHORT_TIME, [polygon(area, PHYSICAL_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
         },
         preview: ({ battle, unit, pose }) => {
             const area = ahead(pose, length, width)
-            const target = nearest(battle.unitsIn(area, unit), pose.position)
-            return still(pose, polygon(area, RANGE_COLOR), ...target ? [ring(target), label(target.position, what, NOTE_COLOR)] : [])
+            const target = nearest(battle.fetch(area, unit), pose.position)
+            return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...target ? [ring(target), Previews.label(target.position, what, NOTE_COLOR)] : [])
         },
     }
 }
@@ -57,11 +58,11 @@ export function onFirstAhead(
 /** An action that does something to its own unit: its preview says what with a word over it. */
 export function onSelf(effect: (battle: Battle, unit: Unit) => void, what: string): Action {
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             effect(battle, unit)
-            yield* hold(battle, SHORT_TIME, [label(unit.position, what, NOTE_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.label(unit.position, what, NOTE_COLOR)])
         },
-        preview: ({ pose }) => still(pose, label(pose.position, what, NOTE_COLOR)),
+        preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, what, NOTE_COLOR)),
     }
 }
 
@@ -70,20 +71,20 @@ export function onCircle(
     radius: number, who: (unit: Unit, other: Unit) => boolean, effect: (battle: Battle, unit: Unit, other: Unit) => void,
     what: string,
 ): Action {
-    const around = (pose: Pose): Area => ({ kind: "circle", center: pose.position, radius })
+    const around = (pose: Pose): Area => (Areas.circle(pose.position, radius))
     const chosen = (battle: Battle, unit: Unit, pose: Pose) => {
         return battle.touchables.filter(other => {
             return who(unit, other) && other.position.distance(pose.position) <= radius + other.radius
         })
     }
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             for(const other of chosen(battle, unit, unit)) effect(battle, unit, other)
-            yield* hold(battle, SHORT_TIME, [polygon(around(unit), RANGE_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.polygon(around(unit), RANGE_COLOR)])
         },
         preview: ({ battle, unit, pose }) => {
-            return still(pose, polygon(around(pose), RANGE_COLOR), ...chosen(battle, unit, pose).flatMap(other => {
-                return [ring(other), label(other.position, what, NOTE_COLOR)]
+            return Previews.still(pose, Previews.polygon(around(pose), RANGE_COLOR), ...chosen(battle, unit, pose).flatMap(other => {
+                return [ring(other), Previews.label(other.position, what, NOTE_COLOR)]
             }))
         },
     }

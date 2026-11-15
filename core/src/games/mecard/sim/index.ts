@@ -5,7 +5,7 @@
  * `hazard`, `card`, `usable`, `item` and `potion`, the kinds of heart, statuses, hazards, cards,
  * usables, items and potions themselves in their `subs`. The monsters, kits and halts are in
  * `catalog`, the bots in `ai`, the game as a whole in `run`, the journey between the battles in
- * `travel`, the places visited on it in `halt`, the floors the party goes through in `floor`, a battle
+ * `travel`, the places visited on it in `halt`, the fights in `fight`, the floors the party goes through in `floor`, a battle
  * written down as JSON in `save`.
  */
 
@@ -17,7 +17,7 @@ export * from "./card/subs"
 export * from "./catalog"
 export * from "./catalog/boosters"
 export * from "./catalog/floors"
-export * from "./catalog/fights"
+export * from "./fight"
 export * from "./catalog/halts"
 export * from "./catalog/places"
 export * from "./catalog/upgrades"

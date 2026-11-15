@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { AssetError } from "@game/core"
 import type { Assets, Painter } from "@game/core"
-import { CHEST_HALT, isHalt, Run } from "@game/core/mecard"
+import { CHEST_HALT, Run } from "@game/core/mecard"
 import { TravelScreen } from "@game/core/mecard/travel-screen"
 import type { TravelScreenOptions } from "@game/core/mecard/travel-screen"
 
@@ -14,6 +14,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 /** Pictures that never load: the map then shows its panels and its codes, as it does while they load. */
 const NO_ASSETS = {
     image: (path: string) => Promise.reject(new AssetError(path, "unreadable", "none in the tests")),
+    layeredImage: (path: string) => Promise.reject(new AssetError(path, "unreadable", "none in the tests")),
 } as unknown as Assets
 
 /** Where a screen drawing only in the interface is given to draw. */
@@ -22,6 +23,7 @@ const NO_WORLD = null as unknown as Painter
 /** Units with no pictures. */
 const NO_SPRITES = {
     of: () => null,
+    thing: () => null,
     whenLoaded: () => {},
 } as unknown as TravelScreenOptions["sprites"]
 
@@ -40,6 +42,9 @@ function shown(): Shown {
     const screen = new TravelScreen(setup.ui, run.travel, {
         theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES,
         enter: () => new Promise(arrive => enters.push(arrive)),
+        leave: () => Promise.resolve(),
+        ready: () => Promise.resolve(),
+        loading: work => work,
         report: () => {},
     })
     setup.ui.render()
@@ -131,7 +136,7 @@ describe("TravelScreen", () => {
     test("back into the halt it stands on → nothing moved, so the way in plays at once", async() => {
         const game = shown()
         const { run, screen, enters } = game
-        const halt = run.travel.journey.places.find(place => isHalt(place.type) && !place.exitTo)
+        const halt = run.travel.journey.places.find(place => !place.fight && place.halt && !place.exitTo)
         if(!halt) throw new Error("The map holds no halt.")
         run.travel.jump(halt)
         run.travel.haltOf(halt)

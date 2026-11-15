@@ -3,13 +3,15 @@ import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import { Component, Dial, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
+import { plainText } from "../../../../semantic"
 import { typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
 import { TEXT_OUTLINE } from "../look/theme"
 import { topMark } from "../look/topMark"
+import { keyColorOf, variantEntries, variantKindOf } from "../look/variantKind"
+import type { VariantEntry, VariantKind } from "../look/variantKind"
 import { CompositeCard, cardCount } from "../../sim/card/subs/composite/CompositeCard"
 import type { Card } from "../../sim/card/Card"
-import { TURN_STEPS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
 
 /** Where a card is shown, which sets its size: the hand, the chain being put together, the other chains. */
 export type CardPlace = "hand"|"chain"|"mini"
@@ -59,14 +61,59 @@ const PICKED_EDGE = new Color(1, 0.85, 0.35)
 /** The edge of a card played unlimited: white, under the yellow one of a card chosen. */
 const UNLIMITED_EDGE = new Color(1, 1, 1)
 
-/** The dial of a turn: its disc, its dot and its needle, and how big it is in each place, as a radius. */
-const DIAL = new Dial(TURN_STEPS, {
+/** The edge of a card another unit put in the chain: the violet of control. */
+const BORROWED_EDGE = new Color(0.85, 0.5, 1)
+
+/**
+ * The look of the dial offering directions: its disc, its dot, its needle, and a bar on each direction, a
+ * shade lighter than the disc.
+ */
+const DIAL_LOOK = {
     face: new Color(0.05, 0.04, 0.08), dot: new Color(0.95, 0.92, 0.86), needle: new Color(0.95, 0.92, 0.86),
-})
+    tick: new Color(0.13, 0.12, 0.19),
+}
+
+/** The dials found already, by how many directions they offer. */
+const DIALS = new Map<number, Dial>()
+
+/** The dial offering a number of directions, the same one each time. */
+function dialOf(steps: number): Dial {
+    let dial = DIALS.get(steps)
+    if(!dial){
+        dial = new Dial(steps, DIAL_LOOK)
+        DIALS.set(steps, dial)
+    }
+    return dial
+}
+
 /** The disc of the dial under the pointer. */
 const DIAL_HOVERED = new Color(0.22, 0.2, 0.3)
 const HAND_DIAL_RADIUS = 11
 const CHAIN_DIAL_RADIUS = 9
+
+/** The chips offering the variants of a card: their color, under the pointer, and chosen. */
+const CHIP = new Color(0.05, 0.04, 0.08)
+const CHIP_HOVERED = new Color(0.22, 0.2, 0.3)
+const CHIP_CHOSEN = new Color(1, 0.85, 0.35)
+
+/** The text on a chip, and on a chosen one, which is light. */
+const CHIP_TEXT = new Color(0.95, 0.92, 0.86)
+const CHIP_CHOSEN_TEXT = new Color(0.1, 0.09, 0.14)
+
+/** How tall a chip is, in virtual pixels, and how many sit on a row. */
+const CHIP_HEIGHT = 9
+const CHIPS_PER_ROW = 3
+
+/** The space between two chips, in virtual pixels. */
+const CHIP_GAP = 1
+
+/** A rectangle of a card, from its top left corner, in virtual pixels. */
+interface Rect {
+    readonly x: number
+    readonly y: number
+    readonly width: number
+    readonly height: number
+}
 const NAME = new Color(0.95, 0.92, 0.86)
 
 /** How much of its color the mark on the band of a card keeps: the same color, darker. */
@@ -136,10 +183,11 @@ export class CardView extends Component {
     public onHover: ((over: boolean) => void)|null = null
 
     /**
-     * What a click on the dial of a turn does, given the step it points at, nothing when none: the dial then
-     * only shows the direction, and the click is a pick as anywhere else on the card.
+     * What choosing a variant of the card does, given the variant, nothing when none: the card then only shows
+     * the variant it is, and a click anywhere on it is a pick. A press on a dial and a drag over it choose
+     * when the pointer is released, the needle following the pointer meanwhile.
      */
-    public onDial: ((step: number) => void)|null = null
+    public onVariant: ((variant: Card) => void)|null = null
 
     /** Does it only keep its place, drawing nothing: a card still on its way there? */
     public ghost = false
@@ -156,11 +204,20 @@ export class CardView extends Component {
         this.invalidate()
     }
 
+    /** Was it put in the chain by another unit, a hypnosis? It then shows a violet edge. Only a look. */
+    public get borrowed(): boolean { return this.#borrowed }
+
+    public set borrowed(borrowed: boolean){
+        if(borrowed === this.#borrowed) return
+        this.#borrowed = borrowed
+        this.invalidate()
+    }
+
     /** The deck it comes from, by its place, which colors its face, none for a card from elsewhere. */
     public deck: number|null = null
 
-    /** Is it being looked at? It then shows the edge of a card lifted. */
-    public lit = false
+    /** The color of the edge it is outlined in while it is looked at, none when it is not. */
+    public edge: Color|null = null
 
     /** What crosses it out, in its middle, none for a card that is not. */
     public cross: Sprite|null = null
@@ -198,6 +255,10 @@ export class CardView extends Component {
         super()
         this.#text = new TextLayout(theme.font, theme.textScale)
         this.#glyphText = new TextLayout(theme.font, theme.textScale * GLYPH_SCALE)
+        // A small place has no room to offer the choice.
+        this.#entries = card && place !== "mini" ? variantEntries(card) : []
+        this.#kind = variantKindOf(this.#entries)
+        this.#current = this.#entries.findIndex(entry => entry.card === card)
     }
 
 
@@ -218,10 +279,12 @@ export class CardView extends Component {
         painter.push()
         painter.setWhitePixel(this.theme.white)
         this.#paintCard(painter, card, 0, 0, width, height)
-        if(card && card === this.card) this.#paintDial(painter, width)
+        if(card && card === this.card) this.#paintVariants(painter, width)
         // The edge of a card chosen or looked at goes over its own, so a frame of the color of its cards stays.
         if(this.unlimited) this.#paintEdge(painter, width, height, UNLIMITED_EDGE)
-        if(this.#activation !== null || this.lit) this.#paintEdge(painter, width, height, PICKED_EDGE)
+        if(this.borrowed) this.#paintEdge(painter, width, height, BORROWED_EDGE)
+        if(this.#activation !== null) this.#paintEdge(painter, width, height, PICKED_EDGE)
+        if(this.edge) this.#paintEdge(painter, width, height, this.edge)
         if(this.#activation) this.#text.drawOutlined(painter, this.#activation, 2, 1, PICKED_EDGE, TEXT_OUTLINE)
         if(this.dimmed){
             painter.setTint(VEIL)
@@ -236,40 +299,52 @@ export class CardView extends Component {
 
     protected override handle(event: UiEvent): void {
         if(event.type === "pointer-move"){
-            // The dial answers the pointer only when a click on it does something of its own.
-            const over = this.onDial !== null && this.#overDialAt(event.x, event.y)
-            if(over !== this.#overDial){
-                this.#overDial = over
+            if(this.#dragging){
+                // The needle follows the pointer, wherever it goes: it is chosen when the pointer is let go.
+                const step = this.#variantAt(event.x, event.y, true)
+                if(step !== null && step !== this.#preview){
+                    this.#preview = step
+                    this.invalidate()
+                }
+                event.consume()
+                return
+            }
+            // What offers the variants answers the pointer only when choosing one does something of its own.
+            const over = this.onVariant !== null ? this.#overVariantsAt(event.x, event.y) : null
+            if(over !== this.#overVariants){
+                this.#overVariants = over
                 this.invalidate()
             }
             return
         }
+        if(event.type === "pointer-up" && event.button === 0 && this.#dragging){
+            this.#dragging = false
+            const chosen = this.#preview
+            this.#preview = null
+            this.invalidate()
+            if(chosen !== null && chosen !== this.#current) this.onVariant?.(this.#entries[chosen].card)
+            event.consume()
+            return
+        }
         if(event.type !== "pointer-down" || event.button !== 0) return
         event.consume()
-        if(this.onDial && this.#overDialAt(event.x, event.y)){
-            // The center of the dial points nowhere: the click is the dial's all the same, and changes nothing.
-            const step = this.#dialStepAt(event.x, event.y)
-            if(step !== null) this.onDial(step)
+        if(this.onVariant && this.#overVariantsAt(event.x, event.y) !== null){
+            // The center of a dial points nowhere: the press is the dial's all the same, and changes nothing.
+            const chosen = this.#variantAt(event.x, event.y, false)
+            if(chosen === null) return
+            if(this.#kind === "dial"){
+                this.#dragging = true
+                this.#preview = chosen
+                this.invalidate()
+            }
+            else if(chosen !== this.#current) this.onVariant(this.#entries[chosen].card)
             return
         }
         this.onPick?.()
     }
 
-    /** Is a point of the card on the disc of the dial of a turn, its center included? */
-    #overDialAt(x: number, y: number): boolean {
-        const spot = this.#dialSpot()
-        return spot !== null && DIAL.contains(x - this.bounds.width / 2, y - spot.cy, spot.radius)
-    }
-
-    /** The step of the dial a point of the card points at, none at the center and off the dial. */
-    #dialStepAt(x: number, y: number): number|null {
-        const spot = this.#dialSpot()
-        if(!spot || !this.#overDialAt(x, y)) return null
-        return DIAL.stepAt(x - this.bounds.width / 2, y - spot.cy, spot.radius)
-    }
-
     protected override hoverChanged(): void {
-        if(!this.hovered) this.#overDial = false
+        if(!this.hovered) this.#overVariants = null
         this.invalidate()
         this.onHover?.(this.hovered)
     }
@@ -282,31 +357,149 @@ export class CardView extends Component {
 
     #dimmed = false
 
-    /** Is the pointer over the dial, which then answers it instead of the card? */
-    #overDial = false
+    /** The variants to choose from, none when the card has nothing to choose or is too small to offer it. */
+    readonly #entries: readonly VariantEntry[]
+
+    /** How the choice among them is offered, none when there is nothing to choose. */
+    readonly #kind: VariantKind|null
+
+    /** Which of them the card is, -1 when it has none. */
+    readonly #current: number
+
+    /** Which part of what offers the variants the pointer is over, none when none: a chip, an arrow, the dial. */
+    #overVariants: number|null = null
+
+    /** Is a dial being dragged, the pointer pressed on it? */
+    #dragging = false
+
+    /** The variant the needle points at while dragging, before it is chosen, none when not dragging. */
+    #preview: number|null = null
+
     #unlimited = false
+
+    #borrowed = false
     #activation: string|null = null
 
-    /**
-     * Where the dial of a turn is, and how big: centered under the one line of its name. None for a card that
-     * is not a turn, and for one too small to hold a dial.
-     */
-    #dialSpot(): { cy: number, radius: number }|null {
-        if(!(this.card instanceof TurnCard) || this.place === "mini") return null
+    /** How much room the choice among the variants has: from under the name of the card to its foot. */
+    #variantRoom(width: number): Rect {
         const look = CARD_LOOKS[this.place]
-        const radius = this.place === "hand" ? HAND_DIAL_RADIUS : CHAIN_DIAL_RADIUS
         const top = 1 + look.band + look.padding + this.#text.lineHeight + 1
-        return { cy: top + radius, radius }
+        const taken = this.card?.input ? INPUT_STRIP : 0
+        return { x: look.padding, y: top, width: width - 2 * look.padding - taken, height: look.height - top }
     }
 
-    /** Draw the dial of a turn, its needle toward the direction of the card. */
-    #paintDial(painter: Painter, width: number): void {
-        const spot = this.#dialSpot()
-        if(!spot || !(this.card instanceof TurnCard)) return
-        DIAL.draw(
-            painter, Math.round(width / 2), spot.cy, spot.radius, this.card.step,
-            this.#overDial ? DIAL_HOVERED : undefined,
-        )
+    /** Where the dial is, and how big: centered in the room under the name. */
+    #dialSpot(width: number): { cx: number, cy: number, radius: number } {
+        const radius = this.place === "hand" ? HAND_DIAL_RADIUS : CHAIN_DIAL_RADIUS
+        return { cx: Math.round(width / 2), cy: this.#variantRoom(width).y + radius, radius }
+    }
+
+    /**
+     * The rectangles that answer a press, besides a dial: one chip per variant, or for a stepper its two
+     * arrows, the previous one first.
+     */
+    #variantRects(width: number): readonly Rect[] {
+        const room = this.#variantRoom(width)
+        if(this.#kind === "stepper"){
+            return [
+                { x: room.x, y: room.y, width: CHIP_HEIGHT, height: CHIP_HEIGHT },
+                { x: room.x + room.width - CHIP_HEIGHT, y: room.y, width: CHIP_HEIGHT, height: CHIP_HEIGHT },
+            ]
+        }
+        const chipWidth = Math.floor((room.width - (CHIPS_PER_ROW - 1) * CHIP_GAP) / CHIPS_PER_ROW)
+        return this.#entries.map((_, index) => ({
+            x: room.x + (index % CHIPS_PER_ROW) * (chipWidth + CHIP_GAP),
+            y: room.y + Math.floor(index / CHIPS_PER_ROW) * (CHIP_HEIGHT + CHIP_GAP),
+            width: chipWidth, height: CHIP_HEIGHT,
+        }))
+    }
+
+    /** Which part of what offers the variants a point of the card is on, none when it is on none. */
+    #overVariantsAt(x: number, y: number): number|null {
+        const width = this.bounds.width
+        if(this.#kind === null) return null
+        if(this.#kind === "dial"){
+            const { cx, cy, radius } = this.#dialSpot(width)
+            return Math.hypot(x - cx, y - cy) <= radius ? 0 : null
+        }
+        const found = this.#variantRects(width).findIndex(rect => {
+            return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
+        })
+        return found < 0 ? null : found
+    }
+
+    /**
+     * The variant a point of the card chooses, none when it chooses none: the one the needle of a dial
+     * points at from there, the chip under it, the one before or after the card for an arrow.
+     *
+     * @param anywhere - Does a point off the dial count, as while dragging it?
+     */
+    #variantAt(x: number, y: number, anywhere: boolean): number|null {
+        const over = this.#overVariantsAt(x, y)
+        if(this.#kind === "dial"){
+            const { cx, cy, radius } = this.#dialSpot(this.bounds.width)
+            if(over === null && !anywhere) return null
+            return dialOf(this.#entries.length).stepAt(x - cx, y - cy, radius)
+        }
+        if(over === null) return null
+        if(this.#kind === "stepper"){
+            const count = this.#entries.length
+            return (this.#current + (over === 0 ? -1 : 1) + count) % count
+        }
+        return over
+    }
+
+    /** Draw what offers the variants of the card, if it has some. */
+    #paintVariants(painter: Painter, width: number): void {
+        if(this.#kind === null) return
+        const chosen = this.#preview ?? this.#current
+        if(this.#kind === "dial"){
+            const { cx, cy, radius } = this.#dialSpot(width)
+            const lit = this.#overVariants !== null || this.#dragging
+            dialOf(this.#entries.length).draw(painter, cx, cy, radius, chosen, lit ? DIAL_HOVERED : undefined)
+            return
+        }
+        const rects = this.#variantRects(width)
+        const text = this.#text
+        if(this.#kind === "stepper"){
+            rects.forEach((rect, index) => {
+                painter.setTint(this.#overVariants === index ? CHIP_HOVERED : CHIP)
+                painter.rect(rect.x, rect.y, rect.width, rect.height)
+                painter.setTint(CHIP_TEXT)
+                const arrow = index === 0 ? "<" : ">"
+                const at = rect.x + Math.round((rect.width - text.widthOf(arrow)) / 2)
+                text.draw(painter, arrow, at, rect.y + 1)
+            })
+            const between = rects[1].x - (rects[0].x + rects[0].width)
+            const label = text.fit(plainText(this.#entries[chosen].key, this.theme.textDisplay), between)
+            painter.setTint(CHIP_TEXT)
+            const from = rects[0].x + rects[0].width
+            text.draw(painter, label, from + Math.round((between - text.widthOf(label)) / 2), rects[0].y + 1)
+            return
+        }
+        this.#entries.forEach((entry, index) => {
+            const rect = rects[index]
+            const isChosen = index === chosen
+            const color = this.#kind === "colors" ? keyColorOf(entry.key) : null
+            painter.setTint(isChosen ? CHIP_CHOSEN : this.#overVariants === index ? CHIP_HOVERED : CHIP)
+            painter.rect(rect.x, rect.y, rect.width, rect.height)
+            if(color){
+                painter.setTint(new Color(color[0], color[1], color[2], color[3] ?? 1))
+                painter.rect(rect.x + 1, rect.y + 1, rect.width - 2, rect.height - 2)
+                return
+            }
+            const label = text.fit(plainText(entry.key, this.theme.textDisplay), rect.width - 2)
+            painter.setTint(isChosen ? CHIP_CHOSEN_TEXT : CHIP_TEXT)
+            text.draw(painter, label, rect.x + Math.round((rect.width - text.widthOf(label)) / 2), rect.y + 1)
+        })
+        // A color is no name: the one chosen is written under the dots.
+        if(this.#kind === "colors"){
+            const last = rects[rects.length - 1]
+            const room = this.#variantRoom(width)
+            const label = text.fit(plainText(this.#entries[chosen].key, this.theme.textDisplay), room.width)
+            painter.setTint(CHIP_TEXT)
+            text.draw(painter, label, room.x, last.y + last.height + CHIP_GAP + 1)
+        }
     }
 
     /** Draw the edge of a card chosen: one pixel over the border of its rectangle. */
@@ -345,7 +538,7 @@ export class CardView extends Component {
         painter.rect(x, y, width, height)
         let top = y + 1
         if(!contents || !bare){
-            const faces = this.hovered && !this.#overDial ? FACES_HOVERED : FACES
+            const faces = this.hovered && this.#overVariants === null ? FACES_HOVERED : FACES
             painter.setTint(card ? faces[(this.deck ?? 0) % faces.length] : BACK)
             painter.rect(x + 1, y + 1, width - 2, height - 2)
             painter.setTint(color)

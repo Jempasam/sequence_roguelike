@@ -4,10 +4,10 @@ import type { Animation, FrameClock } from "../../../../engine/ui"
 export type PlayMode = "pause"|"slow"|"play"|"fast"
 
 /** How long a stop of the replay lasts in each mode, in seconds, none in the fast one. */
-const SPEED_TIME: Readonly<Record<PlayMode, number>> = { pause: 0.5, slow: 2, play: 0.5, fast: 0 }
+export const SPEED_TIME: Readonly<Record<PlayMode, number>> = { pause: 0.5, slow: 2, play: 1, fast: 0 }
 
 /** How often the mode is read again while waiting, in seconds. */
-const POLL_TIME = 0.05
+export const POLL_TIME = 0.05
 
 /**
  * How a replay plays, chosen by the player: the animations it gives wait on its mode, read again as they

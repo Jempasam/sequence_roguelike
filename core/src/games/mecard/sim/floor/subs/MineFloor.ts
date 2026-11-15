@@ -2,12 +2,12 @@ import type { Rng } from "../../base/Rng"
 import { BERSERKER, GOBLIN, ICE_MAGE, KAMIKAZE_ROBOT, MEGALASER, STONE_GOLEM } from "../../catalog/monsters"
 import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
-import { ELITE } from "../../catalog/fights"
+import { ELITE } from "../../fight/fights"
 import { BUTCHER_HALT } from "../../halt/subs/deck/ButcherHalt"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { CHEST_HALT } from "../../halt/subs/gift/ChestHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
-import type { FightType } from "../../run/PlaceType"
+import type { FightType } from "../../fight/FightType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
@@ -42,7 +42,7 @@ export const MINE_FLOOR: FloorType = {
     name: "Mine",
     description: "Des robots et de la pierre, et un robot megalaser au bout. Plus de forges, de coffres et d'élites.",
     icon: visual("floors/mine/logo"),
-    look: sceneLook(34, 26, 20, "mecard/floors/mine"),
+    look: sceneLook(34, 26, 20, "mine"),
     decorations: [
         { picture: visual("floors/mine/mountain"), size: 2 },
         { picture: visual("floors/mine/cart"), size: 2 },

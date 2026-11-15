@@ -11,7 +11,14 @@ export interface DialLook {
 
     /** The needle from the center to the edge. */
     readonly needle: Color
+
+    /** The small bar at the edge on each direction, none to draw no bars: a shade apart from the disc. */
+    readonly tick?: Color
 }
+
+/** Where a bar on a direction starts and ends, as a share of the radius from the center. */
+const TICK_FROM = 0.72
+const TICK_TO = 0.96
 
 /** How much of the radius around the center counts as the center: a click there points nowhere. */
 const DEAD_ZONE = 0.15
@@ -70,9 +77,20 @@ export class Dial {
      * @param face - Another color for the disc than the one of its look, such as a lighter one under the pointer.
      */
     public draw(painter: Painter, cx: number, cy: number, radius: number, step: number, face?: Color): void {
-        const { dot, needle } = this.look
+        const { dot, needle, tick } = this.look
         painter.setTint(face ?? this.look.face)
         painter.circle(cx, cy, radius)
+        if(tick){
+            painter.setTint(tick)
+            for(let each = 0; each < this.steps; each++){
+                const around = (each / this.steps) * 2 * Math.PI
+                const [sin, cos] = [Math.sin(around), Math.cos(around)]
+                painter.thickLine(
+                    { x: cx + sin * radius * TICK_FROM, y: cy - cos * radius * TICK_FROM },
+                    { x: cx + sin * radius * TICK_TO, y: cy - cos * radius * TICK_TO }, 1,
+                )
+            }
+        }
         const angle = (step / this.steps) * 2 * Math.PI
         const tip = { x: cx + Math.sin(angle) * radius, y: cy - Math.cos(angle) * radius }
         painter.setTint(needle)

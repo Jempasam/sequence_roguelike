@@ -8,9 +8,9 @@ import { ACTION } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
 import { hold, sweep } from "../tools/playing"
-import { polygon, still, strike } from "../tools/previews"
 import type { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts a blow at hand takes, before the bonus of the unit. */
 export const BLOW_DAMAGE = 2
@@ -25,7 +25,7 @@ const RECOVERY_TIME = 0.15
  * A physical blow, the bonus of the unit added: its area grows while it goes, then it lands on the whole
  * area. Shown whole in the preview. Each blow says where it reaches.
  */
-export abstract class BlowCard extends AbstractCard<readonly Action[]> {
+export abstract class BlowCard extends AbstractCard<Action> {
 
 
     public readonly output = ACTION
@@ -51,13 +51,13 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
      */
     public abstract reach(battle: Battle, unit: Unit, pose: Pose, progress: number): Area
 
-    public get(): readonly Action[] {
-        return [this.action]
+    public get(): Action {
+        return this.action
     }
 
     /** The units it marks in its preview as the ones it would reach: every one in its area but its own. */
     protected marked(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.unitsIn(area, unit)
+        return battle.fetch(area, unit)
     }
 
     /** The hearts its unit adds to it: its strength, for a blow at hand. */
@@ -77,17 +77,17 @@ export abstract class BlowCard extends AbstractCard<readonly Action[]> {
 
     static #blow(card: BlowCard): Action {
         return {
-            use: function* ({ battle, unit }){
-                yield* sweep(battle, SWING_TIME, share => {
-                    return [polygon(card.reach(battle, unit, unit, share), PHYSICAL_COLOR)]
+            use: function ({ battle, unit }){
+                sweep(battle, SWING_TIME, share => {
+                    return [Previews.polygon(card.reach(battle, unit, unit, share), PHYSICAL_COLOR)]
                 })
                 const area = card.reach(battle, unit, unit, 1)
                 card.land(battle, unit, area)
-                yield* hold(battle, RECOVERY_TIME, [polygon(area, PHYSICAL_COLOR)])
+                hold(battle, RECOVERY_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
             },
             preview: ({ battle, unit, pose }) => {
                 const area = card.reach(battle, unit, pose, 1)
-                return still(pose, ...strike([area], card.marked(battle, unit, area)))
+                return Previews.still(pose, ...Previews.strike([area], card.marked(battle, unit, area)))
             },
         }
     }

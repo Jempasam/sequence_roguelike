@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { CHEST_HALT, planFor, Run } from "@game/core/mecard"
+import { CHEST_HALT, DeckAi, Run } from "@game/core/mecard"
 import { LocalSync, RunBroadcaster, RunReceiver } from "@game/core/mecard/sync"
 import { startedRun } from "../../../../fixtures/startedRun"
 
@@ -62,7 +62,7 @@ describe("RunReceiver", () => {
         if(!battle || !watched) throw new Error("The battle is not fought.")
         battle.advance()
         expect(watched.round).toBe(1)
-        for(const unit of battle.initiative) if(unit.controller === "player") battle.commit(unit, planFor(unit))
+        for(const unit of battle.initiative) if(unit.controller === "player") battle.commit(unit, new DeckAi().decide(unit).chain)
         battle.advance()
         expect(watched.round).toBe(battle.round)
         expect(watched.phase).toBe(battle.phase)

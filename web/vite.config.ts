@@ -3,6 +3,7 @@ import { defineConfig } from "vite"
 
 // With its extension: Vite's native config loader, its next default, does not resolve bare paths.
 import { cWasm } from "../core/build/cWasm.ts"
+import { generatedAssets } from "./build/generatedAssets.ts"
 
 export default defineConfig({
     // Relative, so the build runs from any sub-path it is uploaded to.
@@ -17,5 +18,6 @@ export default defineConfig({
         outDir: process.env.WEB_OUT_DIR ? resolve(process.env.INIT_CWD ?? process.cwd(), process.env.WEB_OUT_DIR) : "dist",
         emptyOutDir: true,
     },
-    plugins: [cWasm()],
+    // generated_assets/ is served and shipped as if it was in assets/.
+    plugins: [cWasm(), generatedAssets("../generated_assets")],
 })

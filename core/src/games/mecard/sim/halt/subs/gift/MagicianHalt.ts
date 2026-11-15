@@ -7,7 +7,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -24,7 +23,7 @@ export class MagicianHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MAGICIAN_HALT, run,
             ["Trois boosters, et chacun tient des ", CARTE.as("cartes"), " assorties."],
-            sceneLook(26, 13, 41, "mecard/travel/magician"),
+            sceneLook(26, 13, 41, "magician"),
             {
                 hat: "topHat",
                 clothes: rgba(0.6, 0.3, 1),
@@ -53,6 +52,6 @@ export const MAGICIAN_HALT: HaltType = {
     id: "magician",
     name: "Magicien",
     description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],    icon: visual("travel/magician/logo", { letter: "MG" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/portal"),
     create: run => new MagicianHalt(run),
 }

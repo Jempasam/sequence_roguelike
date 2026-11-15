@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs"
+
 import { UsageError } from "./errors"
 import { HELP_TOPICS, helpText } from "./help"
 import { planOf } from "./options"
@@ -7,17 +9,22 @@ import type { Console } from "./run"
 
 export { choiceOf, integerOf, listOf, parseArgs, valueOf, valuesOf } from "./args"
 export type { OptionSpec, ParsedArgs } from "./args"
-export { loadDefinitions, NO_DEFINITIONS } from "./define"
-export type { DefinedKit, Definitions, HeartGroup } from "./define"
+export { parseDefinition } from "./define"
+export type { DefinedKit, HeartGroup } from "./define"
 export { closest, normalize, UsageError, unknownName } from "./errors"
 export { fight } from "./fight"
 export type { Combatant, FightResult, FightSpec } from "./fight"
-export { Roster } from "./fighters"
+export { kitFighter, monsterFighter, Roster } from "./fighters"
 export type { Body, Fighter } from "./fighters"
 export { planOf } from "./options"
 export type { Plan } from "./options"
-export { parseOutputs } from "./outputs"
-export type { Atom, OutputColumn } from "./outputs"
+export { checkSizes, parseMatch, rowsOf } from "./match"
+export type { Description, Pick, Root, Row } from "./match"
+export { parseOutputs, STATS } from "./outputs"
+export type { Outputs, Stat } from "./outputs"
+export { fightsFinder } from "./scenario"
+export { BiomeMonsters, Cross, Fights, GetSource, Group, Named, Random, Repeat, SetSource, Sum, Union } from "./sources"
+export type { Source, SourceDraw, SourceWorld } from "./sources"
 export { arranged, render } from "./report"
 export type { Matrix, Presentation } from "./report"
 export { run } from "./run"
@@ -48,8 +55,12 @@ export async function sim(args: readonly string[], io: Console = SYSTEM_CONSOLE)
     }
     const plan = await planOf(args)
     for(const warning of plan.warnings) io.error(`sim : ${warning}`)
-    const { matrices, failures, cancelled } = await run(plan, io)
+    const { matrices, failures, cancelled, logs } = await run(plan, io)
     if(cancelled) return ""
+    if(plan.log !== null){
+        writeFileSync(plan.log, `${logs.map(lines => lines.join("\n")).join("\n\n")}\n`, "utf8")
+        if(!plan.quiet) io.error(`sim : journal de ${logs.length} combat(s) écrit dans ${plan.log}`)
+    }
     const output = render(matrices, plan.presentation)
     if(failures.size > 0){
         const total = [...failures.values()].reduce((sum, count) => sum + count, 0)

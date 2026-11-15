@@ -1,0 +1,402 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 423,
+    "palette": [
+        "#4a4458",
+        "#18141f",
+        "#7a6a3a",
+        {
+            "color": "#ffd870",
+            "light": 1
+        }
+    ],
+    "shapes": [
+        {
+            "box": [
+                0,
+                0,
+                288,
+                21
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "x",
+                "seams": 0.3,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                5,
+                8
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                0,
+                143,
+                288,
+                21
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "x",
+                "seams": 0.3,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                5,
+                8
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                0,
+                21,
+                21,
+                122
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "y",
+                "seams": 0.3,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                5,
+                8
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                267,
+                21,
+                21,
+                122
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "y",
+                "seams": 0.3,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                5,
+                8
+            ],
+            "relief": "round-x"
+        },
+        {
+            "ellipse": [
+                10,
+                8,
+                26,
+                14
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                60,
+                6,
+                22,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                120,
+                8,
+                30,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                196,
+                6,
+                26,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                250,
+                8,
+                28,
+                14
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                9,
+                140,
+                26,
+                14
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                90,
+                146,
+                24,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                170,
+                146,
+                28,
+                12
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                250,
+                140,
+                28,
+                14
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                9,
+                40,
+                12,
+                22
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                9,
+                100,
+                12,
+                22
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                267,
+                44,
+                12,
+                22
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "ellipse": [
+                267,
+                96,
+                12,
+                22
+            ],
+            "material": 2,
+            "depth": [
+                7,
+                10
+            ],
+            "relief": "dome"
+        },
+        {
+            "box": [
+                20,
+                20,
+                248,
+                1
+            ],
+            "material": 1,
+            "depth": 4
+        },
+        {
+            "box": [
+                20,
+                143,
+                248,
+                1
+            ],
+            "material": 1,
+            "depth": 4
+        },
+        {
+            "box": [
+                20,
+                20,
+                1,
+                124
+            ],
+            "material": 1,
+            "depth": 4
+        },
+        {
+            "box": [
+                267,
+                20,
+                1,
+                124
+            ],
+            "material": 1,
+            "depth": 4
+        },
+        {
+            "box": [
+                44,
+                12,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                100,
+                10,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                180,
+                12,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                236,
+                10,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                14,
+                80,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                272,
+                80,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        },
+        {
+            "box": [
+                140,
+                150,
+                2,
+                2
+            ],
+            "material": 3,
+            "depth": 9
+        }
+    ]
+}

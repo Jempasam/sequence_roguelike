@@ -6,36 +6,41 @@ import type { HeartGroup } from "../heart/Heart"
 import { BLACK_HEART, PINK_HEART, RED_HEART } from "../heart/subs"
 import {
     ABOUT_FACE, AIM, ANTIDOTE, ARMOR_PLATING, ASSASSIN_BLOW, ASSASSIN_STEP, ASSASSINATION, BACK_DASH, BANDAGE,
-    BATTERING_RAM, BLACK_HOLE, BLAZE_CARD, BLEED, BLINK, BLOCK, BLOOD_AXE, BLOODLUST_CARD, BOMB, BOTTLE,
-    BOUNCE_DASH, BOW_MODULE, BRAMBLES_CARD, BULL_MODULE, CATCH, CHARGE, CHARM, COATED_BLADE, COIN, CONFUSION,
+    BATTERING_RAM, BLACK_HOLE, AURA, BLAZE_CARD, BLEED, BLINK, BLOCK, BLOOD_AXE, BLOODLUST_CARD, BOMB, BOTTLE,
+    BOUNCE_DASH, BOW_MODULE, BRAMBLES_CARD, BULL_MODULE, CATCH, CHARGE, CHARM, COATED_BLADE, COIN,
     COOL_HEAD, COUNTER_CARD, CROSS_CUT, CROSSBOW, DAGGER, DECOY, DELAYED_CHARGE, DEMON_SLASH, DEMONIC_STRIKE,
-    DISARM_CARD, DISTILLATION, DODGE_CARD, DRIZZLE, ECHO, EXPLOSIVE_DASH, EXPLOSIVE_SHELL, FEAR, FIRE,
+    DISARM_CARD, DISTILLATION, DODGE_CARD, DRIZZLE, EXPLOSIVE_DASH, EXPLOSIVE_SHELL, FEAR, FIRE,
     FISHING, FLAMETHROWER, FLASH_GRENADE, GRAPPLE, GREAT_THRUST, GRUDGE, HARPOON, HEAD_JUMP, HELD_FURY,
     HEMORRHAGE, HOMING_HEAD, HOOK_ON, HORSE, HUNT, HYPNOSIS, ICY_GLARE, IMPROVISED_ROBOT, IMPROVISED_WEAPON,
-    IRON_CHAIN, KNIGHT_MOVE, LASER_LINK, LASSO, LAVA_CARD, LEAP, LIGHTNING, MACHINE_GUN, MARK_CARD, MEGA_LASER,
+    IRON_CHAIN, KNIGHT_MOVE, LASER_LINK, LASSO, LEAP, LIGHTNING, MACHINE_GUN, MARK_CARD, MEGA_LASER,
     MEGA_SLASH, MINE, MIRROR, MISSILE, MUD_CARD, PATH_AIM, PLANT, POISON, PRAYER, PROJECTION, PUDDLE,
-    PURSUIT, RAGE, RAGE_FIT, RAMPART, REPEAT_2, REPETITION, RETREAT_SHOT, RICOCHET, SACRIFICE, SCYTHE,
-    SENTINEL, SHADOW, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHOCK_WAVE, SHOT, SHOTGUN, SHOUT, SHOUT_TOTEM,
+    PURSUIT, RAGE, RAGE_FIT, RAMPART, REPEAT_2, REPETITION, RETREAT_SHOT, RICOCHET, RITUAL, SACRIFICE, SCYTHE,
+    SENTINEL, SHADOW, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHOCK_WAVE, SHOT, SHOTGUN, SHOUT_TOTEM,
     SIDESTEP, SLASH, SLIDING_PARRY_CARD, SLOWNESS, SMALL_SPELL, SOUL_LINK, SOUL_SHIELD, SPARK, SPELL, SPIRIT_ANCHOR,
-    SPIRIT_DASH, SPIRIT_PROJECTION, SPIT, SPYGLASS_CARD, STEAM_CARD, STONE, STONE_WALL, STORM_CARD, STUNNING_DASH,
+    SPIRIT_DASH, SPIRIT_PROJECTION, SPIT, SPYGLASS_CARD, STONE, STONE_WALL, STORM_CARD, STUNNING_DASH,
     SUBSTITUTION, SUCTION, SUPER_REPETITION, SUPLEX, SWEEP, TACKLE, TASER, TAUNT, THORN_SHIELD, THROWN_POTION,
-    THRUSTERS, THRUST, THRUST_CHARGE, TIDE, TOTEM, TURRET, VINE, VULNERABILITY, WAIT,
+    THRUSTERS, THRUST, THRUST_CHARGE, TIDE, TOTEM, TURRET, VINE, WAIT,
     WATER, WEAKNESS, WIND, WOODEN_SHIELD_CARD,
-    BEAR_CARD, BITE, ELEMENT_ON_BLADE, FOX_CARD, FURY, HAWK_CARD, REACTION, RUN, SUMMONING, WOLF_CARD,
+    BEAR_CARD, BITE, ELEMENT_ON_BLADE, FOX_CARD, FURY, FROG_CARD, HAWK_CARD, TRANSMUTATION, REACTION, RUN, SUMMONING, WOLF_CARD,
+    ECHO_RITUAL, CONJURATION, MIST_CARD, SAND_CARD, MAGNETITE_CARD, SWALLOW, SWIFTNESS, VIGOR,
+    MEMORY_GAP, ONE_MIND, PARROT, PAS_DE_DEUX, STUTTER, SYNCHRONISATION, PIERCING_SPEAR,
+    ARC_STEP, ARC_TURN, POSSESSION, HAUNT, ETHEREAL_FORM, PLAGIARISM,
+    PAWN_CARD, ROOK_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, CASTLING, REFLECTION, GLASS_KNIFE, BEAR_TRAP, MISDIRECTION,
+    STRIDE, SHY_AWAY, KICK,
 } from "../card/subs"
 import {
     BACK_EYES, ALEMBIC, BOOTS, BLOOD_PACT, CHIPPED_BLADE, DEMON_FANG, DODGE_SCEPTER, DOLL, ECHO_ITEM, ELEMENT_BAG,
-    FANG, FISHER_GLOVE, GEAR, GRIMOIRE, HOURGLASS, MAGNET, ROSARY, SCARY_MASK, SCOPE, SPYGLASS, STICKY_SOLES,
-    STRENGTH_BELT, TORERO_CAPE, WHETSTONE, FANG_NECKLACE,
+    BOTTLE_BAG, FANG, FISHER_GLOVE, GEAR, GRIMOIRE, HOURGLASS, MAGNET, ROSARY, SCARY_MASK, SCOPE, SPYGLASS, STICKY_SOLES,
+    STRENGTH_BELT, TORERO_CAPE, WHETSTONE, FANG_NECKLACE, PREDATOR_EYE, SOUL_LANTERN, WINGS, TACTICS_BOOK, GLASS_CORE,
 } from "../item/subs"
 import {
     BLOOD_FLASK, CALM_INFUSION, COCAINE, COOL_SYRUP, DEMON_ELIXIR, ENERGIZER, FIRE_FLASK, FISHING_CARD,
     FOLDING_TURRET, FURY_ELIXIR, GLUE_FLASK, GLUE_TUBE, HASTE_ELIXIR, HEALING_POTION, INFLATABLE_DECOY,
-    MAGIC_WATCH, PLANT_BAG, SHARPENING_STONE, SHIELD_FLASK, STRENGTH_ELIXIR, THRUST_BOTTLE, WHISTLE, WRENCH,
+    MAGIC_WATCH, PLANT_BAG, SHARPENING_STONE, SHIELD_FLASK, STRENGTH_ELIXIR, THRUST_BOTTLE, WHISTLE, WIZARD_STAFF, WRENCH,
 } from "../usable/subs"
 import {
     BIG_SHOTGUN, BLOODY_COMBO, BLUE_VENGEANCE, COVERING_FIRE, CRUSH, HUNTER_FUSION, MEGA_THRUST, QUAKE_SEISM,
-    SHADOW_COMBO, SURPRISE_THRUST, TWIN_BLADES, ENCHANTED_BLADE,
+    SHADOW_COMBO, SURPRISE_THRUST, TWIN_BLADES, ENCHANTED_BLADE, POISONED_BLADE, THROWN_FRENZY,
 } from "./cards"
 import type { Visual } from "../base/Visual"
 import { visual } from "../base/Visual"
@@ -155,10 +160,10 @@ export const ARTIFICER_KIT: Kit = {
 export const MAGE_KIT: Kit = {
     name: "Mage",
     sprite: visual("units/mage"),
-    cards: deckAround(SPELL, SPELL, SPELL, FIRE, WATER, STONE, WIND, LIGHTNING, ECHO),
+    cards: deckAround(SPELL, SPELL, STONE, SMALL_SPELL, WATER, STONE, ECHO_RITUAL),
     items: [GRIMOIRE],
-    usables: [MAGIC_WATCH],
-    hearts: [reds(4), blacks(2)],
+    usables: [WIZARD_STAFF],
+    hearts: [reds(4)],
 }
 
 export const ASSASSIN_KIT: Kit = {
@@ -181,9 +186,20 @@ export const APOTHECARY_KIT: Kit = {
     hearts: [reds(6)],
 }
 
+/** Pulls the strings of his allies and the others: what they play, where they stand, what they repeat. */
 export const PUPPETEER_KIT: Kit = {
     name: "Marionnettiste",
     sprite: visual("units/puppeteer"),
+    cards: deckAround(SYNCHRONISATION, STUTTER, PAS_DE_DEUX, PARROT, SHOT),
+    items: [SOUL_LANTERN],
+    usables: [MAGIC_WATCH],
+    hearts: [reds(6)],
+}
+
+/** Throwaway bodies: coins, logs and decoys keep the blows away, while he stays out of reach. */
+export const PRESTIDIGITATOR_KIT: Kit = {
+    name: "Prestidigitateur",
+    sprite: visual("units/prestidigitator"),
     cards: deckAround(COIN, COIN, SUBSTITUTION, STONE_WALL, SHOT, SHOT, DECOY, TOTEM, CHARM),
     items: [DOLL],
     usables: [INFLATABLE_DECOY],
@@ -223,7 +239,7 @@ export const PYROMANCER_KIT: Kit = {
     name: "Pyromancien",
     sprite: visual("units/pyromancer"),
     cards: deckAround(
-        SPELL, FIRE, FIRE, FLAMETHROWER, FLAMETHROWER, SPARK, SPARK, BLAZE_CARD, LAVA_CARD, EXPLOSIVE_SHELL,
+        SPELL, FIRE, FIRE, FIRE, FLAMETHROWER, FLAMETHROWER, SPARK, SPARK, BLAZE_CARD, EXPLOSIVE_SHELL,
         SLOWNESS, BLOCK,
     ),
     items: [ELEMENT_BAG],
@@ -291,6 +307,26 @@ export const RIDER_KIT: Kit = {
     hearts: [reds(5)],
 }
 
+/** Thrusts at a distance, walks round his target in arcs, and stays stuck to it by the spear he threw. */
+export const PIKEMAN_KIT: Kit = {
+    name: "Piquier",
+    sprite: visual("units/pikeman"),
+    cards: closeDeckAround(THRUST, THRUST, PIERCING_SPEAR, ARC_STEP, ARC_TURN),
+    items: [BOOTS],
+    usables: [STRENGTH_ELIXIR],
+    hearts: [reds(5)],
+}
+
+/** A ghost: it slips behind others, sits in their place, copies what they played, and blinks away. */
+export const SPECTRE_KIT: Kit = {
+    name: "Spectre",
+    sprite: visual("units/spectre"),
+    cards: closeDeckAround(POSSESSION, HAUNT, ETHEREAL_FORM, PLAGIARISM, BLINK, ASSASSIN_STEP, DAGGER),
+    items: [WINGS],
+    usables: [HASTE_ELIXIR],
+    hearts: [reds(4)],
+}
+
 export const MARTYR_KIT: Kit = {
     name: "Martyr",
     sprite: visual("units/martyr"),
@@ -323,10 +359,20 @@ export const GRAVITATIONIST_KIT: Kit = {
 export const DRUID_KIT: Kit = {
     name: "Druide",
     sprite: visual("units/druid"),
-    cards: deckAround(PLANT, PLANT, BRAMBLES_CARD, THORN_SHIELD, VINE, ANTIDOTE, SLASH),
-    items: [],
+    cards: deckAround(PLANT, PLANT, BRAMBLES_CARD, THORN_SHIELD, VINE, CONJURATION, AURA, SLASH),
+    items: [DOLL],
     usables: [HEALING_POTION],
     hearts: [reds(6)],
+}
+
+/** A sword fighter who drinks buffs, a bag of bottles giving him one each round. */
+export const WITCHER_KIT: Kit = {
+    name: "Sorceleur",
+    sprite: visual("units/witcher"),
+    cards: closeDeckAround(SLASH, SLASH, CROSS_CUT, VIGOR, SWIFTNESS, SWALLOW, POISONED_BLADE),
+    items: [BOTTLE_BAG],
+    usables: [HEALING_POTION],
+    hearts: [reds(5)],
 }
 
 export const GUNNER_KIT: Kit = {
@@ -341,7 +387,7 @@ export const GUNNER_KIT: Kit = {
 export const HYPNOTIST_KIT: Kit = {
     name: "Hypnotiseur",
     sprite: visual("units/hypnotist"),
-    cards: deckAround(SHOT, SHOT, HYPNOSIS, CHARM, FEAR, SHOUT, ICY_GLARE, SLASH),
+    cards: deckAround(SHOT, SHOT, HYPNOSIS, THROWN_FRENZY, MEMORY_GAP, ONE_MIND, CHARM, FEAR),
     items: [SCARY_MASK],
     usables: [WHISTLE],
     hearts: [reds(6)],
@@ -434,11 +480,31 @@ export const SWAMP_SORCERER_KIT: Kit = {
     name: "Sorcier des marais",
     sprite: visual("units/swamp_sorcerer"),
     cards: deckAround(
-        SMALL_SPELL, MUD_CARD, STEAM_CARD, DRIZZLE, SPIT, CONFUSION, VULNERABILITY, SLOWNESS,
+        SMALL_SPELL, CONJURATION, WATER, WATER, DRIZZLE, MUD_CARD, MIST_CARD, SPIT,
     ),
     items: [STICKY_SOLES],
     usables: [GLUE_TUBE],
     hearts: [reds(6)],
+}
+
+/** Stone only, and what stone gives with the wind and the lightning. */
+export const GEOMANCER_KIT: Kit = {
+    name: "Géomancien",
+    sprite: visual("units/geomancer"),
+    cards: deckAround(SPELL, STONE, STONE, SMALL_SPELL, QUAKE_SEISM, STONE_WALL, SAND_CARD, MAGNETITE_CARD),
+    items: [],
+    usables: [SHIELD_FLASK],
+    hearts: [reds(5)],
+}
+
+/** Plant only: its poison, its healing and its thorns, with no compound. */
+export const PLANT_MAGE_KIT: Kit = {
+    name: "Mage des plantes",
+    sprite: visual("units/plant_mage"),
+    cards: deckAround(SPELL, PLANT, PLANT, SMALL_SPELL, AURA, VINE),
+    items: [],
+    usables: [HEALING_POTION],
+    hearts: [reds(5)],
 }
 
 export const SHADOW_SAMURAI_KIT: Kit = {
@@ -450,12 +516,33 @@ export const SHADOW_SAMURAI_KIT: Kit = {
     hearts: [reds(6)],
 }
 
+/** Beasts used for their transmutation and their fury: it fights with what they give. */
+export const BEAST_WARRIOR_KIT: Kit = {
+    name: "Guerrier bête",
+    sprite: visual("units/beast_warrior"),
+    cards: deckAround(WOLF_CARD, HAWK_CARD, BEAR_CARD, FOX_CARD, BITE, BITE, RUN, RUN, TRANSMUTATION, FURY),
+    items: [PREDATOR_EYE],
+    usables: [SHIELD_FLASK],
+    hearts: [reds(4)],
+}
+
+/** Summons the bodies of its beasts, and plays their small runs and bites on the side. */
 export const SHAMAN_KIT: Kit = {
     name: "Chaman",
     sprite: visual("units/shaman"),
-    cards: deckAround(WOLF_CARD, HAWK_CARD, BEAR_CARD, FOX_CARD, BITE, BITE, RUN, RUN, SUMMONING, FURY),
+    cards: deckAround(HAWK_CARD, FOX_CARD, FROG_CARD, BITE, RUN, RUN, SUMMONING, SUMMONING),
     items: [FANG_NECKLACE],
     usables: [],
+    hearts: [reds(4)],
+}
+
+/** Wolves only: their bites and their fury, summoned as a pack, and the bleeding that makes the prey slow down. */
+export const BIG_BAD_WOLF_KIT: Kit = {
+    name: "Grand Méchant Loup",
+    sprite: visual("units/big_bad_wolf"),
+    cards: deckAround(WOLF_CARD, WOLF_CARD, BITE, BITE, FURY, SUMMONING, BLEED),
+    items: [CHIPPED_BLADE],
+    usables: [BLOOD_FLASK],
     hearts: [reds(4)],
 }
 
@@ -469,17 +556,48 @@ export const SPELLBLADE_KIT: Kit = {
     hearts: [reds(4), blacks(1)],
 }
 
+/** Sets pieces down and has them play for it: the pieces play its actions, in its place. */
+export const CHESS_PLAYER_KIT: Kit = {
+    name: "Joueur d'échecs",
+    sprite: visual("units/chess_player"),
+    cards: deckAround(PAWN_CARD, ROOK_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, CASTLING),
+    items: [DOLL],
+    usables: [INFLATABLE_DECOY],
+    hearts: [reds(3)],
+}
+
+/** Makes the enemies copy it, then leads them into traps: a brittle man, whose own blows hurt him back. */
+export const GLASS_MAN_KIT: Kit = {
+    name: "Homme de verre",
+    sprite: visual("units/glass_man"),
+    cards: deckAround(THRUST, GLASS_KNIFE, REFLECTION, BEAR_TRAP, MISDIRECTION, MIRROR, PARROT),
+    items: [GLASS_CORE],
+    usables: [INFLATABLE_DECOY],
+    hearts: [reds(2)],
+}
+
+/** Moves a lot, and moves the others: the allies it brushes dodge, the enemies are set where they are easy to hit. */
+export const HORSE_KIT: Kit = {
+    name: "Cheval",
+    sprite: visual("units/horse"),
+    cards: deckAround(HORSE, KNIGHT_MOVE, LEAP, STRIDE, SHY_AWAY, KICK),
+    items: [TACTICS_BOOK],
+    usables: [WHISTLE],
+    hearts: [reds(5)],
+}
+
 /** The kits a run starts with. */
 export const STARTING_KITS: readonly Kit[] = []
 
 /** Every kit, the starting ones first: the tavern hires the others. */
 export const ALL_KITS: readonly Kit[] = [
-    ...STARTING_KITS, ARCHER_KIT, BRAWLER_KIT, ARTIFICER_KIT, MAGE_KIT, ASSASSIN_KIT, APOTHECARY_KIT,
-    PUPPETEER_KIT, MECHANIC_KIT, HUNTER_KIT, BERSERKER_KIT, PYROMANCER_KIT, PRIEST_KIT, FISHER_KIT,
+    ...STARTING_KITS, LANCER_KIT, SWORDSMAN_KIT, ARCHER_KIT, BRAWLER_KIT, ARTIFICER_KIT, MAGE_KIT, ASSASSIN_KIT, APOTHECARY_KIT,
+    PUPPETEER_KIT, PRESTIDIGITATOR_KIT, PIKEMAN_KIT, SPECTRE_KIT, MECHANIC_KIT, HUNTER_KIT, BERSERKER_KIT, PYROMANCER_KIT, PRIEST_KIT, FISHER_KIT,
     SPIRITIST_KIT, BULLFIGHTER_KIT, CHRONOMANCER_KIT, RIDER_KIT, MARTYR_KIT, EXPLOSIVE_GOBLIN_KIT,
     GRAVITATIONIST_KIT, DRUID_KIT, GUNNER_KIT, HYPNOTIST_KIT, KNIGHT_KIT, SHADOW_THIEF_KIT, TEMPEST_MAGE_KIT,
     DEMONIST_KIT, ACROBAT_KIT, BLACK_KNIGHT_KIT, BLEEDER_KIT, TURRET_ENGINEER_KIT, DUELIST_KIT,
-    SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT, SHAMAN_KIT, SPELLBLADE_KIT,
+    SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT, SHAMAN_KIT, BEAST_WARRIOR_KIT, BIG_BAD_WOLF_KIT,SPELLBLADE_KIT, GEOMANCER_KIT, PLANT_MAGE_KIT, WITCHER_KIT,
+    CHESS_PLAYER_KIT, GLASS_MAN_KIT, HORSE_KIT,
 ]
 
 /** How many things of one list a second list shares, each one counted as many times as both hold it. */

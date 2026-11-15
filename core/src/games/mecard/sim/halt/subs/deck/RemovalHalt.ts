@@ -7,7 +7,6 @@ import { MAX_REMOVED, removeCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, DECK, SUPPRESSION, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -19,7 +18,7 @@ export class RemovalHalt extends DeckHalt {
     constructor(run: Run){
         super(REMOVAL_HALT, run,
             ["Trois fois, confie-moi de une à trois ", CARTE.as("cartes"), ", je te les fais oublier."],
-            sceneLook(26, 28, 33, "mecard/travel/removal"),
+            sceneLook(26, 28, 33, "removal"),
             {
                 hat: "hood",
                 clothes: rgba(0.6, 0.6, 0.65),
@@ -62,7 +61,8 @@ export const REMOVAL_HALT: HaltType = {
     id: "removal",
     name: "Oubli",
     description: ["Trois fois : ", SUPPRESSION.as("retire"), " de une à trois ", CARTE.as("cartes"), " du ", DECK, " d'une ", UNIT, "."],
-    icon: visual("travel/removal/logo", { letter: "OU" }),
-    transition: DOOR_TRANSITION,
+
+    icon: visual("travel/removal/logo", { letter: "OU" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new RemovalHalt(run),
 }

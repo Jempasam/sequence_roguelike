@@ -15,10 +15,10 @@ import { AbstractCard } from "../AbstractCard"
 import { InputRewriteCard } from "../composite/RewriteCards"
 import { WAIT } from "../movement/Wait"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, still } from "../tools/previews"
 import { summonShown } from "../summon/SummonCard"
 import { CARTE, DISTANCE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead a robot stands, in meters. */
 const ROBOT_AHEAD = 1
@@ -38,7 +38,7 @@ function spotOf(pose: Pose): Vector2 {
  * A robot built from the module plugged into it: a body a little ahead, facing as its unit, with nothing but
  * shield hearts, which plays the cards of the module right after its unit, every round.
  */
-export class RobotCard extends AbstractCard<readonly Action[], Module> {
+export class RobotCard extends AbstractCard<Action, Module> {
 
 
     public readonly output = ACTION
@@ -57,26 +57,26 @@ export class RobotCard extends AbstractCard<readonly Action[], Module> {
     }
 
 
-    public get(module: Module): readonly Action[] {
-        return [RobotCard.#building(this, module)]
+    public get(module: Module): Action {
+        return RobotCard.#building(this, module)
     }
 
 
     static #building(card: RobotCard, module: Module): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
                 const robot = battle.place(unit, {
                     sprite: visual("units/robot"), name: "Robot", at: spotOf(unit), direction: unit.direction,
                     hearts: Heart.many(SHIELD_HEART, count), cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
                 })
                 if(robot) module.tune(robot)
-                yield* hold(battle, SHORT_TIME)
+                hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const spot = spotOf(pose)
-                if(!battle.free(spot, unit, UNIT_RADIUS)) return still(pose, label(spot, "pas de place", NOTE_COLOR))
-                return still(pose, summonShown(spot))
+                if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+                return Previews.still(pose, summonShown(spot))
             },
         }
     }

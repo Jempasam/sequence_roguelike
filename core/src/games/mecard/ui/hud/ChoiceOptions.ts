@@ -132,12 +132,19 @@ export function unitHead(theme: Theme, unit: Hero, sprites: UnitSprites): Compon
     return withPicture(sprites, unit.sprite, row)
 }
 
+/** A character shown with its cards: its head above its cards, which overlap, then its text. */
+export function unitOption(
+    theme: Theme, unit: Hero, sprites: UnitSprites, cards: readonly Card[], text: Text|null, extras: OptionExtras = {},
+): Component {
+    return cardsOption(theme, cards, text, { ...extras, head: unitHead(theme, unit, sprites), overlapped: true })
+}
+
 /** A character of the party offered in a choice: its sprite, then its name, its hearts and its deck. */
 export function heroOption(theme: Theme, hero: Hero, sprites: UnitSprites): Component {
     const column = new Box("column", { gap: 2, align: "center" })
     column.add(new Label(theme, hero.name, { color: CHOSEN_TEXT }))
     column.add(heartsRow(theme, hero.hearts, () => {}))
-    const bot = hero.controller === "bot" ? " · bot" : ""
+    const bot = hero.controller !== "player" ? " · bot" : ""
     column.add(new Label(theme, `${allCards(hero).length} cartes${bot}`, { color: DIM_TEXT }))
     return framed(theme, withPicture(sprites, hero.sprite, column), HERO_WIDTH)
 }

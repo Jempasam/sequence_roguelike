@@ -1,26 +1,28 @@
 import type { Monster } from "../catalog/monsters"
 import type { Floor } from "../floor/Floor"
 import { EXIT_HALT } from "../halt/subs/ExitHalt"
-import { placeTypeById } from "../catalog/places"
+import { haltById } from "../catalog/halts"
+import { fightById } from "../fight/fights"
 import { Journey } from "../run/Journey"
 import type { Place } from "../run/Journey"
-import { isHalt } from "../run/PlaceType"
-import type { FightType } from "../run/PlaceType"
 import type { Run } from "../run/Run"
 import type { Travel } from "../travel/Travel"
 
 import { FLOOR_NAMES, MONSTER_NAMES } from "./catalogNames"
 
 /** The version of the shape of a journey saved, raised when it changes, so an old one is refused clearly. */
-export const TRAVEL_SAVE_VERSION = 1
+export const TRAVEL_SAVE_VERSION = 2
 
 /** A floor: the name of its sort, and its level. */
 type SavedFloor = readonly [string, number]
 
 /** A place of a map, its exits aside. */
 export interface SavedPlace {
-    /** The id of its sort of place, an exit's apart: the exits are not written down. */
-    readonly kind: string
+    /** The id of its fight, none when it holds none: the exits are not written down. */
+    readonly fight: string|null
+
+    /** The id of its halt, none when it holds none. */
+    readonly halt: string|null
     readonly layer: number
     readonly across: number
 
@@ -124,10 +126,13 @@ function savedJourney(journey: Journey): SavedJourney {
     return {
         scenery,
         places: places.flatMap(place => {
-            const { type, layer, across } = place
+            const { fight, halt, layer, across } = place
             if(place.exitTo) return []
             const next = place.next.filter(to => !to.exitTo).map(to => places.indexOf(to))
-            return [{ kind: type.id, layer, across, next, monsters: place.monsters.map(savedMonster) }]
+            return [{
+                fight: fight?.id ?? null, halt: halt?.id ?? null, layer, across, next,
+                monsters: place.monsters.map(savedMonster),
+            }]
         }),
         exits: exits.map(savedFloor),
     }
@@ -136,11 +141,14 @@ function savedJourney(journey: Journey): SavedJourney {
 /** A map laid again as its floor laid it: the places, their links, then the exits, which link themselves. */
 function loadedJourney(save: SavedJourney, run: Run): Journey {
     const journey = new Journey(run.rng, save.scenery)
-    const places = save.places.map(({ kind, layer, across, monsters }) => {
+    const places = save.places.map(({ fight, halt, layer, across, monsters }) => {
         const at = { layer, across }
-        const type = placeTypeById(kind)
-        if(isHalt(type)) return journey.addHalt(type, at)
-        return journey.addFight(type as FightType, monsters.map(name => MONSTER_NAMES.of(name)), at)
+        const haltType = halt === null ? null : haltById(halt)
+        if(fight === null){
+            if(!haltType) throw new Error("A place holds a fight or a halt: the save is corrupted.")
+            return journey.addHalt(haltType, at)
+        }
+        return journey.addFight(fightById(fight), monsters.map(name => MONSTER_NAMES.of(name)), at, haltType)
     })
     save.places.forEach(({ next }, index) => {
         for(const rank of next) journey.link(places[index], placeAt(journey, rank))

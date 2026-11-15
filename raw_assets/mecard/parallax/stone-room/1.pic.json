@@ -1,0 +1,20 @@
+{
+    "size": [288, 164],
+    "seed": 21,
+    "palette": [
+        "#5c584c",
+        "#12100c",
+        "#403c32",
+        {"color": "#e8d88c", "light": 0.2}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "fill": {"pattern": "tiles", "cell": [18, 9], "grout": 1, "offset": 0.5, "odd": 0.2, "materials": [0, 1, 2]}, "depth": 3},
+        {"box": [0, 0, 288, 164], "fill": {"pattern": "noise", "density": 0.006, "radius": 2, "materials": [null, 2]}},
+        {"box": [0, 118, 288, 46], "fill": {"pattern": "tiles", "cell": [26, 12], "grout": 1, "offset": 0.5, "odd": 0.25, "materials": [2, 1, 0]}, "depth": 2},
+        {"box": [0, 116, 288, 3], "material": 1, "depth": 4, "relief": "round-y"},
+
+        {"polygon": [[194, 21], [234, 21], [238, 30], [229, 39], [219, 34], [211, 46], [202, 37], [193, 31]], "material": 1, "depth": 0},
+        {"polygon": [[203, 21], [226, 21], [224, 30], [214, 28], [208, 34]], "material": 3, "depth": 1},
+        {"polygon": [[209, 33], [222, 30], [178, 140], [146, 140]], "material": 3, "depth": 1}
+    ]
+}

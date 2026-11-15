@@ -3,7 +3,8 @@ import {
     BATTERY, BLOOD_FLASK, BLUE_BRACELET, BLUE_FLASK, BLUE_HEART, BOW_MODULE, BLEEDING, Carried, CALM_INFUSION,
     CONCENTRATED, COOL_SYRUP, DEMON_ELIXIR, DEMONIC, ENGINE_OIL, EXPLOSIVE_CORE, EXPLOSIVE_HEART, FISHING, FISHING_CARD,
     FOLDING_TURRET, FRAGILE, FRAGILITY_FLASK, FURIOUS, FURY_ELIXIR, IMPROVISED_ROBOT, INFLATABLE_DECOY, LEATHER_BAG,
-    MAGIC_WATCH, POISONED, SHARPENING_STONE, THRUST, THRUSTERS, TURRET, WHISTLE, WRENCH, STEP,
+    MAGIC_WATCH, MUD_CARD, POISONED, ritualType, SHARPENING_STONE, STONE_ELEMENT, THRUST, THRUSTERS, TURRET,
+    WATER, WATER_ELEMENT, WHISTLE, PLANT, PLANT_ELEMENT, WIZARD_STAFF, WRENCH, STEP,
 } from "@game/core/mecard"
 import type { Card, Unit, Usable } from "@game/core/mecard"
 
@@ -92,6 +93,43 @@ describe("hand and chain", () => {
         on.playRound()
         void far
         expect(foe.life).toBe(0)
+    })
+
+    test("wizard staff gives the element of the only ritual", () => {
+        const { on, hero, carried } = carrying(WIZARD_STAFF)
+        on.applyStatus(hero, ritualType(WATER_ELEMENT), 1)
+        used(on, hero, carried)
+        expect(hero.hand).toEqual([WATER])
+        expect(carried.charges).toBe(1)
+    })
+
+    test("wizard staff gives the mix of two rituals that react", () => {
+        const { on, hero, carried } = carrying(WIZARD_STAFF)
+        on.applyStatus(hero, ritualType(WATER_ELEMENT), 1)
+        on.applyStatus(hero, ritualType(STONE_ELEMENT), 1)
+        used(on, hero, carried)
+        expect(hero.hand).toEqual([MUD_CARD])
+    })
+
+    test("wizard staff gives an element of the rituals when none of them react", () => {
+        const { on, hero, carried } = carrying(WIZARD_STAFF)
+        on.applyStatus(hero, ritualType(WATER_ELEMENT), 1)
+        on.applyStatus(hero, ritualType(PLANT_ELEMENT), 1)
+        used(on, hero, carried)
+        expect(hero.hand).toHaveLength(1)
+        expect([WATER, PLANT]).toContain(hero.hand[0])
+    })
+
+    test("wizard staff gives nothing without a ritual, nor to a full hand", () => {
+        const empty = carrying(WIZARD_STAFF)
+        used(empty.on, empty.hero, empty.carried)
+        expect(empty.hero.hand).toEqual([])
+
+        const full = carrying(WIZARD_STAFF)
+        full.on.applyStatus(full.hero, ritualType(WATER_ELEMENT), 1)
+        full.hero.hand.push(...new Array<Card>(full.hero.stats.handSize.value).fill(STEP))
+        used(full.on, full.hero, full.carried)
+        expect(full.hero.hand).not.toContain(WATER)
     })
 
     test("fishing card puts a Fishing in hand", () => {

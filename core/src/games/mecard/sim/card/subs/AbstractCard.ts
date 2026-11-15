@@ -1,7 +1,11 @@
 import type { Text } from "../../../../../semantic"
+import type { Unit } from "../../battle/Unit"
 import type { Card } from "../Card"
 import type { CardType } from "../CardType"
 import type { Rarity } from "../Rarity"
+
+/** The variants of a card with nothing to choose. */
+const NO_VARIANTS: ReadonlyMap<Text, Card> = new Map()
 
 /**
  * What every card shares: a name, a description and a rarity, and telling itself by its name in the color
@@ -24,7 +28,11 @@ export abstract class AbstractCard<T, U = undefined> implements Card<T, U> {
     ){}
 
 
-    public abstract get(input: U): T
+    public abstract get(input: U, tree?: readonly Card[]): T
+
+    public variants(): ReadonlyMap<Text, Card> { return NO_VARIANTS }
+
+    public variantFor(_unit: Unit): Card { return this }
 
     public toString(): string { return this.name }
 

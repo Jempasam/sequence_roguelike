@@ -1,16 +1,19 @@
 import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
-import { AnimationChain, FrameClock, instant } from "../../../../engine/ui"
+import { Color } from "../../../../engine/math"
+import { AnimationChain, Box, Button, FrameClock, instant, NineSlice } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Observer } from "../../sim/base/Observable"
 import { eventText } from "../../sim/battle/events"
 import { NOTE_COLOR } from "../../sim/battle/previewColors"
-import type { Indicator } from "../../sim/battle/Action"
+import type { Indicator } from "../../sim/battle/preview/Preview"
+import type { Previewable } from "../../sim/battle/preview/Previewable"
 import type { Battle, Phase } from "../../sim/battle/Battle"
 import type { Team } from "../../sim/battle/Team"
 import type { Unit } from "../../sim/battle/Unit"
+import type { Process } from "../../sim/process/Process"
 import type { Card } from "../../sim/card/Card"
 import { CardChain } from "../../sim/card/CardChain"
 import type { RootPreview } from "../../sim/card/CardChain"
@@ -23,6 +26,7 @@ import { ArenaView } from "./ArenaView"
 import { BoardView } from "./BoardView"
 import { Draft } from "./Draft"
 import { Hud } from "./Hud"
+import { NO_PREVIEW } from "./Hud"
 import type { HudHost, Mode } from "./Hud"
 import type { UiRect } from "../hud/BattleGrid"
 import { processText, statusText } from "../hud/StatusProcessList"
@@ -34,13 +38,20 @@ import type { UnitSprites } from "../look/UnitSprites"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import { CARTE } from "../../sim/base/keywords"
 
+/** The frame behind the button of the tactical view while it is on. */
+const TACTICAL_ON = new Color(0.45, 0.38, 0.15, 0.9)
+
 /** How many lines of the log are kept. */
 const LOG_SIZE = 40
 
-/** What the pointer is over that has a preview: a root of a chain, or a card of the hand. */
+/**
+ * What the pointer is over that has a preview: a root of a chain, a card of the hand, or a thing a unit
+ * carries, a status, a process, a usable or an item, which may have none.
+ */
 type Hovered =
-    | { readonly unit: Unit, readonly index: number }
+    | { readonly unit: Unit, readonly index: number, readonly shown?: Card }
     | { readonly card: Card }
+    | { readonly unit: Unit, readonly thing: Partial<Previewable> }
 
 /**
  * Who starts the round: the players, from the screen; another, once the players said they are ready, the
@@ -219,23 +230,20 @@ export class BattleScreen implements HudHost {
         this.#arenaHearts = new ArenaHearts(theme, arena, sprites, (unit, heart, over) => {
             this.hoverUnit(unit, over)
             this.#hud.showInfo(over ? heartText(heart) : null)
-        }, (unit, process, over) => {
-            this.hoverUnit(unit, over)
-            this.#hud.showInfo(over ? processText(process) : null)
-        }, (unit, status, over) => this.#hoverStatus(unit, status, over))
+        }, (unit, process, over) => this.#hoverProcess(unit, process, over),
+        (unit, status, over) => this.#hoverStatus(unit, status, over))
         const main = ui.addLayer("battle")
         this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }))
         // Over the panels, kept from one build of them to the next, and laid over the arena by each frame.
         const controls = ui.addLayer("battle-controls")
         this.#controlsView = new PlayControlView(theme, this.#playControl)
-        controls.content.add(this.#controlsView, { x: "start", y: "start" })
+        this.#controlsRow.add(this.#controlsView)
+        this.#controlsRow.add(this.#tacticalButton())
+        controls.content.add(this.#controlsRow, { x: "start", y: "start" })
         this.#controls = controls
         this.#statusList = new StatusList(theme, controls, sprites, (unit, status, over) => {
             this.#hoverStatus(unit, status, over)
-        }, (unit, process, over) => {
-            this.hoverUnit(unit, over)
-            this.#hud.showInfo(over ? processText(process) : null)
-        })
+        }, (unit, process, over) => this.#hoverProcess(unit, process, over))
         this.#layers = [floor, arena, main, controls]
         this.#connectInputs()
         this.#registerObservers()
@@ -339,8 +347,8 @@ export class BattleScreen implements HudHost {
     }
 
     /** Show what a root of a chain would do while the pointer is over it, until it leaves. */
-    public hoverRoot(unit: Unit, index: number, over: boolean): void {
-        this.#hover({ unit, index }, over)
+    public hoverRoot(unit: Unit, index: number, over: boolean, card?: Card): void {
+        this.#hover({ unit, index, shown: card }, over)
     }
 
     /** Highlight a unit while the pointer is over what stands for it in the panels, until it leaves. */
@@ -359,6 +367,14 @@ export class BattleScreen implements HudHost {
         this.#hover({ card }, over)
     }
 
+    /**
+     * Show what a status, a process, a usable or an item of a unit would do while the pointer is over it,
+     * nothing more than the text when it has no preview.
+     */
+    public hoverThing(unit: Unit, thing: Partial<Previewable>, over: boolean): void {
+        this.#hover({ unit, thing }, over)
+    }
+
 
     readonly #clock = new FrameClock()
     readonly #battleAnimations: BattleAnimations
@@ -374,6 +390,9 @@ export class BattleScreen implements HudHost {
     readonly #layers: readonly [Layer, Layer, Layer, Layer]
     readonly #playControl: PlayControl
     readonly #controlsView: PlayControlView
+
+    /** The playing controls and the button of the tactical view, side by side. */
+    readonly #controlsRow = new Box("row", { gap: 2 })
     readonly #controls: Layer
 
     /** The arena as a component, in the layer under the hearts. */
@@ -497,8 +516,8 @@ export class BattleScreen implements HudHost {
             choose: unit => this.#choose(unit),
             pick: card => this.#pick(card),
             remove: place => this.#remove(place),
-            turn: (place, step) => this.#turn(place, step),
-            turnTo: step => this.#turnTo(step),
+            variant: (place, variant) => this.#variant(place, variant),
+            variantTo: variant => this.#variantTo(variant),
             toggleUsable: index => this.#toggleUsable(index),
             launch: () => this.launch(),
             skip: () => this.#skip(),
@@ -528,14 +547,13 @@ export class BattleScreen implements HudHost {
         this.refresh()
     }
 
-    #turn(place: number, step: number): void {
-        this.#draft()?.turn(place, step)
+    #variant(place: number, variant: Card): void {
+        this.#draft()?.variant(place, variant)
         this.refresh()
     }
 
-    #turnTo(step: number): void {
-        const draft = this.#draft()
-        if(draft) draft.turnStep = step
+    #variantTo(variant: Card): void {
+        this.#draft()?.choose(variant)
         this.refresh()
     }
 
@@ -596,6 +614,20 @@ export class BattleScreen implements HudHost {
         this.refresh()
     }
 
+    /** The button turning the tactical view of the arena on and off, lit up while it is on. */
+    #tacticalButton(): Button {
+        const { theme } = this.options
+        const lit = { ...theme.button, normal: NineSlice.flat(theme.white, TACTICAL_ON) }
+        const button = new Button(theme, "Tac", this.#board.tactical ? { looks: lit } : {})
+        button.onActivate = () => {
+            this.#board.tactical = !this.#board.tactical
+            const next = this.#tacticalButton()
+            this.#controlsRow.remove(button)
+            this.#controlsRow.add(next)
+        }
+        return button
+    }
+
     #skip(): void {
         if(this.skippable) this.catchUp()
     }
@@ -616,7 +648,7 @@ export class BattleScreen implements HudHost {
             view.fixedSize = { width, height }
         }
         if(!last || last.left !== room.left || last.top !== room.top){
-            this.#controls.content.setSlot(this.#controlsView, { offsetX: room.left, offsetY: room.top })
+            this.#controls.content.setSlot(this.#controlsRow, { offsetX: room.left, offsetY: room.top })
         }
         this.#arenaRoom = room
         return room
@@ -638,7 +670,15 @@ export class BattleScreen implements HudHost {
     /** Highlight the unit of a status while the pointer is over its icon, and say what the status is. */
     #hoverStatus(unit: Unit, status: ShownStatus, over: boolean): void {
         this.hoverUnit(unit, over)
+        this.hoverThing(unit, unit.statusOf(status.type) ?? NO_PREVIEW, over)
         this.#hud.showInfo(over ? statusText(status) : null)
+    }
+
+    /** Highlight the unit of a process while the pointer is over its icon, and say what the process is. */
+    #hoverProcess(unit: Unit, process: Process, over: boolean): void {
+        this.hoverUnit(unit, over)
+        this.hoverThing(unit, process, over)
+        this.#hud.showInfo(over ? processText(process) : null)
     }
 
     /** Light up the highlighted unit everywhere it shows. */
@@ -674,6 +714,12 @@ export class BattleScreen implements HudHost {
             this.#hud.showInfo(null)
             return
         }
+        if("thing" in hovered){
+            // What it says is told by whoever hovers it: only what it shows over the arena is told here.
+            const { unit, thing } = hovered
+            this.#board.indicators = planning ? thing.preview?.({ battle, unit, pose: unit })?.indicators ?? [] : []
+            return
+        }
         if("card" in hovered){
             const { card } = hovered
             const preview = planning ? this.#draft()?.previewWith(battle, card) ?? null : null
@@ -681,7 +727,7 @@ export class BattleScreen implements HudHost {
             this.#hud.showInfo(concat(card, " : ", card.description))
             return
         }
-        const { unit, index } = hovered
+        const { unit, index, shown: told } = hovered
         const draft = planning ? this.drafts.get(unit) : undefined
         const shown = planning ? undefined : this.scene.of(unit)?.chain
         const plan = draft ? draft.chain : shown ? new CardChain(shown.cards) : battle.planOf(unit)
@@ -690,7 +736,8 @@ export class BattleScreen implements HudHost {
             : plan?.preview(battle, unit)[index] ?? null
         this.#board.indicators = indicatorsOf(preview)
         const view = plan?.view()[index]
-        if(view) this.#hud.showInfo(concat(view.card, " : ", view.card.description))
+        const card = told ?? view?.card
+        if(card) this.#hud.showInfo(concat(card, " : ", card.description))
     }
 
     /** Open the preparation on the screen: a draft for each unit the players may plan. */
@@ -771,7 +818,10 @@ export class BattleScreen implements HudHost {
 /** Do two hovered things stand for the same? */
 function sameHovered(first: Hovered, second: Hovered): boolean {
     if("card" in first || "card" in second) return "card" in first && "card" in second && first.card === second.card
-    return first.unit === second.unit && first.index === second.index
+    if("thing" in first || "thing" in second){
+        return "thing" in first && "thing" in second && first.unit === second.unit && first.thing === second.thing
+    }
+    return first.unit === second.unit && first.index === second.index && first.shown === second.shown
 }
 
 /** What a root preview draws: its indicators, and a "?" where the viewer cannot be sure. */

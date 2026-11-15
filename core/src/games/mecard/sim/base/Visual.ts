@@ -47,7 +47,7 @@ export class Visual implements VisualData {
      */
     public readonly visual: string
 
-    /** A tint the picture is multiplied by, channel by channel, none to draw it as it is. */
+    /** A hue the picture is recolored with, its light and its saturation kept, none to draw it as it is. */
     public readonly coloration: VisualColor | null
 
     /** Two letters to write where the picture is not available. */

@@ -13,6 +13,7 @@ import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
 import { Carried } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
+import { GREEN_HEART } from "../heart/subs/GreenHeartKind"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
 import type { Item } from "../item/Item"
 import type { Visual } from "../base/Visual"
@@ -78,9 +79,25 @@ export function heroOf(kit: Kit, name = kit.name): Hero {
 export function allyOf(monster: Monster, name: string): Hero {
     return hero({
         name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
-        unlimited: [], hearts: redHearts(monster.hearts),
+        unlimited: [], hearts: monsterHearts(monster.hearts),
         items: [],
         usables: [], bases: { draw: monster.draw, firstDraw: monster.draw, size: monster.size ?? 1 },
+    })
+}
+
+/**
+ * A monster as a fighter, as the floors make it: more hearts at a higher level, its deck kept in order so it
+ * plays the same loop each time.
+ *
+ * @param level - The level of the floor, 1 for none.
+ */
+export function foeOf(monster: Monster, name: string, level = 1): Hero {
+    return hero({
+        name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
+        unlimited: [], hearts: monsterHearts(monster.hearts + level - 1),
+        items: [],
+        usables: [],
+        bases: { draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true, size: monster.size ?? 1 },
     })
 }
 
@@ -116,6 +133,16 @@ export function firstDeck(character: Hero): Card[] {
 /** Full red hearts. */
 export function redHearts(count: number): Heart[] {
     return Heart.many(RED_HEART, count)
+}
+
+/**
+ * The hearts of a monster of so much life, packed in few: above 6, a green heart (worth two red ones) takes
+ * the place of two red ones, as many as it takes to hold 6 hearts, then all of them are green but the odd
+ * one. The greens come first, the reds stay on the right, where the heals fill them.
+ */
+export function monsterHearts(life: number): Heart[] {
+    const greens = life > 6 ? Math.min(life - 6, Math.floor(life / 2)) : 0
+    return [...Heart.many(GREEN_HEART, greens), ...redHearts(life - 2 * greens)]
 }
 
 

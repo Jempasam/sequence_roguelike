@@ -7,7 +7,7 @@ import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
 import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
-import type { FightType } from "../../run/PlaceType"
+import type { FightType } from "../../fight/FightType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
@@ -42,7 +42,7 @@ export const FOREST_FLOOR: FloorType = {
     name: "Forêt",
     description: "Des chasseurs rapides, et un troll au bout. Plus d'hôpitaux, de tavernes et de dresseurs.",
     icon: visual("floors/forest/logo"),
-    look: sceneLook(16, 32, 22, "mecard/floors/forest"),
+    look: sceneLook(16, 32, 22, "forest"),
     decorations: [
         { picture: visual("floors/forest/cabin"), size: 2 },
         { picture: visual("floors/forest/tree"), size: 2 },

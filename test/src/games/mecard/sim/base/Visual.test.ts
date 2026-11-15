@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs"
+import { join } from "node:path"
 import { describe, expect, test } from "vitest"
 import {
-    allPlaceTypes, BOSS_MONSTERS, BURNING_GROUND, BURNING_GROUNDS, FIRE_ELEMENT, GRAND_RITUAL, GRAND_RITUALS, ALL_FIGHTS, ALL_FLOORS, Grievance, Haste, ALL_ITEMS, ALL_KITS, loadedVisual, ALL_MONSTERS, ALL_PETS,
+    allPlaceTypes, BOSS_MONSTERS, BURNING_GROUND, BURNING_GROUNDS, FIRE_ELEMENT, RITUAL_STATUS, RITUAL_STATUSES, ALL_FIGHTS, ALL_FLOORS, Haste, ALL_ITEMS, ALL_KITS, loadedVisual, ALL_MONSTERS, ALL_PETS,
     PNJ_HATS, PNJ_ITEMS, PNJ_MASKS, Riding, savedVisual, ShadowLink, STATUS_FAMILIES, STATUS_TYPES, Strength,
     ALL_USABLES, Vanishing, Visual,
 } from "@game/core/mecard"
@@ -9,9 +10,13 @@ import { ICON_KEYS, SPRITE_KEYS } from "@game/core/mecard/unit-sprites"
 
 // --- Fixture builders ---
 
-/** Do the pictures of a visual exist, as a file shipped with the game? */
+/** The root of the repository, whatever the folder the tests are run from. */
+const ROOT = join(__dirname, "../../../../../..")
+
+/** Do the pictures of a visual exist, as a file shipped with the game (written by hand or generated)? */
 function missingFiles(visuals: readonly Visual[]): string[] {
-    return [...new Set(visuals.map(each => each.visual))].filter(key => !existsSync(`assets/mecard/${key}.png`))
+    const shipped = (key: string) => ["assets", "generated_assets"].some(root => existsSync(join(ROOT, root, "mecard", `${key}.png`)))
+    return [...new Set(visuals.map(each => each.visual))].filter(key => !shipped(key))
 }
 
 // --- Tests ---
@@ -72,23 +77,25 @@ describe("the pictures the catalog names", () => {
 
     test("processes with an icon → a file of the game each, which the screens load", () => {
         const named = [new Strength(1), new Haste(1.5), new Riding(2), new ShadowLink(), new Vanishing()]
-            .flatMap(each => each.icon ? [each.icon] : [])
+            .map(each => each.icon)
         expect(missingFiles(named)).toEqual([])
         const loaded = new Set(ICON_KEYS)
         expect(named.map(each => each.visual).filter(key => !loaded.has(key))).toEqual([])
     })
 
-    test("a process may have no icon → its name and color alone", () => {
-        expect(new Grievance().icon).toBeNull()
+    test("the fights → a file of the game each, and the letter the map writes while it loads", () => {
+        expect(ALL_FIGHTS.map(each => each.icon.letter)).toEqual(["C", "É", "B"])
+        expect(missingFiles(ALL_FIGHTS.map(each => each.icon))).toEqual([])
     })
 
-    test("the fights → no file, and the letter the map writes in its stead", () => {
-        expect(ALL_FIGHTS.map(each => each.icon.letter)).toEqual(["C", "É", "B"])
-        expect(missingFiles(ALL_FIGHTS.map(each => each.icon))).toHaveLength(ALL_FIGHTS.length)
+    test("a variant of a ritual → the picture of its family, in the color of its element", () => {
+        const variant = RITUAL_STATUSES.of(FIRE_ELEMENT).visual
+        expect(variant.visual).toBe(RITUAL_STATUS.visual.visual)
+        expect(variant.coloration).toEqual([FIRE_ELEMENT.color.r, FIRE_ELEMENT.color.g, FIRE_ELEMENT.color.b])
+        expect(variant.color).toEqual(variant.coloration)
     })
 
     test("a variant of a status → the visual of its family", () => {
-        expect(GRAND_RITUALS.of(FIRE_ELEMENT).visual).toBe(GRAND_RITUAL.visual)
         expect(BURNING_GROUNDS.of(FIRE_ELEMENT).visual).toBe(BURNING_GROUND.visual)
         expect(BURNING_GROUNDS.of(FIRE_ELEMENT).color).toEqual(BURNING_GROUND.color)
     })

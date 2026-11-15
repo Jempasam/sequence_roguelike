@@ -8,9 +8,10 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the thrust of the catalog goes through, in meters. */
-const THRUST_RANGE = 2
+export const THRUST_RANGE = 2
 
 /** How wide the thrust of the catalog is, in meters. */
 export const THRUST_WIDTH = 0.5
@@ -39,7 +40,7 @@ export class ThrustCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const to = pose.position.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
-        return { kind: "segment", from: pose.position, to, width: this.width }
+        return Areas.line(pose.position, to, this.width)
     }
 }
 

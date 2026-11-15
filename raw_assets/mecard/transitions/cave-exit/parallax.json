@@ -1,0 +1,27 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#6a5e50"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#a07840", "amount": 0.08}
+        ]
+    },
+    "anim": [
+        "global: a=0 > a=1 m > z*6 on=0.5;0.34 > z*2 a=0",
+        "steps:  y=0.5 > y=0 m > hold > hold"
+    ],
+    "layers": [
+        {"name": "steps", "tag": "object", "picture": "steps.pic.json", "at": [0, 0]},
+        {"name": "rock", "tag": "border", "picture": "rock.pic.json", "at": [0, 0]},
+        {"name": "glare", "tag": "object", "picture": "glare.pic.json", "at": [0, 0]}
+    ]
+}

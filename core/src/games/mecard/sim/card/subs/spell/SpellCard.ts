@@ -5,10 +5,11 @@ import { ACTION, ELEMENT } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
-import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the spell of the catalog reaches, in meters. */
 const SPELL_RANGE = 4
@@ -20,7 +21,7 @@ const SPELL_DAMAGE = 1
 const BOLT_OPACITY = 0.5
 
 /** A spell: a bolt of the element plugged into it, along the line ahead, up to the first unit. */
-export class SpellCard extends AbstractCard<readonly Action[], Element> {
+export class SpellCard extends AbstractCard<Action, Element> {
 
 
     public readonly output = ACTION
@@ -40,29 +41,29 @@ export class SpellCard extends AbstractCard<readonly Action[], Element> {
     }
 
 
-    public get(element: Element): readonly Action[] {
-        return [SpellCard.#casting(this, element)]
+    public get(element: Element): Action {
+        return SpellCard.#casting(this, element)
     }
 
 
     static #casting(card: SpellCard, element: Element): Action {
         const color = { ...element.color, a: BOLT_OPACITY }
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 // The bolt stops on the first body it meets.
                 const { end } = battle.ray(unit, card.range)
-                yield* fly(battle, unit.position, end, color)
-                const area = { kind: "segment", from: unit.position, to: end, width: BOLT_WIDTH } as const
+                fly(battle, unit.position, end, color)
+                const area = Areas.line(unit.position, end, BOLT_WIDTH)
                 const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL)
                 if(hit) element.applyNegative(ctx, hit)
             },
             preview: ctx => {
                 const { battle, unit, pose } = ctx
                 const { end, unit: target } = battle.ray(unit, card.range, pose)
-                const path = polygon({ kind: "segment", from: pose.position, to: end, width: BOLT_WIDTH }, color)
-                if(!target) return still(pose, path)
-                return still(pose, path, label(target.position, element.word, NOTE_COLOR))
+                const path = Previews.polygon(Areas.line(pose.position, end, BOLT_WIDTH), color)
+                if(!target) return Previews.still(pose, path)
+                return Previews.still(pose, path, Previews.label(target.position, element.word, NOTE_COLOR))
             },
         }
     }

@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import { Console } from "@game/core"
-import { BURN, CardChain, FORGE_HALT, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
+import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
 import type { Battle, HaltType, Unit } from "@game/core/mecard"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
+import { shippedTransitions } from "@game/core/mecard/visual-path"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core/mecard/sync"
 import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
 import { startedRun } from "../../../fixtures/startedRun"
@@ -20,7 +21,7 @@ interface Game {
     /** The sorts of halt visited on the spot, in order. */
     readonly visited: HaltType[]
 
-    /** The transitions played, in order: their painting, duration in seconds, and whether in reverse. */
+    /** The transitions played, in order: the key of their visual, duration in seconds, and whether in reverse. */
     readonly transitions: (readonly [string, number, boolean])[]
 
     /** What the game was hosted with, in order. */
@@ -61,7 +62,8 @@ function game(): Game {
         showPnj: () => {},
         showArm: () => {},
         showLibrary: () => {},
-        playTransition: (path, duration, reverse) => transitions.push([path, duration, reverse]),
+        showParallax: () => {},
+        playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),
     })))
@@ -235,22 +237,27 @@ describe("Mecard commands", () => {
         expect(console.lines.filter(line => line.text.startsWith("Couche"))).toHaveLength(13)
     })
 
-    test("transition → the one named played, forward by default, for the duration and the way typed", () => {
+    test("debug transition → the one named played, forward by default, for the duration and the way typed", () => {
         const { console, transitions } = game()
-        for(const line of ["transition door", "transition Door 400", "transition door 2000 envers"]){
+        const [key] = shippedTransitions()
+        const name = key.slice("transitions/".length)
+        const capitalized = name[0].toUpperCase() + name.slice(1)
+        for(const line of [`debug transition ${name}`, `debug transition ${capitalized} 400`, `debug transition ${name} 2000 envers`]){
             console.submit(line)
         }
         expect(console.lines.filter(line => line.kind === "error")).toEqual([])
-        const door = "mecard/transitions/door.ora"
-        expect(transitions).toEqual([[door, 1.5, false], [door, 0.4, false], [door, 2, true]])
+        expect(transitions).toEqual([[key, 1.5, false], [key, 0.4, false], [key, 2, true]])
     })
 
-    test("transition unnamed, unknown, of a duration of 0 or an unknown way → refused, nothing played", () => {
+    test("debug transition unnamed, unknown, of a duration of 0 or an unknown way → refused, nothing played", () => {
         const { console, transitions } = game()
-        for(const line of ["transition", "transition fenêtre", "transition door 0", "transition door 500 côté"]){
-            console.submit(line)
-        }
+        const name = shippedTransitions()[0].slice("transitions/".length)
+        const lines = ["debug transition", "debug transition fenêtre", `debug transition ${name} 0`, `debug transition ${name} 500 côté`]
+        for(const line of lines) console.submit(line)
         expect(errors(console)).toHaveLength(4)
+        // The old command is gone.
+        console.submit(`transition ${name}`)
+        expect(errors(console)).toHaveLength(5)
         expect(transitions).toEqual([])
     })
 
@@ -276,7 +283,7 @@ describe("Mecard commands", () => {
         const { journey } = run.travel
         const before = journey.layers[2].length
         console.submit("travel put Forge 3")
-        const halt = journey.layers[2].find(place => place.type === FORGE_HALT)
+        const halt = journey.layers[2].find(place => place.halt === FORGE_HALT)
         expect(journey.layers[2]).toHaveLength(before + 1)
         expect(journey.layers[1].every(place => place.next.includes(halt!))).toBe(true)
         expect(halt?.next).toEqual(journey.layers[3])
@@ -303,12 +310,12 @@ describe("Mecard commands", () => {
         const { console, run } = game()
         console.submit("run hire Archère")
         console.submit("run tame Gobelin")
-        expect(run.heroes.map(hero => hero.name)).toEqual(["Lancier", "Épéiste", "Archère", "Gobelin allié"])
+        expect(run.heroes.map(hero => hero.name)).toEqual(["Lancier", "Épéiste", "Archère", "Gobelin"])
         expect(run.heroes[3].controller).toBe("bot")
         console.submit("run merge Lancier Épéiste")
         console.submit("run fire Archère")
-        expect(run.heroes.map(hero => hero.name)).toEqual(["Lancier-Épéiste", "Gobelin allié"])
-        expect(console.check("run merge Gobelin_allié Gobelin_allié").valid).toBe(false)
+        expect(run.heroes.map(hero => hero.name)).toEqual(["Lancier-Épéiste", "Gobelin"])
+        expect(console.check("run merge Gobelin Gobelin").valid).toBe(false)
         expect(errors(console)).toEqual([])
     })
 
@@ -401,6 +408,27 @@ describe("Mecard battle commands", () => {
         expect(named(arena, "Mannequin")).not.toBe(first)
     })
 
+    test("run bot → the AI of the bots changed in this battle and the next ones, an unknown one refused", () => {
+        const { console, battle, run } = game()
+        const before = battle().bot
+        console.submit("run bot random")
+        expect(errors(console)).toEqual([])
+        expect(battle().bot).not.toBe(before)
+        expect(battle().bot).toBeInstanceOf(RandomAi)
+        expect(run.bot).toBe(battle().bot)
+        expect(run.newBattle().bot).toBe(run.bot)
+        console.submit("run bot smart")
+        expect(run.bot).toBeInstanceOf(LookaheadAi)
+        expect(battle().bot).toBe(run.bot)
+        console.submit("run bot deck")
+        expect(run.bot).toBeInstanceOf(DeckAi)
+        const kept = run.bot
+        console.submit("run bot nothing")
+        expect(errors(console)).not.toEqual([])
+        expect(run.bot).toBe(kept)
+        expect(battle().bot).toBe(kept)
+    })
+
     test("battle win, then lose → the battle ends for good, on the right side", () => {
         const { console, battle, run } = game()
         console.submit("battle arena")
@@ -425,6 +453,17 @@ describe("Mecard battle commands", () => {
         expect(errors(console)).toEqual([])
         console.submit("battle create 101 10")
         expect(errors(console)).toHaveLength(1)
+    })
+
+    test("battle < create ; edit → each command reads the state the one before left", () => {
+        const { console, battle } = game()
+        const before = battle().living.filter(unit => unit.name.startsWith("Mannequin")).length
+        console.submit("battle create < 50 50 ; 50 60")
+        expect(errors(console)).toEqual([])
+        expect(battle().living.filter(unit => unit.name.startsWith("Mannequin")).length).toBe(before + 2)
+        console.submit("battle < create 10 10 Gobelin enemy ; edit Gobelin kit Mage")
+        expect(errors(console)).toEqual([])
+        expect(battle().living.some(unit => unit.name.startsWith("Mage"))).toBe(true)
     })
 
     test("battle edit → damage, hearts, items, cards, statuses of one unit", () => {
@@ -453,6 +492,27 @@ describe("Mecard battle commands", () => {
         expect(errors(console)).toEqual([])
         console.submit("battle edit Lancier remove")
         expect(battle().units.includes(unit)).toBe(false)
+    })
+
+    test("battle edit kit, monster, pet → the unit is replaced, its place, team and controller kept", () => {
+        const { console, battle } = game()
+        const unit = lancer(battle())
+        const { team, controller } = unit
+        const position = unit.position
+        console.submit("battle edit Lancier monster Gobelin")
+        expect(errors(console)).toEqual([])
+        expect(battle().units.includes(unit)).toBe(false)
+        const goblin = named(battle(), "Gobelin")
+        expect(goblin.team).toBe(team)
+        expect(goblin.controller).toBe(controller)
+        expect(goblin.position).toBe(position)
+        console.submit("battle edit Gobelin kit Mage")
+        expect(battle().units.includes(goblin)).toBe(false)
+        console.submit("battle edit Mage pet Loup")
+        expect(named(battle(), "Loup").team).toBe(team)
+        expect(errors(console)).toEqual([])
+        console.submit("battle edit Loup kit Inconnu")
+        expect(errors(console)).toHaveLength(1)
     })
 
     test("battle edit heart clear → the unit dies, and no edit finds it afterwards", () => {

@@ -1,5 +1,6 @@
 import type { Text } from "../../../../semantic"
 import type { PlugContext, UnitContext } from "../battle/Action"
+import type { Previewable } from "../battle/preview/Previewable"
 import type { Visual } from "../base/Visual"
 
 /**
@@ -11,7 +12,7 @@ import type { Visual } from "../base/Visual"
  * Unlike a status, two processes never merge, and none is ever written down: a battle is only saved
  * between two rounds, when none is left.
  */
-export interface Process {
+export interface Process extends Partial<Previewable> {
     /** What it is called, `force`. */
     readonly name: string
 

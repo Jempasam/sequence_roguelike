@@ -4,7 +4,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -16,7 +15,7 @@ export class MadDoctorHalt extends AbstractHalt {
     constructor(run: Run){
         super(MAD_DOCTOR_HALT, run,
             ["Deux ", UNIT.as("unités"), " ? Sur ma table, elles n'en feront plus qu'une !"],
-            sceneLook(13, 31, 23, "mecard/travel/mad-doctor"),
+            sceneLook(13, 31, 23, "mad-doctor"),
             {
                 hat: "doctorHat",
                 clothes: rgba(0.3, 0.9, 0.6),
@@ -51,7 +50,8 @@ export class MadDoctorHalt extends AbstractHalt {
 export const MAD_DOCTOR_HALT: HaltType = {
     id: "madDoctor",
     name: "Docteur Fou",
-    description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],    icon: visual("travel/mad-doctor/logo", { letter: "DF" }),
-    transition: DOOR_TRANSITION,
+    description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],
+    icon: visual("travel/mad-doctor/logo", { letter: "DF" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new MadDoctorHalt(run),
 }

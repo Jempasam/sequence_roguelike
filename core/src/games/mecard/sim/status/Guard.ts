@@ -39,7 +39,7 @@ export abstract class Guard extends BaseStatus {
                 if(this.level <= 0) return
                 const amount = incoming.amount
                 incoming.amount = 0
-                battle.signals.notifyStatus.notify({ unit, status: this })
+                battle.signals.notifyStatus.notify({ unit, target: this })
                 // Spent before it reacts: what its reaction sets off, a push into a wall, finds it spent already.
                 battle.applyStatus(unit, this.type, -1)
                 if(incoming.source && incoming.source !== unit) this.react(ctx, { incoming, attacker: incoming.source, amount })

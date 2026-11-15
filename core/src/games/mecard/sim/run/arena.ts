@@ -6,8 +6,8 @@ import type { Controller, Unit } from "../battle/Unit"
 import { LANCER_KIT } from "../catalog/kits"
 import { MANNEQUIN } from "../catalog/monsters"
 
-import { ARENA_SIZE, partyStarts } from "./formation"
-import { allyOf, heroOf } from "./Hero"
+import { ARENA_SIZE, monsterStart, partyStarts } from "./formation"
+import { foeOf, heroOf } from "./Hero"
 import type { Hero } from "./Hero"
 import type { Run } from "./Run"
 
@@ -33,8 +33,8 @@ export function teamOf(run: Run, side: Side): Team {
 }
 
 /**
- * Bring a character into a battle, in a team, ready to fight. A unit of the foes keeps its deck in order, as
- * the monsters of the floors do.
+ * Bring a character into a battle, in a team, ready to fight. Whether its deck is kept in order is its own
+ * (see {@link foeOf}), not its side's.
  *
  * @param controller - Who plans its chains, as the character is by default.
  */
@@ -46,7 +46,7 @@ export function enterBattle(
         position, direction: side === "ally" ? Vector2.UP : Vector2.DOWN,
         hearts: character.hearts, decks: character.decks, unlimited: character.unlimited,
         items: character.items, usables: character.usables,
-        bases: side === "enemy" ? { ...character.bases, ordered: true } : character.bases,
+        bases: character.bases,
     })
     battle.refill(unit)
     return unit
@@ -63,7 +63,7 @@ function uniqueName(battle: Battle, name: string): string {
 
 /** A training dummy, its ten hearts full. */
 export function dummy(): Hero {
-    return allyOf(MANNEQUIN, MANNEQUIN.name)
+    return foeOf(MANNEQUIN, MANNEQUIN.name)
 }
 
 /**
@@ -87,6 +87,21 @@ export function trainOn(battle: Battle, run: Run): void {
         battle.vanish(standing)
         standing = enterDummy(battle, run)
     })
+}
+
+/**
+ * A duel: the party of the run (a lancer when it is empty) against one foe of the character told, in an arena
+ * that ends as any battle does.
+ */
+export function duelBattle(run: Run, foe: Hero): Battle {
+    const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), run.rng.int(2 ** 31))
+    const party = run.heroes.length > 0 ? run.heroes : [heroOf(LANCER_KIT)]
+    const starts = partyStarts(party.length)
+    party.forEach((hero, index) => {
+        enterBattle(battle, hero, run.heroesTeam, starts[index], "ally", hero.controller)
+    })
+    enterBattle(battle, foe, run.monstersTeam, monsterStart(0), "enemy", "bot")
+    return battle
 }
 
 /**

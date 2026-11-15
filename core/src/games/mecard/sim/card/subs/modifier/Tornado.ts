@@ -1,18 +1,19 @@
-import type { Action, Preview } from "../../../battle/Action"
-
+import type { Action } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
 import { ModifierCard } from "../ModifierCard"
 import { turn } from "../tools/playing"
+import { inOrder } from "../tools/sequence"
 import { Rarity } from "../../Rarity"
 
-/** How many times a tornado plays its actions, a quarter turn to the right after each time. */
+/** How many times a tornado plays its action, a quarter turn to the right after each time. */
 const TORNADO_TURNS = 4
 
 /** An action, then a quarter turn to the right, in one step. */
 function thenTurned(inner: Action): Action {
     return {
-        use: function* (ctx){
-            yield* inner.use(ctx)
-            yield* turn(ctx, ctx.unit.direction.right)
+        use: ctx => {
+            inner.use(ctx)
+            turn(ctx, ctx.unit.direction.right)
         },
         preview: (ctx): Preview => {
             const preview = inner.preview(ctx)
@@ -22,18 +23,12 @@ function thenTurned(inner: Action): Action {
 }
 
 /**
- * The actions played four times, each time a quarter turn to the right of the one before, a step each: the
+ * The action played four times, each time a quarter turn to the right of the one before, in one step: the
  * unit ends facing as it started. Nested, it spins what it holds: a double diagonal goes all eight ways.
  */
 export const TORNADO = new ModifierCard(
     "Tornade",
-    "L'action est jouée 4 fois, un quart de tour à droite après chacune, une étape chaque fois.",
+    "L'action est jouée 4 fois, un quart de tour à droite après chacune, en une seule étape.",
     Rarity.EPIC,
-    actions => {
-        const spun: Action[] = []
-        for(let i = 0; i < TORNADO_TURNS; i++){
-            spun.push(...actions.slice(0, -1), ...actions.slice(-1).map(thenTurned))
-        }
-        return spun
-    },
+    action => inOrder(Array.from({ length: TORNADO_TURNS }, () => thenTurned(action))),
 )

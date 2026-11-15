@@ -1,13 +1,13 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
+import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, wait } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the blink of the catalog jumps, in meters, before the move factor of the unit: a dash. */
 const BLINK_LENGTH = 3
@@ -32,17 +32,16 @@ export class BlinkCard extends ActionCard {
             return pose.position.plus(pose.direction.times(length * unit.stats.move.value))
         }
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const to = target(unit, unit)
-                yield* hold(battle, BLINK_TIME, [arrow([unit.position, to], MOVE_WIDTH / 2, MOVE_COLOR)])
+                hold(battle, BLINK_TIME, [Previews.arrow([unit.position, to], MOVE_WIDTH / 2, MOVE_COLOR)])
                 battle.blink(unit, to)
-                yield* wait(BLINK_TIME)
+                wait(battle, BLINK_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const to = target(unit, pose)
-                if(!battle.free(to, unit)) return still(pose, label(to, "bloqué", NOTE_COLOR))
-                const jump = arrow([pose.position, to], MOVE_WIDTH / 2, MOVE_COLOR)
-                return still({ ...pose, position: to }, jump)
+                const landing = battle.blinkSpot(unit, pose.position, to)
+                return Previews.still({ ...pose, position: landing }, ...Previews.moving(unit, pose.position, to, landing, MOVE_WIDTH / 2))
             },
         }
     }

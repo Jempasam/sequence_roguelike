@@ -1,0 +1,22 @@
+{
+    "size": [288, 164],
+    "seed": 8,
+    "palette": ["#8a4a30", "#2a2418", "#c9b070", {"color": "#fff4a0", "light": 0.9}],
+    "shapes": [
+        {"box": [24, 122, 38, 8], "material": 0, "depth": [6, 8], "relief": "round-y"},
+        {"box": [24, 122, 38, 1], "material": 2, "depth": 8},
+        {"box": [24, 129, 38, 1], "material": 2, "depth": 8},
+        {"box": [27, 113, 33, 8], "material": 1, "depth": [7, 9], "relief": "round-y"},
+        {"box": [27, 113, 33, 1], "material": 2, "depth": 9},
+        {"box": [30, 105, 28, 7], "material": 0, "depth": [7, 9], "relief": "round-y"},
+        {"box": [33, 107, 3, 3], "material": 2, "depth": 9},
+        {"box": [30, 131, 38, 6], "material": 2, "depth": [6, 7], "relief": "bevel"},
+        {"box": [30, 133, 38, 1], "material": 1, "depth": 7},
+
+        {"box": [238, 120, 20, 16], "material": 1, "depth": [6, 9], "relief": "dome"},
+        {"box": [236, 130, 24, 4], "material": 2, "depth": [7, 8], "relief": "round-y"},
+        {"box": [246, 112, 4, 8], "material": 2, "depth": [6, 8], "relief": "round-x"},
+        {"box": [246, 108, 4, 5], "material": 3, "depth": 8, "relief": "dome"},
+        {"box": [242, 102, 12, 2], "material": 2, "depth": 7}
+    ]
+}

@@ -3,7 +3,7 @@ import {
     AIM, AimCard, ARC_DISTANCE, ARC_STEP, BLINK, BLEED, BLUE_HEART, BOUNCE_DASH, cardMentions, CHARGE, ChainSummonCard, COMBO,
     DamageType, ELEMENT, ELEMENT_ON_BLADE, ELEPHANT_CARD, ENCHANTED_BLADE, FORCE, FusionCard, Heart,
     LIGHTNING, LIGHTNING_ELEMENT, LOOT_MONSTERS, MergedCard, monsterFusion, nearestTurn, POSSESSION,
-    PREPARATION_CARD, RED_HEART, REPEAT_2, Rng, SLASH, SPELL, STEP, SUMMONING, THRUST, TIME_MANIPULATION, TURN_STEPS,
+    PREPARATION_CARD, RED_HEART, REPEAT_2, Rng, SLASH, SPELL, STEP, TRANSMUTATION, THRUST, TIME_MANIPULATION, TURN_STEPS,
     TURNS, Vector2, WAIT, WINGS, WOLF_CARD,
 } from "@game/core/mecard"
 import type { Action, Card, RewriteSpot } from "@game/core/mecard"
@@ -20,10 +20,9 @@ function spotOf(...rest: Card[]): RewriteSpot {
 /** The first option of a draw, as a preview takes it. */
 const FIRST = { pick: <T>(options: readonly T[]): T => options[0] }
 
-/** Play an action of a unit to its end, outside of any round. */
+/** Play an action of a unit, outside of any round. */
 function playOut(action: Action, ctx: Parameters<Action["use"]>[0]): void {
-    const run = action.use(ctx)
-    while(!run.next().done){ /* each tick */ }
+    action.use(ctx)
 }
 
 // --- Tests ---
@@ -133,12 +132,12 @@ describe("the modifiers", () => {
         const hero = unit(on, 3, 3)
         const seen: number[] = []
         const probe: Action = {
-            use: function* ({ unit: playing }){
+            use: ({ unit: playing }) => {
                 seen.push(playing.stats.throwRange.value, playing.stats.meleeRange.value)
             },
             preview: ({ pose }) => ({ indicators: [], pose }),
         }
-        playOut(ELEPHANT_CARD.get([probe])[0], { battle: on, unit: hero })
+        playOut(ELEPHANT_CARD.get(probe), { battle: on, unit: hero })
         expect(seen).toEqual([1, 4])
         expect(hero.stats.throwRange.value).toBe(1)
         expect(hero.stats.meleeRange.value).toBe(1)
@@ -162,7 +161,7 @@ describe("the possession", () => {
 
 describe("the spirits of nature", () => {
     test("the summoning of a wolf → a body of four blue hearts, aiming, running, then biting twice", () => {
-        const rewrite = SUMMONING.get(WOLF_CARD.beast).rewrite(FIRST, spotOf())
+        const rewrite = TRANSMUTATION.get(WOLF_CARD.beast).rewrite(FIRST, spotOf())
         const summoned = rewrite.cards[0]
         expect(summoned).toBeInstanceOf(ChainSummonCard)
         if(!(summoned instanceof ChainSummonCard)) return

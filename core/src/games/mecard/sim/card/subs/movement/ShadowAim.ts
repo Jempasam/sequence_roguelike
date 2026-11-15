@@ -6,9 +6,9 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { shadowImages } from "./ShadowStep"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** What the aim says when nobody is in reach. */
 const NOBODY = "personne à viser"
@@ -36,22 +36,22 @@ function wayOf(battle: Battle, unit: Unit, pose: Pose): Vector2|null {
 export const SHADOW_AIM = new ActionCard("Viser de l'ombre", [
     "Se tourne vers l'ennemi le plus proche, en comptant à travers les murs de l'arène, qui mènent au mur opposé.",
 ], Rarity.RARE, {
-    use: function* (ctx){
+    use: function (ctx){
         const { battle, unit } = ctx
         const way = wayOf(battle, unit, unit)
         if(way){
-            yield* turn(ctx, way)
+            turn(ctx, way)
             return
         }
         battle.events.push({ type: "skipped", unit, reason: NOBODY })
-        yield* hold(battle, WORD_TIME, [label(unit.position, NOBODY, NOTE_COLOR)])
+        hold(battle, WORD_TIME, [Previews.label(unit.position, NOBODY, NOTE_COLOR)])
     },
     // A reach around each place it sees from: what lies past a wall shows on the opposite side.
     preview: ({ battle, unit, pose }) => {
         const way = wayOf(battle, unit, pose)
-        if(!way) return still(pose, label(pose.position, NOBODY, NOTE_COLOR))
+        if(!way) return Previews.still(pose, Previews.label(pose.position, NOBODY, NOTE_COLOR))
         const tip = pose.position.plus(way.times(TURN_LENGTH))
-        const turned = arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)
-        return still({ ...pose, direction: way }, turned)
+        const turned = Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)
+        return Previews.still({ ...pose, direction: way }, turned)
     },
 })

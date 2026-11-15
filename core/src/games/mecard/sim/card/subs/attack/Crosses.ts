@@ -1,5 +1,6 @@
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
-import type { Indicator, Pose } from "../../../battle/Action"
+import type { Pose } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
@@ -7,10 +8,11 @@ import { frenchNumber } from "../../../battle/words"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still, strike } from "../tools/previews"
 import { centeredSegment, cross } from "../tools/areas"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** The two segments of the cutting cross of the catalog: an X, crossing a meter ahead. */
 const X_LENGTH = 2
@@ -32,16 +34,16 @@ export const CROSS_CUT = new ActionCard("Taille croisée", [
     " devant : ", 1, "+",
     FORCE, " ", DamageType.PHYSICAL, " par branche. Au croisement, deux fois.",
 ], Rarity.RARE, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
         const areas = xAreas(unit, unit)
         for(const area of areas) battle.strike(unit, area, amount, DamageType.PHYSICAL)
-        yield* hold(battle, SHORT_TIME, areas.map(area => polygon(area, PHYSICAL_COLOR)))
+        hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
     },
     preview: ({ battle, unit, pose }) => {
         const areas = xAreas(pose, unit)
-        const touched = areas.flatMap(area => battle.unitsIn(area, unit))
-        return still(pose, ...strike(areas, touched))
+        const touched = areas.flatMap(area => battle.fetch(area, unit))
+        return Previews.still(pose, ...Previews.strike(areas, touched))
     },
 })
 
@@ -74,7 +76,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
     FISHING_GOLD,
     " or par mort, et reprend une Pêche en main.",
 ], Rarity.EPIC, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const areas = cross(
             fishingCenter(unit, unit), unit.direction, FISHING_BAR * unit.stats.meleeRange.value, FISHING_WIDTH,
         )
@@ -83,9 +85,9 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
             unit, areas, amount, DamageType.PHYSICAL, target => weakened(target) ? 2 : 1,
         )
         const killed = hit.filter(target => !target.alive).length
-        yield* hold(battle, SHORT_TIME, areas.map(area => polygon(area, PHYSICAL_COLOR)))
+        hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
         if(killed === 0) return
-        battle.blink(unit, fishingCenter(unit, unit))
+        battle.teleport(unit, fishingCenter(unit, unit))
         battle.giveGold(unit, FISHING_GOLD * killed)
         battle.giveCard(unit, FISHING)
     },
@@ -94,11 +96,11 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
             fishingCenter(pose, unit), pose.direction, FISHING_BAR * unit.stats.meleeRange.value, FISHING_WIDTH,
         )
         const amount = 1 + unit.stats.strength.value
-        const touched = [...new Set(areas.flatMap(area => battle.unitsIn(area, unit)))]
+        const touched = [...new Set(areas.flatMap(area => battle.fetch(area, unit)))]
         const dies = touched.some(target => target.life <= amount * (weakened(target) ? 2 : 1))
         const extra: Indicator[] = []
-        if(dies) extra.push(label(fishingCenter(pose, unit), "téléportation", NOTE_COLOR))
-        return still(pose, ...strike(areas, touched), ...extra)
+        if(dies) extra.push(Previews.label(fishingCenter(pose, unit), "téléportation", NOTE_COLOR))
+        return Previews.still(pose, ...Previews.strike(areas, touched), ...extra)
     },
 })
 
@@ -116,10 +118,7 @@ const EVERYWHERE = 1000
 
 function reapArea(pose: Pose, unit: Unit): Area {
     const stretch = unit.stats.meleeRange.value
-    return {
-        kind: "crescent", center: pose.position, direction: pose.direction,
-        inner: REAP_INNER * stretch, radius: REAP_OUTER * stretch, cosHalf: REAP_COS_HALF,
-    }
+    return Areas.crescent(pose.position, pose.direction, REAP_INNER * stretch, REAP_OUTER * stretch, REAP_COS_HALF)
 }
 
 /** A scythe whose every kill makes the next wave hurt everyone, itself apart. */
@@ -128,26 +127,26 @@ export const DEATH_SCYTHE = new ActionCard("Faux de la mort", [
     " meurt, la même chose frappe toutes les ", UNIT.as("unités"), " de la carte, et recommence tant qu'il y a un mort, ",
     WAVES, " vagues au plus.",
 ], Rarity.LEGENDARY, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
         let hit = battle.strike(unit, reapArea(unit, unit), amount, DamageType.PHYSICAL)
-        yield* hold(battle, SHORT_TIME, [polygon(reapArea(unit, unit), PHYSICAL_COLOR)])
+        hold(battle, SHORT_TIME, [Previews.polygon(reapArea(unit, unit), PHYSICAL_COLOR)])
         for(let wave = 1; wave < WAVES && hit.some(target => !target.alive); wave++){
-            const everyone: Area = { kind: "circle", center: unit.position, radius: EVERYWHERE }
+            const everyone: Area = Areas.circle(unit.position, EVERYWHERE)
             hit = battle.strike(unit, everyone, amount, DamageType.PHYSICAL)
-            yield* hold(battle, SHORT_TIME)
+            hold(battle, SHORT_TIME)
         }
     },
     preview: ({ battle, unit, pose }) => {
         const area = reapArea(pose, unit)
         const amount = 1 + unit.stats.strength.value
-        const touched = battle.unitsIn(area, unit)
+        const touched = battle.fetch(area, unit)
         const dies = touched.filter(target => target.life <= amount)
-        const shown: Indicator[] = strike([area], touched)
+        const shown: Indicator[] = Previews.strike([area], touched)
         if(dies.length > 0){
-            shown.push(...dies.map(target => label(target.position, "mort", NOTE_COLOR)))
-            shown.push(label(pose.position, "vague 2", NOTE_COLOR))
+            shown.push(...dies.map(target => Previews.label(target.position, "mort", NOTE_COLOR)))
+            shown.push(Previews.label(pose.position, "vague 2", NOTE_COLOR))
         }
-        return still(pose, ...shown)
+        return Previews.still(pose, ...shown)
     },
 })

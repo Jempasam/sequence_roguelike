@@ -8,9 +8,22 @@ import type { Pose } from "../../sim/battle/Action"
 import { Heart } from "../../sim/heart/Heart"
 import type { Effect, HeartsSignal } from "../../sim/battle/signals"
 import type { Unit } from "../../sim/battle/Unit"
+import type { Card } from "../../sim/card/Card"
 
 import type { PlayControl } from "../hud/PlayControl"
+import { Color } from "../../../../engine/math"
+import { ADDED_EDGE, FOCUS_EDGE, NOTICE_EDGE, REMOVED_EDGE } from "../look/colors"
 import type { BattleScene } from "./BattleScene"
+
+/** The places of the cards of a chain that another chain has not. */
+function placesOf(chain: readonly Card[], without: readonly Card[]): number[] {
+    const held = new Set(without)
+    const places: number[] = []
+    chain.forEach((card, place) => {
+        if(!held.has(card)) places.push(place)
+    })
+    return places
+}
 
 /** How long a number of damage or healing floats, in seconds. */
 const NUMBER_TIME = 0.9
@@ -75,7 +88,12 @@ export class BattleAnimations {
         const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => Animation): void => {
             observers.push(observable.add(event => this.chain.add(animate(event))))
         }
+        //// ROUND ////
+        // Phase Change : Nothing, only a place to stop
         on(signals.phase, () => () => {})
+
+        //// DECKS ////
+        // Card Drawn : Stop on the Unit, Fly to the Hand Animation
         observers.push(signals.drawn.add(({ unit, card, deck }) => {
             const animated = this.animates(unit)
             if(animated) this.chain.add(this.#stopping(() => this.#watchDraw(unit), true))
@@ -95,10 +113,13 @@ export class BattleAnimations {
             })
             if(animated) this.chain.add(this.#stopping(() => BEAT, true))
         }))
+
+        // Card Discarded : Discard Pile Grows
         on(signals.discarded, ({ unit, deck }) => () => {
             scene.change(unit, shown => shown.decks[deck].discard++)
         })
-        // Told in the middle of a draw, when a pile runs out.
+
+        // Deck Reshuffled : Discard Back to Pile, Told in the middle of a draw when a pile runs out
         observers.push(signals.reshuffled.add(({ unit, deck }) => {
             this.chain.add(this.#stopping(() => scene.change(unit, shown => {
                 const piles = shown.decks[deck]
@@ -106,9 +127,14 @@ export class BattleAnimations {
                 piles.discard = 0
             }), true))
         }))
+
+        //// MOVEMENT ////
+        // Unit Move : Glide Animation
         onAnimated(signals.moved, ({ unit, from, to, duration }) => () => {
             return this.#glide(unit, from, to, duration)
         })
+
+        // Unit Blink : Fade Out, Move, Fade In Animation
         onAnimated(signals.blinked, ({ unit, from, to }) => () => {
             return this.clock.tween(2 * BLINK_FADE, share => scene.change(unit, shown => {
                 const there = share >= 0.5
@@ -117,62 +143,125 @@ export class BattleAnimations {
                 shown.opacity = share >= 1 ? 1 : Math.abs(1 - 2 * share)
             }, false))
         })
+
+        //// CARDS ////
         const litCards = (unit: Unit, first: number, last: number, invalid: boolean): number => {
             this.onSelect?.(unit)
-            scene.lightCards({ unit, first, last, invalid })
+            scene.lightCards({ unit, first, last, invalid, edge: FOCUS_EDGE })
             return BEAT
         }
-        // Held while paused, before the card is lit.
+
+        // Card Activated : Held while Paused, Light the Cards
         observers.push(signals.cardActivated.add(({ unit, first, last }) => {
             this.chain.add(this.control.gate())
             this.chain.add(this.#stopping(() => litCards(unit, first, last, false)))
         }))
+
+        // Card Invalid : Held while Paused, Light the Card as Invalid
         observers.push(signals.cardInvalid.add(({ unit, index }) => {
             this.chain.add(this.control.gate())
             this.chain.add(this.#stopping(() => litCards(unit, index, index, true)))
         }))
-        on(signals.chainChanged, ({ unit, cards, cursor }) => () => {
-            scene.change(unit, shown => shown.chain = { cards, cursor })
-        })
+
+        // Chain Overflowed : Outline Every Card of the Chain in Red, it is emptied right after
+        observers.push(signals.chainOverflowed.add(({ unit, cards }) => {
+            this.chain.add(this.#stopping(() => {
+                if(!scene.of(unit)) return 0
+                scene.lightCards({
+                    unit, first: 0, last: cards.length - 1, invalid: false,
+                    indexes: cards.map((_, index) => index), edge: REMOVED_EDGE,
+                })
+                return BEAT
+            }))
+        }))
+
+        // Chain Changed : Outline Leaving Cards in Red then Remove, Put In Cards then Outline in Green
+        // A chain built or emptied at the turn of a round is not looked at card by card.
+        observers.push(signals.chainChanged.add(({ unit, cards, cursor, borrowed }) => {
+            let before: readonly Card[] = []
+            this.chain.add(this.#stopping(() => {
+                const shown = scene.of(unit)
+                if(!shown) return 0
+                before = shown.chain.cards
+                if(before.length === 0 || cards.length === 0) return 0
+                const gone = placesOf(before, cards)
+                if(gone.length === 0) return 0
+                scene.lightCards({
+                    unit, first: gone[0], last: gone[gone.length - 1], invalid: false,
+                    indexes: gone, edge: REMOVED_EDGE,
+                })
+                return BEAT
+            }))
+            this.chain.add(this.#stopping(() => {
+                scene.change(unit, shown => shown.chain = { cards, cursor, borrowed })
+                if(!scene.alive(unit) || before.length === 0 || cards.length === 0) return 0
+                const added = placesOf(cards, before)
+                if(added.length === 0) return 0
+                scene.lightCards({
+                    unit, first: added[0], last: added[added.length - 1], invalid: false,
+                    indexes: added, edge: ADDED_EDGE,
+                })
+                return BEAT
+            }))
+        }))
+
+        //// STEPS ////
+        // Step Started : Unit Becomes the Actor, Steps Left Updated
         on(signals.stepStarted, ({ unit, left }) => () => {
             scene.actor = unit
             scene.change(unit, shown => shown.steps = left)
         })
+
+        //// HEARTS ////
+        // Unit Damaged : Hearts Change, Red Number Floats Up
         onAnimated(signals.damaged, ({ unit, amount, hearts }) => () => {
             return this.#hurt(unit, hearts, `-${amount}`, DAMAGE_COLOR)
         })
+
+        // Unit Healed : Hearts Change, Green Number Floats Up
         onAnimated(signals.healed, ({ unit, amount, hearts }) => () => {
             return this.#hurt(unit, hearts, `+${amount}`, HEAL_COLOR)
         })
+
         const bar = ({ unit, hearts }: HeartsSignal): Play => () => {
             scene.change(unit, shown => shown.hearts = hearts)
         }
         // What stands no more is not looked at.
-        const litHearts = (unit: Unit, indexes: readonly number[]): number => {
+        const litHearts = (unit: Unit, indexes: readonly number[], edge: Color): number => {
             if(!scene.alive(unit)) return 0
-            scene.lightHeart({ unit, indexes })
+            scene.lightHeart({ unit, indexes, edge })
             return BEAT
         }
+
+        // Heart Added : Hearts Change, Light the Heart
         on(signals.heartAdded, signal => () => {
             bar(signal)()
-            return litHearts(signal.unit, [signal.index])
+            return litHearts(signal.unit, [signal.index], ADDED_EDGE)
         })
-        // The hearts are looked at together where they stand, and leave after.
+
+        // Heart Removed : Light the Hearts Together where they Stand, then Leave
         observers.push(signals.heartRemoved.add(signal => {
-            this.chain.add(this.#stopping(() => litHearts(signal.unit, signal.indexes)))
+            this.chain.add(this.#stopping(() => litHearts(signal.unit, signal.indexes, REMOVED_EDGE)))
             this.chain.add(this.#stopping(bar(signal)))
         }))
-        // The hearts are looked at together, then what took their places.
+
+        // Heart Replaced : Light the Hearts Together, then Light what took their Places
         observers.push(signals.heartReplaced.add(signal => {
-            this.chain.add(this.#stopping(() => litHearts(signal.unit, signal.indexes)))
+            this.chain.add(this.#stopping(() => litHearts(signal.unit, signal.indexes, REMOVED_EDGE)))
             this.chain.add(this.#stopping(() => {
                 bar(signal)()
-                return litHearts(signal.unit, signal.indexes)
+                return litHearts(signal.unit, signal.indexes, ADDED_EDGE)
             }))
         }))
+
+        // Heart Wounded : Hearts Change
         on(signals.heartWounded, bar)
+
+        //// UNITS ////
+        // Unit Died : Not Alive Anymore
         on(signals.died, ({ unit }) => () => scene.change(unit, shown => shown.alive = false))
-        // A unit coming in is taken as it is when it comes, before it moves on.
+
+        // Unit Spawned : Appear as it is when it comes, before it moves on
         observers.push(signals.spawned.add(({ unit }) => {
             const born = {
                 position: unit.position, direction: unit.direction, hearts: Heart.copies(unit.hearts.all),
@@ -188,45 +277,77 @@ export class BattleAnimations {
                 scene.enterOrder(unit, battle.initiative)
             }))
         }))
+
+        // Unit Vanished : Removed from the Scene
         on(signals.vanished, ({ unit }) => () => scene.remove(unit))
+
+        //// STATUSES ////
+        // Status Added : Status Appears
         on(signals.statusAdded, ({ unit, type, level }) => () => scene.change(unit, shown => {
             if(!shown.statuses.some(each => each.type === type)) shown.statuses.push({ type, level })
         }))
+
+        // Status Leveled : Level Changes
         on(signals.statusLeveled, ({ unit, type, level }) => () => scene.change(unit, shown => {
             const held = shown.statuses.find(each => each.type === type)
             if(held) held.level = level
         }))
+
+        // Status Removed : Status Disappears
         on(signals.statusRemoved, ({ unit, type }) => () => scene.change(unit, shown => {
             shown.statuses = shown.statuses.filter(each => each.type !== type)
         }))
+
+        //// PROCESSES ////
+        // Process Started : Process Appears, Light It
         on(signals.processStarted, ({ unit, process }) => () => {
             scene.change(unit, shown => shown.processes = [...shown.processes, process])
             if(!scene.alive(unit)) return 0
             scene.lightProcess({ unit, process })
             return BEAT
         })
+
+        // Process Ended : Process Disappears
         on(signals.processEnded, ({ unit, process }) => () => scene.change(unit, shown => {
             shown.processes = shown.processes.filter(each => each !== process)
         }))
+
+        //// TETHERS ////
+        // Tethered : Tether Appears
         on(signals.tethered, ({ tether }) => () => {
             scene.tethers = [...scene.tethers, tether]
         })
+
+        // Untethered : Tether Disappears
         on(signals.untethered, ({ tether }) => () => {
             scene.tethers = scene.tethers.filter(each => each !== tether)
         })
+
+        //// EFFECTS ////
+        // Effect : Drawing Over the Arena Animation
         onAnimated(signals.effect, effect => () => this.#show(effect))
-        on(signals.notifyStatus, ({ unit, status }) => () => {
-            scene.notice = { unit, word: status.type.name }
+
+        //// NOTICES ////
+        // What is notified is outlined in blue where it stands, and its unit has its word said over it.
+        const noticed = (unit: Unit, word: string, outline?: () => void): Play => () => {
+            scene.notice = { unit, word }
+            outline?.()
             return NOTICE_TIME
-        })
-        on(signals.notifyHeart, ({ unit, heart }) => () => {
-            scene.notice = { unit, word: heart.kind.name }
-            return NOTICE_TIME
-        })
-        on(signals.notifyUnit, ({ unit }) => () => {
-            scene.notice = { unit, word: "!" }
-            return NOTICE_TIME
-        })
+        }
+
+        // Status Notified : Outline the Status, Say its Name
+        on(signals.notifyStatus, ({ unit, target }) => noticed(unit, target.type.name, () => {
+            scene.lightStatus({ unit, type: target.type, edge: NOTICE_EDGE })
+        }))
+
+        // Heart Notified : Outline the Heart, Say its Name
+        on(signals.notifyHeart, ({ unit, target }) => noticed(unit, target.kind.name, () => {
+            const index = unit.hearts.all.indexOf(target)
+            if(index >= 0) scene.lightHeart({ unit, indexes: [index], edge: NOTICE_EDGE })
+        }))
+
+        // Unit Notified : Say "!"
+        on(signals.notifyUnit, ({ unit }) => noticed(unit, "!"))
         return observers
     }
 
@@ -283,7 +404,8 @@ export class BattleAnimations {
     async #glide(unit: Unit, from: Pose, to: Pose, duration: number): Promise<void> {
         await this.clock.tween(duration, share => this.scene.change(unit, shown => {
             shown.position = lerp(from.position, to.position, share)
-            shown.direction = lerp(from.direction, to.direction, share).normalized ?? to.direction
+            // Facing straight away, the blend goes through nothing halfway: the unit turns through its right.
+            shown.direction = lerp(from.direction, to.direction, share).normalized ?? from.direction.right
         }, false))
     }
 }

@@ -1,3 +1,4 @@
+import { BEAR_TRAP_HAZARD } from "../hazard/subs/BearTrap"
 import { BURNING_GROUND } from "../hazard/subs/BurningGround"
 import { MINE_HAZARD } from "../hazard/subs/Mine"
 import { PUDDLE_HAZARD } from "../hazard/subs/Puddle"
@@ -8,6 +9,7 @@ import { WHIRLING } from "../hazard/subs/Whirling"
 import type { StatusType } from "./Status"
 import { BLOODLUST } from "./subs/Bloodlust"
 import { BURN } from "./subs/Burn"
+import { BISHOP_PIECE, CHESS_PIECE, KNIGHT_PIECE, PAWN_PIECE, QUEEN_PIECE, ROOK_PIECE } from "./subs/ChessPieces"
 import { CONCENTRATED, FURIOUS } from "./subs/Calm"
 import { COATED } from "./subs/Coated"
 import { CONFUSED } from "./subs/Confusion"
@@ -15,14 +17,21 @@ import { DEMONIC } from "./subs/DemonEnergy"
 import { COUNTER, DISARM, DODGE, SLIDING_PARRY, WOODEN_SHIELD } from "./subs/Dodge"
 import { FLEETING } from "./subs/Fleeting"
 import { FRENZIED } from "./subs/Frenzy"
-import { GRAND_RITUAL } from "./subs/GrandRitual"
 import { HEALING } from "./subs/Healing"
+import { MOMENTUM } from "./subs/Momentum"
+import { OVERHEATED } from "./subs/Overheat"
 import { POISONED } from "./subs/Poison"
 import { POSSESSED } from "./subs/Possessed"
 import { ENRAGED } from "./subs/Rage"
+import { RITUAL_STATUS } from "./subs/RitualStatus"
 import { ROOTED } from "./subs/Rooted"
 import { SLOWED } from "./subs/Slowness"
+import { SOAKED } from "./subs/Soaked"
 import { SPLASHING } from "./subs/Splashing"
+import { STINKING } from "./subs/Stench"
+import { SWALLOWED } from "./subs/Swallow"
+import { SWIFT } from "./subs/Swiftness"
+import { VIGOROUS } from "./subs/Vigor"
 import { VULNERABLE } from "./subs/Vulnerability"
 import { WEAKENED } from "./subs/Weakness"
 import { BLEEDING, FRAGILE, MARKED, SOUL_LINKED, SOUL_SHIELDED } from "./subs/Wounds"
@@ -33,9 +42,11 @@ import { BLEEDING, FRAGILE, MARKED, SOUL_LINKED, SOUL_SHIELDED } from "./subs/Wo
  */
 export const STATUS_TYPES: readonly StatusType[] = [
     BLOODLUST, CONCENTRATED, COUNTER, DEMONIC, DISARM, DODGE, FURIOUS, SLIDING_PARRY, WOODEN_SHIELD, HEALING, SOUL_SHIELDED,
+    SWALLOWED, SWIFT, VIGOROUS, OVERHEATED, MOMENTUM,
+    CHESS_PIECE, PAWN_PIECE, ROOK_PIECE, KNIGHT_PIECE, BISHOP_PIECE, QUEEN_PIECE,
     ENRAGED, FLEETING, FRENZIED, POSSESSED, SOUL_LINKED,
-    BLEEDING, BURN, CONFUSED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, VULNERABLE, WEAKENED,
-    MINE_HAZARD,
+    BLEEDING, BURN, CONFUSED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, STINKING, VULNERABLE, WEAKENED,
+    MINE_HAZARD, BEAR_TRAP_HAZARD,
 ]
 
 /**
@@ -43,5 +54,5 @@ export const STATUS_TYPES: readonly StatusType[] = [
  * {@link StatusType.family} of, and what a screen names a kind of them by.
  */
 export const STATUS_FAMILIES: readonly StatusType[] = [
-    COATED, GRAND_RITUAL, SPLASHING, BURNING_GROUND, PUDDLE_HAZARD, ROCKY, SURGING, WHIRLING,
+    COATED, SOAKED, RITUAL_STATUS, SPLASHING, BURNING_GROUND, PUDDLE_HAZARD, ROCKY, SURGING, WHIRLING,
 ]

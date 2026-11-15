@@ -3,7 +3,7 @@ import { concat } from "../../../../../../semantic"
 import type { Dose, Potion } from "../../../potion/Potion"
 import {
     CONFUSION_POTION, FRENZY_POTION, POISON_POTION, RAGE_POTION, SLOWNESS_POTION, SOUL_LINK_POTION,
-    SOUL_SHIELD_POTION, VULNERABILITY_POTION, WEAKNESS_POTION,
+    SOUL_SHIELD_POTION, SWALLOW_POTION, SWIFTNESS_POTION, VIGOR_POTION, VULNERABILITY_POTION, WEAKNESS_POTION,
 } from "../../../potion/subs/potions"
 import { POTION } from "../../CardType"
 import { Rarity } from "../../Rarity"
@@ -65,6 +65,9 @@ export const VULNERABILITY = new PotionCard("Vulnérabilité", Rarity.RARE, VULN
 export const FRENZY = new PotionCard("Frénésie", Rarity.EPIC, FRENZY_POTION)
 export const SOUL_LINK = new PotionCard("Lien d'âme", Rarity.RARE, SOUL_LINK_POTION)
 export const SOUL_SHIELD = new PotionCard("Bouclier d'âme", Rarity.RARE, SOUL_SHIELD_POTION)
+export const VIGOR = new PotionCard("Vigueur", Rarity.COMMON, VIGOR_POTION)
+export const SWIFTNESS = new PotionCard("Célérité", Rarity.COMMON, SWIFTNESS_POTION)
+export const SWALLOW = new PotionCard("Hirondelle", Rarity.RARE, SWALLOW_POTION)
 
 /** A potion turned around: it takes off what it would put on. */
 export const ANTIDOTE = new DoseCard("Antidote", [

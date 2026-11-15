@@ -2,10 +2,12 @@ import type { Unit } from "../../../battle/Unit"
 import { FUSION, INVOCATION } from "../../../base/keywords"
 import { Heart } from "../../../heart/Heart"
 import type { Card, RewriteSpot } from "../../Card"
-import { BEAST } from "../../CardType"
+import { ACTION, BEAST } from "../../CardType"
 import type { Beast, BodyPart, Rewrite } from "../../CardType"
+import type { Action } from "../../../battle/Action"
 import { Rarity } from "../../Rarity"
 
+import { AbstractCard } from "../AbstractCard"
 import { collageOf } from "../composite/ChainRewrites"
 import { InputRewriteCard, RewriteCard } from "../composite/RewriteCards"
 import { ChainSummonCard } from "../summon/ChainSummons"
@@ -55,7 +57,7 @@ function bodyHearts(beast: Beast, owner: Unit): Heart[] {
 }
 
 /** A card summoning the body of a beast, playing the run of another and the bite of a third: often itself. */
-export function summonCardOf(body: Beast, runner: Beast, biter: Beast): Card {
+export function summonCardOf(body: Beast, runner: Beast, biter: Beast): ChainSummonCard {
     const played = { run: runner.run, bite: biter.bite }
     const cards = bodyCards(body.body, played)
     const same = body === runner && body === biter
@@ -91,9 +93,30 @@ export const RUN = using("Course", "devient la course de sa bête.", Rarity.COMM
 
 export const FURY = using("Fureur", "devient la course de sa bête, puis sa morsure.", Rarity.RARE, beast => [...beast.run, ...beast.bite])
 
-export const SUMMONING = using("Invocation", "devient l'invocation du corps de sa bête, qui joue sa course et sa morsure.", Rarity.RARE, beast => {
+export const TRANSMUTATION = using("Transmutation", "devient l'invocation du corps de sa bête, qui joue sa course et sa morsure.", Rarity.RARE, beast => {
     return [summonCardOf(beast, beast, beast)]
 })
+
+/** The body of the beast it takes set down now, playing its run and its bite: an action, with nothing left to rewrite. */
+export class SummoningCard extends AbstractCard<Action, Beast> {
+
+
+    public readonly output = ACTION
+    public readonly input = BEAST
+
+    constructor(){
+        super("Invocation", [
+            INVOCATION.as("Invoque"), " devant toi le corps de sa bête, qui joue chaque round sa course et sa morsure.",
+        ], Rarity.RARE)
+    }
+
+
+    public get(beast: Beast): Action {
+        return summonCardOf(beast, beast, beast).action
+    }
+}
+
+export const SUMMONING = new SummoningCard()
 
 /** The run and the bite of the beast it takes played now, and kept as a fleeting collage in the hand. */
 export const TOTAL_TRANSFORMATION = new InputRewriteCard("Transformation totale", [
@@ -103,8 +126,8 @@ export const TOTAL_TRANSFORMATION = new InputRewriteCard("Transformation totale"
     return { cards: [...beast.run, ...beast.bite], consumed: 0, acting: true }
 }, ({ battle, unit }, beast) => {
     // A beast with a run and no bite, or the other way round, gives one card: no collage of one.
-    const cards = [...beast.run, ...beast.bite]
-    if(cards.length > 0) battle.giveFleetingCard(unit, collageOf(cards))
+    const collage = collageOf([...beast.run, ...beast.bite])
+    if(collage) battle.giveFleetingCard(unit, collage)
 })
 
 /** The body of the first of three beasts on its right, the run of the second, the bite of the third. */
@@ -118,4 +141,4 @@ export const TOTAL_HYBRID = new RewriteCard("Hybride totale", [
 }, undefined, "prepless")
 
 /** Every card using a beast. */
-export const BEAST_USES: readonly Card[] = [BITE, RUN, FURY, SUMMONING, TOTAL_TRANSFORMATION, TOTAL_HYBRID]
+export const BEAST_USES: readonly Card[] = [BITE, RUN, FURY, TRANSMUTATION, SUMMONING,TOTAL_TRANSFORMATION, TOTAL_HYBRID]

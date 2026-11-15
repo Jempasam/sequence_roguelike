@@ -12,8 +12,8 @@ import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 
 import { statLines } from "../describe"
+import { unlimitedShown } from "./Draft"
 import type { Draft } from "./Draft"
-import type { Visual } from "../../sim/base/Visual"
 import { battleGrid, GAP, sideWidth } from "../hud/BattleGrid"
 import type { BattleGrid, UiRect } from "../hud/BattleGrid"
 import { CardFlight, flightSize } from "../hud/CardFlight"
@@ -22,7 +22,7 @@ import type { CardPlace } from "../hud/CardView"
 import { ChainStrip, FlatStrip, LINK_ROOM, stripOfView } from "../hud/ChainStrip"
 import type { StripCard } from "../hud/ChainStrip"
 import { CardChain } from "../../sim/card/CardChain"
-import { nearestTurn, TURNS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
+
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { DetailBox } from "../hud/DetailBox"
 import { processText, statusText, StatusProcessList } from "../hud/StatusProcessList"
@@ -36,10 +36,15 @@ import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
 import { BagView, SLOT_SIZE } from "../hud/BagView"
 import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
 import { AbsItemIcon, THING_ICON_SIZE } from "../hud/AbsItemIcon"
-import type { Carried } from "../../sim/usable/Usable"
+import type { Carried, Usable } from "../../sim/usable/Usable"
+import type { Item } from "../../sim/item/Item"
+import type { Previewable } from "../../sim/battle/preview/Previewable"
 import { described, usableText } from "../../sim/halt/subs/shown"
 import { withPicture } from "../hud/UnitPicture"
 import type { UnitSprites } from "../look/UnitSprites"
+
+/** What a status the unit no longer holds shows: nothing, always the same so leaving it is recognized. */
+export const NO_PREVIEW: Partial<Previewable> = {}
 
 /** How many hearts fit beside the name of a unit in the initiative: more go on a line of their own. */
 const HEARTS_BESIDE_NAME = 12
@@ -118,7 +123,7 @@ export interface HudHost {
     readonly highlighted: Unit|null
 
     /** Hear that the pointer came over a root of the chain of a unit, or left it. */
-    hoverRoot(unit: Unit, index: number, over: boolean): void
+    hoverRoot(unit: Unit, index: number, over: boolean, card?: Card): void
 
     /** Hear that the pointer came over a card of the hand, or left it. */
     hoverCard(card: Card, over: boolean): void
@@ -128,6 +133,9 @@ export interface HudHost {
 
     /** Hear that the pointer came over what stands for a unit in the panels, or left it. */
     hoverUnit(unit: Unit, over: boolean): void
+
+    /** Hear that the pointer came over a status, a process, a usable or an item of a unit, or left it. */
+    hoverThing(unit: Unit, thing: Partial<Previewable>, over: boolean): void
 }
 
 /** What the players do on the panels. */
@@ -141,11 +149,11 @@ export interface HudActions {
     /** Take a placed card back to the hand. */
     remove(place: number): void
 
-    /** Point the turn placed at a place of the chain to another step. */
-    turn(place: number, step: number): void
+    /** Change the card placed at a place of the chain for another variant of it. */
+    variant(place: number, variant: Card): void
 
-    /** Point the turn of the hand to a step, placing nothing. */
-    turnTo(step: number): void
+    /** Choose the variant of a card of the hand that is shown, placing nothing. */
+    variantTo(variant: Card): void
 
     /** Choose to use what lies at a place of the belt of the unit planned, or not to use it anymore. */
     toggleUsable(index: number): void
@@ -156,7 +164,7 @@ export interface HudActions {
 
 /** What the panels do before a screen tied them. */
 const NO_ACTIONS: HudActions = {
-    choose: () => {}, pick: () => {}, remove: () => {}, turn: () => {}, turnTo: () => {}, toggleUsable: () => {},
+    choose: () => {}, pick: () => {}, remove: () => {}, variant: () => {}, variantTo: () => {}, toggleUsable: () => {},
     launch: () => {}, skip: () => {},
 }
 
@@ -445,7 +453,7 @@ export class Hud {
             const { usable } = first.carried
             const left = members.reduce((sum, entry) => sum + entry.carried.charges, 0)
             const full = members.length * (usable.charges ?? 1)
-            const view = this.#thing(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
+            const view = this.#thing(draft.unit, usable, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
             const active = members.filter(entry => draft.used.has(entry.index)).length
             view.activation = active > 0 ? String(active) : null
             view.spent = members.every(entry => entry.carried.spent)
@@ -462,19 +470,25 @@ export class Hud {
     }
 
     /** The usables of a belt as pictures, the same ones in one, their charges added. */
-    #usableViews(belt: readonly Carried[]): AbsItemIcon[] {
+    #usableViews(unit: Unit, belt: readonly Carried[]): AbsItemIcon[] {
         return stacked(belt, carried => carried.usable).map(({ first, members }) => {
             const { usable } = first
             const left = members.reduce((sum, carried) => sum + carried.charges, 0)
             const full = members.length * (usable.charges ?? 1)
-            return this.#thing(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
+            return this.#thing(unit, usable, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
         })
     }
 
-    /** An item or a usable as its picture with its uses left, told on hover, as in the journey. */
-    #thing(icon: Visual, uses: string|null, told: Text): AbsItemIcon {
-        const view = new AbsItemIcon(this.theme, this.host.sprites, icon, uses ?? "", 1, THING_ICON_SIZE)
-        view.onHover = over => this.showInfo(over ? told : null)
+    /**
+     * An item or a usable as its picture with its uses left, told on hover, as in the journey, and shown
+     * over the arena when it has a preview, as what a unit carries.
+     */
+    #thing(unit: Unit, thing: Usable|Item, uses: string|null, told: Text): AbsItemIcon {
+        const view = new AbsItemIcon(this.theme, this.host.sprites, thing.icon, uses ?? "", 1, THING_ICON_SIZE)
+        view.onHover = over => {
+            this.host.hoverThing(unit, thing, over)
+            this.showInfo(over ? told : null)
+        }
         return view
     }
 
@@ -501,14 +515,14 @@ export class Hud {
         if(unit.items.length > 0){
             column.add(this.#label("Objets", DIM_TEXT))
             const items = stacked(unit.items, item => item).map(({ first, members }) => {
-                return this.#thing(first.icon, countText(members.length), countTold(described(first, first), members.length))
+                return this.#thing(unit, first, countText(members.length), countTold(described(first, first), members.length))
             })
             column.add(this.#bag(items), { align: "start" })
         }
         // The usables of the unit being planned lie in their own zone, to use.
         if(unit.usables.length > 0 && !this.#draft()){
             column.add(this.#label("Utilisables", DIM_TEXT))
-            column.add(this.#bag(this.#usableViews(unit.usables)), { align: "start" })
+            column.add(this.#bag(this.#usableViews(unit, unit.usables)), { align: "start" })
         }
         const shown = this.host.scene.of(unit)?.statuses ?? []
         const statuses = [...unit.statuses.values()].filter(status => shown.some(each => each.type === status.type))
@@ -546,10 +560,12 @@ export class Hud {
             const marks = new StatusProcessList(this.theme, this.host.sprites, scene, {
                 onStatusHover: (_unit, status, over) => {
                     this.host.hoverUnit(unit, over)
+                    this.host.hoverThing(unit, unit.statusOf(status.type) ?? NO_PREVIEW, over)
                     this.showInfo(over ? statusText(status) : null)
                 },
                 onProcessHover: (_unit, process, over) => {
                     this.host.hoverUnit(unit, over)
+                    this.host.hoverThing(unit, process, over)
                     this.showInfo(over ? processText(process) : null)
                 },
             }, { direction: "row", align: "center" })
@@ -588,10 +604,12 @@ export class Hud {
      */
     #shownRoots(unit: Unit): StripCard[] {
         const { battle, mode, scene } = this.host
-        const shown = mode === "playing" ? scene.of(unit)?.chain : undefined
+        // The end of the preparation plays its cards before the mode turns to playing: what is lit is shown.
+        const replayed = mode === "playing" || scene.litCards?.unit === unit
+        const shown = replayed ? scene.of(unit)?.chain : undefined
         if(!shown) return (battle.planOf(unit)?.view() ?? []).map(view => stripOfView(view))
         const lit = scene.litCards?.unit === unit ? scene.litCards : null
-        const marks = { cursor: shown.cursor, lit }
+        const marks = { cursor: shown.cursor, lit, borrowed: shown.borrowed }
         return new CardChain(shown.cards).view().map(view => stripOfView(view, marks))
     }
 
@@ -614,8 +632,8 @@ export class Hud {
         if(roots.length === 0) return this.#label("(rien)", DIM_TEXT)
         return new ChainStrip(this.theme, roots, place, {
             pick: () => this.actions.choose(unit),
-            hoverRoot: (index, over) => {
-                this.host.hoverRoot(unit, index, over)
+            hoverRoot: (index, over, card) => {
+                this.host.hoverRoot(unit, index, over, card)
                 this.host.hoverUnit(unit, over)
             },
             deckOf: unit.decks.homeTeller(),
@@ -693,9 +711,8 @@ export class Hud {
         const deckOf = unit.decks.homeTeller()
         // What the unit plays unlimited is in its hand from the start: the cards drawn come after it.
         const draft = this.#draft()
-        const shownTurn = TURNS[draft?.unit === unit ? draft.turnStep : nearestTurn(unit.direction)]
-        for(const card of unit.unlimited){
-            if(card instanceof TurnCard && card !== shownTurn) continue
+        const shown = unlimitedShown(unit, draft?.unit === unit ? draft : null)
+        for(const card of shown){
             const view = new CardView(this.theme, card, "hand")
             view.unlimited = true
             view.onHover = over => this.#tellCard(card, over)
@@ -765,7 +782,7 @@ export class Hud {
         return heartsRow(this.theme, hearts, (heart, over) => {
             this.host.hoverUnit(unit, over)
             this.showInfo(over ? heartText(heart) : null)
-        }, lit)
+        }, lit, scene.litHeart?.edge)
     }
 
     /** The hand of a unit, face up: a click on a card selects the unit, and its hover highlights it. */
@@ -804,8 +821,8 @@ export class Hud {
         const active = draft.active
         return new FlatStrip(this.theme, cards.map((card, place) => ({ card, active: active[place] })), draft.groups, {
             pick: place => this.actions.remove(place),
-            hover: (place, over) => this.host.hoverRoot(draft.unit, draft.rootOf(place), over),
-            dial: (place, step) => this.actions.turn(place, step),
+            hover: (place, over) => this.host.hoverRoot(draft.unit, draft.rootOf(place), over, cards[place]),
+            variant: (place, variant) => this.actions.variant(place, variant),
             deckOf,
         })
     }
@@ -824,15 +841,18 @@ export class Hud {
             const used = draft.isUsed(card)
             view.dimmed = used
             if(!used) view.onPick = () => this.actions.pick(card)
-            view.onDial = step => this.actions.turnTo(step)
+            view.onVariant = variant => this.actions.variantTo(variant)
             view.onHover = over => this.host.hoverCard(card, over)
             hand.add(view)
         }
         for(const card of draft.available){
-            const view = new CardView(this.theme, card, "hand")
+            // A card with variants shows the one chosen: it stands for all of them.
+            const shown = draft.shown(card)
+            const view = new CardView(this.theme, shown, "hand")
             view.deck = deckOf(card)
-            view.onPick = () => this.actions.pick(card)
-            view.onHover = over => this.host.hoverCard(card, over)
+            view.onPick = () => this.actions.pick(shown)
+            view.onVariant = variant => this.actions.variantTo(variant)
+            view.onHover = over => this.host.hoverCard(shown, over)
             hand.add(view)
         }
         return hand

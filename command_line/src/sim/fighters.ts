@@ -1,9 +1,8 @@
-import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, Heart, heroOf, redHearts } from "@game/core/mecard"
+import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, foeOf, Heart, heroOf, redHearts } from "@game/core/mecard"
 import type { Carried } from "@game/core/mecard"
 import type { Card, HeartGroup, Item, Kit, Monster, UnitSpec } from "@game/core/mecard"
 
 import { heartsOfKit } from "./define"
-import type { Definitions } from "./define"
 import { normalize, UsageError, unknownName } from "./errors"
 
 export type FighterKind = "kit"|"monster"|"pet"
@@ -12,6 +11,9 @@ export type FighterKind = "kit"|"monster"|"pet"
 export interface Body {
     readonly hearts: Heart[]
     readonly decks: Card[][]
+
+    /** The cards it plays unlimited, as the game gives them: a hero's step and turns, none for a monster. */
+    readonly unlimited: readonly Card[]
     readonly items: Item[]
     readonly usables: Carried[]
     readonly bases: NonNullable<UnitSpec["bases"]>
@@ -43,7 +45,7 @@ export type Group = typeof GROUPS[number]
 
 const KIND_NAMES: Record<FighterKind, string> = { kit: "kit", monster: "monstre", pet: "familier" }
 
-function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[], custom: boolean): Fighter {
+export function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[], custom: boolean): Fighter {
     return {
         name: kit.name, kind: "kit", custom, monster: null,
         body(): Body {
@@ -51,6 +53,7 @@ function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[], cust
             return {
                 hearts: [...redHearts(hearts), ...bonus.flatMap(group => Heart.many(group.kind, group.count))],
                 decks: hero.decks,
+                unlimited: hero.unlimited,
                 items: hero.items,
                 usables: hero.usables,
                 bases: hero.bases,
@@ -59,13 +62,19 @@ function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[], cust
     }
 }
 
-function monsterFighter(monster: Monster, kind: "monster"|"pet", custom: boolean): Fighter {
+export function monsterFighter(monster: Monster, kind: "monster"|"pet", custom: boolean): Fighter {
     return {
         name: monster.name, kind, custom, monster,
         body(): Body {
-            const hero = allyOf(monster, monster.name)
+            // A monster keeps its deck in order, a pet is shuffled as a hero's is.
+            const hero = kind === "monster" ? foeOf(monster, monster.name) : allyOf(monster, monster.name)
             return {
-                hearts: hero.hearts, decks: hero.decks, items: [], usables: [], bases: hero.bases,
+                hearts: hero.hearts,
+                decks: hero.decks,
+                unlimited: hero.unlimited,
+                items: [],
+                usables: [],
+                bases: hero.bases,
             }
         },
     }
@@ -76,18 +85,12 @@ export class Roster {
 
     public readonly fighters: readonly Fighter[]
 
-    /** The kits and the monsters the user defined replace those of the game that have their name. */
-    constructor(definitions: Definitions) {
-        const kitNames = new Set(definitions.kits.map(defined => normalize(defined.kit.name)))
-        const monsterNames = new Set(definitions.monsters.map(each => normalize(each.name)))
+    /** The kits, monsters and pets of the game: what the user defines is written in the descriptions. */
+    constructor() {
         this.fighters = [
-            ...ALL_KITS
-                .filter(kit => !kitNames.has(normalize(kit.name)))
-                .map(kit => kitFighter(kit, heartsOfKit(kit).hearts, heartsOfKit(kit).bonus, false)),
-            ...definitions.kits.map(defined => kitFighter(defined.kit, defined.hearts, defined.bonus, true)),
-            ...ALL_MONSTERS.filter(each => !monsterNames.has(normalize(each.name))).map(each => monsterFighter(each, "monster", false)),
-            ...ALL_PETS.filter(each => !monsterNames.has(normalize(each.name))).map(each => monsterFighter(each, "pet", false)),
-            ...definitions.monsters.map(each => monsterFighter(each, "monster", true)),
+            ...ALL_KITS.map(kit => kitFighter(kit, heartsOfKit(kit).hearts, heartsOfKit(kit).bonus, false)),
+            ...ALL_MONSTERS.map(each => monsterFighter(each, "monster", false)),
+            ...ALL_PETS.map(each => monsterFighter(each, "pet", false)),
         ]
     }
 

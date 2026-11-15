@@ -1,0 +1,36 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": ["#f4ecd0", "#2a2418", {"color": "#b83a30", "reflection": 0.2}, "#4a6aa0"],
+    "shapes": [
+        {"line": [36, 34, 36, 118], "material": 1, "width": 2, "depth": 4},
+        {"box": [33, 32, 6, 3], "material": 1, "depth": 5},
+        {"polygon": [[38, 38], [64, 38], [64, 74], [51, 66], [38, 74]], "material": 2, "depth": [3, 4], "relief": "bevel"},
+        {"line": [43, 46, 59, 46], "material": 0, "width": 1, "depth": 5},
+        {"ellipse": [47, 50, 8, 8], "material": 0, "depth": 5},
+
+        {"line": [252, 34, 252, 118], "material": 1, "width": 2, "depth": 4},
+        {"box": [249, 32, 6, 3], "material": 1, "depth": 5},
+        {"polygon": [[250, 38], [226, 38], [226, 74], [238, 66], [250, 74]], "material": 3, "depth": [3, 4], "relief": "bevel"},
+        {"line": [231, 46, 245, 46], "material": 0, "width": 1, "depth": 5},
+        {"ellipse": [233, 50, 8, 8], "material": 0, "depth": 5},
+
+        {"polygon": [[78, 46], [118, 44], [120, 80], [80, 82]], "material": 0, "depth": [3, 4], "relief": "bevel"},
+        {"line": [84, 56, 100, 66], "material": 1, "width": 1, "depth": 5},
+        {"line": [100, 66, 112, 54], "material": 2, "width": 1, "depth": 5},
+        {"line": [86, 72, 112, 72], "material": 1, "width": 1, "depth": 5},
+        {"ellipse": [97, 44, 4, 4], "material": 2, "depth": [5, 6], "relief": "dome"},
+
+        {"polygon": [[172, 48], [206, 50], [204, 84], [170, 82]], "material": 0, "depth": [3, 4], "relief": "bevel"},
+        {"line": [178, 58, 198, 58], "material": 1, "width": 1, "depth": 5},
+        {"line": [178, 66, 192, 66], "material": 1, "width": 1, "depth": 5},
+        {"box": [180, 72, 8, 6], "material": 3, "depth": 5},
+        {"ellipse": [187, 47, 4, 4], "material": 2, "depth": [5, 6], "relief": "dome"},
+
+        {"polygon": [[124, 58], [160, 56], [162, 90], [126, 92]], "material": 0, "depth": [3, 4], "relief": "bevel"},
+        {"line": [130, 66, 154, 66], "material": 1, "width": 1, "depth": 5},
+        {"line": [130, 66, 150, 82], "material": 3, "width": 1, "depth": 5},
+        {"line": [150, 82, 156, 70], "material": 2, "width": 1, "depth": 5},
+        {"ellipse": [141, 55, 4, 4], "material": 3, "depth": [5, 6], "relief": "dome"}
+    ]
+}

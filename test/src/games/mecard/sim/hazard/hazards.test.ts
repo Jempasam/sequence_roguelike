@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { visual } from "@game/core/mecard"
+import { Areas, visual } from "@game/core/mecard"
 import {
     BOMB, BOMB_DAMAGE, Heart, loadBattle, placeBomb, placeFlames, placePuddle, POTION_LEVEL,
     saveBattle, SHIELD_HEART, SLOWED, SLOWNESS_POTION, STEP, TIME_HEART, Vector2, WAIT,
@@ -28,7 +28,7 @@ describe("Hazards, bodies lying on the ground", () => {
         on.startRound()
         const bomb = placeBomb(on, thrower, new Vector2(3, 3))
         expect(on.enemiesOf(enemy)).not.toContain(bomb)
-        expect(on.unitsIn({ kind: "circle", center: new Vector2(3, 3), radius: 1 })).toEqual([enemy])
+        expect(on.fetch(Areas.circle(new Vector2(3, 3), 1))).toEqual([enemy])
         thrower.hand.push(WAIT)
         on.commit(thrower, chain(WAIT))
         on.endPreparation()
@@ -37,12 +37,29 @@ describe("Hazards, bodies lying on the ground", () => {
         expect(on.units).not.toContain(bomb)
     })
 
+    test("a bomb gone at the end of the round → still in the initiative until the next round, but never saved", () => {
+        const on = battle()
+        const thrower = unit(on, 0, 6)
+        unit(on, 3, 2, { team: MONSTERS })
+        on.startRound()
+        const bomb = placeBomb(on, thrower, new Vector2(3, 3))
+        thrower.hand.push(WAIT)
+        on.commit(thrower, chain(WAIT))
+        on.endPreparation()
+        on.playRound()
+        expect(on.units).not.toContain(bomb)
+        expect(on.initiative).toContain(bomb)
+        const loaded = loadBattle(saveBattle(on))
+        expect(loaded.initiative).not.toContain(undefined)
+        expect(loaded.initiative).toHaveLength(on.initiative.length - 1)
+    })
+
     test("flames → burn whoever stands in them at the next pass, then gone", () => {
         const on = battle()
         const lighter = unit(on, 0, 6)
         const enemy = unit(on, 3, 3, { team: MONSTERS })
         on.startRound()
-        placeFlames(on, lighter, { kind: "circle", center: new Vector2(3, 3), radius: 0.5 })
+        placeFlames(on, lighter, new Vector2(3, 3), Areas.circle(new Vector2(3, 3), 0.5))
         on.endPreparation()
         on.playRound()
         expect(enemy.life).toBeLessThan(4)

@@ -14,6 +14,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 /** Units with no pictures. */
 const NO_SPRITES = {
     of: () => null,
+    thing: () => null,
     cardBack: () => null,
     whenLoaded: () => {},
 } as unknown as BattleScreenOptions["sprites"]

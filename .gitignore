@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .generated/
+generated_assets/
 *.blob
 /STYLE.md
 /NETWORK.md
@@ -8,3 +9,4 @@ dist/
 /DUNGEON_OF_THE_MECARD.md
 /UI_ENGINE.md
 /CLAUDE.md
+/trucs

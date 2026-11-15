@@ -18,6 +18,16 @@ const signaling = query.get("signal") ?? `ws://${location.hostname}:${SIGNALING_
 const viewed = query.get("view")
 const sync = syncOf()
 
+if(query.has("noreload")){
+    try{
+        if ((import.meta as any).hot) {
+            (import.meta as any).hot.on('vite:beforeFullReload', () => {
+                throw '(skipping full reload)';
+            });
+        }
+    }catch(_){}
+}
+
 startGame({
     gfx: new WebGfx(canvas),
     loop: new WebLoop(),

@@ -1,0 +1,232 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 123,
+    "palette": [
+        "#6a6478",
+        "#463e58",
+        "#2a2438",
+        "#120e1c"
+    ],
+    "shapes": [
+        {
+            "box": [
+                22,
+                30,
+                14,
+                110
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 3,
+                "axis": "y",
+                "seams": 0.1,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                18,
+                24,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                18,
+                138,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                82,
+                30,
+                14,
+                110
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 3,
+                "axis": "y",
+                "seams": 0.1,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                78,
+                24,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                78,
+                138,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                196,
+                30,
+                14,
+                110
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 3,
+                "axis": "y",
+                "seams": 0.1,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                192,
+                24,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                192,
+                138,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                254,
+                30,
+                14,
+                110
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 3,
+                "axis": "y",
+                "seams": 0.1,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                250,
+                24,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                250,
+                138,
+                22,
+                8
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                0,
+                146,
+                288,
+                18
+            ],
+            "material": 2,
+            "depth": [
+                3,
+                4
+            ]
+        }
+    ]
+}

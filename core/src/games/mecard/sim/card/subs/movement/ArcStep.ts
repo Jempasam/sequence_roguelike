@@ -1,6 +1,7 @@
 import { AGILITE, DISTANCE } from "../../../base/keywords"
 import { Vector2 } from "../../../base/Vector2"
-import type { Action, Indicator, Pose } from "../../../battle/Action"
+import type { Action, Pose } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber } from "../../../battle/words"
 import { Rarity } from "../../Rarity"
@@ -9,8 +10,7 @@ import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
 import { TURN_AROUND } from "../modifier/Wrappers"
 import { TRAVEL_SLACK, travel, WALK_SPEED } from "../tools/playing"
-import { arrow, label } from "../tools/previews"
-
+import * as Previews from "../../../battle/preview/Previews"
 /** How many strides the arc of the catalog takes. */
 const ARC_STRIDES = 6
 
@@ -45,11 +45,11 @@ export const ARC_DISTANCE = headings(Vector2.UP).reduce((sum, heading) => sum + 
  * stride up to the first obstacle. The unit keeps facing where it faced.
  */
 const ARC: Action = {
-    use: function* (ctx){
+    use: function (ctx){
         const length = ARC_STRIDE_LENGTH * ctx.unit.stats.move.value
         for(const heading of headings(ctx.unit.direction)){
             if(!ctx.unit.alive) return
-            const gone = yield* travel(ctx, heading, length, WALK_SPEED)
+            const gone = travel(ctx, heading, length, WALK_SPEED)
             if(gone.distance < length - TRAVEL_SLACK) return
         }
     },
@@ -59,15 +59,15 @@ const ARC: Action = {
         const indicators: Indicator[] = []
         let at: Pose = pose
         for(const heading of headings(pose.direction)){
-            const travelled = battle.travel(unit, at.position, heading, length)
+            const travelled = battle.moveSpot(unit, at.position, heading, length)
             at = { position: travelled.to, direction: heading }
             points.push(travelled.to)
             if(travelled.distance < length - TRAVEL_SLACK){
-                indicators.push(label(travelled.to, "bloqué", NOTE_COLOR))
+                indicators.push(Previews.label(travelled.to, "bloqué", NOTE_COLOR))
                 break
             }
         }
-        indicators.unshift(arrow(points, MOVE_WIDTH, MOVE_COLOR))
+        indicators.unshift(Previews.arrow(points, MOVE_WIDTH, MOVE_COLOR))
         return { indicators, pose: { position: at.position, direction: pose.direction } }
     },
 }

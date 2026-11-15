@@ -1,6 +1,6 @@
 import type { Rng } from "../../base/Rng"
 import type { Monster } from "../../catalog/monsters"
-import { BATTLE, BOSS, ELITE } from "../../catalog/fights"
+import { BATTLE, BOSS, ELITE } from "../../fight/fights"
 import { ALCHEMIST_HALT } from "../../halt/subs/deck/AlchemistHalt"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { ANTIQUARIAN_HALT } from "../../halt/subs/deck/AntiquarianHalt"
@@ -22,12 +22,17 @@ import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
 import { MASTER_TRAINER_HALT } from "../../halt/subs/master/MasterTrainerHalt"
 import { MASTER_MAGICIAN_HALT } from "../../halt/subs/master/MasterMagicianHalt"
 import { MASTER_INVENTOR_HALT } from "../../halt/subs/master/MasterInventorHalt"
+import { BATTLE_REWARD_HALT } from "../../halt/subs/reward/BattleRewardHalt"
+import { BOSS_REWARD_HALT } from "../../halt/subs/reward/BossRewardHalt"
+import { ELITE_REWARD_HALT } from "../../halt/subs/reward/EliteRewardHalt"
+import type { HaltType } from "../../halt/HaltType"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../../halt/subs/party/NecromancerHalt"
 import type { Place, Spot } from "../../run/Journey"
 import { isHalt } from "../../run/PlaceType"
-import type { FightType, PlaceType } from "../../run/PlaceType"
+import type { FightType } from "../../fight/FightType"
+import type { PlaceType } from "../../run/PlaceType"
 import type { Floor, FloorContext, FloorType } from "../Floor"
 import { darkHalts, greatHalts, masterHalts } from "../../catalog/halts"
 
@@ -52,6 +57,11 @@ const SAME_IN_A_ROW = 3
 
 /** How many plans a floor draws at most to find one with no such row: few ever fail twice. */
 const MOST_PLANS = 32
+
+/** The halt that pays for each sort of fight, laid after it on the map. */
+const REWARDS: ReadonlyMap<FightType, HaltType> = new Map([
+    [BATTLE, BATTLE_REWARD_HALT], [ELITE, ELITE_REWARD_HALT], [BOSS, BOSS_REWARD_HALT],
+])
 
 /** A place to come, not on the map yet: what it holds may still change, and its monsters are not drawn. */
 interface PlannedPlace {
@@ -84,7 +94,7 @@ const WEIGHTS: PlaceWeights = new Map<PlaceType, number>([
 
     ...masterHalts().map(type => [type, 1] as const),
     ...greatHalts().map(type => [type, 1] as const),
-    ...darkHalts().map(type => [type, 1] as const)
+    ...darkHalts().map(type => [type, 1] as const),
 ])
 
 /**
@@ -159,11 +169,11 @@ export abstract class AbstractFloor implements Floor {
         return plan
     }
 
-    /** Lay a place on the map, its monsters with it when it holds a fight. */
+    /** Lay a place on the map, its monsters and the halt that pays for it with it when it holds a fight. */
     #lay(ctx: FloorContext, type: PlaceType, at: Spot): Place {
         if(isHalt(type)) return ctx.addHalt(type, at)
         const fight = type as FightType
-        return ctx.addFight(fight, this.monsters(fight, at.layer, ctx.rng), at)
+        return ctx.addFight(fight, this.monsters(fight, at.layer, ctx.rng), at, REWARDS.get(fight) ?? null)
     }
 
     /** The sort of a place of a layer, the places leading to it known. */

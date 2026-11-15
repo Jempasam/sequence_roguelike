@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    BARRELS, BOULDERS, BURNING_GROUNDS, ALL_CARDS, Codecs, COATED, COATS, FIRE_ELEMENT, GRAND_RITUALS, ALL_ITEMS,
+    BARRELS, BOULDERS, BURNING_GROUNDS, ALL_CARDS, Codecs, COATED, COATS, FIRE_ELEMENT, RITUAL_STATUSES, ALL_ITEMS,
     LEGENDARY_CARDS, LOOT_CARDS, POISON_POTION, POTIONS, PUDDLES, savedCard, STATUS_CODECS, STATUS_TYPES,
     ALL_USABLES, WATER_ELEMENT, WAVES, WHIRLWINDS, WIND_ELEMENT,
 } from "@game/core/mecard"
@@ -29,7 +29,7 @@ describe("what the catalogs give is written down by name", () => {
     })
 
     test("a card of a kind no codec writes → refused, naming the card", () => {
-        expect(() => CARD_CODECS.save({ ...ALL_CARDS[0], name: "Impostor" })).toThrow(/not a card that can be saved/)
+        expect(() => CARD_CODECS.save({ ...ALL_CARDS[0], name: "Impostor", variants: () => new Map() })).toThrow(/not a card that can be saved/)
     })
 
     test("a text of no codec → refused as a save of another version", () => {
@@ -49,7 +49,7 @@ describe("what the catalogs give is written down by name", () => {
         expect(COATS.of(dose)).toBe(COATS.of({ ...dose }))
         expect(COATS.of(dose)).not.toBe(COATS.of({ ...dose, sign: 1 }))
         for(const type of [
-            COATS.of(dose), BARRELS.of(dose), PUDDLES.of(dose), GRAND_RITUALS.of(FIRE_ELEMENT),
+            COATS.of(dose), BARRELS.of(dose), PUDDLES.of(dose), RITUAL_STATUSES.of(FIRE_ELEMENT),
             BURNING_GROUNDS.of(FIRE_ELEMENT), BOULDERS.of(WATER_ELEMENT), WAVES.of(WATER_ELEMENT),
             WHIRLWINDS.of(WIND_ELEMENT),
         ]){

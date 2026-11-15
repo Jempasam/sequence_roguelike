@@ -49,16 +49,43 @@ describe("THRUST_CHARGE", () => {
 })
 
 describe("DEMON_SLASH", () => {
-    test("blinks again for each unit hit, three times at most", () => {
+    test("nobody on the way → a dash of two meters", () => {
         const on = battle()
         const slasher = unit(on, 3.5, 6.5)
-        const a = unit(on, 3.5, 6, { team: MONSTERS })
-        const b = unit(on, 3.5, 5.2, { team: MONSTERS })
+        unit(on, 0.5, 0.5, { team: MONSTERS })
         play(on, [[slasher, chain(DEMON_SLASH)]])
-        // Each unit is cut once, whatever the blinks that follow.
-        expect(a.life).toBe(3)
-        expect(b.life).toBe(3)
-        expect(slasher.position.y).toBeLessThan(5.6)
+        expect(slasher.position.y).toBeCloseTo(4.5, 1)
+    })
+
+    test("a unit on the way → a meter farther, and the units cut once", () => {
+        const on = battle()
+        const slasher = unit(on, 3.5, 6.5)
+        const near = unit(on, 3.5, 6, { team: MONSTERS })
+        const sameStretch = unit(on, 3.5, 5.6, { team: MONSTERS })
+        const beyond = unit(on, 3.5, 1.5, { team: MONSTERS })
+        play(on, [[slasher, chain(DEMON_SLASH)]])
+        expect(slasher.position.y).toBeCloseTo(3.5, 1)
+        expect(near.life).toBe(3)
+        expect(sameStretch.life).toBe(3)
+        expect(beyond.life).toBe(4)
+    })
+
+    test("never past five meters", () => {
+        const on = battle()
+        const slasher = unit(on, 3.5, 6.9)
+        for(const y of [6.2, 5.2, 4.2, 3.2, 2.2, 1.2]) unit(on, 3.5, y, { team: MONSTERS })
+        play(on, [[slasher, chain(DEMON_SLASH)]])
+        expect(slasher.position.y).toBeGreaterThanOrEqual(1.9 - 0.1)
+    })
+
+    test("lengthened at least twice → the damage twice", () => {
+        const on = battle()
+        const slasher = unit(on, 3.5, 6.5)
+        const near = unit(on, 3.5, 6, { team: MONSTERS })
+        const far = unit(on, 3.5, 4, { team: MONSTERS })
+        play(on, [[slasher, chain(DEMON_SLASH)]])
+        expect(near.life).toBe(2)
+        expect(far.life).toBe(2)
     })
 })
 

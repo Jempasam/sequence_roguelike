@@ -4,7 +4,7 @@ import type { Monster } from "../catalog/monsters"
 import type { SceneLook } from "../halt/SceneLook"
 import type { HaltType } from "../halt/HaltType"
 import type { Place, PlaceInfo, Spot } from "../run/Journey"
-import type { FightType } from "../run/PlaceType"
+import type { FightType } from "../fight/FightType"
 
 /** A picture lying on the map of a floor, for the look of it. */
 export interface Decoration {
@@ -41,8 +41,8 @@ export interface FloorContext {
     /** The random numbers the map is drawn from. */
     readonly rng: Rng
 
-    /** Lay a fight on the map, with its monsters. */
-    addFight(type: FightType, monsters: readonly Monster[], at: Spot): Place
+    /** Lay a fight on the map, with its monsters, and the halt visited once it is won, none for none. */
+    addFight(type: FightType, monsters: readonly Monster[], at: Spot, halt?: HaltType|null): Place
 
     /** Lay a halt on the map. */
     addHalt(type: HaltType, at: Spot): Place

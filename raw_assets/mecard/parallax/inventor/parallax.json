@@ -1,0 +1,26 @@
+{
+    "size": [816, 444],
+    "ranges": "d=20:85,20:40 w=0:0",
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#6a5a48"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#d09030", "amount": 0.12}
+        ]
+    },
+    "layers": [
+        {"name": "5", "picture": "5.pic.json", "at": [-24, -24]},
+        {"name": "4", "picture": "4.pic.json", "at": [-24, -24]},
+        {"name": "3", "picture": "3.pic.json", "at": [-24, -24]},
+        {"name": "2", "picture": "2.pic.json", "at": [-24, -24]},
+        {"name": "1", "picture": "1.pic.json", "at": [-24, -24]}
+    ]
+}

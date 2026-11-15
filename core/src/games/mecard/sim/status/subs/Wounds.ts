@@ -19,10 +19,10 @@ export class Bleeding extends RoundStatus {
     public readonly type: StatusType = BLEEDING
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
-        // Told once per whole move, a glide of many strides being one: a step costs one heart, not one per tick.
+        // Told once per whole move, a glide of many strides being one: a step costs one heart, not one per stride.
         const bleed = (event: { unit: Unit, from: { position: Vector2 }, to: { position: Vector2 } }): void => {
             if(event.unit !== unit || event.from.position.equals(event.to.position)) return
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             unit.hearts.damage(BLEEDING_DAMAGE, DamageType.PHYSICAL, null)
         }
         return [battle.signals.moved.add(bleed), battle.signals.blinked.add(bleed)]
@@ -42,7 +42,7 @@ export class Mark extends RoundStatus {
         return [unit.hearts.onIncoming.add(incoming => {
             if(incoming.derived || !incoming.source || incoming.amount <= 0) return
             incoming.amount *= 2
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             battle.removeStatus(unit, MARKED)
         })]
     }
@@ -63,7 +63,7 @@ export class Fragility extends RoundStatus {
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onIncoming.add(incoming => {
             if(incoming.derived || incoming.amount <= 0) return
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             incoming.amount += FRAGILITY_DAMAGE
         })]
     }
@@ -85,7 +85,7 @@ export class SoulLink extends RoundStatus {
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.hearts.onDamage.add(({ amount, nature, source }) => {
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             for(const other of holding(unit, SOUL_LINKED)) if(other !== unit) other.hearts.echo(amount, nature, source)
         })]
     }
@@ -105,7 +105,7 @@ export class SoulShield extends RoundStatus {
             if(incoming.derived || incoming.amount <= 0) return
             const bound = holding(unit, SOUL_SHIELDED)
             if(bound.length < 2) return
-            battle.signals.notifyStatus.notify({ unit, status: this })
+            battle.signals.notifyStatus.notify({ unit, target: this })
             const total = incoming.amount
             const share = Math.floor(total / bound.length)
             incoming.amount = total - share * (bound.length - 1)

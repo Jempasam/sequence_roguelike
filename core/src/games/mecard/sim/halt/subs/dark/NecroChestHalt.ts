@@ -4,10 +4,9 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { cardShown } from "../shown"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
-import { DARK_COLOR, DARK_MASK } from "../halt_common"
+import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { offeredMonsters } from "./monster_pool"
 import { CARTE, FUSION } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -19,7 +18,7 @@ export class NecroChestHalt extends CardGiftHalt {
     constructor(run: Run){
         super(NECRO_CHEST_HALT, run,
             ["Un ", FUSION.as("collage"), " arraché à un monstre, parmi trois, gratuit."],
-            sceneLook(31, 23, 13, "mecard/travel/chest"),
+            sceneLook(31, 23, 13, "chest", { coloration: [0.72, 0.56, 0.78] }),
             // A dark one keeps this chest, who tore its cards from the monsters.
             {
                 hat: "skullHood",
@@ -51,6 +50,6 @@ export const NECRO_CHEST_HALT: HaltType = {
     description: ["Un ", FUSION.as("collage"), " d'une chaîne d'un monstre, parmi trois, gratuit."],
     icon: visual("travel/chest/logo", { letter: "CO!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new NecroChestHalt(run),
 }

@@ -1,0 +1,12 @@
+{
+    "size": [272, 148],
+    "seed": 5,
+    "palette": ["#a8743c", "#4a2e18", {"color": "#46464e", "reflection": 0.3}, "#cc9458"],
+    "shapes": [
+        {"polygon": [[108, 44], [88, 34], [88, 146], [108, 136]], "fill": {"pattern": "planks", "width": 7, "axis": "y", "joint": 1, "seams": 0, "odd": 0.2, "materials": [0, 1, 3]}, "depth": [4, 6]},
+        {"polygon": [[88, 34], [84, 37], [84, 143], [88, 146]], "material": 1, "depth": [6, 7]},
+        {"line": [108, 62, 88, 56], "width": 4, "material": 2, "depth": [6, 8]},
+        {"line": [108, 118, 88, 124], "width": 4, "material": 2, "depth": [6, 8]},
+        {"ellipse": [91, 86, 6, 6], "material": 2, "depth": [7, 9], "relief": "dome"}
+    ]
+}

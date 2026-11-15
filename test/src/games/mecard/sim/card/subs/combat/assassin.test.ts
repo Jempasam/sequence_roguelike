@@ -66,7 +66,7 @@ describe("SHADOW", () => {
         hero.hand.push(SHADOW, WAIT)
         on.commit(hero, chain(SHADOW, WAIT))
         on.endPreparation()
-        for(let tick = 0; tick < 30; tick++) on.tick()
+        on.playStep()
         hero.hearts.slay(null)
         on.playRound()
         expect(hero.processes).toEqual([])

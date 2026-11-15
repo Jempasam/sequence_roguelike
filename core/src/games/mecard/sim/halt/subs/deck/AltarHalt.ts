@@ -7,7 +7,6 @@ import { sacrifice } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, DECK } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -29,7 +28,7 @@ export class AltarHalt extends DeckHalt {
     constructor(run: Run){
         super(ALTAR_HALT, run,
             ["Offre deux ", CARTE.as("cartes"), ", et je copie une troisième de ton ", DECK, "."],
-            sceneLook(36, 13, 18, "mecard/travel/altar"),
+            sceneLook(36, 13, 18, "altar"),
             {
                 hat: "mitre",
                 clothes: rgba(0.9, 0.2, 0.25),
@@ -62,7 +61,8 @@ export class AltarHalt extends DeckHalt {
 export const ALTAR_HALT: HaltType = {
     id: "altar",
     name: "Autel sacrificiel",
-    description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],    icon: visual("travel/altar/logo", { letter: "AU" }),
-    transition: DOOR_TRANSITION,
+    description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],
+    icon: visual("travel/altar/logo", { letter: "AU" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new AltarHalt(run),
 }

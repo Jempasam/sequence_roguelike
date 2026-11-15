@@ -1,0 +1,18 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": ["#08243c", "#10486a", "#2c88ac", "#8a7c5c"],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "material": 1, "depth": 1},
+        {"box": [0, 0, 288, 56], "material": 2, "depth": 1},
+        {"box": [0, 44, 288, 14], "fill": {"pattern": "noise", "density": 0.35, "radius": 0, "materials": [null, 2]}},
+        {"box": [0, 100, 288, 64], "material": 0, "depth": 1},
+        {"box": [0, 90, 288, 14], "fill": {"pattern": "noise", "density": 0.35, "radius": 0, "materials": [null, 0]}},
+        {"polygon": [[30, 0], [64, 0], [112, 110], [60, 110]], "fill": {"pattern": "noise", "density": 0.7, "radius": 0, "materials": [null, 2]}},
+        {"polygon": [[120, 0], [150, 0], [196, 110], [150, 110]], "fill": {"pattern": "noise", "density": 0.7, "radius": 0, "materials": [null, 2]}},
+        {"polygon": [[210, 0], [232, 0], [276, 110], [236, 110]], "fill": {"pattern": "noise", "density": 0.7, "radius": 0, "materials": [null, 2]}},
+        {"polygon": [[0, 108], [30, 98], [70, 106], [110, 96], [150, 104], [200, 94], [250, 102], [288, 96], [288, 164], [0, 164]], "material": 0, "depth": [2, 3]},
+        {"polygon": [[0, 128], [40, 120], [90, 126], [140, 118], [200, 126], [250, 118], [288, 124], [288, 164], [0, 164]], "material": 3, "depth": [2, 3]},
+        {"box": [0, 126, 288, 38], "fill": {"pattern": "noise", "density": 0.12, "radius": 1, "materials": [null, 0]}}
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.6, "towards": "#4a4e60"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#3a4a8a", "amount": 0.1}
+        ]
+    },
+    "anim": [
+        "global: > m > z*2.5 on=0.5;0.338 > z*2",
+        "rock:   y=-1 > y=0 m > hold > a=0",
+        "end:    a=0 > a=1 m > hold > a=0",
+        "bridge: y=1 > y=0 m > hold > a=0",
+        "void:   a=0 > a=1 m > hold > a=0"
+    ],
+    "layers": [
+        {"name": "rock", "tag": "border", "picture": "rock.pic.json", "at": [0, 0]},
+        {"name": "end", "tag": "object", "picture": "end.pic.json", "at": [0, 0]},
+        {"name": "bridge", "tag": "object", "picture": "bridge.pic.json", "at": [0, 0]},
+        {"name": "void", "tag": "border", "picture": "void.pic.json", "at": [0, 0]}
+    ]
+}

@@ -1,3 +1,4 @@
+import type { Color } from "../../../../engine/math"
 import { Box, Rect } from "../../../../engine/ui"
 import type { Theme } from "../../../../engine/ui"
 import type { Visual } from "../../sim/base/Visual"
@@ -14,6 +15,9 @@ export interface AbsItem {
 
     /** Written in yellow over its top right corner: an empty text only outlines it, none for not used. */
     readonly activation?: string|null
+
+    /** The color its icon is outlined in, none for no outline of its own. */
+    readonly edge?: Color|null
 
     /** What the pointer coming over it or leaving it does, nothing when none. */
     readonly onHover?: (over: boolean) => void
@@ -127,6 +131,7 @@ export class AbsItemList extends Box {
     #fill(icon: AbsItemIcon, item: AbsItem): void {
         icon.iconSize = item.iconSize ?? this.#iconSize
         icon.activation = item.activation ?? null
+        icon.edge = item.edge ?? null
         icon.onHover = item.onHover ?? null
     }
 

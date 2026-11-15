@@ -1,0 +1,12 @@
+{
+    "size": [272, 148],
+    "seed": 21,
+    "palette": ["#7a6c5c", "#2a2420", "#54483e", "#9a8a74"],
+    "shapes": [
+        {"box": [0, 0, 272, 148], "fill": {"pattern": "noise", "density": 0.5, "radius": 7, "materials": [2, 0, 1]}, "depth": 3},
+        {"polygon": [[0, 0], [272, 0], [272, 30], [214, 40], [204, 70], [190, 96], [82, 96], [66, 70], [58, 40], [0, 30]], "fill": {"pattern": "noise", "density": 0.4, "radius": 5, "materials": [0, 3, 2]}, "depth": [4, 6], "relief": "bevel", "bevel": 1},
+        {"box": [0, 0, 272, 148], "fill": {"pattern": "noise", "density": 0.03, "radius": 3, "materials": [null, 1]}},
+        {"ellipse": [98, 16, 76, 72], "erase": true},
+        {"polygon": [[98, 50], [174, 50], [171, 92], [101, 92]], "erase": true}
+    ]
+}

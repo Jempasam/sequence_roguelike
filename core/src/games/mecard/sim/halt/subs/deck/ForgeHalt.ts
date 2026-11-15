@@ -1,5 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
+import { composable } from "../../../card/Card"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
 import type { Run } from "../../../run/Run"
@@ -7,7 +8,6 @@ import { forge, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
@@ -20,7 +20,7 @@ export class ForgeHalt extends DeckHalt {
     constructor(run: Run){
         super(FORGE_HALT, run,
             ["Donne-moi deux ", CARTE.as("cartes"), ", je les forge dans l'ordre choisi."],
-            sceneLook(41, 18, 10, "mecard/travel/forge"),
+            sceneLook(41, 18, 10, "forge"),
             {
                 hat: "skullcap",
                 clothes: rgba(1, 0.45, 0.15),
@@ -33,8 +33,11 @@ export class ForgeHalt extends DeckHalt {
 
 
     protected fits(deck: readonly Card[]): boolean {
-        return deck.length >= 2
+        return deck.filter(composable).length >= 2
     }
+
+    /** How many pairs are already forged. */
+    #forged = 0
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
         const round = (n: 1|2, back?: () => void): void => {
@@ -47,13 +50,15 @@ export class ForgeHalt extends DeckHalt {
                     ctx.confirm(["Le résultat ", FUSION.as("forgé"), " :"], fusionShown(new FusionCard(cards), deck), "Forger", () => {
                         this.impact()
                         const made = this.run.changeDeck(deck, changed => forge(withCopies(changed, cards, hero.unlimited), cards))
-                        if (n == 1 && this.fits(deck)) round(2)
+                        this.#forged = n
+                        const more = n == 1 && this.run.heroes.some(other => other.decks.some(each => this.fits(each)))
+                        if (more) this.start(ctx)
                         else ctx.tell([FUSION.as("Forgée"), " :"], fusionShown(made, deck))
                     }, { back: pick })
-                }, { back: ask, unlimited: hero.unlimited })
+                }, { back: ask, unlimited: hero.unlimited, among: composable })
             ask()
         }
-        round(1, back)
+        round(this.#forged == 0 ? 1 : 2, back)
     }
 }
 
@@ -61,7 +66,8 @@ export class ForgeHalt extends DeckHalt {
 export const FORGE_HALT: HaltType = {
     id: "forge",
     name: "Forge",
-    description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],    icon: visual("travel/forge/logo", { letter: "FO" }),
-    transition: DOOR_TRANSITION,
+    description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],
+    icon: visual("travel/forge/logo", { letter: "FO" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new ForgeHalt(run),
 }

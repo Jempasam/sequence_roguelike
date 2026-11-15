@@ -1,0 +1,40 @@
+{
+    "size": [288, 164],
+    "seed": 6,
+    "palette": [
+        "#8a663c",
+        "#3e2c1e",
+        {"color": "#d4dae2", "reflection": 0.4},
+        "#5a8a3a"
+    ],
+    "shapes": [
+        {"box": [104, 34, 78, 44], "material": 1, "depth": [3, 4], "relief": "bevel", "bevel": 2},
+        {"box": [106, 36, 74, 40], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [4, 5]},
+
+        {"polygon": [[112, 40], [150, 40], [150, 56], [112, 48]], "material": 2, "depth": [6, 7]},
+        {"box": [108, 40, 6, 10], "material": 1, "depth": [6, 7], "relief": "round-x"},
+        {"line": [158, 40, 158, 66], "width": 2, "material": 1, "depth": 6},
+        {"box": [152, 40, 14, 6], "material": 2, "depth": [6, 7], "relief": "round-y"},
+        {"line": [114, 58, 114, 63], "width": 2, "material": 1, "depth": 6},
+        {"line": [114, 64, 114, 75], "width": 2, "material": 2, "depth": 6},
+        {"line": [122, 58, 122, 63], "width": 2, "material": 1, "depth": 6},
+        {"line": [122, 64, 122, 73], "width": 2, "material": 2, "depth": 6},
+        {"line": [130, 58, 130, 63], "width": 2, "material": 1, "depth": 6},
+        {"line": [130, 64, 130, 71], "width": 2, "material": 2, "depth": 6},
+        {"polygon": [[138, 58], [141, 58], [141, 72], [152, 72], [152, 75], [138, 75]], "material": 2, "depth": [6, 7]},
+        {"ellipse": [168, 56, 9, 9], "material": 2, "depth": [6, 7], "relief": "dome"},
+        {"ellipse": [171, 59, 3, 3], "material": 1, "erase": true},
+
+        {"polygon": [[24, 138], [28, 138], [36, 58], [32, 58]], "material": 0, "depth": 4},
+        {"polygon": [[30, 138], [34, 138], [44, 62], [40, 62]], "material": 1, "depth": 3},
+        {"polygon": [[18, 138], [22, 138], [28, 66], [24, 66]], "material": 0, "depth": 4},
+
+        {"box": [224, 86, 44, 4], "material": 0, "depth": [4, 6], "relief": "bevel", "bevel": 1},
+        {"line": [230, 90, 230, 98], "width": 2, "material": 1, "depth": 4},
+        {"line": [262, 90, 262, 98], "width": 2, "material": 1, "depth": 4},
+        {"box": [236, 74, 18, 12], "material": 1, "depth": [5, 7], "relief": "round-x"},
+        {"box": [234, 72, 22, 3], "material": 1, "depth": [6, 7], "relief": "round-y"},
+        {"picture": "parts/fern.pic.json", "at": [228, 56], "materials": [1, 3, 3], "depth": 5},
+        {"box": [258, 78, 7, 8], "material": 2, "depth": [4, 6], "relief": "round-x"}
+    ]
+}

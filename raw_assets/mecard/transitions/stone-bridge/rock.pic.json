@@ -1,0 +1,16 @@
+{
+    "size": [272, 148],
+    "seed": 8,
+    "palette": ["#4a4a5a", "#26262f", "#6a6a7c"],
+    "shapes": [
+        {"box": [0, 0, 272, 9], "material": 0, "depth": [4, 5]},
+        {"polygon": [[0, 8], [22, 8], [14, 34], [8, 20], [0, 26]], "material": 0, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[30, 8], [52, 8], [42, 26]], "material": 2, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[70, 8], [100, 8], [86, 40]], "material": 0, "depth": [4, 7], "relief": "dome"},
+        {"polygon": [[118, 8], [130, 8], [124, 20]], "material": 2, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[150, 8], [182, 8], [168, 34]], "material": 0, "depth": [4, 7], "relief": "dome"},
+        {"polygon": [[204, 8], [222, 8], [212, 24]], "material": 2, "depth": [4, 6], "relief": "dome"},
+        {"polygon": [[236, 8], [272, 8], [272, 30], [258, 44]], "material": 0, "depth": [4, 7], "relief": "dome"},
+        {"box": [0, 0, 272, 9], "fill": {"pattern": "noise", "density": 0.06, "radius": 2, "materials": [null, 1]}}
+    ]
+}

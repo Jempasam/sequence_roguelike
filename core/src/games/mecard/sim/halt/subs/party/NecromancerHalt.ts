@@ -7,7 +7,6 @@ import type { HeartLoot, Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { visual } from "../../../base/Visual"
 
@@ -27,7 +26,7 @@ export class NecromancerHalt extends AbstractHalt {
         super(NECROMANCER_HALT, run,
             "Les cœurs des morts battent encore. Un qui revient, un qui s'use : à toi de choisir.",
             // Waiting for its own art: the scene of the altar.
-            sceneLook(36, 13, 18, "mecard/travel/altar"),
+            sceneLook(13, 28, 26, "necromancer"),
             {
                 hat: "skullHood",
                 clothes: rgba(0.5, 0.45, 0.6),
@@ -75,7 +74,8 @@ export class NecromancerHalt extends AbstractHalt {
 export const NECROMANCER_HALT: HaltType = {
     id: "necromancer",
     name: "Nécromancien",
-    description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",    icon: visual("travel/necromancer/logo", { letter: "NE" }),
-    transition: DOOR_TRANSITION,
+    description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",
+    icon: visual("travel/necromancer/logo", { letter: "NE" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new NecromancerHalt(run),
 }

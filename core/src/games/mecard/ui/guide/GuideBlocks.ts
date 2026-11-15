@@ -80,21 +80,20 @@ export function cards(shown: readonly Card[], caption: Text|null = null): GuideB
 }
 
 /**
- * The card that turns, as it is played unlimited: its dial answers a click, and the card shown becomes the
- * turn to the direction clicked, so the guide can be tried as the hand is.
+ * A card with variants, as it is played unlimited: it offers them, and the card shown becomes the one chosen,
+ * so the guide can be tried as the hand is.
  *
- * @param turnOf The turn card of each step of the dial.
- * @param first The step it starts at.
+ * @param first The variant it starts at.
  */
-export function dialCard(turnOf: (step: number) => Card, first: number, caption: Text|null = null): GuideBlock {
+export function variantCard(first: Card, caption: Text|null = null): GuideBlock {
     return look => {
         const holder = new Box("column", { align: "center" })
         let shown: CardView|null = null
-        const show = (step: number): void => {
+        const show = (variant: Card): void => {
             if(shown) holder.remove(shown)
-            const view = new CardView(look.theme, turnOf(step), "hand")
+            const view = new CardView(look.theme, variant, "hand")
             view.unlimited = true
-            view.onDial = show
+            view.onVariant = show
             holder.add(view)
             shown = view
         }
@@ -114,7 +113,7 @@ export function hearts(kind: HeartKind, count: number, caption: Text|null = null
 /** A card of a chain, and what is plugged into it, as {@link chain} writes it. */
 export function plug(card: Card, input: StripCard|null = null, active = true): StripCard {
     return {
-        card, active, lit: false, crossed: false,
+        card, active, borrowed: false, edge: null, crossed: false,
         inputs: card.input ? [input] : [],
         links: card.input && input ? [typeColorOf(card.input)] : [],
     }

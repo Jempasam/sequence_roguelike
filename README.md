@@ -33,7 +33,7 @@ npm install
 |---|---|
 | `npm run web:build` | `web/dist/`, à servir tel quel, depuis n'importe quel sous-chemin. Dossier cible : variable `WEB_OUT_DIR` (relative au dossier où npm est lancé, ou absolue ; le dossier est vidé avant le build), ex. `$env:WEB_OUT_DIR="docs"; npm run web:build` (PowerShell) ou `WEB_OUT_DIR=docs npm run web:build` (bash). |
 | `npm run web:build:docs` | Le même build, dans `docs/` (vidé avant). |
-| `npm run desktop:build` | `desktop/dist/<os>-<arch>/` : l'exécutable (Node SEA), `native/` et `assets/`. Uniquement pour la machine courante. |
+| `npm run desktop:build` | `desktop/dist/<os>-<arch>/` : l'exécutable (Node SEA), `native/` et `assets/` (celui du dépôt et `generated_assets/`, fusionnés). Uniquement pour la machine courante. |
 | `npm run desktop:build:node` | Le même dossier, avec `main.cjs` à la place de l'exécutable. Utile pour savoir si un problème vient du bundle ou de la SEA. |
 | `npm run desktop:start` / `desktop:start:node` | Lance ce qui a été construit. |
 | `npm run server:build` | `server/dist/main.js`, à déployer avec un `npm install`. |
@@ -50,8 +50,9 @@ Monorepo en npm workspaces :
 | `server/` | Signalisation WebRTC et lobby. Ne dépend pas de `core`. |
 | `test/` | Les tests de `core`, rangés comme `core/src` (`test/src/engine/gpu/Painter.test.ts` teste `core/src/engine/gpu/Painter.ts`), et les fakes partagés (GL, input, stockage) dans `test/src/fixtures`. |
 | `command_line/` | Outil en ligne de commande, dépend de `core` : liste les catalogues Mecard (cartes, kits, monstres…). Voir [command_line/CLI.md](command_line/CLI.md). |
-| `assets/` | Images et sons livrés avec le jeu. |
-| `art/` | Les sources des images faites avec le projet `picture` (`.pic.json`), rendues dans `assets/` au même chemin. |
+| `assets/` | Images et sons livrés avec le jeu, faits à la main. |
+| `generated_assets/` | Ce que `npm run art` génère. Non commité ; le chargement le voit comme faisant partie d'`assets/` (un chemin n'est que dans l'un des deux). |
+| `raw_assets/` | Les sources des images faites avec le projet `picture` (`.pic.json`), rendues dans `generated_assets/` au même chemin. |
 
 Les règles importantes, que l'ESLint fait respecter :
 
@@ -73,9 +74,9 @@ La doc de chaque partie du moteur :
 
 ## Ajouter un asset
 
-On dépose le fichier dans `assets/` (`.png`, `.wav` ou `.ogg`, chemin en minuscules), puis on lance `npm run assets`. Ça régénère `core/src/engine/assets/AssetPath.ts`, ce qui rend une faute de frappe dans un chemin d'asset visible à la compilation. Ce fichier est commité. `npm run assets -- --check` vérifie qu'il est à jour.
+On dépose le fichier dans `assets/` (`.png`, `.wav` ou `.ogg`, chemin en minuscules), puis on lance `npm run assets`. Ça régénère `core/src/engine/assets/AssetPath.ts`, ce qui rend une faute de frappe dans un chemin d'asset visible à la compilation. Ce fichier est commité et indexe `assets/` et `generated_assets/` ensemble. `npm run assets -- --check` vérifie qu'il est à jour (après `npm run art` sur un clone neuf, puisque `generated_assets/` n'est pas commité).
 
-Une image dessinée avec le projet `picture` (rangé à côté de ce dépôt, ou là où pointe `PICTURE`) a sa source dans `art/` : `art/mecard/travel/forge/4.pic.json` donne `assets/mecard/travel/forge/4.png`. `npm run art` rend toutes les sources puis lance `npm run assets`, et `npm run art -- mecard/travel` ne rend que celles d'un dossier.
+Une image dessinée avec le projet `picture` (rangé à côté de ce dépôt, ou là où pointe `PICTURE`) a sa source dans `raw_assets/` : `raw_assets/mecard/travel/forge/4.pic.json` donne `generated_assets/mecard/travel/forge/4.png`. `npm run art` rend toutes les sources puis lance `npm run assets`, et `npm run art -- mecard/travel` ne rend que celles d'un dossier.
 
 ## Écrire du C (WebAssembly)
 
@@ -98,7 +99,7 @@ Le détail (types, mémoire, déterminisme) est dans la section « Calcul en C �
 | Fichier | Généré par | Commité |
 |---|---|---|
 | `core/src/engine/assets/AssetPath.ts` | `npm run assets` | oui |
-| `assets/**/*.png` venus d'`art/` | `npm run art` | oui |
+| `generated_assets/**` (png et ora venus de `raw_assets/`) | `npm run art` | non |
 | `.generated/**/*.d.c.ts` | Vite à chaque chargement d'un `.c`, ou `npm run wasm` | non |
 | `*/dist/` | les builds | non |
 

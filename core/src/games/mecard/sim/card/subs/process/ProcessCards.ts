@@ -1,6 +1,7 @@
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE, FORCE } from "../../../base/keywords"
-import type { Preview, PreviewContext } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Unit } from "../../../battle/Unit"
 import type { Process } from "../../../process/Process"
 import { Riding } from "../../../process/subs/Riding"
@@ -8,9 +9,9 @@ import { Strength } from "../../../process/subs/Strength"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, TRAVEL_SLACK } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import type { Text } from "../../../../../../semantic"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the strength of the catalog adds to each blow, for its round. */
 const STRENGTH_BONUS = 1
@@ -35,13 +36,13 @@ export class ProcessCard extends ActionCard {
         effect?: (ctx: PreviewContext) => Preview,
     ){
         super(name, description, rarity, {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 battle.startProcess(unit, process(unit))
-                yield* hold(battle, SHORT_TIME, [label(unit.position, word, NOTE_COLOR)])
+                hold(battle, SHORT_TIME, [Previews.label(unit.position, word, NOTE_COLOR)])
             },
             preview: ctx => {
-                const said = label(ctx.pose.position, word, NOTE_COLOR)
-                if(!effect) return still(ctx.pose, said)
+                const said = Previews.label(ctx.pose.position, word, NOTE_COLOR)
+                if(!effect) return Previews.still(ctx.pose, said)
                 const done = effect(ctx)
                 return { ...done, indicators: [said, ...done.indicators] }
             },
@@ -52,9 +53,9 @@ export class ProcessCard extends ActionCard {
 /** What a ride of the horse of the catalog would do from a pose: as far as nothing is in the way. */
 function ridden({ battle, unit, pose }: PreviewContext): Preview {
     const distance = RIDE_LENGTH * unit.stats.move.value
-    const gone = battle.travel(unit, pose.position, pose.direction, distance)
-    const indicators = [arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
-    if(gone.distance < distance - TRAVEL_SLACK) indicators.push(label(gone.to, "bloqué", NOTE_COLOR))
+    const gone = battle.moveSpot(unit, pose.position, pose.direction, distance)
+    const indicators = [Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
+    if(gone.distance < distance - TRAVEL_SLACK) indicators.push(Previews.label(gone.to, "bloqué", NOTE_COLOR))
     return { indicators, pose: { position: gone.to, direction: pose.direction } }
 }
 

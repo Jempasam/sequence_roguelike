@@ -5,10 +5,9 @@ import type { Usable } from "../../../usable/Usable"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { witchUsables } from "../gift/WitchHalt"
-import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { GREAT_COLOR, GREAT_COLORATION, GREAT_HAT } from "../halt_common"
 import { usableText } from "../shown"
 import { visual } from "../../../base/Visual"
 
@@ -19,7 +18,7 @@ export class GreatWitchHalt extends AbstractHalt {
     constructor(run: Run){
         super(GREAT_WITCH_HALT, run,
             "Trois utilisables mijotent ici. Prends-en un : tu en auras trois.",
-            sceneLook(20, 31, 15, "mecard/travel/witch"),
+            sceneLook(20, 31, 15, "witch", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.6, 0.3, 0.8),
@@ -56,6 +55,6 @@ export const GREAT_WITCH_HALT: HaltType = {
     description: "Un utilisable parmi trois, en triple.",
     icon: visual("travel/witch/logo", { letter: "SO*" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatWitchHalt(run),
 }

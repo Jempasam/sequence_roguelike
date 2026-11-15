@@ -3,8 +3,8 @@ import {
     Arena, Battle, Heart, RED_HEART, SHIELD_HEART, SPELL, Strength, Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Card, Unit } from "@game/core/mecard"
-import { BattleScene, HIGHLIGHT_TIME } from "@game/core/mecard/battle-ui"
-import { Replay } from "./replay"
+import { BattleScene } from "@game/core/mecard/battle-ui"
+import { BEAT, Replay } from "./replay"
 
 import { chain, HEROES, MONSTERS } from "../../sim/fixtures"
 import { DamageType } from "@game/core/mecard"
@@ -50,8 +50,8 @@ describe("BattleAnimations, the cards", () => {
         played(on, hero, [WAIT])
         await replay.frame(0)
         expect(selected).toEqual([hero])
-        expect(scene.litCards).toEqual({ unit: hero, first: 0, last: 0, invalid: false })
-        await replay.frame(HIGHLIGHT_TIME / 2)
+        expect(scene.litCards).toMatchObject({ unit: hero, first: 0, last: 0, invalid: false })
+        await replay.frame(BEAT / 2)
         expect(scene.litCards).not.toBeNull()
     })
 
@@ -60,7 +60,7 @@ describe("BattleAnimations, the cards", () => {
         played(on, hero, [WAIT])
         await replay.frame(0)
         expect(scene.of(hero)?.chain.cursor).toBe(0)
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(scene.litCards).toBeNull()
         expect(scene.of(hero)?.chain.cursor).toBe(1)
     })
@@ -70,11 +70,11 @@ describe("BattleAnimations, the cards", () => {
         played(on, hero, [SPELL, WAIT])
         await replay.frame(0)
         expect(selected).toEqual([hero])
-        expect(scene.litCards).toEqual({ unit: hero, first: 0, last: 0, invalid: true })
-        await replay.frame(HIGHLIGHT_TIME / 2)
+        expect(scene.litCards).toMatchObject({ unit: hero, first: 0, last: 0, invalid: true })
+        await replay.frame(BEAT / 2)
         expect(scene.litCards?.invalid).toBe(true)
-        await replay.frame(HIGHLIGHT_TIME / 2)
-        expect(scene.litCards).toEqual({ unit: hero, first: 1, last: 1, invalid: false })
+        await replay.frame(BEAT / 2)
+        expect(scene.litCards).toMatchObject({ unit: hero, first: 1, last: 1, invalid: false })
     })
 
     test("the end of the round skipped → nothing lit anymore", async() => {
@@ -93,8 +93,8 @@ describe("BattleAnimations, the hearts", () => {
         hero.hearts.give(new Heart(SHIELD_HEART))
         await replay.frame(0)
         expect(bar(scene, hero)).toBe("xxxx")
-        expect(scene.litHeart).toEqual({ unit: hero, indexes: [3] })
-        await replay.frame(HIGHLIGHT_TIME)
+        expect(scene.litHeart).toMatchObject({ unit: hero, indexes: [3] })
+        await replay.frame(BEAT)
         expect(scene.litHeart).toBeNull()
     })
 
@@ -103,8 +103,8 @@ describe("BattleAnimations, the hearts", () => {
         hero.hearts.remove(SHIELD_HEART, 1, null)
         await replay.frame(0)
         expect(bar(scene, hero)).toBe("xx")
-        expect(scene.litHeart).toEqual({ unit: hero, indexes: [1] })
-        await replay.frame(HIGHLIGHT_TIME)
+        expect(scene.litHeart).toMatchObject({ unit: hero, indexes: [1] })
+        await replay.frame(BEAT)
         expect(bar(scene, hero)).toBe("x")
         expect(scene.litHeart).toBeNull()
     })
@@ -115,10 +115,10 @@ describe("BattleAnimations, the hearts", () => {
         await replay.frame(0)
         expect(bar(scene, hero)).toBe("xxx")
         expect(scene.litHeart?.indexes).toEqual([2])
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(bar(scene, hero)).toBe("xxo")
         expect(scene.litHeart?.indexes).toEqual([2])
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(scene.litHeart).toBeNull()
     })
 
@@ -128,10 +128,10 @@ describe("BattleAnimations, the hearts", () => {
         await replay.frame(0)
         expect(bar(scene, hero)).toBe("xxx")
         expect(scene.litHeart?.indexes).toEqual([2, 1])
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(bar(scene, hero)).toBe("xoo")
         expect(scene.litHeart?.indexes).toEqual([2, 1])
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(scene.litHeart).toBeNull()
     })
 
@@ -153,7 +153,7 @@ describe("BattleAnimations, the processes", () => {
         await replay.frame(0)
         expect(scene.of(hero)?.processes).toEqual([process])
         expect(scene.litProcess).toEqual({ unit: hero, process })
-        await replay.frame(HIGHLIGHT_TIME)
+        await replay.frame(BEAT)
         expect(scene.litProcess).toBeNull()
     })
 })

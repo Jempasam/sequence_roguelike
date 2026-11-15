@@ -5,7 +5,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { fusionShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { FUSION } from "../../../base/keywords"
@@ -19,7 +18,7 @@ export class InventorHalt extends CardGiftHalt {
     constructor(run: Run){
         super(INVENTOR_HALT, run,
             ["Trois ", FUSION.as("collages"), " sortent de l'atelier. Choisis le tien."],
-            sceneLook(28, 26, 23, "mecard/travel/inventor"),
+            sceneLook(28, 26, 23, "inventor"),
             {
                 hat: "goggles",
                 clothes: rgba(0.8, 0.7, 0.5),
@@ -50,6 +49,6 @@ export const INVENTOR_HALT: HaltType = {
     id: "inventor",
     name: "Inventeur",
     description: ["Un ", FUSION, " parmi trois."],    icon: visual("travel/inventor/logo", { letter: "IN" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/house-door"),
     create: run => new InventorHalt(run),
 }

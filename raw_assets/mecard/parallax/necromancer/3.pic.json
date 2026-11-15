@@ -1,0 +1,261 @@
+{
+ "size": [
+  288,
+  164
+ ],
+ "seed": 7,
+ "palette": [
+  "#9aa8a0",
+  "#182224",
+  {
+   "color": "#50f0b4",
+   "light": 0.9
+  },
+  {
+   "color": "#e03858",
+   "light": 0.55
+  }
+ ],
+ "shapes": [
+  {
+   "box": [
+    106,
+    112,
+    76,
+    24
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     10,
+     8
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     0,
+     1
+    ]
+   },
+   "depth": [
+    4,
+    5
+   ],
+   "relief": "bevel",
+   "bevel": 1
+  },
+  {
+   "box": [
+    100,
+    96,
+    88,
+    18
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 2
+  },
+  {
+   "box": [
+    100,
+    112,
+    88,
+    3
+   ],
+   "material": 1,
+   "depth": 5
+  },
+  {
+   "box": [
+    104,
+    99,
+    80,
+    2
+   ],
+   "material": 1,
+   "depth": 6
+  },
+  {
+   "ellipse": [
+    136,
+    86,
+    9,
+    9
+   ],
+   "material": 3,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    145,
+    86,
+    9,
+    9
+   ],
+   "material": 3,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "polygon": [
+    [
+     137,
+     93
+    ],
+    [
+     153,
+     93
+    ],
+    [
+     145,
+     104
+    ]
+   ],
+   "material": 3,
+   "depth": 8
+  },
+  {
+   "box": [
+    108,
+    84,
+    6,
+    12
+   ],
+   "material": 0,
+   "depth": [
+    6,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "ellipse": [
+    109,
+    78,
+    4,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "box": [
+    174,
+    84,
+    6,
+    12
+   ],
+   "material": 0,
+   "depth": [
+    6,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "ellipse": [
+    175,
+    78,
+    4,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    158,
+    84,
+    12,
+    11
+   ],
+   "material": 0,
+   "depth": [
+    6,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    161,
+    87,
+    3,
+    3
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "ellipse": [
+    166,
+    87,
+    3,
+    3
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "line": [
+    112,
+    138,
+    140,
+    142
+   ],
+   "material": 0,
+   "width": 2,
+   "depth": 6
+  },
+  {
+   "line": [
+    150,
+    142,
+    176,
+    138
+   ],
+   "material": 0,
+   "width": 2,
+   "depth": 6
+  },
+  {
+   "ellipse": [
+    110,
+    136,
+    4,
+    4
+   ],
+   "material": 0,
+   "depth": 6
+  },
+  {
+   "ellipse": [
+    174,
+    136,
+    4,
+    4
+   ],
+   "material": 0,
+   "depth": 6
+  }
+ ]
+}

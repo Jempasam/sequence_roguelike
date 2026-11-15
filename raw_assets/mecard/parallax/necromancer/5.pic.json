@@ -1,0 +1,428 @@
+{
+ "size": [
+  288,
+  164
+ ],
+ "seed": 9,
+ "palette": [
+  "#4c5e60",
+  "#1a2428",
+  "#e0dcc0",
+  {
+   "color": "#50f0b4",
+   "light": 0.5
+  }
+ ],
+ "shapes": [
+  {
+   "box": [
+    0,
+    0,
+    288,
+    21
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     12,
+     7
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     0,
+     1
+    ]
+   },
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 3
+  },
+  {
+   "box": [
+    0,
+    143,
+    288,
+    21
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     12,
+     7
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     0,
+     1
+    ]
+   },
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 3
+  },
+  {
+   "box": [
+    0,
+    21,
+    21,
+    122
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     12,
+     7
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     0,
+     1
+    ]
+   },
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 3
+  },
+  {
+   "box": [
+    267,
+    21,
+    21,
+    122
+   ],
+   "fill": {
+    "pattern": "tiles",
+    "cell": [
+     12,
+     7
+    ],
+    "grout": 1,
+    "offset": 0.5,
+    "materials": [
+     0,
+     1
+    ]
+   },
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 3
+  },
+  {
+   "box": [
+    20,
+    20,
+    248,
+    1
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "box": [
+    20,
+    143,
+    248,
+    1
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "box": [
+    20,
+    20,
+    1,
+    124
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "box": [
+    267,
+    20,
+    1,
+    124
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "ellipse": [
+    134,
+    9,
+    20,
+    17
+   ],
+   "material": 2,
+   "depth": [
+    8,
+    10
+   ],
+   "relief": "dome"
+  },
+  {
+   "box": [
+    139,
+    22,
+    10,
+    5
+   ],
+   "material": 2,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "round-x"
+  },
+  {
+   "ellipse": [
+    137,
+    15,
+    5,
+    5
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "ellipse": [
+    146,
+    15,
+    5,
+    5
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "box": [
+    143,
+    20,
+    2,
+    3
+   ],
+   "material": 1,
+   "depth": 4
+  },
+  {
+   "line": [
+    10,
+    16,
+    24,
+    10
+   ],
+   "material": 2,
+   "width": 3,
+   "depth": 9
+  },
+  {
+   "ellipse": [
+    9,
+    14,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "ellipse": [
+    22,
+    9,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "line": [
+    264,
+    16,
+    278,
+    10
+   ],
+   "material": 2,
+   "width": 3,
+   "depth": 9
+  },
+  {
+   "ellipse": [
+    263,
+    14,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "ellipse": [
+    276,
+    9,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "line": [
+    10,
+    152,
+    24,
+    146
+   ],
+   "material": 2,
+   "width": 3,
+   "depth": 9
+  },
+  {
+   "ellipse": [
+    9,
+    150,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "ellipse": [
+    22,
+    145,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "line": [
+    264,
+    152,
+    278,
+    146
+   ],
+   "material": 2,
+   "width": 3,
+   "depth": 9
+  },
+  {
+   "ellipse": [
+    263,
+    150,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "ellipse": [
+    276,
+    145,
+    4,
+    4
+   ],
+   "material": 2,
+   "depth": [
+    9,
+    10
+   ]
+  },
+  {
+   "ellipse": [
+    100,
+    144,
+    4,
+    7
+   ],
+   "material": 3,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    184,
+    144,
+    4,
+    7
+   ],
+   "material": 3,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    6,
+    76,
+    4,
+    7
+   ],
+   "material": 3,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    278,
+    76,
+    4,
+    7
+   ],
+   "material": 3,
+   "depth": [
+    8,
+    9
+   ],
+   "relief": "dome"
+  }
+ ]
+}

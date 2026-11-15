@@ -1,0 +1,15 @@
+{
+    "size": [272, 148],
+    "seed": 3,
+    "palette": ["#6a4a2a", "#2a2a30", {"color": "#ffb848", "light": 0.9}, "#a02010"],
+    "shapes": [
+        {"box": [63, 74, 3, 18], "material": 0, "depth": [6, 8], "relief": "round-x"},
+        {"box": [61, 70, 7, 5], "material": 1, "depth": [7, 9], "relief": "bevel"},
+        {"ellipse": [62, 58, 5, 13], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [63, 61, 3, 8], "material": 2, "depth": [8, 9], "relief": "dome"},
+        {"box": [206, 74, 3, 18], "material": 0, "depth": [6, 8], "relief": "round-x"},
+        {"box": [204, 70, 7, 5], "material": 1, "depth": [7, 9], "relief": "bevel"},
+        {"ellipse": [205, 58, 5, 13], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [206, 61, 3, 8], "material": 2, "depth": [8, 9], "relief": "dome"}
+    ]
+}

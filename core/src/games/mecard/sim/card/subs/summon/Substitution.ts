@@ -7,9 +7,9 @@ import type { Action } from "../../../battle/Action"
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
 import { travel, wait } from "../tools/playing"
-import { arrow, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { summonedHearts, summonShown } from "./SummonCard"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the log of the catalog lives by, before the summoning of the unit. */
 const LOG_HALVES = 2
@@ -38,20 +38,20 @@ export class SubstitutionCard extends ActionCard {
 
     static #substituting(length: number, halves: number): Action {
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const from = unit.position
                 const distance = length * unit.stats.move.value
-                const gone = yield* travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
+                const gone = travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
                 if(gone.distance > 0) battle.summon(unit, visual("units/log"), "Tronc", from, summonedHearts(unit, halves))
-                yield* wait(SETTLE_TIME)
+                wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = length * unit.stats.move.value
-                const travelled = battle.travel(unit, pose.position, pose.direction.opposite, distance)
-                const dash = arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)
-                if(travelled.distance === 0) return still(pose, dash)
-                return still({ ...pose, position: travelled.to }, dash, summonShown(pose.position))
+                const travelled = battle.moveSpot(unit, pose.position, pose.direction.opposite, distance)
+                const dash = Previews.arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)
+                if(travelled.distance === 0) return Previews.still(pose, dash)
+                return Previews.still({ ...pose, position: travelled.to }, dash, summonShown(pose.position))
             },
         }
     }

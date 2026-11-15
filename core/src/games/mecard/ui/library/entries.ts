@@ -8,7 +8,7 @@ import type { Card } from "../../sim/card/Card"
 import { TURNS } from "../../sim/card/subs/movement/TurnCard"
 import { STEP } from "../../sim/card/subs/movement/Step"
 import { ALL_BOOSTERS } from "../../sim/catalog/boosters"
-import { ALL_ITEMS, LOOT_CARDS, ALL_USABLES } from "../../sim/catalog/index"
+import { ALL_CARDS, ALL_ITEMS, ALL_USABLES } from "../../sim/catalog/index"
 import { ALL_KITS } from "../../sim/catalog/kits"
 import { ALL_MONSTERS } from "../../sim/catalog/monsters"
 import { Heart } from "../../sim/heart/Heart"
@@ -22,7 +22,7 @@ import { KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../sim/run/Run"
 import { HEART_KINDS } from "../../sim/save/catalogNames"
 import { STATUS_FAMILIES, STATUS_TYPES } from "../../sim/status/statusTypes"
 import { usableText, described } from "../../sim/halt/subs/shown"
-import { cardsOption, unitHead } from "../hud/ChoiceOptions"
+import { cardsOption, unitOption } from "../hud/ChoiceOptions"
 import { heartsRow } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
 
@@ -30,6 +30,9 @@ import type { UnitSprites } from "../look/UnitSprites"
 export interface Entry {
     readonly view: Component
     readonly text: Text
+
+    /** What the search reads, the text when none. */
+    readonly search?: Text
 }
 
 /** A tab of the catalogue: its title, and the entries it lists, made when it is shown. */
@@ -68,7 +71,7 @@ export function sections(look: LibraryLook): Section[] {
         {
             // What every hero plays as often as it wishes comes first: a step, and a turn, whose dial is only shown here.
             title: "Cartes",
-            entries: () => [STEP, TURNS[0], ...LOOT_CARDS].map(card => {
+            entries: () => [...new Set([STEP, TURNS[0], ...ALL_CARDS])].map(card => {
                 const text = concat(card, " : ", card.description)
                 return { view: cardsOption(theme, [card], card.description, { onCardHover: onCard, perRow: perRow() }), text }
             }),
@@ -101,8 +104,8 @@ export function sections(look: LibraryLook): Section[] {
                     monster, " : ", String(monster.hearts), " cœurs, pioche ", String(monster.draw), " : ",
                     joinText([...new Set(monster.cards)], ", "), ".",
                 )
-                const view = cardsOption(theme, [...new Set(monster.cards)], null, {
-                    head: unitHead(theme, hero, sprites), onCardHover: onCard, perRow: perRow(),
+                const view = unitOption(theme, hero, sprites, [...new Set(monster.cards)], null, {
+                    onCardHover: onCard, perRow: perRow(),
                 })
                 return { view, text }
             }),

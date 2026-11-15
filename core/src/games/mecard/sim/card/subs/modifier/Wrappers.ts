@@ -1,6 +1,7 @@
 import { Add, ModifierKey, Multiply } from "../../../base/Attribute"
 import type { Attribute, Modifier } from "../../../base/Attribute"
-import { ALLONGE } from "../../../base/keywords"
+import { ALLONGE, PORTEE, PRECISION } from "../../../base/keywords"
+import { frenchNumber } from "../../../battle/words"
 import type { Action, UnitContext } from "../../../battle/Action"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
@@ -9,7 +10,8 @@ import { Rarity } from "../../Rarity"
 import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
 import { turn } from "../tools/playing"
-import { arrow, chained, label, still } from "../tools/previews"
+import { inOrder, repeated } from "../tools/sequence"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How much range and precision the telescope adds, as a factor and in hearts, while its action plays. */
 const SCOPE_RANGE = 0.5
@@ -35,10 +37,10 @@ function raise(unit: Unit, name: string, boost: Boost): () => void {
 /** An action played, and previewed, with stats of its unit raised, put back whatever happens. */
 function boosted(action: Action, name: string, boost: Boost): Action {
     return {
-        use: function* (ctx){
+        use: ctx => {
             const back = raise(ctx.unit, name, boost)
             try {
-                yield* action.use(ctx)
+                action.use(ctx)
             } finally {
                 back()
             }
@@ -61,8 +63,8 @@ const SCOPE: Boost = stats => [
 ]
 
 export const SPYGLASS_CARD = new ModifierCard("Lunette", [
-    "L'action est jouée avec +", String(SCOPE_RANGE), " de portée et +", String(SCOPE_PRECISION), " de précision.",
-], Rarity.RARE, actions => actions.map(action => boosted(action, "lunette", SCOPE)))
+    "L'action est jouée avec +", frenchNumber(SCOPE_RANGE), " ", PORTEE, " et +", frenchNumber(SCOPE_PRECISION), " ", PRECISION, ".",
+], Rarity.RARE, action => boosted(action, "lunette", SCOPE))
 
 /** What the elephant adds to the reaches, before it multiplies them. */
 const ELEPHANT_ADD = 1
@@ -78,18 +80,16 @@ const ELEPHANT: Boost = stats => [
 
 export const ELEPHANT_CARD = new ModifierCard("Éléphant", [
     "L'action est jouée avec (", ALLONGE, " + ", ELEPHANT_ADD, ") × ", ELEPHANT_FACTOR, ".",
-], Rarity.RARE, actions => actions.map(action => boosted(action, "éléphant", ELEPHANT)))
+], Rarity.RARE, action => boosted(action, "éléphant", ELEPHANT))
 
 
 /** A half turn, as a step of its own. */
 export const HALF_TURN: Action = {
-    use: function* (ctx: UnitContext){
-        yield* turn(ctx, ctx.unit.direction.opposite)
-    },
+    use: (ctx: UnitContext) => turn(ctx, ctx.unit.direction.opposite),
     preview: ({ pose }) => {
         const away = pose.direction.opposite
         const tip = pose.position.plus(away.times(TURN_LENGTH))
-        return still({ ...pose, direction: away }, arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))
+        return Previews.still({ ...pose, direction: away }, Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))
     },
 }
 
@@ -98,28 +98,25 @@ export const TURN_AROUND = new ActionCard("Retournement", "Fait demi-tour.", Rar
 
 export const MIRROR = new ModifierCard("Miroir", [
     "Joue l'action, fait demi-tour, puis la rejoue.",
-], Rarity.EPIC, actions => [...actions, HALF_TURN, ...actions])
+], Rarity.EPIC, action => inOrder([action, HALF_TURN, action]))
 
 
 /** How many times a delayed charge plays its action: once, and once more for each pair of actions played before it. */
-function times(unit: Unit): number {
+function repeats(unit: Unit): number {
     return 1 + Math.floor(Math.max(0, unit.stepsPlayed.length - 1) / 2)
 }
 
 /** An action played several times in a row, as many as the actions its unit played before it call for. */
 function delayed(action: Action): Action {
     return {
-        use: function* (ctx){
-            const count = times(ctx.unit)
-            for(let i = 0; i < count; i++) yield* action.use(ctx)
-        },
+        use: ctx => repeated(action, repeats(ctx.unit)).use(ctx),
         preview: ctx => {
             const shown = action.preview(ctx)
-            return chained([shown, still(shown.pose, label(ctx.pose.position, `× ${times(ctx.unit)}`, NOTE_COLOR))], ctx.pose)
+            return Previews.chained([shown, Previews.still(shown.pose, Previews.label(ctx.pose.position, `× ${repeats(ctx.unit)}`, NOTE_COLOR))], ctx.pose)
         },
     }
 }
 
 export const DELAYED_CHARGE = new ModifierCard("Charge différée", [
     "Joue l'action une fois, et une fois de plus pour chaque paire d'actions jouées avant elle ce round.",
-], Rarity.EPIC, actions => actions.map(delayed))
+], Rarity.EPIC, delayed)

@@ -1,0 +1,32 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#6a645a"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#8a7a60", "amount": 0.1}
+        ]
+    },
+    "anim": [
+        "global: z=0.6 a=0 > z=1 a=1 m > z*3 a=0",
+        "rim:    z=0.75 > z=1 > z*2",
+        "newel:  z=0.8 > z=1 > z*1.8",
+        "steps:  z=0.9 > z=1 > z*1.4",
+        "deep:   z=1 > z=1 > z*1.1"
+    ],
+    "layers": [
+        {"name": "newel", "tag": "object", "picture": "newel.pic.json", "at": [0, 0]},
+        {"name": "rim", "tag": "border", "picture": "rim.pic.json", "at": [0, 0]},
+        {"name": "steps", "tag": "object", "picture": "steps.pic.json", "at": [0, 0]},
+        {"name": "deep", "tag": "object", "picture": "deep.pic.json", "at": [0, 0]},
+        {"name": "void", "tag": "border", "picture": "void.pic.json", "at": [0, 0]}
+    ]
+}

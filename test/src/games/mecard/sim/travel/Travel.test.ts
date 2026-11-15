@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BUTCHER_HALT, CHEST_HALT, FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
-import type { CardsDialog, Dialog, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { BATTLE, BUTCHER_HALT, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
+import { isHalt } from "@game/core/mecard"
+import type { CardsDialog, ConfirmDialog, Dialog, FightType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A new place of a sort, on no map. */
 function placeOf(type: PlaceType): Place {
-    return { type, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    return isHalt(type) ? { ...where, fight: null, halt: type } : { ...where, fight: type as FightType, halt: null }
 }
 
 /** The last dialog opened, of the sort the test knows it is. */
@@ -24,9 +26,9 @@ function logOf(travel: Travel): string[] {
     travel.moved.add(() => log.push("moved"))
     travel.visitStarted.add(halt => log.push(`visit ${halt.title}`))
     travel.visitEnded.add(halt => log.push(`end ${halt.title}`))
-    travel.fightReached.add(place => log.push(`fight ${place.type.id}`))
-    travel.fightEntered.add(place => log.push(`fought ${place.type.id}`))
-    travel.fightLeft.add(place => log.push(`left ${place.type.id}`))
+    travel.fightReached.add(place => log.push(`fight ${(place.fight ?? place.halt!).id}`))
+    travel.fightEntered.add(place => log.push(`fought ${(place.fight ?? place.halt!).id}`))
+    travel.fightLeft.add(place => log.push(`left ${(place.fight ?? place.halt!).id}`))
     travel.offerAsked.add(() => log.push("offer"))
     travel.heroAsked.add(dialog => log.push(dialog.follows ? "hero follows" : "hero"))
     travel.cardsAsked.add(() => log.push("cards"))
@@ -274,6 +276,23 @@ describe("Travel, visits", () => {
         expect(hero.decks[0]).toHaveLength(before + 1)
         expect(hero.decks[0].filter(card => card === STEP)).toHaveLength(0)
         expect(hero.decks[0].at(-1)?.contents).toEqual([STEP, STEP])
+    })
+
+    test("a forge going on to its next round → a new choice of character, not one following the confirmation", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        travel.visit(GREAT_FORGE_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        travel.accept(open(travel))
+        const cards = open<CardsDialog>(travel)
+        const picks = cards.selectable.flatMap((selectable, index) => selectable && !cards.repeatable[index] ? [index] : []).slice(0, 2)
+        travel.takeCards(cards, picks)
+        const confirm = open<ConfirmDialog>(travel)
+        travel.accept(confirm)
+        const next = open<HeroDialog>(travel)
+        expect(next.follows).toBe(false)
+        expect(travel.dialogs).toEqual([next])
     })
 
     test("cards of a deck picked twice → still refused", () => {

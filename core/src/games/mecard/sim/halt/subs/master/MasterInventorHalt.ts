@@ -1,4 +1,4 @@
-import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
+import { MASTER_COLOR, MASTER_MASK, MASTER_TRANSITION } from "../halt_common"
 import { FUSION } from "../../../base/keywords"
 import type { Card } from "../../../card/Card"
 import { INVENTED_COUNTS, inventedFusion } from "../../../run/offers"
@@ -6,7 +6,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { upgradeOf } from "../deck/AlchemistHalt"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { fusionShown } from "../shown"
@@ -19,7 +18,7 @@ export class MasterInventorHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MASTER_INVENTOR_HALT, run,
             ["Trois ", FUSION.as("collages"), ", chacun amélioré. Choisis le tien."],
-            sceneLook(28, 26, 23, "mecard/travel/inventor"),
+            sceneLook(28, 26, 23, "inventor", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "goggles",
                 mask: MASTER_MASK,
@@ -51,6 +50,6 @@ export const MASTER_INVENTOR_HALT: HaltType = {
     description: ["Un ", FUSION, " parmi trois, chacun amélioré."],
     icon: visual("travel/inventor/logo", { letter: "IN*" }),
     glow: MASTER_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: MASTER_TRANSITION,
     create: run => new MasterInventorHalt(run),
 }

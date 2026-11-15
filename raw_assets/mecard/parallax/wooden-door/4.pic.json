@@ -1,0 +1,28 @@
+{
+    "size": [288, 164],
+    "seed": 3,
+    "palette": ["#aaa498", "#b0603a", "#2f4a26", "#6f9a3e"],
+    "shapes": [
+        {"box": [78, 134, 132, 9], "fill": {"pattern": "tiles", "cell": [14, 9], "grout": 1, "materials": [0, 2]}, "depth": [6, 7], "relief": "bevel", "bevel": 1},
+        {"box": [90, 128, 108, 6], "fill": {"pattern": "tiles", "cell": [14, 6], "grout": 1, "materials": [0, 2]}, "depth": [5, 6], "relief": "bevel", "bevel": 1},
+        {"box": [112, 123, 64, 5], "fill": {"pattern": "stripes", "width": 2, "axis": "y", "materials": [1, 2]}, "depth": [6, 7]},
+
+        {"polygon": [[33, 118], [59, 118], [55, 142], [37, 142]], "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"box": [30, 114, 32, 6], "material": 1, "depth": [8, 9], "relief": "bevel", "bevel": 1},
+        {"picture": "parts/leaf-big.pic.json", "at": [30, 94], "materials": [2, 2, 3], "depth": 3},
+        {"picture": "parts/leaf-left.pic.json", "at": [45, 100], "materials": [2, 3, 3], "flip": true, "depth": 3},
+        {"picture": "parts/leaf-heart.pic.json", "at": [26, 106], "materials": [2, 2, 3], "depth": 3},
+        {"picture": "parts/leaf-big.pic.json", "at": [42, 84], "materials": [2, 3, 3], "flip": true, "depth": 3},
+
+        {"polygon": [[229, 118], [255, 118], [251, 142], [233, 142]], "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"box": [226, 114, 32, 6], "material": 1, "depth": [8, 9], "relief": "bevel", "bevel": 1},
+        {"picture": "parts/leaf-left.pic.json", "at": [226, 98], "materials": [2, 2, 3], "depth": 3},
+        {"picture": "parts/leaf-big.pic.json", "at": [236, 92], "materials": [2, 3, 3], "depth": 3},
+        {"picture": "parts/leaf-heart.pic.json", "at": [248, 104], "materials": [2, 2, 3], "flip": true, "depth": 3},
+
+        {"picture": "parts/leaf-heart.pic.json", "at": [248, 24], "materials": [2, 3, 3], "flip": true, "depth": 3},
+        {"picture": "parts/leaf-left.pic.json", "at": [236, 28], "materials": [2, 2, 3], "depth": 3},
+        {"picture": "parts/leaf-heart.pic.json", "at": [24, 24], "materials": [2, 2, 3], "depth": 3},
+        {"picture": "parts/leaf-left.pic.json", "at": [34, 28], "materials": [2, 3, 3], "flip": true, "depth": 3}
+    ]
+}

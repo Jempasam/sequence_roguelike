@@ -7,9 +7,8 @@ import type { HeartLoot, Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
-import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { GREAT_COLOR, GREAT_COLORATION, GREAT_HAT } from "../halt_common"
 import { visual } from "../../../base/Visual"
 
 /** Hearts found as loot, twice as many. */
@@ -24,7 +23,7 @@ export class GreatHospitalHalt extends AbstractHalt {
     constructor(run: Run){
         super(GREAT_HOSPITAL_HALT, run,
             "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec trois fois le cœur qu'il choisit.",
-            sceneLook(18, 33, 41, "mecard/travel/hospital"),
+            sceneLook(18, 33, 41, "hospital", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.9, 0.95, 1),
@@ -66,6 +65,6 @@ export const GREAT_HOSPITAL_HALT: HaltType = {
     description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun le cœur à usage unique choisi, en triple.",
     icon: visual("travel/hospital/logo", { letter: "H*" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/warm-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatHospitalHalt(run),
 }

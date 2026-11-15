@@ -3,24 +3,27 @@ import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
 import { Vector2 } from "../base/Vector2"
 import type { ErrorSink } from "../base/Observable"
-import { playedUnlimited } from "../card/Card"
+import { handIndexOf, playedUnlimited } from "../card/Card"
 import type { Card } from "../card/Card"
 
 import { CardChain } from "../card/CardChain"
+import { ACTION } from "../card/CardType"
 import type { Carried, UsableSlot } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
 import { SOLID_HEART } from "../heart/subs/SolidHeartKind"
 import type { Item } from "../item/Item"
 import type { Process } from "../process/Process"
 import type { Status, StatusType } from "../status/Status"
-import { battleStateOf, saveBattle } from "../save/battleSave"
-import type { BattleSave, SaveOptions } from "../save/battleSave"
-import { planFor } from "../ai/Bot"
+import { battleStateOf, loadBattle, saveBattle, secretizeSave } from "../save/battleSave"
+import type { BattleSave, SaveOptions, SecretOptions } from "../save/battleSave"
+import { DeckAi } from "../ai/Bot"
+import { askAi } from "../ai/UnitController"
+import type { BattlePlan, UnitController } from "../ai/UnitController"
 import { FLEETING } from "../status/subs/Fleeting"
 import { Vanishing } from "../process/subs/Vanishing"
 
-import type { Action, ActionRun, PlugContext, Pose } from "./Action"
-import { touches } from "./Area"
+import type { Action, PlugContext, Pose } from "./Action"
+import * as Areas from "./area/Areas"
 import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
@@ -29,7 +32,7 @@ import type { BattleEvent, DeathEvent, MoveEvent } from "./events"
 import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
-import { COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, TICKS_PER_SECOND, UNBLOCK_DAMAGE } from "./rules"
+import { BLINK_OVERSHOOT, COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, STRIDES_PER_SECOND } from "./rules"
 import { Unit, UNIT_RADIUS } from "./Unit"
 import type { Controller, StatBases, UnitSpec, UnitStats } from "./Unit"
 import { HERO_COLORS, MONSTER_COLORS, SUMMON_PALETTE } from "./palettes"
@@ -68,8 +71,8 @@ const TRAVEL_STEP = 0.05
 /** How finely a body already in contact backs out of it, in meters. */
 const BACK_OUT_STEP = 0.01
 
-/** How many ticks a round plays at most, so a broken action never freezes the game. */
-const MAX_ROUND_TICKS = 600 * TICKS_PER_SECOND
+/** How many steps a round plays at most, so a broken chain never freezes the game. */
+const MAX_ROUND_STEPS = 100000
 
 /** How long a wait lasts, in seconds. */
 const WAIT_TIME = 0.3
@@ -220,9 +223,6 @@ export class Battle {
      */
     public endless = false
 
-    /** How many ticks of execution it played since it started: the time of what it tells. */
-    public clock = 0
-
     /** The team left standing, none during the battle and for a draw. */
     public winner: Team|null = null
 
@@ -234,6 +234,12 @@ export class Battle {
 
     /** How deep the damage being dealt was set off by other damage. */
     public effectDepth = 0
+
+    /**
+     * What plays the units whose controller is "bot", the basic AI of the battle: the hand read from left to
+     * right by default. Changing it changes how every such unit plays, from the next round on.
+     */
+    public bot: UnitController = new DeckAi()
 
     constructor(
         public arena: Arena,
@@ -277,6 +283,35 @@ export class Battle {
     }
 
     /**
+     * Another battle in the same state, built from what {@link Battle.save} writes down: it plays on its
+     * own, and nothing that listens to this one listens to it.
+     *
+     * @throws {@link Error} During an execution, as {@link Battle.save} does.
+     */
+    public clone(): Battle {
+        const copy = loadBattle(this.save())
+        copy.bot = this.bot
+        this.units.forEach((unit, index) => { copy.units[index].controller = unit.controller })
+        return copy
+    }
+
+    /**
+     * Hide, in place, what a unit must not know: see {@link SecretOptions} for what is hidden by default.
+     * To show an AI a battle it may play on, secretize a {@link Battle.clone}, never the battle itself.
+     *
+     * @param viewer The unit that looks: its team is the "ally" of the options.
+     * @throws {@link Error} During an execution, or for a unit that is not of this battle.
+     */
+    public secretize(viewer: Unit, options: SecretOptions = {}): void {
+        const index = this.units.indexOf(viewer)
+        if(index < 0) throw new Error(`${viewer.name} is not in this battle.`)
+        // A save writes a player or a bot: the AIs of the units are kept, a view is played with them.
+        const controllers = this.units.map(unit => unit.controller)
+        this.load(secretizeSave(this.save(), index, options))
+        controllers.forEach((controller, at) => { this.units[at].controller = controller })
+    }
+
+    /**
      * Become the battle a save writes down, in place: what listens to it stays, what it held is gone, and
      * only {@link Battle.loaded} is told.
      *
@@ -308,13 +343,15 @@ export class Battle {
         if(this.#processes.size > 0) throw new Error("A battle is never saved while a process goes on.")
         const indices = new Map(this.units.map((unit, index) => [unit, index]))
         const indexOf = (unit: Unit) => indices.get(unit) ?? -1
+        // A unit vanished from the battle (a clone, a hazard) may still be in the initiative or the plans: not written down.
+        const present = <T>([unit]: readonly [Unit, T]) => indices.has(unit)
         return {
             arena: this.arena, rng: this.rng.state, round: this.round, phase: this.phase, winner: this.winner,
             units: this.units.map(unitState),
-            initiative: this.initiative.map(indexOf),
-            plans: new Map([...this.#plans].map(([unit, chain]) => [indexOf(unit), chain])),
-            played: new Map([...this.#played].map(([unit, cards]) => [indexOf(unit), [...cards]])),
-            activated: new Map([...this.#activated].map(([unit, used]) => [indexOf(unit), [...used]])),
+            initiative: this.initiative.filter(unit => indices.has(unit)).map(indexOf),
+            plans: new Map([...this.#plans].filter(present).map(([unit, chain]) => [indexOf(unit), chain])),
+            played: new Map([...this.#played].filter(present).map(([unit, cards]) => [indexOf(unit), [...cards]])),
+            activated: new Map([...this.#activated].filter(present).map(([unit, used]) => [indexOf(unit), [...used]])),
             // An owner gone from the battle, a clone that vanished, is not written down.
             owners: new Map(this.units.flatMap(unit => {
                 const owner = unit.owner ? indexOf(unit.owner) : -1
@@ -360,6 +397,32 @@ export class Battle {
         unit.controller = controller
     }
 
+    /** What decides for a unit that no player plays: the AI it was given, or {@link Battle.bot}. */
+    public controllerOf(unit: Unit): UnitController {
+        const { controller } = unit
+        return controller === "player" || controller === "bot" ? this.bot : controller
+    }
+
+    /**
+     * What the AI of a unit decides, as if it was a bot, even for a unit a player plays: a player who left, say.
+     * The AI sees a copy of the battle it may know; when none can be made, a process going on, the unit plays its
+     * hand from left to right.
+     */
+    public planAsBot(unit: Unit): BattlePlan {
+        try {
+            return askAi(this, unit, this.controllerOf(unit))
+        }
+        catch {
+            return { chain: new DeckAi().decide(unit).chain }
+        }
+    }
+
+    /** Commit what a unit decided, and use the usables it chose. */
+    public commitPlan(unit: Unit, plan: BattlePlan): void {
+        this.commit(unit, plan.chain)
+        if(plan.usables && plan.usables.length > 0) this.activate(unit, plan.usables)
+    }
+
     /** The units still standing. */
     public get living(): Unit[] {
         return this.units.filter(unit => unit.alive)
@@ -393,8 +456,8 @@ export class Battle {
     }
 
     /** The living units whose body takes room and an area touches, in the order they entered. */
-    public unitsIn(area: Area, except: Unit|null = null): Unit[] {
-        return this.touchables.filter(unit => unit !== except && touches(area, unit.position, unit.radius))
+    public fetch(area: Area, except: Unit|null = null): Unit[] {
+        return this.touchables.filter(unit => unit !== except && Areas.checkCircle(area, unit.position, unit.radius))
     }
 
     /**
@@ -539,7 +602,8 @@ export class Battle {
      *
      * @remarks
      * A card the unit plays unlimited is played from that, once per round (the cards of a group count as one):
-     * a second copy comes from the hand.
+     * a second copy comes from the hand. A card with variants in the hand stands for all of them: the chain may
+     * hold any variant of it.
      *
      * @throws {@link Error} When it is not the preparation, the chain is not valid, or a card is neither in hand
      *   nor one the unit plays unlimited and has not played yet this round.
@@ -554,10 +618,11 @@ export class Battle {
         const free = playedUnlimited(chain.cards, unit.unlimited)
         chain.cards.forEach((card, place) => {
             if(free[place]) return
-            const index = hand.indexOf(card)
+            const index = handIndexOf(hand, card)
             if(index < 0) throw new Error(`${card.name} is not in the hand of ${unit.name}.`)
-            hand.splice(index, 1)
-            played.push(card)
+            // A card with variants stands for all of them: the card of the hand is the one played, whichever
+            // variant of it the chain holds.
+            played.push(...hand.splice(index, 1))
         })
         unit.hand.splice(0, unit.hand.length, ...hand)
         this.#plans.set(unit, chain)
@@ -650,33 +715,27 @@ export class Battle {
     }
 
     /**
-     * Play one tick of the round: the action being played goes on, and when it is over, the next unit with an
-     * action left starts its own.
+     * Play one step of the round: the next unit with an action left plays it, from start to end.
      *
      * @returns Is the round still being played? Once it is over, the battle waits for its next round, unless
      * it is over.
      */
-    public tick(): boolean {
+    public playStep(): boolean {
         if(this.phase !== "execution") return false
-        const running = this.#running ?? this.#startNext()
-        if(!running) return false
-        let over = !running.unit.alive
-        if(!over){
-            try {
-                over = running.run.next().done === true
-            } catch(error){
-                this.report(error)
-                over = true
-            }
+        const next = this.#startNext()
+        if(!next) return false
+        try {
+            next.action.use({ battle: this, unit: next.unit })
+        } catch(error){
+            this.report(error)
         }
-        if(over) this.#finish(running.unit)
-        else this.clock++
+        this.#finish(next.unit)
         return this.phase === "execution"
     }
 
-    /** Play the round out at once, tick after tick: what the screen then plays back. */
+    /** Play the round out at once, step after step: what the screen then plays back. */
     public playRound(): void {
-        for(let tick = 0; tick < MAX_ROUND_TICKS && this.tick(); tick++){ /* Plays every tick. */ }
+        for(let step = 0; step < MAX_ROUND_STEPS && this.playStep(); step++){ /* Plays every step. */ }
     }
 
     /** Post something to draw over the arena for a while, from now on. */
@@ -691,8 +750,7 @@ export class Battle {
      * Turn a unit to face a direction, a meter long.
      *
      * @param duration - How long it took to turn, in seconds: at once by default.
-     * @param from - Where it faced before, as it does by default: a turn over a few ticks changes its facing
-     *   on the way.
+     * @param from - Where it faced before, as it does by default: what the turn is told as starting from.
      */
     public turn(unit: Unit, direction: Vector2, duration = 0, from: Vector2 = unit.direction): void {
         unit.direction = direction
@@ -704,13 +762,16 @@ export class Battle {
     }
 
     /**
-     * Have the strides of a unit, moved again and again over the next ticks, told as one move: its start, and
-     * where it is when something else is told, or when {@link Battle.endGlide} is called.
+     * Have the strides of a unit, moved again and again until {@link Battle.endGlide}, told as one move: its
+     * start, and where it is when something else is told, or when the glide ends. The move is shown taking as
+     * long as its strides do at a speed.
+     *
+     * @param speed - How fast the unit goes, in meters per second.
      */
-    public startGlide(unit: Unit): void {
+    public startGlide(unit: Unit, speed: number): void {
         this.#tellGlide()
         const from = { position: unit.position, direction: unit.direction }
-        this.#glide = { unit, from, clock: this.clock }
+        this.#glide = { unit, from, speed, seconds: 0 }
     }
 
     /** Tell the move a glide made so far, and stop gathering its strides. */
@@ -731,8 +792,9 @@ export class Battle {
         if(!forced && !this.#canMove(unit)) return { to: unit.position, distance: 0, struck: null }
         // What others move, a push, a wind, leaves the scenery where it stands.
         if(forced && !unit.movable) return { to: unit.position, distance: 0, struck: null }
-        const travel = this.travel(unit, unit.position, direction, distance, through)
+        const travel = this.moveSpot(unit, unit.position, direction, distance, through)
         if(travel.distance < distance) this.events.push({ type: "blocked", unit })
+        if(!forced && travel.struck) this.signals.bumped.notify({ unit, struck: travel.struck })
         if(travel.distance > 0) this.#relocate(unit, travel.to, travel.distance / SHOVE_SPEED)
         return travel
     }
@@ -749,12 +811,14 @@ export class Battle {
      *
      * @param through - The bodies it goes through, none by default: walls and the other bodies still block.
      */
-    public travel(
+    public moveSpot(
         unit: Unit, from: Vector2, direction: Vector2, distance: number, through: readonly Unit[] = [],
     ): Trip {
-        const scenery = this.bodies.filter(body => !body.touchable)
+        // Nothing moves while the way is tried: what blocks it is read once.
+        const bodies = this.bodies
+        const scenery = bodies.filter(body => !body.touchable)
         const clear = (point: Vector2, slack: number): boolean => unit.tangible
-            ? !this.arena.solid(point, unit.radius) && !this.bodies.some(body => {
+            ? !this.arena.solid(point, unit.radius) && !bodies.some(body => {
                 return body !== unit && !through.includes(body)
                     && body.position.distance(point) < unit.radius + body.radius - slack
             })
@@ -781,15 +845,45 @@ export class Battle {
         return { to: reached, distance: travelled, struck: null }
     }
 
-    /** Move a unit straight to a point, over whatever lies between, when there is room there. */
-    public blink(unit: Unit, to: Vector2): boolean {
-        if(!this.#canMove(unit)) return false
-        if(!this.free(to, unit)){
-            this.events.push({ type: "blocked", unit })
-            return false
+    /**
+     * Where a unit blinking from a point to another lands, a blink never failing: on the point when there is
+     * room there, else a little beyond it, else the farthest free point back toward where it blinks from,
+     * which is free at the worst. Changes nothing: a blink and its preview both ask it.
+     */
+    public blinkSpot(unit: Unit, from: Vector2, to: Vector2): Vector2 {
+        if(this.free(to, unit)) return to
+        const way = to.minus(from).normalized
+        if(!way) return from
+        const step = unit.radius / 2
+        for(let beyond = step; beyond <= BLINK_OVERSHOOT; beyond += step){
+            const spot = to.plus(way.times(beyond))
+            if(this.free(spot, unit)) return spot
         }
-        this.#jump(unit, to)
-        return true
+        for(let back = step; back < from.distance(to); back += step){
+            const spot = to.minus(way.times(back))
+            if(this.free(spot, unit)) return spot
+        }
+        return from
+    }
+
+    /** Move a unit straight to a point, over whatever lies between, to the spot {@link Battle.blinkSpot} gives. */
+    public blink(unit: Unit, to: Vector2): void {
+        if(!this.#canMove(unit)) return
+        this.#jump(unit, this.blinkSpot(unit, unit.position, to))
+    }
+
+    /**
+     * Where a unit leaping to a point ends up: the point when there is room there, else the free spot nearest
+     * to it, looked for ever farther, a leap never failing. Changes nothing.
+     */
+    public leapSpot(unit: Unit, to: Vector2): Vector2 {
+        if(this.free(to, unit)) return to
+        const farthest = this.arena.width + this.arena.height
+        for(let reach = 2 * unit.radius; reach <= farthest; reach += unit.radius){
+            const spot = this.#nearestFree(unit, to, reach)
+            if(spot) return spot
+        }
+        return to
     }
 
     /**
@@ -803,25 +897,51 @@ export class Battle {
     }
 
     /**
-     * Get a unit out of where it has no room, after a move that went over everything, a jump: as long as its
-     * body lies in a wall, a pillar or another body, it loses a heart, then is thrown aside, toward one of
-     * eight ways drawn at random, a free spot first. Each throw goes a body farther than the one before, so
-     * a crowd is always got out of, and lands within the walls, so a jump past a wall costs one heart.
+     * Get a unit out of where it has no room, after a move that went over everything, a jump: when its body
+     * lies in a wall, a pillar or another body, it is moved again to the free spot nearest to it, one that
+     * {@link Battle.leapSpot} gives, within the walls.
      */
     public unblock(unit: Unit): void {
-        const farthest = this.arena.width + this.arena.height
-        for(let reach = 2 * unit.radius; reach <= farthest; reach += unit.radius){
-            if(!unit.alive || this.free(unit.position, unit)) return
+        if(!unit.alive || this.free(unit.position, unit)) return
+        this.events.push({ type: "blocked", unit })
+        this.#jump(unit, this.leapSpot(unit, unit.position))
+    }
+
+    /**
+     * Where a unit teleporting to a point ends up, none when it cannot: the point when there is room there,
+     * else the free spot nearest to it, within a single push, else nowhere. Changes nothing.
+     */
+    public teleportSpot(unit: Unit, to: Vector2): Vector2|null {
+        if(this.free(to, unit)) return to
+        return this.#nearestFree(unit, to, 2 * unit.radius)
+    }
+
+    /**
+     * Move a unit straight to a point, over whatever lies between, to the spot {@link Battle.teleportSpot}
+     * gives. The only move that can fail: with no spot the unit stays where it is.
+     *
+     * @returns Did it go?
+     */
+    public teleport(unit: Unit, to: Vector2): boolean {
+        if(!this.#canMove(unit)) return false
+        const spot = this.teleportSpot(unit, to)
+        if(!spot){
             this.events.push({ type: "blocked", unit })
-            unit.hearts.damage(UNBLOCK_DAMAGE, DamageType.PHYSICAL, null)
-            if(!unit.alive) return
-            const spots = EIGHT_WAYS.map(way => {
-                return this.arena.clamped(unit.position.plus(way.times(reach)), unit.radius)
-            })
-            const free = spots.filter(spot => this.free(spot, unit))
-            const to = this.rng.pick(free.length > 0 ? free : spots)
-            if(to) this.#jump(unit, to)
+            return false
         }
+        this.#jump(unit, spot)
+        return true
+    }
+
+    /** The free spot nearest to a point among the eight around it at a reach, within the walls, none for none. */
+    #nearestFree(unit: Unit, around: Vector2, reach: number): Vector2|null {
+        let nearest: Vector2|null = null
+        for(const way of EIGHT_WAYS){
+            const spot = this.arena.clamped(around.plus(way.times(reach)), unit.radius)
+            if(!this.free(spot, unit)) continue
+            if(!nearest || spot.distance(around) < nearest.distance(around)) nearest = spot
+        }
+        return nearest
     }
 
     /**
@@ -845,7 +965,7 @@ export class Battle {
         attacker.attacking.notify({ attacker, area })
         this.events.push({ type: "struck", unit: attacker, area, nature })
         const hit: Unit[] = []
-        for(const target of this.unitsIn(area, attacker)){
+        for(const target of this.fetch(area, attacker)){
             const dealt = target.hearts.damage(amount * scale(target), nature, attacker)
             if(dealt <= 0) continue
             hit.push(target)
@@ -869,7 +989,7 @@ export class Battle {
         for(const area of areas){
             attacker.attacking.notify({ attacker, area })
             this.events.push({ type: "struck", unit: attacker, area, nature })
-            for(const target of this.unitsIn(area, attacker)) targets.add(target)
+            for(const target of this.fetch(area, attacker)) targets.add(target)
         }
         const hit: Unit[] = []
         for(const target of targets){
@@ -904,7 +1024,7 @@ export class Battle {
     public explode(area: Area, amount: number, source: Unit|null, except: Unit|null = null): void {
         this.events.push({ type: "exploded", area })
         this.post(polygonEffect(area, BLAST_COLOR, BLAST_TIME))
-        for(const target of this.unitsIn(area, except)){
+        for(const target of this.fetch(area, except)){
             target.hearts.damage(amount, DamageType.PHYSICAL, source)
         }
     }
@@ -1045,10 +1165,17 @@ export class Battle {
         this.events.push({ type: "status", unit, text: "électrocuté" })
     }
 
-    /** Put actions at the head of the queue of a unit, played in its place and facing. */
-    public inject(unit: Unit, actions: readonly Action[]): void {
+    /**
+     * Put an action at the head of the queue of a unit, played in its place and facing, and the cards it comes
+     * from in its chain, where its reading stands, lit as they are given.
+     */
+    public inject(unit: Unit, action: Action, cards: readonly Card[] = []): void {
         if(!unit.alive) return
-        unit.steps.unshift(...actions)
+        unit.steps.unshift(action)
+        if(cards.length > 0){
+            const at = unit.chain.insert(unit.chain.cursor, cards)
+            unit.chain.watcher?.activated(at, at + cards.length - 1)
+        }
         this.events.push({ type: "status", unit, text: "hypnotisé" })
     }
 
@@ -1058,7 +1185,7 @@ export class Battle {
      *
      * @param hearts - What the clone lives by: the card making it says.
      */
-    public clone(unit: Unit, hearts: readonly Heart[]): Unit|null {
+    public cloneUnit(unit: Unit, hearts: readonly Heart[]): Unit|null {
         const spot = this.#cloneSpot(unit)
         if(!spot) return null
         const clone = new Unit({
@@ -1087,7 +1214,7 @@ export class Battle {
         const state = unitState(unit)
         const clone = this.#restoreUnit({
             ...state, statuses: [],
-            spec: { ...state.spec, name: `${unit.name}'`, controller: "bot", position: spot, hearts, usables: [] },
+            spec: { ...state.spec, name: `${unit.name}'`, controller: "bot", position: spot, hearts, usables: [], unlimited: [] },
         })
         clone.owner = unit
         if(unit.vanishing) this.startProcess(clone, new Vanishing())
@@ -1186,6 +1313,73 @@ export class Battle {
         if(cards.length === 0) return
         unit.chain.cards.push(...cards)
         unit.chain.watcher?.changed()
+    }
+
+    /**
+     * Make a unit play again the last tree of its chain it started: a copy of its cards is put in its chain
+     * where its reading stands, lit, and the action they give is queued after what the unit has ready.
+     *
+     * @returns Did it have one to play again?
+     */
+    public repeatLast(unit: Unit): boolean {
+        if(!unit.alive || unit.lastTree.length === 0) return false
+        const cards = [...unit.lastTree]
+        const action = new CardChain([...cards]).next(ACTION)
+        if(!action) return false
+        unit.steps.push(action)
+        const at = unit.chain.insert(unit.chain.cursor, cards)
+        unit.chain.watcher?.activated(at, at + cards.length - 1)
+        this.events.push({ type: "status", unit, text: "bégaie" })
+        return true
+    }
+
+    /**
+     * Take the next trees of the chain of a unit away, unread: it loses its turns, the cards it was to play
+     * played by nobody. What it already has ready stays.
+     *
+     * @param count - How many trees it loses at most.
+     * @returns How many it lost.
+     */
+    public skipCards(unit: Unit, count: number): number {
+        if(!unit.alive) return 0
+        const { chain } = unit
+        const kept = { played: unit.lastPlayed, tree: unit.lastTree }
+        let lost = 0
+        const steps = unit.steps.length
+        while(lost < count && chain.cursor < chain.cards.length){
+            const before = chain.cursor
+            unit.readOne()
+            if(chain.cursor === before) break
+            lost++
+        }
+        // What was read is thrown away, not played: the steps it gave are lost, those ready stay.
+        unit.steps.length = steps
+        unit.lastPlayed = kept.played
+        unit.lastTree = kept.tree
+        if(lost > 0) this.events.push({ type: "status", unit, text: "trou de mémoire" })
+        return lost
+    }
+
+    /**
+     * Change in a unit the cards of its chain it has not started reading: each one the test holds for goes
+     * for the card given.
+     *
+     * @returns How many cards it changed.
+     */
+    public rewriteChain(unit: Unit, matches: (card: Card) => boolean, into: Card): number {
+        if(!unit.alive) return 0
+        const { chain } = unit
+        let changed = 0
+        for(let at = chain.cursor; at < chain.cards.length; at++){
+            if(!matches(chain.cards[at])) continue
+            chain.cards[at] = into
+            changed++
+        }
+        if(changed > 0){
+            chain.watcher?.changed()
+            this.events.push({ type: "status", unit, text: "pensée unique" })
+        }
+        return changed
     }
 
     /**
@@ -1339,10 +1533,9 @@ export class Battle {
     /** An action doing nothing for a moment, but saying why. */
     public static wait(reason: string): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: ({ battle, unit }) => {
                 battle.events.push({ type: "skipped", unit, reason })
                 battle.post(labelEffect(unit.position, reason, WAIT_COLOR, WAIT_TIME))
-                for(let tick = 0; tick < WAIT_TIME * TICKS_PER_SECOND; tick++) yield
             },
             preview: ({ pose }) => ({
                 indicators: [{ kind: "label", at: pose.position, text: reason, color: WAIT_COLOR }],
@@ -1373,11 +1566,11 @@ export class Battle {
     /** Where the execution is in the initiative: the next unit to play. */
     #cursor = 0
 
-    /** The action being played, and the unit playing it, none between two actions. */
-    #running: { readonly unit: Unit, readonly run: ActionRun }|null = null
-
-    /** The strides of a unit being gathered as one move, from where and when it started, none when none. */
-    #glide: { readonly unit: Unit, readonly from: Pose, readonly clock: number }|null = null
+    /**
+     * The strides of a unit being gathered as one move: where it started, how fast it goes, and how long its
+     * strides took so far, in seconds. None when none.
+     */
+    #glide: { readonly unit: Unit, readonly from: Pose, readonly speed: number, seconds: number }|null = null
 
     #pass = 0
 
@@ -1495,6 +1688,11 @@ export class Battle {
         unit.onActivate.add(event => signals.cardActivated.notify(event))
         unit.onCardInvalid.add(event => signals.cardInvalid.notify(event))
         unit.onChainChange.add(event => signals.chainChanged.notify(event))
+        unit.onChainOverflow.add(event => {
+            signals.chainOverflowed.notify(event)
+            unit.steps.length = 0
+            this.cutChain(unit, 0)
+        })
         unit.onPrep.add(prepared => this.unitPrepared.notify(prepared))
         unit.onDeath.add(event => this.unitDied.notify(event))
     }
@@ -1505,11 +1703,12 @@ export class Battle {
         this.round = state.round
         this.phase = state.phase
         this.winner = state.winner
-        this.initiative = state.initiative.map(index => units[index])
-        for(const [index, chain] of state.plans) this.#plans.set(units[index], chain)
-        for(const [index, cards] of state.played) this.#played.set(units[index], [...cards])
-        for(const [index, used] of state.activated) this.#activated.set(units[index], [...used])
-        for(const [index, owner] of state.owners) units[index].owner = units[owner]
+        // An index out of the units, written by a save made before a vanished unit was left out, is skipped.
+        this.initiative = state.initiative.map(index => units[index]).filter(unit => unit !== undefined)
+        for(const [index, chain] of state.plans) if(units[index]) this.#plans.set(units[index], chain)
+        for(const [index, cards] of state.played) if(units[index]) this.#played.set(units[index], [...cards])
+        for(const [index, used] of state.activated) if(units[index]) this.#activated.set(units[index], [...used])
+        for(const [index, owner] of state.owners) if(units[index] && units[owner]) units[index].owner = units[owner]
     }
 
     /**
@@ -1536,9 +1735,14 @@ export class Battle {
         this.phaseChanged.notify(this.phase)
     }
 
-    /** Commit the chain of each bot of the round. */
+    /**
+     * Commit the chain of each bot of the round. Every bot decides before any chain is committed, so none
+     * knows what the others chose.
+     */
     #planBots(): void {
-        for(const unit of this.initiative) if(unit.controller === "bot") this.commit(unit, planFor(unit))
+        const bots = this.initiative.filter(unit => unit.controller !== "player")
+        const plans = bots.map(unit => this.planAsBot(unit))
+        bots.forEach((unit, index) => this.commitPlan(unit, plans[index]))
     }
 
     /** Take everything out, each thing plugged taken back, so only what listens from outside stays. */
@@ -1557,9 +1761,7 @@ export class Battle {
         this.#activated.clear()
         this.#cursor = 0
         this.#pass = 0
-        this.#running = null
         this.#glide = null
-        this.clock = 0
         this.actor = null
         this.effectDepth = 0
     }
@@ -1641,8 +1843,8 @@ export class Battle {
         this.#checkOver()
     }
 
-    /** Start the action of the next unit with one left, or end the round when none has: none then. */
-    #startNext(): { readonly unit: Unit, readonly run: ActionRun }|null {
+    /** Take the action of the next unit with one left, or end the round when none has: none then. */
+    #startNext(): { readonly unit: Unit, readonly action: Action }|null {
         while(this.phase === "execution"){
             if(!this.initiative.some(unit => unit.alive && unit.hasSteps)){
                 this.#endRound()
@@ -1654,16 +1856,13 @@ export class Battle {
                 continue
             }
             const unit = this.initiative[this.#cursor++]
-            const run = unit.alive ? unit.playTurn() : null
-            if(!run) continue
-            this.#running = { unit, run }
-            return this.#running
+            const action = unit.alive ? unit.playTurn() : null
+            if(action) return { unit, action }
         }
         return null
     }
 
     #finish(unit: Unit): void {
-        this.#running = null
         this.#tellGlide()
         unit.stepEnded.notify(unit)
         this.unitStepped.notify(unit)
@@ -1704,7 +1903,7 @@ export class Battle {
         this.#glide = null
         const { unit, from } = glide
         if(from.position.equals(unit.position) && from.direction.equals(unit.direction)) return
-        const duration = Math.max(1, this.clock - glide.clock) / TICKS_PER_SECOND
+        const duration = Math.max(1 / STRIDES_PER_SECOND, glide.seconds)
         this.signals.moved.notify({
             unit, from, to: { position: unit.position, direction: unit.direction }, duration,
         })
@@ -1752,7 +1951,9 @@ export class Battle {
         const from = unit.position
         if(this.#glide && this.#glide.unit !== unit) this.#tellGlide()
         unit.position = to
-        if(!this.#glide){
+        if(this.#glide){
+            this.#glide.seconds += from.distance(to) / this.#glide.speed
+        } else {
             const { direction } = unit
             this.signals.moved.notify({
                 unit, from: { position: from, direction }, to: { position: to, direction }, duration,
@@ -1804,6 +2005,7 @@ function unitState(unit: Unit): UnitState {
             name: unit.name, sprite: unit.sprite, team: unit.team, controller: unit.controller,
             position: unit.position,
             direction: unit.direction, hearts: unit.hearts.all, decks: unit.decks.all.map(() => []),
+            unlimited: unit.unlimited,
             items: unit.items,
             usables: unit.usables, decisive: unit.decisive, zone: unit.zone,
         },

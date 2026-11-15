@@ -6,9 +6,9 @@ import type { Battle } from "../../../battle/Battle"
 
 import { ActionCard } from "../ActionCard"
 import { hold, wait, WORD_TIME } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { UNIT } from "../../../base/keywords"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How long a swap takes to fade out and back in, in seconds. */
 const SWAP_TIME = 0.15
@@ -29,24 +29,24 @@ function closest(battle: Battle, unit: Unit, from: Vector2): Unit|null {
 
 function swapping(): Action {
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             const other = closest(battle, unit, unit.position)
             if(!other){
                 battle.events.push({ type: "skipped", unit, reason: "personne en vue" })
-                yield* hold(battle, WORD_TIME, [label(unit.position, "personne en vue", NOTE_COLOR)])
+                hold(battle, WORD_TIME, [Previews.label(unit.position, "personne en vue", NOTE_COLOR)])
                 return
             }
-            const jump = arrow([unit.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
-            yield* hold(battle, SWAP_TIME, [jump])
+            const jump = Previews.arrow([unit.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
+            hold(battle, SWAP_TIME, [jump])
             battle.swap(unit, other)
-            yield* wait(SWAP_TIME)
+            wait(battle, SWAP_TIME)
         },
         preview: ({ battle, unit, pose }) => {
             const other = closest(battle, unit, pose.position)
-            if(!other) return still(pose, label(pose.position, "personne en vue", NOTE_COLOR))
-            const there = arrow([pose.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
-            const back = arrow([other.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR)
-            return still({ ...pose, position: other.position }, there, back)
+            if(!other) return Previews.still(pose, Previews.label(pose.position, "personne en vue", NOTE_COLOR))
+            const there = Previews.arrow([pose.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
+            const back = Previews.arrow([other.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR)
+            return Previews.still({ ...pose, position: other.position }, there, back)
         },
     }
 }

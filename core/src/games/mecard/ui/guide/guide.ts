@@ -11,8 +11,8 @@ import { SLOWED } from "../../sim/status/subs/Slowness"
 
 import { engineColor } from "../look/colors"
 import {
-    cardNamed, cards, chain, component, dialCard, heading, hearts, note, paragraph, plug, quote, subheading,
-    terms, together, transform,
+    cardNamed, cards, chain, component, heading, hearts, note, paragraph, plug, quote, subheading,
+    terms, together, transform, variantCard,
 } from "./GuideBlocks"
 import type { GuideBlock, Term } from "./GuideBlocks"
 import { arenaSketch, band, mapSketch, ring, roundTimeline, sector } from "./sketches"
@@ -115,7 +115,7 @@ export const GUIDE: readonly GuideBlock[] = [
         "Tourner a un cadran de ", String(TURN_STEPS), " directions, le haut étant devant toi. Clique la carte pour la ",
         "poser, ou clique le cadran pour choisir la direction du trait : la carte change avec lui. Essaie ici.",
     )),
-    dialCard(step => TURNS[step], 0, "Tourner : clique le cadran pour choisir une direction. En bataille, clique la carte pour la poser."),
+    variantCard(TURNS[0], "Tourner : clique le cadran pour choisir une direction. En bataille, clique la carte pour la poser."),
 
     //// 3. A game from afar ////
     heading("Une partie, vue de loin"),

@@ -24,7 +24,7 @@ describe("REPETITION", () => {
 
     test("before a modifier and what it takes → the modifier twice, nesting", () => {
         const resolution = resolve([REPETITION, REPEAT_2, STEP], drawing(0))
-        expect(resolution.chain.actionsLeft()).toHaveLength(4)
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
     })
 
     test("before a preparation card → played twice", () => {
@@ -141,7 +141,7 @@ describe("INSTINCT", () => {
     test("among the cards in sight → one that fits its place", () => {
         const resolution = resolve([REPEAT_2, INSTINCT], drawing(0), [FIRE, SLASH])
         expect(resolution.cards).toEqual([REPEAT_2, SLASH])
-        expect(resolution.chain.actionsLeft()).toHaveLength(2)
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
     })
 
     test("before nothing fits → lost", () => {
@@ -180,7 +180,7 @@ describe("POTION_POUCH", () => {
 })
 
 describe("TORNADO", () => {
-    test("a thrust → four steps, the unit facing as it started", () => {
+    test("a thrust → four thrusts in one step, the unit facing as it started", () => {
         const on = battle()
         const spinner = unit(on, 3, 5)
         unit(on, 0.5, 0.5, { team: MONSTERS })
@@ -188,13 +188,13 @@ describe("TORNADO", () => {
         spinner.hand.push(TORNADO, THRUST)
         on.commit(spinner, chain(TORNADO, THRUST))
         on.endPreparation()
-        expect(spinner.stepsLeft).toBe(4)
+        expect(spinner.stepsLeft).toBe(1)
         on.playRound()
         expect(spinner.direction).toEqual(Vector2.UP)
     })
 
-    test("a double diagonal → still four steps, each going both ways", () => {
-        expect(resolve([TORNADO, DOUBLE_DIAGONAL, THRUST], drawing(0)).chain.actionsLeft()).toHaveLength(4)
+    test("a double diagonal → still one step, each of its four turns going both ways", () => {
+        expect(resolve([TORNADO, DOUBLE_DIAGONAL, THRUST], drawing(0)).chain.actionsLeft()).toHaveLength(1)
     })
 
     test("its preview → the unit facing as it started", () => {

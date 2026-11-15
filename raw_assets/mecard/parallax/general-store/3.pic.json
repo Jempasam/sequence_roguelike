@@ -1,0 +1,47 @@
+{
+    "size": [288, 164],
+    "seed": 13,
+    "palette": [
+        "#7a5430",
+        "#2a1c14",
+        "#c8a040",
+        {"color": "#ffdc90", "light": 0.9}
+    ],
+    "shapes": [
+        {"box": [62, 104, 156, 42], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "materials": [0, 1]}, "depth": 5},
+        {"box": [70, 110, 40, 30], "material": 1, "depth": [5, 6], "relief": "bevel"},
+        {"box": [74, 114, 32, 22], "fill": {"pattern": "planks", "width": 9, "axis": "y", "joint": 1, "materials": [0, 1]}, "depth": 6},
+        {"box": [118, 110, 40, 30], "material": 1, "depth": [5, 6], "relief": "bevel"},
+        {"box": [122, 114, 32, 22], "fill": {"pattern": "planks", "width": 9, "axis": "y", "joint": 1, "materials": [0, 1]}, "depth": 6},
+        {"box": [166, 110, 44, 30], "material": 1, "depth": [5, 6], "relief": "bevel"},
+        {"box": [170, 114, 36, 22], "fill": {"pattern": "planks", "width": 9, "axis": "y", "joint": 1, "materials": [0, 1]}, "depth": 6},
+        {"box": [58, 98, 164, 7], "material": 0, "depth": [6, 8], "relief": "round-y"},
+
+        {"line": [92, 92, 92, 74], "width": 2, "material": 2, "depth": [6, 8], "relief": "round-x"},
+        {"line": [82, 74, 112, 74], "width": 1, "material": 2, "depth": 7},
+        {"line": [82, 74, 78, 86], "width": 1, "material": 1, "depth": 6},
+        {"line": [82, 74, 86, 86], "width": 1, "material": 1, "depth": 6},
+        {"ellipse": [76, 85, 12, 4], "material": 2, "depth": [6, 8], "relief": "dome"},
+        {"line": [112, 74, 108, 86], "width": 1, "material": 1, "depth": 6},
+        {"line": [112, 74, 116, 86], "width": 1, "material": 1, "depth": 6},
+        {"ellipse": [106, 85, 12, 4], "material": 2, "depth": [6, 8], "relief": "dome"},
+
+        {"box": [124, 90, 42, 8], "material": 0, "depth": [5, 6], "relief": "bevel"},
+        {"picture": "parts/baguette.pic.json", "at": [127, 84], "materials": [2]},
+        {"picture": "parts/baguette.pic.json", "at": [130, 77], "materials": [2], "flip": true},
+        {"picture": "parts/baguette.pic.json", "at": [126, 70], "materials": [2]},
+
+        {"box": [176, 76, 28, 22], "material": 1, "depth": [6, 7], "relief": "bevel"},
+        {"box": [178, 78, 24, 8], "material": 2, "depth": [7, 8], "relief": "bevel"},
+        {"ellipse": [180, 87, 4, 4], "material": 2, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [187, 87, 4, 4], "material": 2, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [194, 87, 4, 4], "material": 2, "depth": [8, 9], "relief": "dome"},
+        {"box": [180, 92, 20, 4], "material": 0, "depth": [7, 8]},
+        {"ellipse": [186, 66, 10, 10], "material": 2, "depth": [7, 9], "relief": "dome"},
+
+        {"line": [122, 24, 122, 40], "width": 1, "material": 1, "depth": 4},
+        {"box": [116, 40, 12, 3], "material": 1, "depth": [5, 7], "relief": "round-y"},
+        {"box": [118, 43, 8, 11], "material": 3, "depth": 2},
+        {"box": [116, 54, 12, 3], "material": 1, "depth": [5, 7], "relief": "round-y"}
+    ]
+}

@@ -15,6 +15,11 @@ export const STORM = new Compound("Tempête", rgba(0.75, 0.8, 1), "foudroyé", W
 export const MUD = new Compound("Boue", rgba(0.5, 0.4, 0.3), "embourbé", WATER_ELEMENT, STONE_ELEMENT)
 export const BLAZE_ELEMENT = new Compound("Brasier", rgba(1, 0.7, 0.2), "embrasé", FIRE_ELEMENT, WIND_ELEMENT)
 export const BRAMBLES = new Compound("Ronces", rgba(0.35, 0.6, 0.3), "lacéré", PLANT_ELEMENT, STONE_ELEMENT)
+export const ASH = new Compound("Cendre", rgba(0.55, 0.5, 0.45), "réduit en cendres", FIRE_ELEMENT, PLANT_ELEMENT)
+export const PLASMA = new Compound("Plasma", rgba(0.85, 0.5, 1), "ionisé", LIGHTNING_ELEMENT, FIRE_ELEMENT)
+export const MIST = new Compound("Brume", rgba(0.7, 0.85, 0.95), "transi", WATER_ELEMENT, WIND_ELEMENT)
+export const SAND = new Compound("Sable", rgba(0.85, 0.75, 0.45), "ensablé", WIND_ELEMENT, STONE_ELEMENT)
+export const MAGNETITE = new Compound("Magnétite", rgba(0.45, 0.5, 0.6), "aimanté", STONE_ELEMENT, LIGHTNING_ELEMENT)
 
 /** The elements a spell starts from, the ones found as cards. */
 export const BASE_ELEMENTS: readonly Element[] = [
@@ -22,7 +27,9 @@ export const BASE_ELEMENTS: readonly Element[] = [
 ]
 
 /** What reacts: each compound holds the two elements it comes from. */
-export const COMPOUNDS: readonly Compound[] = [STEAM, LAVA, STORM, MUD, BLAZE_ELEMENT, BRAMBLES]
+export const COMPOUNDS: readonly Compound[] = [
+    STEAM, LAVA, STORM, MUD, BLAZE_ELEMENT, BRAMBLES, ASH, PLASMA, MIST, SAND, MAGNETITE,
+]
 
 /** What two elements give when they meet, in either order, none when they do not react. */
 export function reaction(first: Element, second: Element): Element|null {

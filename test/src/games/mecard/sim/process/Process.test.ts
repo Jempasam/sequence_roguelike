@@ -15,7 +15,7 @@ describe("Process", () => {
         on.startRound()
         on.commit(hero, chain(STRENGTH_CARD, WAIT))
         on.endPreparation()
-        on.tick()
+        on.playStep()
         expect(hero.stats.strength.value).toBe(1)
         expect(hero.processes.map(String)).toEqual(["force +1"])
         on.playRound()

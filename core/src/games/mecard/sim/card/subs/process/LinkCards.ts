@@ -8,9 +8,10 @@ import { Hook, IronChain, LaserLink } from "../../../process/subs/Links"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { arrow, label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the laser link takes from each enemy across it, each end of a turn. */
 const LASER_DAMAGE = 1
@@ -35,24 +36,24 @@ function linkAction(
     reach?: number,
 ): Action {
     return {
-        use: function* ({ battle, unit }){
+        use: function ({ battle, unit }){
             const partner = find(battle, unit, unit)
             if(!partner){
                 battle.events.push({ type: "skipped", unit, reason: "personne à lier" })
-                yield* hold(battle, SHORT_TIME, [label(unit.position, "personne", NOTE_COLOR)])
+                hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne", NOTE_COLOR)])
                 return
             }
             battle.startProcess(unit, process(partner))
-            yield* hold(battle, SHORT_TIME, [arrow([unit.position, partner.position], MOVE_WIDTH, CONTROL_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.arrow([unit.position, partner.position], MOVE_WIDTH, CONTROL_COLOR)])
         },
         preview: ({ battle, unit, pose }) => {
             const partner = find(battle, unit, pose)
-            const circle = reach === undefined ? [] : [polygon({ kind: "circle", center: pose.position, radius: reach }, RANGE_COLOR)]
-            if(!partner) return still(pose, ...circle, label(pose.position, "personne", NOTE_COLOR))
-            return still(
+            const circle = reach === undefined ? [] : [Previews.polygon(Areas.circle(pose.position, reach), RANGE_COLOR)]
+            if(!partner) return Previews.still(pose, ...circle, Previews.label(pose.position, "personne", NOTE_COLOR))
+            return Previews.still(
                 pose, ...circle,
-                label(pose.position, word, NOTE_COLOR),
-                arrow([pose.position, partner.position], MOVE_WIDTH, CONTROL_COLOR),
+                Previews.label(pose.position, word, NOTE_COLOR),
+                Previews.arrow([pose.position, partner.position], MOVE_WIDTH, CONTROL_COLOR),
             )
         },
     }

@@ -1,0 +1,18 @@
+{
+    "size": [288, 164],
+    "seed": 4,
+    "palette": ["#2a3342", "#0e1117", {"color": "#5a6678", "reflection": 0.5}, {"color": "#f0f6ff", "light": 0.9}],
+    "shapes": [
+        {"line": [144, 18, 144, 34], "width": 2, "material": 1, "depth": 6},
+        {"box": [130, 33, 28, 9], "material": 0, "depth": [6, 8], "relief": "round-y"},
+        {"box": [136, 42, 16, 3], "material": 2, "depth": 7},
+        {"box": [138, 41, 12, 2], "material": 3},
+
+        {"box": [28, 108, 36, 32], "fill": {"pattern": "planks", "width": 5, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [6, 7], "relief": "bevel", "bevel": 1},
+        {"box": [28, 122, 36, 2], "material": 2, "depth": 8},
+        {"box": [34, 94, 24, 14], "fill": {"pattern": "planks", "width": 5, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [6, 7], "relief": "bevel", "bevel": 1},
+
+        {"box": [232, 118, 30, 24], "fill": {"pattern": "planks", "width": 5, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [6, 7], "relief": "bevel", "bevel": 1},
+        {"box": [232, 128, 30, 2], "material": 2, "depth": 8}
+    ]
+}

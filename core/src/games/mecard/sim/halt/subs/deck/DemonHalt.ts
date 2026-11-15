@@ -7,7 +7,6 @@ import { possess } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { CAVE_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, FUSION, DECK, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -19,7 +18,7 @@ export class DemonHalt extends DeckHalt {
     constructor(run: Run){
         super(DEMON_HALT, run,
             ["Signe, et je ", FUSION.as("colle"), " par paires tout le ", DECK, " d'une ", UNIT, "."],
-            sceneLook(31, 8, 10, "mecard/travel/demon"),
+            sceneLook(31, 8, 10, "demon"),
             {
                 hat: "hornedCrown",
                 clothes: rgba(0.8, 0.1, 0.15),
@@ -50,7 +49,8 @@ export class DemonHalt extends DeckHalt {
 export const DEMON_HALT: HaltType = {
     id: "demon",
     name: "Démon",
-    description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],    icon: visual("travel/demon/logo", { letter: "DÉ" }),
-    transition: CAVE_TRANSITION,
+    description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],
+    icon: visual("travel/demon/logo", { letter: "DÉ" }),
+    transition: visual("transitions/warm-door", {coloration:[0.8, 0.1, 0.15]}),
     create: run => new DemonHalt(run),
 }

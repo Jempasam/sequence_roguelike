@@ -1,0 +1,27 @@
+{
+    "size": [288, 164],
+    "seed": 22,
+    "palette": [
+        "#6a6658",
+        "#1e1c18",
+        "#55503f",
+        "#6a4a30"
+    ],
+    "shapes": [
+        {"polygon": [[8, 22], [78, 22], [78, 38], [70, 46], [75, 60], [65, 68], [67, 118], [8, 118]], "fill": {"pattern": "tiles", "cell": [14, 8], "grout": 1, "offset": 0.5, "odd": 0.2, "materials": [0, 1, 2]}, "depth": [4, 5], "relief": "bevel", "bevel": 2},
+        {"line": [30, 60, 36, 72], "material": 1, "depth": 1},
+        {"line": [36, 72, 32, 84], "material": 1, "depth": 1},
+        {"line": [32, 84, 40, 98], "material": 1, "depth": 1},
+
+        {"polygon": [[120, 48], [146, 48], [146, 66], [133, 80], [120, 66]], "material": 2, "depth": [3, 4], "relief": "bevel"},
+        {"polygon": [[124, 52], [142, 52], [142, 65], [133, 75], [124, 65]], "material": 0, "depth": 3},
+        {"line": [133, 52, 133, 74], "material": 2, "depth": 3},
+        {"line": [124, 62, 142, 62], "material": 2, "depth": 3},
+        {"polygon": [[118, 46], [148, 46], [148, 82], [118, 82]], "fill": {"pattern": "noise", "density": 0.08, "radius": 1, "materials": [null, 1]}},
+
+        {"box": [196, 106, 60, 5], "fill": {"pattern": "planks", "width": 2, "axis": "x", "materials": [3, 1]}, "depth": [4, 5], "relief": "round-y"},
+        {"box": [200, 111, 4, 8], "material": 3, "depth": 4, "relief": "round-x"},
+        {"box": [250, 111, 4, 4], "material": 3, "depth": 4},
+        {"polygon": [[238, 118], [262, 96], [266, 100], [244, 120]], "fill": {"pattern": "planks", "width": 2, "axis": "x", "materials": [3, 1]}, "depth": 4}
+    ]
+}

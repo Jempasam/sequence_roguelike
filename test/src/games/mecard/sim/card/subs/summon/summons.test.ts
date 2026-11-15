@@ -90,7 +90,7 @@ describe("STONE_WALL", () => {
         mason.hand.push(STONE_WALL)
         on.commit(mason, chain(STONE_WALL))
         on.endPreparation()
-        for(let tick = 0; tick < 200 && bodies(on).length < 3; tick++) on.tick()
+        for(let tick = 0; tick < 200 && bodies(on).length < 3; tick++) on.playStep()
         expect(bodies(on).map(each => each.position.y)).toEqual([5, 5, 5])
         on.playRound()
         expect(bodies(on)).toHaveLength(0)
@@ -98,12 +98,30 @@ describe("STONE_WALL", () => {
 })
 
 describe("THORN_SHIELD", () => {
-    test("grown → a body with a thorn heart, lost first", () => {
+    /** The hearts of the bush as soon as it is grown, before the round wears it away. */
+    function grown(summoning: number): Heart[] {
         const on = battle()
         const gardener = unit(on, 3, 6)
+        gardener.stats.summon.base = summoning
         unit(on, 0.5, 0.5, { team: MONSTERS })
-        play(on, [[gardener, chain(THORN_SHIELD)]])
-        expect(bodies(on)[0].hearts.all.some(heart => heart.kind === THORN_HEART)).toBe(true)
+        on.startRound()
+        gardener.hand.push(THORN_SHIELD)
+        on.commit(gardener, chain(THORN_SHIELD))
+        on.endPreparation()
+        for(let tick = 0; tick < 200 && bodies(on).length < 1; tick++) on.playStep()
+        return bodies(on)[0].hearts.all
+    }
+
+    test("grown → a body of one thorn heart and no other", () => {
+        const hearts = grown(0)
+        expect(hearts).toHaveLength(1)
+        expect(hearts.every(heart => heart.kind === THORN_HEART)).toBe(true)
+    })
+
+    test("the summoning of the unit → as many thorn hearts more", () => {
+        const hearts = grown(1)
+        expect(hearts).toHaveLength(2)
+        expect(hearts.every(heart => heart.kind === THORN_HEART)).toBe(true)
     })
 })
 

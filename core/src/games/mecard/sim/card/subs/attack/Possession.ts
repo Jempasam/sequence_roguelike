@@ -8,7 +8,8 @@ import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still, strike } from "../tools/previews"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far around the possession looks for its prey, in meters. */
 const POSSESSION_RADIUS = 3
@@ -35,25 +36,25 @@ export const POSSESSION = new ActionCard("Possession", [
     DamageType.PHYSICAL, ". Si elle meurt, tu prends sa place, tourné comme tu l'étais, et joues après ta chaîne ",
     "ce qu'il restait de la sienne.",
 ], Rarity.EPIC, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const prey = preyOf(battle, unit, unit.position)
         if(!prey){
-            yield* hold(battle, SHORT_TIME, [label(unit.position, "aucune proie", NOTE_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.label(unit.position, "aucune proie", NOTE_COLOR)])
             return
         }
-        const area = { kind: "circle", center: prey.position, radius: prey.radius } as const
+        const area = Areas.circle(prey.position, prey.radius)
         // Read before the blow: dying, the prey keeps its chain, but what it holds may change.
         const left = prey.unplayed()
         const at = prey.position
         battle.strike(unit, area, POSSESSION_DAMAGE, DamageType.PHYSICAL, target => target === prey ? 1 : 0)
-        yield* hold(battle, SHORT_TIME, [polygon(area, PHYSICAL_COLOR)])
+        hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
         if(prey.alive || !unit.alive) return
-        battle.blink(unit, at)
+        battle.teleport(unit, at)
         battle.appendToChain(unit, left)
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = polygon({ kind: "circle", center: pose.position, radius: POSSESSION_RADIUS }, RANGE_COLOR)
+        const zone = Previews.polygon(Areas.circle(pose.position, POSSESSION_RADIUS), RANGE_COLOR)
         const prey = preyOf(battle, unit, pose.position)
-        return still(pose, zone, ...prey ? [...strike([], [prey]), label(prey.position, "possession", NOTE_COLOR)] : [])
+        return Previews.still(pose, zone, ...prey ? [...Previews.strike([], [prey]), Previews.label(prey.position, "possession", NOTE_COLOR)] : [])
     },
 })

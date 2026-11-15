@@ -8,8 +8,9 @@ import type { Process } from "../process/Process"
 import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
 
-import type { Indicator, Pose } from "./Action"
-import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent } from "./events"
+import type { Pose } from "./Action"
+import type { Indicator } from "./preview/Preview"
+import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent } from "./events"
 import type { DamageType } from "./DamageType"
 import type { Phase } from "./Battle"
 import type { Unit, UnitStats } from "./Unit"
@@ -37,6 +38,12 @@ export interface MoveSignal {
 
     /** How long it took, in seconds of the simulation. */
     readonly duration: number
+}
+
+/** A unit stopped by another in its way, on a move of its own. */
+export interface BumpSignal {
+    readonly unit: Unit
+    readonly struck: Unit
 }
 
 /** A unit leaving a pose for another at once, over whatever lies between. */
@@ -133,16 +140,11 @@ export interface ModifierSignal {
     readonly key: ModifierKey
 }
 
-/** A status about to act, to show it first. */
-export interface StatusNotice {
+/** Something of a unit about to act, to show it first: a status, a heart. */
+export interface Notice<T> {
     readonly unit: Unit
-    readonly status: Status
-}
-
-/** A heart about to act, to show it first. */
-export interface HeartNotice {
-    readonly unit: Unit
-    readonly heart: Heart
+    /** What is about to act. */
+    readonly target: T
 }
 
 /**
@@ -166,8 +168,9 @@ export interface Effect {
  * happens, each carrying what it takes to show it without reading the battle, which is already further on.
  *
  * @remarks
- * The battle reads its clock, {@link Battle.clock}, when it tells each: a screen plays them back in that
- * time. They are never written down nor sent: a viewer plays its own battle, and hears its own.
+ * The battle has no time of its own: it tells them in the order they happen, those that take a while saying
+ * how long, and a screen plays them back one after the other. They are never written down nor sent: a viewer
+ * plays its own battle, and hears its own.
  */
 export class BattleSignals {
 
@@ -189,6 +192,9 @@ export class BattleSignals {
     public readonly moved: Observable<MoveSignal>
     public readonly blinked: Observable<BlinkSignal>
 
+    /** A unit ran into another on a move of its own. */
+    public readonly bumped: Observable<BumpSignal>
+
     /** A unit starts one of its steps. */
     public readonly stepStarted: Observable<StepSignal>
 
@@ -200,6 +206,9 @@ export class BattleSignals {
 
     /** The chain of a unit changed, or its reading went on. */
     public readonly chainChanged: Observable<ChainChangeEvent>
+
+    /** The chain of a unit grew too long, told with its cards just before it is emptied. */
+    public readonly chainOverflowed: Observable<ChainOverflowEvent>
 
     public readonly damaged: Observable<DamageSignal>
     public readonly healed: Observable<HealSignal>
@@ -236,10 +245,10 @@ export class BattleSignals {
     public readonly effect: Observable<Effect>
 
     /** A status is about to act. */
-    public readonly notifyStatus: Observable<StatusNotice>
+    public readonly notifyStatus: Observable<Notice<Status>>
 
     /** A heart is about to act. */
-    public readonly notifyHeart: Observable<HeartNotice>
+    public readonly notifyHeart: Observable<Notice<Heart>>
 
     /** A unit is about to act, out of its steps: an item, a rule. */
     public readonly notifyUnit: Observable<UnitSignal>
@@ -258,10 +267,12 @@ export class BattleSignals {
         this.reshuffled = signal()
         this.moved = signal()
         this.blinked = signal()
+        this.bumped = signal()
         this.stepStarted = signal()
         this.cardActivated = signal()
         this.cardInvalid = signal()
         this.chainChanged = signal()
+        this.chainOverflowed = signal()
         this.damaged = signal()
         this.healed = signal()
         this.heartAdded = signal()

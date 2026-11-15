@@ -41,7 +41,7 @@ class ThornHeartRule extends HeartRule {
 
     public override onLost({ battle, unit, heart, source }: HeartLostEvent): void {
         if(!source || source === unit) return
-        battle.signals.notifyHeart.notify({ unit, heart })
+        battle.signals.notifyHeart.notify({ unit, target: heart })
         source.hearts.damage(this.kind.damage, DamageType.PHYSICAL, unit)
     }
 }

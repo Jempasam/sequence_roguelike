@@ -28,6 +28,8 @@ import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { RunSoundLink } from "./sound/RunSoundLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { ArmScreen } from "./travel/ArmScreen"
+import { ParallaxScreen } from "./travel/ParallaxScreen"
+import type { Visual } from "../sim/base/Visual"
 
 /** The share of the height of the screen the console takes, from the top. */
 const CONSOLE_SHARE = 0.45
@@ -125,6 +127,12 @@ export class MecardGame {
             report: text => this.#console.print(text),
             leave: () => this.#travelOn(),
         }, assets)
+        this.#parallax = new ParallaxScreen(theme, ui, {
+            report: text => this.#console.print(text),
+            print: text => this.#console.print(text),
+            clipboard,
+            leave: () => this.#travelOn(),
+        }, assets)
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#travelOn() }, sprites)
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: uiSound,
@@ -160,11 +168,12 @@ export class MecardGame {
             },
             showPnj: () => this.#pnjOn(),
             showArm: () => this.#armOn(),
+            showParallax: parallax => this.#parallaxOn(parallax),
             showLibrary: () => this.#libraryOn(),
             hostGame: (mode, policy) => this.hostGame(mode, policy),
             connect: (code, guest) => this.#connect(code, guest),
-            playTransition: (path, duration, reverse) => {
-                void this.#screen.transitions.play(path, {
+            playTransition: (transition, duration, reverse) => {
+                void this.#screen.transitions.play(transition, {
                     duration,
                     reverse,
                     onMiddle: () => this.#console.print("Transition : milieu."),
@@ -178,7 +187,6 @@ export class MecardGame {
         this.#console.print("Console : tape help pour la liste des commandes.")
         this.#consoleView = new ConsoleView(theme, this.#console)
         this.#consoleView.visible = false
-        ui.addLayer("console").content.add(this.#consoleView, { x: "start", y: "start", offsetX: 4, offsetY: 4 })
         // Made last among the screens, so it lies over them.
         this.#menu = new MainMenuScreen(theme, ui, {
             newGame: () => this.#startNewGame(),
@@ -188,6 +196,8 @@ export class MecardGame {
         }, assets)
         // Over the menu, which it replaces while it is read.
         this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() })
+        // Over the menu and the guide too, so it can be opened from the main menu.
+        ui.addLayer("console").content.add(this.#consoleView, { x: "start", y: "start", offsetX: 4, offsetY: 4 })
         this.#menuOn()
     }
 
@@ -201,6 +211,7 @@ export class MecardGame {
         else if(this.#menu.visible) this.#menu.frame()
         else if(this.#pnj.visible) this.#pnj.frame()
         else if(this.#arm.visible) this.#arm.frame()
+        else if(this.#parallax.visible) this.#parallax.frame()
         else if(this.#library.visible) this.#library.frame(input)
         this.#screen.frame(input, world, dt)
     }
@@ -265,6 +276,7 @@ export class MecardGame {
     readonly #screen: RunScreen
     readonly #pnj: PnjScreen
     readonly #arm: ArmScreen
+    readonly #parallax: ParallaxScreen
     readonly #library: LibraryScreen
     readonly #broadcaster: RunBroadcaster|null
     readonly #sound: RunSoundLink|null
@@ -347,6 +359,7 @@ export class MecardGame {
         this.#screen.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
+        this.#parallax.visible = false
         this.#library.visible = false
         this.#guide.visible = false
         this.#menu.visible = true
@@ -401,6 +414,7 @@ export class MecardGame {
         this.#guide.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
+        this.#parallax.visible = false
         this.#library.visible = false
         if(!this.#screen.visible) this.#screen.visible = true
     }
@@ -409,6 +423,7 @@ export class MecardGame {
     #pnjOn(): void {
         this.#screen.visible = false
         this.#arm.visible = false
+        this.#parallax.visible = false
         this.#library.visible = false
         this.#pnj.visible = true
     }
@@ -417,8 +432,19 @@ export class MecardGame {
     #armOn(): void {
         this.#screen.visible = false
         this.#pnj.visible = false
+        this.#parallax.visible = false
         this.#library.visible = false
         this.#arm.visible = true
+    }
+
+    /** Show the bench of the parallaxes alone, on the one a visual names, the run left where it stands. */
+    #parallaxOn(parallax: Visual): void {
+        this.#screen.visible = false
+        this.#pnj.visible = false
+        this.#arm.visible = false
+        this.#library.visible = false
+        this.#parallax.visible = true
+        this.#parallax.show(parallax)
     }
 
     /** Show the catalogue alone, the run left where it stands. */
@@ -426,6 +452,7 @@ export class MecardGame {
         this.#screen.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
+        this.#parallax.visible = false
         this.#library.visible = true
     }
 

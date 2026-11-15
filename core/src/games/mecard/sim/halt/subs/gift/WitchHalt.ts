@@ -8,7 +8,6 @@ import type { Usable } from "../../../usable/Usable"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { usableText } from "../shown"
 import { visual } from "../../../base/Visual"
@@ -25,7 +24,7 @@ export class WitchHalt extends AbstractHalt {
     constructor(run: Run){
         super(WITCH_HALT, run,
             "Trois utilisables mijotent ici. Prends-en un.",
-            sceneLook(20, 31, 15, "mecard/travel/witch"),
+            sceneLook(20, 31, 15, "witch"),
             {
                 hat: "witchHat",
                 clothes: rgba(0.6, 0.3, 0.8),
@@ -59,6 +58,6 @@ export const WITCH_HALT: HaltType = {
     id: "witch",
     name: "Sorcière",
     description: "Un utilisable parmi trois.",    icon: visual("travel/witch/logo", { letter: "SO" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door"),
     create: run => new WitchHalt(run),
 }

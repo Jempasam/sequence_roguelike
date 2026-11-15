@@ -9,6 +9,7 @@ import { Rarity } from "../../Rarity"
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { DAGGER_RANGE, DAGGER_WIDTH } from "./Dagger"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** Blows to the left and to the right at once: hit on both sides, whoever is hit is stunned. */
 export class SkullBreakCard extends BlowCard {
@@ -31,7 +32,7 @@ export class SkullBreakCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const side = pose.direction.right.times(this.range * unit.stats.meleeRange.value * progress)
-        return { kind: "segment", from: pose.position.minus(side), to: pose.position.plus(side), width: this.width }
+        return Areas.line(pose.position.minus(side), pose.position.plus(side), this.width)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

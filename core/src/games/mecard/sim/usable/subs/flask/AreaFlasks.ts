@@ -1,6 +1,12 @@
 import type { Visual } from "../../../base/Visual"
 import type { Text } from "../../../../../../semantic"
-import type { UnitContext } from "../../../battle/Action"
+import type { Pose, UnitContext } from "../../../battle/Action"
+import type { Area } from "../../../battle/Area"
+import type { Battle } from "../../../battle/Battle"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import type { Unit } from "../../../battle/Unit"
 import type { Status } from "../../../status/Status"
 import { Bleeding, Fragility } from "../../../status/subs/Wounds"
 
@@ -8,6 +14,7 @@ import { AbstractUsable } from "../AbstractUsable"
 import type { UsableOptions } from "../AbstractUsable"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the flasks of this file fly, in meters, before the range of the unit, and how wide they splash. */
 const FLASK_FLIGHT = 5
@@ -28,11 +35,22 @@ export class SplashFlask extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        const { end } = battle.ray(unit, FLASK_FLIGHT * unit.stats.throwRange.value)
         const given = this.make()
-        for(const other of battle.unitsIn({ kind: "circle", center: end, radius: FLASK_SPLASH }, unit)){
+        for(const other of battle.fetch(this.#splash(battle, unit, unit), unit)){
             battle.applyStatus(other, given.type, given.level)
         }
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const splash = this.#splash(battle, unit, pose)
+        return Previews.still(pose, ...Previews.strike([splash], battle.fetch(splash, unit)))
+    }
+
+
+    /** Where it splashes when thrown from a pose: around where it meets a body. */
+    #splash(battle: Battle, unit: Unit, pose: Pose): Area {
+        const { end } = battle.ray(unit, FLASK_FLIGHT * unit.stats.throwRange.value, pose)
+        return Areas.circle(end, FLASK_SPLASH)
     }
 }
 

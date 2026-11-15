@@ -1,0 +1,18 @@
+{
+    "size": [288, 164],
+    "seed": 3,
+    "palette": [{"color": "#2a78d8", "light": 0.2}, {"color": "#5ab0f0", "light": 0.2}, {"color": "#ffffff", "light": 0.4}, {"color": "#fff0a0", "light": 0.9}],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "material": 1, "depth": 1},
+        {"box": [0, 0, 288, 40], "material": 0, "depth": 1},
+        {"ellipse": [96, 30, 16, 16], "material": 3, "depth": 3},
+        {"ellipse": [30, 50, 44, 12], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [46, 42, 30, 14], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [100, 70, 40, 10], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [114, 63, 24, 11], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [150, 36, 50, 11], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [166, 30, 28, 12], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [236, 82, 36, 9], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [248, 76, 20, 10], "material": 2, "depth": [2, 3], "relief": "dome"}
+    ]
+}

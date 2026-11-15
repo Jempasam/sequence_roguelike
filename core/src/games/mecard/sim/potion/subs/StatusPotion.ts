@@ -3,7 +3,7 @@ import { colored } from "../../base/Rgba"
 import type { Rgba } from "../../base/Rgba"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
-import type { StatusType } from "../../status/Status"
+import type { Polarity, StatusType } from "../../status/Status"
 import type { Potion } from "../Potion"
 
 /**
@@ -13,6 +13,8 @@ export class StatusPotion implements Potion {
 
 
     public readonly color: Rgba
+
+    public get polarity(): Polarity { return this.type.polarity }
 
     constructor(
         public readonly name: string,

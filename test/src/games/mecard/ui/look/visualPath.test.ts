@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets } from "@game/core"
-import { Visual } from "@game/core/mecard"
-import { distinctPictures, loadPictures, pathOf } from "@game/core/mecard/visual-path"
+import { BACK_VISUAL, Visual } from "@game/core/mecard"
+import { allPlaceTypes } from "@game/core/mecard"
+import { distinctPictures, loadPictures, pathOf, shippedTransitions, transitionPath, transitionTintOf } from "@game/core/mecard/visual-path"
+import { ASSET_PATHS } from "@game/core"
 
 import { png, RGB } from "../../../../fixtures/png"
 
@@ -20,6 +22,33 @@ describe("pathOf", () => {
     test("a key or a visual → the file under the assets of the game", () => {
         expect(pathOf("units/goblin")).toBe("mecard/units/goblin.png")
         expect(pathOf(new Visual({ visual: "statuses/burn" }))).toBe("mecard/statuses/burn.png")
+    })
+})
+
+describe("transitions", () => {
+    test("transitionPath → the painting of the key", () => {
+        expect(transitionPath(new Visual({ visual: "transitions/door" }))).toBe("mecard/transitions/door.ora")
+    })
+
+    test("shippedTransitions → the keys of the paintings under transitions/", () => {
+        const shipped = ["mecard/transitions/door.ora", "mecard/transitions/cave.ora", "mecard/border/x.png"] as never
+        expect(shippedTransitions(shipped)).toEqual(["transitions/cave", "transitions/door"])
+    })
+
+    test("transitionTintOf → the coloration of the visual, none without", () => {
+        expect(transitionTintOf(new Visual({ visual: "transitions/door" }))).toBeNull()
+        const tint = transitionTintOf(new Visual({ visual: "transitions/door", coloration: [1, 0.5, 0.25] }))
+        expect([tint?.r, tint?.g, tint?.b]).toEqual([1, 0.5, 0.25])
+    })
+
+    test("every place is entered by a transition the game ships", () => {
+        for(const type of allPlaceTypes()){
+            expect(ASSET_PATHS, type.id).toContain(transitionPath(type.transition))
+        }
+    })
+
+    test("the way back to the map is a transition the game ships", () => {
+        expect(ASSET_PATHS).toContain(transitionPath(BACK_VISUAL))
     })
 })
 

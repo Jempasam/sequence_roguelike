@@ -7,7 +7,6 @@ import { removeCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -44,7 +43,7 @@ export class AntiquarianHalt extends DeckHalt {
     constructor(run: Run){
         super(ANTIQUARIAN_HALT, run,
             ["Vends-moi une ", CARTE, " : plus elle en tient, plus je paie."],
-            sceneLook(31, 26, 23, "mecard/travel/antiquarian"),
+            sceneLook(31, 26, 23, "antiquarian"),
             {
                 hat: "velvetToque",
                 clothes: rgba(0.7, 0.6, 0.5),
@@ -78,7 +77,8 @@ export class AntiquarianHalt extends DeckHalt {
 export const ANTIQUARIAN_HALT: HaltType = {
     id: "antiquarian",
     name: "Antiquaire",
-    description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],    icon: visual("travel/antiquarian/logo", { letter: "AN" }),
-    transition: DOOR_TRANSITION,
+    description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],
+    icon: visual("travel/antiquarian/logo", { letter: "AN" }),
+    transition: visual("transitions/house-door"),
     create: run => new AntiquarianHalt(run),
 }

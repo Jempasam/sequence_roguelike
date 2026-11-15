@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    ARCHER_KIT, BATTLE, BOSS, CaveFloor, CHEST_HALT, EXIT_HALT, SHOP_HALT, CAVE_FLOOR, FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, LAYERS, MINE_FLOOR, planFor,
-    RED_HEART, Run, TROLL,
+    ARCHER_KIT, BATTLE, BATTLE_REWARD_HALT, BOSS, CaveFloor, CHEST_HALT, EXIT_HALT, SHOP_HALT, CAVE_FLOOR,
+    FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, isHalt, LAYERS, MINE_FLOOR, DeckAi, Run, TROLL,
 } from "@game/core/mecard"
-import type { Battle, Monster, Place, PlaceType } from "@game/core/mecard"
+import type { Battle, FightType, Monster, Place, PlaceType } from "@game/core/mecard"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 import { DamageType } from "@game/core/mecard"
@@ -14,7 +14,7 @@ import { DamageType } from "@game/core/mecard"
 function playOut(fight: Battle): void {
     for(let round = 0; round < 60 && fight.phase !== "over"; round++){
         if(fight.waiting) fight.startRound()
-        for(const fighter of fight.living) fight.commit(fighter, planFor(fighter))
+        for(const fighter of fight.living) fight.commit(fighter, new DeckAi().decide(fighter).chain)
         fight.endPreparation()
         fight.playRound()
     }
@@ -59,7 +59,10 @@ function toBoss(run: Run): void {
 
 /** Stand a party on a new place of a sort. */
 function standOn(run: Run, type: PlaceType): Place {
-    const place: Place = { type, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
+    const place: Place = isHalt(type)
+        ? { ...where, fight: null, halt: type }
+        : { ...where, fight: type as FightType, halt: null }
     run.travel.jump(place)
     return place
 }
@@ -74,8 +77,7 @@ describe("Run", () => {
         expect(fight.events.filter(event => event.type === "error")).toEqual([])
         expect(fight.phase).toBe("over")
         run.endBattle()
-        if(run.phase === "rewards") expect(run.rewards).toHaveLength(3)
-        else expect([run.phase, run.rewards]).toEqual(["over", []])
+        expect(["travel", "over"]).toContain(run.phase)
     })
 })
 
@@ -116,7 +118,7 @@ describe("Run.travel", () => {
         const run = startedRun(1)
         toBoss(run)
         const { depth } = run.travel
-        expect(run.travel.next.map(place => place.type)).toEqual([EXIT_HALT, EXIT_HALT])
+        expect(run.travel.next.map(place => place.halt)).toEqual([EXIT_HALT, EXIT_HALT])
         walk(run, run.travel.next[0])
         expect(run.travel.depth).toBe(depth)
     })
@@ -225,21 +227,104 @@ describe("Run.returnable", () => {
     })
 })
 
-describe("Run fights", () => {
-    test("a won battle → gold", () => {
+describe("Run.bot", () => {
+    test("by default → the AI of the game, given to every battle", () => {
         const run = startedRun(2)
+        expect(run.bot).toBeInstanceOf(DeckAi)
+        expect(run.newBattle().bot).toBe(run.bot)
+        run.startBattle()
+        expect(run.battle?.bot).toBe(run.bot)
+    })
+
+    test("changed → the battles that follow play their bots with it", () => {
+        const run = startedRun(2)
+        const other = new DeckAi()
+        run.bot = other
+        expect(run.newBattle().bot).toBe(other)
+        const played = run.newBattle()
+        run.playBattle(played)
+        expect(played.bot).toBe(other)
+    })
+})
+
+describe("Run fights", () => {
+    test("a won fight → the halt of its place, which knows the fight and pays once a prize is taken", () => {
+        const run = startedRun(2)
+        const { travel } = run
         const gold = run.gold
-        const fight = fought(run)
+        const place = travel.next[0]
+        travel.go(place)
+        travel.enter()
+        expect(travel.phase).toBe("fight")
+        expect(travel.fight?.monsters).toEqual(place.monsters)
+        run.startBattle()
+        const fight = run.battle!
+        fight.startRound()
         win(run, fight)
         run.endBattle()
-        expect(run.phase).toBe("rewards")
-        expect(run.gold).toBeGreaterThan(gold)
+        expect(run.phase).toBe("travel")
+        expect(travel.phase).toBe("visit")
+        expect(travel.halt?.type).toBe(BATTLE_REWARD_HALT)
+        expect(travel.fight?.monsters).toEqual(place.monsters)
+        expect(run.gold).toBe(gold)
+    })
+
+    test("a visit that follows a fight, left → the map, the fight forgotten", () => {
+        const run = startedRun(2)
+        const { travel } = run
+        travel.go(travel.next[0])
+        travel.enter()
+        run.startBattle()
+        run.battle!.startRound()
+        win(run, run.battle!)
+        run.endBattle()
+        travel.leave()
+        expect(travel.phase).toBe("map")
+        expect(travel.fight).toBeNull()
+    })
+
+    test("a fight that lays no halt → the map once won", () => {
+        const run = startedRun(2)
+        const { travel } = run
+        const place: Place = { fight: BATTLE, halt: null, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        travel.jump(place)
+        travel.journey.link(place, place)
+        travel.go(place)
+        travel.enter()
+        run.startBattle()
+        run.battle!.startRound()
+        win(run, run.battle!)
+        run.endBattle()
+        expect(travel.phase).toBe("map")
+        expect(run.phase).toBe("travel")
+    })
+
+    test("a place with a fight and a halt → the halt visited once the fight is won, and not fought again", () => {
+        const run = startedRun(2)
+        const { travel } = run
+        const place: Place = { fight: BATTLE, halt: CHEST_HALT, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        travel.jump(place)
+        travel.journey.link(place, place)
+        travel.go(place)
+        travel.enter()
+        run.startBattle()
+        run.battle!.startRound()
+        win(run, run.battle!)
+        run.endBattle()
+        expect(travel.halt?.type).toBe(CHEST_HALT)
+        expect(run.gold).toBe(30)
+        travel.leave()
+        // The halt left as it was: going back into it opens it, not the fight.
+        expect(travel.returnable).toBe(place)
+        travel.go(place)
+        travel.enter()
+        expect(travel.phase).toBe("visit")
     })
 
     test("the boss → leads its monsters", () => {
         const run = startedRun(2)
         toBoss(run)
-        expect(run.fight).toBe(BOSS)
+        expect(run.travel.place?.fight).toBe(BOSS)
         const fight = fought(run)
         const bosses = fight.units.filter(unit => unit.name.startsWith(GOLEM.name))
         expect(bosses).toHaveLength(1)
@@ -324,32 +409,30 @@ describe("Run, its phases", () => {
         fight.playRound()
     }
 
-    test("a whole fight → played by its methods alone, from the map back to the map", () => {
+    test("a whole fight → played by its methods alone, from the map to the halt of its place", () => {
         const run = startedRun(2)
         const { travel } = run
         const log: string[] = []
         run.phaseChanged.add(phase => log.push(phase))
         run.battleStarted.add(() => log.push("started"))
-        run.rewardsOffered.add(rewards => log.push(`${rewards.length} rewards`))
-        run.rewardClaimed.add(() => log.push("claimed"))
-        travel.jump(travel.journey.layers[0][0])
-        const fight = fought(run)
+        travel.go(travel.next[0])
+        travel.enter()
+        run.startBattle()
+        const fight = run.battle!
+        fight.startRound()
         expect(run.battle).toBe(fight)
         win(run, fight)
         expect(run.phase).toBe("battle")
         run.endBattle()
         expect(run.battle).toBeNull()
-        const [reward] = run.rewards
-        run.claim(reward, run.heroes[0])
-        expect(log).toEqual(["battle", "started", "rewards", "3 rewards", "claimed", "travel"])
-        expect(run.rewards).toEqual([])
-        expect(travel.phase).toBe("map")
+        expect(log).toEqual(["battle", "started", "travel"])
+        expect(travel.phase).toBe("visit")
     })
 
     test("a fight reached → no battle until it is started", () => {
         const run = startedRun(2)
         const { travel } = run
-        const place: Place = { type: BATTLE, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        const place: Place = { fight: BATTLE, halt: null, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)
@@ -360,7 +443,7 @@ describe("Run, its phases", () => {
         expect(run.phase).toBe("battle")
     })
 
-    test("a lost battle → the run over, told, with no reward", () => {
+    test("a lost battle → the run over, told", () => {
         const run = startedRun(2)
         const defeats: Run[] = []
         run.defeated.add(each => defeats.push(each))
@@ -368,7 +451,6 @@ describe("Run, its phases", () => {
         run.endBattle()
         expect(run.phase).toBe("over")
         expect(defeats).toEqual([run])
-        expect(run.rewards).toEqual([])
     })
 
     test("a battle not over → cannot end", () => {
@@ -381,27 +463,6 @@ describe("Run, its phases", () => {
         const run = startedRun(2)
         run.startBattle()
         expect(() => run.startBattle()).toThrow()
-    })
-
-    test("out of the rewards → nothing to claim or skip", () => {
-        const run = startedRun(2)
-        expect(() => run.skipReward()).toThrow()
-        expect(() => run.claim({ kind: "heart", loot: { heart: RED_HEART, count: 2 } }, run.heroes[0])).toThrow()
-    })
-
-    test("a reward not offered → refused", () => {
-        const run = startedRun(2)
-        win(run, fought(run))
-        run.endBattle()
-        expect(() => run.claim({ kind: "heart", loot: { heart: RED_HEART, count: 2 } }, run.heroes[0])).toThrow()
-    })
-
-    test("a reward skipped → back on the map, nothing gained", () => {
-        const run = startedRun(2)
-        win(run, fought(run))
-        run.endBattle()
-        run.skipReward()
-        expect(run.phase).toBe("travel")
     })
 
     test("back to the map → the visit left and the battle dropped", () => {

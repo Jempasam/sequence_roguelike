@@ -1,0 +1,7 @@
+{
+    "size": [272, 148],
+    "palette": ["#ffe2a0"],
+    "shapes": [
+        {"box": [0, 0, 272, 148], "material": 0, "depth": 1}
+    ]
+}

@@ -8,6 +8,7 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far the sweep of the catalog reaches all around, in meters. */
 const SWEEP_RANGE = 1.2
@@ -32,7 +33,7 @@ export class SweepCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return { kind: "circle", center: pose.position, radius: this.range * unit.stats.meleeRange.value * progress }
+        return Areas.circle(pose.position, this.range * unit.stats.meleeRange.value * progress)
     }
 }
 

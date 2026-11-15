@@ -3,6 +3,14 @@ import { CAVE_FLOOR } from "../floor/subs/CaveFloor"
 import { FOREST_FLOOR } from "../floor/subs/ForestFloor"
 import { HELL_FLOOR } from "../floor/subs/HellFloor"
 import { MINE_FLOOR } from "../floor/subs/MineFloor"
+import { CASTLE_FLOOR } from "../floor/subs/CastleFloor"
+import { DOJO_FLOOR } from "../floor/subs/DojoFloor"
+import { FACTORY_FLOOR } from "../floor/subs/FactoryFloor"
+import { GRAVEYARD_FLOOR } from "../floor/subs/GraveyardFloor"
+import { HARBOR_FLOOR } from "../floor/subs/HarborFloor"
+import { SWAMP_FLOOR } from "../floor/subs/SwampFloor"
+import { TUNDRA_FLOOR } from "../floor/subs/TundraFloor"
+import { VOLCANO_FLOOR } from "../floor/subs/VolcanoFloor"
 
 /** The sort of floor every run starts on. */
 export const FIRST_FLOOR: FloorType = CAVE_FLOOR
@@ -16,8 +24,16 @@ export const FIRST_FLOOR: FloorType = CAVE_FLOOR
  */
 export const FLOOR_LINKS: ReadonlyMap<FloorType, readonly FloorType[]> = new Map([
     [CAVE_FLOOR, [FOREST_FLOOR, MINE_FLOOR]],
-    [FOREST_FLOOR, [HELL_FLOOR]],
-    [MINE_FLOOR, [HELL_FLOOR]],
+    [FOREST_FLOOR, [HELL_FLOOR, TUNDRA_FLOOR, SWAMP_FLOOR]],
+    [MINE_FLOOR, [HELL_FLOOR, FACTORY_FLOOR, VOLCANO_FLOOR]],
+    [SWAMP_FLOOR, [GRAVEYARD_FLOOR, HARBOR_FLOOR]],
+    [TUNDRA_FLOOR, [CASTLE_FLOOR, DOJO_FLOOR]],
+    [CASTLE_FLOOR, [DOJO_FLOOR, HELL_FLOOR]],
+    [GRAVEYARD_FLOOR, [HELL_FLOOR]],
+    [VOLCANO_FLOOR, [HELL_FLOOR]],
+    [FACTORY_FLOOR, [HELL_FLOOR]],
+    [HARBOR_FLOOR, [HELL_FLOOR]],
+    [DOJO_FLOOR, [HELL_FLOOR]],
     [HELL_FLOOR, [CAVE_FLOOR]],
 ])
 

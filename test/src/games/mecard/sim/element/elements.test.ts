@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    AURA, BRAMBLES, BURN, CONJURATION, CROSSED_SPELL, ECHO, FIRE, FIRE_ELEMENT, GRAND_RITUAL_CARD,
+    AURA, BRAMBLES, BURN, CONJURATION, CROSSED_SPELL, FIRE, FIRE_ELEMENT, FusionCard, GRAND_RITUAL_CARD,
     Heart,
-    LAVA, LIGHTNING, LIGHTNING_ELEMENT, loadBattle, MUD, PLANT, POISONED, reaction, REACTION, RED_HEART,
-    RITUAL, ROOTED,
+    LAVA, LIGHTNING, LIGHTNING_ELEMENT, loadBattle, MUD, PLANT, PLANT_ELEMENT, POISONED, reaction, REACTION, RED_HEART,
+    RITUAL, ritualType, ROOTED,
     saveBattle, SHIELD_HEART, SLOWED, SMALL_SPELL, SPELL, STEAM, STEP, STONE, STONE_ELEMENT, STORM, WAIT,
     WATER, WATER_ELEMENT,
     WIND, WIND_ELEMENT, Vector2,
@@ -86,7 +86,7 @@ describe("AURA", () => {
         hero.hand.push(AURA, FIRE, WAIT)
         on.commit(hero, chain(AURA, FIRE, WAIT))
         on.endPreparation()
-        on.tick()
+        on.playStep()
         expect(hero.statusOf(BURN)).toBeUndefined()
         expect(hero.stats.strength.value).toBe(1)
         on.playRound()
@@ -251,7 +251,7 @@ describe("reaction", () => {
     })
 
     test("two elements that do not react → none", () => {
-        expect(reaction(WATER_ELEMENT, WIND_ELEMENT)).toBeNull()
+        expect(reaction(WATER_ELEMENT, PLANT_ELEMENT)).toBeNull()
     })
 
     test("a compound does what both do", () => {
@@ -268,34 +268,57 @@ describe("REACTION", () => {
         expect(foe.statusOf(SLOWED)).toBeDefined()
     })
 
-    test("no reaction → the first element goes on alone", () => {
-        const { foe } = cast(SPELL, REACTION, WATER, WIND)
-        expect(foe.statusOf(SLOWED)).toBeDefined()
+    test("no reaction → one of the two goes on alone", () => {
+        const { foe } = cast(SPELL, REACTION, WATER, PLANT)
+        expect([SLOWED, POISONED].filter(type => foe.statusOf(type)).length).toBe(1)
     })
 })
 
-describe("RITUAL and ECHO", () => {
-    test("an echo meets the ritual of the round", () => {
+describe("RITUAL", () => {
+    test("the elements of the chain that react with it become their compound", () => {
         const { on, hero, foe } = duel()
-        hero.stats.chainSize.base = 5
-        play(on, [[hero, chain(RITUAL, FIRE, SPELL, ECHO, WATER)]])
+        hero.stats.chainSize.base = 4
+        play(on, [[hero, chain(RITUAL, FIRE, SPELL, WATER)]])
         expect(foe.statusOf(BURN)).toBeDefined()
         expect(foe.statusOf(SLOWED)).toBeDefined()
-        expect(hero.processes).toEqual([])
     })
 
-    test("no ritual → the element as it is", () => {
-        const { foe } = cast(SPELL, ECHO, WATER)
-        expect(foe.statusOf(BURN)).toBeUndefined()
+    test("an element that does not react stays as it is", () => {
+        const { on, hero, foe } = duel()
+        hero.stats.chainSize.base = 4
+        play(on, [[hero, chain(RITUAL, WATER, SPELL, PLANT)]])
+        expect(foe.statusOf(POISONED)).toBeDefined()
+        expect(foe.statusOf(SLOWED)).toBeUndefined()
+    })
+
+    test("the elements a fusion unfolds into react too", () => {
+        const { on, hero, foe } = duel()
+        hero.stats.chainSize.base = 4
+        play(on, [[hero, chain(RITUAL, FIRE, new FusionCard([SPELL, WATER]))]])
+        expect(foe.statusOf(BURN)).toBeDefined()
         expect(foe.statusOf(SLOWED)).toBeDefined()
+    })
+
+    test("it lasts the round of its card only", () => {
+        const { hero } = cast(RITUAL, FIRE)
+        expect(hero.statusOf(ritualType(FIRE_ELEMENT))).toBeUndefined()
     })
 
     test("a grand ritual lasts rounds, and comes back from a save", () => {
         const fight = cast(GRAND_RITUAL_CARD, FIRE)
+        expect(fight.hero.statusOf(ritualType(FIRE_ELEMENT))?.level).toBe(2)
         const again = loadBattle(saveBattle(fight.on))
         const hero = again.units[0]
-        play(again, [[hero, chain(SPELL, ECHO, WATER)]])
+        play(again, [[hero, chain(SPELL, WATER)]])
         expect(again.units[1].statusOf(BURN)).toBeDefined()
+        expect(hero.statusOf(ritualType(FIRE_ELEMENT))?.level).toBe(1)
+    })
+
+    test("a ritual of each element looks like it", () => {
+        const fire = ritualType(FIRE_ELEMENT).visual
+        const water = ritualType(WATER_ELEMENT).visual
+        expect(fire.visual).toBe(water.visual)
+        expect(fire.coloration).not.toEqual(water.coloration)
     })
 })
 

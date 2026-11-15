@@ -4,7 +4,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { cardShown } from "../shown"
 import { CardGiftHalt } from "./CardGiftHalt"
 import { CARTE } from "../../../base/keywords"
@@ -19,7 +18,7 @@ export class ChestHalt extends CardGiftHalt {
             // No character stands there, so it is only told.
             ["Une ", CARTE, " parmi trois, gratuite."],
             // Nobody standing there.
-            sceneLook(31, 23, 13, "mecard/travel/chest"),
+            sceneLook(31, 23, 13, "chest"),
         )
         this.#cards = lootCards(run.rng, INVENTED_COUNTS)
     }
@@ -38,7 +37,8 @@ export class ChestHalt extends CardGiftHalt {
 export const CHEST_HALT: HaltType = {
     id: "chest",
     name: "Coffre",
-    description: ["Une ", CARTE, " parmi trois, gratuite."],    icon: visual("travel/chest/logo", { letter: "CO" }),
-    transition: DOOR_TRANSITION,
+    description: ["Une ", CARTE, " parmi trois, gratuite."],
+    icon: visual("travel/chest/logo", { letter: "CO" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new ChestHalt(run),
 }

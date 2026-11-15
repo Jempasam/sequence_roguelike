@@ -1,5 +1,5 @@
 import { AssetError } from "../../../../engine/assets"
-import type { Assets, LayeredImagePath } from "../../../../engine/assets"
+import type { Assets } from "../../../../engine/assets"
 import type { Visual } from "../../sim/base/Visual"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
@@ -21,6 +21,7 @@ import type { HaltMoment } from "../../sim/halt/SceneLook"
 import { cardText, deckLine, described, usableText } from "../../sim/halt/subs/shown"
 import type { Hero } from "../../sim/run/Hero"
 import type { Place } from "../../sim/run/Journey"
+import { BACK_VISUAL } from "../../sim/run/PlaceType"
 import type { Run } from "../../sim/run/Run"
 import type {
     CardsDialog, ConfirmDialog, Dialog, HeroDialog, OfferDialog, TellDialog,
@@ -32,7 +33,7 @@ import { CardView } from "../hud/CardView"
 import type { CardPlace } from "../hud/CardView"
 import { DeckView } from "../hud/DeckView"
 import { DetailBox } from "../hud/DetailBox"
-import { cardsOption, heroOption, unitHead } from "../hud/ChoiceOptions"
+import { cardsOption, heroOption, unitOption } from "../hud/ChoiceOptions"
 import { BagView } from "../hud/BagView"
 import { boosterView } from "../hud/BoosterView"
 import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
@@ -106,6 +107,9 @@ const WAITING_HINT = "En attente..."
 /** How long the party takes to slide from a place to another, in seconds, however far it is. */
 export const WALK_TIME = 0.5
 
+/** How long the map takes to scroll to the party, in seconds. */
+const MAP_SCROLL_TIME = 0.6
+
 /** What the players may not do on the screen, the rest being theirs. */
 export interface TravelLocks {
     /** May they not choose where the party goes? */
@@ -132,7 +136,16 @@ export interface TravelScreenOptions {
     readonly sounds?: UiSoundLink|null
 
     /** Play a transition into a place over the screen, done at its middle, at once when it cannot be. */
-    enter(path: LayeredImagePath): Promise<void>
+    enter(transition: Visual): Promise<void>
+
+    /** Play the transition back to the map over the screen, done at its middle. */
+    leave(): Promise<void>
+
+    /** Wait for the painting of a transition to be loaded. */
+    ready(transition: Visual): Promise<void>
+
+    /** Show a sign that something loads for as long as a promise is awaited. */
+    loading<Result>(work: Promise<Result>): Promise<Result>
 
     /** Tell the players something went wrong. */
     report(text: string): void
@@ -240,7 +253,7 @@ export class TravelScreen {
         this.#engine = engine
         this.#locks = options.locks ?? NO_TRAVEL_LOCKS
         this.#layer = ui.addLayer("travel")
-        this.#scenes = new TravelScenes(ui.gpu, assets, ui)
+        this.#scenes = new TravelScenes(ui.gpu, assets, ui, text => this.options.report(text))
         this.#scroll = new Scroll(theme, { width: MARGIN, height: MARGIN })
         this.#partyScroll = new Scroll(theme, { axis: "horizontal", width: MARGIN, height: MARGIN })
         this.#mapScroll = new Scroll(theme, { width: MARGIN, height: MARGIN, bar: false, wheel: false })
@@ -273,10 +286,23 @@ export class TravelScreen {
     public showMap(): void {
         this.#clock.finish()
         this.#arriving = false
+        this.#leaving = null
         this.#arm.disappear()
         this.#queued = null
         this.#dialog = null
         this.#fill()
+    }
+
+    /**
+     * Load what the transition back to the map needs: the scene of the map and the transition itself. The
+     * sign of loading shows only if the map is not loaded yet, such as the one of a new floor.
+     */
+    public async prepareBack(): Promise<void> {
+        const floor = this.engine.floor.type
+        if(!this.#scenes.hasMap(floor.look)){
+            await this.options.loading(this.#scenes.loadMap(floor.look, error => this.#sceneFailed(floor.name, error)))
+        }
+        await this.options.ready(BACK_VISUAL)
     }
 
     /** Stop showing the travel. */
@@ -315,10 +341,7 @@ export class TravelScreen {
         const look = visiting?.look ?? this.engine.floor.type.look
         const { r, g, b } = look.color
         this.#veil = NineSlice.flat(this.theme.white, new Color(r, g, b, VEIL_ALPHA))
-        const failed = (error: AssetError): void => {
-            const place = visiting?.title ?? this.engine.floor.type.name
-            this.options.report(`Le décor de ${place} n'a pas pu être chargé : ${error.message}`)
-        }
+        const failed = (error: AssetError): void => this.#sceneFailed(visiting?.title ?? this.engine.floor.type.name, error)
         const scene = visiting
             ? this.#scenes.haltScene(look, () => this.refresh(), failed)
             : this.#scenes.mapScene(look, () => this.refresh(), failed)
@@ -455,8 +478,11 @@ export class TravelScreen {
 
     /** The halt being visited, none while the map is shown. */
     get #visiting(): Halt|null {
-        return this.#arriving ? null : this.engine.halt
+        return this.#arriving ? null : this.engine.halt ?? this.#leaving
     }
+
+    /** The halt just left, shown until the middle of the transition back to the map, none when none is. */
+    #leaving: Halt|null = null
 
     /** What builds the dialog shown, none while the map is. */
     get #shownDialog(): (() => Component)|null {
@@ -508,7 +534,10 @@ export class TravelScreen {
                 this.#arriving = true
                 this.animations.add(() => this.#arrive(halt))
             }),
-            travel.visitEnded.add(() => this.showMap()),
+            travel.visitEnded.add(halt => {
+                this.#leaving = halt
+                this.animations.add(() => this.#leave(halt))
+            }),
         ]
     }
 
@@ -542,11 +571,32 @@ export class TravelScreen {
 
     /** Play the transition into a visit, the halt shown at its middle. */
     async #arrive(halt: Halt): Promise<void> {
+        // Its scene and its transition loaded first, so the transition does not stall once it plays.
+        await this.options.loading(Promise.all([
+            this.#scenes.loadHalt(halt.look, error => this.#sceneFailed(halt.title, error)),
+            this.options.ready(halt.type.transition),
+        ]))
         await this.options.enter(halt.type.transition)
         if(this.engine.halt !== halt) return
         this.#arriving = false
         this.#arm.appear()
         this.refresh()
+    }
+
+    /** Play the transition back to the map, the map shown at its middle and the scene of the halt let go after. */
+    async #leave(halt: Halt): Promise<void> {
+        if(this.#leaving !== halt) return
+        await this.prepareBack()
+        await this.options.leave()
+        // The visit may have been replaced while the transition played.
+        if(this.#leaving !== halt) return
+        this.showMap()
+        this.#scenes.releaseHalt()
+    }
+
+    /** Tell the players the scene of a place could not be loaded. */
+    #sceneFailed(place: string, error: AssetError): void {
+        this.options.report(`Le décor de ${place} n'a pas pu être chargé : ${error.message}`)
     }
 
     /** Tie the map to what the players do: going to the place they click. */
@@ -562,14 +612,14 @@ export class TravelScreen {
 
     #showOffer(dialog: OfferDialog): void {
         const options = dialog.offers.map(shown => {
-            const head = shown.unit ? unitHead(this.theme, shown.unit, this.sprites) : null
             const under = this.#stuffShown(shown, "mini", OFFERED_DECK_ROOM, {})
-            return cardsOption(this.theme, cardsOf(shown), shown.text ?? null, {
-                head, under, before: this.#boostersShown(shown), deck: this.#placeOf(shown.from),
+            const extras = {
+                under, before: this.#boostersShown(shown), deck: this.#placeOf(shown.from),
                 sprite: shown.sprite, sprites: this.sprites,
-                // The cards of an ally, a character or a monster, overlap.
-                overlapped: Boolean(shown.unit || shown.sprite),
-            })
+            }
+            // The cards of an ally, a character or a monster, overlap.
+            if(shown.unit) return unitOption(this.theme, shown.unit, this.sprites, cardsOf(shown), shown.text ?? null, extras)
+            return cardsOption(this.theme, cardsOf(shown), shown.text ?? null, { ...extras, overlapped: Boolean(shown.sprite) })
         })
         this.#choose({
             step: { title: this.#title(dialog.title), options },
@@ -860,7 +910,7 @@ export class TravelScreen {
         for(const child of [...detail.children]) detail.remove(child)
         if(!hero) return
         const head = new Box("row", { gap: MARGIN, align: "center" })
-        head.add(this.#label(hero.controller === "bot" ? `${hero.name} (bot)` : hero.name, CHOSEN_TEXT))
+        head.add(this.#label(hero.controller !== "player" ? `${hero.name} (bot)` : hero.name, CHOSEN_TEXT))
         head.add(this.#hearts(hero))
         detail.add(withPicture(this.sprites, hero.sprite, head))
         this.#detailTabs.refresh()
@@ -964,7 +1014,13 @@ export class TravelScreen {
         const view = this.#mapView
         if(!this.#mapFocus || !view || view.bounds.isEmpty || !this.#mapScroll.overflows) return
         this.#mapFocus = false
-        this.#mapScroll.offset = view.partyRowBottom() - this.#mapScroll.bounds.height
+        const scroll = this.#mapScroll
+        const from = scroll.offset
+        const to = view.partyRowBottom() - scroll.bounds.height
+        // Slid there with a gentle start and stop, not jumped to.
+        void this.#clock.tween(MAP_SCROLL_TIME, share => {
+            scroll.offset = from + (to - from) * (share * share * (3 - 2 * share))
+        })
     }
 
     /** What the pointer hovers, as tall as a few lines whatever it says. */

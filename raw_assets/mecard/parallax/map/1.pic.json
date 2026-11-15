@@ -1,0 +1,24 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": [
+        "#5a4a34",
+        "#2a2018",
+        "#7a6648",
+        {"color": "#a8c8e0", "light": 0.8}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "planks", "width": 8, "axis": "y", "joint": 1, "seams": 0.2, "odd": 0.1, "materials": [0, 1, 2]}, "depth": 2},
+        {"box": [0, 26, 288, 5], "material": 1, "depth": [3, 5], "relief": "round-y"},
+        {"box": [0, 100, 288, 12], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "materials": [1, 0]}, "depth": [3, 4], "relief": "bevel"},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "planks", "width": 6, "axis": "x", "joint": 1, "seams": 0.7, "materials": [2, 1]}, "depth": 2},
+
+        {"box": [208, 40, 26, 40], "material": 1, "depth": 1},
+        {"box": [211, 43, 20, 34], "material": 3, "depth": 0},
+        {"line": [221, 43, 221, 77], "material": 1, "depth": 2},
+        {"line": [211, 60, 231, 60], "material": 1, "depth": 2},
+        {"box": [205, 80, 32, 3], "material": 0, "depth": [3, 5], "relief": "round-y"},
+
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "noise", "density": 0.015, "radius": 2, "materials": [null, 1]}}
+    ]
+}

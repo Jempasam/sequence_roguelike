@@ -3,6 +3,7 @@ import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import { frenchNumber } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
+import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Element } from "../../../element/Element"
 import { ACTION, ELEMENT } from "../../CardType"
@@ -11,9 +12,10 @@ import { enchantmentOf } from "../../../status/subs/EnchantedBlade"
 import { AbstractCard } from "../AbstractCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the small spell of the catalog reaches, in meters, before the reach of the unit. */
 const SMALL_SPELL_RANGE = 6
@@ -28,7 +30,7 @@ const BOLT_OPACITY = 0.5
 const SPOT_OPACITY = 0.3
 
 /** An action made from the element plugged into it. */
-export class ElementActionCard extends AbstractCard<readonly Action[], Element> {
+export class ElementActionCard extends AbstractCard<Action, Element> {
 
 
     public readonly output = ACTION
@@ -44,8 +46,8 @@ export class ElementActionCard extends AbstractCard<readonly Action[], Element> 
     }
 
 
-    public get(element: Element): readonly Action[] {
-        return [this.cast(element)]
+    public get(element: Element): Action {
+        return this.cast(element)
     }
 }
 
@@ -57,22 +59,22 @@ export function conjured(battle: Battle, pose: Pose): Pose {
 
 /** The positive of the element on the unit itself. */
 export const AURA = new ElementActionCard("Aura", "S'applique le positif de l'élément.", Rarity.COMMON, element => ({
-    use: function* (ctx){
+    use: function (ctx){
         element.applyPositive(ctx, ctx.unit)
-        yield* hold(ctx.battle, SHORT_TIME, [label(ctx.unit.position, element.name, NOTE_COLOR)])
+        hold(ctx.battle, SHORT_TIME, [Previews.label(ctx.unit.position, element.name, NOTE_COLOR)])
     },
-    preview: ({ pose }) => still(pose, label(pose.position, element.name, NOTE_COLOR)),
+    preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, element.name, NOTE_COLOR)),
 }))
 
 /** The element on the blade of the unit for the round: each blow that lands applies its negative. */
 export const ELEMENT_ON_BLADE = new ElementActionCard("Élément sur lame", [
     "Jusqu'à la fin du round, chacune de tes attaques qui touche applique le négatif de l'élément.",
 ], Rarity.RARE, element => ({
-    use: function* (ctx){
+    use: function (ctx){
         ctx.battle.applyStatus(ctx.unit, enchantmentOf(element), 1)
-        yield* hold(ctx.battle, SHORT_TIME, [label(ctx.unit.position, element.name, NOTE_COLOR)])
+        hold(ctx.battle, SHORT_TIME, [Previews.label(ctx.unit.position, element.name, NOTE_COLOR)])
     },
-    preview: ({ pose }) => still(pose, label(pose.position, `lame : ${element.name}`, NOTE_COLOR)),
+    preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, `lame : ${element.name}`, NOTE_COLOR)),
 }))
 
 /** The negative of the element on the first body far ahead, without a wound. */
@@ -81,18 +83,19 @@ export const SMALL_SPELL = new ElementActionCard("Petit sort", [
 ], Rarity.COMMON, element => {
     const color = { ...element.color, a: BOLT_OPACITY }
     return {
-        use: function* (ctx){
+        use: function (ctx){
             const { battle, unit } = ctx
             const { end, unit: hit } = battle.ray(unit, SMALL_SPELL_RANGE * unit.stats.throwRange.value)
-            yield* fly(battle, unit.position, end, color)
+            fly(battle, unit.position, end, color)
             if(hit) element.applyNegative(ctx, hit)
         },
         preview: ({ battle, unit, pose }) => {
             const range = SMALL_SPELL_RANGE * unit.stats.throwRange.value
             const { end, unit: target } = battle.ray(unit, range, pose)
-            const path = polygon({ kind: "segment", from: pose.position, to: end, width: BOLT_WIDTH }, color)
-            if(!target) return still(pose, path)
-            return still(pose, path, label(target.position, element.word, NOTE_COLOR))
+            const path: Area = Areas.line(pose.position, end, BOLT_WIDTH)
+            const reached = Previews.strike([path], target ? [target] : [])
+            if(!target) return Previews.still(pose, ...reached)
+            return Previews.still(pose, ...reached, Previews.label(target.position, element.word, NOTE_COLOR))
         },
     }
 })
@@ -101,14 +104,14 @@ export const SMALL_SPELL = new ElementActionCard("Petit sort", [
 export const CONJURATION = new ElementActionCard("Conjuration", [
     "Invoque l'élément à ", frenchNumber(CONJURATION_AHEAD), " ", DISTANCE, " devant.",
 ], Rarity.RARE, element => ({
-    use: function* (ctx){
+    use: function (ctx){
         const { position, direction } = conjured(ctx.battle, ctx.unit)
         element.invoke(ctx, position, direction, element)
-        yield* hold(ctx.battle, SHORT_TIME)
+        hold(ctx.battle, SHORT_TIME)
     },
     preview: ({ battle, pose }) => {
         const center = conjured(battle, pose).position
         const color = { ...element.color, a: SPOT_OPACITY }
-        return still(pose, polygon({ kind: "circle", center, radius: UNIT_RADIUS }, color))
+        return Previews.still(pose, Previews.polygon(Areas.circle(center, UNIT_RADIUS), color))
     },
 }))

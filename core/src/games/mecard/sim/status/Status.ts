@@ -4,6 +4,7 @@ import { colored, rgba } from "../base/Rgba"
 import type { Rgba } from "../base/Rgba"
 import { Visual } from "../base/Visual"
 import type { UnitContext } from "../battle/Action"
+import type { Previewable } from "../battle/preview/Previewable"
 
 /** The look of a status, by the name of its icon among those of the statuses, such as `burn`: and the color of its name. */
 export function statusVisual(icon: string, r: number, g: number, b: number): Visual {
@@ -113,7 +114,7 @@ export function familyType(
  * loading calls `init` again, which plugs everything back. A status of a kind a unit holds already is not
  * made again: its level goes up by the new one's.
  */
-export interface Status {
+export interface Status extends Partial<Previewable> {
     readonly type: StatusType
 
     /** What is left of it, or how much it stacked: a status of no level is gone. */

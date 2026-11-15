@@ -10,9 +10,8 @@ import { MAX_SWAPPED, swapCards } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "../deck/DeckHalt"
-import { DARK_COLOR, DARK_MASK } from "../halt_common"
+import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
 
 /** The traitor: cards swapped between a deck of the party and the deck of a monster among some. */
@@ -23,7 +22,7 @@ export class DarkStrategistHalt extends DeckHalt {
         super(DARK_STRATEGIST_HALT, run,
             ["Les monstres ont de bonnes ", CARTE.as("cartes"), ". Échangeons-en."],
             // Waiting for its own art: the scene of the antiquarian, as the strategist.
-            sceneLook(31, 26, 23, "mecard/travel/antiquarian"),
+            sceneLook(28, 30, 16, "strategist", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "bicorne",
                 clothes: DARK_COLOR,
@@ -79,6 +78,6 @@ export const DARK_STRATEGIST_HALT: HaltType = {
     description: ["Échange des ", CARTE.as("cartes"), " entre un ", DECK, " et celui d'un monstre parmi trois."],
     icon: visual("travel/strategist/logo", { letter: "ST!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new DarkStrategistHalt(run),
 }

@@ -1,0 +1,23 @@
+{
+    "size": [288, 164],
+    "seed": 3,
+    "palette": [
+        "#5a1a18",
+        "#b5463a",
+        "#e8d4b8",
+        "#8c8c94"
+    ],
+    "shapes": [
+        {"box": [0, 6, 288, 3], "material": 3, "depth": [6, 8], "relief": "round-y"},
+        {"line": [40, 2, 40, 7], "material": 3, "depth": 6},
+        {"line": [150, 2, 150, 7], "material": 3, "depth": 6},
+        {"line": [250, 2, 250, 7], "material": 3, "depth": 6},
+        {"line": [66, 9, 66, 16], "material": 3, "depth": 7},
+        {"line": [101, 9, 101, 13], "material": 3, "depth": 7},
+        {"line": [131, 9, 131, 15], "material": 3, "depth": 7},
+        {"line": [210, 9, 210, 14], "material": 3, "depth": 7},
+        {"picture": "parts/carcass.pic.json", "at": [56, 14], "materials": [0, 2, 1]},
+        {"picture": "parts/carcass.pic.json", "at": [91, 11], "materials": [0, 2, 1], "flip": true},
+        {"picture": "parts/carcass.pic.json", "at": [200, 12], "materials": [0, 2, 1]}
+    ]
+}

@@ -1,33 +1,23 @@
 import type { Assets } from "../../../../engine/assets"
 import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
-import {
-    AnimationChain, Box, Button, Choice, instant, Label, Panel, Scroll,
-} from "../../../../engine/ui"
+import { AnimationChain, Box, Button, instant, Label, Panel } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import type { Observer } from "../../sim/base/Observable"
+import type { Visual } from "../../sim/base/Visual"
 import type { Battle } from "../../sim/battle/Battle"
-import { deckShown } from "../../sim/halt/subs/shown"
-import type { Hero } from "../../sim/run/Hero"
-import { rewardText } from "../../sim/run/Run"
-import type { Reward, Run } from "../../sim/run/Run"
+import { BATTLE } from "../../sim/fight/fights"
+import type { Run } from "../../sim/run/Run"
 
 import { ALL_BATTLE_LOCKS, BattleScreen, NO_BATTLE_LOCKS } from "../battle/BattleScreen"
 import type { BattleLocks } from "../battle/BattleScreen"
-import { cardsOption, heroOption } from "../hud/ChoiceOptions"
 import type { UnitSprites } from "../look/UnitSprites"
 import { CHOSEN_TEXT, WARNING_TEXT } from "../look/theme"
 import { NO_TRAVEL_LOCKS, TravelScreen } from "../travel/TravelScreen"
 import type { TravelLocks } from "../travel/TravelScreen"
+import { LoadingOverlay } from "./LoadingOverlay"
 import { PlaceTransitions } from "./PlaceTransitions"
 import type { UiSoundLink } from "../sound/UiSoundLink"
-
-/** The size the scroll of the rewards asks for: it takes whatever room its panel gives it. */
-const SCROLL_SIZE = 40
-
-/** The space between two options of the reward, and between its two steps, in virtual pixels. */
-const OPTION_GAP = 6
-const STEP_SPACING = 8
 
 /** The share of the screen the panel of the end of a battle takes. */
 const MODAL_SHARE = 0.85
@@ -37,15 +27,15 @@ export interface RunLocks {
     readonly battle: BattleLocks
     readonly travel: TravelLocks
 
-    /** May they not see a battle out: it ends elsewhere, and no reward is theirs to take? */
-    readonly rewards: boolean
+    /** May they not move the fights on, into a fight reached or out of a battle over: it is done elsewhere? */
+    readonly fights: boolean
 }
 
 /** Nothing locked: the players play the run. */
-export const NO_RUN_LOCKS: RunLocks = { battle: NO_BATTLE_LOCKS, travel: NO_TRAVEL_LOCKS, rewards: false }
+export const NO_RUN_LOCKS: RunLocks = { battle: NO_BATTLE_LOCKS, travel: NO_TRAVEL_LOCKS, fights: false }
 
 /** Everything locked: the players only watch. */
-export const ALL_RUN_LOCKS: RunLocks = { battle: ALL_BATTLE_LOCKS, travel: { map: true }, rewards: true }
+export const ALL_RUN_LOCKS: RunLocks = { battle: ALL_BATTLE_LOCKS, travel: { map: true }, fights: true }
 
 /** What a screen is built with, besides what it shows. */
 export interface RunScreenOptions {
@@ -80,8 +70,8 @@ export interface RunScreenOptions {
 }
 
 /**
- * A run on the screen: its journey on a {@link TravelScreen}, each fight on a {@link BattleScreen}, a reward
- * to choose after each victory.
+ * A run on the screen: its journey on a {@link TravelScreen}, each fight on a {@link BattleScreen}. What a won
+ * fight gives is a halt of the journey, visited over a transition out of the battle.
  *
  * @remarks
  * It holds no rule: it shows what the {@link Run} tells, and moves it on when a screen is done showing.
@@ -97,6 +87,9 @@ export class RunScreen {
 
     /** The transitions into the places, over everything it shows. */
     public readonly transitions: PlaceTransitions
+
+    /** The sign shown, over everything, while pictures load before a transition. */
+    public readonly loading: LoadingOverlay
 
     /** What it plays what the run tells on, one thing after the other. */
     public readonly animations: AnimationChain
@@ -148,7 +141,6 @@ export class RunScreen {
     ){
         const { theme, assets, sprites, toWorld, toUi, report } = options
         this.theme = theme
-        this.#sprites = sprites
         this.#engine = engine
         this.#locks = options.locks ?? NO_RUN_LOCKS
         this.animations = new AnimationChain(error => report(String(error)))
@@ -165,10 +157,15 @@ export class RunScreen {
             theme, assets, sprites, report,
             sounds: options.sounds,
             locks: this.#locks.travel,
-            enter: path => this.transitions.enter(path),
+            enter: visual => this.#enterVisit(visual),
+            leave: () => this.transitions.leave(),
+            ready: visual => this.transitions.ready(visual),
+            loading: work => this.loading.during(work),
         })
         this.#layer = ui.addLayer("run")
-        this.transitions = new PlaceTransitions(ui, assets, report)
+        this.transitions = new PlaceTransitions(ui, theme, assets, report)
+        // Made after the transitions, so it lies over them.
+        this.loading = new LoadingOverlay(ui, theme)
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
     }
@@ -210,8 +207,6 @@ export class RunScreen {
         if(this.#end) content.add(this.#end(), { x: "center", y: "center" })
     }
 
-
-    readonly #sprites: UnitSprites
 
     /** What comes after a battle is shown in, over it. */
     readonly #layer: Layer
@@ -255,12 +250,9 @@ export class RunScreen {
             run.battleStarted.add(battle => {
                 this.travelScreen.animations.add(() => this.#enterBattle(battle))
             }),
-            run.rewardsOffered.add(rewards => {
-                this.animations.add(instant(() => this.#showEnd(() => this.#reward(rewards))))
-            }),
             run.defeated.add(() => this.animations.add(instant(() => this.#showEnd(() => this.#defeat())))),
             run.phaseChanged.add(phase => {
-                if(phase === "travel") this.animations.add(instant(() => this.#showTravel()))
+                if(phase === "travel") this.animations.add(() => this.#backToTravel())
             }),
             run.loaded.add(() => this.animations.add(instant(() => this.#fill()))),
         ]
@@ -272,20 +264,20 @@ export class RunScreen {
     }
 
     /** Tie the buttons of what comes after a battle to what the players do. */
-    #connectInputs(buttons: { readonly skip?: Button, readonly restart?: Button }): void {
-        if(buttons.skip) buttons.skip.onActivate = () => this.#claim(null, null)
+    #connectInputs(buttons: { readonly restart?: Button }): void {
         if(buttons.restart) buttons.restart.onActivate = () => this.options.restart()
     }
 
     /** Go into the fight reached, unless it is fought elsewhere. */
     #startFight(): void {
         const run = this.#engine
-        if(!this.#locks.rewards && run.canAdvance) run.advance()
+        if(!this.#locks.fights && run.canAdvance) run.advance()
     }
 
     /** Play the transition into a fight, its battle shown at its middle, at once when nothing is shown yet. */
     async #enterBattle(battle: Battle): Promise<void> {
-        if(this.#visible) await this.transitions.enter(this.#engine.fight.transition)
+        const { transition } = this.#engine.travel.fight?.type ?? BATTLE
+        if(this.#visible) await this.transitions.enter(transition)
         if(this.#engine.battle !== battle) return
         if(this.battleScreen.engine !== battle) this.battleScreen.engine = battle
         this.#bringBattle()
@@ -297,6 +289,19 @@ export class RunScreen {
         this.#hideEnd()
         this.travelScreen.visible = false
         this.battleScreen.visible = true
+    }
+
+    /** Back to the map after a fight: the transition back covers the screen, the map shown at its middle. */
+    async #backToTravel(): Promise<void> {
+        // A won fight leads to a halt: the transition into it already took the screen over.
+        if(this.#engine.travel.phase === "visit") return
+        if(this.#visible && !this.travelScreen.visible){
+            await this.travelScreen.prepareBack()
+            await this.transitions.leave()
+            // Another run, or another phase, may have come meanwhile.
+            if(this.#engine.phase !== "travel") return
+        }
+        this.#showTravel()
     }
 
     /** Show the map of the journey, the battle screen hidden. */
@@ -311,14 +316,19 @@ export class RunScreen {
     /** The battle was shown to its end: the run takes it back, unless it is fought elsewhere. */
     #seeOut(battle: Battle): void {
         const run = this.#engine
-        if(!this.#locks.rewards && run.battle === battle && run.canAdvance) run.advance()
+        if(!this.#locks.fights && run.battle === battle && run.canAdvance) run.advance()
     }
 
-    /** Take a reward for a character, or none. */
-    #claim(reward: Reward|null, hero: Hero|null, deck = 0): void {
-        const run = this.#engine
-        if(reward && hero) run.claim(reward, hero, hero.decks.at(deck))
-        else run.skipReward()
+    /**
+     * Play the transition into a visit, done at its middle. Into a halt that follows a battle, the battle is
+     * left at the middle for the halt, so the transition goes from one to the other.
+     */
+    async #enterVisit(visual: Visual): Promise<void> {
+        await this.transitions.enter(visual)
+        if(!this.#visible || !this.battleScreen.visible) return
+        this.#hideEnd()
+        this.battleScreen.visible = false
+        this.travelScreen.visible = true
     }
 
 
@@ -336,44 +346,6 @@ export class RunScreen {
         this.#end = null
         this.battleScreen.panels = true
         this.refresh()
-    }
-
-    /** The reward of a victory, chosen in steps: what to take, who takes it, then a card in which deck. */
-    #reward(rewards: readonly Reward[]): Component {
-        const { theme } = this
-        const { heroes } = this.#engine
-        // A step opens under the ones before, however tall they are: the scroll goes down to it.
-        const scroll = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
-        const choice = new Choice(theme, picks => {
-            if(picks.length === 0){
-                const options = rewards.map(reward => {
-                    return cardsOption(theme, reward.kind === "card" ? [reward.card] : [], rewardText(reward))
-                })
-                return { title: this.#label("Victoire ! Choisis une récompense :"), options }
-            }
-            scroll.scrollToEnd()
-            if(picks.length === 1){
-                const options = heroes.map(hero => heroOption(theme, hero, this.#sprites))
-                return { title: this.#label("Pour qui ?"), options }
-            }
-            const hero = heroes[picks[1]]
-            if(picks.length === 2 && rewards[picks[0]].kind === "card" && hero.decks.length > 1){
-                const options = hero.decks.map(deck => {
-                    return cardsOption(theme, [], deckShown(hero, deck).text ?? null)
-                })
-                return { title: this.#label("Dans quel deck ?"), options }
-            }
-            return null
-        }, ([reward, hero, deck]) => this.#claim(rewards[reward], heroes[hero], deck), {
-            gap: OPTION_GAP, spacing: STEP_SPACING,
-        })
-        scroll.content = choice
-        const column = new Box("column", { gap: 3 })
-        column.add(scroll, { grow: 1 })
-        const skip = new Button(theme, "Ne rien prendre")
-        this.#connectInputs({ skip })
-        column.add(skip, { align: "center" })
-        return this.#modal(column)
     }
 
     #defeat(): Component {

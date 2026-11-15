@@ -1,10 +1,10 @@
 import type { Rgba } from "../base/Rgba"
 import type { Vector2 } from "../base/Vector2"
 
-import type { Indicator } from "./Action"
-import { outline } from "./Area"
+import type { Indicator } from "./preview/Preview"
 import type { Area } from "./Area"
 import type { Effect } from "./signals"
+import * as Areas from "./area/Areas"
 
 /** How many times a second an effect changing over its life is computed, when it is posted. */
 const SAMPLES_PER_SECOND = 30
@@ -44,7 +44,7 @@ export function polygonEffect(area: Area, color: Rgba, seconds: number): Effect 
 
 /** A straight line from a point to another, shown for a while. */
 export function lineEffect(from: Vector2, to: Vector2, width: number, color: Rgba, seconds: number): Effect {
-    return still(seconds, [polygonOf({ kind: "segment", from, to, width }, color)])
+    return still(seconds, [polygonOf(Areas.line(from, to, width), color)])
 }
 
 /** A word over a point, fading out. */
@@ -54,7 +54,7 @@ export function labelEffect(at: Vector2, text: string, color: Rgba, seconds: num
 
 /** The outline of an area, filled. */
 export function polygonOf(area: Area, color: Rgba): Indicator {
-    return { kind: "polygon", points: outline(area), color }
+    return { kind: "polygon", points: area, color }
 }
 
 /** An indicator, its opacity scaled. */

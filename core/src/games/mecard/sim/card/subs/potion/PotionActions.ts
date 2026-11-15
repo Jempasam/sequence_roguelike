@@ -5,7 +5,8 @@ import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { counted, frenchNumber, HeartCount } from "../../../battle/words"
-import type { Action, ActionRun, Indicator, Pose, UnitContext } from "../../../battle/Action"
+import type { Action, Pose, UnitContext } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
 import type { Battle } from "../../../battle/Battle"
 import type { Area } from "../../../battle/Area"
 import { placePuddle, PUDDLE_RADIUS, PUDDLE_ROUNDS } from "../../../hazard/subs/Puddle"
@@ -18,9 +19,10 @@ import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
 import { flight, hold, SHORT_TIME, wait } from "../tools/playing"
-import { label, polygon, still } from "../tools/previews"
 import { summonedHearts, summonShown } from "../summon/SummonCard"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How long a potion flies when thrown, in seconds. */
 const THROW_TIME = 0.25
@@ -51,7 +53,7 @@ const STRONG = 2
 
 /** How a potion shows over an area. */
 function shown(dose: Dose, area: Area): Indicator {
-    return polygon(area, { ...dose.potion.color, a: 0.35 })
+    return Previews.polygon(area, { ...dose.potion.color, a: 0.35 })
 }
 
 /** What the level of a potion card reads as, for the player: `niveau 2 + alchimie`. */
@@ -63,7 +65,7 @@ function levelText(times = 1): Text {
  * A card pouring the potion plugged into it, at the level the alchemy of its unit gives: on itself, ahead,
  * around. Each says where, and how strong.
  */
-export abstract class PotionActionCard extends AbstractCard<readonly Action[], Dose> {
+export abstract class PotionActionCard extends AbstractCard<Action, Dose> {
 
 
     public readonly output = ACTION
@@ -79,16 +81,16 @@ export abstract class PotionActionCard extends AbstractCard<readonly Action[], D
     }
 
 
-    public get(dose: Dose): readonly Action[] {
-        return [{
+    public get(dose: Dose): Action {
+        return {
             use: ctx => this.pouring(ctx, dose, levelOf(dose, ctx.unit, this.times)),
-            preview: ({ battle, unit, pose }) => still(pose, ...this.shows(battle, unit, pose, dose)),
-        }]
+            preview: ({ battle, unit, pose }) => Previews.still(pose, ...this.shows(battle, unit, pose, dose)),
+        }
     }
 
 
     /** Pour the dose, at a level. */
-    protected abstract pouring(ctx: UnitContext, dose: Dose, level: number): ActionRun
+    protected abstract pouring(ctx: UnitContext, dose: Dose, level: number): void
 
     /** What its preview shows from a pose. */
     protected abstract shows(battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[]
@@ -98,13 +100,13 @@ export abstract class PotionActionCard extends AbstractCard<readonly Action[], D
 export class BottleCard extends PotionActionCard {
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
         pour(battle, dose, unit, level)
-        yield* hold(battle, SHORT_TIME, [shown(dose, { kind: "circle", center: unit.position, radius: UNIT_RADIUS })])
+        hold(battle, SHORT_TIME, [shown(dose, Areas.circle(unit.position, UNIT_RADIUS))])
     }
 
     protected shows(_battle: Battle, _unit: Unit, pose: Pose, dose: Dose): Indicator[] {
-        return [shown(dose, { kind: "circle", center: pose.position, radius: UNIT_RADIUS })]
+        return [shown(dose, Areas.circle(pose.position, UNIT_RADIUS))]
     }
 }
 
@@ -125,25 +127,25 @@ export class ThrownPotionCard extends PotionActionCard {
     }
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
-        const area = this.#splash(unit, unit)
-        if(area.kind !== "circle") return
-        yield* flight(battle, THROW_TIME, share => {
-            const center = unit.position.plus(area.center.minus(unit.position).times(share))
-            return [shown(dose, { kind: "circle", center, radius: UNIT_RADIUS / 2 })]
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
+        const landing = this.#landing(unit, unit)
+        const area = Areas.circle(landing, this.radius)
+        flight(battle, THROW_TIME, share => {
+            const center = unit.position.plus(landing.minus(unit.position).times(share))
+            return [shown(dose, Areas.circle(center, UNIT_RADIUS / 2))]
         })
-        for(const target of battle.unitsIn(area)) pour(battle, dose, target, level)
-        yield* hold(battle, SPLASH_TIME, [shown(dose, area)])
+        for(const target of battle.fetch(area)) pour(battle, dose, target, level)
+        hold(battle, SPLASH_TIME, [shown(dose, area)])
     }
 
     protected shows(_battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[] {
-        return [shown(dose, this.#splash(unit, pose))]
+        return [shown(dose, Areas.circle(this.#landing(unit, pose), this.radius))]
     }
 
 
-    #splash(unit: Unit, pose: Pose): Area {
-        const center = pose.position.plus(pose.direction.times(this.distance * unit.stats.throwRange.value))
-        return { kind: "circle", center, radius: this.radius }
+    /** Where the flask lands, from a pose. */
+    #landing(unit: Unit, pose: Pose): Vector2 {
+        return pose.position.plus(pose.direction.times(this.distance * unit.stats.throwRange.value))
     }
 }
 
@@ -161,10 +163,10 @@ export class PotionRainCard extends PotionActionCard {
     }
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
         const area = this.#rain(unit, unit)
-        for(const target of battle.unitsIn(area)) pour(battle, dose, target, level)
-        yield* hold(battle, SPLASH_TIME, [shown(dose, area)])
+        for(const target of battle.fetch(area)) pour(battle, dose, target, level)
+        hold(battle, SPLASH_TIME, [shown(dose, area)])
     }
 
     protected shows(_battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[] {
@@ -173,7 +175,7 @@ export class PotionRainCard extends PotionActionCard {
 
 
     #rain(unit: Unit, pose: Pose): Area {
-        return { kind: "circle", center: pose.position, radius: this.radius * unit.stats.throwRange.value }
+        return Areas.circle(pose.position, this.radius * unit.stats.throwRange.value)
     }
 }
 
@@ -181,16 +183,16 @@ export class PotionRainCard extends PotionActionCard {
 export class BarrelCard extends PotionActionCard {
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
         const at = this.#spot(unit)
         const barrel = battle.summon(unit, visual("units/barrel"), "Tonneau", at, summonedHearts(unit, BARREL_HALVES))
         if(barrel) battle.applyStatus(barrel, barrelOf(dose), Math.abs(level))
-        yield* wait(SHORT_TIME)
+        wait(battle, SHORT_TIME)
     }
 
     protected shows(_battle: Battle, _unit: Unit, pose: Pose, dose: Dose): Indicator[] {
         const at = this.#spot(pose)
-        return [summonShown(at), shown(dose, { kind: "circle", center: at, radius: SPLASH_RADIUS })]
+        return [summonShown(at), shown(dose, Areas.circle(at, SPLASH_RADIUS))]
     }
 
 
@@ -203,13 +205,13 @@ export class BarrelCard extends PotionActionCard {
 export class CoatCard extends PotionActionCard {
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
         battle.applyStatus(unit, coatOf(dose), Math.abs(level))
-        yield* hold(battle, SHORT_TIME, [shown(dose, { kind: "circle", center: unit.position, radius: UNIT_RADIUS })])
+        hold(battle, SHORT_TIME, [shown(dose, Areas.circle(unit.position, UNIT_RADIUS))])
     }
 
     protected shows(_battle: Battle, _unit: Unit, pose: Pose, dose: Dose): Indicator[] {
-        return [shown(dose, { kind: "circle", center: pose.position, radius: UNIT_RADIUS })]
+        return [shown(dose, Areas.circle(pose.position, UNIT_RADIUS))]
     }
 }
 
@@ -227,17 +229,17 @@ export class PuddleCard extends PotionActionCard {
     }
 
 
-    protected *pouring({ battle, unit }: UnitContext, dose: Dose, level: number): ActionRun {
+    protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
         const center = this.#center(unit, unit)
         if(!battle.arena.inside(center)) return
         placePuddle(battle, unit, center, dose, level, this.rounds)
-        yield* wait(SHORT_TIME)
+        wait(battle, SHORT_TIME)
     }
 
     protected shows(battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[] {
         const center = this.#center(unit, pose)
-        if(!battle.arena.inside(center)) return [label(center, "hors de l'arène", NOTE_COLOR)]
-        return [shown(dose, { kind: "circle", center, radius: PUDDLE_RADIUS })]
+        if(!battle.arena.inside(center)) return [Previews.label(center, "hors de l'arène", NOTE_COLOR)]
+        return [shown(dose, Areas.circle(center, PUDDLE_RADIUS))]
     }
 
 

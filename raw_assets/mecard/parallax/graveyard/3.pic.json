@@ -1,0 +1,126 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 222,
+    "palette": [
+        "#5a5a6c",
+        "#2e2e40",
+        "#14141e",
+        {
+            "color": "#8aff9a",
+            "light": 0.9
+        }
+    ],
+    "shapes": [
+        {
+            "box": [
+                80,
+                78,
+                128,
+                66
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "x",
+                "seams": 0.3,
+                "materials": [
+                    0,
+                    1
+                ]
+            },
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-x"
+        },
+        {
+            "polygon": [
+                [
+                    70,
+                    82
+                ],
+                [
+                    144,
+                    36
+                ],
+                [
+                    218,
+                    82
+                ]
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                7
+            ]
+        },
+        {
+            "box": [
+                124,
+                100,
+                40,
+                44
+            ],
+            "material": 1,
+            "depth": 2
+        },
+        {
+            "ellipse": [
+                124,
+                96,
+                40,
+                20
+            ],
+            "material": 1,
+            "depth": 2,
+            "relief": "dome"
+        },
+        {
+            "box": [
+                138,
+                112,
+                12,
+                32
+            ],
+            "material": 3,
+            "depth": 3
+        },
+        {
+            "box": [
+                94,
+                92,
+                6,
+                12
+            ],
+            "material": 3,
+            "depth": 6
+        },
+        {
+            "box": [
+                188,
+                92,
+                6,
+                12
+            ],
+            "material": 3,
+            "depth": 6
+        },
+        {
+            "box": [
+                70,
+                142,
+                148,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                5
+            ]
+        }
+    ]
+}

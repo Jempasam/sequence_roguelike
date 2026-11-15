@@ -1,6 +1,6 @@
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
-import { distanceToSegment } from "../../../battle/Area"
+import * as Areas from "../../../battle/area/Areas"
 import type { Unit } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { BLEEDING } from "../../../status/subs/Wounds"
@@ -18,9 +18,6 @@ const BEHIND_COS = Math.cos(130 * Math.PI / 180)
 
 /** How close to the body of its unit a unit must pass to be stunned by the cape, in meters. */
 const CAPE_REACH = 0.2
-
-/** How long the cape lets a unit that passed be passed again before stunning it, in ticks: one move is many strides. */
-const CAPE_PAUSE = 30
 
 /** The circles of the mask and the magnet, in meters, and how far the magnet pulls. */
 const MASK_RADIUS = 1.5
@@ -67,14 +64,15 @@ export class ToreroCape extends AbstractItem {
 
 
     public init({ battle, unit, hold }: PlugContext): void {
-        const lastStun = new Map<Unit, number>()
+        // A move is many strides: a unit is stunned once by the cape for each step it takes.
+        const stunned = new Set<Unit>()
+        hold(battle.unitStepped.add(() => stunned.clear()))
         hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
             // What others make it do is not a pass: only its own moves.
             if(mover === unit || mover.shoving) return
-            if(distanceToSegment(unit.position, from, to) > unit.radius + CAPE_REACH) return
-            const last = lastStun.get(mover)
-            if(last !== undefined && battle.clock - last < CAPE_PAUSE) return
-            lastStun.set(mover, battle.clock)
+            if(Areas.distanceToSegment(unit.position, from, to) > unit.radius + CAPE_REACH) return
+            if(stunned.has(mover)) return
+            stunned.add(mover)
             battle.stun(mover)
         }))
     }
@@ -87,7 +85,7 @@ export class ScaryMask extends AbstractItem {
 
 
     constructor(){
-        super("Masque effrayant", visual("items/bag"), [
+        super("Masque effrayant", visual("items/scary_mask"), [
             "Au début de chaque round, les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
             " autour lui tournent le dos.",
         ])
@@ -97,7 +95,7 @@ export class ScaryMask extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.roundStarted.add(() => {
             turnUnitsIn(
-                battle, { kind: "circle", center: unit.position, radius: MASK_RADIUS }, unit,
+                battle, Areas.circle(unit.position, MASK_RADIUS), unit,
                 other => other.position.minus(unit.position).normalized,
             )
         }))
@@ -111,7 +109,7 @@ export class StickySoles extends AbstractItem {
 
 
     constructor(){
-        super("Semelles collantes", visual("items/boots"), [
+        super("Semelles collantes", visual("items/sticky_soles"), [
             "Les déplacements que d'autres lui imposent sont divisés par ", String(SOLES_DIVISOR), ".",
         ])
     }
@@ -131,7 +129,7 @@ export class Magnet extends AbstractItem {
 
 
     constructor(){
-        super("Aimant", visual("items/alembic"), [
+        super("Aimant", visual("items/magnet"), [
             "Au début de chaque round, tire de ", frenchNumber(MAGNET_PULL), " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
             MAGNET_RADIUS, " ", DISTANCE, ". Aucun dégât.",
         ])
@@ -140,7 +138,7 @@ export class Magnet extends AbstractItem {
 
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.roundStarted.add(() => {
-            for(const other of battle.unitsIn({ kind: "circle", center: unit.position, radius: MAGNET_RADIUS }, unit)){
+            for(const other of battle.fetch(Areas.circle(unit.position, MAGNET_RADIUS), unit)){
                 const toward = unit.position.minus(other.position).normalized
                 if(toward) shoveNow(battle, unit, other, toward, MAGNET_PULL)
             }
@@ -183,7 +181,7 @@ export class DemonFang extends AbstractItem {
 
 
     constructor(){
-        super("Croc démoniaque", visual("items/fang"), [
+        super("Croc démoniaque", visual("items/demon_fang"), [
             "Chaque ", UNIT, " tuée donne un round d'énergie démoniaque.",
         ])
     }
@@ -201,7 +199,7 @@ export class Rosary extends AbstractItem {
 
 
     constructor(){
-        super("Chapelet", visual("items/grimoire"), ["Chaque Attendre donne un round de concentration."])
+        super("Chapelet", visual("items/rosary"), ["Chaque Attendre donne un round de concentration."])
     }
 
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { planFor, POSSESSED, Rng } from "@game/core/mecard"
+import { DeckAi, POSSESSED, Rng } from "@game/core/mecard"
 import { ENEMY_SEATS, FIXED_SEATS, COOP_SEATS, randomSeats } from "@game/core/mecard/sync"
 
 import { connected, fight, hosted, unitOf } from "../fixtures"
@@ -53,7 +53,7 @@ describe("RunHost in coop", () => {
         battle.advance()
         const { guest } = connected(session, "a")
         expect(guest.units).toEqual([])
-        for(const unit of battle.awaited.units) battle.commit(unit, planFor(unit))
+        for(const unit of battle.awaited.units) battle.commit(unit, new DeckAi().decide(unit).chain)
         battle.advance()
         battle.advance()
         expect(guest.units).toEqual([session.run.heroes[1].name])
@@ -120,10 +120,10 @@ describe("RunHost in enemy mode", () => {
         let rounds = 0
         for(; rounds < 2 && battle.phase === "preparation"; rounds++){
             const unit = unitOf(viewer.battle, guest.units[0])
-            viewer.battle?.commit(unit, planFor(unit))
+            viewer.battle?.commit(unit, new DeckAi().decide(unit).chain)
             guest.ready()
             const hostUnits = battle.awaited.units.filter(each => !session.host.isGuests(each))
-            for(const each of hostUnits) battle.commit(each, planFor(each))
+            for(const each of hostUnits) battle.commit(each, new DeckAi().decide(each).chain)
             session.host.ready()
             battle.advance()
             if(battle.waiting) battle.advance()
@@ -172,7 +172,7 @@ describe("RunHost in enemy mode", () => {
         const battle = fight(session.run)
         battle.advance()
         const { guest } = connected(session, "a")
-        for(const unit of battle.awaited.units) battle.commit(unit, planFor(unit))
+        for(const unit of battle.awaited.units) battle.commit(unit, new DeckAi().decide(unit).chain)
         battle.advance()
         battle.advance()
         expect(guest.units).toEqual([])

@@ -4,7 +4,9 @@ import type { Unit } from "../../../battle/Unit"
 import { Heart } from "../../../heart/Heart"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 import { MODULE } from "../../../card/CardType"
+import { composable } from "../../../card/Card"
 import type { Card } from "../../../card/Card"
+import { collageOf } from "../../../card/subs/composite/ChainRewrites"
 import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
 import { turnUnitsIn } from "../../../card/subs/tools/turning"
@@ -16,6 +18,7 @@ import { mergeable, MergedCard } from "../../../card/subs/composite/MergedCard"
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
 import { frenchNumber } from "../../../battle/words"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How far around its unit the whistle reaches, in meters. */
 const WHISTLE_RADIUS = 1.5
@@ -117,7 +120,7 @@ export class Whistle extends AbstractUsable {
 
     protected act({ battle, unit }: UnitContext): void {
         turnUnitsIn(
-            battle, { kind: "circle", center: unit.position, radius: WHISTLE_RADIUS }, unit,
+            battle, Areas.circle(unit.position, WHISTLE_RADIUS), unit,
             other => unit.position.minus(other.position).normalized,
         )
     }
@@ -241,7 +244,8 @@ export class GlueTube extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        const cards = chainLeft(unit)
+        // A card with variants to choose from stays out: no collage holds it.
+        const cards = chainLeft(unit).filter(composable)
         if(cards.length >= 2) battle.giveCards(unit, [new FusionCard(cards)])
     }
 }
@@ -291,7 +295,8 @@ export class TimePocket extends AbstractUsable {
         const cards = chainLeft(unit)
         if(cards.length === 0) return
         battle.cutChain(unit, unit.chain.cursor)
-        battle.giveCard(unit, cards.length === 1 ? cards[0] : new FusionCard(cards))
+        const collage = collageOf(cards)
+        if(collage) battle.giveCard(unit, collage)
     }
 }
 

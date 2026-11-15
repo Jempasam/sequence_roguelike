@@ -1,5 +1,5 @@
 import { CARTE } from "../../../base/keywords"
-import { MASTER_COLOR, MASTER_MASK } from "../halt_common"
+import { MASTER_COLOR, MASTER_MASK, MASTER_TRANSITION } from "../halt_common"
 import { LOOT_BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { upgradeAll, upgradeFitsAll, LOOT_UPGRADES } from "../../../catalog/upgrades"
@@ -9,7 +9,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
 import { visual } from "../../../base/Visual"
@@ -42,7 +41,7 @@ export class MasterMagicianHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MASTER_MAGICIAN_HALT, run,
             ["Trois boosters, chacun avec son charme. Ses ", CARTE.as("cartes"), " en profiteront."],
-            sceneLook(26, 13, 41, "mecard/travel/magician"),
+            sceneLook(26, 13, 41, "magician", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "topHat",
                 mask: MASTER_MASK,
@@ -82,6 +81,6 @@ export const MASTER_MAGICIAN_HALT: HaltType = {
     description: ["Un booster parmi trois, ouvert et ses ", CARTE.as("cartes"), " améliorées."],
     icon: visual("travel/magician/logo", { letter: "MG*" }),
     glow: MASTER_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: MASTER_TRANSITION,
     create: run => new MasterMagicianHalt(run),
 }

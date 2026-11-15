@@ -39,7 +39,7 @@ describe("saveTravel", () => {
         const { travel } = startedRun(3)
         const loaded = reloaded(saveTravel(travel))
         const shape = ({ journey }: Travel) => journey.places.map(place => ({
-            kind: place.type.id, layer: place.layer, across: place.across,
+            fight: place.fight?.id, halt: place.halt?.id, layer: place.layer, across: place.across,
             next: place.next.map(to => journey.places.indexOf(to)),
             monsters: place.monsters.map(monster => monster.name),
             exit: place.exitTo && [place.exitTo.type.name, place.exitTo.level],

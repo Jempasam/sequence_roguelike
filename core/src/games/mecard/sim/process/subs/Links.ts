@@ -1,15 +1,21 @@
 import { Vector2 } from "../../base/Vector2"
 import type { PlugContext } from "../../battle/Action"
+import type { Area } from "../../battle/Area"
+import type { Battle } from "../../battle/Battle"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
+import * as Areas from "../../battle/area/Areas"
 
 /** How wide the laser between two allies cuts, in meters. */
 const LASER_WIDTH = 0.3
 
 /** Tie a process to a partner: the two drawn tied, the process over once the partner dies. */
-function tieTo({ battle, unit, hold }: PlugContext, partner: Unit, process: AbstractProcess, look: string): void {
+export function tieTo({ battle, unit, hold }: PlugContext, partner: Unit, process: AbstractProcess, look: string): void {
     hold(battle.tether(unit, partner, visual(look)))
     hold(partner.onDeath.add(() => battle.endProcess(unit, process)))
 }
@@ -35,11 +41,20 @@ export class LaserLink extends AbstractProcess {
         const { battle, unit, hold } = ctx
         tieTo(ctx, this.ally, this, "tethers/laser")
         hold(battle.unitStepped.add(() => {
-            const way = { kind: "segment", from: unit.position, to: this.ally.position, width: LASER_WIDTH } as const
-            for(const target of battle.unitsIn(way, unit)){
-                if(target.team !== unit.team) target.hearts.damage(this.damage, DamageType.PHYSICAL, unit)
-            }
+            const way = Areas.line(unit.position, this.ally.position, LASER_WIDTH)
+            for(const target of this.#across(battle, unit, way)) target.hearts.damage(this.damage, DamageType.PHYSICAL, unit)
         }))
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const way = Areas.line(unit.position, this.ally.position, LASER_WIDTH)
+        return Previews.still(pose, ...Previews.strike([way], this.#across(battle, unit, way)))
+    }
+
+
+    /** The enemies the laser cuts. */
+    #across(battle: Battle, unit: Unit, way: Area): Unit[] {
+        return battle.fetch(way, unit).filter(target => target.team !== unit.team)
     }
 }
 

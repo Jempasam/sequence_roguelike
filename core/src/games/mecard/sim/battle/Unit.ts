@@ -16,18 +16,26 @@ import type { Process } from "../process/Process"
 import { Vanishing } from "../process/subs/Vanishing"
 import type { Status, StatusType } from "../status/Status"
 
-import type { Action, ActionRun } from "./Action"
+import type { UnitController } from "../ai/UnitController"
+import type { Action } from "./Action"
 import type { Battle } from "./Battle"
 import { Decks } from "./Decks"
 import type {
-    ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, DeathEvent, HitEvent, IncomingShove, MoveEvent,
+    ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent, DeathEvent, HitEvent,
+    IncomingShove, MoveEvent,
 } from "./events"
 import type { Area } from "./Area"
 import type { Team } from "./Team"
 import type { Visual } from "../base/Visual"
 
-/** Who plans the chains of a unit. */
-export type Controller = "player"|"bot"
+/** How many cards a chain holds at most while it plays: past it, it is told overflowing and emptied. */
+export const MAX_CHAIN_CARDS = 50
+
+/**
+ * Who plans the chains of a unit: a player, a bot, which plays as {@link Battle.bot} says, or a given
+ * {@link UnitController}, a bot that plays its own way.
+ */
+export type Controller = "player"|"bot"|UnitController
 
 /** What a unit is made from when it enters a battle. */
 export interface UnitSpec {
@@ -229,6 +237,9 @@ export class Unit {
     /** Its chain changed, or its reading went on. */
     public readonly onChainChange: Observable<ChainChangeEvent>
 
+    /** Its chain holds {@link MAX_CHAIN_CARDS} cards or more. */
+    public readonly onChainOverflow: Observable<ChainOverflowEvent>
+
     /** Its preparations were built, its chain rewritten. */
     public readonly onPrep: Observable<Unit>
 
@@ -280,6 +291,9 @@ export class Unit {
     /** The first card of the last tree of its chain it started playing, none before it plays any. */
     public lastPlayed: Card|null = null
 
+    /** All the cards of the last tree of its chain it started playing, the first one included, none before. */
+    public lastTree: readonly Card[] = []
+
     /** The steps ready to play, the next one first, before what its chain has left to give. */
     public readonly steps: Action[] = []
 
@@ -317,6 +331,7 @@ export class Unit {
         this.onActivate = new Observable(report)
         this.onCardInvalid = new Observable(report)
         this.onChainChange = new Observable(report)
+        this.onChainOverflow = new Observable(report)
         this.onPrep = new Observable(report)
         this.name = spec.name
         this.sprite = spec.sprite ?? null
@@ -399,6 +414,7 @@ export class Unit {
         this.chain.watcher = null
         this.chain = chain
         this.lastPlayed = null
+        this.lastTree = []
         chain.watcher = this.#watcher
         this.#watcher.changed()
     }
@@ -414,7 +430,7 @@ export class Unit {
     /** Have the next step ready, read from its chain when none is. Is there one? */
     public fillSteps(): boolean {
         if(this.steps.length > 0) return true
-        this.steps.push(...this.#guarded(() => this.chain.next(ACTION), null) ?? [])
+        this.readOne()
         return this.steps.length > 0
     }
 
@@ -423,12 +439,16 @@ export class Unit {
         return this.chain.cards.slice(this.chain.cursor)
     }
 
+    /** Read the next tree of its chain, its step made ready after those it has. */
+    public readOne(): void {
+        const action = this.#guarded(() => this.chain.next(ACTION), null)
+        if(action) this.steps.push(action)
+    }
+
     /** Read what is left of its chain: every step it gives made ready, each card that cannot play told. */
     public readChain(): void {
         const { chain } = this
-        while(chain.cursor < chain.cards.length){
-            this.steps.push(...this.#guarded(() => chain.next(ACTION), null) ?? [])
-        }
+        while(chain.cursor < chain.cards.length) this.readOne()
     }
 
     /**
@@ -436,7 +456,7 @@ export class Unit {
      *
      * @returns What plays it, none when it has none left, or when it died of being told.
      */
-    public playTurn(): ActionRun|null {
+    public playTurn(): Action|null {
         const { battle } = this
         if(!this.fillSteps()) return null
         const action = this.steps.shift()
@@ -446,7 +466,7 @@ export class Unit {
         battle.signals.stepStarted.notify({ unit: this, left: this.stepsLeft })
         this.stepStarted.notify(this)
         battle.unitStepping.notify(this)
-        return this.alive ? action.use({ battle, unit: this }) : null
+        return this.alive ? action : null
     }
 
     /** Die, once nothing keeps it alive: its rules and processes go, and what it had left to play. */
@@ -477,12 +497,14 @@ export class Unit {
         activated: (first, last) => {
             const cards = this.chain.cards.slice(first, last + 1)
             this.lastPlayed = cards[0] ?? null
+            this.lastTree = cards
             this.onActivate.notify({ unit: this, first, last, cards })
         },
         invalid: index => this.onCardInvalid.notify({ unit: this, index }),
         changed: () => {
-            const { cards, cursor } = this.chain
-            this.onChainChange.notify({ unit: this, cards: [...cards], cursor })
+            const { cards, cursor, borrowed } = this.chain
+            this.onChainChange.notify({ unit: this, cards: [...cards], cursor, borrowed: [...borrowed] })
+            if(cards.length >= MAX_CHAIN_CARDS) this.onChainOverflow.notify({ unit: this, cards: [...cards] })
         },
     }
 

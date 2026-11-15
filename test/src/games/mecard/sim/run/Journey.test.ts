@@ -3,7 +3,12 @@ import {
     BATTLE, BOSS, CAVE_FLOOR, ELITE, EXIT_HALT, FOREST_FLOOR, FORGE_HALT, GOBLIN, HOSPITAL_HALT, Journey, LAYERS, MINE_FLOOR, Rng,
     SHOP_HALT, TAVERN_HALT, zipped,
 } from "@game/core/mecard"
-import type { FightType, Place } from "@game/core/mecard"
+import type { FightType, Place, PlaceType } from "@game/core/mecard"
+
+/** The sort of fight or of halt a place holds, the fight first. */
+function typeOf(place: Place): PlaceType {
+    return place.fight ?? place.halt!
+}
 
 // --- Fixture builders ---
 
@@ -34,9 +39,9 @@ describe("Journey", () => {
     test("any seed → the layers of an act, battles first, a hospital before the boss", () => {
         for(const journey of journeys()){
             expect(journey.layers).toHaveLength(LAYERS + 1)
-            expect(journey.layers[0].every(place => place.type === BATTLE)).toBe(true)
-            expect(journey.layers[LAYERS - 2].every(place => place.type === HOSPITAL_HALT)).toBe(true)
-            expect(journey.layers[LAYERS - 1].map(place => place.type)).toEqual([BOSS])
+            expect(journey.layers[0].every(place => typeOf(place) === BATTLE)).toBe(true)
+            expect(journey.layers[LAYERS - 2].every(place => typeOf(place) === HOSPITAL_HALT)).toBe(true)
+            expect(journey.layers[LAYERS - 1].map(place => typeOf(place))).toEqual([BOSS])
         }
     })
 
@@ -55,8 +60,8 @@ describe("Journey", () => {
         for(const journey of journeys()){
             for(const layer of journey.layers.slice(1, LAYERS - 2)){
                 for(const place of layer){
-                    if(place.type === BATTLE) continue
-                    expect(leadingTo(journey, place).map(each => each.type)).not.toContain(place.type)
+                    if(typeOf(place) === BATTLE) continue
+                    expect(leadingTo(journey, place).map(each => typeOf(each))).not.toContain(typeOf(place))
                 }
             }
         }
@@ -64,8 +69,8 @@ describe("Journey", () => {
 
     test("any seed → no shop on the second layer, no elite before the fifth", () => {
         for(const journey of journeys()){
-            expect(journey.layers[1].map(place => place.type)).not.toContain(SHOP_HALT)
-            const early = journey.layers.slice(0, 4).flat().map(place => place.type)
+            expect(journey.layers[1].map(place => typeOf(place))).not.toContain(SHOP_HALT)
+            const early = journey.layers.slice(0, 4).flat().map(place => typeOf(place))
             expect(early).not.toContain(ELITE)
         }
     })
@@ -73,7 +78,7 @@ describe("Journey", () => {
     test("any seed → monsters on every fight, none on a halt", () => {
         for(const journey of journeys()){
             for(const place of journey.places){
-                const fight = [BATTLE, ELITE, BOSS].includes(place.type as FightType)
+                const fight = [BATTLE, ELITE, BOSS].includes(typeOf(place) as FightType)
                 expect(place.monsters.length > 0).toBe(fight)
             }
         }

@@ -10,7 +10,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { stuffOf } from "../shown"
 import { visual } from "../../../base/Visual"
@@ -28,7 +27,7 @@ export class TavernHalt extends AbstractHalt {
     constructor(run: Run){
         super(TAVERN_HALT, run,
             "Ces héros boivent ici. L'un d'eux peut te suivre.",
-            sceneLook(36, 23, 13, "mecard/travel/tavern"),
+            sceneLook(36, 23, 13, "tavern"),
             {
                 hat: "beret",
                 clothes: rgba(1, 0.6, 0.25),
@@ -68,7 +67,8 @@ export class TavernHalt extends AbstractHalt {
 export const TAVERN_HALT: HaltType = {
     id: "tavern",
     name: "Taverne",
-    description: "Un héros parmi trois rejoint l'équipe.",    icon: visual("travel/tavern/logo", { letter: "TA" }),
-    transition: DOOR_TRANSITION,
+    description: "Un héros parmi trois rejoint l'équipe.",
+    icon: visual("travel/tavern/logo", { letter: "TA" }),
+    transition: visual("transitions/warm-door"),
     create: run => new TavernHalt(run),
 }

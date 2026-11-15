@@ -9,25 +9,26 @@ import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
 import { BLINK } from "../movement/Blink"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { visual } from "../../../base/Visual"
 import { DamageType } from "../../../battle/DamageType"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** A shadow left where the unit stands, which it jumps back to as the round ends. */
 export const SHADOW = new ActionCard("Ombre", [
     "Laisse une ombre là où tu es. En fin de round, tu te téléportes à l'ombre la plus proche : ",
     SHADOW_LINK_DAMAGE, " ", DamageType.PHYSICAL, " à chaque corps sur le chemin, quelles que soient tes stats.",
 ], Rarity.RARE, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const shadow = placeHazard(battle, unit, {
             sprite: visual("units/shadow"), name: "Ombre", hearts: [new Heart(TIME_HEART)],
-            zone: { kind: "circle", center: unit.position, radius: UNIT_RADIUS },
+            at: unit.position, zone: Areas.circle(unit.position, UNIT_RADIUS),
         })
         battle.startProcess(unit, new ShadowLink(shadow))
-        yield* hold(battle, SHORT_TIME, [label(unit.position, "ombre", NOTE_COLOR)])
+        hold(battle, SHORT_TIME, [Previews.label(unit.position, "ombre", NOTE_COLOR)])
     },
-    preview: ({ pose }) => still(pose, label(pose.position, "ombre", NOTE_COLOR)),
+    preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, "ombre", NOTE_COLOR)),
 })
 
 /** A shadow left behind and a blink at once. */

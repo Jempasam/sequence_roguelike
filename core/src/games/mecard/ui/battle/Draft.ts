@@ -1,14 +1,31 @@
 import { CardChain, resolve } from "../../sim/card/CardChain"
 import { playable } from "../../sim/card/Reading"
-import { groupOf, playedUnlimited } from "../../sim/card/Card"
+import { groupOf, handIndexOf, playedUnlimited } from "../../sim/card/Card"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
-import { nearestTurn, TURNS, TurnCard } from "../../sim/card/subs/movement/TurnCard"
 import type { CardNode } from "../../sim/card/CardNode"
 import type { CardType } from "../../sim/card/CardType"
 import type { RootPreview } from "../../sim/card/CardChain"
 import type { Carried } from "../../sim/usable/Usable"
+
+/**
+ * The cards a unit plays unlimited that are shown to place: of each family of variants only one, the one
+ * chosen in a draft when there is one, else the one the unit would choose, else the first of the family it
+ * plays. The other cards come all.
+ */
+export function unlimitedShown(unit: Unit, draft: Draft|null): Card[] {
+    const firsts = new Map<object, Card>()
+    for(const card of unit.unlimited){
+        if(card.variants().size > 0 && !firsts.has(groupOf(card))) firsts.set(groupOf(card), card)
+    }
+    const shown = new Map<object, Card>()
+    for(const [group, first] of firsts){
+        const wished = draft?.chosen.get(group) ?? first.variantFor(unit)
+        shown.set(group, unit.unlimited.includes(wished) ? wished : first)
+    }
+    return unit.unlimited.filter(card => card.variants().size === 0 || shown.get(groupOf(card)) === card)
+}
 
 /** What a click on a card of the hand did: placed it, or nothing since the chain is full. */
 export type Placement = "placed"|"full"
@@ -40,33 +57,56 @@ export class Draft {
 
     constructor(
         public readonly unit: Unit,
-    ){
-        this.turnStep = nearestTurn(unit.direction)
-    }
+    ){}
 
 
     /**
-     * The step of the next turn the unit plays: the one facing nearest to where the unit faces at first, then
-     * the one chosen on the dial.
+     * The variant chosen for each family of variants the unit plays unlimited, by the group they share: none
+     * until one is chosen, the unit then showing the one it would choose without choosing.
      */
-    public turnStep: number
+    public readonly chosen = new Map<object, Card>()
 
     /**
-     * The cards the unit plays unlimited that are shown to place: each but the turns, and the turn of the
-     * step chosen, in the order of the unit. Placing one takes nothing from the hand.
+     * The cards the unit plays unlimited that are shown to place: of each family of variants only the one
+     * chosen, in the order of the unit. Placing one takes nothing from the hand.
      */
     public get unlimited(): Card[] {
-        const shown = TURNS[this.turnStep]
-        return this.unit.unlimited.filter(card => !(card instanceof TurnCard) || card === shown)
+        return unlimitedShown(this.unit, this)
+    }
+
+    /**
+     * Choose the variant of a family that is shown, placing nothing.
+     *
+     * @returns Does the unit play it unlimited, or hold a card of its family?
+     */
+    public choose(variant: Card): boolean {
+        if(!this.canPlay(variant)) return false
+        this.chosen.set(groupOf(variant), variant)
+        return true
+    }
+
+    /** The card shown for a card of the hand: the variant chosen when it has some, else itself. */
+    public shown(card: Card): Card {
+        return card.variants().size > 0 ? this.chosen.get(groupOf(card)) ?? card : card
+    }
+
+    /** Can the unit place a variant: does it play it unlimited, or hold a card of its family, free to place? */
+    public canPlay(variant: Card): boolean {
+        return this.unit.unlimited.includes(variant) || handIndexOf(this.available, variant) >= 0
     }
 
     /** The cards of the hand not placed yet, each copy once: a card played unlimited takes none from it. */
     public get available(): Card[] {
+        return this.#handLeftBy(this.chain.cards)
+    }
+
+    /** The cards of the hand a chain leaves, each copy once. */
+    #handLeftBy(cards: readonly Card[]): Card[] {
         const left = [...this.unit.hand]
-        const free = playedUnlimited(this.chain.cards, this.unit.unlimited)
-        this.chain.cards.forEach((card, place) => {
+        const free = playedUnlimited(cards, this.unit.unlimited)
+        cards.forEach((card, place) => {
             if(free[place]) return
-            const index = left.indexOf(card)
+            const index = handIndexOf(left, card)
             if(index >= 0) left.splice(index, 1)
         })
         return left
@@ -148,14 +188,18 @@ export class Draft {
     }
 
     /**
-     * Change the direction of a turn of the chain, which keeps its place.
+     * Change a card of the chain for another variant of it, which keeps its place.
      *
-     * @returns Was there a turn at that place, and the unit able to turn to that step?
+     * @returns Was there a card with variants at that place, the variant one of them, and the unit able to
+     *   play it unlimited?
      */
-    public turn(place: number, step: number): boolean {
-        const turn = TURNS[step]
-        if(!(this.chain.cards[place] instanceof TurnCard) || !turn || !this.unit.unlimited.includes(turn)) return false
-        this.chain.cards[place] = turn
+    public variant(place: number, variant: Card): boolean {
+        const held = this.chain.cards[place]
+        if(!held || !held.variants().size || groupOf(held) !== groupOf(variant)) return false
+        // The card of the chain stands for a card of the hand, or the unit plays the variant unlimited.
+        const left = this.#handLeftBy(this.chain.cards.filter((_, at) => at !== place))
+        if(!this.unit.unlimited.includes(variant) && handIndexOf(left, variant) < 0) return false
+        this.chain.cards[place] = variant
         return true
     }
 

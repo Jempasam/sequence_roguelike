@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { FusionCard, planFor, savedCard, STEP, THRUST } from "@game/core/mecard"
+import { FusionCard, DeckAi, savedCard, STEP, THRUST } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { PLAN_TOPIC, writePlanMessage } from "@game/core/mecard/sync"
 
@@ -19,13 +19,13 @@ function preparing() {
 
 /** Commit what the host plays. */
 function hostCommits({ host }: Hosted, battle: Battle): void {
-    for(const unit of battle.awaited.units) if(!host.isGuests(unit)) battle.commit(unit, planFor(unit))
+    for(const unit of battle.awaited.units) if(!host.isGuests(unit)) battle.commit(unit, new DeckAi().decide(unit).chain)
 }
 
 /** Commit what a client plays on its own battle. */
 function clientCommits({ guest, viewer }: Playing): void {
     const unit = unitOf(viewer.battle, guest.units[0])
-    viewer.battle?.commit(unit, planFor(unit))
+    viewer.battle?.commit(unit, new DeckAi().decide(unit).chain)
 }
 
 // --- Tests ---

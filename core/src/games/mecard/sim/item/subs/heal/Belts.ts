@@ -43,6 +43,6 @@ export class Belt extends AbstractItem {
     }
 }
 
-export const STRENGTH_BELT = new Belt("Ceinture de force", visual("items/amulet"), SHIELD_HEART, 1)
+export const STRENGTH_BELT = new Belt("Ceinture de force", visual("items/belt"), SHIELD_HEART, 1)
 
-export const DEATH_BELT = new Belt("Ceinture de la mort", visual("items/amulet"), BLUE_HEART, DEATH_BELT_HEARTS)
+export const DEATH_BELT = new Belt("Ceinture de la mort", visual("items/belt", { coloration: [0.55, 0.4, 0.65] }), BLUE_HEART, DEATH_BELT_HEARTS)

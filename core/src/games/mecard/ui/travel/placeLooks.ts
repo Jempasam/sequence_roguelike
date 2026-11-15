@@ -1,14 +1,13 @@
-import type { LayeredImagePath } from "../../../../engine/assets"
-import { allPlaceTypes } from "../../sim/catalog/places"
+import { visual } from "../../sim/base/Visual"
+import type { Visual } from "../../sim/base/Visual"
+import { shippedTransitions } from "../look/visualPath"
 
 /**
- * The transitions of the places, each once, by the name of its file: `door` for `…/door.ora`.
+ * The transitions the game ships, each once, by the name of its file: `door` for `…/door.ora`.
  *
  * @remarks
- * A function, not a value, for it is asked once the catalog is read, which a command may come first to.
+ * A function, not a value, for it is asked once the assets are indexed, which a command may come first to.
  */
-export function placeTransitions(): ReadonlyMap<string, LayeredImagePath> {
-    return new Map(allPlaceTypes().map(({ transition }) => {
-        return [transition.replace(/^.*\//, "").replace(/\.ora$/, ""), transition]
-    }))
+export function placeTransitions(): ReadonlyMap<string, Visual> {
+    return new Map(shippedTransitions().map(key => [key.slice("transitions/".length), visual(key)]))
 }

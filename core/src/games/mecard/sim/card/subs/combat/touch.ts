@@ -1,8 +1,9 @@
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import { RANGE_COLOR } from "../../../battle/previewColors"
-import type { Indicator, Pose } from "../../../battle/Action"
-
-import { polygon } from "../tools/previews"
+import type { Pose } from "../../../battle/Action"
+import type { Indicator } from "../../../battle/preview/Preview"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the taser and the push reach, in meters: about a body ahead. */
 export const TOUCH_RANGE = 1
@@ -14,5 +15,5 @@ export const TOUCH_RANGE = 1
  */
 export function touchZone(pose: Pose): Indicator {
     const to = pose.position.plus(pose.direction.times(TOUCH_RANGE + UNIT_RADIUS))
-    return polygon({ kind: "segment", from: pose.position, to, width: 2 * UNIT_RADIUS }, RANGE_COLOR)
+    return Previews.polygon(Areas.line(pose.position, to, 2 * UNIT_RADIUS), RANGE_COLOR)
 }

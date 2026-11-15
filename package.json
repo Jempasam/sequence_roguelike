@@ -29,6 +29,8 @@
         "lint": "eslint .",
         "assets": "node scripts/indexAssets.ts",
         "art": "node scripts/renderArt.ts",
+        "art:changed": "node scripts/renderArt.ts --changed",
+        "art:preview": "node scripts/renderArt.ts --preview",
         "wasm": "node scripts/compileWasm.ts"
     },
     "devDependencies": {

@@ -1,6 +1,7 @@
+import type { Color } from "../../../../engine/math"
 import type { Vector2 } from "../../sim/base/Vector2"
 import type { Battle } from "../../sim/battle/Battle"
-import type { Indicator } from "../../sim/battle/Action"
+import type { Indicator } from "../../sim/battle/preview/Preview"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 import { Heart } from "../../sim/heart/Heart"
@@ -25,6 +26,9 @@ export interface SceneChain {
 
     /** The next card to read: those before it are greyed out. */
     readonly cursor: number
+
+    /** The places of the cards another unit put in the chain. */
+    readonly borrowed: readonly number[]
 }
 
 /** The cards of a chain being looked at, the first and the last of them. */
@@ -35,12 +39,30 @@ export interface LitCards {
 
     /** Could they not be built? They are then crossed out. */
     readonly invalid: boolean
+
+    /** Only these places between the first and the last, all of them when none are told. */
+    readonly indexes?: readonly number[]
+
+    /** The color they are outlined in. */
+    readonly edge: Color
 }
 
 /** Hearts being looked at together, by their places in the bar shown. */
 export interface LitHeart {
     readonly unit: Unit
     readonly indexes: readonly number[]
+
+    /** The color they are outlined in. */
+    readonly edge: Color
+}
+
+/** A status being looked at. */
+export interface LitStatus {
+    readonly unit: Unit
+    readonly type: StatusType
+
+    /** The color it is outlined in. */
+    readonly edge: Color
 }
 
 /** A process being looked at. */
@@ -104,7 +126,7 @@ export interface SceneUnit {
 }
 
 /** Something to look at a moment, before it acts: what lights up, and the word said over its unit. */
-export interface Notice {
+export interface NoticeWord {
     readonly unit: Unit
     readonly word: string
 }
@@ -131,7 +153,7 @@ export class BattleScene {
     public actor: Unit|null = null
 
     /** What is being looked at before it acts, none when nothing is. */
-    public notice: Notice|null = null
+    public notice: NoticeWord|null = null
 
     /** The cards being looked at, none when none are. */
     public get litCards(): LitCards|null { return this.#litCards }
@@ -141,6 +163,9 @@ export class BattleScene {
 
     /** The process being looked at, none when none is. */
     public get litProcess(): LitProcess|null { return this.#litProcess }
+
+    /** The status being looked at, none when none is. */
+    public get litStatus(): LitStatus|null { return this.#litStatus }
 
     /** The card being drawn, none when none is. */
     public flight: Flight|null = null
@@ -222,6 +247,7 @@ export class BattleScene {
         this.#litCards = null
         this.#litHeart = null
         this.#litProcess = null
+        this.#litStatus = null
         this.flight = null
         this.drawer = null
         this.actor = actor
@@ -234,7 +260,8 @@ export class BattleScene {
             unit, position: unit.position, direction: unit.direction,
             hearts: Heart.copies(unit.hearts.all),
             statuses: [...unit.statuses.values()].map(({ type, level }) => ({ type, level })), processes: [...unit.processes],
-            steps: unit.stepsLeft, chain: { cards: [...unit.chain.cards], cursor: unit.chain.cursor },
+            steps: unit.stepsLeft,
+            chain: { cards: [...unit.chain.cards], cursor: unit.chain.cursor, borrowed: [...unit.chain.borrowed] },
             hand: [...unit.hand], decks: decksOf(unit), cursor: unit.decks.cursor,
             alive: unit.alive, opacity: 1,
         }
@@ -261,12 +288,19 @@ export class BattleScene {
         this.version++
     }
 
+    /** Look at a status. */
+    public lightStatus(lit: LitStatus): void {
+        this.#litStatus = lit
+        this.version++
+    }
+
     /** Look at nothing anymore. */
     public unlight(): void {
-        if(!this.#litCards && !this.#litHeart && !this.#litProcess) return
+        if(!this.#litCards && !this.#litHeart && !this.#litProcess && !this.#litStatus) return
         this.#litCards = null
         this.#litHeart = null
         this.#litProcess = null
+        this.#litStatus = null
         this.version++
     }
 
@@ -305,4 +339,5 @@ export class BattleScene {
     #litCards: LitCards|null = null
     #litHeart: LitHeart|null = null
     #litProcess: LitProcess|null = null
+    #litStatus: LitStatus|null = null
 }

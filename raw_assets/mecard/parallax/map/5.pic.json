@@ -1,0 +1,37 @@
+{
+    "size": [288, 164],
+    "seed": 9,
+    "palette": [
+        "#5a3c24",
+        "#2a1a10",
+        {"color": "#b8923e", "reflection": 0.7},
+        "#dccc9c"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [20, 20, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 143, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 20, 1, 124], "material": 1, "depth": 4},
+        {"box": [267, 20, 1, 124], "material": 1, "depth": 4},
+
+        {"ellipse": [9, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [271, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [9, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [271, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+
+        {"ellipse": [124, 9, 40, 40], "material": 2, "depth": [8, 9], "relief": "round-y"},
+        {"ellipse": [128, 13, 32, 32], "material": 1, "depth": [7, 8]},
+        {"polygon": [[144, 11], [148, 29], [144, 47], [140, 29]], "material": 3, "depth": [9, 10]},
+        {"polygon": [[126, 29], [144, 25], [162, 29], [144, 33]], "material": 3, "depth": [9, 10]},
+        {"polygon": [[144, 14], [147, 25], [144, 29], [141, 25]], "material": 2, "depth": [10, 10]},
+        {"ellipse": [141, 26, 6, 6], "material": 2, "depth": [9, 10], "relief": "dome"},
+
+        {"box": [60, 148, 44, 8], "material": 3, "depth": [8, 9], "relief": "round-x"},
+        {"ellipse": [56, 147, 6, 10], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [102, 147, 6, 10], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"box": [76, 148, 12, 8], "material": 0, "depth": [9, 9]}
+    ]
+}

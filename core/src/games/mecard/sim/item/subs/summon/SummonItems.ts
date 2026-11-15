@@ -30,7 +30,7 @@ export class Gear extends AbstractItem {
 
 
     constructor(){
-        super("Engrenage", visual("items/bag"), ["Chaque robot qu'elle construit gagne un cœur de bouclier."])
+        super("Engrenage", visual("items/gear"), ["Chaque robot qu'elle construit gagne un cœur de bouclier."])
     }
 
 
@@ -48,7 +48,7 @@ export class Cell extends AbstractItem {
 
 
     constructor(){
-        super("Pile", visual("items/med_kit"), ["Chaque invocation de temps gagne un cœur de temps de plus."])
+        super("Pile", visual("items/battery"), ["Chaque invocation de temps gagne un cœur de temps de plus."])
     }
 
 
@@ -94,7 +94,7 @@ export class SummonHeart extends AbstractItem {
 
 
     constructor(){
-        super("Cœur d'invocation", visual("items/amulet"), ["Quand une de ses invocations disparaît : gagne un cœur bleu."])
+        super("Cœur d'invocation", visual("items/summon_heart"), ["Quand une de ses invocations disparaît : gagne un cœur bleu."])
     }
 
 

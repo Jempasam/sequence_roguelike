@@ -1,5 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
+import { composable } from "../../../card/Card"
 import type { Card } from "../../../card/Card"
 import type { Hero } from "../../../run/Hero"
 import type { Run } from "../../../run/Run"
@@ -7,7 +8,6 @@ import { forge, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "../deck/DeckHalt"
 import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
 import { fusionShown } from "../shown"
@@ -27,7 +27,7 @@ export class GreatForgeHalt extends DeckHalt {
     constructor(run: Run){
         super(GREAT_FORGE_HALT, run,
             ["Donne-moi deux ou trois ", CARTE.as("cartes"), ", je les forge dans l'ordre choisi, jusqu'à trois fois."],
-            sceneLook(41, 18, 10, "mecard/travel/forge"),
+            sceneLook(41, 18, 10, "forge", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(1, 0.45, 0.15),
@@ -41,8 +41,11 @@ export class GreatForgeHalt extends DeckHalt {
 
 
     protected fits(deck: readonly Card[]): boolean {
-        return deck.length >= 2
+        return deck.filter(composable).length >= 2
     }
+
+    /** How many times the great forger already forged. */
+    #forged = 0
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
         const round = (n: number, back?: () => void): void => {
@@ -55,13 +58,15 @@ export class GreatForgeHalt extends DeckHalt {
                     ctx.confirm(["Le résultat ", FUSION.as("forgé"), " :"], fusionShown(new FusionCard(cards), deck), "Forger", () => {
                         this.impact()
                         const made = this.run.changeDeck(deck, changed => forge(withCopies(changed, cards, hero.unlimited), cards))
-                        if (n + 1 < ROUNDS && this.fits(deck)) round(n + 1)
+                        this.#forged = n + 1
+                        const more = n + 1 < ROUNDS && this.run.heroes.some(other => other.decks.some(each => this.fits(each)))
+                        if (more) this.start(ctx)
                         else ctx.tell([FUSION.as("Forgée"), " :"], fusionShown(made, deck))
                     }, { back: pick })
-                }, { back: ask, unlimited: hero.unlimited })
+                }, { back: ask, unlimited: hero.unlimited, among: composable })
             ask()
         }
-        round(0, back)
+        round(this.#forged, back)
     }
 }
 
@@ -72,6 +77,6 @@ export const GREAT_FORGE_HALT: HaltType = {
     description: [FUSION.as("Colle"), " deux ou trois ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi, jusqu'à trois fois."],
     icon: visual("travel/forge/logo", { letter: "FO*" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/great-door"),
     create: run => new GreatForgeHalt(run),
 }

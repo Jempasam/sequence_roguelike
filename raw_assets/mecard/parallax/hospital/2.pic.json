@@ -1,0 +1,38 @@
+{
+    "size": [288, 164],
+    "seed": 7,
+    "palette": [
+        "#c4b8a0",
+        "#3a3a34",
+        {"color": "#6ab08a", "reflection": 0.6},
+        {"color": "#b03838", "reflection": 0.3}
+    ],
+    "shapes": [
+        {"box": [120, 40, 48, 72], "fill": {"pattern": "planks", "width": 5, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [3, 5], "relief": "bevel", "bevel": 1},
+        {"box": [116, 36, 56, 6], "material": 0, "depth": [4, 6], "relief": "round-y"},
+        {"box": [124, 47, 40, 56], "material": 1, "depth": 1},
+        {"box": [126, 49, 17, 52], "material": 2, "depth": 2},
+        {"box": [145, 49, 17, 52], "material": 2, "depth": 2},
+        {"box": [124, 66, 40, 2], "material": 0, "depth": 4},
+        {"box": [124, 84, 40, 2], "material": 0, "depth": 4},
+        {"box": [143, 47, 2, 56], "material": 0, "depth": 4},
+
+        {"box": [126, 56, 5, 10], "material": 3, "depth": [4, 6], "relief": "round-x"},
+        {"box": [127, 52, 3, 4], "material": 0, "depth": 5},
+        {"box": [134, 58, 5, 8], "material": 0, "depth": [4, 6], "relief": "round-x"},
+        {"box": [150, 54, 6, 12], "material": 3, "depth": [4, 6], "relief": "round-x"},
+        {"box": [152, 50, 2, 4], "material": 0, "depth": 5},
+        {"box": [158, 58, 5, 8], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [126, 74, 8, 10], "material": 0, "depth": [4, 6], "relief": "round-x"},
+        {"box": [136, 72, 4, 12], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [150, 76, 12, 8], "material": 0, "depth": [4, 6], "relief": "bevel"},
+        {"box": [128, 92, 30, 8], "material": 0, "depth": [4, 5], "relief": "bevel"},
+        {"box": [132, 94, 4, 4], "material": 3, "depth": 6},
+
+        {"box": [236, 74, 24, 38], "material": 0, "depth": [3, 4], "relief": "bevel"},
+        {"box": [238, 78, 20, 2], "material": 1, "depth": 2},
+        {"box": [238, 92, 20, 2], "material": 1, "depth": 2},
+        {"box": [242, 60, 5, 14], "material": 2, "depth": [3, 5], "relief": "round-x"},
+        {"box": [250, 64, 4, 10], "material": 3, "depth": [3, 5], "relief": "round-x"}
+    ]
+}

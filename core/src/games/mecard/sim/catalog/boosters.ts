@@ -44,7 +44,26 @@ import { SWAP } from "../card/subs/movement/Swap"
 import { ANTIDOTE, CONFUSION, SLOWNESS, VULNERABILITY } from "../card/subs/potion/PotionCard"
 import { THORN_SHIELD, TOTEM } from "../card/subs/summon/summons"
 import { signatureOf } from "../card/CardChain"
-import { AURA, CONJURATION, SMALL_SPELL } from "../card/subs"
+import {
+    AURA, CONJURATION, SMALL_SPELL,
+    BEAST_CARDS, BITE, RUN, FURY, TRANSMUTATION, SUMMONING, CYBERNETIC_BEAST, ELEMENTAL,
+    SYNCHRONISATION, STUTTER, PAS_DE_DEUX, PARROT, MEMORY_GAP, EXO_NERF,
+    STUNNING_DASH, EXPLOSIVE_DASH, RAM, THRUST_CHARGE, BOUNCE_DASH, DEMON_SLASH, MEGA_SLASH, HEAD_JUMP, SHADOW_STEP, BATTERING_RAM,
+    REPETITION, SUPER_REPETITION, REPEAT_2, MIRROR, DELAYED_CHARGE, TIME_MANIPULATION, COMBO, TORNADO, DOUBLE_DIAGONAL,
+    POSSESSION, HAUNT, PLAGIARISM, ETHEREAL_FORM, SPIRIT_ANCHOR, SPIRIT_PROJECTION, SPIRIT_DASH, SOUL_LINK, SOUL_SHIELD,
+    FAR_AIM, WEAK_AIM, CONCENTRATION, SPYGLASS_CARD, CHARGED_SHOT, MACHINE_GUN, RICOCHET, BOUNCING_BOW,
+    ASSASSIN_BLOW, TACKLE, BLEED, HEMORRHAGE, MARK_CARD, FRAGILITY_CARD,
+    SUCTION, BLACK_HOLE, CATCH, TIDE, SHOCK_WAVE, QUAKE, PROJECTION,
+    TURRET, SENTINEL, SHOUT_TOTEM, DECOY,
+    VIGOR, SWIFTNESS, SWALLOW, RAGE, FRENZY, PUDDLE, BARREL, POTION_RAIN, COATED_BLADE, BIG_BOTTLE, DISTILLATION, POTION_POUCH,
+    BLOCK, RAMPART, WOODEN_SHIELD_CARD, SLIDING_PARRY_CARD, COUNTER_CARD, DISARM_CARD, TAUNT, EXPLOSIVE_SHELL,
+    GRUDGE, DEMONIC_STRIKE, HELD_FURY, SACRIFICE, STRENGTH_CARD, COOL_HEAD,
+    REACTION, RITUAL, CROSSED_SPELL,
+    PAWN_CARD, ROOK_CARD, KNIGHT_PIECE_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, PLAYED_BY_LAST, CASTLING, FORCED_CASTLING,
+    REFLECTION, MISDIRECTION, GLASS_KNIFE, BEAR_TRAP, HORSE, KNIGHT_MOVE, STRIDE, SHY_AWAY, MOUNT, KICK, CANNONBALL,
+    BOUNCING_BALL, SLINGSHOT, MINE, KAMIKAZE, COLLISION, DRAFT, OVERHEAT_CARD, MAGIC_KNIFE, HOOK_ON, LASER_LINK,
+    PAWN_ROBOT,
+} from "../card/subs"
 
 /** Cards drawn at random from a pool, as many as `count`. */
 export interface BoosterPool {
@@ -162,6 +181,169 @@ export const ALL_BOOSTERS: readonly Booster[] = [
     {
         name: "Esprit", color: rgba(0.9, 0.5, 0.8), icon: CHARM,
         pools: [{ count: 2, pool: [CHARM, FEAR, HYPNOSIS] }, { count: 1, pool: [PUSH, SWAP, SUBSTITUTION] }],
+    },
+    {
+        name: "Bestial", color: rgba(0.75, 0.5, 0.25), icon: BEAST_CARDS[0],
+        pools: [{ count: 1, pool: BEAST_CARDS }, { count: 2, pool: [BITE, RUN, FURY, TRANSMUTATION, SUMMONING] }],
+    },
+    {
+        name: "Mental", color: rgba(0.75, 0.55, 0.9), icon: HYPNOSIS,
+        pools: [
+            { count: 2, pool: [SYNCHRONISATION, STUTTER, PAS_DE_DEUX, PARROT, MEMORY_GAP, EXO_NERF] },
+            { count: 1, pool: [HYPNOSIS, CHARM, FEAR] },
+        ],
+    },
+    {
+        name: "Méca-bête", color: rgba(0.7, 0.6, 0.5), icon: CYBERNETIC_BEAST,
+        pools: [
+            { count: 1, pool: BEAST_CARDS },
+            { count: 1, pool: [CYBERNETIC_BEAST] },
+            { count: 1, pool: [IMPROVISED_ROBOT, TANK_ROBOT] },
+        ],
+    },
+    {
+        name: "Magi-bête", color: rgba(0.3, 0.75, 0.8), icon: ELEMENTAL,
+        pools: [
+            { count: 1, pool: ELEMENT_CARDS },
+            { count: 1, pool: [ELEMENTAL] },
+            { count: 1, pool: [FURY, TRANSMUTATION, SUMMONING] },
+        ],
+    },
+    {
+        name: "Dash-lame", color: rgba(0.85, 0.55, 0.55), icon: STUNNING_DASH,
+        pools: [
+            { count: 2, pool: [STUNNING_DASH, EXPLOSIVE_DASH, RAM, THRUST_CHARGE, BOUNCE_DASH, DEMON_SLASH] },
+            { count: 1, pool: [MEGA_SLASH, HEAD_JUMP, SHADOW_STEP, BATTERING_RAM] },
+        ],
+    },
+    {
+        name: "Chrono", color: rgba(0.4, 0.7, 0.95), icon: REPETITION,
+        pools: [
+            { count: 2, pool: [REPETITION, SUPER_REPETITION, REPEAT_2, MIRROR, DELAYED_CHARGE] },
+            { count: 1, pool: [TIME_MANIPULATION, COMBO, TORNADO, DOUBLE_DIAGONAL] },
+        ],
+    },
+    {
+        name: "Spectres", color: rgba(0.65, 0.8, 0.85), icon: ETHEREAL_FORM,
+        pools: [
+            { count: 1, pool: [POSSESSION, HAUNT, PLAGIARISM] },
+            { count: 1, pool: [ETHEREAL_FORM, SPIRIT_ANCHOR, SPIRIT_PROJECTION] },
+            { count: 1, pool: [SPIRIT_DASH, SOUL_LINK, SOUL_SHIELD] },
+        ],
+    },
+    {
+        name: "Tireurs d'élite", color: rgba(0.55, 0.65, 0.4), icon: CHARGED_SHOT,
+        pools: [
+            { count: 1, pool: [FAR_AIM, WEAK_AIM, CONCENTRATION] },
+            { count: 2, pool: [SPYGLASS_CARD, CHARGED_SHOT, MACHINE_GUN, RICOCHET, BOUNCING_BOW] },
+        ],
+    },
+    {
+        name: "Hémorragie", color: rgba(0.55, 0.05, 0.3), icon: HEMORRHAGE,
+        pools: [
+            { count: 1, pool: [ASSASSIN_BLOW, TACKLE, SCYTHE] },
+            { count: 2, pool: [BLEED, HEMORRHAGE, MARK_CARD, FRAGILITY_CARD] },
+        ],
+    },
+    {
+        name: "Gravité", color: rgba(0.25, 0.2, 0.45), icon: BLACK_HOLE,
+        pools: [
+            { count: 2, pool: [SUCTION, BLACK_HOLE, CATCH, TIDE] },
+            { count: 1, pool: [SHOCK_WAVE, QUAKE, PROJECTION, BATTERING_RAM] },
+        ],
+    },
+    {
+        name: "Automates", color: rgba(0.6, 0.65, 0.7), icon: TURRET,
+        pools: [
+            { count: 2, pool: [TURRET, SENTINEL, SHOUT_TOTEM, DECOY] },
+            { count: 1, pool: [BLACK_HOLE, TOTEM, STONE_WALL] },
+        ],
+    },
+    {
+        name: "Alchimie", color: rgba(0.3, 0.8, 0.7), icon: DISTILLATION,
+        pools: [
+            { count: 1, pool: [VIGOR, SWIFTNESS, SWALLOW, RAGE, FRENZY] },
+            { count: 1, pool: [PUDDLE, BARREL, POTION_RAIN, COATED_BLADE, BIG_BOTTLE] },
+            { count: 1, pool: [DISTILLATION, ANTIDOTE, POTION_POUCH] },
+        ],
+    },
+    {
+        name: "Défense", color: rgba(0.35, 0.5, 0.85), icon: RAMPART,
+        pools: [
+            { count: 2, pool: [BLOCK, RAMPART, WOODEN_SHIELD_CARD, SLIDING_PARRY_CARD, COUNTER_CARD] },
+            { count: 1, pool: [DISARM_CARD, TAUNT, EXPLOSIVE_SHELL] },
+        ],
+    },
+    {
+        name: "Fureur", color: rgba(0.9, 0.2, 0.1), icon: DEMONIC_STRIKE,
+        pools: [{ count: 3, pool: [GRUDGE, DEMONIC_STRIKE, HELD_FURY, SACRIFICE, STRENGTH_CARD, COOL_HEAD] }],
+    },
+    {
+        name: "Réactions", color: rgba(0.95, 0.6, 0.35), icon: REACTION,
+        pools: [{ count: 2, pool: ELEMENT_CARDS }, { count: 1, pool: [REACTION, RITUAL, CROSSED_SPELL] }],
+    },
+    {
+        name: "Échiquier", color: rgba(0.92, 0.88, 0.75), icon: PAWN_CARD,
+        pools: [
+            { count: 2, pool: [PAWN_CARD, ROOK_CARD, KNIGHT_PIECE_CARD, BISHOP_CARD] },
+            { count: 1, pool: [PLAYED_BY_NEAREST, PLAYED_BY_LAST, CASTLING, FORCED_CASTLING] },
+        ],
+    },
+    {
+        name: "Cristal", color: rgba(0.65, 0.9, 0.95), icon: GLASS_KNIFE,
+        pools: [
+            { count: 2, pool: [MIRROR, PARROT, REFLECTION, MISDIRECTION] },
+            { count: 1, pool: [GLASS_KNIFE, BEAR_TRAP, THRUST] },
+        ],
+    },
+    {
+        name: "Écurie", color: rgba(0.65, 0.4, 0.2), icon: HORSE,
+        pools: [
+            { count: 2, pool: [HORSE, KNIGHT_MOVE, LEAP] },
+            { count: 1, pool: [STRIDE, SHY_AWAY, MOUNT, KICK] },
+        ],
+    },
+    {
+        name: "Artillerie", color: rgba(0.5, 0.5, 0.55), icon: CANNONBALL,
+        pools: [
+            { count: 2, pool: [CANNONBALL, BOUNCING_BALL, SLINGSHOT] },
+            { count: 1, pool: [MINE, BOMB, KAMIKAZE] },
+        ],
+    },
+    {
+        name: "Impacts", color: rgba(0.85, 0.55, 0.3), icon: COLLISION,
+        pools: [
+            { count: 2, pool: [COLLISION, DRAFT, PUSH, PROJECTION] },
+            { count: 1, pool: [BATTERING_RAM, RAM, BOUNCE_DASH] },
+        ],
+    },
+    {
+        name: "Ardeur", color: rgba(1, 0.45, 0.1), icon: OVERHEAT_CARD,
+        pools: [
+            { count: 1, pool: [OVERHEAT_CARD, HELD_FURY, STRENGTH_CARD] },
+            { count: 2, pool: [DEMONIC_STRIKE, SACRIFICE, GRUDGE, BLOODLUST_CARD] },
+        ],
+    },
+    {
+        name: "Pièges", color: rgba(0.55, 0.4, 0.25), icon: BEAR_TRAP,
+        pools: [
+            { count: 2, pool: [BEAR_TRAP, MINE, PUDDLE, BOMB] },
+            { count: 1, pool: [DECOY, TAUNT, CATCH] },
+        ],
+    },
+    {
+        name: "Lames lancées", color: rgba(0.75, 0.8, 0.9), icon: MAGIC_KNIFE,
+        pools: [
+            { count: 1, pool: [MAGIC_KNIFE, DAGGER] },
+            { count: 2, pool: [RICOCHET, BOUNCING_BOW, CHARGED_SHOT] },
+        ],
+    },
+    {
+        name: "Entraide", color: rgba(0.5, 0.85, 0.6), icon: HOOK_ON,
+        pools: [
+            { count: 2, pool: [HOOK_ON, LASER_LINK, SWAP, PAS_DE_DEUX] },
+            { count: 1, pool: [MOUNT, FORCED_CASTLING, PAWN_ROBOT] },
+        ],
     },
 ]
 

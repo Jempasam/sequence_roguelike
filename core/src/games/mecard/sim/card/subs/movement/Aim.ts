@@ -2,13 +2,14 @@ import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
-import type { Action, PreviewContext } from "../../../battle/Action"
+import type { Action } from "../../../battle/Action"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Battle } from "../../../battle/Battle"
 
 import { ActionCard } from "../ActionCard"
 import { hold, turn, WORD_TIME } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /**
  * Which enemy in reach an aim turns to: the closest, one drawn at random when it plays, the one with the
@@ -73,27 +74,27 @@ export class AimCard extends ActionCard {
             return target?.position.minus(pose.position).normalized ?? null
         }
         return {
-            use: function* (ctx){
+            use: function (ctx){
                 const { battle, unit } = ctx
                 const way = toward({ battle, unit, pose: unit }, true)
                 if(way){
-                    yield* turn(ctx, way)
+                    turn(ctx, way)
                     return
                 }
                 battle.events.push({ type: "skipped", unit, reason: "personne à viser" })
-                yield* hold(battle, WORD_TIME, [label(unit.position, "personne à viser", NOTE_COLOR)])
+                hold(battle, WORD_TIME, [Previews.label(unit.position, "personne à viser", NOTE_COLOR)])
             },
             preview: ctx => {
                 const { battle, unit, pose } = ctx
                 if(choice === "random"){
                     const some = enemiesInReach(battle, unit).length > 0
-                    return still(pose, label(pose.position, some ? "au hasard" : "personne à viser", NOTE_COLOR))
+                    return Previews.still(pose, Previews.label(pose.position, some ? "au hasard" : "personne à viser", NOTE_COLOR))
                 }
                 const way = toward(ctx, false)
-                if(!way) return still(pose, label(pose.position, "personne à viser", NOTE_COLOR))
+                if(!way) return Previews.still(pose, Previews.label(pose.position, "personne à viser", NOTE_COLOR))
                 const tip = pose.position.plus(way.times(TURN_LENGTH))
-                const turned = arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, direction: way }, turned)
+                const turned = Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)
+                return Previews.still({ ...pose, direction: way }, turned)
             },
         }
     }

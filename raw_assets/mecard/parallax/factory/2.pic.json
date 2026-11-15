@@ -1,0 +1,205 @@
+{
+    "size": [
+        288,
+        164
+    ],
+    "seed": 127,
+    "palette": [
+        "#6a5a40",
+        "#3a3020",
+        "#2a2418",
+        "#100c08"
+    ],
+    "shapes": [
+        {
+            "box": [
+                22,
+                0,
+                16,
+                150
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                19,
+                40,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                19,
+                100,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                80,
+                0,
+                16,
+                150
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                77,
+                40,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                77,
+                100,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                196,
+                0,
+                16,
+                150
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                193,
+                40,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                193,
+                100,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                254,
+                0,
+                16,
+                150
+            ],
+            "material": 0,
+            "depth": [
+                3,
+                5
+            ],
+            "relief": "round-x"
+        },
+        {
+            "box": [
+                251,
+                40,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                251,
+                100,
+                22,
+                6
+            ],
+            "material": 1,
+            "depth": [
+                4,
+                6
+            ],
+            "relief": "round-y"
+        },
+        {
+            "box": [
+                0,
+                142,
+                288,
+                22
+            ],
+            "fill": {
+                "pattern": "planks",
+                "width": 4,
+                "axis": "x",
+                "seams": 0.2,
+                "materials": [
+                    2,
+                    1
+                ]
+            },
+            "depth": [
+                3,
+                4
+            ]
+        }
+    ]
+}

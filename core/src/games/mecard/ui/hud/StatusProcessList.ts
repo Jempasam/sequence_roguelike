@@ -68,11 +68,13 @@ export class StatusProcessList extends AbsItemList {
             return
         }
         const lit = this.scene.litProcess?.unit === unit ? this.scene.litProcess.process : null
+        const litStatus = this.scene.litStatus?.unit === unit ? this.scene.litStatus : null
         const items: AbsItem[] = []
         for(const status of shown.statuses){
             items.push({
                 visual: status.type.visual,
                 text: String(status.level),
+                edge: litStatus?.type === status.type ? litStatus.edge : null,
                 iconSize: STATUS_ICON_SIZE,
                 onHover: over => this.hooks.onStatusHover(unit, status, over),
             })

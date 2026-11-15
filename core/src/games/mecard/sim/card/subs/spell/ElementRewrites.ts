@@ -1,23 +1,25 @@
 import type { Action } from "../../../battle/Action"
 import { counted } from "../../../battle/words"
 import type { Element } from "../../../element/Element"
-import { reaction } from "../../../element/reactions"
-import { Echo } from "../../../element/subs/Echo"
-import { Ritual } from "../../../process/subs/Ritual"
-import { ritualType } from "../../../status/subs/GrandRitual"
+import { COMPOUNDS, reaction } from "../../../element/reactions"
+import { ritualType } from "../../../status/subs/RitualStatus"
 import type { Card, RewriteSpot } from "../../Card"
 import { ELEMENT } from "../../CardType"
 import type { Rewrite } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
-import { AbstractCard } from "../AbstractCard"
 import { ActionCard } from "../ActionCard"
-import { InputRewriteCard, RewriteCard } from "../composite/RewriteCards"
+import { InputRewriteCard, RECOVERY, REPETITION, RewriteCard } from "../composite/RewriteCards"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import { compoundCard, ElementCard } from "./ElementCard"
 import { conjured } from "./ElementActions"
+import { FusionCard } from "../composite/FusionCard"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
+
+/** How many rounds the ritual of the catalog keeps its element. */
+const RITUAL_ROUNDS = 1
 
 /** How many rounds the grand ritual of the catalog keeps its element. */
 const GRAND_RITUAL_ROUNDS = 3
@@ -43,15 +45,15 @@ function nextTwo({ rest }: RewriteSpot): readonly [Element, Element]|null {
 /** What calls an element, its negative that of another. */
 function crossing(invoked: Element, applied: Element): Action {
     return {
-        use: function* (ctx){
+        use: function (ctx){
             const { position, direction } = conjured(ctx.battle, ctx.unit)
             invoked.invoke(ctx, position, direction, applied)
-            yield* hold(ctx.battle, SHORT_TIME)
+            hold(ctx.battle, SHORT_TIME)
         },
         preview: ({ battle, pose }) => {
             const center = conjured(battle, pose).position
             const color = { ...applied.color, a: SPOT_OPACITY }
-            return still(pose, polygon({ kind: "circle", center, radius: UNIT_RADIUS }, color))
+            return Previews.still(pose, Previews.polygon(Areas.circle(center, UNIT_RADIUS), color))
         },
     }
 }
@@ -70,9 +72,9 @@ export const CROSSED_SPELL = new RewriteCard("Sort croisé", [
 
 /** What the two elements on its right give as they react. */
 export const REACTION = new RewriteCard("Réaction", [
-    "Fin de préparation : les deux éléments à sa droite réagissent et deviennent un seul : Feu et Eau font de la Vapeur, ",
-    "Feu et Pierre de la Lave, Vent et Électricité une Tempête, Eau et Pierre de la Boue, Feu et Vent un Brasier, ",
-    "Plante et Pierre des Ronces. Sans réaction, l'un des deux au hasard l'emporte.",
+    "Fin de préparation : les deux éléments à sa droite réagissent et deviennent un seul : ",
+    COMPOUNDS.map(({ first, second, name }) => `${first.name} + ${second.name} = ${name}`).join(", "),
+    ". Sans réaction, l'un des deux au hasard l'emporte.",
 ], Rarity.RARE, (ctx, spot) => {
     const elements = nextTwo(spot)
     if(!elements) return NOTHING
@@ -86,36 +88,18 @@ const KEPT: Rewrite = { cards: [], consumed: 0, acting: true }
 
 /** The element it takes, kept for the round. */
 export const RITUAL = new InputRewriteCard("Rituel", [
-    "Fin de préparation : garde son élément jusqu'à la fin du round. Un Écho s'y mêle.",
+    "Fin de préparation : garde son élément pendant ", counted(RITUAL_ROUNDS, "round"), ". Une fois la préparation finie, ",
+    "les éléments de ta chaîne qui réagissent avec lui deviennent leur composé.",
 ], Rarity.RARE, ELEMENT, () => KEPT, ({ battle, unit }, element) => {
-    battle.startProcess(unit, new Ritual(element))
+    battle.applyStatus(unit, ritualType(element), RITUAL_ROUNDS)
 })
 
 /** The element it takes, kept for rounds. */
 export const GRAND_RITUAL_CARD = new InputRewriteCard("Grand rituel", [
-    "Fin de préparation : garde son élément pendant ", counted(GRAND_RITUAL_ROUNDS, "round"), ". Un Écho s'y mêle.",
+    "Fin de préparation : garde son élément pendant ", counted(GRAND_RITUAL_ROUNDS, "round"), ". Une fois la préparation ",
+    "finie, les éléments de ta chaîne qui réagissent avec lui deviennent leur composé.",
 ], Rarity.EPIC, ELEMENT, () => KEPT, ({ battle, unit }, element) => {
     battle.applyStatus(unit, ritualType(element), GRAND_RITUAL_ROUNDS)
 })
 
-/** An element meeting the ritual going on, when it plays: what they give as they react. */
-export class EchoCard extends AbstractCard<Element, Element> {
-
-
-    public readonly output = ELEMENT
-    public readonly input = ELEMENT
-
-    constructor(){
-        super("Écho", [
-            "Mêle l'élément à sa droite à celui de ton rituel en cours : ils réagissent quand il joue. Sans rituel ni réaction, ",
-            "il reste lui-même.",
-        ], Rarity.RARE)
-    }
-
-
-    public get(element: Element): Element {
-        return new Echo(element)
-    }
-}
-
-export const ECHO = new EchoCard()
+export const ECHO_RITUAL = new FusionCard([RITUAL, RECOVERY],{name: "Rituel de l'Echo", rarity: Rarity.EPIC})

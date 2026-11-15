@@ -1,7 +1,6 @@
 import { visual } from "../../../base/Visual"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { PINK_HEART } from "../../../heart/subs/PinkHeartKind"
-import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 import type { Beast } from "../../CardType"
 
 import { SLASH } from "../attack/Slash"
@@ -48,7 +47,7 @@ export const BEAR_SPIRIT: Beast = {
     sprite: visual("units/bear"),
     run: [STEP, WAIT],
     bite: [AIM, WAIT, SLASH, SWEEP],
-    hearts: [{ kind: RED_HEART, count: 4 }, { kind: PINK_HEART, count: 1 }],
+    hearts: [{ kind: BLUE_HEART, count: 4 },{ kind: PINK_HEART, count: 1 }],
     body: [AIM, WAIT, "bite", WAIT, "run"],
 }
 

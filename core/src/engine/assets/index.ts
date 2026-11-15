@@ -6,6 +6,6 @@
  */
 
 export * from "./AssetError"
-export type * from "./AssetPath"
+export * from "./AssetPath"
 export * from "./Assets"
 export * from "./MemoryAssets"

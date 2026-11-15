@@ -2,7 +2,6 @@ import { Vector2 } from "../../../base/Vector2"
 import { DISTANCE, PORTEE } from "../../../base/keywords"
 import { frenchNumber, HeartCount } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
-import { Heart } from "../../../heart/Heart"
 import { THORN_HEART } from "../../../heart/subs/ThornHeartKind"
 import { HEALING, TOTEM_RADIUS } from "../../../status/subs/Healing"
 import { Rarity } from "../../Rarity"
@@ -25,11 +24,8 @@ const STONE_SPACING = 0.7
 /** How many hearts each stone of the wall of the catalog lives by, before the summoning of the unit. */
 const STONE_HALVES = 1
 
-/** How many hearts the thorn bush of the catalog lives by, before its thorn heart and the summoning. */
+/** How many thorn hearts the thorn bush of the catalog lives by, before the summoning of the unit. */
 const THORNS_HALVES = 1
-
-/** How many thorn hearts the thorn bush of the catalog loses first. */
-const THORN_HEARTS = 2
 
 /** How many hearts the totem of the catalog lives by, before the summoning of the unit. */
 const TOTEM_HALVES = 2
@@ -62,14 +58,11 @@ export const STONE_WALL = new SummonCard("Mur de pierre", [
 
 /** A thorn bush ahead: whoever breaks its thorn heart is wounded. */
 export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
-    "Fait pousser des ronces à ", AHEAD, " ", DISTANCE, " devant : ", new HeartCount(THORNS_HALVES), " + invocation, et un cœur ",
-    THORN_HEART, " perdu d'abord.",
+    "Fait pousser des ronces à ", AHEAD, " ", DISTANCE, " devant : ", new HeartCount(THORNS_HALVES), " + invocation, en cœurs ",
+    THORN_HEART, ".",
 ], Rarity.RARE, {
-    sprite: visual("units/thorns"), name: "Ronces", halves: THORNS_HALVES,
+    sprite: visual("units/thorns"), name: "Ronces", halves: THORNS_HALVES, kind: THORN_HEART,
     spots: (_unit, pose) => [ahead(pose, AHEAD)],
-    equip: (_battle, body) => {
-        for(const heart of Heart.many(THORN_HEART, THORN_HEARTS)) body.hearts.give(heart)
-    },
 })
 
 /** A totem ahead, healing the allies around it at the end of each round. */

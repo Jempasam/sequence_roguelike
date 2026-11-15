@@ -9,7 +9,6 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { CARTE, DECK } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -26,7 +25,7 @@ export class TrainerHalt extends AbstractHalt {
     constructor(run: Run){
         super(TRAINER_HALT, run,
             "Une de mes trois bêtes, te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, "mecard/travel/trainer"),
+            sceneLook(23, 28, 15, "trainer"),
             {
                 hat: "huntingHat",
                 clothes: rgba(0.55, 0.75, 0.3),
@@ -58,6 +57,6 @@ export const TRAINER_HALT: HaltType = {
     id: "trainer",
     name: "Dresseur",
     description: "Un allié parmi deux pets et un monstre, joué par un bot.",    icon: visual("travel/trainer/logo", { letter: "DR" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/warm-door"),
     create: run => new TrainerHalt(run),
 }

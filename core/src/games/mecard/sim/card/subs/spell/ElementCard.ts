@@ -2,7 +2,7 @@ import { concat } from "../../../../../../semantic"
 import { ELEMENT } from "../../CardType"
 import type { Element } from "../../../element/Element"
 import {
-    BLAZE_ELEMENT, BRAMBLES, COMPOUNDS, LAVA, MUD, STEAM, STORM,
+    ASH, BLAZE_ELEMENT, BRAMBLES, COMPOUNDS, LAVA, MAGNETITE, MIST, MUD, PLASMA, SAND, STEAM, STORM,
 } from "../../../element/reactions"
 import { FIRE_ELEMENT } from "../../../element/subs/Fire"
 import { LIGHTNING_ELEMENT } from "../../../element/subs/Lightning"
@@ -26,8 +26,11 @@ export class ElementCard extends AbstractCard<Element> {
         public readonly element: Element,
 
         rarity: Rarity,
+
+        /** What it is called, the name of its element by default. */
+        name: string = element.name,
     ){
-        super(element.name, [
+        super(name, [
             concat("Négatif : ", element.negativeText, "."),
             concat("Positif : ", element.positiveText, "."),
             concat("Invoque : ", element.invokedText, "."),
@@ -56,10 +59,16 @@ export const STORM_CARD = new ElementCard(STORM, Rarity.RARE)
 export const MUD_CARD = new ElementCard(MUD, Rarity.RARE)
 export const BLAZE_CARD = new ElementCard(BLAZE_ELEMENT, Rarity.RARE)
 export const BRAMBLES_CARD = new ElementCard(BRAMBLES, Rarity.RARE)
+export const ASH_CARD = new ElementCard(ASH, Rarity.RARE)
+export const PLASMA_CARD = new ElementCard(PLASMA, Rarity.RARE)
+export const MIST_CARD = new ElementCard(MIST, Rarity.RARE)
+export const SAND_CARD = new ElementCard(SAND, Rarity.RARE)
+export const MAGNETITE_CARD = new ElementCard(MAGNETITE, Rarity.RARE)
 
 /** What two elements give as they react, never found as loot. */
 export const COMPOUND_CARDS: readonly ElementCard[] = [
     STEAM_CARD, LAVA_CARD, STORM_CARD, MUD_CARD, BLAZE_CARD, BRAMBLES_CARD,
+    ASH_CARD, PLASMA_CARD, MIST_CARD, SAND_CARD, MAGNETITE_CARD,
 ]
 
 /**

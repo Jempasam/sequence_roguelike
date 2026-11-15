@@ -5,7 +5,7 @@ import { DECK, TURNS } from "@game/core/mecard"
 import { CardView } from "@game/core/mecard/card-view"
 import { GuideScreen } from "@game/core/mecard/guide"
 import { GUIDE } from "@game/core/mecard/guide-content"
-import { cardNamed, dialCard } from "@game/core/mecard/guide-blocks"
+import { cardNamed, variantCard } from "@game/core/mecard/guide-blocks"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 
@@ -68,18 +68,18 @@ describe("GuideScreen", () => {
     })
 })
 
-describe("dialCard", () => {
-    test("the dial turned → the card shown is the turn to that step, alone", () => {
+describe("variantCard", () => {
+    test("a variant chosen → the card shown is that variant, alone", () => {
         const setup = uiSetup({}, 320, 180)
-        const block = dialCard(step => TURNS[step], 0)
+        const block = variantCard(TURNS[0])
         const holder = (block({ theme: setup.theme, hearLink: () => {} }) as Box).children[0] as Box
         const first = holder.children[0] as CardView
         expect(first.card).toBe(TURNS[0])
-        first.onDial!(3)
+        first.onVariant!(TURNS[3])
         expect(holder.children).toHaveLength(1)
         const next = holder.children[0] as CardView
         expect(next.card).toBe(TURNS[3])
-        expect(next.onDial).not.toBeNull()
+        expect(next.onVariant).not.toBeNull()
     })
 
     test("the guide of the game → names the infinite cards with a card to try", () => {

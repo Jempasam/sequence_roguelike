@@ -26,12 +26,12 @@ describe("Unit, the turns", () => {
         expect(told).toEqual([`0-1 ${SPELL} ${FIRE}`, `2-2 ${STEP}`])
     })
 
-    test("a tree giving two actions → one each turn, the others playing between", () => {
+    test("a repeated action → one turn for all its plays, the others playing after", () => {
         const { on, hero, foe } = facing()
         const order: string[] = []
         on.unitStepping.add(unit => order.push(unit === hero ? "hero" : "foe"))
         play(on, [[hero, chain(REPEAT_2, WAIT)], [foe, chain(WAIT, WAIT)]])
-        expect(order).toEqual(["hero", "foe", "hero", "foe"])
+        expect(order).toEqual(["hero", "foe", "foe"])
     })
 
     test("a card that cannot be built → costs no turn", () => {
@@ -62,6 +62,25 @@ describe("Unit, the turns", () => {
         expect(passes).toBe(1)
     })
 
+    test("a chain growing to 50 cards → told overflowing with its cards, then emptied", () => {
+        const { on, hero } = facing()
+        const told: number[] = []
+        on.signals.chainOverflowed.add(({ unit, cards }) => {
+            if(unit === hero) told.push(cards.length)
+        })
+        const plan = chain(WAIT)
+        hero.hand.push(...plan.cards)
+        on.startRound()
+        on.commit(hero, plan)
+        on.endPreparation()
+        on.appendToChain(hero, Array.from({ length: 48 }, () => WAIT))
+        expect(told).toEqual([])
+        on.appendToChain(hero, [WAIT])
+        expect(told).toEqual([50])
+        expect(hero.chain.cards).toEqual([])
+        expect(hero.hasSteps).toBe(false)
+    })
+
     test("what is left counts the steps ready and those of the chain", () => {
         const { on, hero } = facing()
         const plan = chain(REPEAT_2, WAIT, STEP)
@@ -69,9 +88,9 @@ describe("Unit, the turns", () => {
         on.startRound()
         on.commit(hero, plan)
         on.endPreparation()
-        expect(hero.stepsLeft).toBe(3)
-        on.tick()
         expect(hero.stepsLeft).toBe(2)
+        on.playStep()
+        expect(hero.stepsLeft).toBe(1)
     })
 
     test("the reading moving on → the chain told, as a copy", () => {

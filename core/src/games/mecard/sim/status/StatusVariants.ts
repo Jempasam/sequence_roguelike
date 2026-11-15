@@ -1,3 +1,4 @@
+import type { Visual } from "../base/Visual"
 import type { Element } from "../element/Element"
 import { doseKey } from "../potion/Potion"
 import type { Dose } from "../potion/Potion"
@@ -66,8 +67,9 @@ class ElementTypeOf extends StatusType implements ElementType {
 
     constructor(
         family: StatusType, name: string, public readonly element: Element, make: VariantMaker<ElementType>,
+        look: Visual,
     ){
-        super(name, family.visual, family.polarity, (level, type) => make(type as ElementTypeOf, level), {
+        super(name, look, family.polarity, (level, type) => make(type as ElementTypeOf, level), {
             family, cloned: family.cloned,
         })
     }
@@ -86,12 +88,18 @@ export function doseVariants(
     return new StatusVariants(doseKey, dose => new DoseTypeOf(family, name(dose), dose, make))
 }
 
-/** The kinds of a family of statuses made for an element, one for each element: see {@link doseVariants}. */
+/**
+ * The kinds of a family of statuses made for an element, one for each element: see {@link doseVariants}.
+ *
+ * @param look - How a variant looks from the look of its family, the look of its family by default.
+ */
 export function elementVariants(
     family: StatusType, name: (element: Element) => string, make: VariantMaker<ElementType>,
+    look: (family: Visual, element: Element) => Visual = visual => visual,
 ): StatusVariants<Element, ElementType> {
     return new StatusVariants(
-        element => element.name, element => new ElementTypeOf(family, name(element), element, make),
+        element => element.name,
+        element => new ElementTypeOf(family, name(element), element, make, look(family.visual, element)),
     )
 }
 

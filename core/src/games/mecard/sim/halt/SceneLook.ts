@@ -1,6 +1,8 @@
-import type { ImagePath, LayeredImagePath } from "../../../../engine/assets"
+import type { LayeredImagePath } from "../../../../engine/assets"
 import { rgba } from "../base/Rgba"
 import type { Rgba } from "../base/Rgba"
+import { visual } from "../base/Visual"
+import type { Visual, VisualPatch } from "../base/Visual"
 
 import type { PnjHatName, PnjItemName, PnjMaskName } from "./PnjHats"
 
@@ -16,6 +18,12 @@ export type PnjCue = "pomp"|"strike"|"fear"|"yes"|"no"|"surprise"|"laugh"|"spin"
 /** The character of a scene: its painting, what it wears, and what it plays at the moments of a visit. */
 export interface ScenePnj {
     readonly painting: LayeredImagePath
+
+    /**
+     * The sprite of a unit it is drawn from instead of its painting, cut in three and bent as a whole, none
+     * to be drawn from its painting.
+     */
+    readonly unit: Visual|null
 
     /** Its hat, none bare-headed. */
     readonly hat: PnjHatName|null
@@ -44,14 +52,14 @@ export interface ScenePnj {
 
 /** How the journey looks at a place: the pictures behind the panels, the frame over them, their color. */
 export interface SceneLook {
-    /** The layers of its parallax, the farthest first. */
-    readonly layers: readonly ImagePath[]
+    /**
+     * The parallax behind the panels: the screen resolves its key to its layers, its coloration tints them
+     * all, and its color stands in where it has none.
+     */
+    readonly parallax: Visual
 
-    /** The thin frame over the whole interface, cut in three by three equal parts. */
-    readonly border: ImagePath
-
-    /** How many virtual pixels a pixel of its frame takes, a whole number: how thick the frame is drawn. */
-    readonly borderScale: number
+    /** The thin frame over the whole interface, a picture cut in three by three equal parts. */
+    readonly border: Visual
 
     /** The color of its panels, opaque: they let it show through on their own. */
     readonly color: Rgba
@@ -68,27 +76,24 @@ export const DEFAULT_CUES: Readonly<Record<HaltMoment, PnjCue>> = {
     refuse: "no",
 }
 
-/** How many virtual pixels a pixel of a frame takes, unless its place says otherwise. */
-export const BORDER_SCALE = 2
-
 /** The painting every character of the halts is drawn from, for now. */
 const PNJ_PAINTING: LayeredImagePath = "mecard/pnj/merchant.ora"
 
-/** How many layers a parallax has, unless its place says otherwise. */
-export const LAYER_COUNT = 5
-
 /**
- * A look from the color of its panels, as bytes, and the folder of its pictures: the layers `1.png` up to
- * the count given, the farthest first, and `border.png`.
+ * A look from the color of its panels, as bytes, and the name of its scene: the parallax `parallax/<id>`
+ * and the frame `border/<id>`, the parallax changed by the patch given, its color that of the panels.
  */
 export function sceneLook(
-    red: number, green: number, blue: number, folder: string, layerCount = LAYER_COUNT,
-    borderScale = BORDER_SCALE,
+    red: number, green: number, blue: number, id: string, parallax: VisualPatch = {},
 ): SceneLook {
-    const layers = Array.from({ length: layerCount }, (_, index) => `${folder}/${index + 1}.png` as ImagePath)
+    const color = rgba(red / 255, green / 255, blue / 255)
     return {
-        layers, border: `${folder}/border.png` as ImagePath, borderScale,
-        color: rgba(red / 255, green / 255, blue / 255),
+        parallax: visual(`parallax/${id}`, {
+            color: [color.r, color.g, color.b],
+            ...parallax,
+        }),
+        border: visual(`border/${id}`),
+        color,
     }
 }
 
@@ -99,6 +104,7 @@ export function sceneLook(
 export function scenePnj(pnj: Partial<ScenePnj>): ScenePnj {
     return {
         painting: PNJ_PAINTING,
+        unit: null,
         hat: null,
         clothes: null,
         hatColor: null,

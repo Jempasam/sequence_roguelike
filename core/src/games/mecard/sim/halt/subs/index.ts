@@ -1,8 +1,8 @@
 /**
  * @packageDocumentation
  * The halts of Dungeon of the Mecard, one file for each: its file exports its class and its sort. They are
- * sorted by what they work on: a deck in `deck`, something taken among a few offers or bought in `gift`, and
- * the characters of the party in `party`.
+ * sorted by what they work on: a deck in `deck`, something taken among a few offers or bought in `gift`, the
+ * characters of the party in `party`, and a card made of a monster in `monster`.
  * {@link AbstractHalt} is what they all share, {@link DeckHalt} and {@link CardGiftHalt} the mechanisms some
  * of them share.
  */
@@ -20,6 +20,11 @@ export * from "./deck/ForgeHalt"
 export * from "./deck/RemovalHalt"
 export * from "./deck/StrategistHalt"
 export * from "./deck/WeaverHalt"
+export * from "./monster/MonsterCardHalt"
+export * from "./monster/MonsterMageHalt"
+export * from "./monster/MonsterMechanicHalt"
+export * from "./monster/MonsterShamanHalt"
+export * from "./monster/monsterCards"
 export * from "./gift/CardGiftHalt"
 export * from "./gift/ChestHalt"
 export * from "./gift/InventorHalt"
@@ -52,4 +57,9 @@ export * from "./gift/WitchHalt"
 export * from "./party/HospitalHalt"
 export * from "./party/MadDoctorHalt"
 export * from "./party/NecromancerHalt"
+export * from "./reward/RewardHalt"
+export * from "./reward/BattleRewardHalt"
+export * from "./reward/EliteRewardHalt"
+export * from "./reward/BossRewardHalt"
+export * from "./reward/MonsterLootingRewardHalt"
 export * from "./shown"

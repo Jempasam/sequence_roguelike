@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     ACTION, Arena, Battle, COMPOUNDS, CROSSED_SPELL, DrawnCard, ELEMENT_CARDS, FusionCard, GRAND_RITUAL_CARD,
-    Heart, IMPROVISED_WEAPON, LOOT_CARDS, loadBattle, MISSILE, planFor, POTION, POTION_POUCH,
+    Heart, IMPROVISED_WEAPON, LOOT_CARDS, loadBattle, MISSILE, DeckAi, POTION, POTION_POUCH,
     PREPARATION,
     REACTION, RED_HEART, RITUAL, saveBattle, signatureOf, SPELL, Team, Vector2,
     ADAPTATION, BEAST_CARDS, BEAST_USES, BeastCard, BITE, CYBERNETIC_BEAST, ELEMENTAL, HYBRIDIZATION, REVERSED_ADAPTATION,
@@ -118,7 +118,7 @@ describe("the loot, played", () => {
             for(let round = 0; round < ROUNDS && on.waiting; round++){
                 on.startRound()
                 for(const unit of on.initiative){
-                    const chain = planFor(unit)
+                    const chain = new DeckAi().decide(unit).chain
                     for(const card of chain.cards){
                         for(const each of [card, ...card.contents ?? []]) seen.add(each)
                     }

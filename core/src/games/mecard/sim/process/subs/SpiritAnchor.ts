@@ -28,7 +28,7 @@ export class SpiritAnchor extends AbstractProcess {
     public dispose({ battle, unit }: UnitContext): void {
         const { spirit } = this
         if(unit.alive && battle.phase !== "over" && spirit.alive){
-            if(!battle.blink(unit, spirit.position) && battle.leap(unit, spirit.position)) battle.unblock(unit)
+            if(!battle.teleport(unit, spirit.position) && battle.leap(unit, spirit.position)) battle.unblock(unit)
             battle.turn(unit, spirit.direction)
         }
         battle.vanish(spirit)

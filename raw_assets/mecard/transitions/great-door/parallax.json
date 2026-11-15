@@ -1,0 +1,32 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#6a5a58"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#b02020", "amount": 0.1}
+        ]
+    },
+    "anim": [
+        "global: y=0.2 a=0 > y=0 a=1 m > hold > z*8 on=gate a=0",
+        "stairs: > m > hold > y+0.6",
+        "leaf:   a=0 > m > a=1 > hold",
+        "gate:   > m > a=0 > hold"
+    ],
+    "layers": [
+        {"name": "stairs", "tag": "object", "picture": "stairs.pic.json", "at": [0, 0]},
+        {"name": "pillars", "tag": "object", "picture": "pillars.pic.json", "at": [0, 0]},
+        {"name": "torch", "tag": "object", "picture": "torch.pic.json", "at": [0, 0]},
+        {"name": "leaf", "tag": "object", "picture": "leaf.pic.json", "at": [0, 0]},
+        {"name": "gate", "tag": "object", "picture": "gate.pic.json", "at": [0, 0]},
+        {"name": "back", "tag": "border", "picture": "back.pic.json", "at": [0, 0]}
+    ]
+}

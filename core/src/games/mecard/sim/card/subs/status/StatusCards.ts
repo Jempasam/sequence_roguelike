@@ -1,10 +1,10 @@
-import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, PORTEE, UNIT } from "../../../base/keywords"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { EXPLOSIVE_HEART } from "../../../heart/subs/ExplosiveHeartKind"
 import { Heart } from "../../../heart/Heart"
 import { Grievance, WeakeningBlows } from "../../../process/subs/Grievance"
 import { BLEEDING, FRAGILE, MARKED } from "../../../status/subs/Wounds"
-import { CONCENTRATED, FURIOUS } from "../../../status/subs/Calm"
+import { CONCENTRATED, CONCENTRATION_RANGE, FURIOUS } from "../../../status/subs/Calm"
 import { PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
@@ -12,9 +12,9 @@ import type { StatusType } from "../../../status/Status"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { polygon, still } from "../tools/previews"
 import { ahead, onCircle, onFirstAhead, onSelf, ring } from "../tools/targeting"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** The reach of the weakening blows: a short wide band ahead. */
 const WEAKENING_LENGTH = 1.5
@@ -38,8 +38,8 @@ function giving(type: StatusType, level: number, what: string): Action {
 }
 
 export const CONCENTRATION = new ActionCard("Concentration", [
-    "Gagne un round de concentration : chaque Attendre en ajoute un, et chaque round restant donne un quart ",
-    "de portée en plus.",
+    "Gagne un round de concentration : chaque Attendre en ajoute un, et chaque round restant donne +",
+    frenchNumber(CONCENTRATION_RANGE), " ", PORTEE, " et ", ALLONGE, ".",
 ], Rarity.RARE, giving(CONCENTRATED, 1, "+1 concentration"))
 
 export const HELD_FURY = new ActionCard("Fureur contenue", [
@@ -58,16 +58,16 @@ export const WEAKENING_BLOWS = new ActionCard("Coups affaiblissant", [
     "Les ", UNIT.as("unités"), " touchées sur ", frenchNumber(WEAKENING_LENGTH), " ", DISTANCE, " devant, jusqu'à la fin du round, ",
     "prennent un écho de ", 1, "+", FORCE, " à chaque blessure.",
 ], Rarity.RARE, {
-    use: function* ({ battle, unit }){
+    use: function ({ battle, unit }){
         const area = ahead(unit, WEAKENING_LENGTH, WEAKENING_WIDTH)
-        for(const target of battle.unitsIn(area, unit)){
+        for(const target of battle.fetch(area, unit)){
             battle.startProcess(target, new WeakeningBlows(1 + unit.stats.strength.value))
         }
-        yield* hold(battle, SHORT_TIME, [polygon(area, PHYSICAL_COLOR)])
+        hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
         const area = ahead(pose, WEAKENING_LENGTH, WEAKENING_WIDTH)
-        return still(pose, polygon(area, RANGE_COLOR), ...battle.unitsIn(area, unit).map(ring))
+        return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...battle.fetch(area, unit).map(ring))
     },
 })
 

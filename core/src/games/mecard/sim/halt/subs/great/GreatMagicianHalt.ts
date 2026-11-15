@@ -7,10 +7,9 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
-import { GREAT_COLOR, GREAT_HAT } from "../halt_common"
+import { GREAT_COLOR, GREAT_COLORATION, GREAT_HAT } from "../halt_common"
 import { visual } from "../../../base/Visual"
 
 /** The booster, drawing twice as many cards from each of its pools. */
@@ -25,7 +24,7 @@ export class GreatMagicianHalt extends CardGiftHalt {
     constructor(run: Run){
         super(GREAT_MAGICIAN_HALT, run,
             ["Trois boosters, et chacun tient deux fois plus de ", CARTE.as("cartes"), " assorties."],
-            sceneLook(26, 13, 41, "mecard/travel/magician"),
+            sceneLook(26, 13, 41, "magician", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.6, 0.3, 1),
@@ -57,6 +56,6 @@ export const GREAT_MAGICIAN_HALT: HaltType = {
     description: ["Un booster parmi trois, en double : deux fois plus de ", CARTE.as("cartes"), "."],
     icon: visual("travel/magician/logo", { letter: "MG**" }),
     glow: GREAT_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/portal", { coloration: GREAT_COLORATION }),
     create: run => new GreatMagicianHalt(run),
 }

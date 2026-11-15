@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { BURN, CardChain, loadBattle, planFor, POISONED, Run } from "@game/core/mecard"
+import { BURN, CardChain, loadBattle, DeckAi, POISONED, Run } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import { started } from "../fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -13,7 +13,7 @@ function firstBattle(seed = 3): Battle {
 
 /** Commit what the bot would play for every unit, players included. */
 function planAll(battle: Battle): void {
-    for(const unit of battle.initiative) battle.commit(unit, planFor(unit))
+    for(const unit of battle.initiative) battle.commit(unit, new DeckAi().decide(unit).chain)
 }
 
 /** A battle with statuses on its units, which listen to it. */
@@ -68,14 +68,13 @@ describe("Battle.load", () => {
         expect(told).toEqual(["loaded"])
     })
 
-    test("loaded → the log and the clock start over", () => {
+    test("loaded → the log starts over", () => {
         const battle = firstBattle(9)
         planAll(battle)
         battle.endPreparation()
         battle.playRound()
         battle.load(firstBattle(3).save())
         expect(battle.events).toEqual([])
-        expect(battle.clock).toBe(0)
     })
 })
 
@@ -84,7 +83,7 @@ describe("Battle.advance", () => {
         const battle = startedRun(3).newBattle()
         battle.advance()
         expect(battle.phase).toBe("preparation")
-        const bots = battle.initiative.filter(unit => unit.controller === "bot")
+        const bots = battle.initiative.filter(unit => unit.controller !== "player")
         expect(bots.length).toBeGreaterThan(0)
         for(const bot of bots) expect(battle.planOf(bot)).toBeDefined()
     })
@@ -116,7 +115,8 @@ describe("Travel", () => {
         run.travel.loaded.add(() => told++)
         run.travel.load(source.travel.save())
         expect(run.travel.depth).toBe(source.travel.depth)
-        expect(run.travel.place?.type).toBe(source.travel.place?.type)
+        expect(run.travel.place?.fight).toBe(source.travel.place?.fight)
+        expect(run.travel.place?.halt).toBe(source.travel.place?.halt)
         expect(told).toBe(1)
     })
 

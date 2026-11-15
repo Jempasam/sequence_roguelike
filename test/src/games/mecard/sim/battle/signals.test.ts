@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    Add, BLINK, BURN, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART, TICKS_PER_SECOND,
+    Add, BLINK, BURN, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART,
     Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
@@ -137,15 +137,15 @@ describe("Battle signals", () => {
         expect(told).toEqual(["modifierAdded", "modifierRemoved"])
     })
 
-    test("the clock → the ticks played, what a move is timed by", () => {
+    test("a move → told once for all its strides, timed by the speed it goes at", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
         unit(on, 0, 0, { team: MONSTERS })
-        let start = -1
-        on.signals.moved.add(({ duration }) => { start = on.clock / TICKS_PER_SECOND - duration })
+        const durations: number[] = []
+        on.signals.moved.add(({ duration }) => durations.push(duration))
         play(on, [[walker, chain(STEP)]])
-        expect(start).toBeGreaterThanOrEqual(0)
-        expect(on.clock).toBeGreaterThan(0)
+        expect(durations).toHaveLength(1)
+        expect(durations[0]).toBeCloseTo(0.5)
     })
 
     test("a round played out → the battle waits for the next, which draws once started", () => {

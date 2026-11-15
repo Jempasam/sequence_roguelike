@@ -2,6 +2,7 @@ import { Primitive, RAW_VERTEX_SIZE, Texture } from "../../gpu"
 import type { Gpu, Painter } from "../../gpu"
 import { shrinkPixels } from "../../image"
 import type { OraImage } from "../../image"
+import type { Color } from "../../math"
 
 import { Component } from "../Component"
 import { EMPTY_HINT } from "../SizeHint"
@@ -16,6 +17,9 @@ export interface TransitionPlay {
 
     /** Is it played from its end back to its start? */
     readonly reverse?: boolean
+
+    /** A color every picture is multiplied by, none to draw them as they are painted. */
+    readonly tint?: Readonly<Color>|null
 
     /** Hear that it passed its middle, where it covers what changes behind it. */
     readonly onMiddle?: () => void
@@ -185,6 +189,10 @@ export class Transition extends Component {
         const { scale, x, y, opacity } = this.#frameAt(picture)
         const alpha = opacity * picture.layer.opacity
         if(scale === 0 || alpha === 0) return
+        const tint = this.#play?.tint
+        const red = tint?.r ?? 1
+        const green = tint?.g ?? 1
+        const blue = tint?.b ?? 1
         // A texel holds `shrink` pixels of the painting, and the last ones may stand past its layer.
         const texelWidth = spaceWidth * picture.width * scale * this.shrink / picture.layer.pixels.width
         const texelHeight = spaceHeight * picture.height * scale * this.shrink / picture.layer.pixels.height
@@ -211,15 +219,16 @@ export class Transition extends Component {
             vertices[at + 2] = 0
             vertices[at + 3] = u
             vertices[at + 4] = v
-            vertices[at + 5] = 1
-            vertices[at + 6] = 1
-            vertices[at + 7] = 1
+            vertices[at + 5] = red
+            vertices[at + 6] = green
+            vertices[at + 7] = blue
             vertices[at + 8] = alpha
         }
         corner(0, shownLeft, shownTop, u0, v0)
         corner(1, shownRight, shownTop, u1, v0)
         corner(2, shownRight, shownBottom, u1, v1)
         corner(3, shownLeft, shownBottom, u0, v1)
+        if(tint)painter.setColorMode("hue")
         painter.draw(vertices, QUAD_INDICES, texture, Primitive.TRIANGLES)
     }
 

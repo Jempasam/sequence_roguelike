@@ -4,6 +4,10 @@ import { colored } from "../base/Rgba"
 import type { Vector2 } from "../base/Vector2"
 import type { UnitContext } from "../battle/Action"
 import type { Area } from "../battle/Area"
+import type { Preview } from "../battle/preview/Preview"
+import type { PreviewContext } from "../battle/preview/PreviewContext"
+import * as Previews from "../battle/preview/Previews"
+import { HAZARD_COLOR } from "../battle/previewColors"
 import type { Battle } from "../battle/Battle"
 import type { Unit } from "../battle/Unit"
 import type { Card } from "../card/Card"
@@ -34,6 +38,11 @@ export abstract class HazardStatus extends BaseStatus {
         this.#held.length = 0
     }
 
+    /** The ground it covers, in the color of the hazards. */
+    public preview({ unit, pose }: PreviewContext): Preview {
+        return Previews.still(pose, ...unit.zone ? [Previews.polygon(unit.zone, HAZARD_COLOR)] : [])
+    }
+
 
     /** Plug in what it listens to, each kept with {@link HazardStatus.hold}. */
     protected abstract plug(ctx: UnitContext): void
@@ -52,7 +61,10 @@ export interface HazardSpec {
     readonly sprite: Visual
     readonly name: string
 
-    /** The ground it covers, where its body lies: its middle. */
+    /** Where its body lies: the middle of its zone. */
+    readonly at: Vector2
+
+    /** The ground it covers. */
     readonly zone: Area
 
     /** What it lives by: its time hearts count its rounds, its solid hearts last. */
@@ -76,24 +88,9 @@ export interface HazardSpec {
  */
 export function placeHazard(battle: Battle, owner: Unit, spec: HazardSpec): Unit|null {
     const body = battle.place(owner, {
-        sprite: spec.sprite, name: spec.name, at: middleOf(spec.zone), hearts: spec.hearts, tangible: false,
+        sprite: spec.sprite, name: spec.name, at: spec.at, hearts: spec.hearts, tangible: false,
         zone: spec.zone, cards: spec.cards,
     })
     if(body && spec.status) battle.applyStatus(body, spec.status.type, spec.status.level)
     return body
-}
-
-/** The middle of an area, where the body covering it stands. */
-function middleOf(area: Area): Vector2 {
-    switch(area.kind){
-        case "circle":
-        case "sector":
-            return area.center
-        case "segment":
-            return area.from.plus(area.to).times(0.5)
-        case "crescent":
-            return area.center.plus(area.direction.times((area.inner + area.radius) / 2))
-        default:
-            throw new Error("An area of an unknown kind was covered.")
-    }
 }

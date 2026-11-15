@@ -10,6 +10,7 @@ import { BlowCard } from "./BlowCard"
 import { SHOT_DAMAGE, SHOT_RANGE } from "./Shot"
 import { THRUST_WIDTH } from "./Thrust"
 import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How wide the laser of the catalog is, in meters: two thrusts side by side. */
 const LASER_WIDTH = 2 * THRUST_WIDTH
@@ -41,7 +42,7 @@ export class MegaLaserCard extends BlowCard {
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const length = this.range * unit.stats.throwRange.value * progress
         const to = pose.position.plus(pose.direction.times(length))
-        return { kind: "segment", from: pose.position, to, width: this.width }
+        return Areas.line(pose.position, to, this.width)
     }
 }
 

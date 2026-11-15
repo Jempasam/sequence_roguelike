@@ -1,3 +1,4 @@
+import { ALLONGE, PORTEE } from "../../base/keywords"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { WAIT } from "../../card/subs/movement/Wait"
@@ -9,7 +10,7 @@ import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 export const CONCENTRATION_RANGE = 0.25
 
 /** A concentration: the range grows with the rounds left. */
-export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de portée pour chaque round restant (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
+export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de ", PORTEE, " et d'", ALLONGE, " pour chaque round restant (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
 
 /** Does the step a unit just played wait? */
 function waited({ unit }: UnitContext): boolean {
@@ -30,7 +31,10 @@ export class Concentration extends ScalingStatus {
     public readonly type: StatusType = CONCENTRATED
 
     protected gains(level: number): readonly StatGain[] {
-        return [{ stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * level }]
+        return [
+            { stat: stats => stats.throwRange, amount: CONCENTRATION_RANGE * level },
+            { stat: stats => stats.meleeRange, amount: CONCENTRATION_RANGE * level },
+        ]
     }
 
     protected override watch(ctx: UnitContext): Observer[] {

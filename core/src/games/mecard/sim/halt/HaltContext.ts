@@ -2,6 +2,7 @@ import type { Text } from "../../../../semantic"
 import type { Card } from "../card/Card"
 import type { Booster } from "../catalog/boosters"
 import type { CardUpgrade } from "../catalog/upgrades"
+import type { Fight } from "../fight/Fight"
 import type { Item } from "../item/Item"
 import type { Hero } from "../run/Hero"
 import type { Usable } from "../usable/Usable"
@@ -83,6 +84,9 @@ export interface CardChoosing extends Choosing<Card> {
  * ask would not.
  */
 export interface HaltContext {
+    /** The fight just won that this visit follows, none when the visit follows no fight. */
+    readonly fight?: Fight|null
+
     /** Offer things, the players taking one. */
     offer<T>(
         title: Text, offers: readonly T[], show: (offer: T) => Shown, done: (offer: T) => void, way?: Way,

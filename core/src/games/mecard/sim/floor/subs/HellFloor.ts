@@ -2,12 +2,12 @@ import type { Rng } from "../../base/Rng"
 import { BERSERKER, BRUTE, DEVIL, ELF_ASSASSIN, FIRE_MAGE, IMP } from "../../catalog/monsters"
 import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
-import { ELITE } from "../../catalog/fights"
+import { ELITE } from "../../fight/fights"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
-import type { FightType } from "../../run/PlaceType"
+import type { FightType } from "../../fight/FightType"
 import { encounter } from "../encounter"
 import type { FloorType } from "../Floor"
 
@@ -42,7 +42,7 @@ export const HELL_FLOOR: FloorType = {
     name: "Enfer",
     description: "Du feu et de la rage, et le diable au bout. Plus de démons, d'autels et d'élites, peu d'hôpitaux.",
     icon: visual("floors/hell/logo"),
-    look: sceneLook(38, 14, 14, "mecard/floors/hell"),
+    look: sceneLook(38, 14, 14, "hell"),
     decorations: [
         { picture: visual("floors/hell/statue"), size: 2 },
         { picture: visual("floors/hell/flame"), size: 2 },

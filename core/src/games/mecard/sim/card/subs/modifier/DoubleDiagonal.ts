@@ -1,9 +1,9 @@
 import type { Vector2 } from "../../../base/Vector2"
-import type { Action, Preview } from "../../../battle/Action"
-
+import type { Action } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
 import { ModifierCard } from "../ModifierCard"
-import { chained } from "../tools/previews"
 import { Rarity } from "../../Rarity"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** Where a unit faces after an action played an eighth off ahead: ahead, unless the action turned it. */
 function settled(direction: Vector2, diagonal: Vector2, ahead: Vector2): Vector2 {
@@ -13,13 +13,14 @@ function settled(direction: Vector2, diagonal: Vector2, ahead: Vector2): Vector2
 /** An action played twice, an eighth to the left of ahead then an eighth to the right, in one step. */
 function doubled(inner: Action): Action {
     return {
-        use: function* (ctx){
+        use: ctx => {
             const unit = ctx.unit
             const ahead = unit.direction
             for(const side of [-1, 1] as const){
+                if(!unit.alive) return
                 const diagonal = ahead.eighth(side)
                 ctx.battle.turn(unit, diagonal)
-                yield* inner.use(ctx)
+                inner.use(ctx)
                 ctx.battle.turn(unit, settled(unit.direction, diagonal, ahead))
             }
         },
@@ -33,12 +34,12 @@ function doubled(inner: Action): Action {
                 pose = { ...preview.pose, direction: settled(preview.pose.direction, diagonal, ahead) }
                 previews.push({ ...preview, pose })
             }
-            return chained(previews, ctx.pose)
+            return Previews.chained(previews, ctx.pose)
         },
     }
 }
 
 export const DOUBLE_DIAGONAL = new ModifierCard(
     "Double diagonale", "L'action est jouée tournée de 45° à gauche puis à droite, en une étape.", Rarity.RARE,
-    actions => actions.map(doubled),
+    doubled,
 )

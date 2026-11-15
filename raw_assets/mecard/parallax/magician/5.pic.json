@@ -1,0 +1,37 @@
+{
+    "size": [288, 164],
+    "seed": 15,
+    "palette": [
+        "#4a2468",
+        "#1e1030",
+        {"color": "#d0a040", "reflection": 0.7},
+        {"color": "#ffe8a0", "light": 0.9}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [20, 20, 248, 1], "material": 2, "depth": 6},
+        {"box": [20, 143, 248, 1], "material": 2, "depth": 6},
+        {"box": [20, 20, 1, 124], "material": 2, "depth": 6},
+        {"box": [267, 20, 1, 124], "material": 2, "depth": 6},
+
+        {"ellipse": [9, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [271, 9, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [9, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [271, 147, 8, 8], "material": 2, "depth": [8, 10], "relief": "dome"},
+
+        {"polygon": [[144, 9], [147, 14], [153, 14], [148, 17], [150, 22], [144, 19], [138, 22], [140, 17], [135, 14], [141, 14]], "material": 2, "depth": [8, 10]},
+        {"polygon": [[30, 9], [32, 13], [36, 13], [33, 15], [34, 19], [30, 17], [26, 19], [27, 15], [24, 13], [28, 13]], "material": 2, "depth": [8, 9]},
+        {"polygon": [[258, 9], [260, 13], [264, 13], [261, 15], [262, 19], [258, 17], [254, 19], [255, 15], [252, 13], [256, 13]], "material": 2, "depth": [8, 9]},
+
+        {"box": [40, 147, 208, 5], "material": 1, "depth": [7, 8]},
+        {"ellipse": [52, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [84, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [116, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [148, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [180, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [212, 146, 6, 6], "material": 3, "depth": [8, 9], "relief": "dome"}
+    ]
+}

@@ -6,6 +6,12 @@ import { rgba } from "../base/Rgba"
 /** A move, a turn. */
 export const MOVE_COLOR = rgba(0.15, 0.5, 0.9, 0.9)
 
+/** How far a move would go with nothing in the way, under the move itself: a grey arrow. */
+export const POTENTIAL_COLOR = rgba(0.5, 0.5, 0.55, 0.6)
+
+/** Where a unit stands after a move: its body, a blue disc. */
+export const BODY_COLOR = rgba(0.15, 0.5, 0.9, 0.3)
+
 /** The reach of an action: how far it looks or goes, a faint disc. */
 export const RANGE_COLOR = rgba(0.25, 0.55, 0.95, 0.15)
 

@@ -1,0 +1,35 @@
+{
+    "size": [288, 164],
+    "seed": 31,
+    "palette": ["#6a7288", "#1a1e2c", "#a8b0c8", {"color": "#70e8ff", "light": 1}],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "tiles", "cell": [24, 10], "grout": 1, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel"},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "tiles", "cell": [24, 10], "grout": 1, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel"},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "tiles", "cell": [10, 24], "grout": 1, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel"},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "tiles", "cell": [10, 24], "grout": 1, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel"},
+
+        {"box": [20, 20, 248, 2], "material": 1, "depth": 4},
+        {"box": [20, 142, 248, 2], "material": 1, "depth": 4},
+        {"box": [20, 20, 2, 124], "material": 1, "depth": 4},
+        {"box": [266, 20, 2, 124], "material": 1, "depth": 4},
+
+        {"ellipse": [120, 9, 48, 12], "material": 2, "depth": [7, 10], "relief": "dome"},
+        {"box": [128, 12, 32, 6], "material": 3, "depth": 8},
+        {"ellipse": [9, 9, 12, 12], "material": 2, "depth": [7, 10], "relief": "dome"},
+        {"ellipse": [267, 9, 12, 12], "material": 2, "depth": [7, 10], "relief": "dome"},
+        {"ellipse": [9, 143, 12, 12], "material": 2, "depth": [7, 10], "relief": "dome"},
+        {"ellipse": [267, 143, 12, 12], "material": 2, "depth": [7, 10], "relief": "dome"},
+
+        {"box": [48, 12, 2, 2], "material": 2, "depth": 9},
+        {"box": [88, 12, 2, 2], "material": 2, "depth": 9},
+        {"box": [200, 12, 2, 2], "material": 2, "depth": 9},
+        {"box": [240, 12, 2, 2], "material": 2, "depth": 9},
+        {"box": [14, 60, 2, 2], "material": 2, "depth": 9},
+        {"box": [14, 100, 2, 2], "material": 2, "depth": 9},
+        {"box": [272, 60, 2, 2], "material": 2, "depth": 9},
+        {"box": [272, 100, 2, 2], "material": 2, "depth": 9},
+        {"box": [60, 150, 3, 3], "material": 3, "depth": 9},
+        {"box": [140, 150, 3, 3], "material": 3, "depth": 9},
+        {"box": [220, 150, 3, 3], "material": 3, "depth": 9}
+    ]
+}

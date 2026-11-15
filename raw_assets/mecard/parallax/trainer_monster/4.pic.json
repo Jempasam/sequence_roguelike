@@ -1,0 +1,27 @@
+{
+    "size": [288, 164],
+    "seed": 14,
+    "palette": ["#2a1a16", "#7a5236", "#fffdf0", {"color": "#9a98b0", "reflection": 0.3}],
+    "shapes": [
+        {"ellipse": [22, 106, 30, 8], "material": 1, "depth": [6, 8], "relief": "dome"},
+        {"line": [26, 112, 22, 138], "width": 3, "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"line": [48, 112, 52, 138], "width": 3, "material": 1, "depth": [6, 8], "relief": "round-x"},
+        {"line": [37, 114, 37, 138], "width": 3, "material": 0, "depth": [5, 7], "relief": "round-x"},
+        {"box": [24, 122, 26, 2], "material": 0, "depth": 6},
+        {"line": [30, 106, 46, 86], "width": 1, "material": 0, "depth": 7},
+        {"line": [46, 86, 58, 92], "width": 1, "material": 0, "depth": 7},
+        {"line": [58, 92, 70, 82], "width": 1, "material": 0, "depth": 7},
+        {"box": [26, 100, 9, 6], "material": 3, "depth": [7, 9], "relief": "dome"},
+        {"ellipse": [216, 124, 52, 14], "material": 2, "depth": [5, 7], "relief": "dome"},
+        {"picture": "parts/skull.pic.json", "at": [226, 104], "materials": [0, 1, 2], "depth": 8},
+        {"picture": "parts/skull.pic.json", "at": [212, 120], "materials": [0, 1, 2], "flip": true, "depth": 8},
+        {"line": [244, 132, 262, 126], "width": 2, "material": 2, "depth": [7, 9], "relief": "round-y"},
+        {"line": [236, 136, 254, 138], "width": 2, "material": 2, "depth": [7, 9], "relief": "round-y"},
+        {"ellipse": [260, 124, 5, 5], "material": 2, "depth": [7, 9], "relief": "dome"},
+        {"ellipse": [250, 136, 5, 5], "material": 2, "depth": [7, 9], "relief": "dome"},
+        {"line": [96, 138, 104, 134], "width": 2, "material": 2, "depth": 6},
+        {"ellipse": [92, 136, 6, 5], "material": 2, "depth": 7, "relief": "dome"},
+        {"ellipse": [180, 134, 12, 6], "material": 3, "depth": [6, 8], "relief": "round-y"},
+        {"ellipse": [183, 135, 6, 3], "material": 0, "depth": 5, "erase": true}
+    ]
+}

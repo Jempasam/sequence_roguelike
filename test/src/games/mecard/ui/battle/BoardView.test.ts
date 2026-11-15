@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { visual } from "@game/core/mecard"
+import { Areas, visual } from "@game/core/mecard"
 import { Heart, placeHazard, RED_HEART, TIME_HEART, Vector2 } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 import { BattleScene, BoardView, drawOrder } from "@game/core/mecard/battle-ui"
@@ -65,10 +65,51 @@ describe("drawOrder", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         placeHazard(on, hero, {
-            sprite: visual("units/fire"), name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1 },
+            sprite: visual("units/fire"), name: "Flammes", at: new Vector2(3, 3), zone: Areas.circle(new Vector2(3, 3), 1),
             hearts: [new Heart(TIME_HEART)],
         })
         expect(drawOrder(shownOf(on)).map(shown => shown.unit)).toEqual([hero])
+    })
+})
+
+describe("BoardView.draw, tactical", () => {
+    /** Units with a picture each, and a shade. */
+    const PICTURE = { width: 12, height: 12 }
+    const WITH_SPRITES = {
+        of: () => PICTURE, shade: PICTURE, rope: null, tether: () => null,
+    } as unknown as ConstructorParameters<typeof BoardView>[3]
+
+    /** Every call the board makes on a painter, by name. */
+    function drawnBy(on: Battle, tactical: boolean): string[] {
+        const { theme } = uiSetup()
+        const scene = new BattleScene()
+        for(const each of on.units) scene.add(each)
+        const board = new BoardView(theme.font, theme.white, scene, WITH_SPRITES)
+        board.tactical = tactical
+        board.fit(on, ROOM)
+        const calls: string[] = []
+        const painter = new Proxy({}, {
+            get: (_, name) => (...args: unknown[]) => {
+                calls.push(String(name))
+                return args
+            },
+        }) as Parameters<BoardView["draw"]>[0]
+        board.draw(painter, on)
+        return calls
+    }
+
+    test("the pictures are drawn when not tactical", () => {
+        const on = battle()
+        unit(on, 3, 3)
+        expect(drawnBy(on, false)).toContain("sprite")
+    })
+
+    test("no picture drawn, a disc for a hero and one for a pillar", () => {
+        const on = withPillars(battle(), { center: new Vector2(3.5, 3), radius: 0.5 })
+        unit(on, 1, 5)
+        const calls = drawnBy(on, true)
+        expect(calls).not.toContain("sprite")
+        expect(calls.filter(name => name === "circle").length).toBeGreaterThanOrEqual(2)
     })
 })
 
@@ -95,7 +136,7 @@ describe("BoardView.unitAt", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         const zone = placeHazard(on, hero, {
-            sprite: visual("units/fire"), name: "Flammes", zone: { kind: "circle", center: new Vector2(3, 3), radius: 1.2 },
+            sprite: visual("units/fire"), name: "Flammes", at: new Vector2(3, 3), zone: Areas.circle(new Vector2(3, 3), 1.2),
             hearts: [new Heart(TIME_HEART)],
         }) as Unit
         const { board, pixel } = boardOn(on)
@@ -108,7 +149,7 @@ describe("BoardView.unitAt", () => {
         const maker = unit(on, 3, 5)
         unit(on, 0.5, 0.5, { team: MONSTERS })
         on.startRound()
-        const clone = on.clone(maker, [new Heart(RED_HEART)]) as Unit
+        const clone = on.cloneUnit(maker, [new Heart(RED_HEART)]) as Unit
         const { board, pixel } = boardOn(on)
         expect(board.unitAt(...pixel(clone.position.x, clone.position.y))).toBe(clone)
     })

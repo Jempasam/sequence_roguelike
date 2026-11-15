@@ -5,6 +5,11 @@ import {
 } from "@game/core/mecard"
 import type { Floor, FloorType, FightType, Place, PlaceType, PlaceWeights } from "@game/core/mecard"
 
+/** The sort of fight or of halt a place holds: floors only lay a fight or a halt, not both. */
+function typeOf(place: Place): PlaceType {
+    return place.fight ?? place.halt!
+}
+
 // --- Fixture builders ---
 
 /** The sorts of floor a run may reach. */
@@ -47,12 +52,12 @@ function longestRow(map: Journey, alike: (place: Place) => boolean): number {
 
 /** The most halts a path of a map meets in a row. */
 function longestHaltRow(map: Journey): number {
-    return longestRow(map, place => isHalt(place.type))
+    return longestRow(map, place => isHalt(typeOf(place)))
 }
 
 /** The most fights a path of a map meets in a row. */
 function longestFightRow(map: Journey): number {
-    return longestRow(map, place => !isHalt(place.type))
+    return longestRow(map, place => !isHalt(typeOf(place)))
 }
 
 // --- Tests ---
@@ -81,7 +86,7 @@ describe.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name", ({ t
     })
 
     test("its boss → leads the monsters of a boss fight", () => {
-        const place = mapOf(type.create(1)).places.find(each => each.type === BOSS)
+        const place = mapOf(type.create(1)).places.find(each => typeOf(each) === BOSS)
         const [boss, ...others] = place?.monsters ?? []
         expect(BOSS_MONSTERS).toContain(boss)
         expect(others.length).toBeGreaterThan(0)
@@ -89,7 +94,7 @@ describe.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name", ({ t
     })
 
     test("its map → no exit of its own, they are not its to lay", () => {
-        expect(mapOf(type.create(1)).places.map(place => place.type)).not.toContain(EXIT_HALT)
+        expect(mapOf(type.create(1)).places.map(place => typeOf(place))).not.toContain(EXIT_HALT)
     })
 
     test("its decorations → at least one, drawn at a whole size", () => {
@@ -132,12 +137,12 @@ describe("a filled map", () => {
         journey.addExits(exits, EXIT_HALT)
         const last = journey.layers[LAYERS]
         expect(last.map(place => place.exitTo)).toEqual(exits)
-        expect(last.every(place => place.type === EXIT_HALT)).toBe(true)
+        expect(last.every(place => typeOf(place) === EXIT_HALT)).toBe(true)
         expect(journey.layers[LAYERS - 1][0].next).toEqual(last)
     })
 
     test("a floor with its own weights → no other place but those it always lays", () => {
-        const kinds = new Set(mapOf(new ForgeCave(1)).places.map(place => place.type))
+        const kinds = new Set(mapOf(new ForgeCave(1)).places.map(place => typeOf(place)))
         expect(kinds).toEqual(new Set([BATTLE, FORGE_HALT, HOSPITAL_HALT, BOSS]))
     })
 
@@ -158,7 +163,7 @@ describe("a filled map", () => {
     test.each(types)("$name → a halt is never of the kind of a place leading to it", ({ type }) => {
         for(let seed = 1; seed <= 200; seed++){
             for(const place of mapOf(type.create(1), seed).places) for(const next of place.next){
-                if(isHalt(place.type) && next.layer < LAYERS - 2) expect(next.type).not.toBe(place.type)
+                if(isHalt(typeOf(place)) && next.layer < LAYERS - 2) expect(typeOf(next)).not.toBe(typeOf(place))
             }
         }
     })
@@ -166,9 +171,9 @@ describe("a filled map", () => {
     test.each(types)("$name → the first layer stays battles, the last two their hospitals and boss", ({ type }) => {
         for(let seed = 1; seed <= 200; seed++){
             const { layers } = mapOf(type.create(1), seed)
-            expect(layers[0].every(place => place.type === BATTLE)).toBe(true)
-            expect(layers[LAYERS - 2].every(place => place.type === HOSPITAL_HALT)).toBe(true)
-            expect(layers[LAYERS - 1].map(place => place.type)).toEqual([BOSS])
+            expect(layers[0].every(place => typeOf(place) === BATTLE)).toBe(true)
+            expect(layers[LAYERS - 2].every(place => typeOf(place) === HOSPITAL_HALT)).toBe(true)
+            expect(layers[LAYERS - 1].map(place => typeOf(place))).toEqual([BOSS])
         }
     })
 
@@ -189,13 +194,13 @@ describe("a filled map", () => {
     test("a battle breaking halts → in their middle, the ends of a row stay halts", () => {
         for(let seed = 1; seed <= 200; seed++){
             const { layers } = mapOf(new HaltCave(1), seed)
-            expect(layers[1].every(place => isHalt(place.type))).toBe(true)
-            expect(layers[LAYERS - 2].every(place => place.type === HOSPITAL_HALT)).toBe(true)
+            expect(layers[1].every(place => isHalt(typeOf(place)))).toBe(true)
+            expect(layers[LAYERS - 2].every(place => typeOf(place) === HOSPITAL_HALT)).toBe(true)
         }
     })
 
     test("a battle breaking halts → holds its monsters", () => {
-        const fights = mapOf(new HaltCave(1)).places.filter(place => place.type === BATTLE)
+        const fights = mapOf(new HaltCave(1)).places.filter(place => typeOf(place) === BATTLE)
         for(const fight of fights) expect(fight.monsters.length).toBeGreaterThan(0)
     })
 })

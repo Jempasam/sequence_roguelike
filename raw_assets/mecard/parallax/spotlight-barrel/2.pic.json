@@ -1,0 +1,11 @@
+{
+    "size": [288, 164],
+    "seed": 2,
+    "palette": ["#5c6c84", "#7f92ac", "#8c9ab0", "#b8c4d4"],
+    "shapes": [
+        {"polygon": [[133, 38], [155, 38], [232, 122], [56, 122]], "material": 0, "depth": 3},
+        {"polygon": [[138, 38], [150, 38], [186, 118], [102, 118]], "material": 1, "depth": 3},
+        {"ellipse": [56, 108, 176, 30], "material": 2, "depth": 3},
+        {"ellipse": [86, 112, 116, 22], "material": 3, "depth": 3}
+    ]
+}

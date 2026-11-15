@@ -3,10 +3,8 @@ import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_WIDTH, TURN_LENGTH } from "../../../battle/previewColors"
-import type { Indicator } from "../../../battle/Action"
-
-import { arrow } from "./previews"
-
+import type { Indicator } from "../../../battle/preview/Preview"
+import * as Previews from "../../../battle/preview/Previews"
 /** A unit and the direction a turn gives it. */
 export interface Turning {
     readonly unit: Unit
@@ -21,7 +19,7 @@ export function turnsIn(
     battle: Battle, area: Area, by: Unit, directionOf: (unit: Unit) => Vector2|null,
 ): Turning[] {
     const turnings: Turning[] = []
-    for(const unit of battle.unitsIn(area, by)){
+    for(const unit of battle.fetch(area, by)){
         const direction = directionOf(unit)
         if(direction) turnings.push({ unit, direction })
     }
@@ -39,5 +37,5 @@ export function turnUnitsIn(
 
 /** An arrow from a unit toward the direction a turn gives it. */
 export function turning({ unit, direction }: Turning): Indicator {
-    return arrow([unit.position, unit.position.plus(direction.times(TURN_LENGTH))], MOVE_WIDTH, CONTROL_COLOR)
+    return Previews.arrow([unit.position, unit.position.plus(direction.times(TURN_LENGTH))], MOVE_WIDTH, CONTROL_COLOR)
 }

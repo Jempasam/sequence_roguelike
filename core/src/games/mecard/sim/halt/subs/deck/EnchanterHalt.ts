@@ -13,7 +13,6 @@ import { removeCards, withCopies } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { cardShown, fusionShown } from "../shown"
 import { CARTE, FUSION, DECK } from "../../../base/keywords"
@@ -75,7 +74,7 @@ export class EnchanterHalt extends AbstractHalt {
     constructor(run: Run){
         super(ENCHANTER_HALT, run,
             ["Je ", FUSION.as("colle"), " à ta ", CARTE, " l'un de mes trois enchantements."],
-            sceneLook(15, 23, 43, "mecard/travel/enchanter"),
+            sceneLook(15, 23, 43, "enchanter"),
             {
                 hat: "starCone",
                 clothes: rgba(0.3, 0.45, 1),
@@ -127,8 +126,9 @@ export class EnchanterHalt extends AbstractHalt {
 export const ENCHANTER_HALT: HaltType = {
     id: "enchanter",
     name: "Enchanteur",
-    description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],    icon: visual("travel/enchanter/logo", { letter: "EN" }),
-    transition: DOOR_TRANSITION,
+    description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],
+    icon: visual("travel/enchanter/logo", { letter: "EN" }),
+    transition: visual("transitions/dungeon-door"),
     create: run => new EnchanterHalt(run),
 }
 

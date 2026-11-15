@@ -1,0 +1,30 @@
+{
+    "size": [816, 444],
+    "render": {
+        "light": 270,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.7, "towards": "#4a4458"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#5a40a0", "amount": 0.1}
+        ]
+    },
+    "anim": [
+        "global: y=0.12 a=0 > y=0 a=1 m > hold > z*8 on=0.5;0.5 a=0",
+        "vortex: > m > hold > z*1.4",
+        "runes:  > m > hold > z*1.25"
+    ],
+    "layers": [
+        {"name": "torches", "tag": "object", "picture": "torches.pic.json", "at": [0, 0]},
+        {"name": "vortex", "tag": "object", "picture": "vortex.pic.json", "at": [0, 0]},
+        {"name": "runes", "tag": "object", "picture": "runes.pic.json", "at": [0, 0]},
+        {"name": "ring", "tag": "object", "picture": "ring.pic.json", "at": [0, 0]},
+        {"name": "room", "tag": "border", "picture": "room.pic.json", "at": [0, 0]}
+    ]
+}

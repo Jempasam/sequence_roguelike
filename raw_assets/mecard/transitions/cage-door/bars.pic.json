@@ -1,0 +1,577 @@
+{
+ "size": [
+  272,
+  148
+ ],
+ "seed": 3,
+ "palette": [
+  "#8a929c",
+  "#4a5058",
+  "#a8b0ba",
+  "#101216"
+ ],
+ "shapes": [
+  {
+   "box": [
+    100,
+    48,
+    3,
+    90
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    110,
+    38,
+    3,
+    100
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    120,
+    33,
+    3,
+    105
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    130,
+    31,
+    3,
+    107
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    140,
+    31,
+    3,
+    107
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    150,
+    34,
+    3,
+    104
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    160,
+    39,
+    3,
+    99
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    170,
+    50,
+    3,
+    88
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "ellipse": [
+    98,
+    30,
+    76,
+    60
+   ],
+   "material": 1,
+   "depth": [
+    4,
+    4
+   ]
+  },
+  {
+   "ellipse": [
+    101,
+    33,
+    70,
+    54
+   ],
+   "erase": true
+  },
+  {
+   "box": [
+    98,
+    60,
+    76,
+    78
+   ],
+   "material": 1,
+   "depth": [
+    4,
+    4
+   ]
+  },
+  {
+   "box": [
+    101,
+    60,
+    70,
+    75
+   ],
+   "erase": true
+  },
+  {
+   "box": [
+    100,
+    48,
+    3,
+    90
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    110,
+    38,
+    3,
+    100
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    120,
+    33,
+    3,
+    105
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    130,
+    31,
+    3,
+    107
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    140,
+    31,
+    3,
+    107
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    150,
+    34,
+    3,
+    104
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    160,
+    39,
+    3,
+    99
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    170,
+    50,
+    3,
+    88
+   ],
+   "material": 0,
+   "depth": [
+    5,
+    8
+   ],
+   "relief": "round-x"
+  },
+  {
+   "box": [
+    98,
+    54,
+    76,
+    5
+   ],
+   "material": 2,
+   "depth": [
+    6,
+    7
+   ],
+   "relief": "round-y"
+  },
+  {
+   "box": [
+    98,
+    96,
+    76,
+    5
+   ],
+   "material": 2,
+   "depth": [
+    6,
+    7
+   ],
+   "relief": "round-y"
+  },
+  {
+   "box": [
+    98,
+    130,
+    76,
+    8
+   ],
+   "material": 2,
+   "depth": [
+    6,
+    7
+   ],
+   "relief": "round-y"
+  },
+  {
+   "ellipse": [
+    99,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    99,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    109,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    109,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    119,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    119,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    129,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    129,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    139,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    139,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    149,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    149,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    159,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    159,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    169,
+    53,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "ellipse": [
+    169,
+    95,
+    5,
+    7
+   ],
+   "material": 2,
+   "depth": [
+    7,
+    9
+   ],
+   "relief": "dome"
+  },
+  {
+   "box": [
+    128,
+    108,
+    16,
+    14
+   ],
+   "material": 2,
+   "depth": [
+    6,
+    8
+   ],
+   "relief": "bevel",
+   "bevel": 1
+  },
+  {
+   "ellipse": [
+    133,
+    112,
+    6,
+    6
+   ],
+   "material": 3,
+   "depth": [
+    3,
+    4
+   ]
+  }
+ ]
+}

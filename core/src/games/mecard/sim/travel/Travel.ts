@@ -2,6 +2,7 @@ import type { Text } from "../../../../semantic"
 import { Observable } from "../base/Observable"
 import type { Card } from "../card/Card"
 import { exitsOf } from "../catalog/floors"
+import type { Fight } from "../fight/Fight"
 import type { Floor } from "../floor/Floor"
 import type { Halt } from "../halt/Halt"
 import type { CardChoosing, Choosing, Count, HaltContext, Shown, Way } from "../halt/HaltContext"
@@ -11,7 +12,6 @@ import type { HaltMoment } from "../halt/SceneLook"
 import type { Hero } from "../run/Hero"
 import { Journey } from "../run/Journey"
 import type { Place } from "../run/Journey"
-import { isHalt } from "../run/PlaceType"
 import type { Run } from "../run/Run"
 import { loadTravel, saveTravel } from "../save/travelSave"
 import type { TravelSave } from "../save/travelSave"
@@ -77,8 +77,8 @@ interface Step {
  * fighting it is up to the run.
  *
  * The halts ask their questions through a {@link HaltContext} only it holds, each question opening a
- * {@link Dialog}, answered by its `take` methods. A character asked while a pick is taken in follows the
- * dialog of that pick, which stays open: answering it again takes back the steps after it. So
+ * {@link Dialog}, answered by its `take` methods. A character asked while an offer or a character is taken
+ * in follows the dialog of that pick, which stays open: answering it again takes back the steps after it. So
  * {@link Travel.dialogs} is a list, and an answer says which dialog it is for.
  */
 export class Travel {
@@ -191,6 +191,7 @@ export class Travel {
         this.loaded = new Observable(report)
         this.floor = floor
         this.journey = this.#newJourney()
+        Object.defineProperty(this.#context, "fight", { get: () => this.#fight })
     }
 
 
@@ -201,6 +202,9 @@ export class Travel {
 
     /** The halt being visited, none out of a visit. */
     public get halt(): Halt|null { return this.#halt }
+
+    /** The fight reached, or just won while its halt is visited, none otherwise. */
+    public get fight(): Fight|null { return this.#fight }
 
     /** The steps of the dialog open, from its first, none when none is. */
     public get dialogs(): readonly Dialog[] {
@@ -247,11 +251,11 @@ export class Travel {
     /**
      * The halt a place holds: made the first time it is asked for, then the same, what it offers staying.
      *
-     * @throws {@link Error} When the place holds a fight.
+     * @throws {@link Error} When the place holds no halt.
      */
     public haltOf(place: Place): Halt {
-        const { type } = place
-        if(!isHalt(type)) throw new Error(`A place of sort ${type.id} holds a fight, not a halt.`)
+        const { halt: type } = place
+        if(!type) throw new Error("A place holding a fight only holds no halt.")
         const kept = this.#halts.get(place)
         if(kept) return kept
         const halt = type.create(this.run)
@@ -284,6 +288,7 @@ export class Travel {
         this.#halts.clear()
         this.#phase = "map"
         this.#halt = null
+        this.#fight = null
         this.#steps.length = 0
     }
 
@@ -330,12 +335,14 @@ export class Travel {
     public enter(): void {
         const place = this.#place
         if(this.#phase !== "entering" || !place) throw new Error("The party is entering no place.")
-        if(isHalt(place.type)){
-            this.#open(this.haltOf(place))
+        // A halt already made on a place with a fight is the one its won fight led to: going back is no fight.
+        if(place.fight && !this.#halts.has(place)){
+            this.#fight = place.fight.createFight(this.run, place)
+            this.#enterPhase("fight")
+            this.fightReached.notify(place)
             return
         }
-        this.#enterPhase("fight")
-        this.fightReached.notify(place)
+        this.#open(this.haltOf(place))
     }
 
     /**
@@ -345,6 +352,21 @@ export class Travel {
     public startFight(): void {
         const place = this.#place
         if(this.#phase === "fight" && place) this.fightEntered.notify(place)
+    }
+
+    /**
+     * Tell the fight reached is won: the halt of its place opens, being told of the fight, or the party goes back
+     * to the map when the place holds none. Nothing is done when the party is in no fight.
+     */
+    public endFight(): void {
+        const place = this.#place
+        if(this.#phase !== "fight" || !place) return
+        if(!place.halt){
+            this.leave()
+            return
+        }
+        this.fightLeft.notify(place)
+        this.#open(this.haltOf(place))
     }
 
     /**
@@ -367,6 +389,7 @@ export class Travel {
         if(this.#halt?.locked) return
         const halt = this.#halt
         const fought = this.#phase === "fight" ? this.#place : null
+        this.#fight = null
         this.#steps.length = 0
         // Forgotten first, so the visit is over for whatever the halt does as it stops.
         this.#halt = null
@@ -478,6 +501,10 @@ export class Travel {
     #place: Place|null = null
     #halt: Halt|null = null
 
+    /** The fight reached, kept once won while the halt it leads to is visited, none otherwise. */
+    #fight: Fight|null = null
+
+
     /** The halts of the floor made so far, by their place. */
     readonly #halts = new Map<Place, Halt>()
 
@@ -489,6 +516,8 @@ export class Travel {
 
     /** What the halts ask through. */
     readonly #context: HaltContext = {
+        // Read from the travel as the halts ask: see the constructor.
+        fight: null,
         offer: <T>(
             title: Text, offers: readonly T[], show: (offer: T) => Shown, done: (offer: T) => void,
             way: Way = {},
@@ -595,7 +624,9 @@ export class Travel {
         this.#steps.length = at + 1
         taken.notify({ dialog, picks })
         this.#context.react("pick")
-        this.#picking = true
+        // Only a choice of the screen (an offer, a character) is followed by the next step of its choice: what
+        // a confirmation or cards leads to is a dialog of its own, which replaces the screen.
+        this.#picking = dialog instanceof OfferDialog || dialog instanceof HeroDialog
         try {
             step.answer(picks)
         } finally {

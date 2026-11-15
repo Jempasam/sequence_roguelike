@@ -1,4 +1,4 @@
-import type { LayeredImagePath } from "../../../../engine/assets"
+import { visual } from "../base/Visual"
 import type { Visual } from "../base/Visual"
 import type { Rgba } from "../base/Rgba"
 import type { HaltType } from "../halt/HaltType"
@@ -26,15 +26,15 @@ export interface PlaceType extends PlaceInfo {
     /** The color of a glow around its token on the map, none for no glow. */
     readonly glow?: Rgba
 
-    /** The painting of the transition entering it, read as `Transition` reads it. */
-    readonly transition: LayeredImagePath
+    /**
+     * The transition entering it, such as `transitions/warm-door`: a name the screen resolves as it wishes. Its
+     * coloration tints the transition, its color and description fill in where the screen has none.
+     */
+    readonly transition: Visual
 }
 
-/** A sort of place holding a fight: the monsters are the place's own, and how rich it pays is the sort's. */
-export interface FightType extends PlaceType {
-    /** How much gold a won fight gives, and how much more at random up to a spread the run knows. */
-    readonly gold: number
-}
+/** The transition played on leaving a fight or a halt, back to the map: a name the screen resolves as it wishes. */
+export const BACK_VISUAL = visual("transitions/back")
 
 /** Is a sort of place a halt, visited rather than fought? A halt is the one that makes visits. */
 export function isHalt(type: PlaceType): type is HaltType {

@@ -43,8 +43,8 @@ describe("CardChain.problems", () => {
 })
 
 describe("resolve", () => {
-    test("repeat ×2 of an attack → 2 steps", () => {
-        expect(resolve([REPEAT_2, SLASH], drawing(0)).chain.actionsLeft()).toHaveLength(2)
+    test("repeat ×2 of an attack → 1 step, the attack played twice in it", () => {
+        expect(resolve([REPEAT_2, SLASH], drawing(0)).chain.actionsLeft()).toHaveLength(1)
     })
 
     test("double diagonal of an attack → 1 step", () => {
@@ -69,7 +69,7 @@ describe("resolve", () => {
         expect(fused.size).toBe(2)
         const resolution = fused.resolve(drawing(0))
         expect(resolution.reading.roots.map(String)).toEqual([`${REPEAT_2.name}(${THRUST.name})`, STEP.name, SLASH.name])
-        expect(resolution.chain.actionsLeft()).toHaveLength(4)
+        expect(resolution.chain.actionsLeft()).toHaveLength(3)
     })
 
     test("a fusion of a fusion → unfolded in turn", () => {
@@ -89,13 +89,13 @@ describe("resolve", () => {
     test("a fusion of modifiers before an action → the action taken by both", () => {
         const resolution = resolve([new FusionCard([REPEAT_2, GAMBLE]), THRUST], drawing(0))
         expect(resolution.reading.roots.map(String)).toEqual([`${REPEAT_2.name}(${GAMBLE.name}(${THRUST.name}))`])
-        expect(resolution.chain.actionsLeft()).toHaveLength(2)
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
     })
 
     test("a fusion plugged into a modifier → its first card taken, the rest after", () => {
         const resolution = resolve([REPEAT_2, new FusionCard([THRUST, PRAYER])], drawing(0))
         expect(resolution.reading.roots.map(String)).toEqual([`${REPEAT_2.name}(${THRUST.name})`])
-        expect([resolution.chain.actionsLeft().length, resolution.acting.length]).toEqual([2, 1])
+        expect([resolution.chain.actionsLeft().length, resolution.acting.length]).toEqual([1, 1])
     })
 
     test("a fusion whose last card is not given its input → unfolded, only that card greyed out", () => {
@@ -113,7 +113,7 @@ describe("resolve", () => {
     test("a fusion of the catalog → its cards, a gamble of two thrusts", () => {
         const resolution = resolve([UNSTABLE_THRUST], drawing(0))
         expect(resolution.reading.roots.map(String)).toEqual([`${GAMBLE.name}(${REPEAT_2.name}(${THRUST.name}))`])
-        expect(resolution.chain.actionsLeft()).toHaveLength(2)
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
     })
 
     test("a draw → the card drawn, read in its place", () => {

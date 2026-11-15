@@ -9,7 +9,6 @@ import { possessBy } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { CAVE_TRANSITION } from "../../transitions"
 import { DeckHalt } from "../deck/DeckHalt"
 import { DARK_COLOR, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
@@ -21,7 +20,7 @@ export class DarkDemonHalt extends DeckHalt {
     constructor(run: Run){
         super(DARK_DEMON_HALT, run,
             ["Signe, et chaque ", CARTE, " d'un ", DECK, " sera ", FUSION.as("collée"), " à celle d'un monstre."],
-            sceneLook(31, 8, 10, "mecard/travel/demon"),
+            sceneLook(31, 8, 10, "demon", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "hornedCrown",
                 clothes: DARK_COLOR,
@@ -61,6 +60,6 @@ export const DARK_DEMON_HALT: HaltType = {
     description: ["Chaque ", CARTE, " d'une ", UNIT, " est ", FUSION.as("collée"), " à la ", CARTE, " d'un monstre au même rang."],
     icon: visual("travel/demon/logo", { letter: "DÉ!" }),
     glow: DARK_COLOR,
-    transition: CAVE_TRANSITION,
+    transition: visual("transitions/warm-door", {coloration:[0.72, 0.56, 0.78]}),
     create: run => new DarkDemonHalt(run),
 }

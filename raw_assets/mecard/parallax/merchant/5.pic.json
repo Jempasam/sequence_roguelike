@@ -1,0 +1,40 @@
+{
+    "size": [288, 164],
+    "seed": 15,
+    "palette": [
+        "#5a3a24",
+        "#2a1a10",
+        {"color": "#d8b048", "reflection": 0.8},
+        "#c8b890"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 143, 288, 21], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [0, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [267, 21, 21, 122], "fill": {"pattern": "planks", "width": 4, "axis": "y", "seams": 0.6, "materials": [0, 1]}, "depth": [5, 8], "relief": "bevel", "bevel": 3},
+        {"box": [20, 20, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 143, 248, 1], "material": 1, "depth": 4},
+        {"box": [20, 20, 1, 124], "material": 1, "depth": 4},
+        {"box": [267, 20, 1, 124], "material": 1, "depth": 4},
+
+        {"line": [9, 12, 20, 12], "material": 3, "depth": 8},
+        {"line": [9, 15, 20, 15], "material": 3, "depth": 8},
+        {"line": [268, 12, 279, 12], "material": 3, "depth": 8},
+        {"line": [268, 15, 279, 15], "material": 3, "depth": 8},
+        {"line": [9, 148, 20, 148], "material": 3, "depth": 8},
+        {"line": [9, 151, 20, 151], "material": 3, "depth": 8},
+        {"line": [268, 148, 279, 148], "material": 3, "depth": 8},
+        {"line": [268, 151, 279, 151], "material": 3, "depth": 8},
+
+        {"ellipse": [9, 9, 9, 9], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [270, 9, 9, 9], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [9, 146, 9, 9], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [270, 146, 9, 9], "material": 2, "depth": [8, 10], "relief": "dome"},
+
+        {"line": [136, 9, 136, 14], "material": 3, "depth": 9},
+        {"line": [152, 9, 152, 14], "material": 3, "depth": 9},
+        {"box": [128, 12, 32, 14], "fill": {"pattern": "planks", "width": 4, "axis": "x", "seams": 0, "materials": [0, 1]}, "depth": [7, 9], "relief": "bevel", "bevel": 1},
+        {"ellipse": [136, 14, 16, 10], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"box": [143, 16, 2, 6], "material": 1, "depth": 10}
+    ]
+}

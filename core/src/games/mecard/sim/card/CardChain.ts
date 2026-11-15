@@ -1,14 +1,17 @@
 import { joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import type { Action, Indicator, Pose, Preview, PreviewContext, UnitContext } from "../battle/Action"
+import type { Action, Pose, UnitContext } from "../battle/Action"
+import type { Indicator, Preview } from "../battle/preview/Preview"
+import type { PreviewContext } from "../battle/preview/PreviewContext"
 import type { Battle } from "../battle/Battle"
 import type { Unit } from "../battle/Unit"
 
+import { composable } from "./Card"
 import type { Card, RewriteContext, RewriteSpot } from "./Card"
 import type { CardNode } from "./CardNode"
-import { ACTION, PREPARATION } from "./CardType"
+import { ACTION, CARD, PREPARATION } from "./CardType"
 import type { CardType, PrepPhase, Preparation } from "./CardType"
-import { read, takes } from "./Reading"
+import { read, takes, treeEnd } from "./Reading"
 import type { Reading } from "./Reading"
 
 /** What cards in a row give at the end of the preparation, once every card rewriting it is rewritten. */
@@ -123,6 +126,9 @@ export class CardChain {
     /** What follows the reading, none by default. */
     public watcher: ChainWatcher|null = null
 
+    /** The places of the cards another unit put in the row, which it did not plan itself. */
+    public readonly borrowed = new Set<number>()
+
     constructor(cards: readonly Card[] = []){
         this.cards = [...cards]
     }
@@ -150,7 +156,26 @@ export class CardChain {
     public copy(): CardChain {
         const copy = new CardChain(this.cards)
         copy.cursor = this.cursor
+        for(const index of this.borrowed) copy.borrowed.add(index)
         return copy
+    }
+
+    /**
+     * Put cards in the row, given by another unit, as they are given: at a place, those from there on shifted.
+     * The reading moves on past them when it stood after the place, since they are given to be played at
+     * once, not read.
+     *
+     * @returns Where the first of them stands.
+     */
+    public insert(at: number, cards: readonly Card[]): number {
+        const shifted = [...this.borrowed].map(index => index >= at ? index + cards.length : index)
+        this.borrowed.clear()
+        for(const index of shifted) this.borrowed.add(index)
+        this.cards.splice(at, 0, ...cards)
+        cards.forEach((_, offset) => this.borrowed.add(at + offset))
+        if(at <= this.cursor) this.cursor += cards.length
+        this.watcher?.changed()
+        return at
     }
 
     /**
@@ -162,8 +187,14 @@ export class CardChain {
         if(!card) return null
         if(card.input === null) return { last: first, value: card.get(undefined) }
         if(!takes(card, this.cards[first + 1])) return null
+        if(card.input === CARD){
+            // Whatever follows is taken as it is, built or not: the cards, not what they give.
+            const last = treeEnd(this.cards, first + 1)
+            const tree = this.cards.slice(first + 1, last + 1)
+            return { last, value: card.get(tree, tree) }
+        }
         const input = this.get(first + 1)
-        return input && { last: input.last, value: card.get(input.value) }
+        return input && { last: input.last, value: card.get(input.value, this.cards.slice(first + 1, input.last + 1)) }
     }
 
     /**
@@ -186,11 +217,11 @@ export class CardChain {
         return null
     }
 
-    /** The actions it has left to give, one tree after the other. It touches nothing. */
+    /** The actions it has left to give, one for each tree, one after the other. It touches nothing. */
     public actionsLeft(): Action[] {
         const copy = this.copy()
         const actions: Action[] = []
-        for(let next = copy.next(ACTION); next; next = copy.next(ACTION)) actions.push(...next)
+        for(let next = copy.next(ACTION); next; next = copy.next(ACTION)) actions.push(next)
         return actions
     }
 
@@ -435,17 +466,15 @@ export class CardChain {
             }
             const indicators: Indicator[] = []
             for(const each of acting){
-                for(const action of values[each.index] as readonly Action[]){
-                    for(const before of beforeSteps){
-                        const carried = before({ battle, unit, pose })
-                        indicators.push(...carried.indicators)
-                        pose = carried.pose
-                    }
-                    const preview = action.preview({ battle, unit, pose })
-                    indicators.push(...preview.indicators)
-                    pose = preview.pose
-                    if(preview.beforeStep) beforeSteps.push(preview.beforeStep)
+                for(const before of beforeSteps){
+                    const carried = before({ battle, unit, pose })
+                    indicators.push(...carried.indicators)
+                    pose = carried.pose
                 }
+                const preview = (values[each.index] as Action).preview({ battle, unit, pose })
+                indicators.push(...preview.indicators)
+                pose = preview.pose
+                if(preview.beforeStep) beforeSteps.push(preview.beforeStep)
             }
             return { preview: { indicators, pose }, start, uncertain }
         })
@@ -494,11 +523,24 @@ function resolved(
     const values: unknown[] = cards.map(() => undefined)
     const ok: boolean[] = cards.map(() => false)
     const guessed: boolean[] = cards.map(() => false)
+    // Where the tree of each card ends, once it is built: what gave the input of the card on its left.
+    const ends: number[] = cards.map((_, index) => index)
     for(let index = cards.length - 1; index >= 0; index--){
         const card = cards[index]
         const given = card.input !== null
+        if(card.input === CARD){
+            // Taken as it is: the cards themselves, whether the tree on the right is built or not.
+            if(!takes(card, cards[index + 1])) continue
+            const tree = cards.slice(index + 1, treeEnd(cards, index + 1) + 1)
+            values[index] = card.get(tree, tree)
+            ends[index] = index + tree.length
+            ok[index] = true
+            guessed[index] = drawn[index]
+            continue
+        }
         if(given && !(takes(card, cards[index + 1]) && ok[index + 1])) continue
-        values[index] = card.get(given ? values[index + 1] : undefined)
+        values[index] = card.get(given ? values[index + 1] : undefined, given ? cards.slice(index + 1, ends[index + 1] + 1) : undefined)
+        if(given) ends[index] = ends[index + 1]
         ok[index] = true
         guessed[index] = drawn[index] || (given && guessed[index + 1])
     }
@@ -566,9 +608,11 @@ export function signatureOf(card: Card): Signature {
 
 /**
  * Do cards in a row read whole, read by what they truly take and give: each given its input by the card on
- * its right, each head playable. For the halts, which tie and upgrade cards.
+ * its right, each head playable, none with variants to choose from, which no composite holds. For the
+ * halts, which tie and upgrade cards.
  */
 export function readsWhole(cards: readonly Card[]): boolean {
+    if(!cards.every(composable)) return false
     const signatures = cards.map(signatureOf)
     for(let index = 0; index < signatures.length; index++){
         const { input } = signatures[index]

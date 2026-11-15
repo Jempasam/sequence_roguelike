@@ -1,5 +1,4 @@
 import type { Observer } from "../../sim/base/Observable"
-import { planFor } from "../../sim/ai/Bot"
 import type { Battle } from "../../sim/battle/Battle"
 import { CardChain } from "../../sim/card/CardChain"
 import { cardsInHand } from "../../sim/save/battleSave"
@@ -75,7 +74,8 @@ export class BattleHost {
         const battle = this.#engine
         if(!battle) return
         const owed = battle.awaited.units.filter(unit => this.seats.holderOf(unit.name) === guest)
-        for(const unit of owed) battle.commit(unit, planFor(unit))
+        const plans = owed.map(unit => battle.planAsBot(unit))
+        owed.forEach((unit, index) => battle.commitPlan(unit, plans[index]))
     }
 
     /** Wait for a client no more. */

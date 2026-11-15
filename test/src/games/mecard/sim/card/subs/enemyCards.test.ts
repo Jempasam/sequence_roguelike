@@ -28,14 +28,14 @@ describe("clone", () => {
     test("room ahead → appears ahead of its maker", () => {
         const on = battle()
         const maker = unit(on, 3, 3)
-        expectAt(on.clone(maker, hearts(2)) as Unit, 3, 2.2)
+        expectAt(on.cloneUnit(maker, hearts(2)) as Unit, 3, 2.2)
     })
 
     test("something ahead → appears to the side, never behind", () => {
         const on = battle()
         const maker = unit(on, 3, 3)
         unit(on, 3, 2.2, { team: MONSTERS })
-        const clone = on.clone(maker, hearts(2)) as Unit
+        const clone = on.cloneUnit(maker, hearts(2)) as Unit
         expect(clone.position.y).toBeLessThanOrEqual(3)
     })
 })
@@ -122,7 +122,7 @@ describe("SPIT", () => {
 })
 
 describe("DIVISION", () => {
-    test("five hearts → a clone on two shields, and nothing lost", () => {
+    test("five hearts → a clone on two shields, the two hearts lost by its maker", () => {
         const on = battle()
         const maker = unit(on, 3, 5, { hearts: hearts(5) })
         unit(on, 0.5, 0.5, { team: MONSTERS })
@@ -130,7 +130,7 @@ describe("DIVISION", () => {
         const clone = cloneOf(on, maker) as Unit
         expect(clone.hearts.all.map(heart => heart.kind)).toEqual([SHIELD_HEART, SHIELD_HEART])
         expect(clone.controller).toBe("bot")
-        expect(maker.life).toBe(5)
+        expect(maker.life).toBe(3)
     })
 
     test("one heart → no clone", () => {

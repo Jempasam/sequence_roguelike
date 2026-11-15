@@ -1,0 +1,31 @@
+{
+    "size": [288, 164],
+    "seed": 3,
+    "palette": [
+        "#8a5430",
+        "#2a1a10",
+        {"color": "#e0b030", "reflection": 0.7},
+        {"color": "#ffd860", "light": 0.6}
+    ],
+    "shapes": [
+        {"ellipse": [98, 40, 92, 76], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [3, 5], "relief": "bevel", "bevel": 2},
+        {"ellipse": [106, 48, 76, 64], "material": 1, "depth": 2},
+        {"box": [96, 80, 96, 20], "material": 1, "depth": 3},
+        {"ellipse": [102, 74, 84, 34], "material": 3, "depth": [6, 8], "relief": "dome"},
+        {"ellipse": [108, 72, 72, 28], "material": 2, "depth": [7, 9], "relief": "dome"},
+        {"ellipse": [122, 64, 44, 20], "material": 2, "depth": [8, 10], "relief": "dome"},
+        {"ellipse": [134, 60, 20, 10], "material": 3, "depth": [9, 10], "relief": "dome"},
+        {"ellipse": [112, 76, 10, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+        {"ellipse": [166, 74, 10, 6], "material": 3, "depth": [8, 9], "relief": "dome"},
+
+        {"box": [92, 96, 104, 38], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "seams": 0, "materials": [0, 1]}, "depth": [5, 6], "relief": "bevel", "bevel": 1},
+        {"box": [88, 92, 112, 7], "material": 0, "depth": [6, 8], "relief": "round-y"},
+        {"box": [88, 92, 112, 2], "material": 2, "depth": 8},
+        {"box": [88, 128, 112, 8], "material": 0, "depth": [5, 7], "relief": "round-y"},
+        {"box": [98, 98, 6, 36], "material": 2, "depth": [7, 8], "relief": "round-x"},
+        {"box": [184, 98, 6, 36], "material": 2, "depth": [7, 8], "relief": "round-x"},
+        {"box": [138, 101, 12, 14], "material": 2, "depth": [8, 9], "relief": "bevel", "bevel": 1},
+        {"ellipse": [141, 104, 6, 5], "material": 1, "depth": 9},
+        {"box": [143, 108, 2, 4], "material": 1, "depth": 9}
+    ]
+}

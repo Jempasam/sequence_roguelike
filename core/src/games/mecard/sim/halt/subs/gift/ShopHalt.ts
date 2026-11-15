@@ -12,7 +12,6 @@ import type { Usable } from "../../../usable/Usable"
 import type { HaltContext, Shown } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
 import { described, usableText } from "../shown"
 import { CARTE, DECK, SUPPRESSION, UNIT } from "../../../base/keywords"
@@ -70,7 +69,7 @@ export class ShopHalt extends AbstractHalt {
     constructor(run: Run){
         super(SHOP_HALT, run,
             [CARTE.as("Cartes"), ", objets, utilisables. Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"],
-            sceneLook(36, 28, 15, "mecard/travel/shop"),
+            sceneLook(36, 28, 15, "shop"),
             {
                 hat: "furToque",
                 clothes: rgba(0.35, 0.55, 1),
@@ -152,7 +151,8 @@ export class ShopHalt extends AbstractHalt {
 export const SHOP_HALT: HaltType = {
     id: "shop",
     name: "Magasin",
-    description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],    icon: visual("travel/shop/logo", { letter: "MA" }),
-    transition: DOOR_TRANSITION,
+    description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],
+    icon: visual("travel/shop/logo", { letter: "MA" }),
+    transition: visual("transitions/warm-door"),
     create: run => new ShopHalt(run),
 }

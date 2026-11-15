@@ -1,7 +1,8 @@
-import { Arena, ARENA_SIZE, Battle, monsterStart, partyStarts, pillarsFor, planFor, Rng, Team, Vector2 } from "@game/core/mecard"
-import type { Unit } from "@game/core/mecard"
+import { Arena, ARENA_SIZE, askAi, Battle, DeckAi, monsterStart, partyStarts, pillarsFor, Rng, Team, Vector2 } from "@game/core/mecard"
+import type { BattlePlan, Unit, UnitController } from "@game/core/mecard"
 
 import type { Body } from "./fighters"
+import { Journal } from "./journal"
 import { REFINE_FAILED } from "./strategies"
 import type { Strategy } from "./strategies"
 import type { Outcome } from "./stats"
@@ -12,7 +13,7 @@ export interface Combatant {
     readonly body: Body
     readonly strategy: Strategy
 
-    /** Is it a monster of the game, whose chains the battle plans as it does in a run? */
+    /** Is it a monster of the game as a foe, with the body a run gives it, that no hero's refill fills? */
     readonly hostile: boolean
 }
 
@@ -33,6 +34,9 @@ export interface FightSpec {
 
     /** What plays the units a battle makes by itself, a clone, a summoned body. */
     readonly defaults: { readonly allies: Strategy, readonly foes: Strategy }
+
+    /** Is everything that happens written down, in {@link FightResult.log}? */
+    readonly journal?: boolean
 }
 
 export interface FightResult {
@@ -44,6 +48,17 @@ export interface FightResult {
 
     /** The effects that failed, as the battle told them, and the error that stopped the battle if one did. */
     readonly errors: readonly string[]
+
+    /** The full account of the battle, one line per thing that happened: only when the spec asked for it. */
+    readonly log?: readonly string[]
+}
+
+/** How a battle ended for the allies, in the journal. */
+const OUTCOME_TEXT: Readonly<Record<Outcome, string>> = {
+    win: "victoire des alliés",
+    loss: "défaite des alliés",
+    draw: "nul",
+    timeout: "timeout",
 }
 
 function messageOf(error: unknown): string {
@@ -101,6 +116,13 @@ export function fight(spec: FightSpec): FightResult {
     const foesTeam = new Team("Monstres")
     const strategies = new Map<Unit, Strategy>()
     const starters: Starter[] = []
+    // The AI of each strategy, made once per battle with its own random numbers.
+    const ais = new Map<Strategy, UnitController>()
+    const aiOf = (strategy: Strategy): UnitController => {
+        const known = ais.get(strategy) ?? strategy.ai(strategyRng)
+        ais.set(strategy, known)
+        return known
+    }
 
     const bottom = spec.mirrored ? spec.foes : spec.allies
     const starts = partyStarts(bottom.length)
@@ -110,11 +132,13 @@ export function fight(spec: FightSpec): FightResult {
         const unit = battle.add({
             name: combatant.name,
             team: side === "allies" ? alliesTeam : foesTeam,
-            controller: combatant.hostile || (combatant.strategy.deck && !carries) ? "bot" : "player",
+            // The game's own AI is the bot of the battle; any other plays as its strategy's AI says.
+            controller: combatant.strategy.deck && !carries ? "bot" : aiOf(combatant.strategy),
             position: atBottom ? starts[index] : monsterStart(index),
             direction: atBottom ? Vector2.UP : Vector2.DOWN,
             hearts: combatant.body.hearts,
             decks: combatant.body.decks,
+            unlimited: combatant.body.unlimited,
             items: combatant.body.items,
             usables: combatant.body.usables,
             bases: combatant.body.bases,
@@ -126,6 +150,15 @@ export function fight(spec: FightSpec): FightResult {
     spec.allies.forEach((combatant, index) => place(combatant, "allies", index))
     spec.foes.forEach((combatant, index) => place(combatant, "foes", index))
     for(const { center, radius } of pillarsFor(starts, rng)) battle.addPillar(center, radius)
+    const journal = spec.journal ? new Journal(battle) : null
+    journal?.snapshot("Départ")
+    const told = (result: FightResult, how: string): FightResult => {
+        if(!journal) return result
+        journal.snapshot("Arrivée")
+        journal.note(`Issue : ${how}, ${result.rounds} round(s)${result.errors.length > 0 ? `, ${result.errors.length} erreur(s)` : ""}`)
+        for(const error of result.errors) journal.note(`  erreur : ${error}`)
+        return { ...result, log: journal.lines }
+    }
 
     const strategyOf = (unit: Unit): Strategy => {
         return strategies.get(unit) ?? (unit.team === alliesTeam ? spec.defaults.allies : spec.defaults.foes)
@@ -136,7 +169,9 @@ export function fight(spec: FightSpec): FightResult {
 
     const timedOut = (): FightResult => {
         const outcome = spec.softWin ? softOutcome(starters) : "timeout"
-        return { outcome, rounds: battle.round, soft: outcome !== "timeout", errors: failures() }
+        const why = battle.round >= spec.maxRounds ? "limite de rounds" : "bloqué"
+        const how = outcome === "timeout" ? `timeout (${why})` : `timeout (${why}) donné aux points : ${OUTCOME_TEXT[outcome]}`
+        return told({ outcome, rounds: battle.round, soft: outcome !== "timeout", errors: failures() }, how)
     }
 
     let life = lifeOf(battle)
@@ -147,14 +182,26 @@ export function fight(spec: FightSpec): FightResult {
             if(battle.round >= spec.maxRounds || blocked) return timedOut()
             battle.startRound()
             const planners = [...battle.initiative]
+            // Every unit decides from the battle before any chain is committed: none knows what the others choose.
+            const plans = new Map<Unit, BattlePlan>()
             for(const unit of planners){
-                battle.commit(unit, unit.controller === "bot" ? planFor(unit) : strategyOf(unit).plan(unit, battle, strategyRng))
+                try {
+                    plans.set(unit, askAi(battle, unit, battle.controllerOf(unit)))
+                }
+                catch {
+                    // A battle is not copied while a process goes on: the deck's chain is played, and it is told.
+                    notes.push(REFINE_FAILED)
+                    plans.set(unit, { chain: new DeckAi().decide(unit).chain })
+                }
             }
+            for(const unit of planners) battle.commit(unit, plans.get(unit)!.chain)
             for(const unit of planners){
-                if(unit.controller === "player" && strategyOf(unit).refine?.(unit, battle, strategyRng) === false) notes.push(REFINE_FAILED)
-            }
-            for(const unit of planners){
-                if(!strategyOf(unit).usables) continue
+                const chosen = plans.get(unit)!.usables
+                if(chosen) {
+                    if(chosen.length > 0) battle.activate(unit, chosen)
+                    continue
+                }
+                if(!strategyOf(unit).usables || strategyOf(unit).choosesUsables) continue
                 const ready = unit.usables.filter(carried => !carried.spent)
                 if(ready.length > 0) battle.activate(unit, ready)
             }
@@ -166,11 +213,11 @@ export function fight(spec: FightSpec): FightResult {
         }
     }
     catch(error){
-        return {
+        return told({
             outcome: "timeout", rounds: battle.round, soft: false,
             errors: [...failures(), `combat interrompu : ${messageOf(error)}`],
-        }
+        }, "combat interrompu par une exception")
     }
     const outcome = battle.winner === alliesTeam ? "win" : battle.winner === foesTeam ? "loss" : "draw"
-    return { outcome, rounds: battle.round, soft: false, errors: failures() }
+    return told({ outcome, rounds: battle.round, soft: false, errors: failures() }, OUTCOME_TEXT[outcome])
 }

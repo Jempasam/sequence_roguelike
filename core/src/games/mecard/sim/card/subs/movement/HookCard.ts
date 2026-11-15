@@ -4,15 +4,17 @@ import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
+import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import { ROOTED } from "../../../status/subs/Rooted"
 
 import { ActionCard } from "../ActionCard"
-import { fly } from "../tools/bolt"
+import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { hold, SHORT_TIME, travel } from "../tools/playing"
-import { arrow, label, still } from "../tools/previews"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import * as Areas from "../../../battle/area/Areas"
+import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the hooks of the catalog reach, in meters, before the reach of the unit. */
 const HOOK_RANGE = 4
@@ -93,31 +95,33 @@ export class HookCard extends ActionCard {
 
     static #hooking(range: number, pullsUnits: boolean, pullsSelf: boolean, roots: number): Action {
         return {
-            use: function* ({ battle, unit }){
+            use: function ({ battle, unit }){
                 const caught = HookCard.#caught(battle, unit, unit, range, pullsUnits, pullsSelf)
-                yield* fly(battle, unit.position, caught.end, ROPE_COLOR)
+                fly(battle, unit.position, caught.end, ROPE_COLOR)
                 if(!caught.pulled){
                     battle.events.push({ type: "skipped", unit, reason: "rien à accrocher" })
-                    yield* hold(battle, SHORT_TIME, [label(unit.position, "rien à accrocher", NOTE_COLOR)])
+                    hold(battle, SHORT_TIME, [Previews.label(unit.position, "rien à accrocher", NOTE_COLOR)])
                     return
                 }
                 const forced = caught.pulled !== unit
                 const theirs = { battle, unit: caught.pulled }
-                yield* travel(theirs, caught.way, caught.distance, PULL_SPEED, forced)
+                travel(theirs, caught.way, caught.distance, PULL_SPEED, forced)
                 if(forced && roots > 0) battle.applyStatus(caught.pulled, ROOTED, roots)
             },
             preview: ({ battle, unit, pose }) => {
                 const caught = HookCard.#caught(battle, unit, pose, range, pullsUnits, pullsSelf)
-                const rope = arrow([pose.position, caught.end], MOVE_WIDTH / 2, ROPE_COLOR)
+                const rope = Previews.arrow([pose.position, caught.end], MOVE_WIDTH / 2, ROPE_COLOR)
                 const { pulled } = caught
-                if(!pulled) return still(pose, rope, label(pose.position, "rien à accrocher", NOTE_COLOR))
+                const area: Area = Areas.line(pose.position, caught.end, BOLT_WIDTH)
+                const reached = Previews.strike([area], pulled && pulled !== unit ? [pulled] : [])
+                if(!pulled) return Previews.still(pose, ...reached, rope, Previews.label(pose.position, "rien à accrocher", NOTE_COLOR))
                 const from = pulled === unit ? pose.position : pulled.position
-                const pull = battle.travel(pulled, from, caught.way, caught.distance)
+                const pull = battle.moveSpot(pulled, from, caught.way, caught.distance)
                 if(pulled !== unit){
-                    return still(pose, rope, arrow([from, pull.to], MOVE_WIDTH, CONTROL_COLOR))
+                    return Previews.still(pose, ...reached, rope, Previews.arrow([from, pull.to], MOVE_WIDTH, CONTROL_COLOR))
                 }
-                const gone = arrow([from, pull.to], MOVE_WIDTH, MOVE_COLOR)
-                return still({ ...pose, position: pull.to }, rope, gone)
+                const gone = Previews.arrow([from, pull.to], MOVE_WIDTH, MOVE_COLOR)
+                return Previews.still({ ...pose, position: pull.to }, ...reached, rope, gone)
             },
         }
     }

@@ -5,9 +5,8 @@ import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { AbstractHalt } from "../AbstractHalt"
-import { DARK_COLOR, DARK_MASK } from "../halt_common"
+import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
 
 /** The shady tavern: a monster among some joins the party, planned by the players as a hero. */
@@ -17,7 +16,7 @@ export class DarkTavernHalt extends AbstractHalt {
     constructor(run: Run){
         super(DARK_TAVERN_HALT, run,
             "Ces monstres boivent ici. L'un d'eux peut te suivre, et t'obéir.",
-            sceneLook(36, 23, 13, "mecard/travel/tavern"),
+            sceneLook(36, 23, 13, "tavern", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "beret",
                 clothes: DARK_COLOR,
@@ -51,6 +50,6 @@ export const DARK_TAVERN_HALT: HaltType = {
     description: "Un monstre parmi trois rejoint l'équipe, joué comme un héros.",
     icon: visual("travel/tavern/logo", { letter: "TA!" }),
     glow: DARK_COLOR,
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/warm-door", { coloration: DARK_COLORATION }),
     create: run => new DarkTavernHalt(run),
 }

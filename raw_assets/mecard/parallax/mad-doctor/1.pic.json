@@ -1,0 +1,20 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": [
+        "#2e4a3e",
+        "#12221c",
+        "#3e6454",
+        {"color": "#6e7a76", "reflection": 0.6}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "tiles", "cell": [14, 7], "grout": 1, "offset": 0.5, "odd": 0.12, "materials": [0, 1, 2]}, "depth": 2},
+        {"box": [0, 0, 288, 112], "fill": {"pattern": "noise", "density": 0.012, "radius": 2, "materials": [null, 1]}},
+        {"box": [0, 106, 288, 6], "material": 1, "depth": [3, 4], "relief": "round-y"},
+        {"box": [0, 112, 288, 52], "fill": {"pattern": "tiles", "cell": [12, 12], "grout": 1, "odd": 0.5, "materials": [0, 1, 2]}, "depth": 2},
+        {"line": [78, 21, 78, 106], "width": 5, "material": 3, "depth": [3, 5], "relief": "round-x"},
+        {"line": [210, 21, 210, 106], "width": 5, "material": 3, "depth": [3, 5], "relief": "round-x"},
+        {"box": [74, 60, 9, 3], "material": 3, "depth": [4, 5]},
+        {"box": [206, 60, 9, 3], "material": 3, "depth": [4, 5]}
+    ]
+}

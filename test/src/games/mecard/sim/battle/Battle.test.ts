@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     Add, AIM, Arena, Battle, BLINK, BURN, Carried, CLONE, DODGE_CARD, FIRE_FLASK, FusionCard, GLASS_HEART,
-    HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, SHIELD_HEART, SHOT, SLASH, STEP,
+    HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, REPEAT_2, SHIELD_HEART, SHOT, SLASH, STEP,
     STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURNS, UNIT_RADIUS, Vector2, WAIT,
 } from "@game/core/mecard"
 import type { Unit } from "@game/core/mecard"
@@ -92,14 +92,14 @@ describe("Collisions", () => {
         const on = pillared()
         // Its path passes 0.8 m from the pillar: 0.05 m inside the true circles, within the slack.
         const walker = unit(on, 4.3, 5)
-        const gone = on.travel(walker, walker.position, Vector2.UP, 4)
+        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 4)
         expect(gone.distance).toBeCloseTo(4)
     })
 
     test("straight into a pillar → stops at the true contact", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 5)
-        const gone = on.travel(walker, walker.position, Vector2.UP, 3)
+        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
         const gap = gone.to.distance(new Vector2(3.5, 3))
         expect(gap).toBeGreaterThanOrEqual(0.5 + walker.radius)
         expect(gap).toBeLessThan(0.5 + walker.radius + 0.06)
@@ -108,14 +108,14 @@ describe("Collisions", () => {
     test("a little inside a pillar, going further in → backs out to the true contact", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 3.82)
-        const gone = on.travel(walker, walker.position, Vector2.UP, 1)
+        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 1)
         expect(gone.to.distance(new Vector2(3.5, 3))).toBeGreaterThanOrEqual(0.5 + walker.radius)
     })
 
     test("against a pillar, leaving along it → moves", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 3.82)
-        const gone = on.travel(walker, walker.position, new Vector2(1, 0), 1)
+        const gone = on.moveSpot(walker, walker.position, new Vector2(1, 0), 1)
         expect(gone.distance).toBeCloseTo(1)
     })
 
@@ -166,7 +166,7 @@ describe("Collisions", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        const gone = on.travel(walker, walker.position, Vector2.UP, 3)
+        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
         expect(gone.struck).toBe(target)
         expect(gone.to.distance(target.position)).toBeGreaterThanOrEqual(walker.radius + target.radius)
     })
@@ -174,7 +174,7 @@ describe("Collisions", () => {
     test("a move against a wall → the wall stays exact", () => {
         const on = battle()
         const walker = unit(on, 3, 1)
-        const gone = on.travel(walker, walker.position, Vector2.UP, 3)
+        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
         expect(gone.to.y).toBeGreaterThanOrEqual(walker.radius)
     })
 })
@@ -338,6 +338,63 @@ describe("Steps of others", () => {
         expect(root.preview?.indicators.slice(0, 2).map(indicator => indicator.kind)).toEqual(["polygon", "arrow"])
     })
 
+    test("a hypnosis → the cards it was given join the chain of the target, edged and lit", () => {
+        const on = battle()
+        const caster = unit(on, 3, 5)
+        const target = unit(on, 3, 2, { team: MONSTERS, direction: Vector2.LEFT })
+        const changes: { cards: readonly unknown[], cursor: number, borrowed: readonly number[] }[] = []
+        const lit: number[][] = []
+        // The next round empties the chain: only what changed while cards were borrowed is looked at.
+        on.signals.chainChanged.add(event => { if(event.unit === target && event.borrowed.length > 0) changes.push(event) })
+        on.signals.cardActivated.add(event => { if(event.unit === target) lit.push([event.first, event.last]) })
+        play(on, [[caster, chain(HYPNOSIS, STEP)], [target, chain(WAIT)]])
+        const last = changes[changes.length - 1]
+        expect(last.cards).toContain(STEP)
+        expect(last.borrowed).toHaveLength(1)
+        expect(last.cards[last.borrowed[0]]).toBe(STEP)
+        expect(last.cursor).toBeGreaterThan(last.borrowed[0])
+        expect(lit).toContainEqual([last.borrowed[0], last.borrowed[0]])
+    })
+
+    test("a hypnosis → the target already past in the initiative still plays it, once", () => {
+        const on = battle()
+        const target = unit(on, 3, 2, { team: MONSTERS, direction: Vector2.LEFT })
+        const caster = unit(on, 3, 5)
+        play(on, [[caster, chain(HYPNOSIS, STEP)], [target, chain(WAIT)]])
+        expectAt(target, 1, 2)
+    })
+
+    test("a hypnosis of two cards → both are played and both join the chain", () => {
+        const on = battle()
+        const caster = unit(on, 3, 5)
+        const target = unit(on, 3, 2, { team: MONSTERS, direction: Vector2.LEFT })
+        let borrowed: readonly number[] = []
+        on.signals.chainChanged.add(event => { if(event.unit === target && event.borrowed.length > 0) borrowed = event.borrowed })
+        play(on, [[caster, chain(HYPNOSIS, REPEAT_2, STEP)]])
+        expect(target.position.x).toBeLessThan(1)
+        expect(borrowed).toHaveLength(2)
+    })
+
+    test("a hypnosis → an ally in the cone is taken too", () => {
+        const on = battle()
+        const caster = unit(on, 3, 5)
+        const ally = unit(on, 3, 3, { direction: Vector2.LEFT })
+        // A monster far off, so the battle does not end for want of an enemy.
+        unit(on, 0, 0, { team: MONSTERS })
+        play(on, [[caster, chain(HYPNOSIS, STEP)]])
+        expectAt(ally, 1, 3)
+    })
+
+    test("a hypnosis → nobody to hypnotise leaves every chain as it was", () => {
+        const on = battle()
+        const caster = unit(on, 3, 5)
+        const far = unit(on, 3, 0, { team: MONSTERS })
+        let changed = false
+        on.signals.chainChanged.add(event => { if(event.unit === far && event.borrowed.length > 0) changed = true })
+        play(on, [[caster, chain(HYPNOSIS, STEP)]])
+        expect(changed).toBe(false)
+    })
+
     test("a clone → plays the rest of the chain too, then vanishes", () => {
         const on = battle()
         const maker = unit(on, 3, 5)
@@ -354,7 +411,7 @@ describe("Steps of others", () => {
         const maker = unit(on, 3, 5)
         unit(on, 0, 0, { team: MONSTERS })
         on.startRound()
-        const clone = on.clone(maker, [new Heart(RED_HEART), new Heart(RED_HEART)]) as Unit
+        const clone = on.cloneUnit(maker, [new Heart(RED_HEART), new Heart(RED_HEART)]) as Unit
         expect(clone.vanishing).toBe(true)
         expect(clone.decisive).toBe(false)
         const gone: Unit[] = []
@@ -376,34 +433,36 @@ describe("Steps of others", () => {
     })
 })
 
-describe("Battle.tick", () => {
-    test("a step → a little of the way at each tick, the whole way at the end", () => {
+describe("Battle.playStep", () => {
+    test("a step → the whole way in one step, told as one move lasting as long as it takes", () => {
         const on = battle()
         const walker = unit(on, 3, 5, { hand: [STEP] })
         unit(on, 0, 0, { team: MONSTERS })
         on.startRound()
         on.commit(walker, chain(STEP))
         on.endPreparation()
-        on.tick()
-        expect(walker.position.y).toBeGreaterThan(3)
-        expect(walker.position.y).toBeLessThan(5)
-        on.playRound()
+        const moves: { to: number, duration: number }[] = []
+        on.signals.moved.add(({ to, duration }) => moves.push({ to: to.position.y, duration }))
+        on.playStep()
         expectAt(walker, 3, 3)
+        expect(moves).toHaveLength(1)
+        expect(moves[0].to).toBeCloseTo(3)
+        // Two meters at the walking speed of four meters a second.
+        expect(moves[0].duration).toBeCloseTo(0.5)
     })
 
-    test("a slash → shows its arc before it lands", () => {
+    test("a slash → shows its arc before it lands, all in one step", () => {
         const on = battle()
         const attacker = unit(on, 3, 3, { hand: [SLASH] })
         const target = unit(on, 3, 2, { team: MONSTERS })
         on.startRound()
         on.commit(attacker, chain(SLASH))
         on.endPreparation()
-        const shown: string[] = []
-        on.signals.effect.add(effect => shown.push(...effect.frame(0).map(each => each.kind)))
-        on.tick()
-        expect(shown).toEqual(["polygon"])
-        expect(target.life).toBe(4)
-        on.playRound()
+        const lives: number[] = []
+        on.signals.effect.add(() => lives.push(target.life))
+        on.playStep()
+        // The arc is told first, while the target is whole, and the step is over when it has landed.
+        expect(lives[0]).toBe(4)
         expect(target.life).toBe(2)
     })
 })
@@ -493,13 +552,13 @@ describe("Battle.unblock", () => {
         expect(free.life).toBe(4)
     })
 
-    test("throws a unit off a body it lies in, for a heart", () => {
+    test("throws a unit off a body it lies in, at no cost", () => {
         const on = battle()
         const stuck = unit(on, 3, 3)
         unit(on, 3.1, 3, { team: MONSTERS })
         on.unblock(stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)
-        expect(stuck.life).toBe(3)
+        expect(stuck.life).toBe(4)
     })
 
     test("throws a unit off a pillar", () => {
@@ -509,7 +568,7 @@ describe("Battle.unblock", () => {
         expect(on.free(stuck.position, stuck)).toBe(true)
     })
 
-    test("gets out of a crowd, a heart for each throw", () => {
+    test("gets out of a crowd, at no cost", () => {
         const on = battle()
         const stuck = unit(on, 3, 3, { hearts: Heart.many(RED_HEART, 20) })
         for(let x = 1.6; x < 4.5; x += 0.7){
@@ -517,19 +576,71 @@ describe("Battle.unblock", () => {
         }
         on.unblock(stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)
-        expect(stuck.life).toBeLessThan(20)
+        expect(stuck.life).toBe(20)
     })
 })
 
 describe("Battle.leap", () => {
-    test("lands past a wall → back within the walls, for one heart", () => {
+    test("lands past a wall → back within the walls, at no cost", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
         unit(on, 6, 6, { team: MONSTERS })
         on.leap(hero, new Vector2(3, -2))
         on.unblock(hero)
-        expect(hero.life).toBe(3)
+        expect(hero.life).toBe(4)
         expect(on.free(hero.position, hero)).toBe(true)
+    })
+})
+
+describe("Battle.blink", () => {
+    test("a taken point → a free spot, never a failure", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        unit(on, 3, 3, { team: MONSTERS })
+        on.blink(hero, new Vector2(3, 3))
+        expect(on.free(hero.position, hero)).toBe(true)
+        expect(hero.position.distance(new Vector2(3, 1))).toBeGreaterThan(0)
+    })
+
+    test("a point past a wall → the farthest free spot toward it", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        on.blink(hero, new Vector2(3, -5))
+        expect(on.free(hero.position, hero)).toBe(true)
+    })
+
+    test("a free point → on it", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        on.blink(hero, new Vector2(3, 4))
+        expectAt(hero, 3, 4)
+    })
+})
+
+describe("Battle.teleport", () => {
+    test("a free point → on it", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        expect(on.teleport(hero, new Vector2(3, 4))).toBe(true)
+        expectAt(hero, 3, 4)
+    })
+
+    test("a taken point → pushed to a free spot", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        unit(on, 3, 4, { team: MONSTERS })
+        expect(on.teleport(hero, new Vector2(3, 4))).toBe(true)
+        expect(on.free(hero.position, hero)).toBe(true)
+    })
+
+    test("no free spot within a push → fails, the unit stays", () => {
+        const on = battle()
+        const hero = unit(on, 3, 1)
+        for(let x = 1.6; x < 4.5; x += 0.5){
+            for(let y = 2.6; y < 5.5; y += 0.5) unit(on, x, y, { team: MONSTERS })
+        }
+        expect(on.teleport(hero, new Vector2(3, 4))).toBe(false)
+        expectAt(hero, 3, 1)
     })
 })
 

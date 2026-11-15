@@ -1,0 +1,9 @@
+{
+    "size": [272, 148],
+    "seed": 3,
+    "palette": [{"color": "#ffb347", "light": 0.55}, {"color": "#ffe590", "light": 0.85}, "#4a3020", "#4a3020"],
+    "shapes": [
+        {"box": [108, 44, 56, 92], "material": 0, "depth": 2},
+        {"ellipse": [114, 72, 44, 60], "material": 1, "depth": 2}
+    ]
+}

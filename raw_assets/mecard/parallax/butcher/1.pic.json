@@ -1,0 +1,20 @@
+{
+    "size": [288, 164],
+    "seed": 5,
+    "palette": [
+        "#d8d2c0",
+        "#6e665a",
+        "#8a2a22",
+        "#4a3a2e"
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 104], "fill": {"pattern": "tiles", "cell": [8, 8], "grout": 1, "materials": [0, 1]}, "depth": 3},
+        {"box": [0, 104, 288, 4], "material": 2, "depth": [4, 5], "relief": "round-y"},
+        {"box": [0, 108, 288, 22], "fill": {"pattern": "tiles", "cell": [8, 8], "grout": 1, "materials": [2, 1]}, "depth": 3},
+        {"box": [0, 130, 288, 34], "fill": {"pattern": "planks", "width": 6, "axis": "x", "joint": 1, "seams": 0.8, "materials": [3, 1]}, "depth": 2},
+        {"box": [0, 0, 288, 130], "fill": {"pattern": "noise", "density": 0.012, "radius": 2, "materials": [null, 2], "bump": 0}},
+        {"box": [196, 30, 40, 100], "material": 1, "depth": 1},
+        {"box": [199, 33, 34, 97], "fill": {"pattern": "planks", "width": 6, "axis": "y", "joint": 1, "seams": 0, "materials": [3, 1]}, "depth": [2, 3], "relief": "bevel", "bevel": 2},
+        {"ellipse": [225, 80, 4, 4], "material": 1, "depth": [3, 5], "relief": "dome"}
+    ]
+}

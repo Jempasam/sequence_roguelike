@@ -8,7 +8,6 @@ import { cutFusions, MAX_CUT } from "../../../run/visits"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
-import { DOOR_TRANSITION } from "../../transitions"
 import { DeckHalt } from "./DeckHalt"
 import { CARTE, COMPOSITE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
@@ -20,7 +19,7 @@ export class ButcherHalt extends DeckHalt {
     constructor(run: Run){
         super(BUTCHER_HALT, run,
             ["Une ou deux ", COMPOSITE.as("fusions"), " à découper ? Je te rends leurs ", CARTE.as("cartes"), "."],
-            sceneLook(33, 15, 13, "mecard/travel/butcher"),
+            sceneLook(33, 15, 13, "butcher"),
             {
                 hat: "chefToque",
                 clothes: rgba(0.95, 0.95, 0.95),
@@ -49,6 +48,6 @@ export const BUTCHER_HALT: HaltType = {
     id: "butcher",
     name: "Boucher",
     description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],    icon: visual("travel/butcher/logo", { letter: "BU" }),
-    transition: DOOR_TRANSITION,
+    transition: visual("transitions/dungeon-door"),
     create: run => new ButcherHalt(run),
 }

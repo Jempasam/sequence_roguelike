@@ -1,0 +1,27 @@
+{
+    "size": [288, 164],
+    "seed": 6,
+    "palette": ["#140e0a", {"color": "#c0c8d0", "reflection": 0.6}, "#c8985a", "#fff0c8"],
+    "shapes": [
+        {"box": [26, 60, 64, 66], "material": 0, "depth": 2},
+        {"picture": "parts/dog.pic.json", "at": [32, 74], "materials": [2, 3]},
+        {"box": [26, 60, 64, 4], "material": 1, "depth": [4, 6], "relief": "round-y"},
+        {"box": [26, 122, 64, 4], "material": 1, "depth": [4, 6], "relief": "round-y"},
+        {"box": [26, 60, 4, 66], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [86, 60, 4, 66], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [40, 62, 3, 62], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [52, 62, 3, 62], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [64, 62, 3, 62], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [76, 62, 3, 62], "material": 1, "depth": [4, 6], "relief": "round-x"},
+
+        {"box": [198, 66, 62, 58], "material": 0, "depth": 2},
+        {"picture": "parts/bird.pic.json", "at": [202, 78], "materials": [2, 3]},
+        {"box": [198, 66, 62, 4], "material": 1, "depth": [4, 6], "relief": "round-y"},
+        {"box": [198, 120, 62, 4], "material": 1, "depth": [4, 6], "relief": "round-y"},
+        {"box": [198, 66, 4, 58], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [256, 66, 4, 58], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [212, 68, 3, 54], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [224, 68, 3, 54], "material": 1, "depth": [4, 6], "relief": "round-x"},
+        {"box": [236, 68, 3, 54], "material": 1, "depth": [4, 6], "relief": "round-x"}
+    ]
+}

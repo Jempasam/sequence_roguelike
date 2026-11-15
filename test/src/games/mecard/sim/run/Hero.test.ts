@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
-    allyOf, AMULET, baseOf, GOBLIN, Heart, heroOf, LANCER_KIT, merged, SHIELD_HEART, statsOf,
-    SWORDSMAN_KIT, WHETSTONE,
+    allyOf, AMULET, baseOf, foeOf, GOBLIN, GREEN_HEART, Heart, heroOf, LANCER_KIT, merged, monsterHearts,
+    RED_HEART, SHIELD_GUARD, SHIELD_HEART, statsOf, SWORDSMAN_KIT, WHETSTONE,
 } from "@game/core/mecard"
 
 // --- Tests ---
@@ -13,6 +13,40 @@ describe("allyOf", () => {
         expect(ally.hearts).toHaveLength(GOBLIN.hearts)
         expect(baseOf(ally, "draw")).toBe(GOBLIN.draw)
         expect(baseOf(ally, "ordered")).toBe(false)
+    })
+})
+
+describe("foeOf", () => {
+    test("a goblin at level 3 → two more hearts, its deck kept in order", () => {
+        const foe = foeOf(GOBLIN, "Gobelin", 3)
+        expect(foe.controller).toBe("bot")
+        expect(foe.hearts).toHaveLength(GOBLIN.hearts + 2)
+        expect(baseOf(foe, "draw")).toBe(GOBLIN.draw)
+        expect(baseOf(foe, "ordered")).toBe(true)
+    })
+})
+
+describe("monsterHearts", () => {
+    /** The hearts as green and red counts, in order: "4V 2R". */
+    const shape = (life: number) => {
+        const hearts = monsterHearts(life)
+        const greens = hearts.filter(heart => heart.kind === GREEN_HEART).length
+        const reds = hearts.filter(heart => heart.kind === RED_HEART).length
+        expect(hearts.slice(0, greens).every(heart => heart.kind === GREEN_HEART)).toBe(true)
+        expect(greens * 2 + reds).toBe(life)
+        return `${greens}V ${reds}R`
+    }
+
+    test.each([
+        [4, "0V 4R"], [6, "0V 6R"], [7, "1V 5R"], [10, "4V 2R"], [12, "6V 0R"],
+        [13, "6V 1R"], [14, "7V 0R"], [15, "7V 1R"], [24, "12V 0R"],
+    ])("%i life → %s, the greens first, as much life as asked", (life, expected) => {
+        expect(shape(life)).toBe(expected)
+    })
+
+    test("a monster of 10 hearts at level 1 → 4 green and 2 red hearts as a foe", () => {
+        expect(foeOf(SHIELD_GUARD, "Garde").hearts.map(heart => heart.kind)).toEqual(
+            [...Array(4).fill(GREEN_HEART), ...Array(2).fill(RED_HEART)])
     })
 })
 

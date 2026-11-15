@@ -1,4 +1,5 @@
 import type { Command, CommandContext } from "./Command"
+import { expandLine, lexLine } from "./expand"
 
 /** What a line of the console is: printed by a command, a command entered, or an error. */
 export type ConsoleLineKind = "output"|"command"|"error"
@@ -62,7 +63,7 @@ export class Console<C extends CommandContext> {
      * @throws {@link Error} When a command already has that name, or the name holds a space.
      */
     public register<P>(name: string, command: Command<C, P>): void {
-        if(/\s/.test(name)) throw new Error(`A command name holds no space, unlike "${name}".`)
+        if(/[\s;<>]/.test(name)) throw new Error(`A command name holds no space, ";", "<" or ">", unlike "${name}".`)
         if(this.commands.has(name)) throw new Error(`The console already has a command "${name}".`)
         this.commands.set(name, command)
     }
@@ -82,13 +83,25 @@ export class Console<C extends CommandContext> {
 
     /** How a line being typed stands, for its colors. */
     public check(line: string): LineCheck {
-        const [name, ...args] = tokensOf(line)
-        if(!name) return { name: "", known: false, valid: false, error: null }
-        const command = this.commands.get(name)
-        if(!command) return { name, known: false, valid: false, error: `Commande inconnue : ${name}` }
-        const parsed = command.parse(this.context, args)
-        if(parsed instanceof Error) return { name, known: true, valid: false, error: parsed.message }
-        return { name, known: true, valid: true, error: null }
+        let commands: string[][]
+        try {
+            commands = expandLine(line)
+        } catch(error){
+            const name = lexLine(line)[0] ?? ""
+            return { name, known: this.commands.has(name), valid: false, error: (error as Error).message }
+        }
+        if(commands.length === 0) return { name: "", known: false, valid: false, error: null }
+        // Only the first command is read now: what the others read may depend on what the ones before do.
+        for(const [index, [name, ...args]] of commands.entries()){
+            const command = this.commands.get(name)
+            if(!command){
+                return { name: commands[0][0], known: false, valid: false, error: `Commande inconnue : ${name}` }
+            }
+            if(index > 0) continue
+            const parsed = command.parse(this.context, args)
+            if(parsed instanceof Error) return { name, known: true, valid: false, error: parsed.message }
+        }
+        return { name: commands[0][0], known: true, valid: true, error: null }
     }
 
     /**
@@ -100,22 +113,39 @@ export class Console<C extends CommandContext> {
         if(!typed) return
         if(this.history.at(-1) !== typed) this.history.push(typed)
         this.print(typed, "command")
-        const [name, ...args] = tokensOf(typed)
+        let commands: string[][]
+        try {
+            commands = expandLine(typed)
+        } catch(error){
+            this.print((error as Error).message, "error")
+            return
+        }
+        // One after the other, each read once the ones before it ran, and none after a failure.
+        for(const words of commands){
+            if(!this.run(words, commands.length > 1)) return
+        }
+    }
+
+    /** Run a command from its words, saying why it did not when it did not. Did it run? */
+    private run([name, ...args]: readonly string[], several: boolean): boolean {
+        const where = several ? `[${[name, ...args].join(" ")}] ` : ""
         const command = this.commands.get(name)
         if(!command){
-            this.print(`Commande inconnue : ${name}. Tape help pour la liste.`, "error")
-            return
+            this.print(`${where}Commande inconnue : ${name}. Tape help pour la liste.`, "error")
+            return false
         }
         const parsed = command.parse(this.context, args)
         if(parsed instanceof Error){
-            this.print(parsed.message, "error")
-            return
+            this.print(`${where}${parsed.message}`, "error")
+            return false
         }
         try {
             command.execute(this.context, parsed)
         } catch(error){
-            this.print(error instanceof Error ? error.message : String(error), "error")
+            this.print(`${where}${error instanceof Error ? error.message : String(error)}`, "error")
+            return false
         }
+        return true
     }
 
     /**
@@ -123,7 +153,13 @@ export class Console<C extends CommandContext> {
      * offers for its argument, each starting with what is typed already.
      */
     public suggestions(line: string): string[] {
-        const tokens = tokensOf(line, true)
+        // What is typed is read as the last command the line stands for: the one being written.
+        let tokens: string[]
+        try {
+            tokens = expandLine(line, true).at(-1) ?? [""]
+        } catch{
+            return []
+        }
         const typed = tokens.at(-1) ?? ""
         const offered = tokens.length <= 1
             ? [...this.commands.keys()]
@@ -134,7 +170,7 @@ export class Console<C extends CommandContext> {
 
     /** The line with the word being typed replaced by a suggestion, and a space after it. */
     public completed(line: string, suggestion: string): string {
-        const tokens = tokensOf(line, true)
+        const tokens = lexLine(line, true)
         tokens[Math.max(0, tokens.length - 1)] = suggestion
         return `${tokens.join(" ")} `
     }

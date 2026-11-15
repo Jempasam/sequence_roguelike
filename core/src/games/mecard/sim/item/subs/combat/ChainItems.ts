@@ -23,7 +23,7 @@ export class Wings extends AbstractItem {
 
 
     constructor(){
-        super("Ailes", visual("items/boots"), [
+        super("Ailes", visual("items/wings"), [
             "Chaque Avancer de ta chaîne, même au sein d'une fusion, devient un Blink.",
         ])
     }
@@ -48,7 +48,7 @@ export class SoulLantern extends AbstractItem {
 
 
     constructor(){
-        super("Lanterne à âme", visual("items/amulet"), [
+        super("Lanterne à âme", visual("items/soul_lantern"), [
             "Quand une ", UNIT, " ennemie meurt pendant ton tour, reçois un ", FUSION.as("collage"),
             " temporaire des cartes qu'elle n'avait pas encore jouées.",
         ])
@@ -58,8 +58,8 @@ export class SoulLantern extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.unitDied.add(({ unit: dead }) => {
             if(battle.phase !== "execution" || battle.actor !== unit || dead.team === unit.team) return
-            const left = dead.unplayed()
-            if(left.length > 0) battle.giveFleetingCard(unit, collageOf(left))
+            const collage = collageOf(dead.unplayed())
+            if(collage) battle.giveFleetingCard(unit, collage)
         }))
     }
 }
@@ -71,7 +71,7 @@ export class FangNecklace extends AbstractItem {
 
 
     constructor(){
-        super("Collier de crocs", visual("items/fang"), [
+        super("Collier de crocs", visual("items/fang_necklace"), [
             "Quand une de tes bêtes invoquées meurt, reçois un ", FUSION.as("collage"),
             " temporaire de sa course et de sa morsure.",
         ])
@@ -82,7 +82,8 @@ export class FangNecklace extends AbstractItem {
         hold(battle.unitDied.add(({ unit: dead }) => {
             if(dead.owner !== unit) return
             const body = beastBodyOf(dead)
-            if(body) battle.giveFleetingCard(unit, collageOf([...body.run, ...body.bite]))
+            const collage = body ? collageOf([...body.run, ...body.bite]) : null
+            if(collage) battle.giveFleetingCard(unit, collage)
         }))
     }
 }

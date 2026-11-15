@@ -45,8 +45,8 @@ export const GREAT_CHEST_HALT: HaltType = {
     id: "greatChest",
     name: "Grand coffre",
     description: ["Une ", CARTE, " légendaire parmi trois, gratuite."],
-    icon: visual("travel/chest/logo", { letter: "CO+" }),
+    icon: visual("halts/chest", { letter: "CO+" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/gilded-door", { coloration: GREAT_COLORATION }),
+    transition: visual("gilded-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatChestHalt(run),
 }

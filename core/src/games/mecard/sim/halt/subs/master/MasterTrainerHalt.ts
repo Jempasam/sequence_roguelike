@@ -68,7 +68,7 @@ export const MASTER_TRAINER_HALT: HaltType = {
     id: "masterTrainer",
     name: "Maître dresseur",
     description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
-    icon: visual("travel/trainer/logo", { letter: "D*" }),
+    icon: visual("halts/trainer", { letter: "D*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,
     create: run => new MasterTrainerHalt(run),

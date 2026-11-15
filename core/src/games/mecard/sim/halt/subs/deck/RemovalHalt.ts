@@ -62,7 +62,7 @@ export const REMOVAL_HALT: HaltType = {
     name: "Oubli",
     description: ["Trois fois : ", SUPPRESSION.as("retire"), " de une à trois ", CARTE.as("cartes"), " du ", DECK, " d'une ", UNIT, "."],
 
-    icon: visual("travel/removal/logo", { letter: "OU" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/removal", { letter: "OU" }),
+    transition: visual("dungeon-door"),
     create: run => new RemovalHalt(run),
 }

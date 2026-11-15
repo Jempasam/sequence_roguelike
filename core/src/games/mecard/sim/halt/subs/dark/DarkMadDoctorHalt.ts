@@ -52,8 +52,8 @@ export const DARK_MAD_DOCTOR_HALT: HaltType = {
     id: "darkMadDoctor",
     name: "Chirurgien des monstres",
     description: ["Greffe une ", UNIT, " avec un monstre parmi trois."],
-    icon: visual("travel/mad-doctor/logo", { letter: "DF!" }),
+    icon: visual("halts/mad-doctor", { letter: "DF!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
+    transition: visual("dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new DarkMadDoctorHalt(run),
 }

@@ -46,7 +46,7 @@ export const MASTER_CHEST_HALT: HaltType = {
     id: "masterChest",
     name: "Coffre de maître",
     description: ["Une ", CARTE, " améliorée parmi trois, gratuite."],
-    icon: visual("travel/chest/logo", { letter: "CO*" }),
+    icon: visual("halts/chest", { letter: "CO*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,
     create: run => new MasterChestHalt(run),

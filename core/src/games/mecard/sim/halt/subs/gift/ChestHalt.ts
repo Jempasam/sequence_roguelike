@@ -38,7 +38,7 @@ export const CHEST_HALT: HaltType = {
     id: "chest",
     name: "Coffre",
     description: ["Une ", CARTE, " parmi trois, gratuite."],
-    icon: visual("travel/chest/logo", { letter: "CO" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/chest", { letter: "CO" }),
+    transition: visual("dungeon-door"),
     create: run => new ChestHalt(run),
 }

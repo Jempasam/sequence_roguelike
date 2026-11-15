@@ -1255,8 +1255,8 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
         debug: group("debug", "les bancs d'essai des visuels.", {
             parallax: command(
                 "debug parallax <id> : ouvre le banc d'essai d'une parallaxe, parallax/<id>.ora sinon les png de parallax/<id>/.",
-                [named("la parallaxe", () => shippedParallaxes().map(key => key.slice("parallax/".length)), id => id)],
-                (ctx, id) => ctx.showParallax(visual(`parallax/${id}`)),
+                [named("la parallaxe", () => shippedParallaxes(), id => id)],
+                (ctx, id) => ctx.showParallax(visual(id)),
             ),
             transition: command(
                 "debug transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"

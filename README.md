@@ -76,7 +76,7 @@ La doc de chaque partie du moteur :
 
 On dépose le fichier dans `assets/` (`.png`, `.wav` ou `.ogg`, chemin en minuscules), puis on lance `npm run assets`. Ça régénère `core/src/engine/assets/AssetPath.ts`, ce qui rend une faute de frappe dans un chemin d'asset visible à la compilation. Ce fichier est commité et indexe `assets/` et `generated_assets/` ensemble. `npm run assets -- --check` vérifie qu'il est à jour (après `npm run art` sur un clone neuf, puisque `generated_assets/` n'est pas commité).
 
-Une image dessinée avec le projet `picture` (rangé à côté de ce dépôt, ou là où pointe `PICTURE`) a sa source dans `raw_assets/` : `raw_assets/mecard/travel/forge/4.pic.json` donne `generated_assets/mecard/travel/forge/4.png`. `npm run art` rend toutes les sources puis lance `npm run assets`, et `npm run art -- mecard/travel` ne rend que celles d'un dossier.
+Une image dessinée avec le projet `picture` (rangé à côté de ce dépôt, ou là où pointe `PICTURE`) a sa source dans `raw_assets/` : `raw_assets/mecard/halts/forge.pic.json` donne `generated_assets/mecard/halts/forge.png`. `npm run art` rend toutes les sources puis lance `npm run assets`, et `npm run art -- mecard/travel` ne rend que celles d'un dossier.
 
 ## Écrire du C (WebAssembly)
 

@@ -76,8 +76,8 @@ export const DARK_STRATEGIST_HALT: HaltType = {
     id: "darkStrategist",
     name: "Traître",
     description: ["Échange des ", CARTE.as("cartes"), " entre un ", DECK, " et celui d'un monstre parmi trois."],
-    icon: visual("travel/strategist/logo", { letter: "ST!" }),
+    icon: visual("halts/strategist", { letter: "ST!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
+    transition: visual("dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new DarkStrategistHalt(run),
 }

@@ -9,5 +9,5 @@ import { shippedTransitions } from "../look/visualPath"
  * A function, not a value, for it is asked once the assets are indexed, which a command may come first to.
  */
 export function placeTransitions(): ReadonlyMap<string, Visual> {
-    return new Map(shippedTransitions().map(key => [key.slice("transitions/".length), visual(key)]))
+    return new Map(shippedTransitions().map(name => [name, visual(name)]))
 }

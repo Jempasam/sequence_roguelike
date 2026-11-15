@@ -116,7 +116,7 @@ export class GreatThrustCard extends SingleBlow {
 
     constructor(){
         super("Grande estoc", [
-            "Perce sur ", GREAT_THRUST_REACH, "×", ALLONGE, " ", DISTANCE, " devant, sauf le premier mètre (×", ALLONGE, ") : ", 1, " ",
+            "Perce sur ", GREAT_THRUST_REACH, "×", ALLONGE, " ", DISTANCE, " devant, sauf le premier mètre : ", 1, " ",
             DamageType.PHYSICAL, " à l'", UNIT, " la plus proche, et un de plus tous les ", GREAT_THRUST_PER, " ",
             DISTANCE, " de distance.",
         ], Rarity.RARE, 1)
@@ -127,8 +127,8 @@ export class GreatThrustCard extends SingleBlow {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value
-        const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START * stretch))
-        const to = from.plus(pose.direction.times((GREAT_THRUST_REACH - GREAT_THRUST_START) * stretch * progress))
+        const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START))
+        const to = from.plus(pose.direction.times((GREAT_THRUST_REACH * stretch - GREAT_THRUST_START) * progress))
         return Areas.line(from, to, GREAT_THRUST_WIDTH)
     }
 

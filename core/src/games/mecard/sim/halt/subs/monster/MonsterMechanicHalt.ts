@@ -20,7 +20,7 @@ export class MonsterMechanicHalt extends MonsterCardHalt {
     constructor(run: Run){
         super(MONSTER_MECHANIC_HALT, run,
             `Un monstre, c'est juste une machine qui s'ignore. Je t'en tire un ${MODULE.name} !`,
-            sceneLook(28, 18, 31, "trainer_monster", { visual: "parallax/workshop", coloration: [0.72, 0.56, 0.78] }),
+            sceneLook(28, 18, 31, "trainer_monster", { visual: "workshop", coloration: [0.72, 0.56, 0.78] }),
             {
                 unit: visual("units/mechanic"),
             },
@@ -48,6 +48,6 @@ export const MONSTER_MECHANIC_HALT: HaltType = {
     description: ["Fait d'un monstre un ", MODULE.name, " pour une ", UNIT, ", avec un robot si elle n'en a aucun."],
     icon: visual("units/mechanic", { letter: "MM!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/house-door"),
+    transition: visual("house-door"),
     create: run => new MonsterMechanicHalt(run),
 }

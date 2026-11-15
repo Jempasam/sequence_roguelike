@@ -240,7 +240,7 @@ describe("Mecard commands", () => {
     test("debug transition → the one named played, forward by default, for the duration and the way typed", () => {
         const { console, transitions } = game()
         const [key] = shippedTransitions()
-        const name = key.slice("transitions/".length)
+        const name = key
         const capitalized = name[0].toUpperCase() + name.slice(1)
         for(const line of [`debug transition ${name}`, `debug transition ${capitalized} 400`, `debug transition ${name} 2000 envers`]){
             console.submit(line)
@@ -251,7 +251,7 @@ describe("Mecard commands", () => {
 
     test("debug transition unnamed, unknown, of a duration of 0 or an unknown way → refused, nothing played", () => {
         const { console, transitions } = game()
-        const name = shippedTransitions()[0].slice("transitions/".length)
+        const name = shippedTransitions()[0]
         const lines = ["debug transition", "debug transition fenêtre", `debug transition ${name} 0`, `debug transition ${name} 500 côté`]
         for(const line of lines) console.submit(line)
         expect(errors(console)).toHaveLength(4)

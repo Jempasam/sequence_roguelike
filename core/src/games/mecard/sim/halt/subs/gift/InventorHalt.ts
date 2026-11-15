@@ -48,7 +48,7 @@ export class InventorHalt extends CardGiftHalt {
 export const INVENTOR_HALT: HaltType = {
     id: "inventor",
     name: "Inventeur",
-    description: ["Un ", FUSION, " parmi trois."],    icon: visual("travel/inventor/logo", { letter: "IN" }),
-    transition: visual("transitions/house-door"),
+    description: ["Un ", FUSION, " parmi trois."],    icon: visual("halts/inventor", { letter: "IN" }),
+    transition: visual("house-door"),
     create: run => new InventorHalt(run),
 }

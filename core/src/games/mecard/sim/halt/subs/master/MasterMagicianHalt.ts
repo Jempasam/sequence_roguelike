@@ -79,7 +79,7 @@ export const MASTER_MAGICIAN_HALT: HaltType = {
     id: "masterMagician",
     name: "Maître magicien",
     description: ["Un booster parmi trois, ouvert et ses ", CARTE.as("cartes"), " améliorées."],
-    icon: visual("travel/magician/logo", { letter: "MG*" }),
+    icon: visual("halts/magician", { letter: "MG*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,
     create: run => new MasterMagicianHalt(run),

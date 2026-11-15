@@ -68,7 +68,7 @@ export const TAVERN_HALT: HaltType = {
     id: "tavern",
     name: "Taverne",
     description: "Un héros parmi trois rejoint l'équipe.",
-    icon: visual("travel/tavern/logo", { letter: "TA" }),
-    transition: visual("transitions/warm-door"),
+    icon: visual("halts/tavern", { letter: "TA" }),
+    transition: visual("warm-door"),
     create: run => new TavernHalt(run),
 }

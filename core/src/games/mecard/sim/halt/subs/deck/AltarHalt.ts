@@ -62,7 +62,7 @@ export const ALTAR_HALT: HaltType = {
     id: "altar",
     name: "Autel sacrificiel",
     description: ["Sacrifie deux ", CARTE.as("cartes"), " : une troisième ", CARTE, " du ", DECK, " est copiée."],
-    icon: visual("travel/altar/logo", { letter: "AU" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/altar", { letter: "AU" }),
+    transition: visual("dungeon-door"),
     create: run => new AltarHalt(run),
 }

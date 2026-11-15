@@ -27,14 +27,14 @@ export interface PlaceType extends PlaceInfo {
     readonly glow?: Rgba
 
     /**
-     * The transition entering it, such as `transitions/warm-door`: a name the screen resolves as it wishes. Its
+     * The transition entering it, such as `warm-door`: a name the screen resolves as it wishes. Its
      * coloration tints the transition, its color and description fill in where the screen has none.
      */
     readonly transition: Visual
 }
 
 /** The transition played on leaving a fight or a halt, back to the map: a name the screen resolves as it wishes. */
-export const BACK_VISUAL = visual("transitions/back")
+export const BACK_VISUAL = visual("back")
 
 /** Is a sort of place a halt, visited rather than fought? A halt is the one that makes visits. */
 export function isHalt(type: PlaceType): type is HaltType {

@@ -47,8 +47,8 @@ export const MONSTER_LOOTING_REWARD_HALT: HaltType = {
     id: "monsterLootingReward",
     name: "Butin des monstres",
     description: ["Une ", CARTE, " parmi quatre des plus fortes des monstres vaincus, et de l'or."],
-    icon: visual("travel/chest/logo", { letter: "R" }),
-    transition: visual("transitions/gilded-door", { coloration: LOOTING_COLORATION }),
+    icon: visual("halts/chest", { letter: "R" }),
+    transition: visual("gilded-door", { coloration: LOOTING_COLORATION }),
     onMap: false,
     create: run => new MonsterLootingRewardHalt(MONSTER_LOOTING_REWARD_HALT, run, 15),
 }

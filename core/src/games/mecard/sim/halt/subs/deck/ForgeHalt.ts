@@ -67,7 +67,7 @@ export const FORGE_HALT: HaltType = {
     id: "forge",
     name: "Forge",
     description: [FUSION.as("Colle"), " deux ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi."],
-    icon: visual("travel/forge/logo", { letter: "FO" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/forge", { letter: "FO" }),
+    transition: visual("dungeon-door"),
     create: run => new ForgeHalt(run),
 }

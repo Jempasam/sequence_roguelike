@@ -51,7 +51,7 @@ export class MerchantHalt extends AbstractHalt {
 export const MERCHANT_HALT: HaltType = {
     id: "merchant",
     name: "Marchand ambulant",
-    description: "Un objet parmi trois.",    icon: visual("travel/merchant/logo", { letter: "MB" }),
-    transition: visual("transitions/stone-bridge"),
+    description: "Un objet parmi trois.",    icon: visual("halts/merchant", { letter: "MB" }),
+    transition: visual("stone-bridge"),
     create: run => new MerchantHalt(run),
 }

@@ -80,7 +80,7 @@ export const DEFAULT_CUES: Readonly<Record<HaltMoment, PnjCue>> = {
 const PNJ_PAINTING: LayeredImagePath = "mecard/pnj/merchant.ora"
 
 /**
- * A look from the color of its panels, as bytes, and the name of its scene: the parallax `parallax/<id>`
+ * A look from the color of its panels, as bytes, and the name of its scene: the parallax `<id>`
  * and the frame `border/<id>`, the parallax changed by the patch given, its color that of the panels.
  */
 export function sceneLook(
@@ -88,7 +88,7 @@ export function sceneLook(
 ): SceneLook {
     const color = rgba(red / 255, green / 255, blue / 255)
     return {
-        parallax: visual(`parallax/${id}`, {
+        parallax: visual(id, {
             color: [color.r, color.g, color.b],
             ...parallax,
         }),

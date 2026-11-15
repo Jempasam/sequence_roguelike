@@ -48,8 +48,8 @@ export const DARK_TAVERN_HALT: HaltType = {
     id: "darkTavern",
     name: "Taverne mal famée",
     description: "Un monstre parmi trois rejoint l'équipe, joué comme un héros.",
-    icon: visual("travel/tavern/logo", { letter: "TA!" }),
+    icon: visual("halts/tavern", { letter: "TA!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/warm-door", { coloration: DARK_COLORATION }),
+    transition: visual("warm-door", { coloration: DARK_COLORATION }),
     create: run => new DarkTavernHalt(run),
 }

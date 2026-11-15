@@ -57,7 +57,7 @@ export class WitchHalt extends AbstractHalt {
 export const WITCH_HALT: HaltType = {
     id: "witch",
     name: "Sorcière",
-    description: "Un utilisable parmi trois.",    icon: visual("travel/witch/logo", { letter: "SO" }),
-    transition: visual("transitions/dungeon-door"),
+    description: "Un utilisable parmi trois.",    icon: visual("halts/witch", { letter: "SO" }),
+    transition: visual("dungeon-door"),
     create: run => new WitchHalt(run),
 }

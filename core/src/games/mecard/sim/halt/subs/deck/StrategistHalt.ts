@@ -171,7 +171,7 @@ export const STRATEGIST_HALT: HaltType = {
     id: "strategist",
     name: "Stratège",
     description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],
-    icon: visual("travel/strategist/logo", { letter: "ST" }),
-    transition: visual("transitions/house-door"),
+    icon: visual("halts/strategist", { letter: "ST" }),
+    transition: visual("house-door"),
     create: run => new StrategistHalt(run),
 }

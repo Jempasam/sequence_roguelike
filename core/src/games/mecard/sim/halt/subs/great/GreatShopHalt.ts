@@ -118,8 +118,8 @@ export const GREAT_SHOP_HALT: HaltType = {
     id: "greatShop",
     name: "Grand magasin",
     description: [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, un quart moins cher."],
-    icon: visual("travel/shop/logo", { letter: "MA*" }),
+    icon: visual("halts/shop", { letter: "MA*" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/warm-door", { coloration: GREAT_COLORATION }),
+    transition: visual("warm-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatShopHalt(run),
 }

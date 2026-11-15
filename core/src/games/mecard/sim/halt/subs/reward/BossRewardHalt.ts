@@ -39,8 +39,8 @@ export const BOSS_REWARD_HALT: HaltType = {
     id: "bossReward",
     name: "Récompense de boss",
     description: ["Une ", CARTE, ", un objet, une ", FUSION, " ou une ", CARTE, " améliorée au choix, et beaucoup d'or."],
-    icon: visual("travel/chest/logo", { letter: "R" }),
-    transition: visual("transitions/great-door", { coloration: BOSS_COLORATION }),
+    icon: visual("halts/chest", { letter: "R" }),
+    transition: visual("great-door", { coloration: BOSS_COLORATION }),
     onMap: false,
     create: run => new BossRewardHalt(BOSS_REWARD_HALT, run, 80),
 }

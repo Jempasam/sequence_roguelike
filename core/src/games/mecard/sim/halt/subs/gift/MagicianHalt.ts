@@ -51,7 +51,7 @@ export class MagicianHalt extends CardGiftHalt {
 export const MAGICIAN_HALT: HaltType = {
     id: "magician",
     name: "Magicien",
-    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],    icon: visual("travel/magician/logo", { letter: "MG" }),
-    transition: visual("transitions/portal"),
+    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],    icon: visual("halts/magician", { letter: "MG" }),
+    transition: visual("portal"),
     create: run => new MagicianHalt(run),
 }

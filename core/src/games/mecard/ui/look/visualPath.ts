@@ -13,18 +13,29 @@ export function pathOf(visual: Visual|string): ImagePath {
     return `mecard/${key}.png` as ImagePath
 }
 
-/** The painting of the transition a visual names: where its key becomes a path, the file may not exist. */
+/** The folder of the transitions: the root of the keys of the visuals that name one. */
+const TRANSITIONS_ROOT = "mecard/transitions"
+
+/** The folder of the parallaxes: the root of the keys of the visuals that name one. */
+const PARALLAX_ROOT = "mecard/parallax"
+
+/**
+ * The painting of the transition a visual names, its key being a name under `mecard/transitions/`: where
+ * that key becomes a path, the file may not exist.
+ */
 export function transitionPath(visual: Visual|string): LayeredImagePath {
     const key = typeof visual === "string" ? visual : visual.visual
-    return `mecard/${key}.ora` as LayeredImagePath
+    return `${TRANSITIONS_ROOT}/${key}.ora` as LayeredImagePath
 }
 
 /** The keys of the transitions the game ships, one for each `.ora` under `mecard/transitions/`. */
 export function shippedTransitions(shipped: readonly AssetPath[] = ASSET_PATHS): string[] {
     const keys: string[] = []
     for(const path of shipped){
-        const match = /^mecard\/(transitions\/[^/]+)\.ora$/.exec(path)
-        if(match) keys.push(match[1])
+        if(path.startsWith(`${TRANSITIONS_ROOT}/`) && path.endsWith(".ora")){
+            const key = path.slice(TRANSITIONS_ROOT.length + 1, -".ora".length)
+            if(!key.includes("/")) keys.push(key)
+        }
     }
     return keys.sort()
 }
@@ -48,17 +59,18 @@ function rankOf(path: string): number {
 }
 
 /**
- * The files of the parallax a visual names: `mecard/<key>.ora` when the game ships it, else the pictures
- * right in the folder `mecard/<key>/`, by the number they are named with, the first the farthest.
+ * The files of the parallax a visual names, its key being a name under `mecard/parallax/`: `<key>.ora` when
+ * the game ships it, else the pictures right in the folder `<key>/`, by the number they are named with, the
+ * first the farthest.
  *
  * @param shipped - The files the game ships, all of them unless a test says otherwise.
  * @throws {@link AssetError} When the game ships neither, naming both.
  */
 export function parallaxSource(visual: Visual|string, shipped: readonly AssetPath[] = ASSET_PATHS): ParallaxSource {
     const key = typeof visual === "string" ? visual : visual.visual
-    const painting = `mecard/${key}.ora`
+    const painting = `${PARALLAX_ROOT}/${key}.ora`
     if(shipped.includes(painting as AssetPath)) return { painting: painting as LayeredImagePath }
-    const folder = `mecard/${key}/`
+    const folder = `${PARALLAX_ROOT}/${key}/`
     const images = shipped.filter((path): path is ImagePath => {
         return path.startsWith(folder) && path.endsWith(".png") && !path.slice(folder.length).includes("/")
     })
@@ -72,7 +84,7 @@ export function parallaxSource(visual: Visual|string, shipped: readonly AssetPat
 export function shippedParallaxes(shipped: readonly AssetPath[] = ASSET_PATHS): string[] {
     const keys = new Set<string>()
     for(const path of shipped){
-        const match = /^mecard\/(parallax\/[^/]+?)(?:\.ora|\/[^/]+\.png)$/.exec(path)
+        const match = /^mecard\/parallax\/([^/]+?)(?:\.ora|\/[^/]+\.png)$/.exec(path)
         if(match) keys.add(match[1])
     }
     return [...keys].sort()

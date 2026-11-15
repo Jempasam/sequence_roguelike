@@ -27,17 +27,17 @@ describe("pathOf", () => {
 
 describe("transitions", () => {
     test("transitionPath → the painting of the key", () => {
-        expect(transitionPath(new Visual({ visual: "transitions/door" }))).toBe("mecard/transitions/door.ora")
+        expect(transitionPath(new Visual({ visual: "door" }))).toBe("mecard/transitions/door.ora")
     })
 
     test("shippedTransitions → the keys of the paintings under transitions/", () => {
         const shipped = ["mecard/transitions/door.ora", "mecard/transitions/cave.ora", "mecard/border/x.png"] as never
-        expect(shippedTransitions(shipped)).toEqual(["transitions/cave", "transitions/door"])
+        expect(shippedTransitions(shipped)).toEqual(["cave", "door"])
     })
 
     test("transitionTintOf → the coloration of the visual, none without", () => {
-        expect(transitionTintOf(new Visual({ visual: "transitions/door" }))).toBeNull()
-        const tint = transitionTintOf(new Visual({ visual: "transitions/door", coloration: [1, 0.5, 0.25] }))
+        expect(transitionTintOf(new Visual({ visual: "door" }))).toBeNull()
+        const tint = transitionTintOf(new Visual({ visual: "door", coloration: [1, 0.5, 0.25] }))
         expect([tint?.r, tint?.g, tint?.b]).toEqual([1, 0.5, 0.25])
     })
 

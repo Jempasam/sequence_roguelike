@@ -61,8 +61,8 @@ export const DARK_TRAINER_HALT: HaltType = {
     id: "darkTrainer",
     name: "Dompteur",
     description: "Un boss affaibli parmi trois, joué par un bot.",
-    icon: visual("travel/trainer/logo", { letter: "DR!" }),
+    icon: visual("halts/trainer", { letter: "DR!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/cage-door"),
+    transition: visual("cage-door"),
     create: run => new DarkTrainerHalt(run),
 }

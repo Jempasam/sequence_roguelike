@@ -48,7 +48,7 @@ export const MASTER_INVENTOR_HALT: HaltType = {
     id: "masterInventor",
     name: "Maître inventeur",
     description: ["Un ", FUSION, " parmi trois, chacun amélioré."],
-    icon: visual("travel/inventor/logo", { letter: "IN*" }),
+    icon: visual("halts/inventor", { letter: "IN*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,
     create: run => new MasterInventorHalt(run),

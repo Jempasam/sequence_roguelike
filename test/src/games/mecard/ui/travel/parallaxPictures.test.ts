@@ -47,23 +47,23 @@ const SHIPPED = [
 
 describe("parallaxSource", () => {
     test("a painting shipped → it, before the pictures of the folder", () => {
-        expect(parallaxSource("parallax/cave", SHIPPED)).toEqual({ painting: "mecard/parallax/cave.ora" })
+        expect(parallaxSource("cave", SHIPPED)).toEqual({ painting: "mecard/parallax/cave.ora" })
     })
 
     test("no painting → the pictures right in the folder, by their number, the farthest first", () => {
-        expect(parallaxSource("parallax/wood", SHIPPED)).toEqual({
+        expect(parallaxSource("wood", SHIPPED)).toEqual({
             images: ["mecard/parallax/wood/2.png", "mecard/parallax/wood/10.png"],
         })
     })
 
     test("neither → an asset error naming the folder", () => {
-        expect(() => parallaxSource("parallax/none", SHIPPED)).toThrow(AssetError)
+        expect(() => parallaxSource("none", SHIPPED)).toThrow(AssetError)
     })
 })
 
 describe("shippedParallaxes", () => {
     test("each painting and folder of pictures, once", () => {
-        expect(shippedParallaxes(SHIPPED)).toEqual(["parallax/cave", "parallax/wood"])
+        expect(shippedParallaxes(SHIPPED)).toEqual(["cave", "wood"])
     })
 })
 

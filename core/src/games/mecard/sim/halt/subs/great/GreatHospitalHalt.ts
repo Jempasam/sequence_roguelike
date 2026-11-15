@@ -63,8 +63,8 @@ export const GREAT_HOSPITAL_HALT: HaltType = {
     id: "greatHospital",
     name: "Grand hôpital",
     description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun le cœur à usage unique choisi, en triple.",
-    icon: visual("travel/hospital/logo", { letter: "H*" }),
+    icon: visual("halts/hospital", { letter: "H*" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/warm-door", { coloration: GREAT_COLORATION }),
+    transition: visual("warm-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatHospitalHalt(run),
 }

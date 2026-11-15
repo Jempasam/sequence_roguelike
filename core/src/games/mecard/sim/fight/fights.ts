@@ -10,8 +10,8 @@ export const BATTLE: FightType = {
     id: "battle",
     name: "Combat",
     description: "Des monstres. Une halte de récompense si tu gagnes.",
-    icon: visual("travel/fight/logo", { letter: "C" }),
-    transition: visual("transitions/cave"),
+    icon: visual("halts/fight", { letter: "C" }),
+    transition: visual("cave"),
     createFight: (run, place) => new StandardFight(BATTLE, run, place.monsters),
 }
 
@@ -20,9 +20,9 @@ export const ELITE: FightType = {
     id: "elite",
     name: "Élite",
     description: "Des monstres plus nombreux. Une meilleure récompense.",
-    icon: visual("travel/fight/logo", { letter: "É" }),
+    icon: visual("halts/fight", { letter: "É" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/cave", { coloration: [0.8, 0.1, 0.15] }),
+    transition: visual("cave", { coloration: [0.8, 0.1, 0.15] }),
     createFight: (run, place) => new StandardFight(ELITE, run, place.monsters),
 }
 
@@ -31,9 +31,9 @@ export const BOSS: FightType = {
     id: "boss",
     name: "Boss",
     description: "Le gardien de l'étage. Le vaincre ouvre ses sorties.",
-    icon: visual("travel/deadly-fight/logo", { letter: "B" }),
+    icon: visual("halts/deadly-fight", { letter: "B" }),
     glow: rgba(1, 0.15, 0.15),
-    transition: visual("transitions/great-door"),
+    transition: visual("great-door"),
     createFight: (run, place) => new StandardFight(BOSS, run, place.monsters),
 }
 

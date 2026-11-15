@@ -56,7 +56,7 @@ export const HOSPITAL_HALT: HaltType = {
     id: "hospital",
     name: "Hôpital",
     description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",
-    icon: visual("travel/hospital/logo", { letter: "H" }),
-    transition: visual("transitions/warm-door"),
+    icon: visual("halts/hospital", { letter: "H" }),
+    transition: visual("warm-door"),
     create: run => new HospitalHalt(run),
 }

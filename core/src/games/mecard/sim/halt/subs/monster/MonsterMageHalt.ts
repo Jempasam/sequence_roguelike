@@ -21,7 +21,7 @@ export class MonsterMageHalt extends MonsterCardHalt {
     constructor(run: Run){
         super(MONSTER_MAGE_HALT, run,
             "Un poison, un remède, et un monstre pour porter le tout : voilà un élément.",
-            sceneLook(28, 18, 31, "trainer_monster", { visual: "parallax/space", coloration: [0.72, 0.56, 0.78] }),
+            sceneLook(28, 18, 31, "trainer_monster", { visual: "space", coloration: [0.72, 0.56, 0.78] }),
             {
                 unit: visual("units/mage"),
             },
@@ -49,6 +49,6 @@ export const MONSTER_MAGE_HALT: HaltType = {
     description: ["Fait d'un monstre un ", ELEMENT.name, " pour une ", UNIT, ", avec une conjuration si elle n'en a aucune."],
     icon: visual("units/mage", { letter: "MG!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/portal"),
+    transition: visual("portal"),
     create: run => new MonsterMageHalt(run),
 }

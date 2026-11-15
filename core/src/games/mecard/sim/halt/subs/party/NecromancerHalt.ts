@@ -75,7 +75,7 @@ export const NECROMANCER_HALT: HaltType = {
     id: "necromancer",
     name: "Nécromancien",
     description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",
-    icon: visual("travel/necromancer/logo", { letter: "NE" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/necromancer", { letter: "NE" }),
+    transition: visual("dungeon-door"),
     create: run => new NecromancerHalt(run),
 }

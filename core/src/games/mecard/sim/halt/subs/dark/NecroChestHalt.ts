@@ -48,8 +48,8 @@ export const NECRO_CHEST_HALT: HaltType = {
     id: "necroChest",
     name: "Nécro coffre",
     description: ["Un ", FUSION.as("collage"), " d'une chaîne d'un monstre, parmi trois, gratuit."],
-    icon: visual("travel/chest/logo", { letter: "CO!" }),
+    icon: visual("halts/chest", { letter: "CO!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/dungeon-door", { coloration: DARK_COLORATION }),
+    transition: visual("dungeon-door", { coloration: DARK_COLORATION }),
     create: run => new NecroChestHalt(run),
 }

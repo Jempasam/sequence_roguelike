@@ -54,8 +54,8 @@ export const GREAT_MAGICIAN_HALT: HaltType = {
     id: "greatMagician",
     name: "Grand magicien",
     description: ["Un booster parmi trois, en double : deux fois plus de ", CARTE.as("cartes"), "."],
-    icon: visual("travel/magician/logo", { letter: "MG**" }),
+    icon: visual("halts/magician", { letter: "MG**" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/portal", { coloration: GREAT_COLORATION }),
+    transition: visual("portal", { coloration: GREAT_COLORATION }),
     create: run => new GreatMagicianHalt(run),
 }

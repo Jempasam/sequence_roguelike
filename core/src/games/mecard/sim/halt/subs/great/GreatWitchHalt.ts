@@ -53,8 +53,8 @@ export const GREAT_WITCH_HALT: HaltType = {
     id: "greatWitch",
     name: "Grande sorcière",
     description: "Un utilisable parmi trois, en triple.",
-    icon: visual("travel/witch/logo", { letter: "SO*" }),
+    icon: visual("halts/witch", { letter: "SO*" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/dungeon-door", { coloration: GREAT_COLORATION }),
+    transition: visual("dungeon-door", { coloration: GREAT_COLORATION }),
     create: run => new GreatWitchHalt(run),
 }

@@ -37,6 +37,6 @@ export const EXIT_HALT: HaltType = {
     id: "exit",
     name: "Sortie",
     description: "Mène à un autre étage.",    icon: visual("floors/exit", { letter: "S" }),
-    transition: visual("transitions/spiral-stairs"),
+    transition: visual("spiral-stairs"),
     create: run => new ExitHalt(run, run.travel.place?.exitTo ?? run.travel.journey.exits[0]),
 }

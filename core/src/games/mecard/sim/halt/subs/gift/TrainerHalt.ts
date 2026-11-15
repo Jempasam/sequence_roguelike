@@ -56,7 +56,7 @@ export class TrainerHalt extends AbstractHalt {
 export const TRAINER_HALT: HaltType = {
     id: "trainer",
     name: "Dresseur",
-    description: "Un allié parmi deux pets et un monstre, joué par un bot.",    icon: visual("travel/trainer/logo", { letter: "DR" }),
-    transition: visual("transitions/warm-door"),
+    description: "Un allié parmi deux pets et un monstre, joué par un bot.",    icon: visual("halts/trainer", { letter: "DR" }),
+    transition: visual("warm-door"),
     create: run => new TrainerHalt(run),
 }

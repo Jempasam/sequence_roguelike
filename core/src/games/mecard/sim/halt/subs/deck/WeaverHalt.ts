@@ -86,7 +86,7 @@ export class WeaverHalt extends DeckHalt {
 export const WEAVER_HALT: HaltType = {
     id: "weaver",
     name: "Tisserand",
-    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],    icon: visual("travel/forge/logo", { letter: "TI" }),
-    transition: visual("transitions/house-door"),
+    description: ["Lie deux ", CARTE.as("cartes"), " du ", DECK, " : ", MERGE.as("mélangées"), ", ou l'une au hasard."],    icon: visual("halts/forge", { letter: "TI" }),
+    transition: visual("house-door"),
     create: run => new WeaverHalt(run),
 }

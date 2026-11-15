@@ -72,7 +72,7 @@ export const ALCHEMIST_HALT: HaltType = {
     id: "alchemist",
     name: "Alchimiste",
     description: ["Deux copies d'une ", CARTE, " deviennent une seule, améliorée."],
-    icon: visual("travel/alchemist/logo", { letter: "AL" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/alchemist", { letter: "AL" }),
+    transition: visual("dungeon-door"),
     create: run => new AlchemistHalt(run),
 }

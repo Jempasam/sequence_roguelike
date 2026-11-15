@@ -78,7 +78,7 @@ export const ANTIQUARIAN_HALT: HaltType = {
     id: "antiquarian",
     name: "Antiquaire",
     description: ["Vends une ", CARTE, ", à son prix en magasin : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut."],
-    icon: visual("travel/antiquarian/logo", { letter: "AN" }),
-    transition: visual("transitions/house-door"),
+    icon: visual("halts/antiquarian", { letter: "AN" }),
+    transition: visual("house-door"),
     create: run => new AntiquarianHalt(run),
 }

@@ -20,7 +20,7 @@ export class MonsterShamanHalt extends MonsterCardHalt {
     constructor(run: Run){
         super(MONSTER_SHAMAN_HALT, run,
             "Chaque monstre a un esprit. Je le réveille, et il court et mord pour toi.",
-            sceneLook(28, 18, 31, "trainer_monster", { visual: "parallax/forest", coloration: [0.72, 0.56, 0.78] }),
+            sceneLook(28, 18, 31, "trainer_monster", { visual: "forest", coloration: [0.72, 0.56, 0.78] }),
             {
                 unit: visual("units/shaman"),
             },
@@ -48,6 +48,6 @@ export const MONSTER_SHAMAN_HALT: HaltType = {
     description: ["Fait d'un monstre une ", BEAST.name, " pour une ", UNIT, ", avec une fureur si elle n'en a aucun usage."],
     icon: visual("units/shaman", { letter: "SM!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/cave-exit"),
+    transition: visual("cave-exit"),
     create: run => new MonsterShamanHalt(run),
 }

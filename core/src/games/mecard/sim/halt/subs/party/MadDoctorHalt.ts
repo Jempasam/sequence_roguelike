@@ -51,7 +51,7 @@ export const MAD_DOCTOR_HALT: HaltType = {
     id: "madDoctor",
     name: "Docteur Fou",
     description: ["Greffe deux ", UNIT.as("unités"), " en une seule."],
-    icon: visual("travel/mad-doctor/logo", { letter: "DF" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/mad-doctor", { letter: "DF" }),
+    transition: visual("dungeon-door"),
     create: run => new MadDoctorHalt(run),
 }

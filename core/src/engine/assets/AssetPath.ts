@@ -148,6 +148,28 @@ export type AssetPath =
     | "mecard/floors/volcano/logo.png"
     | "mecard/floors/volcano/obsidian.png"
     | "mecard/floors/volcano/rock.png"
+    | "mecard/halts/alchemist.png"
+    | "mecard/halts/altar.png"
+    | "mecard/halts/antiquarian.png"
+    | "mecard/halts/butcher.png"
+    | "mecard/halts/chest.png"
+    | "mecard/halts/deadly-fight.png"
+    | "mecard/halts/demon.png"
+    | "mecard/halts/enchanter.png"
+    | "mecard/halts/fight.png"
+    | "mecard/halts/forge.png"
+    | "mecard/halts/hospital.png"
+    | "mecard/halts/inventor.png"
+    | "mecard/halts/mad-doctor.png"
+    | "mecard/halts/magician.png"
+    | "mecard/halts/merchant.png"
+    | "mecard/halts/necromancer.png"
+    | "mecard/halts/removal.png"
+    | "mecard/halts/shop.png"
+    | "mecard/halts/strategist.png"
+    | "mecard/halts/tavern.png"
+    | "mecard/halts/trainer.png"
+    | "mecard/halts/witch.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
     | "mecard/items/alembic.png"
@@ -396,147 +418,11 @@ export type AssetPath =
     | "mecard/transitions/spiral-stairs.ora"
     | "mecard/transitions/stone-bridge.ora"
     | "mecard/transitions/warm-door.ora"
-    | "mecard/travel/alchemist/1.png"
-    | "mecard/travel/alchemist/2.png"
-    | "mecard/travel/alchemist/3.png"
-    | "mecard/travel/alchemist/4.png"
-    | "mecard/travel/alchemist/5.png"
-    | "mecard/travel/alchemist/border.png"
-    | "mecard/travel/alchemist/logo.png"
-    | "mecard/travel/altar/1.png"
-    | "mecard/travel/altar/2.png"
-    | "mecard/travel/altar/3.png"
-    | "mecard/travel/altar/4.png"
-    | "mecard/travel/altar/5.png"
-    | "mecard/travel/altar/border.png"
-    | "mecard/travel/altar/logo.png"
-    | "mecard/travel/antiquarian/1.png"
-    | "mecard/travel/antiquarian/2.png"
-    | "mecard/travel/antiquarian/3.png"
-    | "mecard/travel/antiquarian/4.png"
-    | "mecard/travel/antiquarian/5.png"
-    | "mecard/travel/antiquarian/border.png"
-    | "mecard/travel/antiquarian/logo.png"
-    | "mecard/travel/butcher/1.png"
-    | "mecard/travel/butcher/2.png"
-    | "mecard/travel/butcher/3.png"
-    | "mecard/travel/butcher/4.png"
-    | "mecard/travel/butcher/5.png"
-    | "mecard/travel/butcher/border.png"
-    | "mecard/travel/butcher/logo.png"
-    | "mecard/travel/chest/1.png"
-    | "mecard/travel/chest/2.png"
-    | "mecard/travel/chest/3.png"
-    | "mecard/travel/chest/4.png"
-    | "mecard/travel/chest/5.png"
-    | "mecard/travel/chest/border.png"
-    | "mecard/travel/chest/logo.png"
-    | "mecard/travel/deadly-fight/logo.png"
-    | "mecard/travel/demon/1.png"
-    | "mecard/travel/demon/2.png"
-    | "mecard/travel/demon/3.png"
-    | "mecard/travel/demon/4.png"
-    | "mecard/travel/demon/5.png"
-    | "mecard/travel/demon/border.png"
-    | "mecard/travel/demon/logo.png"
-    | "mecard/travel/enchanter/1.png"
-    | "mecard/travel/enchanter/2.png"
-    | "mecard/travel/enchanter/3.png"
-    | "mecard/travel/enchanter/4.png"
-    | "mecard/travel/enchanter/5.png"
-    | "mecard/travel/enchanter/border.png"
-    | "mecard/travel/enchanter/logo.png"
-    | "mecard/travel/fight/logo.png"
-    | "mecard/travel/forge/1.png"
-    | "mecard/travel/forge/2.png"
-    | "mecard/travel/forge/3.png"
-    | "mecard/travel/forge/4.png"
-    | "mecard/travel/forge/5.png"
-    | "mecard/travel/forge/border.png"
-    | "mecard/travel/forge/logo.png"
     | "mecard/travel/hand.png"
-    | "mecard/travel/hospital/1.png"
-    | "mecard/travel/hospital/2.png"
-    | "mecard/travel/hospital/3.png"
-    | "mecard/travel/hospital/4.png"
-    | "mecard/travel/hospital/5.png"
-    | "mecard/travel/hospital/border.png"
-    | "mecard/travel/hospital/logo.png"
-    | "mecard/travel/inventor/1.png"
-    | "mecard/travel/inventor/2.png"
-    | "mecard/travel/inventor/3.png"
-    | "mecard/travel/inventor/4.png"
-    | "mecard/travel/inventor/5.png"
-    | "mecard/travel/inventor/border.png"
-    | "mecard/travel/inventor/logo.png"
-    | "mecard/travel/mad-doctor/1.png"
-    | "mecard/travel/mad-doctor/2.png"
-    | "mecard/travel/mad-doctor/3.png"
-    | "mecard/travel/mad-doctor/4.png"
-    | "mecard/travel/mad-doctor/5.png"
-    | "mecard/travel/mad-doctor/border.png"
-    | "mecard/travel/mad-doctor/logo.png"
-    | "mecard/travel/magician/1.png"
-    | "mecard/travel/magician/2.png"
-    | "mecard/travel/magician/3.png"
-    | "mecard/travel/magician/4.png"
-    | "mecard/travel/magician/5.png"
-    | "mecard/travel/magician/border.png"
-    | "mecard/travel/magician/logo.png"
-    | "mecard/travel/map/1.png"
-    | "mecard/travel/map/2.png"
-    | "mecard/travel/map/3.png"
-    | "mecard/travel/map/4.png"
-    | "mecard/travel/map/5.png"
-    | "mecard/travel/map/border.png"
     | "mecard/travel/map/circle.png"
     | "mecard/travel/map/paper.png"
     | "mecard/travel/map/path.png"
     | "mecard/travel/map/shade.png"
-    | "mecard/travel/merchant/1.png"
-    | "mecard/travel/merchant/2.png"
-    | "mecard/travel/merchant/3.png"
-    | "mecard/travel/merchant/4.png"
-    | "mecard/travel/merchant/5.png"
-    | "mecard/travel/merchant/border.png"
-    | "mecard/travel/merchant/logo.png"
-    | "mecard/travel/necromancer/logo.png"
-    | "mecard/travel/removal/1.png"
-    | "mecard/travel/removal/2.png"
-    | "mecard/travel/removal/3.png"
-    | "mecard/travel/removal/4.png"
-    | "mecard/travel/removal/5.png"
-    | "mecard/travel/removal/border.png"
-    | "mecard/travel/removal/logo.png"
-    | "mecard/travel/shop/1.png"
-    | "mecard/travel/shop/2.png"
-    | "mecard/travel/shop/3.png"
-    | "mecard/travel/shop/4.png"
-    | "mecard/travel/shop/5.png"
-    | "mecard/travel/shop/border.png"
-    | "mecard/travel/shop/logo.png"
-    | "mecard/travel/strategist/logo.png"
-    | "mecard/travel/tavern/1.png"
-    | "mecard/travel/tavern/2.png"
-    | "mecard/travel/tavern/3.png"
-    | "mecard/travel/tavern/4.png"
-    | "mecard/travel/tavern/5.png"
-    | "mecard/travel/tavern/border.png"
-    | "mecard/travel/tavern/logo.png"
-    | "mecard/travel/trainer/1.png"
-    | "mecard/travel/trainer/2.png"
-    | "mecard/travel/trainer/3.png"
-    | "mecard/travel/trainer/4.png"
-    | "mecard/travel/trainer/5.png"
-    | "mecard/travel/trainer/border.png"
-    | "mecard/travel/trainer/logo.png"
-    | "mecard/travel/witch/1.png"
-    | "mecard/travel/witch/2.png"
-    | "mecard/travel/witch/3.png"
-    | "mecard/travel/witch/4.png"
-    | "mecard/travel/witch/5.png"
-    | "mecard/travel/witch/border.png"
-    | "mecard/travel/witch/logo.png"
     | "mecard/units/acrobat.png"
     | "mecard/units/amog.png"
     | "mecard/units/apothecary.png"
@@ -837,6 +723,28 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/volcano/logo.png",
     "mecard/floors/volcano/obsidian.png",
     "mecard/floors/volcano/rock.png",
+    "mecard/halts/alchemist.png",
+    "mecard/halts/altar.png",
+    "mecard/halts/antiquarian.png",
+    "mecard/halts/butcher.png",
+    "mecard/halts/chest.png",
+    "mecard/halts/deadly-fight.png",
+    "mecard/halts/demon.png",
+    "mecard/halts/enchanter.png",
+    "mecard/halts/fight.png",
+    "mecard/halts/forge.png",
+    "mecard/halts/hospital.png",
+    "mecard/halts/inventor.png",
+    "mecard/halts/mad-doctor.png",
+    "mecard/halts/magician.png",
+    "mecard/halts/merchant.png",
+    "mecard/halts/necromancer.png",
+    "mecard/halts/removal.png",
+    "mecard/halts/shop.png",
+    "mecard/halts/strategist.png",
+    "mecard/halts/tavern.png",
+    "mecard/halts/trainer.png",
+    "mecard/halts/witch.png",
     "mecard/hud/bag.png",
     "mecard/hud/booster.png",
     "mecard/items/alembic.png",
@@ -1085,147 +993,11 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/transitions/spiral-stairs.ora",
     "mecard/transitions/stone-bridge.ora",
     "mecard/transitions/warm-door.ora",
-    "mecard/travel/alchemist/1.png",
-    "mecard/travel/alchemist/2.png",
-    "mecard/travel/alchemist/3.png",
-    "mecard/travel/alchemist/4.png",
-    "mecard/travel/alchemist/5.png",
-    "mecard/travel/alchemist/border.png",
-    "mecard/travel/alchemist/logo.png",
-    "mecard/travel/altar/1.png",
-    "mecard/travel/altar/2.png",
-    "mecard/travel/altar/3.png",
-    "mecard/travel/altar/4.png",
-    "mecard/travel/altar/5.png",
-    "mecard/travel/altar/border.png",
-    "mecard/travel/altar/logo.png",
-    "mecard/travel/antiquarian/1.png",
-    "mecard/travel/antiquarian/2.png",
-    "mecard/travel/antiquarian/3.png",
-    "mecard/travel/antiquarian/4.png",
-    "mecard/travel/antiquarian/5.png",
-    "mecard/travel/antiquarian/border.png",
-    "mecard/travel/antiquarian/logo.png",
-    "mecard/travel/butcher/1.png",
-    "mecard/travel/butcher/2.png",
-    "mecard/travel/butcher/3.png",
-    "mecard/travel/butcher/4.png",
-    "mecard/travel/butcher/5.png",
-    "mecard/travel/butcher/border.png",
-    "mecard/travel/butcher/logo.png",
-    "mecard/travel/chest/1.png",
-    "mecard/travel/chest/2.png",
-    "mecard/travel/chest/3.png",
-    "mecard/travel/chest/4.png",
-    "mecard/travel/chest/5.png",
-    "mecard/travel/chest/border.png",
-    "mecard/travel/chest/logo.png",
-    "mecard/travel/deadly-fight/logo.png",
-    "mecard/travel/demon/1.png",
-    "mecard/travel/demon/2.png",
-    "mecard/travel/demon/3.png",
-    "mecard/travel/demon/4.png",
-    "mecard/travel/demon/5.png",
-    "mecard/travel/demon/border.png",
-    "mecard/travel/demon/logo.png",
-    "mecard/travel/enchanter/1.png",
-    "mecard/travel/enchanter/2.png",
-    "mecard/travel/enchanter/3.png",
-    "mecard/travel/enchanter/4.png",
-    "mecard/travel/enchanter/5.png",
-    "mecard/travel/enchanter/border.png",
-    "mecard/travel/enchanter/logo.png",
-    "mecard/travel/fight/logo.png",
-    "mecard/travel/forge/1.png",
-    "mecard/travel/forge/2.png",
-    "mecard/travel/forge/3.png",
-    "mecard/travel/forge/4.png",
-    "mecard/travel/forge/5.png",
-    "mecard/travel/forge/border.png",
-    "mecard/travel/forge/logo.png",
     "mecard/travel/hand.png",
-    "mecard/travel/hospital/1.png",
-    "mecard/travel/hospital/2.png",
-    "mecard/travel/hospital/3.png",
-    "mecard/travel/hospital/4.png",
-    "mecard/travel/hospital/5.png",
-    "mecard/travel/hospital/border.png",
-    "mecard/travel/hospital/logo.png",
-    "mecard/travel/inventor/1.png",
-    "mecard/travel/inventor/2.png",
-    "mecard/travel/inventor/3.png",
-    "mecard/travel/inventor/4.png",
-    "mecard/travel/inventor/5.png",
-    "mecard/travel/inventor/border.png",
-    "mecard/travel/inventor/logo.png",
-    "mecard/travel/mad-doctor/1.png",
-    "mecard/travel/mad-doctor/2.png",
-    "mecard/travel/mad-doctor/3.png",
-    "mecard/travel/mad-doctor/4.png",
-    "mecard/travel/mad-doctor/5.png",
-    "mecard/travel/mad-doctor/border.png",
-    "mecard/travel/mad-doctor/logo.png",
-    "mecard/travel/magician/1.png",
-    "mecard/travel/magician/2.png",
-    "mecard/travel/magician/3.png",
-    "mecard/travel/magician/4.png",
-    "mecard/travel/magician/5.png",
-    "mecard/travel/magician/border.png",
-    "mecard/travel/magician/logo.png",
-    "mecard/travel/map/1.png",
-    "mecard/travel/map/2.png",
-    "mecard/travel/map/3.png",
-    "mecard/travel/map/4.png",
-    "mecard/travel/map/5.png",
-    "mecard/travel/map/border.png",
     "mecard/travel/map/circle.png",
     "mecard/travel/map/paper.png",
     "mecard/travel/map/path.png",
     "mecard/travel/map/shade.png",
-    "mecard/travel/merchant/1.png",
-    "mecard/travel/merchant/2.png",
-    "mecard/travel/merchant/3.png",
-    "mecard/travel/merchant/4.png",
-    "mecard/travel/merchant/5.png",
-    "mecard/travel/merchant/border.png",
-    "mecard/travel/merchant/logo.png",
-    "mecard/travel/necromancer/logo.png",
-    "mecard/travel/removal/1.png",
-    "mecard/travel/removal/2.png",
-    "mecard/travel/removal/3.png",
-    "mecard/travel/removal/4.png",
-    "mecard/travel/removal/5.png",
-    "mecard/travel/removal/border.png",
-    "mecard/travel/removal/logo.png",
-    "mecard/travel/shop/1.png",
-    "mecard/travel/shop/2.png",
-    "mecard/travel/shop/3.png",
-    "mecard/travel/shop/4.png",
-    "mecard/travel/shop/5.png",
-    "mecard/travel/shop/border.png",
-    "mecard/travel/shop/logo.png",
-    "mecard/travel/strategist/logo.png",
-    "mecard/travel/tavern/1.png",
-    "mecard/travel/tavern/2.png",
-    "mecard/travel/tavern/3.png",
-    "mecard/travel/tavern/4.png",
-    "mecard/travel/tavern/5.png",
-    "mecard/travel/tavern/border.png",
-    "mecard/travel/tavern/logo.png",
-    "mecard/travel/trainer/1.png",
-    "mecard/travel/trainer/2.png",
-    "mecard/travel/trainer/3.png",
-    "mecard/travel/trainer/4.png",
-    "mecard/travel/trainer/5.png",
-    "mecard/travel/trainer/border.png",
-    "mecard/travel/trainer/logo.png",
-    "mecard/travel/witch/1.png",
-    "mecard/travel/witch/2.png",
-    "mecard/travel/witch/3.png",
-    "mecard/travel/witch/4.png",
-    "mecard/travel/witch/5.png",
-    "mecard/travel/witch/border.png",
-    "mecard/travel/witch/logo.png",
     "mecard/units/acrobat.png",
     "mecard/units/amog.png",
     "mecard/units/apothecary.png",

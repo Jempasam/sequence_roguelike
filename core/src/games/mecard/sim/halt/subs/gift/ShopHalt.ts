@@ -152,7 +152,7 @@ export const SHOP_HALT: HaltType = {
     id: "shop",
     name: "Magasin",
     description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],
-    icon: visual("travel/shop/logo", { letter: "MA" }),
-    transition: visual("transitions/warm-door"),
+    icon: visual("halts/shop", { letter: "MA" }),
+    transition: visual("warm-door"),
     create: run => new ShopHalt(run),
 }

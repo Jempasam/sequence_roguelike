@@ -48,8 +48,8 @@ export const GREAT_MERCHANT_HALT: HaltType = {
     id: "greatMerchant",
     name: "Grand marchand ambulant",
     description: "Un objet parmi trois, en triple.",
-    icon: visual("travel/merchant/logo", { letter: "MB*" }),
+    icon: visual("halts/merchant", { letter: "MB*" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/stone-bridge", { coloration: GREAT_COLORATION }),
+    transition: visual("stone-bridge", { coloration: GREAT_COLORATION }),
     create: run => new GreatMerchantHalt(run),
 }

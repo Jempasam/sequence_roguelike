@@ -64,8 +64,8 @@ export const DARK_MAGICIAN_HALT: HaltType = {
     id: "darkMagician",
     name: "Magicien noir",
     description: ["Un booster parmi trois, tirés dans les ", CARTE.as("cartes"), " des monstres."],
-    icon: visual("travel/magician/logo", { letter: "MG!" }),
+    icon: visual("halts/magician", { letter: "MG!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/portal", { coloration: DARK_COLORATION }),
+    transition: visual("portal", { coloration: DARK_COLORATION }),
     create: run => new DarkMagicianHalt(run),
 }

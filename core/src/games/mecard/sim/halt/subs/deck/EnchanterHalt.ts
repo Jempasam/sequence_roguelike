@@ -127,8 +127,8 @@ export const ENCHANTER_HALT: HaltType = {
     id: "enchanter",
     name: "Enchanteur",
     description: ["Une ", CARTE, " parmi trois, ", FUSION.as("collée"), " à une ", CARTE, " du ", DECK, "."],
-    icon: visual("travel/enchanter/logo", { letter: "EN" }),
-    transition: visual("transitions/dungeon-door"),
+    icon: visual("halts/enchanter", { letter: "EN" }),
+    transition: visual("dungeon-door"),
     create: run => new EnchanterHalt(run),
 }
 

@@ -50,7 +50,7 @@ export const DEMON_HALT: HaltType = {
     id: "demon",
     name: "Démon",
     description: ["Toutes les ", CARTE.as("cartes"), " d'une ", UNIT, " sont ", FUSION.as("collées"), " par paires."],
-    icon: visual("travel/demon/logo", { letter: "DÉ" }),
-    transition: visual("transitions/warm-door", {coloration:[0.8, 0.1, 0.15]}),
+    icon: visual("halts/demon", { letter: "DÉ" }),
+    transition: visual("warm-door", {coloration:[0.8, 0.1, 0.15]}),
     create: run => new DemonHalt(run),
 }

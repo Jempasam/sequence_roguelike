@@ -75,8 +75,8 @@ export const GREAT_FORGE_HALT: HaltType = {
     id: "greatForge",
     name: "Grand forgeron",
     description: [FUSION.as("Colle"), " deux ou trois ", CARTE.as("cartes"), " du ", DECK, ", dans l'ordre choisi, jusqu'à trois fois."],
-    icon: visual("travel/forge/logo", { letter: "FO*" }),
+    icon: visual("halts/forge", { letter: "FO*" }),
     glow: GREAT_COLOR,
-    transition: visual("transitions/great-door"),
+    transition: visual("great-door"),
     create: run => new GreatForgeHalt(run),
 }

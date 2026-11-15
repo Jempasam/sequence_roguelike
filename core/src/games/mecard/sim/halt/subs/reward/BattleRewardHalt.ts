@@ -28,8 +28,8 @@ export const BATTLE_REWARD_HALT: HaltType = {
     id: "battleReward",
     name: "Récompense de combat",
     description: ["Une ", CARTE, " parmi quatre, et de l'or."],
-    icon: visual("travel/chest/logo", { letter: "R" }),
-    transition: visual("transitions/gilded-door"),
+    icon: visual("halts/chest", { letter: "R" }),
+    transition: visual("gilded-door"),
     onMap: false,
     create: run => new BattleRewardHalt(BATTLE_REWARD_HALT, run, 15),
 }

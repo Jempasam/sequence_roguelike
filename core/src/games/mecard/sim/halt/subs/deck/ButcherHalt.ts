@@ -47,7 +47,7 @@ export class ButcherHalt extends DeckHalt {
 export const BUTCHER_HALT: HaltType = {
     id: "butcher",
     name: "Boucher",
-    description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],    icon: visual("travel/butcher/logo", { letter: "BU" }),
-    transition: visual("transitions/dungeon-door"),
+    description: ["Coupe une ou deux ", COMPOSITE.as("fusions"), " : chacun redevient ses ", CARTE.as("cartes"), "."],    icon: visual("halts/butcher", { letter: "BU" }),
+    transition: visual("dungeon-door"),
     create: run => new ButcherHalt(run),
 }

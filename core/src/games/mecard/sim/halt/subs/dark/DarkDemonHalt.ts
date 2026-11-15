@@ -58,8 +58,8 @@ export const DARK_DEMON_HALT: HaltType = {
     id: "darkDemon",
     name: "Archidémon",
     description: ["Chaque ", CARTE, " d'une ", UNIT, " est ", FUSION.as("collée"), " à la ", CARTE, " d'un monstre au même rang."],
-    icon: visual("travel/demon/logo", { letter: "DÉ!" }),
+    icon: visual("halts/demon", { letter: "DÉ!" }),
     glow: DARK_COLOR,
-    transition: visual("transitions/warm-door", {coloration:[0.72, 0.56, 0.78]}),
+    transition: visual("warm-door", {coloration:[0.72, 0.56, 0.78]}),
     create: run => new DarkDemonHalt(run),
 }

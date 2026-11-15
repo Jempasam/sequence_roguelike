@@ -36,8 +36,8 @@ export const ELITE_REWARD_HALT: HaltType = {
     id: "eliteReward",
     name: "Récompense d'élite",
     description: ["Deux ", CARTE.as("cartes"), ", un objet ou une ", FUSION, " au choix, et de l'or."],
-    icon: visual("travel/chest/logo", { letter: "R" }),
-    transition: visual("transitions/gilded-door", { coloration: ELITE_COLORATION }),
+    icon: visual("halts/chest", { letter: "R" }),
+    transition: visual("gilded-door", { coloration: ELITE_COLORATION }),
     onMap: false,
     create: run => new EliteRewardHalt(ELITE_REWARD_HALT, run, 35),
 }

@@ -9,7 +9,7 @@ export const MASTER_COLOR = rgba(1, 0.8, 0.2)
 export const MASTER_MASK: PnjMaskName = "sunglasses"
 
 /** The gold transtion of the masters */
-export const MASTER_TRANSITION = visual("transitions/gilded-door",{coloration:[1,.8,.2]})
+export const MASTER_TRANSITION = visual("gilded-door",{coloration:[1,.8,.2]})
 
 
 /** The blue of the great ones: their glow, their crown and what they carry. */

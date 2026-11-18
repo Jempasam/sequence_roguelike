@@ -24,8 +24,8 @@ const TASER_WIDTH = 0.1
 
 /** The line the taser follows, from a pose, up to the first body. */
 function zap(battle: Battle, unit: Unit, pose: Pose): Area {
-    const { end } = battle.ray(unit, TOUCH_RANGE, pose)
-    return Areas.line(pose.position, end, TASER_WIDTH)
+    const { start, end } = battle.ray(unit, TOUCH_RANGE, pose)
+    return Areas.line(start, end, TASER_WIDTH)
 }
 
 /** A shock to the unit just ahead, losing it its next step. */
@@ -54,8 +54,8 @@ export class TaserCard extends ActionCard {
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
                 const shown = Previews.polygon(zap(battle, unit, pose), CONTROL_COLOR)
-                if(!target) return Previews.still(pose, touchZone(pose), shown)
-                return Previews.still(pose, touchZone(pose), shown, Previews.label(target.position, "électrocuté", NOTE_COLOR))
+                if(!target) return Previews.still(pose, touchZone(unit, pose), shown)
+                return Previews.still(pose, touchZone(unit, pose), shown, Previews.label(target.position, "électrocuté", NOTE_COLOR))
             },
         }
     }

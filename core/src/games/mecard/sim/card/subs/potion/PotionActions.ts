@@ -31,19 +31,19 @@ const THROW_TIME = 0.25
 const SPLASH_TIME = 0.3
 
 /** How far ahead the thrown potion of the catalog lands, in meters, before the reach of the unit. */
-const POTION_THROW = 2.5
+const POTION_THROW = 2.5 - UNIT_RADIUS
 
 /** How wide the splash of the thrown potion of the catalog is, in meters: its radius. */
 const POTION_SPLASH = 1
 
 /** How far the rain of potion of the catalog reaches around its unit, in meters, before its reach. */
-const RAIN_RADIUS = 2.5
+const RAIN_RADIUS = 2.5 - UNIT_RADIUS
 
 /** How far ahead the puddle of the catalog lies, in meters, before the reach of the unit. */
-const PUDDLE_AHEAD = 1.5
+const PUDDLE_AHEAD = 1.5 - UNIT_RADIUS
 
 /** How far ahead the barrel of the catalog stands, in meters. */
-const BARREL_AHEAD = 1
+const BARREL_AHEAD = 1 - UNIT_RADIUS
 
 /** How many hearts the barrel of the catalog lives by, before the summoning of the unit. */
 const BARREL_HALVES = 1
@@ -145,7 +145,7 @@ export class ThrownPotionCard extends PotionActionCard {
 
     /** Where the flask lands, from a pose. */
     #landing(unit: Unit, pose: Pose): Vector2 {
-        return pose.position.plus(pose.direction.times(this.distance * unit.stats.throwRange.value))
+        return unit.muzzle(pose).plus(pose.direction.times(this.distance * unit.stats.throwRange.value))
     }
 }
 
@@ -175,7 +175,7 @@ export class PotionRainCard extends PotionActionCard {
 
 
     #rain(unit: Unit, pose: Pose): Area {
-        return Areas.circle(pose.position, this.radius * unit.stats.throwRange.value)
+        return unit.around(this.radius * unit.stats.throwRange.value, pose)
     }
 }
 
@@ -184,20 +184,20 @@ export class BarrelCard extends PotionActionCard {
 
 
     protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
-        const at = this.#spot(unit)
+        const at = this.#spot(unit, unit)
         const barrel = battle.summon(unit, visual("units/barrel"), "Tonneau", at, summonedHearts(unit, BARREL_HALVES))
         if(barrel) battle.applyStatus(barrel, barrelOf(dose), Math.abs(level))
         wait(battle, SHORT_TIME)
     }
 
-    protected shows(_battle: Battle, _unit: Unit, pose: Pose, dose: Dose): Indicator[] {
-        const at = this.#spot(pose)
+    protected shows(_battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[] {
+        const at = this.#spot(unit, pose)
         return [summonShown(at), shown(dose, Areas.circle(at, SPLASH_RADIUS))]
     }
 
 
-    #spot(pose: Pose): Vector2 {
-        return pose.position.plus(pose.direction.times(BARREL_AHEAD))
+    #spot(unit: Unit, pose: Pose): Vector2 {
+        return unit.muzzle(pose).plus(pose.direction.times(BARREL_AHEAD))
     }
 }
 
@@ -244,7 +244,7 @@ export class PuddleCard extends PotionActionCard {
 
 
     #center(unit: Unit, pose: Pose): Vector2 {
-        return pose.position.plus(pose.direction.times(PUDDLE_AHEAD * unit.stats.throwRange.value))
+        return unit.muzzle(pose).plus(pose.direction.times(PUDDLE_AHEAD * unit.stats.throwRange.value))
     }
 }
 

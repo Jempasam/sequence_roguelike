@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import {
-    AIM, BACK_DASH, BATTLE, GOBLIN, Heart, StandardFight, DeckAi, RED_HEART, STEP, TURNS, Vector2,
+    AIM, BACK_DASH, BATTLE, GOBLIN, Heart, DeckAi, RED_HEART, STEP, TURNS, Vector2,
 } from "@game/core/mecard"
 
 import { battle, MONSTERS, unit } from "../fixtures"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Tests ---
@@ -29,7 +30,7 @@ describe("Deck, ordered", () => {
     })
 
     test("a goblin → plays each round of its deck in turn", () => {
-        const fight = new StandardFight(BATTLE, startedRun(1), [GOBLIN]).battle
+        const fight = fightOf(BATTLE, GOBLIN).create(startedRun(1), { layer: 0, across: 0.5 }).battle
         fight.startRound()
         const goblin = fight.units.find(candidate => candidate.name.startsWith(GOBLIN.name))
         if(!goblin) throw new Error("The fight has no goblin.")

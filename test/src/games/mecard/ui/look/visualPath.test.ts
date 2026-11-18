@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets } from "@game/core"
 import { BACK_VISUAL, Visual } from "@game/core/mecard"
 import { allPlaceTypes } from "@game/core/mecard"
-import { distinctPictures, loadPictures, pathOf, shippedTransitions, transitionPath, transitionTintOf } from "@game/core/mecard/visual-path"
+import { dataPathOf, distinctPictures, loadPictures, pathOf, shippedPictures, shippedTransitions, transitionPath, transitionTintOf } from "@game/core/mecard/visual-path"
 import { ASSET_PATHS } from "@game/core"
 
 import { png, RGB } from "../../../../fixtures/png"
@@ -80,5 +80,45 @@ describe("loadPictures", () => {
 
     test("no key → nothing", async() => {
         expect(await loadPictures(assets(), [])).toEqual([])
+    })
+
+    test("a picture shipped with a JSON of its name → its data; without → none", async() => {
+        const shipped = ["mecard/units/goblin.png", "mecard/units/goblin.json", "mecard/units/wall.png"] as never
+        const files = new Assets(new MemoryAssets({
+            "mecard/units/goblin.png": png({ width: 1, height: 1, colorType: RGB, samples: [1, 2, 3] }),
+            "mecard/units/goblin.json": new TextEncoder().encode('{ "mode": "feet" }'),
+            "mecard/units/wall.png": png({ width: 1, height: 1, colorType: RGB, samples: [1, 2, 3] }),
+        }))
+        const loaded = await loadPictures(files, ["units/goblin", "units/wall"], shipped)
+        expect(loaded.map(each => each.data)).toEqual([{ mode: "feet" }, null])
+    })
+
+    test("a JSON that is not valid → an error naming the file, not a picture left out", async() => {
+        const shipped = ["mecard/units/goblin.png", "mecard/units/goblin.json"] as never
+        const files = new Assets(new MemoryAssets({
+            "mecard/units/goblin.png": png({ width: 1, height: 1, colorType: RGB, samples: [1, 2, 3] }),
+            "mecard/units/goblin.json": new TextEncoder().encode("{ not json"),
+        }))
+        await expect(loadPictures(files, ["units/goblin"], shipped)).rejects.toThrow(/goblin\.json/)
+    })
+})
+
+describe("shippedPictures", () => {
+    test("the pngs in a folder and under it → their keys, sorted; nothing from the other folders or the JSON files", () => {
+        const shipped = [
+            "mecard/units/wolf.png", "mecard/units/bear.png", "mecard/units/bear.json", "mecard/units/test/walls/x.png",
+            "mecard/processes/haste.png",
+        ] as never
+        expect(shippedPictures("units", shipped)).toEqual(["units/bear", "units/test/walls/x", "units/wolf"])
+    })
+
+    test("a JSON shipped → beside a picture of its name", () => {
+        const shipped: readonly string[] = ASSET_PATHS
+        const orphans = shipped.filter(path => path.endsWith(".json") && !shipped.includes(path.replace(/\.json$/, ".png")))
+        expect(orphans).toEqual([])
+    })
+
+    test("dataPathOf → the JSON of the key", () => {
+        expect(dataPathOf("units/wolf")).toBe("mecard/units/wolf.json")
     })
 })

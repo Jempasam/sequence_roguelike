@@ -1,4 +1,4 @@
-import { Arena, ARENA_SIZE, askAi, Battle, DeckAi, monsterStart, partyStarts, pillarsFor, Rng, Team, Vector2 } from "@game/core/mecard"
+import { Arena, ARENA_SIZE, askAi, Battle, DeckAi, monsterStart, partyStarts, Rng, Team, Vector2 } from "@game/core/mecard"
 import type { BattlePlan, Unit, UnitController } from "@game/core/mecard"
 
 import type { Body } from "./fighters"
@@ -149,7 +149,6 @@ export function fight(spec: FightSpec): FightResult {
     }
     spec.allies.forEach((combatant, index) => place(combatant, "allies", index))
     spec.foes.forEach((combatant, index) => place(combatant, "foes", index))
-    for(const { center, radius } of pillarsFor(starts, rng)) battle.addPillar(center, radius)
     const journal = spec.journal ? new Journal(battle) : null
     journal?.snapshot("Départ")
     const told = (result: FightResult, how: string): FightResult => {

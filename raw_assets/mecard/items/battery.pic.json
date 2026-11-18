@@ -7,7 +7,7 @@
     },
     {
       "color": "#ffe040",
-      "light": 0.9
+      "light": 0.25
     }
   ],
   "pixels": {
@@ -25,9 +25,6 @@
       "............"
     ]
   },
-  "filters": [
-    "auto_depth"
-  ],
   "render": {
     "preset": "shaded",
     "light": 135

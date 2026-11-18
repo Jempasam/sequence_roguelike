@@ -400,7 +400,7 @@ export class JourneyView extends Component {
             this.#paintUnder(painter, art.circle, x, y, circle)
         }
         // A fight is what the token shows, its halt a small badge on a corner when the halt wants to be seen.
-        const main = place.exitTo?.type ?? place.fight ?? place.halt!
+        const main = place.exitTo?.type ?? place.fight?.category ?? place.halt!
         this.#paintIcon(painter, main, x, y, shade, LOGO_SCALE)
         const badge = place.fight && place.halt && place.halt.onMap !== false ? place.halt : null
         if(badge) this.#paintIcon(painter, badge, x + BADGE_SHIFT, y + BADGE_SHIFT, shade, BADGE_SCALE)

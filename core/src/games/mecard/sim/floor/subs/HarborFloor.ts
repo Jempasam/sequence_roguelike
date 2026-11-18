@@ -1,24 +1,16 @@
 import type { Rng } from "../../base/Rng"
-import { HARPOON_PIRATE, GOBLIN_WRESTLER, TOXIC_TOAD, BRUTE, GARRISON_GOBLIN, SNIPER, KRAKEN_CAPTAIN } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { MERCHANT_HALT } from "../../halt/subs/gift/MerchantHalt"
 import { SHOP_HALT } from "../../halt/subs/gift/ShopHalt"
 import { CHEST_HALT } from "../../halt/subs/gift/ChestHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { HARBOR_FIGHTS } from "../fights/harborFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [HARPOON_PIRATE, GOBLIN_WRESTLER, TOXIC_TOAD],
-    middle: [BRUTE, HARPOON_PIRATE, GARRISON_GOBLIN],
-    deep: [HARPOON_PIRATE, BRUTE, GOBLIN_WRESTLER, SNIPER],
-}
 
 /** Port: Des pirates, des quais, et un capitaine Kraken au bout. Plus de marchands, de boutiques et de coffres. */
 export class HarborFloor extends AbstractFloor {
@@ -31,8 +23,8 @@ export class HarborFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, KRAKEN_CAPTAIN, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(HARBOR_FIGHTS, category, layer, rng)
     }
 }
 

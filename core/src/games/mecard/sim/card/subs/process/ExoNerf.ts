@@ -1,5 +1,6 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { Mimicking } from "../../../process/subs/Mimicking"
 
@@ -9,7 +10,7 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the nerf of the catalog flies ahead, in meters. */
-const NERF_RANGE = 6
+const NERF_RANGE = 6 - UNIT_RADIUS
 
 /** What a nerf finding nobody says. */
 const NOBODY = "personne en face"

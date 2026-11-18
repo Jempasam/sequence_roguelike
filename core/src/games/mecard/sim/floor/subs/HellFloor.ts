@@ -1,22 +1,19 @@
 import type { Rng } from "../../base/Rng"
-import { BERSERKER, BRUTE, DEVIL, ELF_ASSASSIN, FIRE_MAGE, IMP } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { encounter } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { HELL_FIGHTS } from "../fights/hellFights"
 import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives in hell. */
-const MONSTERS: readonly Monster[] = [FIRE_MAGE, BERSERKER, BRUTE, ELF_ASSASSIN, IMP]
 
 /** Hell: the last floor of a round, before the cave again, harder. */
 export class HellFloor extends AbstractFloor {
@@ -32,8 +29,8 @@ export class HellFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return encounter(MONSTERS, DEVIL, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(HELL_FIGHTS, category, layer, rng)
     }
 }
 

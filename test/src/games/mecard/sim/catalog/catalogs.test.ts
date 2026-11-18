@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    ALL_BOOSTERS, ALL_CARDS, ALL_FIGHTS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_UPGRADES, ALL_USABLES,
+    ALL_BOOSTERS, ALL_CARDS, ALL_FIGHT_CATEGORIES, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_UPGRADES, ALL_USABLES,
     BOSS_MONSTERS, LEGENDARY_CARDS, LOOT_BOOSTERS, LOOT_CARDS, LOOT_ITEMS, LOOT_KITS, LOOT_MONSTERS, LOOT_PETS,
     LOOT_UPGRADES, LOOT_USABLES, POTION_CARDS, STARTING_KITS,
 } from "@game/core/mecard"
@@ -28,7 +28,7 @@ describe("the catalogs follow one convention: ALL_Y, LOOT_Y, and X_Y for the par
     test("the parts of a catalog are all in it", () => {
         const parts: [readonly unknown[], readonly unknown[]][] = [
             [LEGENDARY_CARDS, ALL_CARDS], [POTION_CARDS, ALL_CARDS], [STARTING_KITS, ALL_KITS],
-            [BOSS_MONSTERS, ALL_MONSTERS], [ALL_FIGHTS, ALL_FIGHTS],
+            [BOSS_MONSTERS, ALL_MONSTERS], [ALL_FIGHT_CATEGORIES, ALL_FIGHT_CATEGORIES],
         ]
         for(const [part, all] of parts) for(const each of part) expect(all).toContain(each)
     })

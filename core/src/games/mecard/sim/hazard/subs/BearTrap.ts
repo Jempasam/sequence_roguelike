@@ -34,7 +34,7 @@ export class Trapping extends HazardStatus {
         this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             const zone = unit.zone ?? Areas.circle(unit.position, BEAR_TRAP_RADIUS)
-            if(!Areas.checkCircle(zone, to, mover.radius)) return
+            if(!mover.hitbox.touches({ position: to, direction: mover.direction }, zone)) return
             mover.hearts.damage(BEAR_TRAP_DAMAGE, DamageType.PHYSICAL, unit.owner ?? unit)
             battle.stun(mover)
             unit.hearts.slay(null)

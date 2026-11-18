@@ -1,5 +1,6 @@
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { echoOf, isEcho } from "../../../process/subs/echo"
@@ -10,7 +11,7 @@ import { ModifierCard } from "../ModifierCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import * as Previews from "../../../battle/preview/Previews"
 /** How far around the unit the enemies copy its last action, in meters. */
-const REFLECTION_RADIUS = 3
+const REFLECTION_RADIUS = 3 - UNIT_RADIUS
 
 /** The last action a unit played before this one, none when it played none, copies left aside. */
 function lastBefore(unit: Unit, self: Action): Action|null {
@@ -29,7 +30,7 @@ const reflecting: Action = {
             hold(battle, SHORT_TIME, [Previews.label(unit.position, "rien à refléter", NOTE_COLOR)])
             return
         }
-        const around = battle.enemiesOf(unit).filter(enemy => enemy.position.distance(unit.position) <= REFLECTION_RADIUS)
+        const around = battle.enemiesOf(unit).filter(enemy => unit.hitbox.gap(unit, enemy.hitbox, enemy) <= REFLECTION_RADIUS)
         for(const enemy of around){
             enemy.steps.unshift(echoOf(copied))
             battle.events.push({ type: "status", unit: enemy, text: "reflet" })
@@ -37,7 +38,7 @@ const reflecting: Action = {
         hold(battle, SHORT_TIME, around.map(enemy => Previews.arrow([unit.position, enemy.position], MOVE_WIDTH / 2, MOVE_COLOR)))
     },
     preview: ({ battle, unit, pose }) => {
-        const around = battle.enemiesOf(unit).filter(enemy => enemy.position.distance(pose.position) <= REFLECTION_RADIUS)
+        const around = battle.enemiesOf(unit).filter(enemy => unit.hitbox.gap(pose, enemy.hitbox, enemy) <= REFLECTION_RADIUS)
         return Previews.still(pose, ...around.map(enemy => Previews.arrow([pose.position, enemy.position], MOVE_WIDTH / 2, MOVE_COLOR)))
     },
 }

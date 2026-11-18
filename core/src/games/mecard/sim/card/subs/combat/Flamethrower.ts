@@ -1,6 +1,8 @@
 import { ELEMENTAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
+import { UNIT_RADIUS } from "../../../battle/Unit"
+import type { Unit } from "../../../battle/Unit"
 import { placeFlames } from "../../../hazard/subs/Flames"
 import { BURN, Burn } from "../../../status/subs/Burn"
 
@@ -14,7 +16,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the flamethrower of the catalog reaches, in meters. */
-const FLAME_RANGE = 3
+const FLAME_RANGE = 3 - UNIT_RADIUS
 
 /** How wide the flames of the catalog are, in meters. */
 const FLAME_WIDTH = 0.8
@@ -55,20 +57,20 @@ export class FlamethrowerCard extends ActionCard {
 
     static #burning(range: number, width: number, amount: number, burn: number): Action {
         // The band it burns from a pose, as long as a share of its reach.
-        const flames = (pose: Pose, share = 1): Area => {
-            const to = pose.position.plus(pose.direction.times(range * share))
-            return Areas.line(pose.position, to, width)
+        const flames = (unit: Unit, pose: Pose, share = 1): Area => {
+            const from = unit.muzzle(pose)
+            return Areas.line(from, from.plus(pose.direction.times(range * share)), width)
         }
         return {
             use: function ({ battle, unit }){
-                sweep(battle, FLAME_TIME, share => [Previews.polygon(flames(unit, share), ELEMENTAL_COLOR)])
-                const area = flames(unit)
+                sweep(battle, FLAME_TIME, share => [Previews.polygon(flames(unit, unit, share), ELEMENTAL_COLOR)])
+                const area = flames(unit, unit)
                 for(const target of battle.strike(unit, area, amount, DamageType.ELEMENTAL)){
                     battle.applyStatus(target, BURN, burn)
                 }
-                placeFlames(battle, unit, unit.position.plus(unit.direction.times(range / 2)), area)
+                placeFlames(battle, unit, unit.muzzle().plus(unit.direction.times(range / 2)), area)
             },
-            preview: ({ pose }) => Previews.still(pose, Previews.polygon(flames(pose), ELEMENTAL_COLOR)),
+            preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(flames(unit, pose), ELEMENTAL_COLOR)),
         }
     }
 }

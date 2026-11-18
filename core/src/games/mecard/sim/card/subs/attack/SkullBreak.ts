@@ -31,8 +31,11 @@ export class SkullBreakCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const side = pose.direction.right.times(this.range * unit.stats.meleeRange.value * progress)
-        return Areas.line(pose.position.minus(side), pose.position.plus(side), this.width)
+        // From the edge of each side, one band through the body: its own reach on either side of it.
+        const toRight = unit.muzzle(pose, pose.direction.right)
+        const toLeft = unit.muzzle(pose, pose.direction.left)
+        const stretch = pose.direction.right.times(this.range * unit.stats.meleeRange.value * progress)
+        return Areas.line(toLeft.minus(stretch), toRight.plus(stretch), this.width)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

@@ -3,6 +3,7 @@ import { frenchNumber } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -12,7 +13,7 @@ import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far the dagger of the catalog reaches, in meters: shorter than a thrust. */
-export const DAGGER_RANGE = 1.1
+export const DAGGER_RANGE = 1.1 - UNIT_RADIUS
 
 /** How wide the dagger of the catalog is, in meters. */
 export const DAGGER_WIDTH = 0.4
@@ -50,8 +51,9 @@ export class DaggerCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
-        return Areas.line(pose.position, to, this.width)
+        const from = unit.muzzle(pose)
+        const to = from.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
+        return Areas.line(from, to, this.width)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

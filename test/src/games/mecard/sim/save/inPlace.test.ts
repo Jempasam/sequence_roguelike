@@ -155,11 +155,11 @@ describe("Run", () => {
         const run = startedRun(5)
         const { travel } = run
         const before = travel.journey.places.find(place => {
-            return travel.journey.nextOf(place).some(next => next.monsters.length > 0)
+            return travel.journey.nextOf(place).some(next => next.fight !== null)
         })
         if(!before) throw new Error("The map leads to no fight.")
         travel.jump(before)
-        const fight = travel.next.find(next => next.monsters.length > 0)
+        const fight = travel.next.find(next => next.fight !== null)
         if(!fight) throw new Error("The map leads to no fight.")
         expect(run.canAdvance).toBe(false)
         travel.go(fight)

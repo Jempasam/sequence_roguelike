@@ -2,7 +2,8 @@ import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
-import { UNIT_RADIUS } from "../../../battle/Unit"
+import { Disk } from "../../../battle/hitbox/Disk"
+import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber, HeartCount } from "../../../battle/words"
@@ -27,7 +28,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead the bodies of the cards of this file stand, in meters: at the contact. */
-const AHEAD = 1
+const AHEAD = 1 - UNIT_RADIUS
 
 /** The radii of the zones the bodies work in, in meters. */
 const BLACK_HOLE_RADIUS = 3
@@ -53,6 +54,12 @@ export interface ChainSummon {
     /** The cards the body plays, round after round. */
     readonly cards: readonly Card[]
 
+    /** How much bigger than the base its body is, a factor of its radius. 1 by default. */
+    readonly size?: number
+
+    /** How far ahead of its owner it is set down, in meters: at the contact by default. */
+    readonly ahead?: number
+
     /** How far around it the body works, in meters: the zone shown in the preview. */
     readonly radius: number
 
@@ -63,14 +70,14 @@ export interface ChainSummon {
     placed?(body: Unit): void
 }
 
-/** Where the body of a summon stands, from a pose. */
-function spotOf(pose: Pose): Vector2 {
-    return pose.position.plus(pose.direction.times(AHEAD))
+/** Where the body of a summon stands, ahead of the edge of its owner at a pose. */
+function spotOf(owner: Unit, pose: Pose, ahead = AHEAD): Vector2 {
+    return owner.muzzle(pose).plus(pose.direction.times(ahead))
 }
 
 /** The units but the owner within a distance of a point. */
 function around(battle: Battle, owner: Unit, at: Vector2, radius: number): Unit[] {
-    return battle.touchables.filter(other => other !== owner && other.position.distance(at) <= radius + other.radius)
+    return battle.touchables.filter(other => other !== owner && other.hitbox.gapToDisk(other, new Disk(radius), { position: at, direction: other.direction }) <= 0)
 }
 
 /** The nearest enemy of an owner within a distance of a point, as a list. */
@@ -101,8 +108,8 @@ export class ChainSummonCard extends ActionCard {
                 hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const spot = spotOf(pose)
-                if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+                const spot = spotOf(unit, pose, summon.ahead)
+                if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
                 return Previews.still(
                     pose, summonShown(spot), Previews.polygon(Areas.circle(spot, summon.radius), RANGE_COLOR),
                     ...summon.targets(battle, unit, spot).map(ring),
@@ -115,8 +122,8 @@ export class ChainSummonCard extends ActionCard {
 /** Set down the body of a summon a meter ahead of its owner, none when there is no room. */
 export function placeChainSummon(battle: Battle, owner: Unit, summon: ChainSummon): Unit|null {
     const body = battle.place(owner, {
-        sprite: summon.sprite, name: summon.name, at: spotOf(owner), direction: owner.direction,
-        hearts: summon.hearts(owner), cards: summon.cards,
+        sprite: summon.sprite, name: summon.name, at: spotOf(owner, owner, summon.ahead), direction: owner.direction,
+        hearts: summon.hearts(owner), cards: summon.cards, size: summon.size,
     })
     if(body) summon.placed?.(body)
     return body

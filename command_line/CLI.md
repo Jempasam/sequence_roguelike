@@ -27,7 +27,9 @@ Astuce : `npm run cli --silent -- list cards` supprime les lignes d'en-tête de 
 |---|---|---|
 | `cards` | `ALL_CARDS` | la description de la carte |
 | `kits` | `ALL_KITS` | cartes, objets, usables du kit |
-| `monsters` | `ALL_MONSTERS` | PV, pioche, taille si définie, cartes |
+| `monsters` | `ALL_MONSTERS` | PV, pioche, taille si définie, cartes, objets si présents |
+| `fights` | `allFightTypes()` | la catégorie (combat, élite, boss) et la description du combat |
+| `hazards` | `ALL_HAZARDS` | la description du hazard et les cartes qu'il joue |
 | `pets` | `ALL_PETS` | comme `monsters` |
 | `items` | `ALL_ITEMS` | la description de l'objet |
 | `usables` | `ALL_USABLES` | la description de l'usable |

@@ -1,25 +1,17 @@
 import type { Rng } from "../../base/Rng"
-import { FIRE_LIZARD, IMP, FIRE_MAGE, STONE_GOLEM, BERSERKER, MAGMA_DRAGON } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { VOLCANO_FIGHTS } from "../fights/volcanoFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [FIRE_LIZARD, IMP, FIRE_MAGE],
-    middle: [STONE_GOLEM, FIRE_LIZARD, BERSERKER],
-    deep: [STONE_GOLEM, FIRE_MAGE, BERSERKER, FIRE_LIZARD],
-}
 
 /** Volcan: De la lave et des lézards de feu, et un dragon de magma au bout. Plus de forges et d'élites. */
 export class VolcanoFloor extends AbstractFloor {
@@ -32,8 +24,8 @@ export class VolcanoFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, MAGMA_DRAGON, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(VOLCANO_FIGHTS, category, layer, rng)
     }
 }
 

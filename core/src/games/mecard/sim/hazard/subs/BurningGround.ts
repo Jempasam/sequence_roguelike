@@ -1,5 +1,4 @@
 import type { UnitContext } from "../../battle/Action"
-import * as Areas from "../../battle/area/Areas"
 import type { Vector2 } from "../../base/Vector2"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
@@ -42,7 +41,7 @@ export class BurningGround extends HazardStatus {
     protected plug({ battle, unit }: UnitContext): void {
         this.hold(battle.unitStepping.add(stepping => {
             if(!unit.alive || stepping === unit || !stepping.tangible || !unit.zone) return
-            if(!Areas.checkCircle(unit.zone, stepping.position, stepping.radius)) return
+            if(!stepping.hitbox.touches(stepping, unit.zone)) return
             this.element.applyNegative({ battle, unit: unit.owner ?? unit }, stepping)
         }))
     }

@@ -52,7 +52,7 @@ export class Plant extends AbstractElement {
 
     public invoke(ctx: UnitContext, at: Vector2, direction: Vector2, effect: Element): void {
         const { battle, unit } = ctx
-        const { end, unit: hit } = battle.ray(unit, THORN_RANGE, { position: at, direction })
+        const { end, unit: hit } = battle.rayFrom(unit, THORN_RANGE, { position: at, direction })
         battle.post(lineEffect(at, end, THORN_WIDTH, this.color, THORN_TIME))
         if(!hit) return
         hit.hearts.damage(THORN_DAMAGE, DamageType.PHYSICAL, unit)

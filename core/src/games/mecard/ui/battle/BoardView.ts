@@ -5,19 +5,21 @@ import { TextLayout } from "../../../../engine/text"
 import type { BitmapFont } from "../../../../engine/text"
 import * as Areas from "../../sim/battle/area/Areas"
 import { Vector2 } from "../../sim/base/Vector2"
+import { Disk } from "../../sim/battle/hitbox/Disk"
+import type { Hitbox } from "../../sim/battle/hitbox/Hitbox"
 import type { Indicator } from "../../sim/battle/preview/Preview"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 
 import { colorOf, NOTICE_EDGE } from "../look/colors"
 import type { BattleScene, SceneUnit } from "./BattleScene"
+import { hitboxMetrics } from "../look/hitboxMetrics"
+import { drawSprite, FEET_DROP, modeOf, SPRITE_METER, spriteReach } from "../look/spriteModes"
+import type { SpriteView } from "../look/spriteModes"
 import type { UnitSprites } from "../look/UnitSprites"
 
 /** The fewest pixels of the world a meter takes, however little room the arena is given. */
 const MIN_METER = 6
-
-/** How many pixels of the world a meter takes for a sprite to be drawn at its own size. */
-const SPRITE_METER = 12
 
 /**
  * The room kept over the arena, in meters: what the sprite of a unit of the base size stands out above the
@@ -34,21 +36,29 @@ const ARROW_HEAD = 5
 /** The ink of the grid, as the paths of the map of the journey. */
 const GRID = new Color(0.3, 0.2, 0.13, 0.35)
 const INK = new Color(0.05, 0.04, 0.08)
-const CHOSEN = new Color(1, 0.85, 0.35)
-const ACTING = new Color(1, 1, 1)
-const HIGHLIGHTED = new Color(0.45, 0.75, 1)
-const HITBOX_FILL = new Color(1, 1, 1, 0.08)
-const HITBOX_EDGE = new Color(1, 1, 1, 0.4)
 const NOTICED = NOTICE_EDGE
 
-/** The disc of a thing without a team in the tactical view: pillars and the ground. */
+/** The dot of a hazard in the tactical view. */
 const TACTICAL_MARK = new Color(1, 1, 1, 0.6)
 
-/** How opaque the disc of the team under a sprite is: the body it takes, seen through. */
-const SPRITE_DISC_ALPHA = 0.45
+/** The color of the hitbox of a thing without a team: pillars, walls, the ground. */
+const NEUTRAL = new Color(1, 1, 1)
 
-/** How far below the middle of the body the feet of a sprite stand, in pixels. */
-const FEET_DROP = 1
+/** How opaque the inside and the edge of a hitbox are, and how thick the edge is in pixels. */
+const HITBOX_FILL = 0.12
+const HITBOX_EDGE = 0.6
+
+/** The same for a hitbox that is lit: the one planned, acting or hovered. */
+const LIT_FILL = 0.3
+const LIT_EDGE = 1
+const LIT_THICKNESS = 2
+
+/** How opaque the inside of a hitbox is where nothing else shows the body: no picture, or the tactical view. */
+const BARE_FILL = 0.5
+
+/** How far the arrow of the front stands out of the hitbox, and how wide its base is, in pixels. */
+const FRONT_ARROW = 4
+const FRONT_ARROW_BASE = 3
 
 /** Added to the size of a unit that is only found by the ground it covers: it ranks after any body. */
 const ZONE_RANK = 100
@@ -59,11 +69,14 @@ const GROUND_RANK = 0.01
 /** How thick a tie between two units is drawn, in meters. */
 const TETHER_THICKNESS = 0.2
 
+/** How much smaller a clone is drawn than it is. */
+const VANISHING_SCALE = 0.75
+
 /** How many sides the outline of a hitbox is drawn with. */
 const HITBOX_SIDES = 24
 
-/** How large the shade under a thing is, as a share of its size. */
-const SHADE_SIZE = 1.5
+/** How far the shade under a body lies out of its hitbox, on every side, in meters. */
+const SHADE_MARGIN = 0.1
 
 /** How thick the lines of the grid are, in pixels. */
 const GRID_THICKNESS = 2
@@ -100,13 +113,13 @@ export function drawOrder(units: readonly SceneUnit[]): SceneUnit[] {
 export class BoardView {
 
 
-    /** The unit drawn with the ring of the one being planned, none when none is. */
+    /** The unit whose hitbox is lit as the one being planned, none when none is. */
     public chosen: Unit|null = null
 
-    /** The unit drawn with the ring of the one acting, none when none is. */
+    /** The unit whose hitbox is lit as the one acting, none when none is. */
     public acting: Unit|null = null
 
-    /** The unit the pointer is over, in the arena or in the panels, ringed wider, none when none. */
+    /** The unit the pointer is over, in the arena or in the panels, its hitbox lit, none when none. */
     public highlighted: Unit|null = null
 
     /** What the action hovered would do, drawn over the arena, none when nothing is hovered. */
@@ -150,11 +163,14 @@ export class BoardView {
      * over the unit. The interface draws them there.
      */
     public heartsAnchor(unit: Unit): readonly [number, number] {
-        const [cx, cy] = this.#pixels(this.scene.of(unit)?.position ?? unit.position)
+        const shown = this.scene.of(unit)
+        const pose = { position: shown?.position ?? unit.position, direction: shown?.direction ?? unit.direction }
+        const [cx, cy] = this.#pixels(pose.position)
         const sprite = this.tactical ? null : this.sprites.of(unit.sprite)
         if(sprite){
-            const scale = this.#spriteScale(unit.stats.size.value)
-            return [cx, cy + (FEET_DROP - sprite.height) * scale - 1]
+            const look = this.sprites.look(unit.sprite)
+            const mode = modeOf(look, unit.hitbox)
+            return [cx, cy - spriteReach(sprite, mode, look, hitboxMetrics(unit.hitbox, pose), this.#view()) - 1]
         }
         const radius = unit.radius * this.#meter * (unit.vanishing ? 0.75 : 1)
         return [cx, cy - radius - 1]
@@ -178,8 +194,7 @@ export class BoardView {
         let best = Infinity
         for(const shown of this.scene.living){
             const { unit } = shown
-            const [cx, cy] = this.#pixels(shown.position)
-            const onBody = Math.hypot(x - cx, y - cy) <= unit.radius * meter + 1
+            const onBody = unit.hitbox.gapToDisk(shown, new Disk(1 / meter), { position: at, direction: shown.direction }) <= 0
             const onZone = unit.zone !== null && Areas.checkPoint(unit.zone, at)
             if(!onBody && !onZone) continue
             // A body lying on the ground comes after one standing, of the same size.
@@ -200,15 +215,16 @@ export class BoardView {
         painter.setWhitePixel(this.#white)
         this.#drawFloor(painter, battle)
         this.#drawHazards(painter)
-        // The circles of the hitboxes lie under the sprites, which stand on them.
+        // The shades and the hitboxes lie under the sprites, which stand on them.
         const { width, height } = battle.arena
+        const standing = drawOrder(this.scene.living)
         painter.push()
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
-        this.#drawHitboxes(painter)
+        for(const shown of standing) this.#drawBody(painter, shown)
         this.#drawTethers(painter)
         painter.pop()
-        for(const shown of drawOrder(this.scene.living)) this.#drawUnit(painter, shown)
+        for(const shown of standing) this.#drawUnit(painter, shown)
         // What is shown over the arena stays in it: a reach wider than the room is cut at its walls.
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
@@ -232,23 +248,41 @@ export class BoardView {
     #top = 0
 
     /**
-     * The hitbox of every body, a pale disc with its edge: the units, the clones however small they look,
-     * and the pillars. What touches what reads at a glance.
+     * What lies under a unit: its shade, then its hitbox, the exact shape it is hit and clicked by, seen through,
+     * in the color of the unit, white for what has no team, and the arrow of where it faces. It is lit while the
+     * unit is planned, acting or hovered. A body that takes no room has its hitbox too: it is what is clicked.
      */
-    #drawHitboxes(painter: Painter): void {
-        const bodies = this.#bodies().map(shown => ({ center: shown.position, radius: shown.unit.radius }))
-        for(const { center, radius } of bodies){
-            const [cx, cy] = this.#pixels(center)
-            const pixels = radius * this.#meter
-            painter.setTint(HITBOX_FILL)
-            painter.circle(cx, cy, pixels)
-            const edge = Array.from({ length: HITBOX_SIDES }, (_, side) => {
-                const angle = side / HITBOX_SIDES * 2 * Math.PI
-                return { x: cx + Math.cos(angle) * pixels, y: cy + Math.sin(angle) * pixels }
-            })
-            painter.setTint(HITBOX_EDGE)
-            painter.multiLine(edge, 1, true)
-        }
+    #drawBody(painter: Painter, shown: SceneUnit): void {
+        const { unit } = shown
+        const lit = unit === this.chosen || unit === this.acting || unit === this.highlighted
+        const hitbox = this.#hitboxOf(unit)
+        this.#drawShade(painter, shown, hitbox)
+        painter.setBlend("alpha")
+        const { r, g, b } = unit.targetable ? colorOf(unit) : NEUTRAL
+        const bare = this.tactical || !this.sprites.of(unit.sprite)
+        const fill = lit ? LIT_FILL : bare ? BARE_FILL : HITBOX_FILL
+        const corners = this.#cornersOf(shown, hitbox)
+        painter.setTint(this.#faded.set(r, g, b, fill * shown.opacity))
+        painter.polygon(corners)
+        painter.setTint(this.#faded.set(r, g, b, (lit ? LIT_EDGE : HITBOX_EDGE) * shown.opacity))
+        painter.multiLine(corners, lit ? LIT_THICKNESS : 1, true)
+        if(!unit.targetable) return
+        // The arrow stands on the front of the shape, in the same color as the edge.
+        const [cx, cy] = this.#pixels(shown.position)
+        const ahead = shown.direction
+        const side = ahead.right
+        const front = hitbox.extent[0] / 2 * this.#meter
+        const tip = front + FRONT_ARROW
+        painter.triangle(
+            cx + ahead.x * tip, cy + ahead.y * tip,
+            cx + ahead.x * front + side.x * FRONT_ARROW_BASE, cy + ahead.y * front + side.y * FRONT_ARROW_BASE,
+            cx + ahead.x * front - side.x * FRONT_ARROW_BASE, cy + ahead.y * front - side.y * FRONT_ARROW_BASE,
+        )
+    }
+
+    /** The hitbox of a unit as the board shows it: a clone is drawn smaller than it is. */
+    #hitboxOf(unit: Unit): Hitbox {
+        return unit.vanishing ? unit.hitbox.scaled(VANISHING_SCALE) : unit.hitbox
     }
 
     /**
@@ -286,19 +320,27 @@ export class BoardView {
         for(let y = 1; y < height; y++) line(this.#left, this.#top + y * meter, right, this.#top + y * meter)
     }
 
-    /** The darker spot under a thing of the arena, centered on it, as wide as 1.5 times its size in pixels. */
-    #drawShade(painter: Painter, cx: number, cy: number, size: number, opacity = 1): void {
+    /**
+     * The darker spot under a body: the rectangle around its hitbox, turned the way it faces, with a margin
+     * of a few centimeters more on every side, the picture stretched over it.
+     */
+    #drawShade(painter: Painter, shown: SceneUnit, hitbox: Hitbox): void {
         const shade = this.sprites.shade
         if(!shade || this.tactical) return
-        const scale = size * SHADE_SIZE / shade.width
+        const [length, width] = hitbox.extent
+        const [cx, cy] = this.#pixels(shown.position)
         painter.setBlend("alpha")
-        painter.setTint(this.#faded.set(1, 1, 1, opacity))
+        painter.setTint(this.#faded.set(1, 1, 1, shown.opacity))
         painter.push()
-        painter.translate(Math.round(cx - shade.width * scale / 2), Math.round(cy - shade.height * scale / 2))
-        painter.scale(scale, scale)
+        painter.translate(Math.round(cx), Math.round(cy))
+        painter.rotate(Math.atan2(shown.direction.y, shown.direction.x))
+        painter.scale(
+            (length + 2 * SHADE_MARGIN) * this.#meter / shade.width,
+            (width + 2 * SHADE_MARGIN) * this.#meter / shade.height,
+        )
         // The picture is faint: drawn twice, it darkens the paper enough to tell where a thing stands.
-        painter.sprite(shade, 0, 0)
-        painter.sprite(shade, 0, 0)
+        painter.sprite(shade, -shade.width / 2, -shade.height / 2)
+        painter.sprite(shade, -shade.width / 2, -shade.height / 2)
         painter.pop()
         painter.setBlend("cutout")
     }
@@ -308,7 +350,8 @@ export class BoardView {
      * visual gives where it has none.
      */
     #drawHazards(painter: Painter): void {
-        for(const { unit, position } of this.scene.living){
+        for(const shown of this.scene.living){
+            const { unit, position } = shown
             if(!unit.zone) continue
             const [x, y] = this.#pixels(position)
             if(this.tactical){
@@ -321,14 +364,14 @@ export class BoardView {
             const sprite = this.sprites.of(unit.sprite)
             if(!sprite){
                 const [r, g, b] = unit.sprite?.color ?? [1, 1, 1]
-                this.#drawShade(painter, x, y, 6)
+                this.#drawShade(painter, shown, unit.hitbox)
                 painter.setBlend("alpha")
                 painter.setTint(this.#faded.set(r, g, b, 1))
                 painter.circle(x, y, 3)
                 painter.setBlend("cutout")
                 continue
             }
-            this.#drawShade(painter, x, y, this.#meter)
+            this.#drawShade(painter, shown, unit.hitbox)
             painter.setBlend("alpha")
             painter.setTint(this.#coloredBy(unit.sprite, 1))
             const scale = this.#spriteScale(1)
@@ -343,96 +386,40 @@ export class BoardView {
     }
 
     #drawUnit(painter: Painter, shown: SceneUnit): void {
+        // In the tactical view the hitbox under it is all there is of a unit.
+        if(this.tactical) return
         const { unit } = shown
         const [cx, cy] = this.#pixels(shown.position)
-        const radius = unit.radius * this.#meter * (unit.vanishing ? 0.75 : 1)
-        this.#drawShade(painter, cx, cy, unit.stats.size.value * this.#meter * (unit.vanishing ? 0.75 : 1), shown.opacity)
-        if(unit === this.highlighted){
-            painter.setTint(HIGHLIGHTED)
-            painter.circle(cx, cy, radius + 3)
-        }
-        const ring = unit === this.chosen ? CHOSEN : unit === this.acting ? ACTING : null
-        if(ring){
-            painter.setTint(ring)
-            painter.circle(cx, cy, radius + 1.5)
-        }
-        const { r, g, b, a } = colorOf(unit)
-        if(this.tactical){
-            this.#drawTactical(painter, shown, cx, cy, radius)
-            return
-        }
         const sprite = this.sprites.of(unit.sprite)
         if(sprite){
-            this.#drawSprite(painter, shown, sprite, cx, cy, radius)
+            this.#drawSprite(painter, shown, sprite)
             return
         }
-        painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
-        painter.circle(cx, cy, radius)
-        const ahead = shown.direction
-        const side = ahead.right
-        const tip = radius + 3
-        painter.triangle(
-            cx + ahead.x * tip, cy + ahead.y * tip,
-            cx + ahead.x * (radius - 1) + side.x * 2.5, cy + ahead.y * (radius - 1) + side.y * 2.5,
-            cx + ahead.x * (radius - 1) - side.x * 2.5, cy + ahead.y * (radius - 1) - side.y * 2.5,
-        )
         painter.setTint(INK)
         this.#text.draw(painter, unit.name.slice(0, 1), Math.round(cx) - 1, Math.round(cy) - 4)
     }
 
-    /**
-     * A unit as a plan: the disc of its body in the color of its team and a tick where it faces, a white disc
-     * where it has no team, as the pillars, and no picture.
-     */
-    #drawTactical(painter: Painter, shown: SceneUnit, cx: number, cy: number, radius: number): void {
+    /** A unit as its sprite, drawn over its hitbox the way its look says, mirrored where it faces left, fading as it blinks. */
+    #drawSprite(painter: Painter, shown: SceneUnit, sprite: Sprite): void {
+        const { unit } = shown
+        const look = this.sprites.look(unit.sprite)
         painter.setBlend("alpha")
-        if(shown.unit.targetable){
-            this.#drawTeamDisc(painter, shown, cx, cy, radius)
-        } else {
-            painter.setTint(this.#faded.set(1, 1, 1, TACTICAL_MARK.a * shown.opacity))
-            painter.circle(cx, cy, radius)
-        }
+        painter.setTint(this.#coloredBy(unit.sprite, shown.opacity))
+        drawSprite(painter, sprite, modeOf(look, unit.hitbox), look, hitboxMetrics(unit.hitbox, shown), this.#view())
         painter.setBlend("cutout")
     }
 
-    /** The disc of a body in the color of its team, seen through, with a tick where it faces. */
-    #drawTeamDisc(painter: Painter, shown: SceneUnit, cx: number, cy: number, radius: number): void {
-        const { r, g, b, a } = colorOf(shown.unit)
-        const ahead = shown.direction
-        painter.setTint(this.#faded.set(r, g, b, a * SPRITE_DISC_ALPHA * shown.opacity))
-        painter.circle(cx, cy, radius)
-        const side = ahead.right
-        const tip = radius + 2
-        painter.setTint(this.#faded.set(r, g, b, a * shown.opacity))
-        painter.triangle(
-            cx + ahead.x * tip, cy + ahead.y * tip,
-            cx + ahead.x * radius + side.x * 1.5, cy + ahead.y * radius + side.y * 1.5,
-            cx + ahead.x * radius - side.x * 1.5, cy + ahead.y * radius - side.y * 1.5,
-        )
+    /** Where the arena lies on the screen, for the pictures to be drawn in it. */
+    #view(): SpriteView {
+        return { meter: this.#meter, pixels: point => this.#pixels(point) }
     }
 
-    /**
-     * A unit as its sprite: the disc of its body in the color of its team, seen through, a tick where it
-     * faces, then the sprite standing on it, turned the way it faces, fading as it blinks.
-     */
-    #drawSprite(
-        painter: Painter, shown: SceneUnit, sprite: Sprite, cx: number, cy: number, radius: number,
-    ): void {
-        const ahead = shown.direction
-        painter.setBlend("alpha")
-        // Scenery has no team disc and faces nowhere: its picture alone stands there.
-        if(shown.unit.targetable) this.#drawTeamDisc(painter, shown, cx, cy, radius)
-        painter.setTint(this.#coloredBy(shown.unit.sprite, shown.opacity))
-        const scale = this.#spriteScale(shown.unit.stats.size.value)
-        const width = sprite.width * scale
-        const left = Math.round(cx - width / 2)
-        const top = Math.round(cy + (FEET_DROP - sprite.height) * scale)
-        painter.push()
-        painter.translate(ahead.x < 0 ? left + width : left, top)
-        painter.scale(ahead.x < 0 ? -scale : scale, scale)
-        painter.sprite(sprite, 0, 0)
-        painter.pop()
-        painter.setBlend("cutout")
+    /** The corners of the outline of a body, in virtual pixels of the arena. */
+    #cornersOf(shown: SceneUnit, hitbox: Hitbox = shown.unit.hitbox): { x: number, y: number }[] {
+        return hitbox.outline(shown).map(point => {
+            const [x, y] = this.#pixels(point)
+            return { x, y }
+        })
     }
 
     /** How large a sprite is drawn for a body of a size: it follows the body as the arena shows it. */
@@ -444,11 +431,6 @@ export class BoardView {
     #coloredBy(visual: Visual|null, opacity: number): Color {
         const [r, g, b] = visual?.coloration ?? [1, 1, 1]
         return this.#faded.set(r, g, b, opacity)
-    }
-
-    /** The units standing whose body takes room, where the scene has them. */
-    #bodies(): SceneUnit[] {
-        return this.scene.living.filter(shown => shown.unit.tangible)
     }
 
     /** Light up what is about to act: a ring around its unit, and its word over it. */

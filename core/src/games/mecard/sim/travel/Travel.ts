@@ -337,7 +337,7 @@ export class Travel {
         if(this.#phase !== "entering" || !place) throw new Error("The party is entering no place.")
         // A halt already made on a place with a fight is the one its won fight led to: going back is no fight.
         if(place.fight && !this.#halts.has(place)){
-            this.#fight = place.fight.createFight(this.run, place)
+            this.#fight = place.fight.create(this.run, place)
             this.#enterPhase("fight")
             this.fightReached.notify(place)
             return

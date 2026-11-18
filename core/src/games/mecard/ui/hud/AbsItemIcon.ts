@@ -184,16 +184,19 @@ export class AbsItemIcon extends Component {
         painter.push()
         painter.scale(scale, scale)
         if(picture){
+            // The picture is centered in the square of the icon, whatever its own size.
+            const left = Math.floor((iconSize - picture.width) / 2)
+            const top = Math.floor((iconSize - picture.height) / 2)
             if(edge){
                 painter.setColorMode("mask")
                 painter.setTint(edge)
-                for(const [dx, dy] of AROUND) painter.sprite(picture, dx, dy)
+                for(const [dx, dy] of AROUND) painter.sprite(picture, left + dx, top + dy)
                 painter.setColorMode("modulate")
             }
             // A coloration gives the picture its hue, as for clothes: its light and saturation stay.
             if(visual.coloration) painter.setColorMode("hue")
             painter.setTint(new Color(r * shade, g * shade, b * shade))
-            painter.sprite(picture, 0, 0)
+            painter.sprite(picture, left, top)
             painter.pop()
         }
         else {

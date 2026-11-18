@@ -4,6 +4,7 @@ import type { Area } from "../../../battle/Area"
 import { fading, polygonOf } from "../../../battle/effects"
 import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Pose } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { frenchNumber } from "../../../battle/words"
 import { BURN, Burn } from "../../../status/subs/Burn"
@@ -41,45 +42,44 @@ const FLASH_COLOR = rgba(1, 0.85, 0.15, 0.55)
 const FLASH_TIME = 0.4
 
 /** Who a body acts for: its owner, the unit itself when it has none. */
-function sourceOf(unit: Unit): Unit {
+export function sourceOf(unit: Unit): Unit {
     return unit.owner ?? unit
 }
 
-/** The ground around a pose, as far as a radius reaches. */
-function around(pose: Pose, radius: number): Area {
-    return Areas.circle(pose.position, radius)
-}
+/** How far from the edge of its body a unit that blows up, or flashes, reaches: a blast that centers on its middle. */
+const KAMIKAZE_RADIUS = BLAST_RADIUS - UNIT_RADIUS
+const FLASH_REACH = FLASH_RADIUS - UNIT_RADIUS
 
 /** The ground a body covers: its zone, else its own body. */
-function groundOf(unit: Unit, pose: Pose): Area {
+export function groundOf(unit: Unit, pose: Pose): Area {
     return unit.zone ?? Areas.circle(pose.position, unit.radius)
 }
 
 /** Blow up: every unit around takes the damage, then the unit is gone, a bomb as a goblin. */
 export const KAMIKAZE = new ActionCard("Kamikaze", [
-    "Explose : ", BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ",
+    "Explose : ", BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(KAMIKAZE_RADIUS), " ",
     DISTANCE, " autour. Puis meurt.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        battle.explode(around(unit, BLAST_RADIUS), BOMB_DAMAGE, sourceOf(unit), unit)
+        battle.explode(unit.around(KAMIKAZE_RADIUS), BOMB_DAMAGE, sourceOf(unit), unit)
         unit.hearts.slay(null)
         hold(battle, SHORT_TIME)
     },
-    preview: ({ pose }) => Previews.still(pose, Previews.polygon(around(pose, BLAST_RADIUS), HAZARD_COLOR), Previews.label(pose.position, "boum", NOTE_COLOR)),
+    preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(unit.around(KAMIKAZE_RADIUS, pose), HAZARD_COLOR), Previews.label(pose.position, "boum", NOTE_COLOR)),
 })
 
 /** Flash: every unit around is stunned, then the unit is gone. */
 export const FLASH = new ActionCard("Flash", [
-    "Étourdit chaque ", UNIT, " à ", frenchNumber(FLASH_RADIUS), " ", DISTANCE, " autour. Puis meurt.",
+    "Étourdit chaque ", UNIT, " à ", frenchNumber(FLASH_REACH), " ", DISTANCE, " autour. Puis meurt.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        const flash = around(unit, FLASH_RADIUS)
+        const flash = unit.around(FLASH_REACH)
         battle.post(fading(FLASH_TIME, [polygonOf(flash, FLASH_COLOR)]))
         for(const target of battle.fetch(flash, unit)) battle.stun(target)
         unit.hearts.slay(null)
         hold(battle, SHORT_TIME)
     },
-    preview: ({ pose }) => Previews.still(pose, Previews.polygon(around(pose, FLASH_RADIUS), FLASH_COLOR), Previews.label(pose.position, "flash", NOTE_COLOR)),
+    preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(unit.around(FLASH_REACH, pose), FLASH_COLOR), Previews.label(pose.position, "flash", NOTE_COLOR)),
 })
 
 /** Blaze: every unit on the ground the unit covers is burnt, then the unit is gone, flames as a torch. */

@@ -1,22 +1,19 @@
 import type { Rng } from "../../base/Rng"
-import { BULL, ELF_ARCHER, ELF_ASSASSIN, GOBLIN_RIDER, HUNTER, TROLL } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
 import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
 import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { encounter } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { FOREST_FIGHTS } from "../fights/forestFights"
 import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives in the forest. */
-const MONSTERS: readonly Monster[] = [HUNTER, ELF_ASSASSIN, GOBLIN_RIDER, BULL, ELF_ARCHER]
 
 /** The forest: fast hunters, but the party finds rest and company on the way. */
 export class ForestFloor extends AbstractFloor {
@@ -32,8 +29,8 @@ export class ForestFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return encounter(MONSTERS, TROLL, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(FOREST_FIGHTS, category, layer, rng)
     }
 }
 

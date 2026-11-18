@@ -276,7 +276,7 @@ export class RunScreen {
 
     /** Play the transition into a fight, its battle shown at its middle, at once when nothing is shown yet. */
     async #enterBattle(battle: Battle): Promise<void> {
-        const { transition } = this.#engine.travel.fight?.type ?? BATTLE
+        const { transition } = this.#engine.travel.fight?.type.category ?? BATTLE
         if(this.#visible) await this.transitions.enter(transition)
         if(this.#engine.battle !== battle) return
         if(this.battleScreen.engine !== battle) this.battleScreen.engine = battle

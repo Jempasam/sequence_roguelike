@@ -1,4 +1,5 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SOLID_HEART } from "../../../heart/subs/SolidHeartKind"
@@ -14,7 +15,7 @@ import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead the spirit of a projection appears, in meters. */
-const PROJECTION_AHEAD = 1
+const PROJECTION_AHEAD = 1 - UNIT_RADIUS
 
 export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
     "Laisse un esprit intouchable là où tu es. En fin de round, tu te téléportes sur lui, tourné comme lui, ",
@@ -40,7 +41,7 @@ export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
         if(cards.length > 0){
             battle.place(unit, {
                 sprite: visual("units/spirit"), name: "Esprit projeté",
-                at: unit.position.plus(unit.direction.times(PROJECTION_AHEAD)), direction: unit.direction,
+                at: unit.muzzle().plus(unit.direction.times(PROJECTION_AHEAD)), direction: unit.direction,
                 hearts: [new Heart(BLUE_HEART)], cards,
             })
         }

@@ -11,8 +11,7 @@ import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
 import type { Card } from "../card/Card"
 import type { Fight } from "../fight/Fight"
-import { BATTLE } from "../fight/fights"
-import { StandardFight } from "../fight/StandardFight"
+import { EMPTY_FIGHT } from "../fight/fights"
 import { FIRST_FLOOR } from "../catalog/floors"
 import { freeHalts } from "../catalog/halts"
 import { TAVERN_HALT } from "../halt/subs/gift/TavernHalt"
@@ -465,11 +464,11 @@ export class Run {
         this.phaseChanged.notify(phase)
     }
 
-    /** A fight against the monsters of the current place, the first of the map when it holds none. */
+    /** A fight of the current place, the first of the map when it holds none, an empty one when no place does. */
     #standIn(): Fight {
         const { place, journey } = this.travel
-        const fight = [place, ...journey.places].find(each => each?.monsters.length)
-        return new StandardFight(BATTLE, this, fight?.monsters ?? [])
+        const held = [place, ...journey.places].find(each => each?.fight)
+        return (held?.fight ?? EMPTY_FIGHT).create(this, held ?? place ?? { layer: 0, across: 0.5 })
     }
 
     /** A name no character of the party has: the name, or the name and a number. */

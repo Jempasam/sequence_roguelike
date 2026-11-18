@@ -31,7 +31,7 @@ export class Mined extends HazardStatus {
         this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             const zone = unit.zone ?? Areas.circle(unit.position, MINE_RADIUS)
-            if(!Areas.checkCircle(zone, to, mover.radius)) return
+            if(!mover.hitbox.touches({ position: to, direction: mover.direction }, zone)) return
             const blast = Areas.circle(unit.position, BLAST_RADIUS)
             battle.explode(blast, BOMB_DAMAGE, unit.owner ?? unit, unit)
             unit.hearts.slay(null)

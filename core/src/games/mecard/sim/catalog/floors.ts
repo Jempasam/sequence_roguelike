@@ -16,25 +16,27 @@ import { VOLCANO_FLOOR } from "../floor/subs/VolcanoFloor"
 export const FIRST_FLOOR: FloorType = CAVE_FLOOR
 
 /**
- * The sorts of floor the exits of each sort lead to, a choice when there are several. Hell leads back to the
- * cave, so a run goes on until the party falls, each floor a level harder.
+ * The sorts of floor the exits of each sort lead to, a choice when there are several. The floors are written
+ * from the easiest to the hardest (measured by winrate with the Chevalier and Archère kits) and each leads to
+ * the next one or two, so a run climbs in difficulty. The harbor, the hardest, leads back to the cave, so a run
+ * goes on until the party falls, each floor a level harder.
  *
  * @remarks
  * Going through a same class twice in a row takes two sorts of it, each its own node.
  */
 export const FLOOR_LINKS: ReadonlyMap<FloorType, readonly FloorType[]> = new Map([
-    [CAVE_FLOOR, [FOREST_FLOOR, MINE_FLOOR]],
-    [FOREST_FLOOR, [HELL_FLOOR, TUNDRA_FLOOR, SWAMP_FLOOR]],
-    [MINE_FLOOR, [HELL_FLOOR, FACTORY_FLOOR, VOLCANO_FLOOR]],
-    [SWAMP_FLOOR, [GRAVEYARD_FLOOR, HARBOR_FLOOR]],
-    [TUNDRA_FLOOR, [CASTLE_FLOOR, DOJO_FLOOR]],
-    [CASTLE_FLOOR, [DOJO_FLOOR, HELL_FLOOR]],
-    [GRAVEYARD_FLOOR, [HELL_FLOOR]],
-    [VOLCANO_FLOOR, [HELL_FLOOR]],
-    [FACTORY_FLOOR, [HELL_FLOOR]],
-    [HARBOR_FLOOR, [HELL_FLOOR]],
-    [DOJO_FLOOR, [HELL_FLOOR]],
-    [HELL_FLOOR, [CAVE_FLOOR]],
+    [CAVE_FLOOR, [TUNDRA_FLOOR, MINE_FLOOR]],
+    [TUNDRA_FLOOR, [MINE_FLOOR, GRAVEYARD_FLOOR]],
+    [MINE_FLOOR, [GRAVEYARD_FLOOR, HELL_FLOOR]],
+    [GRAVEYARD_FLOOR, [HELL_FLOOR, VOLCANO_FLOOR]],
+    [HELL_FLOOR, [VOLCANO_FLOOR, SWAMP_FLOOR]],
+    [VOLCANO_FLOOR, [SWAMP_FLOOR, DOJO_FLOOR]],
+    [SWAMP_FLOOR, [DOJO_FLOOR, FACTORY_FLOOR]],
+    [DOJO_FLOOR, [FACTORY_FLOOR, FOREST_FLOOR]],
+    [FACTORY_FLOOR, [FOREST_FLOOR, CASTLE_FLOOR]],
+    [FOREST_FLOOR, [CASTLE_FLOOR, HARBOR_FLOOR]],
+    [CASTLE_FLOOR, [HARBOR_FLOOR]],
+    [HARBOR_FLOOR, [CAVE_FLOOR]],
 ])
 
 /** Every sort of floor. */

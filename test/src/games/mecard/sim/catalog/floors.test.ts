@@ -1,13 +1,13 @@
 import { describe, expect, test } from "vitest"
 import {
-    BATTLE, BOSS, BOSS_MONSTERS, CaveFloor, CHEST_HALT, ELITE, encounter, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS, GOBLIN, GOLEM, isHalt,
+    BATTLE, BOSS, BOSS_MONSTERS, CaveFloor, CHEST_HALT, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS,
     Journey, LAYERS, Rng,
 } from "@game/core/mecard"
-import type { Floor, FloorType, FightType, Place, PlaceType, PlaceWeights } from "@game/core/mecard"
+import type { Floor, FloorType, Monster, Place, PlaceType, PlaceWeights } from "@game/core/mecard"
 
 /** The sort of fight or of halt a place holds: floors only lay a fight or a halt, not both. */
 function typeOf(place: Place): PlaceType {
-    return place.fight ?? place.halt!
+    return place.fight?.category ?? place.halt!
 }
 
 // --- Fixture builders ---
@@ -26,6 +26,17 @@ function mapOf(floor: Floor, seed = 1): Journey {
     return map
 }
 
+/** The monsters the fight of a place puts in the arena, on a floor. */
+function monstersOf(place: Place, floor: Floor): Monster[] {
+    const monsters: Monster[] = []
+    place.fight!.populate({
+        rng: new Rng(1), level: floor.level, layer: place.layer,
+        add: monster => { monsters.push(monster) },
+        addKit: () => {},
+    })
+    return monsters
+}
+
 /** A cave of only battles and forges. */
 class ForgeCave extends CaveFloor {
     protected override weights(): PlaceWeights {
@@ -40,6 +51,11 @@ class HaltCave extends CaveFloor {
     }
 }
 
+/** Does a place hold a halt, and no fight? */
+function isHaltPlace(place: Place): boolean {
+    return !place.fight
+}
+
 /** The most places alike a path of a map meets in a row. */
 function longestRow(map: Journey, alike: (place: Place) => boolean): number {
     const rows = new Map<Place, number>()
@@ -52,12 +68,12 @@ function longestRow(map: Journey, alike: (place: Place) => boolean): number {
 
 /** The most halts a path of a map meets in a row. */
 function longestHaltRow(map: Journey): number {
-    return longestRow(map, place => isHalt(typeOf(place)))
+    return longestRow(map, place => isHaltPlace(place))
 }
 
 /** The most fights a path of a map meets in a row. */
 function longestFightRow(map: Journey): number {
-    return longestRow(map, place => !isHalt(typeOf(place)))
+    return longestRow(map, place => !isHaltPlace(place))
 }
 
 // --- Tests ---
@@ -87,7 +103,7 @@ describe.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name", ({ t
 
     test("its boss → leads the monsters of a boss fight", () => {
         const place = mapOf(type.create(1)).places.find(each => typeOf(each) === BOSS)
-        const [boss, ...others] = place?.monsters ?? []
+        const [boss, ...others] = monstersOf(place!, type.create(1))
         expect(BOSS_MONSTERS).toContain(boss)
         expect(others.length).toBeGreaterThan(0)
         for(const other of others) expect(BOSS_MONSTERS).not.toContain(other)
@@ -100,32 +116,6 @@ describe.each(ALL_FLOORS.map(type => ({ name: type.name, type })))("$name", ({ t
     test("its decorations → at least one, drawn at a whole size", () => {
         expect(type.decorations.length).toBeGreaterThan(0)
         for(const { size } of type.decorations) expect(Number.isInteger(size)).toBe(true)
-    })
-})
-
-describe("encounter", () => {
-    const count = (fight: FightType, layer: number, level: number): number => {
-        return encounter([GOBLIN], GOLEM, fight, layer, level, new Rng(1)).length
-    }
-
-    test("the first layer of level 1 → two monsters", () => {
-        expect(count(BATTLE, 0, 1)).toBe(2)
-    })
-
-    test("deeper, harder, or an elite → more monsters", () => {
-        expect(count(BATTLE, 4, 1)).toBeGreaterThan(count(BATTLE, 0, 1))
-        expect(count(BATTLE, 0, 3)).toBeGreaterThan(count(BATTLE, 0, 1))
-        expect(count(ELITE, 0, 1)).toBeGreaterThan(count(BATTLE, 0, 1))
-    })
-
-    test("however deep → what the arena has room for", () => {
-        expect(count(BATTLE, 40, 40)).toBe(7)
-    })
-
-    test("a boss at the deepest → it, and the others in the room left", () => {
-        const monsters = encounter([GOBLIN], GOLEM, BOSS, 40, 40, new Rng(1))
-        expect(monsters[0]).toBe(GOLEM)
-        expect(monsters).toHaveLength(7)
     })
 })
 
@@ -163,7 +153,7 @@ describe("a filled map", () => {
     test.each(types)("$name → a halt is never of the kind of a place leading to it", ({ type }) => {
         for(let seed = 1; seed <= 200; seed++){
             for(const place of mapOf(type.create(1), seed).places) for(const next of place.next){
-                if(isHalt(typeOf(place)) && next.layer < LAYERS - 2) expect(typeOf(next)).not.toBe(typeOf(place))
+                if(isHaltPlace(place) && next.layer < LAYERS - 2) expect(typeOf(next)).not.toBe(typeOf(place))
             }
         }
     })
@@ -194,13 +184,13 @@ describe("a filled map", () => {
     test("a battle breaking halts → in their middle, the ends of a row stay halts", () => {
         for(let seed = 1; seed <= 200; seed++){
             const { layers } = mapOf(new HaltCave(1), seed)
-            expect(layers[1].every(place => isHalt(typeOf(place)))).toBe(true)
+            expect(layers[1].every(place => isHaltPlace(place))).toBe(true)
             expect(layers[LAYERS - 2].every(place => typeOf(place) === HOSPITAL_HALT)).toBe(true)
         }
     })
 
     test("a battle breaking halts → holds its monsters", () => {
         const fights = mapOf(new HaltCave(1)).places.filter(place => typeOf(place) === BATTLE)
-        for(const fight of fights) expect(fight.monsters.length).toBeGreaterThan(0)
+        for(const fight of fights) expect(monstersOf(fight, new CaveFloor(1)).length).toBeGreaterThan(0)
     })
 })

@@ -2,6 +2,7 @@ import { rgba } from "../../../base/Rgba"
 import { MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { ALLONGE, DISTANCE, FORCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { DamageType } from "../../../battle/DamageType"
 import { Skewering } from "../../../process/subs/Skewering"
@@ -13,7 +14,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the spear of the catalog flies, in meters, before the reach of the unit's blows. */
-const SPEAR_RANGE = 3
+const SPEAR_RANGE = 3 - UNIT_RADIUS
 
 /** How many hearts the spear of the catalog takes, before the strength of the unit. */
 const SPEAR_DAMAGE = 1
@@ -26,16 +27,16 @@ function throwing(range: number, amount: number): Action {
     const reach = (unit: Unit): number => range * unit.stats.meleeRange.value
     return {
         use: function ({ battle, unit }){
-            const { end, unit: target } = battle.ray(unit, reach(unit))
-            fly(battle, unit.position, end, SPEAR_COLOR)
+            const { start, end, unit: target } = battle.ray(unit, reach(unit))
+            fly(battle, start, end, SPEAR_COLOR)
             if(!target) return
-            const area = Areas.line(unit.position, end, BOLT_WIDTH)
+            const area = Areas.line(start, end, BOLT_WIDTH)
             battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
             if(target.alive) battle.startProcess(unit, new Skewering(target))
         },
         preview: ({ battle, unit, pose }) => {
-            const { end, unit: target } = battle.ray(unit, reach(unit), pose)
-            const shaft = Previews.arrow([pose.position, end], MOVE_WIDTH / 2, SPEAR_COLOR)
+            const { start, end, unit: target } = battle.ray(unit, reach(unit), pose)
+            const shaft = Previews.arrow([start, end], MOVE_WIDTH / 2, SPEAR_COLOR)
             if(!target) return Previews.still(pose, shaft, Previews.label(end, "raté", NOTE_COLOR))
             return Previews.still(pose, shaft, ...Previews.strike([], [target]), Previews.label(target.position, "lance", NOTE_COLOR))
         },

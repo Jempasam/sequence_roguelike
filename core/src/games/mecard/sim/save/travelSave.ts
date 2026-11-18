@@ -1,17 +1,16 @@
-import type { Monster } from "../catalog/monsters"
 import type { Floor } from "../floor/Floor"
 import { EXIT_HALT } from "../halt/subs/ExitHalt"
 import { haltById } from "../catalog/halts"
-import { fightById } from "../fight/fights"
+import { fightTypeById } from "../catalog/fightTypes"
 import { Journey } from "../run/Journey"
 import type { Place } from "../run/Journey"
 import type { Run } from "../run/Run"
 import type { Travel } from "../travel/Travel"
 
-import { FLOOR_NAMES, MONSTER_NAMES } from "./catalogNames"
+import { FLOOR_NAMES } from "./catalogNames"
 
 /** The version of the shape of a journey saved, raised when it changes, so an old one is refused clearly. */
-export const TRAVEL_SAVE_VERSION = 2
+export const TRAVEL_SAVE_VERSION = 3
 
 /** A floor: the name of its sort, and its level. */
 type SavedFloor = readonly [string, number]
@@ -28,9 +27,6 @@ export interface SavedPlace {
 
     /** The places it leads to, by their rank on the map, the exits aside: laying them links them again. */
     readonly next: readonly number[]
-
-    /** The monsters of its fight, by name. */
-    readonly monsters: readonly string[]
 }
 
 /** The map of a floor. */
@@ -115,12 +111,6 @@ function loadedFloor([name, level]: SavedFloor): Floor {
     return FLOOR_NAMES.of(name).create(level)
 }
 
-/** @throws {@link Error} For a monster out of the catalog. */
-function savedMonster(monster: Monster): string {
-    if(!MONSTER_NAMES.has(monster)) throw new Error(`${monster.name} is not in the catalog: it cannot be saved.`)
-    return monster.name
-}
-
 function savedJourney(journey: Journey): SavedJourney {
     const { places, scenery, exits } = journey
     return {
@@ -131,7 +121,6 @@ function savedJourney(journey: Journey): SavedJourney {
             const next = place.next.filter(to => !to.exitTo).map(to => places.indexOf(to))
             return [{
                 fight: fight?.id ?? null, halt: halt?.id ?? null, layer, across, next,
-                monsters: place.monsters.map(savedMonster),
             }]
         }),
         exits: exits.map(savedFloor),
@@ -141,14 +130,14 @@ function savedJourney(journey: Journey): SavedJourney {
 /** A map laid again as its floor laid it: the places, their links, then the exits, which link themselves. */
 function loadedJourney(save: SavedJourney, run: Run): Journey {
     const journey = new Journey(run.rng, save.scenery)
-    const places = save.places.map(({ fight, halt, layer, across, monsters }) => {
+    const places = save.places.map(({ fight, halt, layer, across }) => {
         const at = { layer, across }
         const haltType = halt === null ? null : haltById(halt)
         if(fight === null){
             if(!haltType) throw new Error("A place holds a fight or a halt: the save is corrupted.")
             return journey.addHalt(haltType, at)
         }
-        return journey.addFight(fightById(fight), monsters.map(name => MONSTER_NAMES.of(name)), at, haltType)
+        return journey.addFight(fightTypeById(fight), at, haltType)
     })
     save.places.forEach(({ next }, index) => {
         for(const rank of next) journey.link(places[index], placeAt(journey, rank))

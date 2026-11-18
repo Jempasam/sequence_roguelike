@@ -3,15 +3,15 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
-import * as Areas from "../../../battle/area/Areas"
 
 /** How far the sweep of the catalog reaches all around, in meters. */
-const SWEEP_RANGE = 1.2
+const SWEEP_RANGE = 1.2 - UNIT_RADIUS
 
 /** A blow all around the unit. */
 export class SweepCard extends BlowCard {
@@ -33,7 +33,7 @@ export class SweepCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return Areas.circle(pose.position, this.range * unit.stats.meleeRange.value * progress)
+        return unit.around(this.range * unit.stats.meleeRange.value * progress, pose)
     }
 }
 

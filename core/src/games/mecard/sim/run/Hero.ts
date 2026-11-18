@@ -80,7 +80,7 @@ export function allyOf(monster: Monster, name: string): Hero {
     return hero({
         name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
         unlimited: [], hearts: monsterHearts(monster.hearts),
-        items: [],
+        items: [...monster.items ?? []],
         usables: [], bases: { draw: monster.draw, firstDraw: monster.draw, size: monster.size ?? 1 },
     })
 }

@@ -1,7 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { SUMMON_PALETTE } from "../../../battle/palettes"
-import { UNIT_RADIUS } from "../../../battle/Unit"
+import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
@@ -90,7 +90,7 @@ export class SummonCard extends ActionCard {
             },
             preview: ({ battle, unit, pose }) => {
                 const spots = spec.spots(unit, pose)
-                const room = spots.filter(spot => battle.free(spot, unit, UNIT_RADIUS))
+                const room = spots.filter(spot => battle.free(spot, unit, UNIT_HITBOX))
                 if(room.length === 0) return Previews.still(pose, Previews.label(spots[0] ?? pose.position, "pas de place", NOTE_COLOR))
                 return Previews.still(pose, ...room.map(spot => summonShown(spot)))
             },

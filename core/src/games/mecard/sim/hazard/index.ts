@@ -7,3 +7,4 @@
  */
 
 export * from "./Hazard"
+export * from "./HazardType"

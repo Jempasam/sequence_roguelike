@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
 import {
-    ARCHER_KIT, BATTLE, BATTLE_REWARD_HALT, BOSS, CaveFloor, CHEST_HALT, EXIT_HALT, SHOP_HALT, CAVE_FLOOR,
-    FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, isHalt, LAYERS, MINE_FLOOR, DeckAi, Run, TROLL,
+    ARCHER_KIT, BATTLE, BATTLE_REWARD_HALT, BOSS, CaveFloor, CHEST_HALT, ELITE, EXIT_HALT, SHOP_HALT, CAVE_FLOOR,
+    FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, LAYERS, MINE_FLOOR, DeckAi, Run, TROLL,
 } from "@game/core/mecard"
-import type { Battle, FightType, Monster, Place, PlaceType } from "@game/core/mecard"
+import type { Battle, FightCategory, FightType, HaltType, Place, PlaceType } from "@game/core/mecard"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 import { DamageType } from "@game/core/mecard"
@@ -31,8 +32,8 @@ function win(run: Run, fight: Battle): void {
 
 /** A cave of nothing but goblins. */
 class GoblinCave extends CaveFloor {
-    protected override monsters(): Monster[] {
-        return [GOBLIN]
+    protected override fightFor(category: FightCategory): FightType {
+        return fightOf(category, GOBLIN)
     }
 }
 
@@ -59,10 +60,10 @@ function toBoss(run: Run): void {
 
 /** Stand a party on a new place of a sort. */
 function standOn(run: Run, type: PlaceType): Place {
-    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
-    const place: Place = isHalt(type)
-        ? { ...where, fight: null, halt: type }
-        : { ...where, fight: type as FightType, halt: null }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null }
+    const place: Place = [BATTLE, ELITE, BOSS].includes(type as FightCategory)
+        ? { ...where, fight: fightOf(type as FightCategory, GOBLIN), halt: null }
+        : { ...where, fight: null, halt: type as HaltType }
     run.travel.jump(place)
     return place
 }
@@ -256,7 +257,8 @@ describe("Run fights", () => {
         travel.go(place)
         travel.enter()
         expect(travel.phase).toBe("fight")
-        expect(travel.fight?.monsters).toEqual(place.monsters)
+        const monsters = travel.fight?.monsters
+        expect(monsters?.length).toBeGreaterThan(0)
         run.startBattle()
         const fight = run.battle!
         fight.startRound()
@@ -265,7 +267,7 @@ describe("Run fights", () => {
         expect(run.phase).toBe("travel")
         expect(travel.phase).toBe("visit")
         expect(travel.halt?.type).toBe(BATTLE_REWARD_HALT)
-        expect(travel.fight?.monsters).toEqual(place.monsters)
+        expect(travel.fight?.monsters).toEqual(monsters)
         expect(run.gold).toBe(gold)
     })
 
@@ -286,7 +288,7 @@ describe("Run fights", () => {
     test("a fight that lays no halt → the map once won", () => {
         const run = startedRun(2)
         const { travel } = run
-        const place: Place = { fight: BATTLE, halt: null, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        const place: Place = { fight: fightOf(BATTLE, GOBLIN), halt: null, layer: 1, across: 0.5, next: [], exitTo: null }
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)
@@ -302,7 +304,7 @@ describe("Run fights", () => {
     test("a place with a fight and a halt → the halt visited once the fight is won, and not fought again", () => {
         const run = startedRun(2)
         const { travel } = run
-        const place: Place = { fight: BATTLE, halt: CHEST_HALT, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        const place: Place = { fight: fightOf(BATTLE, GOBLIN), halt: CHEST_HALT, layer: 1, across: 0.5, next: [], exitTo: null }
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)
@@ -324,7 +326,7 @@ describe("Run fights", () => {
     test("the boss → leads its monsters", () => {
         const run = startedRun(2)
         toBoss(run)
-        expect(run.travel.place?.fight).toBe(BOSS)
+        expect(run.travel.place?.fight?.category).toBe(BOSS)
         const fight = fought(run)
         const bosses = fight.units.filter(unit => unit.name.startsWith(GOLEM.name))
         expect(bosses).toHaveLength(1)
@@ -432,7 +434,7 @@ describe("Run, its phases", () => {
     test("a fight reached → no battle until it is started", () => {
         const run = startedRun(2)
         const { travel } = run
-        const place: Place = { fight: BATTLE, halt: null, layer: 1, across: 0.5, next: [], exitTo: null, monsters: [GOBLIN] }
+        const place: Place = { fight: fightOf(BATTLE, GOBLIN), halt: null, layer: 1, across: 0.5, next: [], exitTo: null }
         travel.jump(place)
         travel.journey.link(place, place)
         travel.go(place)

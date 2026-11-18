@@ -33,7 +33,7 @@ export abstract class ContactHazard extends HazardStatus {
         const touched = new Set<Unit>()
         const check = (other: Unit): void => {
             if(other === unit || !other.alive || !other.tangible || !other.touchable || touched.has(other)) return
-            if(unit.position.distance(other.position) > unit.radius + other.radius + CONTACT_SLACK) return
+            if(unit.hitbox.gap(unit, other.hitbox, other) > CONTACT_SLACK) return
             touched.add(other)
             this.touch({ battle, unit: unit.owner ?? unit }, unit, other)
         }

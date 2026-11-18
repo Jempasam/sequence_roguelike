@@ -1,3 +1,11 @@
+import {
+    PROGRAMMED_BUBBLE, INSPIRATION, INFLATE, SURPRISE_BUBBLE, BATH, EXPLOSIVE_BATH, FIERY_BUBBLE,
+    PISTO_BUBBLE, BURSTING,
+} from "../card/subs/summon/BubbleCards"
+import {
+    VIOLET_BUBBLE, BLUE_BUBBLE, GREEN_BUBBLE, RED_BUBBLE, ORANGE_BUBBLE, EXPLOSIVE_BUBBLE, GIANT_BUBBLE, ELEMENTAL_BUBBLE,
+    POTION_BUBBLE, BEAST_BUBBLE,
+} from "../card/subs/summon/Bubbles"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Rng } from "../base/Rng"
@@ -19,7 +27,7 @@ import { BLINK } from "../card/subs/movement/Blink"
 import { STEP } from "../card/subs/movement/Step"
 import { BOTTLE, THROWN_POTION } from "../card/subs/potion/PotionActions"
 import { POISON, WEAKNESS } from "../card/subs/potion/PotionCard"
-import { ELEMENT_CARDS } from "../card/subs/spell/ElementCard"
+import { ELEMENT_CARDS, LIGHTNING, WIND } from "../card/subs/spell/ElementCard"
 import { SPELL } from "../card/subs/spell/SpellCard"
 import { SUBSTITUTION } from "../card/subs/summon/Substitution"
 import { COIN, STONE_WALL } from "../card/subs/summon/summons"
@@ -343,6 +351,27 @@ export const ALL_BOOSTERS: readonly Booster[] = [
         pools: [
             { count: 2, pool: [HOOK_ON, LASER_LINK, SWAP, PAS_DE_DEUX] },
             { count: 1, pool: [MOUNT, FORCED_CASTLING, PAWN_ROBOT] },
+        ],
+    },
+    {
+        name: "Bulles", color: rgba(0.75, 0.7, 1), icon: VIOLET_BUBBLE,
+        pools: [
+            { count: 2, pool: [VIOLET_BUBBLE, BLUE_BUBBLE, GREEN_BUBBLE, RED_BUBBLE] },
+            { count: 1, pool: [EXPLOSIVE_BUBBLE, ORANGE_BUBBLE, GIANT_BUBBLE] },
+        ],
+    },
+    {
+        name: "Bain moussant", color: rgba(0.85, 0.95, 1), icon: BATH,
+        pools: [
+            { count: 2, pool: [BATH, EXPLOSIVE_BATH, PISTO_BUBBLE, BURSTING, KAMIKAZE] },
+            { count: 1, pool: [PROGRAMMED_BUBBLE, SURPRISE_BUBBLE] },
+        ],
+    },
+    {
+        name: "Bulles ensorcelées", color: rgba(0.6, 0.3, 0.9), icon: ELEMENTAL_BUBBLE,
+        pools: [
+            { count: 2, pool: [ELEMENTAL_BUBBLE, FIERY_BUBBLE, POTION_BUBBLE, BEAST_BUBBLE] },
+            { count: 1, pool: [INSPIRATION, INFLATE, WIND, LIGHTNING] },
         ],
     },
 ]

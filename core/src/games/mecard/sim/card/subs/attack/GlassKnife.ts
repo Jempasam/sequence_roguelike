@@ -30,8 +30,9 @@ export class GlassKnifeCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(THRUST_RANGE * unit.stats.meleeRange.value * progress))
-        return Areas.line(pose.position, to, THRUST_WIDTH)
+        const from = unit.muzzle(pose)
+        const to = from.plus(pose.direction.times(THRUST_RANGE * unit.stats.meleeRange.value * progress))
+        return Areas.line(from, to, THRUST_WIDTH)
     }
 
     public override get(): Action {

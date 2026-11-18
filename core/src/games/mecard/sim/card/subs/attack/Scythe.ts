@@ -3,6 +3,7 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -14,10 +15,10 @@ import * as Areas from "../../../battle/area/Areas"
 const SCYTHE_DAMAGE = 1
 
 /** How far from the unit the blade of the scythe of the catalog starts, in meters. */
-const SCYTHE_INNER = 1
+const SCYTHE_INNER = 1 - UNIT_RADIUS
 
 /** How far the blade of the scythe of the catalog reaches, in meters. */
-const SCYTHE_OUTER = 2
+const SCYTHE_OUTER = 2 - UNIT_RADIUS
 
 /** The cosine of half the angle of the scythe of the catalog: an arc of 120°. */
 const SCYTHE_COS_HALF = 0.5
@@ -45,7 +46,7 @@ export class ScytheCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value * progress
-        return Areas.crescent(pose.position, pose.direction, this.inner * stretch, this.outer * stretch, this.cosHalf)
+        return Areas.crescent(unit.muzzle(pose), pose.direction, this.inner * stretch, this.outer * stretch, this.cosHalf)
     }
 }
 

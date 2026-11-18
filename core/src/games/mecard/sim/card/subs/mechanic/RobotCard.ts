@@ -1,7 +1,8 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { UNIT_RADIUS } from "../../../battle/Unit"
+import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
+import type { Unit } from "../../../battle/Unit"
 import { HeartCount } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
@@ -21,7 +22,7 @@ import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead a robot stands, in meters. */
-const ROBOT_AHEAD = 1
+const ROBOT_AHEAD = 1 - UNIT_RADIUS
 
 /** How many shield hearts the improvised robot lives by, before the summoning of the unit. */
 const ROBOT_HEARTS = 2
@@ -29,9 +30,9 @@ const ROBOT_HEARTS = 2
 /** How many times the hearts of the tank robot are those of a robot. */
 const TANK_FACTOR = 2
 
-/** Where a robot stands, from a pose. */
-function spotOf(pose: Pose): Vector2 {
-    return pose.position.plus(pose.direction.times(ROBOT_AHEAD))
+/** Where a robot stands, ahead of the edge of a unit at a pose. */
+function spotOf(unit: Unit, pose: Pose): Vector2 {
+    return unit.muzzle(pose).plus(pose.direction.times(ROBOT_AHEAD))
 }
 
 /**
@@ -67,15 +68,15 @@ export class RobotCard extends AbstractCard<Action, Module> {
             use: function ({ battle, unit }){
                 const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
                 const robot = battle.place(unit, {
-                    sprite: visual("units/robot"), name: "Robot", at: spotOf(unit), direction: unit.direction,
+                    sprite: visual("units/robot"), name: "Robot", at: spotOf(unit, unit), direction: unit.direction,
                     hearts: Heart.many(SHIELD_HEART, count), cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
                 })
                 if(robot) module.tune(robot)
                 hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const spot = spotOf(pose)
-                if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+                const spot = spotOf(unit, pose)
+                if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
                 return Previews.still(pose, summonShown(spot))
             },
         }

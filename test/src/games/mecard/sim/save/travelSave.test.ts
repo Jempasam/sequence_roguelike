@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { BATTLE, GOBLIN, loadTravel, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
-import type { Monster, Travel, TravelSave } from "@game/core/mecard"
+import type { Travel, TravelSave } from "@game/core/mecard"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
@@ -35,13 +36,12 @@ describe("saveTravel", () => {
         expect(ways(loaded)).toEqual(ways(travel))
     })
 
-    test("a map read back → its links, monsters and exits as they were", () => {
+    test("a map read back → its links, fights and exits as they were", () => {
         const { travel } = startedRun(3)
         const loaded = reloaded(saveTravel(travel))
         const shape = ({ journey }: Travel) => journey.places.map(place => ({
             fight: place.fight?.id, halt: place.halt?.id, layer: place.layer, across: place.across,
             next: place.next.map(to => journey.places.indexOf(to)),
-            monsters: place.monsters.map(monster => monster.name),
             exit: place.exitTo && [place.exitTo.type.name, place.exitTo.level],
         }))
         expect(shape(loaded)).toEqual(shape(travel))
@@ -49,11 +49,11 @@ describe("saveTravel", () => {
         expect(loaded.floor.type).toBe(travel.floor.type)
     })
 
-    test("a monster out of the catalog → refused", () => {
+    test("a fight out of the catalog → refused on loading", () => {
         const { travel } = startedRun(3)
-        const stranger: Monster = { ...GOBLIN, name: "Inconnu" }
-        travel.journey.addFight(BATTLE, [stranger], { layer: 0, across: 0.5 })
-        expect(() => saveTravel(travel)).toThrow("Inconnu")
+        const stranger = fightOf(BATTLE, GOBLIN)
+        travel.journey.addFight(stranger, { layer: 0, across: 0.5 })
+        expect(() => reloaded(saveTravel(travel))).toThrow(stranger.id)
     })
 
     test("out of the map → refused", () => {

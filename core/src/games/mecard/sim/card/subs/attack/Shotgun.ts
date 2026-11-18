@@ -4,6 +4,7 @@ import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, sweep } from "../tools/playing"
@@ -13,7 +14,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the shotgun of the catalog reaches, in meters, before the reach of the unit. */
-const SHOTGUN_RANGE = 2.5
+const SHOTGUN_RANGE = 2.5 - UNIT_RADIUS
 
 /** How many pellets the shotgun of the catalog fires. */
 const SHOTGUN_PELLETS = 3
@@ -72,8 +73,8 @@ export class ShotgunCard extends ActionCard {
                     const side = (battle.rng.next() * 2 - 1) * spread
                     const ahead = unit.direction
                     const way = ahead.plus(ahead.right.times(side)).normalized ?? ahead
-                    const { end } = battle.ray(unit, reach, { position: unit.position, direction: way })
-                    lines.push({ from: unit.position, to: end })
+                    const { start, end } = battle.ray(unit, reach, { position: unit.position, direction: way })
+                    lines.push({ from: start, to: end })
                 }
                 const segment = (line: typeof lines[number], share: number): Area => {
                     const to = line.from.plus(line.to.minus(line.from).times(share))
@@ -93,7 +94,7 @@ export class ShotgunCard extends ActionCard {
             preview: ({ battle, unit, pose }) => {
                 const radius = range * unit.stats.throwRange.value
                 const cosHalf = 1 / Math.sqrt(1 + spread * spread)
-                const area: Area = Areas.arc(pose.position, pose.direction, radius, cosHalf)
+                const area: Area = Areas.arc(unit.muzzle(pose), pose.direction, radius, cosHalf)
                 return Previews.still(pose, ...Previews.strike([area], battle.fetch(area, unit)))
             },
         }

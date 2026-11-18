@@ -3,6 +3,7 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -11,7 +12,7 @@ import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far the slash of the catalog reaches, in meters. */
-const SLASH_RANGE = 1.3
+const SLASH_RANGE = 1.3 - UNIT_RADIUS
 
 /** The cosine of half the angle of the slash of the catalog: 0.5 for 60° on each side, an arc of 120°. */
 const SLASH_COS_HALF = 0.5
@@ -39,7 +40,7 @@ export class SlashCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return Areas.arc(pose.position, pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
+        return Areas.arc(unit.muzzle(pose), pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
     }
 }
 

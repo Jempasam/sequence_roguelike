@@ -1,7 +1,6 @@
 import { visual } from "../base/Visual"
 import type { Visual } from "../base/Visual"
 import type { Rgba } from "../base/Rgba"
-import type { HaltType } from "../halt/HaltType"
 
 import type { PlaceInfo } from "./Journey"
 
@@ -35,8 +34,3 @@ export interface PlaceType extends PlaceInfo {
 
 /** The transition played on leaving a fight or a halt, back to the map: a name the screen resolves as it wishes. */
 export const BACK_VISUAL = visual("back")
-
-/** Is a sort of place a halt, visited rather than fought? A halt is the one that makes visits. */
-export function isHalt(type: PlaceType): type is HaltType {
-    return "create" in type
-}

@@ -2,6 +2,7 @@ import { DISTANCE } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
@@ -14,7 +15,7 @@ import { RAM } from "../movement/Ram"
 import { ChainSummonCard } from "./ChainSummons"
 
 /** How far ahead the cannonballs stand, in meters: at the contact. */
-const AHEAD = 1
+const AHEAD = 1 - UNIT_RADIUS
 
 /** How many time hearts a cannonball lives by: it is gone at the end of its round. */
 const CANNONBALL_ROUNDS = 1

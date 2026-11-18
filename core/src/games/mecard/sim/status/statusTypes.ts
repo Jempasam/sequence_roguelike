@@ -12,9 +12,13 @@ import { BURN } from "./subs/Burn"
 import { BISHOP_PIECE, CHESS_PIECE, KNIGHT_PIECE, PAWN_PIECE, QUEEN_PIECE, ROOK_PIECE } from "./subs/ChessPieces"
 import { CONCENTRATED, FURIOUS } from "./subs/Calm"
 import { COATED } from "./subs/Coated"
+import { BUBBLE, GIANT, SOAPY } from "./subs/BubbleStatuses"
+import { ELEMENT_COATING } from "./subs/ElementCoating"
+import { POTION_COATING } from "./subs/PotionCoating"
 import { CONFUSED } from "./subs/Confusion"
 import { DEMONIC } from "./subs/DemonEnergy"
 import { COUNTER, DISARM, DODGE, SLIDING_PARRY, WOODEN_SHIELD } from "./subs/Dodge"
+import { EXPLOSIVE } from "./subs/Explosive"
 import { FLEETING } from "./subs/Fleeting"
 import { FRENZIED } from "./subs/Frenzy"
 import { HEALING } from "./subs/Healing"
@@ -23,6 +27,7 @@ import { OVERHEATED } from "./subs/Overheat"
 import { POISONED } from "./subs/Poison"
 import { POSSESSED } from "./subs/Possessed"
 import { ENRAGED } from "./subs/Rage"
+import { RESURRECTED } from "./subs/Resurrection"
 import { RITUAL_STATUS } from "./subs/RitualStatus"
 import { ROOTED } from "./subs/Rooted"
 import { SLOWED } from "./subs/Slowness"
@@ -42,9 +47,9 @@ import { BLEEDING, FRAGILE, MARKED, SOUL_LINKED, SOUL_SHIELDED } from "./subs/Wo
  */
 export const STATUS_TYPES: readonly StatusType[] = [
     BLOODLUST, CONCENTRATED, COUNTER, DEMONIC, DISARM, DODGE, FURIOUS, SLIDING_PARRY, WOODEN_SHIELD, HEALING, SOUL_SHIELDED,
-    SWALLOWED, SWIFT, VIGOROUS, OVERHEATED, MOMENTUM,
+    SWALLOWED, SWIFT, VIGOROUS, OVERHEATED, MOMENTUM, RESURRECTED, BUBBLE, SOAPY, GIANT,
     CHESS_PIECE, PAWN_PIECE, ROOK_PIECE, KNIGHT_PIECE, BISHOP_PIECE, QUEEN_PIECE,
-    ENRAGED, FLEETING, FRENZIED, POSSESSED, SOUL_LINKED,
+    ENRAGED, EXPLOSIVE, FLEETING, FRENZIED, POSSESSED, SOUL_LINKED,
     BLEEDING, BURN, CONFUSED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, STINKING, VULNERABLE, WEAKENED,
     MINE_HAZARD, BEAR_TRAP_HAZARD,
 ]
@@ -54,5 +59,5 @@ export const STATUS_TYPES: readonly StatusType[] = [
  * {@link StatusType.family} of, and what a screen names a kind of them by.
  */
 export const STATUS_FAMILIES: readonly StatusType[] = [
-    COATED, SOAKED, RITUAL_STATUS, SPLASHING, BURNING_GROUND, PUDDLE_HAZARD, ROCKY, SURGING, WHIRLING,
+    COATED, ELEMENT_COATING, POTION_COATING, SOAKED, RITUAL_STATUS, SPLASHING, BURNING_GROUND, PUDDLE_HAZARD, ROCKY, SURGING, WHIRLING,
 ]

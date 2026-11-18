@@ -1,6 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
+import type { Unit } from "../../../battle/Unit"
 import { frenchNumber } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -18,10 +19,10 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the small spell of the catalog reaches, in meters, before the reach of the unit. */
-const SMALL_SPELL_RANGE = 6
+const SMALL_SPELL_RANGE = 6 - UNIT_RADIUS
 
-/** How far ahead the conjuration of the catalog calls its element, in meters. */
-const CONJURATION_AHEAD = 1.5
+/** How far ahead of the edge of the unit the conjuration of the catalog calls its element, in meters. */
+const CONJURATION_AHEAD = 1.5 - UNIT_RADIUS
 
 /** How opaque a bolt of an element shows. */
 const BOLT_OPACITY = 0.5
@@ -52,8 +53,8 @@ export class ElementActionCard extends AbstractCard<Action, Element> {
 }
 
 /** Where a conjuration calls its element from a pose: within the walls. */
-export function conjured(battle: Battle, pose: Pose): Pose {
-    const ahead = pose.position.plus(pose.direction.times(CONJURATION_AHEAD))
+export function conjured(battle: Battle, unit: Unit, pose: Pose = unit): Pose {
+    const ahead = unit.muzzle(pose).plus(pose.direction.times(CONJURATION_AHEAD))
     return { position: battle.arena.clamped(ahead, UNIT_RADIUS), direction: pose.direction }
 }
 
@@ -85,14 +86,14 @@ export const SMALL_SPELL = new ElementActionCard("Petit sort", [
     return {
         use: function (ctx){
             const { battle, unit } = ctx
-            const { end, unit: hit } = battle.ray(unit, SMALL_SPELL_RANGE * unit.stats.throwRange.value)
-            fly(battle, unit.position, end, color)
+            const { start, end, unit: hit } = battle.ray(unit, SMALL_SPELL_RANGE * unit.stats.throwRange.value)
+            fly(battle, start, end, color)
             if(hit) element.applyNegative(ctx, hit)
         },
         preview: ({ battle, unit, pose }) => {
             const range = SMALL_SPELL_RANGE * unit.stats.throwRange.value
-            const { end, unit: target } = battle.ray(unit, range, pose)
-            const path: Area = Areas.line(pose.position, end, BOLT_WIDTH)
+            const { start, end, unit: target } = battle.ray(unit, range, pose)
+            const path: Area = Areas.line(start, end, BOLT_WIDTH)
             const reached = Previews.strike([path], target ? [target] : [])
             if(!target) return Previews.still(pose, ...reached)
             return Previews.still(pose, ...reached, Previews.label(target.position, element.word, NOTE_COLOR))
@@ -109,8 +110,8 @@ export const CONJURATION = new ElementActionCard("Conjuration", [
         element.invoke(ctx, position, direction, element)
         hold(ctx.battle, SHORT_TIME)
     },
-    preview: ({ battle, pose }) => {
-        const center = conjured(battle, pose).position
+    preview: ({ battle, unit, pose }) => {
+        const center = conjured(battle, unit, pose).position
         const color = { ...element.color, a: SPOT_OPACITY }
         return Previews.still(pose, Previews.polygon(Areas.circle(center, UNIT_RADIUS), color))
     },

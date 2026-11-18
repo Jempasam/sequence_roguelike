@@ -41,8 +41,8 @@ export class MegaLaserCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const length = this.range * unit.stats.throwRange.value * progress
-        const to = pose.position.plus(pose.direction.times(length))
-        return Areas.line(pose.position, to, this.width)
+        const from = unit.muzzle(pose)
+        return Areas.line(from, from.plus(pose.direction.times(length)), this.width)
     }
 }
 

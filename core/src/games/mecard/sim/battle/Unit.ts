@@ -17,7 +17,7 @@ import { Vanishing } from "../process/subs/Vanishing"
 import type { Status, StatusType } from "../status/Status"
 
 import type { UnitController } from "../ai/UnitController"
-import type { Action } from "./Action"
+import type { Action, Pose } from "./Action"
 import type { Battle } from "./Battle"
 import { Decks } from "./Decks"
 import type {
@@ -25,6 +25,8 @@ import type {
     IncomingShove, MoveEvent,
 } from "./events"
 import type { Area } from "./Area"
+import { Disk } from "./hitbox/Disk"
+import type { Hitbox } from "./hitbox/Hitbox"
 import type { Team } from "./Team"
 import type { Visual } from "../base/Visual"
 
@@ -72,6 +74,9 @@ export interface UnitSpec {
     /** The ground it covers, for a body lying on the arena: a puddle, flames. None by default. */
     readonly zone?: Area|null
 
+    /** The shape of its body at size 1, scaled by its size: a disc of {@link UNIT_RADIUS} by default. */
+    readonly hitbox?: Hitbox
+
     /**
      * The bases of its stats that are not those of {@link UnitStats}, the others left as they are there. A
      * monster sets its draw to one round of its loop, and keeps its deck in order: the cards are then drawn
@@ -95,6 +100,9 @@ export function frailest(units: readonly Unit[]): Unit|null {
 
 /** The radius of the body of a unit of size 1, in meters: two such never come closer than twice that. */
 export const UNIT_RADIUS = 0.35
+
+/** The shape of the body of a unit of size 1, by default. */
+export const UNIT_HITBOX: Hitbox = new Disk(UNIT_RADIUS)
 
 /** How many cards a unit draws at the start of a battle, by default. */
 export const STARTING_HAND = 5
@@ -177,6 +185,12 @@ export class UnitStats {
 
     /** Do others move it: a push, a wind, a whirlwind? Its own moves are not concerned, as `mobility` is. */
     public readonly movable = new Attribute(true)
+
+    /**
+     * Do the walls of the arena stop it? Yes by default; a ship that sails across the arena and out of it is
+     * not stopped, and is gone once it lies wholly outside.
+     */
+    public readonly bounded = new Attribute(true)
 }
 
 /**
@@ -341,6 +355,7 @@ export class Unit {
         this.usables = [...spec.usables ?? []]
         this.decisive = spec.decisive ?? true
         this.zone = spec.zone ?? null
+        this.#shape = spec.hitbox ?? UNIT_HITBOX
         this.position = spec.position
         this.direction = spec.direction
         this.hearts = new Hearts(this, spec.hearts)
@@ -379,9 +394,39 @@ export class Unit {
     /** Do others move it? */
     public get movable(): boolean { return this.stats.movable.value }
 
-    /** The radius of its body, in meters: the base, times its size. */
+    /** Do the walls of the arena stop it? */
+    public get bounded(): boolean { return this.stats.bounded.value }
+
+    /** The shape of its body: the base one, times its size. */
+    public get hitbox(): Hitbox {
+        return this.#shape.scaled(this.stats.size.value)
+    }
+
+    /** The shape of its body at size 1, the one it was made with. */
+    public get baseHitbox(): Hitbox {
+        return this.#shape
+    }
+
+    /** The radius of the disc around its body that holds it whole, in meters: the base, times its size. */
     public get radius(): number {
-        return UNIT_RADIUS * this.stats.size.value
+        return this.hitbox.reach
+    }
+
+    /**
+     * Where the edge of its body lies from a pose, going a direction: where its blows and shots start from,
+     * their reach counted from there and not from its middle.
+     *
+     * @param pose - Where it would stand and face, where it stands and faces by default.
+     * @param direction - Where the blow goes, a meter long, where the pose faces by default: backward for a
+     * blow behind.
+     */
+    public muzzle(pose: Pose = this, direction: Vector2 = pose.direction): Vector2 {
+        return pose.position.plus(direction.times(this.hitbox.edge(pose, direction)))
+    }
+
+    /** The zone around its body, at a pose, as far from its edge as a margin, in meters. */
+    public around(margin: number, pose: Pose = this): Area {
+        return this.hitbox.grown(pose, margin)
     }
 
     /** How many of its hearts are not empty. */
@@ -491,6 +536,9 @@ export class Unit {
     /** Its name in its color. */
     public toSemString(): Text { return colored(this.color, this.name) }
 
+
+    /** The shape of its body at size 1. */
+    readonly #shape: Hitbox
 
     /** What its chain tells, told in turn. */
     readonly #watcher: ChainWatcher = {

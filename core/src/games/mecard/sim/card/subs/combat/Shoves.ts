@@ -4,6 +4,7 @@ import type { Action, Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 
@@ -23,14 +24,14 @@ const PROJECTION_DISTANCE = 2.5
 const IMPACT_DAMAGE = 2
 
 /** How far the projection reaches in front of the unit, in meters, and the cosine of half its angle. */
-const PROJECTION_RADIUS = 1.5
+const PROJECTION_RADIUS = 1.5 - UNIT_RADIUS
 const PROJECTION_COS_HALF = Math.SQRT1_2
 
 /** How far the suction reaches around the unit, in meters. */
-const SUCTION_RADIUS = 3
+const SUCTION_RADIUS = 3 - UNIT_RADIUS
 
 /** The reach of the catch, in meters before the range, its width, and the hearts it takes. */
-const CATCH_LENGTH = 2.5
+const CATCH_LENGTH = 2.5 - UNIT_RADIUS
 const CATCH_WIDTH = 0.5
 const CATCH_DAMAGE = 1
 
@@ -38,27 +39,29 @@ const CATCH_DAMAGE = 1
 const RAM_LENGTH = 2
 
 /** The reach of the sling: ahead and behind, in meters before the range, and the width of each. */
-const SLING_LENGTH = 2.5
+const SLING_LENGTH = 2.5 - UNIT_RADIUS
 const SLING_AHEAD_WIDTH = 0.5
 const SLING_BEHIND_WIDTH = 0.7
 
 /** How far the shock wave throws, in meters, before the range, and how far it reaches. */
 const WAVE_DISTANCE = 1.5
-const WAVE_RADIUS = 1.5
+const WAVE_RADIUS = 1.5 - UNIT_RADIUS
 
 /** The size of the tide, in meters, and how far it carries what it covers. */
-const TIDE_LENGTH = 4
+const TIDE_LENGTH = 4 - UNIT_RADIUS
 const TIDE_WIDTH = 3
 const TIDE_DISTANCE = 2
 
-/** A segment ahead of a pose, from its center. */
-function ahead(pose: Pose, length: number, width: number): Area {
-    return Areas.line(pose.position, pose.position.plus(pose.direction.times(length)), width)
+/** A segment ahead of a unit at a pose, from the edge of its body. */
+function ahead(unit: Unit, pose: Pose, length: number, width: number): Area {
+    const from = unit.muzzle(pose)
+    return Areas.line(from, from.plus(pose.direction.times(length)), width)
 }
 
-/** A segment behind a pose, from its center. */
-function behind(pose: Pose, length: number, width: number): Area {
-    return ahead({ position: pose.position, direction: pose.direction.opposite }, length, width)
+/** A segment behind a unit at a pose, from the edge of its body. */
+function behind(unit: Unit, pose: Pose, length: number, width: number): Area {
+    const from = unit.muzzle(pose, pose.direction.opposite)
+    return Areas.line(from, from.minus(pose.direction.times(length)), width)
 }
 
 /** What a shove would show: its zone is shown apart, here the way it goes and where it is stopped. */
@@ -73,18 +76,16 @@ function shoveShown(battle: Battle, one: Shove): Indicator[] {
 
 /** An action shoving units of a zone, by the shoves it asks of a pose. */
 function shoving(
-    zone: (pose: Pose, range: number) => Area, shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => Shove[],
+    zone: (unit: Unit, pose: Pose) => Area, shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => Shove[],
 ): Action {
     return {
         use: function ({ battle, unit }){
-            const range = unit.stats.throwRange.value
-            const hit = battle.fetch(zone(unit, range), unit)
+            const hit = battle.fetch(zone(unit, unit), unit)
             shoveAll(shovesOf(battle, unit, unit, hit))
             hold(battle, SHORT_TIME)
         },
         preview: ({ battle, unit, pose }) => {
-            const range = unit.stats.throwRange.value
-            const area = zone(pose, range)
+            const area = zone(unit, pose)
             const hit = battle.fetch(area, unit)
             const shown = shovesOf(battle, unit, pose, hit).flatMap(one => shoveShown(battle, one))
             return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...shown)
@@ -101,7 +102,7 @@ export const PROJECTION = new ActionCard("Projection", [
     "Projette chaque ", UNIT, " dans le secteur devant, à ", frenchNumber(PROJECTION_RADIUS), " ", DISTANCE, ", sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE,
     ". Si elle percute un mur ou une ", UNIT, ", elles prennent ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shoving(
-    (pose: Pose) => (Areas.arc(pose.position, pose.direction, PROJECTION_RADIUS, PROJECTION_COS_HALF)),
+    (unit, pose) => Areas.arc(unit.muzzle(pose), pose.direction, PROJECTION_RADIUS, PROJECTION_COS_HALF),
     (battle, unit, pose, hit) => hit.map(target => ({
         battle, by: unit, target,
         direction: pose.direction,
@@ -119,7 +120,7 @@ function toward(from: Vector2, to: Vector2): Vector2|null {
 export const SUCTION = new ActionCard("Aspiration", [
     "Tire chaque ", UNIT, " à ", SUCTION_RADIUS, " ", DISTANCE, " autour jusqu'au contact. Aucun dégât.",
 ], Rarity.RARE, shoving(
-    (pose: Pose) => (Areas.circle(pose.position, SUCTION_RADIUS)),
+    (unit, pose) => unit.around(SUCTION_RADIUS, pose),
     (battle, unit, pose, hit) => hit.flatMap(target => {
         const direction = toward(target.position, pose.position)
         if(!direction) return []
@@ -127,13 +128,18 @@ export const SUCTION = new ActionCard("Aspiration", [
     }),
 ))
 
+/** Where the catch brings what it takes, from a pose: at the contact of the unit, a body ahead of its edge. */
+function catchSpot(unit: Unit, pose: Pose): Vector2 {
+    return unit.muzzle(pose).plus(pose.direction.times(1 - UNIT_RADIUS))
+}
+
 export const CATCH = new ActionCard("Attrapage", [
     "Ramène au contact devant chaque ", UNIT, " du couloir devant, sur ", frenchNumber(CATCH_LENGTH), "×", PORTEE, " ", DISTANCE, ". ",
     CATCH_DAMAGE, " ", DamageType.PHYSICAL, " fixes.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        const area = ahead(unit, CATCH_LENGTH * unit.stats.throwRange.value, CATCH_WIDTH)
-        const spot = unit.position.plus(unit.direction.times(1))
+        const area = ahead(unit, unit, CATCH_LENGTH * unit.stats.throwRange.value, CATCH_WIDTH)
+        const spot = catchSpot(unit, unit)
         const hit = battle.fetch(area, unit)
         for(const target of hit){
             target.hearts.damage(CATCH_DAMAGE, DamageType.PHYSICAL, unit)
@@ -144,8 +150,8 @@ export const CATCH = new ActionCard("Attrapage", [
         hold(battle, SHORT_TIME)
     },
     preview: ({ battle, unit, pose }) => {
-        const area = ahead(pose, CATCH_LENGTH * unit.stats.throwRange.value, CATCH_WIDTH)
-        const spot = pose.position.plus(pose.direction.times(1))
+        const area = ahead(unit, pose, CATCH_LENGTH * unit.stats.throwRange.value, CATCH_WIDTH)
+        const spot = catchSpot(unit, pose)
         const shown = battle.fetch(area, unit).map(target => Previews.arrow([target.position, spot], MOVE_WIDTH, CONTROL_COLOR))
         return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...shown)
     },
@@ -191,7 +197,7 @@ export const SLING_CARD = new ActionCard("Fronde", [
         const reach = SLING_LENGTH * unit.stats.throwRange.value
         const first = battle.ray(unit, reach, pose).unit
         if(!first) return null
-        const end = pose.position.minus(pose.direction.times(reach))
+        const end = unit.muzzle(pose, pose.direction.opposite).minus(pose.direction.times(reach))
         const direction = toward(first.position, end)
         if(!direction) return null
         return {
@@ -211,8 +217,8 @@ export const SLING_CARD = new ActionCard("Fronde", [
         preview: ({ battle, unit, pose }) => {
             const reach = SLING_LENGTH * unit.stats.throwRange.value
             const zones = [
-                Previews.polygon(ahead(pose, reach, SLING_AHEAD_WIDTH), RANGE_COLOR),
-                Previews.polygon(behind(pose, reach, SLING_BEHIND_WIDTH), HAZARD_COLOR),
+                Previews.polygon(ahead(unit, pose, reach, SLING_AHEAD_WIDTH), RANGE_COLOR),
+                Previews.polygon(behind(unit, pose, reach, SLING_BEHIND_WIDTH), HAZARD_COLOR),
             ]
             const one = slung(battle, unit, pose)
             return Previews.still(pose, ...zones, ...one ? shoveShown(battle, one) : [])
@@ -224,7 +230,7 @@ export const SHOCK_WAVE = new ActionCard("Onde de choc", [
     "Projette chaque ", UNIT, " à ", frenchNumber(WAVE_RADIUS), " ", DISTANCE, " autour vers l'extérieur, sur ", frenchNumber(WAVE_DISTANCE),
     "×", PORTEE, " ", DISTANCE, ". Impact : ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shoving(
-    (pose: Pose) => (Areas.circle(pose.position, WAVE_RADIUS)),
+    (unit, pose) => unit.around(WAVE_RADIUS, pose),
     (battle, unit, pose, hit) => hit.flatMap(target => {
         const direction = toward(pose.position, target.position)
         if(!direction) return []
@@ -239,7 +245,7 @@ export const TIDE = new ActionCard("Marée", [
     "Fait avancer de ", TIDE_DISTANCE, " ", DISTANCE, " chaque ", UNIT, " du rectangle de ", TIDE_LENGTH, " ", DISTANCE, " sur ",
     TIDE_WIDTH, " ", DISTANCE, " devant. Aucun dégât.",
 ], Rarity.RARE, shoving(
-    (pose: Pose) => ahead(pose, TIDE_LENGTH, TIDE_WIDTH),
+    (unit, pose) => ahead(unit, pose, TIDE_LENGTH, TIDE_WIDTH),
     (battle, unit, pose, hit) => hit.map(target => ({
         battle, by: unit, target, direction: pose.direction, distance: TIDE_DISTANCE,
     })),

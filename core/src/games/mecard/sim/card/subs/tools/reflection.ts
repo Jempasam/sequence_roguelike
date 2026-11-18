@@ -1,5 +1,6 @@
 import { Vector2 } from "../../../base/Vector2"
 import type { Battle } from "../../../battle/Battle"
+import { Disk } from "../../../battle/hitbox/Disk"
 import type { Unit } from "../../../battle/Unit"
 
 /**
@@ -13,7 +14,7 @@ import type { Unit } from "../../../battle/Unit"
 export function reflected(
     battle: Battle, at: Vector2, direction: Vector2, clearance: number, slack: number, struck: Unit|null,
 ): Vector2|null {
-    if(struck) return mirrored(direction, at.minus(struck.position).normalized)
+    if(struck) return mirrored(direction, struck.hitbox.normal(struck, at))
     const { width, height } = battle.arena
     const reach = clearance + slack
     const flipX = at.x <= reach || at.x >= width - reach
@@ -21,8 +22,9 @@ export function reflected(
     if(flipX || flipY){
         return new Vector2(flipX ? -direction.x : direction.x, flipY ? -direction.y : direction.y)
     }
-    const pillar = battle.bodies.find(each => !each.touchable && at.distance(each.position) <= each.radius + reach)
-    return pillar ? mirrored(direction, at.minus(pillar.position).normalized) : null
+    const probe = { position: at, direction }
+    const pillar = battle.bodies.find(each => !each.touchable && each.hitbox.gap(each, new Disk(reach), probe) <= 0)
+    return pillar ? mirrored(direction, pillar.hitbox.normal(pillar, at)) : null
 }
 
 /** A direction mirrored along a normal, none without a normal. */

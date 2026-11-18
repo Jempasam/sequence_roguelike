@@ -1,6 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import { rgba } from "../../../base/Rgba"
 import type { Vector2 } from "../../../base/Vector2"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
@@ -17,7 +18,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the hooks of the catalog reach, in meters, before the reach of the unit. */
-const HOOK_RANGE = 4
+const HOOK_RANGE = 4 - UNIT_RADIUS
 
 /** How fast a hook pulls, in meters per second. */
 const PULL_SPEED = 10
@@ -36,6 +37,9 @@ const ROPE_COLOR = rgba(0.85, 0.75, 0.5, 0.9)
 
 /** What a hook caught, from a pose, and where the pull it sets off would take who. */
 interface Catch {
+    /** Where the rope started: the edge of the body of the caster. */
+    readonly start: Vector2
+
     /** Where the rope went. */
     readonly end: Vector2
 
@@ -79,25 +83,25 @@ export class HookCard extends ActionCard {
         battle: Battle, unit: Unit, pose: Pose, range: number, pullsUnits: boolean, pullsSelf: boolean,
     ): Catch {
         const reach = range * unit.stats.throwRange.value
-        const { end, unit: hit } = battle.ray(unit, reach, pose)
+        const { start, end, unit: hit } = battle.ray(unit, reach, pose)
         if(hit && pullsUnits){
             const distance = hit.position.distance(pose.position) - unit.radius - hit.radius - PULL_GAP
-            return { end, pulled: hit, way: pose.direction.opposite, distance: Math.max(0, distance) }
+            return { start, end, pulled: hit, way: pose.direction.opposite, distance: Math.max(0, distance) }
         }
-        const anchored = hit !== null || pose.position.distance(end) < reach - ANCHOR_SLACK
+        const anchored = hit !== null || start.distance(end) < reach - ANCHOR_SLACK
         if(anchored && pullsSelf){
             // The line stops on the edge of what it caught: the caster stops a body short of it.
             const distance = pose.position.distance(end) - unit.radius - PULL_GAP
-            return { end, pulled: unit, way: pose.direction, distance: Math.max(0, distance) }
+            return { start, end, pulled: unit, way: pose.direction, distance: Math.max(0, distance) }
         }
-        return { end, pulled: null, way: pose.direction, distance: 0 }
+        return { start, end, pulled: null, way: pose.direction, distance: 0 }
     }
 
     static #hooking(range: number, pullsUnits: boolean, pullsSelf: boolean, roots: number): Action {
         return {
             use: function ({ battle, unit }){
                 const caught = HookCard.#caught(battle, unit, unit, range, pullsUnits, pullsSelf)
-                fly(battle, unit.position, caught.end, ROPE_COLOR)
+                fly(battle, caught.start, caught.end, ROPE_COLOR)
                 if(!caught.pulled){
                     battle.events.push({ type: "skipped", unit, reason: "rien à accrocher" })
                     hold(battle, SHORT_TIME, [Previews.label(unit.position, "rien à accrocher", NOTE_COLOR)])
@@ -110,9 +114,9 @@ export class HookCard extends ActionCard {
             },
             preview: ({ battle, unit, pose }) => {
                 const caught = HookCard.#caught(battle, unit, pose, range, pullsUnits, pullsSelf)
-                const rope = Previews.arrow([pose.position, caught.end], MOVE_WIDTH / 2, ROPE_COLOR)
+                const rope = Previews.arrow([caught.start, caught.end], MOVE_WIDTH / 2, ROPE_COLOR)
                 const { pulled } = caught
-                const area: Area = Areas.line(pose.position, caught.end, BOLT_WIDTH)
+                const area: Area = Areas.line(caught.start, caught.end, BOLT_WIDTH)
                 const reached = Previews.strike([area], pulled && pulled !== unit ? [pulled] : [])
                 if(!pulled) return Previews.still(pose, ...reached, rope, Previews.label(pose.position, "rien à accrocher", NOTE_COLOR))
                 const from = pulled === unit ? pose.position : pulled.position

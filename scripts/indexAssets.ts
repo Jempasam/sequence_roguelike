@@ -17,7 +17,7 @@ const CHECK = process.argv.includes("--check")
 const SEGMENT = /^[a-z0-9_-]+$/
 
 /** The extensions shipped with the game. A .psd or an .aseprite left in assets/ must not be. */
-const EXTENSIONS = [".png", ".ora", ".wav", ".ogg"]
+const EXTENSIONS = [".png", ".ora", ".wav", ".ogg", ".json"]
 
 /** The files that keep an empty folder in git, and are not assets. */
 const IGNORED = [".gitkeep"]

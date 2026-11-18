@@ -89,12 +89,22 @@ export function heroesOf(save: RunSave): Hero[] {
     if(save.version !== RUN_SAVE_VERSION){
         throw new Error(`A run save of version ${save.version} cannot be loaded by version ${RUN_SAVE_VERSION}.`)
     }
+    return loadedHeroes(save.heroes)
+}
+
+/**
+ * The characters written down, as {@link savedHero} writes them.
+ *
+ * @throws {@link Error} When they name something the catalog does not have.
+ */
+export function loadedHeroes(saved: readonly SavedHero[]): Hero[] {
     const card = cardLoader()
-    return save.heroes.map(each => loadedHero(each, card))
+    return saved.map(each => loadedHero(each, card))
 }
 
 
-function savedHero({ name, sprite, controller, decks, unlimited, hearts, items, usables, bases }: Hero): SavedHero {
+/** A character of the party written down, to read back with {@link loadedHeroes}. */
+export function savedHero({ name, sprite, controller, decks, unlimited, hearts, items, usables, bases }: Hero): SavedHero {
     return {
         name, sprite: savedVisual(sprite), controller: savedController(controller), bases,
         decks: decks.map(deck => deck.map(savedCard)), unlimited: unlimited.map(savedCard),

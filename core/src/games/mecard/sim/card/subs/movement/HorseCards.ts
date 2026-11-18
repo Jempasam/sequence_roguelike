@@ -1,7 +1,8 @@
 import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
-import type { Vector2 } from "../../../base/Vector2"
+import type { Pose } from "../../../battle/Action"
 import { DamageType } from "../../../battle/DamageType"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { DODGE } from "../../../status/subs/Dodge"
@@ -25,11 +26,11 @@ const BRUSH_SHOVE = 1
 const BRUSH_DODGE = 1
 
 /** How far a unit can be pushed aside by a shy away, and how far it goes, in meters. */
-const SHY_RANGE = 4
+const SHY_RANGE = 4 - UNIT_RADIUS
 const SHY_SHOVE = 2
 
-/** How far behind the unit a kick lands, in meters. */
-const KICK_REACH = 1
+/** How far behind the edge of the unit a kick lands, in meters. */
+const KICK_REACH = 1 - UNIT_RADIUS
 
 /** How wide a kick is, in meters. */
 const KICK_WIDTH = 0.6
@@ -53,14 +54,13 @@ export const STRIDE = new ModifierCard("Foulée", [
     }
 }))
 
-/** The nearest unit, ally or enemy, from a point within a range. */
-function nearestOther(battle: Battle, unit: Unit, from: Vector2): Unit|null {
+/** The nearest unit, ally or enemy, within a range of the edge of a unit at a pose. */
+function nearestOther(battle: Battle, unit: Unit, pose: Pose): Unit|null {
     let found: Unit|null = null
     for(const other of battle.touchables){
         if(other === unit) continue
-        const distance = other.position.distance(from)
-        if(distance > SHY_RANGE) continue
-        if(!found || distance < found.position.distance(from)) found = other
+        if(unit.hitbox.gap(pose, other.hitbox, other) > SHY_RANGE) continue
+        if(!found || other.position.distance(pose.position) < found.position.distance(pose.position)) found = other
     }
     return found
 }
@@ -70,7 +70,7 @@ export const SHY_AWAY = new ActionCard("Écart", [
     DISTANCE, ". Aucun dégât.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        const target = nearestOther(battle, unit, unit.position)
+        const target = nearestOther(battle, unit, unit)
         if(!target){
             hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne en vue", NOTE_COLOR)])
             return
@@ -79,14 +79,15 @@ export const SHY_AWAY = new ActionCard("Écart", [
         hold(battle, SHORT_TIME)
     },
     preview: ({ battle, unit, pose }) => {
-        const target = nearestOther(battle, unit, pose.position)
+        const target = nearestOther(battle, unit, pose)
         return Previews.still(pose, Previews.label(target?.position ?? pose.position, target ? "écart" : "personne en vue", NOTE_COLOR))
     },
 })
 
-/** The ground a kick covers: a short narrow band behind a pose. */
-function kickArea(unit: Unit, at: Vector2, direction: Vector2) {
-    return Areas.line(at, at.minus(direction.times(KICK_REACH * unit.stats.meleeRange.value)), KICK_WIDTH)
+/** The ground a kick covers: a short narrow band behind a unit at a pose, from the edge of its body. */
+function kickArea(unit: Unit, pose: Pose) {
+    const from = unit.muzzle(pose, pose.direction.opposite)
+    return Areas.line(from, from.minus(pose.direction.times(KICK_REACH * unit.stats.meleeRange.value)), KICK_WIDTH)
 }
 
 export const KICK = new ActionCard("Ruade", [
@@ -94,9 +95,9 @@ export const KICK = new ActionCard("Ruade", [
     DamageType.PHYSICAL, ", et la repousse de ", KICK_SHOVE, " ", DISTANCE, ".",
 ], Rarity.COMMON, {
     use: function ({ battle, unit }){
-        const hit = battle.strike(unit, kickArea(unit, unit.position, unit.direction), KICK_DAMAGE + unit.stats.strength.value, DamageType.PHYSICAL)
+        const hit = battle.strike(unit, kickArea(unit, unit), KICK_DAMAGE + unit.stats.strength.value, DamageType.PHYSICAL)
         for(const target of hit) shove({ battle, by: unit, target, direction: unit.direction.opposite, distance: KICK_SHOVE })
         hold(battle, SHORT_TIME)
     },
-    preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(kickArea(unit, pose.position, pose.direction), PHYSICAL_COLOR)),
+    preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(kickArea(unit, pose), PHYSICAL_COLOR)),
 })

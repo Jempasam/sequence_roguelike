@@ -2,6 +2,7 @@ import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../bat
 import { DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import type { Process } from "../../../process/Process"
 import { Hook, IronChain, LaserLink } from "../../../process/subs/Links"
@@ -20,7 +21,7 @@ const LASER_DAMAGE = 1
 const HOOK_REACH = 2
 
 /** How far the iron chain aims, how far apart its ends may stand before it pulls, and how far it pulls. */
-const CHAIN_RANGE = 2
+const CHAIN_RANGE = 2 - UNIT_RADIUS
 const CHAIN_SLACK = 2
 const CHAIN_PULL = 1
 

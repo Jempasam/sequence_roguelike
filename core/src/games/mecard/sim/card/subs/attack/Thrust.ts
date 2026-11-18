@@ -3,6 +3,7 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -11,7 +12,7 @@ import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far the thrust of the catalog goes through, in meters. */
-export const THRUST_RANGE = 2
+export const THRUST_RANGE = 2 - UNIT_RADIUS
 
 /** How wide the thrust of the catalog is, in meters. */
 export const THRUST_WIDTH = 0.5
@@ -39,8 +40,9 @@ export class ThrustCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
-        return Areas.line(pose.position, to, this.width)
+        const from = unit.muzzle(pose)
+        const to = from.plus(pose.direction.times(this.range * unit.stats.meleeRange.value * progress))
+        return Areas.line(from, to, this.width)
     }
 }
 

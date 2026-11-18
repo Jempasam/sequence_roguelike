@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import { MemoryStorage, SaveSlot } from "@game/core"
 import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
-import { RunSaver } from "@game/core/mecard/sync"
+import { RunSaver } from "@game/core/mecard/persist"
 
-import { startedRun } from "../../../../fixtures/startedRun"
+import { startedRun } from "../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 

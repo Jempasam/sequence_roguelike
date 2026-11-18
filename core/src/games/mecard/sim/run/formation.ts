@@ -1,30 +1,15 @@
-import type { Rng } from "../base/Rng"
 import { Vector2 } from "../base/Vector2"
-import type { Pillar } from "../battle/Arena"
-import { UNIT_RADIUS } from "../battle/Unit"
 
-// Where the units and the pillars of a battle stand at its start: the formation of an arena.
+// Where the units of a battle stand at its start, and where the hazards of a fight may be laid: the formation of an arena.
 
 /** The size of the arena, in meters. */
 export const ARENA_SIZE = 9
 
-/** The size of the square the units and the pillars start in, in meters, in the middle of the arena. */
+/** The size of the square the units stand in at the start, in meters, in the middle of the arena. */
 const FORMATION_SIZE = 7
 
 /** How far the square the units start in stands from the walls, in meters. */
 const FORMATION_INSET = (ARENA_SIZE - FORMATION_SIZE) / 2
-
-/** How many pillars each arena holds. */
-const PILLARS = 3
-
-/** The radius of a pillar, in meters. */
-const PILLAR_RADIUS = 0.45
-
-/** How far apart two pillars stand at least, center to center, in meters: room to walk between. */
-const PILLAR_SPACING = 2
-
-/** How far a pillar stands at least from where a unit starts, beyond touching it, in meters. */
-const PILLAR_CLEARANCE = 0.2
 
 /** How many characters of the party stand in a row at the start of a battle, and how far apart, in meters. */
 const PARTY_ROW = 3
@@ -55,41 +40,19 @@ export function monsterStart(index: number): Vector2 {
 }
 
 /**
- * How many spots are drawn for a pillar before the pillars laid out so far are given up. Pillars drawn one
- * after the other may leave no room for the last one (two of them two meters apart in the middle), about one
- * layout in 250, and drawing on would never end.
+ * A spot of the monsters' half of the arena, for a fight that stands its monsters as it wants: the column from the
+ * left, 0 to 6, and the row from the top, 0 or 1. A monster of a larger size stands in the top row, with a column of
+ * room each side.
  */
-const PILLAR_DRAWS = 500
-
-/**
- * The pillars of an arena, in the middle rows, away from where the units start: the top rows of the
- * monsters, and where the party stands.
- *
- * @param starts - Where the units of the party start.
- * @param rng - What draws where the pillars stand.
- */
-export function pillarsFor(starts: readonly Vector2[], rng: Rng): Pillar[] {
-    let pillars = laidOut(starts, rng)
-    while(pillars === null) pillars = laidOut(starts, rng)
-    return pillars
+export function monsterSpot(column: number, row: number): Vector2 {
+    return new Vector2(FORMATION_INSET + 0.5 + column, FORMATION_INSET + 0.5 + row)
 }
 
-/** One try at the pillars of an arena, none when the last pillar found no room. */
-function laidOut(starts: readonly Vector2[], rng: Rng): Pillar[]|null {
-    const pillars: Pillar[] = []
-    const clear = PILLAR_RADIUS + UNIT_RADIUS + PILLAR_CLEARANCE
-    while(pillars.length < PILLARS){
-        let placed = false
-        for(let draw = 0; draw < PILLAR_DRAWS && !placed; draw++){
-            const x = FORMATION_INSET + 0.5 + rng.next() * (FORMATION_SIZE - 1)
-            const y = FORMATION_INSET + 2.5 + rng.next() * (FORMATION_SIZE - 5)
-            const center = new Vector2(x, y)
-            const crowded = pillars.some(pillar => pillar.center.distance(center) < PILLAR_SPACING)
-            const onStart = starts.some(start => start.distance(center) < clear)
-            placed = !crowded && !onStart
-            if(placed) pillars.push({ center, radius: PILLAR_RADIUS })
-        }
-        if(!placed) return null
-    }
-    return pillars
+/**
+ * A spot of the middle of the arena, for a fight that lays a hazard there: the column from the left, 0 to 6,
+ * and the row from the top, 2 to 4, the rows the monsters stand above and the party below. Between two
+ * whole numbers lies the edge of a spot: a wall between two columns is laid at a column and a half.
+ */
+export function hazardSpot(column: number, row: number): Vector2 {
+    return new Vector2(FORMATION_INSET + 0.5 + column, FORMATION_INSET + 0.5 + row)
 }

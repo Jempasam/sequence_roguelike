@@ -1,4 +1,8 @@
+import type { Rng } from "../base/Rng"
+import type { Vector2 } from "../base/Vector2"
 import type { Battle } from "../battle/Battle"
+import type { Controller } from "../battle/Unit"
+import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
 
 import type { FightType } from "./FightType"
@@ -6,16 +10,45 @@ import type { FightType } from "./FightType"
 /** How a fight ended for the party. */
 export type FightResult = "won"|"lost"
 
+/** How a monster stands in the arena, where it does not stand as the others do. */
+export interface MonsterPose {
+    /** Where it stands: the next place of the top rows by default. */
+    readonly position?: Vector2
+
+    /** Where it looks: down, toward the party, by default. */
+    readonly direction?: Vector2
+
+    /** What plays it: the bot of the run by default. */
+    readonly controller?: Controller
+}
+
 /**
- * A fight of the journey, as a place holds it: its monsters, and the battle they are fought in. A halt that
+ * All a fight may do to set its monsters: say how hard the floor is and where the place lies, draw from the
+ * random numbers of the run, and put monsters in the arena.
+ */
+export interface FightStage {
+    /** The random numbers of the run. */
+    readonly rng: Rng
+
+    /** How hard the floor is, from 1: a monster has one more heart for each level past the first. */
+    readonly level: number
+
+    /** The row of the map the place lies in, from 0. */
+    readonly layer: number
+
+    /** Put a monster in the arena, on the side of the monsters. */
+    add(monster: Monster, pose?: MonsterPose): void
+
+    /** Put a kit in the arena, on the side of the monsters: a character as the party's are, with its own cards, items and usables. */
+    addKit(kit: Kit, pose?: MonsterPose): void
+}
+
+/**
+ * A fight of the journey, as a place holds it: the battle of the party against some monsters. A halt that
  * follows a won fight is told of it, to give what the fight gave.
- *
- * @remarks
- * A fight only makes its battle and takes the party back from it: the battle is the engine of the rules, and
- * the {@link Travel} fights it.
  */
 export interface Fight {
-    /** The sort of fight it is. */
+    /** The fight it is. */
     readonly type: FightType
 
     /** The monsters it holds, whoever asks: a halt that follows it, a screen. */

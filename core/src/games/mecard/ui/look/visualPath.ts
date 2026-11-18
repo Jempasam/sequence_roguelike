@@ -1,5 +1,5 @@
 import { ASSET_PATHS, AssetError } from "../../../../engine/assets"
-import type { AssetPath, Assets, ImagePath, LayeredImagePath } from "../../../../engine/assets"
+import type { AssetPath, Assets, ImagePath, JsonPath, LayeredImagePath } from "../../../../engine/assets"
 import type { PixelData } from "../../../../engine/image"
 import { Color } from "../../../../engine/math"
 import type { Visual } from "../../sim/base/Visual"
@@ -96,19 +96,55 @@ export function distinctPictures(visuals: readonly Visual[]): Visual[] {
 }
 
 /**
+ * The keys of the pictures the game ships in a folder of `mecard/`, like `units`, and in the folders under it:
+ * `units/wolf` for `mecard/units/wolf.png`, `units/test/walls/brick` for the one in a folder of a theme, sorted.
+ */
+export function shippedPictures(folder: string, shipped: readonly AssetPath[] = ASSET_PATHS): string[] {
+    const prefix = `mecard/${folder}/`
+    const keys: string[] = []
+    for(const path of shipped){
+        if(path.startsWith(prefix) && path.endsWith(".png")){
+            keys.push(`${folder}/${path.slice(prefix.length, -".png".length)}`)
+        }
+    }
+    return keys.sort()
+}
+
+/** The file of data a picture may come with, by the key of the picture: `mecard/<key>.json`. */
+export function dataPathOf(visual: Visual|string): JsonPath {
+    const key = typeof visual === "string" ? visual : visual.visual
+    return `mecard/${key}.json` as JsonPath
+}
+
+/** A picture loaded, with what its file of data says, none when it has none. */
+export interface LoadedPicture {
+    readonly key: string
+    readonly pixels: PixelData
+    readonly data: unknown
+}
+
+/**
  * The pictures that keys name, as far as they exist: a key whose file cannot be read is left out, and the
- * screen draws what the visual says in its stead.
+ * screen draws what the visual says in its stead. Each comes with the JSON file of the same name when the
+ * game ships one; a picture without it has none, a JSON that is not valid fails.
+ *
+ * @param shipped - The files the game ships, all of them unless a test says otherwise.
+ * @throws {@link AssetError} When a file of data cannot be read or is not JSON.
  */
 export async function loadPictures(
-    assets: Assets, keys: readonly string[],
-): Promise<{ key: string, pixels: PixelData }[]> {
-    const loaded = await Promise.all(keys.map(async key => {
+    assets: Assets, keys: readonly string[], shipped: readonly AssetPath[] = ASSET_PATHS,
+): Promise<LoadedPicture[]> {
+    const loaded = await Promise.all(keys.map(async(key): Promise<LoadedPicture|null> => {
+        let pixels: PixelData
         try {
-            return { key, pixels: await assets.image(pathOf(key)) }
+            pixels = await assets.image(pathOf(key))
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             return null
         }
+        const dataPath = dataPathOf(key)
+        const data = shipped.includes(dataPath) ? await assets.json(dataPath) : null
+        return { key, pixels, data }
     }))
     return loaded.filter(each => each !== null)
 }

@@ -3,7 +3,6 @@ import type { Vector2 } from "../../base/Vector2"
 import type { Pose } from "../Action"
 import type { Area } from "../Area"
 import type { Unit } from "../Unit"
-import * as Areas from "../area/Areas"
 import { BODY_COLOR, HIT_COLOR, MARK_COLOR, MISS_COLOR, MOVE_COLOR, POTENTIAL_COLOR } from "../previewColors"
 
 import type { Indicator, Preview } from "./Preview"
@@ -49,7 +48,7 @@ export function moving(unit: Unit, from: Vector2, potential: Vector2, landing: V
     return [
         arrow([from, potential], width, POTENTIAL_COLOR),
         arrow([from, landing], width, MOVE_COLOR),
-        polygon(Areas.circle(landing, unit.radius), BODY_COLOR),
+        polygon(unit.hitbox.outline({ position: landing, direction: unit.direction }), BODY_COLOR),
     ]
 }
 
@@ -60,7 +59,7 @@ export function moving(unit: Unit, from: Vector2, potential: Vector2, landing: V
 export function strike(areas: readonly Area[], touched: readonly Unit[]): Indicator[] {
     const color = touched.length > 0 ? HIT_COLOR : MISS_COLOR
     const marks = [...new Set(touched)].map(hit => {
-        return polygon(Areas.circle(hit.position, hit.radius), MARK_COLOR)
+        return polygon(hit.hitbox.outline(hit), MARK_COLOR)
     })
     return [...areas.map(area => polygon(area, color)), ...marks]
 }

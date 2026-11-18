@@ -3,6 +3,7 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -10,10 +11,9 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { MergedCard } from "../composite/MergedCard"
 import { SHOCK_WAVE, SUCTION } from "../combat/Shoves"
-import * as Areas from "../../../battle/area/Areas"
 
 /** How far the axe of the catalog reaches all around, in meters. */
-const AXE_RANGE = 1.2
+const AXE_RANGE = 1.2 - UNIT_RADIUS
 
 /** How many hearts the axe of the catalog fills again for each unit hit. */
 const AXE_HEAL = 1
@@ -38,7 +38,7 @@ export class BloodAxeCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return Areas.circle(pose.position, this.range * unit.stats.meleeRange.value * progress)
+        return unit.around(this.range * unit.stats.meleeRange.value * progress, pose)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

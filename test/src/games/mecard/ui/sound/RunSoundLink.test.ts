@@ -2,10 +2,11 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets, SoundPlayer, SoundSettings } from "@game/core"
-import { BATTLE, CHEST_HALT, isHalt } from "@game/core/mecard"
-import type { FightType, Place, PlaceType, Run } from "@game/core/mecard"
+import { BATTLE, BOSS, CHEST_HALT, ELITE, GOBLIN } from "@game/core/mecard"
+import type { FightCategory, HaltType, Place, PlaceType, Run } from "@game/core/mecard"
 import { RunSoundLink } from "@game/core/mecard/run-sound-link"
 import { FakeAudio } from "../../../../fixtures/fakeAudio"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
@@ -48,8 +49,10 @@ function settle(): Promise<void> {
 
 /** A new place of a sort, on no map. */
 function placeOf(type: PlaceType): Place {
-    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
-    return isHalt(type) ? { ...where, fight: null, halt: type } : { ...where, fight: type as FightType, halt: null }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null }
+    return [BATTLE, ELITE, BOSS].includes(type as FightCategory)
+        ? { ...where, fight: fightOf(type as FightCategory, GOBLIN), halt: null }
+        : { ...where, fight: null, halt: type as HaltType }
 }
 
 /** Reach a fight, to be fought by the run. */

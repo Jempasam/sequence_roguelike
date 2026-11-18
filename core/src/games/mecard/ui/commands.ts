@@ -23,6 +23,8 @@ import { loadBattle, saveBattle } from "../sim/save/battleSave"
 import type { BattleSave } from "../sim/save/battleSave"
 import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
+import { allFightTypes } from "../sim/catalog/fightTypes"
+import type { FightType } from "../sim/fight/FightType"
 import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
@@ -51,13 +53,16 @@ import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
 
 import { chainText, heartsText } from "./describe"
 import { placeTransitions } from "./travel/placeLooks"
-import { shippedParallaxes } from "./look/visualPath"
+import { shippedParallaxes, shippedPictures } from "./look/visualPath"
 import { visual } from "../sim/base/Visual"
 import type { Visual } from "../sim/base/Visual"
 import { DamageType } from "../sim/battle/DamageType"
 
 /** What the commands of Dungeon of the Mecard run with: the run, its battle, the screen to build again. */
 export interface MecardContext extends CommandContext {
+    /** Is a run started? Not at the main menu, where the run and the battle held are not played. */
+    readonly playing: boolean
+
     /** The run being played. */
     readonly run: Run
 
@@ -103,6 +108,9 @@ export interface MecardContext extends CommandContext {
     /** Open the bench of the parallaxes, on the one a visual names, for a try. */
     showParallax(parallax: Visual): void
 
+    /** Open the bench of the sprites of the units, on the one a visual names, the first for none, for a try. */
+    showSprites(sprite: Visual|null): void
+
     /** Play a transition over the screen, for a try, telling its middle and its end. */
     playTransition(transition: Visual, duration: number, reverse: boolean): void
 
@@ -124,7 +132,8 @@ export interface MecardContext extends CommandContext {
 }
 
 /** What the game gives the context of the commands, read at each command. */
-export interface MecardHost extends Omit<MecardContext, "run"|"battle"> {
+export interface MecardHost extends Omit<MecardContext, "run"|"battle"|"playing"> {
+    readonly playing: boolean
     readonly run: Run
     readonly battle: Battle
 }
@@ -142,6 +151,7 @@ export class LiveContext implements MecardContext {
     ){}
 
 
+    public get playing(): boolean { return this.host().playing }
     public get run(): Run { return this.host().run }
     public get battle(): Battle { return this.host().battle }
     public print(text: string): void { this.host().print(text) }
@@ -158,6 +168,7 @@ export class LiveContext implements MecardContext {
     public showArm(): void { this.host().showArm() }
     public showLibrary(): void { this.host().showLibrary() }
     public showParallax(parallax: Visual): void { this.host().showParallax(parallax) }
+    public showSprites(sprite: Visual|null): void { this.host().showSprites(sprite) }
     public playTransition(transition: Visual, duration: number, reverse: boolean): void {
         this.host().playTransition(transition, duration, reverse)
     }
@@ -228,8 +239,32 @@ function wordOf(name: string): string {
 
 //// Arguments ////
 
-const UNIT: Arg<MecardContext, Unit> = named("l'unité", ctx => ctx.battle.living, unit => wordOf(unit.name))
-const HERO: Arg<MecardContext, Hero> = named("le héros", ctx => ctx.run.heroes, hero => wordOf(hero.name))
+/** The message of a command that needs a run started, told at the main menu. */
+const NOT_PLAYING = "Aucune partie démarrée : lance une partie depuis le menu."
+
+/** An argument read only once a run is started, the error saying so before. */
+function whilePlaying<T>(arg: Arg<MecardContext, T>): Arg<MecardContext, T> {
+    return {
+        complete: (ctx, before) => ctx.playing ? arg.complete(ctx, before) : [],
+        read: (ctx, word, before) => ctx.playing ? arg.read(ctx, word, before) : new Error(NOT_PLAYING),
+    }
+}
+
+/** A command that runs only once a run is started, the error saying so before. */
+function whilePlayingCommand<P>(each: Command<MecardContext, P>): Command<MecardContext, P> {
+    return {
+        ...each,
+        complete: (ctx, args) => ctx.playing ? each.complete(ctx, args) : [],
+        parse: (ctx, args) => ctx.playing ? each.parse(ctx, args) : new Error(NOT_PLAYING),
+    }
+}
+
+const UNIT: Arg<MecardContext, Unit> = whilePlaying(
+    named("l'unité", ctx => ctx.battle.living, unit => wordOf(unit.name)),
+)
+const HERO: Arg<MecardContext, Hero> = whilePlaying(
+    named("le héros", ctx => ctx.run.heroes, hero => wordOf(hero.name)),
+)
 const CARD: Arg<MecardContext, Card> = named("la carte", () => ALL_CARDS, card => wordOf(card.name))
 const ITEM: Arg<MecardContext, Item> = named("l'objet", () => ALL_ITEMS, item => wordOf(item.name))
 const HEART: Arg<MecardContext, HeartKind> = named("le cœur", () => HEART_KINDS, kind => wordOf(kind.name))
@@ -280,6 +315,7 @@ function typeWord(type: PlaceType): string {
 
 const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
 const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => ALL_FLOORS, type => wordOf(type.name))
+const FIGHT: Arg<MecardContext, FightType> = named("le combat", allFightTypes, type => type.id)
 const KIT: Arg<MecardContext, Kit> = named("le kit", () => ALL_KITS, kit => wordOf(kit.name))
 const PET: Arg<MecardContext, Monster> = named("le familier", () => ALL_PETS, pet => wordOf(pet.name))
 const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => ALL_USABLES, each => wordOf(each.name))
@@ -634,6 +670,11 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
                 pet: command("battle duel pet <familier> : l'équipe contre ce familier.", [PET],
                     (ctx: MecardContext, pet) => duel(ctx, allyOf(pet, pet.name))),
             }),
+            fight: command("battle fight <combat> : lance ce combat du jeu, avec l'équipe.", [FIGHT],
+                (ctx: MecardContext, type) => {
+                    ctx.playBattle(type.create(ctx.run, { layer: 0, across: 0.5 }).battle)
+                    ctx.print(`Combat : ${type.name}.`)
+                }),
             win: command("battle win : tue les ennemis qui décident de la victoire.", [], (ctx: MecardContext) => {
                 endBy(ctx, unit => !isAlly(ctx, unit))
                 ctx.print("Les ennemis sont tombés.")
@@ -1258,6 +1299,12 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
                 [named("la parallaxe", () => shippedParallaxes(), id => id)],
                 (ctx, id) => ctx.showParallax(visual(id)),
             ),
+            sprites: command(
+                "debug sprites [unité] : ouvre le banc d'essai des sprites des unités : chaque sprite avec chaque hitbox,"
+                    + " dans chaque mode de dessin, et copie le JSON à poser à côté de l'image.",
+                [optional(named("l'unité", () => shippedPictures("units"), key => key.replace("units/", "")), null)],
+                (ctx, key) => ctx.showSprites(key === null ? null : visual(key)),
+            ),
             transition: command(
                 "debug transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"
                     + ` ${DEFAULT_TRANSITION} ms par défaut, et dit quand elle passe son milieu et sa fin.`,
@@ -1304,5 +1351,7 @@ export function registerCommands(console: Console<MecardContext>): void {
         ...catalogCommands(), ...battleCommands(), ...runCommands(), ...travelCommands(), ...toolCommands(),
         ...networkCommands(),
     }
-    for(const [name, each] of Object.entries(all)) console.register(name, each)
+    // Those acting on the run or the battle: at the main menu, they would act on what is not played.
+    const played = new Set(["battle", "run", "travel"])
+    for(const [name, each] of Object.entries(all)) console.register(name, played.has(name) ? whilePlayingCommand(each) : each)
 }

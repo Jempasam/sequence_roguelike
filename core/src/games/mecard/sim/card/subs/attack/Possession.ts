@@ -1,8 +1,9 @@
 import { DISTANCE, HEART, UNIT } from "../../../base/keywords"
-import type { Vector2 } from "../../../base/Vector2"
+import type { Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
 import { NOTE_COLOR, PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -12,7 +13,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far around the possession looks for its prey, in meters. */
-const POSSESSION_RADIUS = 3
+const POSSESSION_RADIUS = 3 - UNIT_RADIUS
 
 /** How many hearts its prey has at most. */
 const POSSESSION_MAX_LIFE = 3
@@ -20,11 +21,12 @@ const POSSESSION_MAX_LIFE = 3
 /** How many hearts it takes from its prey. */
 const POSSESSION_DAMAGE = 3
 
-/** Its prey from a point: the enemy around with the fewest hearts, then the nearest, none with too many. */
-function preyOf(battle: Battle, unit: Unit, from: Vector2): Unit|null {
+/** Its prey from a pose: the enemy around with the fewest hearts, then the nearest, none with too many. */
+function preyOf(battle: Battle, unit: Unit, pose: Pose): Unit|null {
+    const from = pose.position
     const prey = battle.enemiesOf(unit).filter(enemy => {
         return enemy.alive && enemy.targetable && enemy.life <= POSSESSION_MAX_LIFE
-            && enemy.position.distance(from) <= POSSESSION_RADIUS + enemy.radius
+            && unit.hitbox.gap(pose, enemy.hitbox, enemy) <= POSSESSION_RADIUS
     })
     prey.sort((a, b) => a.life - b.life || a.position.distance(from) - b.position.distance(from))
     return prey[0] ?? null
@@ -37,7 +39,7 @@ export const POSSESSION = new ActionCard("Possession", [
     "ce qu'il restait de la sienne.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
-        const prey = preyOf(battle, unit, unit.position)
+        const prey = preyOf(battle, unit, unit)
         if(!prey){
             hold(battle, SHORT_TIME, [Previews.label(unit.position, "aucune proie", NOTE_COLOR)])
             return
@@ -53,8 +55,8 @@ export const POSSESSION = new ActionCard("Possession", [
         battle.appendToChain(unit, left)
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = Previews.polygon(Areas.circle(pose.position, POSSESSION_RADIUS), RANGE_COLOR)
-        const prey = preyOf(battle, unit, pose.position)
+        const zone = Previews.polygon(unit.around(POSSESSION_RADIUS, pose), RANGE_COLOR)
+        const prey = preyOf(battle, unit, pose)
         return Previews.still(pose, zone, ...prey ? [...Previews.strike([], [prey]), Previews.label(prey.position, "possession", NOTE_COLOR)] : [])
     },
 })

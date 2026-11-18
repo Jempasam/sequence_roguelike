@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Areas, visual } from "@game/core/mecard"
+import { Areas, Box, visual } from "@game/core/mecard"
 import { Heart, placeHazard, RED_HEART, TIME_HEART, Vector2 } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 import { BattleScene, BoardView, drawOrder } from "@game/core/mecard/battle-ui"
@@ -76,7 +76,7 @@ describe("BoardView.draw, tactical", () => {
     /** Units with a picture each, and a shade. */
     const PICTURE = { width: 12, height: 12 }
     const WITH_SPRITES = {
-        of: () => PICTURE, shade: PICTURE, rope: null, tether: () => null,
+        of: () => PICTURE, look: () => ({ mode: null, lift: 0 }), shade: PICTURE, rope: null, tether: () => null,
     } as unknown as ConstructorParameters<typeof BoardView>[3]
 
     /** Every call the board makes on a painter, by name. */
@@ -104,12 +104,25 @@ describe("BoardView.draw, tactical", () => {
         expect(drawnBy(on, false)).toContain("sprite")
     })
 
-    test("no picture drawn, a disc for a hero and one for a pillar", () => {
+    test("no picture drawn, the hitbox of a hero and of a pillar", () => {
         const on = withPillars(battle(), { center: new Vector2(3.5, 3), radius: 0.5 })
         unit(on, 1, 5)
         const calls = drawnBy(on, true)
         expect(calls).not.toContain("sprite")
-        expect(calls.filter(name => name === "circle").length).toBeGreaterThanOrEqual(2)
+        expect(calls.filter(name => name === "polygon").length).toBeGreaterThanOrEqual(2)
+    })
+
+    test("a boat that takes no room → its hitbox is drawn at rest and in the tactical view", () => {
+        const on = battle()
+        const hero = unit(on, 3, 2)
+        on.place(hero, {
+            sprite: visual("units/ship"), name: "Bateau", at: new Vector2(3, 6), hearts: [new Heart(TIME_HEART)],
+            tangible: false, targetable: false, hitbox: new Box(3.2, 1.2),
+        })
+        const polygonsOf = (tactical: boolean): number => drawnBy(on, tactical).filter(name => name === "polygon").length
+        // One for the hero, one for the boat.
+        expect(polygonsOf(false)).toBe(2)
+        expect(polygonsOf(true)).toBe(2)
     })
 })
 

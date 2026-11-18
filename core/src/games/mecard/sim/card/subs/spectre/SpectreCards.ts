@@ -1,6 +1,7 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { Ethereal } from "../../../process/subs/Ethereal"
@@ -11,14 +12,13 @@ import { ActionCard } from "../ActionCard"
 import { ProcessCard } from "../process/ProcessCards"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the haunt of the catalog reaches ahead, in meters. */
-const HAUNT_RANGE = 5
+const HAUNT_RANGE = 5 - UNIT_RADIUS
 
 /** How far the plagiarism of the catalog reaches around its caster, in meters. */
-const PLAGIARISM_RANGE = 4
+const PLAGIARISM_RANGE = 4 - UNIT_RADIUS
 
 /** How many cards of others the plagiarism copies at most: the closest units come first. */
 const PLAGIARISM_MAX = 2
@@ -64,8 +64,7 @@ export const HAUNT = new ActionCard("Hantise", [
 
 /** The units of a circle around a pose that played a card, the closest first, the caster apart. */
 function playersAround(battle: Battle, unit: Unit, pose: Pose, range: number): Unit[] {
-    const area = Areas.circle(pose.position, range)
-    return battle.fetch(area, unit)
+    return battle.fetch(unit.around(range, pose), unit)
         .filter(other => other.lastTree.length > 0)
         .sort((a, b) => a.position.distance(pose.position) - b.position.distance(pose.position))
 }
@@ -75,7 +74,7 @@ function plagiarizing(range: number, most: number): Action {
     return {
         use: function ({ battle, unit }){
             const players = playersAround(battle, unit, unit, range).slice(0, most)
-            hold(battle, SHORT_TIME, [Previews.polygon(Areas.circle(unit.position, range), CONTROL_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.polygon(unit.around(range), CONTROL_COLOR)])
             if(players.length === 0){
                 battle.events.push({ type: "skipped", unit, reason: "rien à plagier" })
                 return
@@ -86,7 +85,7 @@ function plagiarizing(range: number, most: number): Action {
         preview: ({ battle, unit, pose }) => {
             const players = playersAround(battle, unit, pose, range).slice(0, most)
             const shown = players.map(player => Previews.label(player.position, `${player.lastPlayed}`, NOTE_COLOR))
-            return Previews.still(pose, Previews.polygon(Areas.circle(pose.position, range), CONTROL_COLOR), ...shown)
+            return Previews.still(pose, Previews.polygon(unit.around(range, pose), CONTROL_COLOR), ...shown)
         },
     }
 }

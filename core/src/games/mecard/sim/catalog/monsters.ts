@@ -1,6 +1,7 @@
 import type { Text } from "../../../../semantic"
 import { colored, rgba } from "../base/Rgba"
 import type { Card } from "../card/Card"
+import type { Item } from "../item/Item"
 import { CURSED_FLURRY } from "../card/subs/composite/FusionCard"
 import { SHOT } from "../card/subs/attack/Shot"
 import { SWEEP } from "../card/subs/attack/Sweep"
@@ -96,6 +97,9 @@ export interface Monster {
 
     /** Its deck, in the order it plays, one round after the other. */
     readonly cards: readonly Card[]
+
+    /** The items it carries, none by default: only an ally carries them, for now. */
+    readonly items?: readonly Item[]
 
     /** Its name. */
     toString(): string

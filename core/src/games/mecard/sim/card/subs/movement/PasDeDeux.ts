@@ -24,14 +24,14 @@ function dancing(range: number, cosHalf: number): Action {
             const partner = closestInCone(battle, unit, unit, range, cosHalf)
             if(!partner){
                 battle.events.push({ type: "skipped", unit, reason: NOBODY })
-                hold(battle, SHORT_TIME, aimedCone(unit, range, cosHalf, null, NOBODY))
+                hold(battle, SHORT_TIME, aimedCone(unit, unit, range, cosHalf, null, NOBODY))
                 return
             }
             const crossing = [
                 Previews.arrow([unit.position, partner.position], MOVE_WIDTH / 2, MOVE_COLOR),
                 Previews.arrow([partner.position, unit.position], MOVE_WIDTH / 2, CONTROL_COLOR),
             ]
-            hold(battle, DANCE_TIME, [...aimedCone(unit, range, cosHalf, partner, NOBODY), ...crossing])
+            hold(battle, DANCE_TIME, [...aimedCone(unit, unit, range, cosHalf, partner, NOBODY), ...crossing])
             const mine = unit.direction
             const theirs = partner.direction
             if(!battle.swap(unit, partner)) return
@@ -43,7 +43,7 @@ function dancing(range: number, cosHalf: number): Action {
         },
         preview: ({ battle, unit, pose }) => {
             const partner = closestInCone(battle, unit, pose, range, cosHalf)
-            const shown = aimedCone(pose, range, cosHalf, partner, NOBODY)
+            const shown = aimedCone(unit, pose, range, cosHalf, partner, NOBODY)
             if(!partner) return Previews.still(pose, ...shown)
             return Previews.still(
                 { position: partner.position, direction: partner.direction }, ...shown,

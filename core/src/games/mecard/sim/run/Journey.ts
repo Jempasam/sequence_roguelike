@@ -1,6 +1,5 @@
 import type { Text } from "../../../../semantic"
 import type { Rng } from "../base/Rng"
-import type { Monster } from "../catalog/monsters"
 import type { Floor, FloorContext } from "../floor/Floor"
 import type { HaltType } from "../halt/HaltType"
 
@@ -35,8 +34,6 @@ export interface Place extends Spot {
     /** The floor it leads out to, none but on an exit. */
     readonly exitTo: Floor|null
 
-    /** The monsters of its fight, none on a halt. */
-    readonly monsters: readonly Monster[]
 }
 
 /**
@@ -88,16 +85,16 @@ export class Journey implements FloorContext {
     }
 
     /**
-     * Lay a fight on the map, with its monsters, and the halt visited once it is won, none to go back to the map.
+     * Lay a fight on the map, and the halt visited once it is won, none to go back to the map.
      * What a won fight gives is the halt's: nothing is given where none is laid.
      */
-    public addFight(type: FightType, monsters: readonly Monster[], at: Spot, halt: HaltType|null = null): Place {
-        return this.#add({ ...at, fight: type, halt, next: [], exitTo: null, monsters })
+    public addFight(type: FightType, at: Spot, halt: HaltType|null = null): Place {
+        return this.#add({ ...at, fight: type, halt, next: [], exitTo: null })
     }
 
     /** Lay a halt on the map. */
     public addHalt(type: HaltType, at: Spot): Place {
-        return this.#add({ ...at, fight: null, halt: type, next: [], exitTo: null, monsters: [] })
+        return this.#add({ ...at, fight: null, halt: type, next: [], exitTo: null })
     }
 
     /**
@@ -135,7 +132,7 @@ export class Journey implements FloorContext {
         this.exits = floors
         floors.forEach((exitTo, index) => {
             const across = (index + 0.5) / floors.length
-            const place = this.#add({ fight: null, halt: exit, layer, across, next: [], exitTo, monsters: [] })
+            const place = this.#add({ fight: null, halt: exit, layer, across, next: [], exitTo })
             for(const end of ends) this.link(end, place)
         })
     }

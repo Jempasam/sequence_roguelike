@@ -1,22 +1,19 @@
 import type { Rng } from "../../base/Rng"
-import { BERSERKER, GOBLIN, ICE_MAGE, KAMIKAZE_ROBOT, MEGALASER, STONE_GOLEM } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { BUTCHER_HALT } from "../../halt/subs/deck/ButcherHalt"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { CHEST_HALT } from "../../halt/subs/gift/ChestHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { encounter } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { MINE_FIGHTS } from "../fights/mineFights"
 import type { FloorType } from "../Floor"
 
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives in the mine. */
-const MONSTERS: readonly Monster[] = [KAMIKAZE_ROBOT, STONE_GOLEM, GOBLIN, BERSERKER, ICE_MAGE]
 
 /** The mine: the richest way, and the most guarded one. */
 export class MineFloor extends AbstractFloor {
@@ -32,8 +29,8 @@ export class MineFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return encounter(MONSTERS, MEGALASER, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(MINE_FIGHTS, category, layer, rng)
     }
 }
 

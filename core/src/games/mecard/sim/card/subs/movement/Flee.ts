@@ -3,17 +3,17 @@ import { MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColo
 import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, travel, wait, WALK_SPEED, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { STEP_LENGTH } from "./Step"
-import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How close an enemy must stand for the flight of the catalog to go, in meters. */
-const FLEE_REACH = 2
+const FLEE_REACH = 2 - UNIT_RADIUS
 
 /** How long the unit stays still after its flight, in seconds. */
 const SETTLE_TIME = 0.08
@@ -21,9 +21,13 @@ const SETTLE_TIME = 0.08
 /** What the flight says when nobody is close. */
 const NOBODY = "personne de proche"
 
-/** The way away from the closest enemy too close to a pose, none when nobody is. */
+/** The way away from the closest enemy too close to the edge of a unit at a pose, none when nobody is. */
 function awayFrom(battle: Battle, unit: Unit, pose: Pose, reach: number): Vector2|null {
-    const enemy = battle.nearestEnemy(unit, reach, pose.position)
+    let enemy: Unit|null = null
+    for(const each of battle.enemiesOf(unit)){
+        if(unit.hitbox.gap(pose, each.hitbox, each) > reach) continue
+        if(!enemy || each.position.distance(pose.position) < enemy.position.distance(pose.position)) enemy = each
+    }
     if(!enemy) return null
     return pose.position.minus(enemy.position).normalized ?? pose.direction.opposite
 }
@@ -60,7 +64,7 @@ export class FleeCard extends ActionCard {
                 wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const shown = Previews.polygon(Areas.circle(pose.position, reach), RANGE_COLOR)
+                const shown = Previews.polygon(unit.around(reach, pose), RANGE_COLOR)
                 const way = awayFrom(battle, unit, pose, reach)
                 if(!way) return Previews.still(pose, shown, Previews.label(pose.position, NOBODY, NOTE_COLOR))
                 const gone = battle.moveSpot(unit, pose.position, way, length * unit.stats.move.value)

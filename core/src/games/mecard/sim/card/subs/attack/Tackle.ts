@@ -3,6 +3,7 @@ import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -14,7 +15,7 @@ import * as Areas from "../../../battle/area/Areas"
 const TACKLE_DAMAGE = 1
 
 /** How far the tackle of the catalog reaches, in meters. */
-const TACKLE_RANGE = 1
+const TACKLE_RANGE = 1 - UNIT_RADIUS
 
 /** The cosine of half the angle of the tackle of the catalog: an arc of 120°. */
 const TACKLE_COS_HALF = 0.5
@@ -38,7 +39,7 @@ export class TackleCard extends BlowCard {
 
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return Areas.arc(pose.position, pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
+        return Areas.arc(unit.muzzle(pose), pose.direction, this.range * unit.stats.meleeRange.value * progress, this.cosHalf)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

@@ -12,7 +12,7 @@ Usage : npm run cli -- sim --match "<alliés>/<adversaires>" [options]
   --ai <liste>        pilotage : kit=, monster=, pet=, allies=, foes=, Nom=, ou une IA seule (= kit=) (sim --help ai)
   --level N           niveau d'étage des monstres (défaut 1)
   --layer n|a-b       couche(s) de la carte du biome où piocher les combats fight:/biome: (défaut 0-3 ; le boss est en 11)
-  --fight battle|elite|boss   sorte de combat piochée sur la carte (défaut battle)
+  --fight battle|elite|boss|<id>  sorte de combat piochée sur la carte, ou id d'un combat précis (list fights ; défaut battle)
   --games N           combats par ligne (défaut 30)
   --seed N            graine (défaut 1) : même graine, même sortie
   --max-rounds N      au-delà, le combat est un timeout, hors winrate (défaut 60)

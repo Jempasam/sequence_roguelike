@@ -1,5 +1,5 @@
 import { BATTLE, BOSS, ELITE, foeOf, Journey, Rng } from "@game/core/mecard"
-import type { FightType, FloorType, Monster } from "@game/core/mecard"
+import type { FightCategory, FloorType, Monster, Place } from "@game/core/mecard"
 
 import { normalize, UsageError } from "./errors"
 import type { Body, Fighter, FighterKind, Roster } from "./fighters"
@@ -11,7 +11,7 @@ import { takenKey } from "./sources"
 import type { SourceDraw } from "./sources"
 import type { Strategy } from "./strategies"
 
-export const FIGHT_TYPES: Readonly<Record<"battle"|"elite"|"boss", FightType>> = { battle: BATTLE, elite: ELITE, boss: BOSS }
+export const FIGHT_CATEGORIES: Readonly<Record<"battle"|"elite"|"boss", FightCategory>> = { battle: BATTLE, elite: ELITE, boss: BOSS }
 
 /**
  * Who plays what: the AI of a fighter is the one named for it, else the one of its side, else the one of its
@@ -35,7 +35,7 @@ export interface Setup {
     readonly roster: Roster
     readonly level: number
     readonly layers: { readonly from: number, readonly to: number }
-    readonly fightType: FightType
+    readonly fightType: FightCategory
     readonly maxRounds: number
 
     /** How many rounds in a row without any life gained or lost make a battle blocked, none to never. */
@@ -90,6 +90,17 @@ function foe(fighter: Fighter, setup: Setup, index: number): Combatant {
     return { name: fighter.name, body: fighter.body(), strategy, hostile: false }
 }
 
+/** The monsters a fight of a place puts in the arena, as it would at that level. */
+function monstersOf(place: Place, level: number, rng: Rng): Monster[] {
+    const monsters: Monster[] = []
+    place.fight!.populate({
+        rng, level, layer: place.layer,
+        add: monster => { monsters.push(monster) },
+        addKit: kit => { throw new UsageError(`« ${place.fight!.name} » se bat contre le kit ${kit.name} : sim ne sait pas encore jouer un combat de kits.`) },
+    })
+    return monsters
+}
+
 /** How many maps are drawn looking for a fight of the kind asked before there is said to be none. */
 const MAP_DRAWS = 50
 
@@ -99,26 +110,46 @@ const MAP_DRAWS = 50
  *
  * @throws {@link UsageError} When no map drawn holds a fight of that kind in those layers.
  */
-function fightsOfFloor(floor: FloorType, setup: { level: number, layers: { from: number, to: number }, fightType: FightType, seed: number }): Monster[][] {
+function fightsOfFloor(floor: FloorType, setup: FightsSetup): Monster[][] {
     const { from, to } = setup.layers
     const rng = new Rng(hash(setup.seed, "fights", floor.name))
     for(let drawn = 0; drawn < MAP_DRAWS; drawn++){
         const journey = new Journey(rng)
         floor.create(setup.level).fillMap(journey)
+        // A fight asked by its id is taken wherever the map lays it: the layers are for the sorts of fight.
         const fights = journey.places.filter(place => {
-            return place.fight === setup.fightType && place.layer >= from && place.layer <= to
+            if(setup.fightId !== undefined) return place.fight?.id === setup.fightId
+            return place.fight?.category === setup.fightType && place.layer >= from && place.layer <= to
         })
-        if(fights.length > 0) return fights.map(place => [...place.monsters])
+        // A fight asked by its id is one fight, however many times the map lays it.
+        if(setup.fightId !== undefined) fights.splice(1)
+        if(fights.length > 0) return fights.map(place => monstersOf(place, setup.level, rng))
     }
-    const kind = Object.entries(FIGHT_TYPES).find(([, type]) => type === setup.fightType)?.[0]
+    if(setup.fightId !== undefined){
+        throw new UsageError(`--fight ${setup.fightId} : « ${floor.name} » ne pose pas ce combat (${MAP_DRAWS} cartes tirées).`)
+    }
+    const kind = Object.entries(FIGHT_CATEGORIES).find(([, type]) => type === setup.fightType)?.[0]
     throw new UsageError(
         `--fight ${kind} --layer ${from}-${to} : aucun combat de ce genre dans « ${floor.name} » `
         + `(${MAP_DRAWS} cartes tirées).`,
     )
 }
 
+/** What the fights a run can pick are chosen by. */
+export interface FightsSetup {
+    readonly level: number
+    readonly layers: { readonly from: number, readonly to: number }
+
+    /** The sort of fight picked, when no fight is asked by its id. */
+    readonly fightType: FightCategory
+
+    /** The id of the one fight picked, whatever its sort and its layer, none to pick by sort. */
+    readonly fightId?: string
+    readonly seed: number
+}
+
 /** The fights of the biomes, found when first asked and kept. */
-export function fightsFinder(setup: { level: number, layers: { from: number, to: number }, fightType: FightType, seed: number }): Setup["fightsOf"] {
+export function fightsFinder(setup: FightsSetup): Setup["fightsOf"] {
     const known = new Map<FloorType, readonly (readonly Monster[])[]>()
     return floor => {
         let found = known.get(floor)

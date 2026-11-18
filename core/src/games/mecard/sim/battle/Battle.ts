@@ -23,7 +23,6 @@ import { FLEETING } from "../status/subs/Fleeting"
 import { Vanishing } from "../process/subs/Vanishing"
 
 import type { Action, PlugContext, Pose } from "./Action"
-import * as Areas from "./area/Areas"
 import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
@@ -33,7 +32,8 @@ import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
 import { BLINK_OVERSHOOT, COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, STRIDES_PER_SECOND } from "./rules"
-import { Unit, UNIT_RADIUS } from "./Unit"
+import type { Hitbox } from "./hitbox/Hitbox"
+import { Unit, UNIT_HITBOX, UNIT_RADIUS } from "./Unit"
 import type { Controller, StatBases, UnitSpec, UnitStats } from "./Unit"
 import { HERO_COLORS, MONSTER_COLORS, SUMMON_PALETTE } from "./palettes"
 import { DECK } from "../base/keywords"
@@ -67,6 +67,12 @@ const CLONE_SPOTS: readonly (readonly [number, number])[] = [
  * never to pass through another between two checks.
  */
 const TRAVEL_STEP = 0.05
+
+/** The name of the team of the scenery: its pillars and hazards. */
+const SCENERY_TEAM = "Décor"
+
+/** How many times a turn that brings a body into others moves it out of them before it gives up. */
+const TURN_PUSHES = 4
 
 /** How finely a body already in contact backs out of it, in meters. */
 const BACK_OUT_STEP = 0.01
@@ -115,6 +121,9 @@ export interface Trip {
 
 /** Where a straight line from a unit stopped. */
 export interface RayHit {
+    /** The point it started from: the edge of the body of the unit, for a line from a unit. */
+    readonly start: Vector2
+
     /** The point it reached: the body it met, a pillar, a wall, or its full length. */
     readonly end: Vector2
 
@@ -226,8 +235,13 @@ export class Battle {
     /** The team left standing, none during the battle and for a draw. */
     public winner: Team|null = null
 
-    /** The team of the scenery, pillars, none until one is set up. */
-    public scenery: Team|null = null
+    /**
+     * The team of the scenery, the pillars and hazards of the arena: the one a battle loaded holds, else a
+     * team made when the first body of the scenery comes.
+     */
+    public get scenery(): Team {
+        return this.units.find(unit => unit.team.name === SCENERY_TEAM)?.team ?? (this.#scenery ??= new Team(SCENERY_TEAM))
+    }
 
     /** The unit whose action plays, or played last this round, none before the first. */
     public actor: Unit|null = null
@@ -440,14 +454,11 @@ export class Battle {
 
     /** Set up a pillar of stone: a body that blocks, is never aimed at, touched or moved by others. */
     public addPillar(center: Vector2, radius: number): Unit {
-        this.scenery ??= new Team("Décor")
-        const pillar = new Unit({
-            name: "Pilier", sprite: visual("units/pillar"), team: this.scenery, controller: "bot", position: center,
-            direction: Vector2.DOWN, hearts: [new Heart(SOLID_HEART)], decks: [], decisive: false,
-            bases: { size: radius / UNIT_RADIUS, targetable: false, touchable: false, movable: false },
-        }, this)
-        this.#enter(pillar)
-        return pillar
+        return this.place(null, {
+            name: "Pilier", sprite: visual("units/pillar"), at: center, direction: Vector2.DOWN,
+            hearts: [new Heart(SOLID_HEART)], size: radius / UNIT_RADIUS,
+            targetable: false, touchable: false, movable: false,
+        })!
     }
 
     /** The teams, in the order their first unit entered. */
@@ -457,23 +468,26 @@ export class Battle {
 
     /** The living units whose body takes room and an area touches, in the order they entered. */
     public fetch(area: Area, except: Unit|null = null): Unit[] {
-        return this.touchables.filter(unit => unit !== except && Areas.checkCircle(area, unit.position, unit.radius))
+        return this.touchables.filter(unit => unit !== except && unit.hitbox.touches(unit, area))
     }
 
     /**
      * Is there room for a body at a point: within the walls, off the others?
      *
      * @param except - The unit whose body it is, which is never in its own way.
-     * @param radius - The radius of the body, that of the unit by default, else that of a body of size 1.
+     * @param hitbox - The shape of the body, that of the unit by default, else that of a body of size 1.
      * @param slack - How much smaller the others are taken to be, in meters.
+     * @param direction - Where the body faces, as the unit does by default.
+     * @param bounded - Do the walls stop the body? Yes by default; one that sails across them is only kept off
+     * the other bodies.
      */
     public free(
-        point: Vector2, except: Unit|null = null, radius = except?.radius ?? UNIT_RADIUS, slack = 0,
+        point: Vector2, except: Unit|null = null, hitbox: Hitbox = except?.hitbox ?? UNIT_HITBOX, slack = 0,
+        direction: Vector2 = except?.direction ?? Vector2.DOWN, bounded = except?.bounded ?? true,
     ): boolean {
-        if(this.arena.solid(point, radius)) return false
-        return !this.bodies.some(unit => {
-            return unit !== except && unit.position.distance(point) < radius + unit.radius - slack
-        })
+        const at = { position: point, direction }
+        if(bounded && hitbox.crossesWalls(at, this.arena)) return false
+        return !this.bodies.some(unit => unit !== except && hitbox.gap(at, unit.hitbox, unit) < -slack)
     }
 
     /** The living units of the other teams whose body takes room and the others aim at. */
@@ -492,6 +506,22 @@ export class Battle {
                 nearest = ally
                 best = distance
             }
+        }
+        return nearest
+    }
+
+    /**
+     * The closest living ally of a unit within a distance of the edge of its body, itself apart, none for none:
+     * how far a spell reaches around a unit, which counts from its body and not from its middle.
+     *
+     * @param pose - Where the unit would stand and face, where it stands and faces by default.
+     */
+    public nearestAllyFromEdge(unit: Unit, range = Infinity, pose: Pose = unit): Unit|null {
+        let nearest: Unit|null = null
+        for(const ally of this.bodies){
+            if(ally === unit || ally.team !== unit.team) continue
+            if(unit.hitbox.gap(pose, ally.hitbox, ally) > range) continue
+            if(!nearest || ally.position.distance(pose.position) < nearest.position.distance(pose.position)) nearest = ally
         }
         return nearest
     }
@@ -518,24 +548,33 @@ export class Battle {
      * Follow a straight line from a unit along its facing, up to a distance, until it meets the body of
      * another unit, a pillar or a wall.
      *
-     * @param pose - Where the line starts and goes, where the unit stands and faces by default.
+     * @param pose - Where the unit would stand and face, where it stands and faces by default: the line starts
+     * from the edge of its body there, and goes the way it faces.
      * @param through - The bodies it goes through, none by default.
      */
     public ray(unit: Unit, range: number, pose: Pose = unit, through: readonly Unit[] = []): RayHit {
+        return this.rayFrom(unit, range, { position: unit.muzzle(pose), direction: pose.direction }, through)
+    }
+
+    /**
+     * Follow a straight line from exactly where a pose stands, not from the edge of the body of the unit: a
+     * line that starts elsewhere than on it, as a shot off a wall does.
+     */
+    public rayFrom(unit: Unit, range: number, pose: Pose, through: readonly Unit[] = []): RayHit {
         const from = pose.position
         const direction = pose.direction
         let reach = Math.min(range, this.#wallDistance(from, direction))
         let hit: Unit|null = null
         for(const other of this.bodies){
             if(other === unit || through.includes(other)) continue
-            const entry = entryDistance(from, direction, other.position, other.radius)
+            const entry = other.hitbox.entry(other, from, direction)
             if(entry !== null && entry <= reach){
                 reach = entry
                 // Scenery stops the line without being hit.
                 hit = other.touchable ? other : null
             }
         }
-        return { end: from.plus(direction.times(reach)), unit: hit }
+        return { start: from, end: from.plus(direction.times(reach)), unit: hit }
     }
 
 
@@ -753,13 +792,77 @@ export class Battle {
      * @param from - Where it faced before, as it does by default: what the turn is told as starting from.
      */
     public turn(unit: Unit, direction: Vector2, duration = 0, from: Vector2 = unit.direction): void {
+        const turned = this.turnSpot(unit, direction)
+        if(!turned){
+            this.events.push({ type: "blocked", unit })
+            return
+        }
         unit.direction = direction
         this.events.push({ type: "turned", unit })
         const position = unit.position
         this.signals.moved.notify({
             unit, from: { position, direction: from }, to: { position, direction }, duration,
         })
+        if(!turned.position.equals(position)) this.#relocate(unit, turned.position, 0)
     }
+
+    /**
+     * Where a unit stands once turned to face a direction, none when it cannot turn. A shape that is not round
+     * takes other room turned: a turn that brings it into an obstacle, by more than the slack of the smaller
+     * obstacles a move is tried with, is refused; one that brings it in by less moves it out of the obstacle,
+     * to where the true ones leave it room. Only what the turn itself brings it into counts, so a round body,
+     * whose room never changes, always turns. Changes nothing: a turn and its preview both ask it.
+     */
+    public turnSpot(unit: Unit, direction: Vector2): Pose|null {
+        const { hitbox } = unit
+        const obstacles = this.#obstaclesOf(unit)
+        const before = { position: unit.position, direction: unit.direction }
+        const worsened = (at: Pose, body: Unit): number => {
+            const after = hitbox.gap(at, body.hitbox, body)
+            return after < hitbox.gap(before, body.hitbox, body) ? after : Infinity
+        }
+        const wallsWorsened = (at: Pose): boolean => {
+            return unit.bounded && hitbox.crossesWalls(at, this.arena) && !hitbox.crossesWalls(before, this.arena)
+        }
+        let at: Pose = { position: unit.position, direction }
+        if(obstacles.some(body => worsened(at, body) < -COLLISION_SLACK)) return null
+        for(let tries = 0; tries < TURN_PUSHES; tries++){
+            const crowding = obstacles.filter(body => worsened(at, body) < 0)
+            const shift = crowding.reduce((total, body) => {
+                return total.plus(hitbox.separation(at, body.hitbox, body))
+            }, Vector2.ZERO)
+            const inWall = wallsWorsened(at)
+            if(crowding.length === 0 && !inWall) return at
+            if(!unit.movable) return null
+            at = { position: at.position.plus(shift).plus(inWall ? this.#wallShift(unit, at) : Vector2.ZERO), direction }
+        }
+        return obstacles.some(body => worsened(at, body) < 0) || wallsWorsened(at) ? null : at
+    }
+
+    /** Does the body of a unit lie wholly beyond a wall of the arena? */
+    #outside(unit: Unit): boolean {
+        const { x, y } = unit.position
+        const { width, height } = this.arena
+        const reach = unit.radius
+        return x + reach < 0 || y + reach < 0 || x - reach > width || y - reach > height
+    }
+
+    /** The bodies a unit cannot overlap: all the tangible ones for a tangible unit, else only the scenery. */
+    #obstaclesOf(unit: Unit): Unit[] {
+        return this.bodies.filter(body => body !== unit && (unit.tangible || !body.touchable))
+    }
+
+    /** How far a unit crossing a wall must go to lie wholly within the arena, in meters. */
+    #wallShift(unit: Unit, at: Pose): Vector2 {
+        const outline = unit.hitbox.outline(at)
+        const left = Math.min(...outline.map(point => point.x))
+        const right = Math.max(...outline.map(point => point.x))
+        const top = Math.min(...outline.map(point => point.y))
+        const bottom = Math.max(...outline.map(point => point.y))
+        const { width, height } = this.arena
+        return new Vector2(Math.max(0, -left) - Math.max(0, right - width), Math.max(0, -top) - Math.max(0, bottom - height))
+    }
+
 
     /**
      * Have the strides of a unit, moved again and again until {@link Battle.endGlide}, told as one move: its
@@ -795,6 +898,7 @@ export class Battle {
         const travel = this.moveSpot(unit, unit.position, direction, distance, through)
         if(travel.distance < distance) this.events.push({ type: "blocked", unit })
         if(!forced && travel.struck) this.signals.bumped.notify({ unit, struck: travel.struck })
+        if(travel.struck) this.signals.collided.notify({ unit, struck: travel.struck })
         if(travel.distance > 0) this.#relocate(unit, travel.to, travel.distance / SHOVE_SPEED)
         return travel
     }
@@ -817,14 +921,17 @@ export class Battle {
         // Nothing moves while the way is tried: what blocks it is read once.
         const bodies = this.bodies
         const scenery = bodies.filter(body => !body.touchable)
+        const { hitbox } = unit
+        const stands = (point: Vector2): Pose => ({ position: point, direction: unit.direction })
+        const overlaps = (body: Unit, point: Vector2, slack: number): boolean => {
+            return hitbox.gap(stands(point), body.hitbox, body) < -slack
+        }
+        const inWall = (point: Vector2): boolean => unit.bounded && hitbox.crossesWalls(stands(point), this.arena)
         const clear = (point: Vector2, slack: number): boolean => unit.tangible
-            ? !this.arena.solid(point, unit.radius) && !bodies.some(body => {
-                return body !== unit && !through.includes(body)
-                    && body.position.distance(point) < unit.radius + body.radius - slack
+            ? !inWall(point) && !bodies.some(body => {
+                return body !== unit && !through.includes(body) && overlaps(body, point, slack)
             })
-            : !this.arena.solid(point, unit.radius) && !scenery.some(body => {
-                return body !== unit && body.position.distance(point) < unit.radius + body.radius - slack
-            })
+            : !inWall(point) && !scenery.some(body => body !== unit && overlaps(body, point, slack))
         const steps = Math.max(1, Math.ceil(distance / TRAVEL_STEP))
         let reached = from
         let travelled = 0
@@ -833,8 +940,7 @@ export class Battle {
             const next = from.plus(direction.times(distance * i / steps))
             if(!clear(next, COLLISION_SLACK)){
                 const struck = this.touchables.find(other => {
-                    const touching = unit.radius + other.radius - COLLISION_SLACK
-                    return other !== unit && !through.includes(other) && other.position.distance(next) < touching
+                    return other !== unit && !through.includes(other) && overlaps(other, next, COLLISION_SLACK)
                 }) ?? null
                 return { ...contact ?? backedOut(from, direction, point => clear(point, 0)), struck }
             }
@@ -1235,7 +1341,7 @@ export class Battle {
             .map(([forward, side]) => {
                 return unit.position.plus(Vector2.relative(unit.direction, forward * scale, side * scale))
             })
-            .find(spot => this.free(spot, null, unit.radius))
+            .find(spot => this.free(spot, null, unit.hitbox, 0, unit.direction))
         if(spot) return spot
         this.events.push({ type: "skipped", unit, reason: "pas de place pour le clone" })
         return null
@@ -1400,11 +1506,18 @@ export class Battle {
      * Leave a body in the arena for a unit, of its team: a body with no deck, out of the order of play,
      * lasting as long as its hearts. A tangible body needs room, and nothing is left when the point is
      * taken; one lying on the ground, a hazard, is left wherever it falls.
+     *
+     * @param owner - Who it is left for, none for a body of the scenery, a hazard of the arena, which has a
+     * team of its own and, with no room, is an error: whoever sets the arena up put it wrong.
+     * @throws {@link Error} When a body of the scenery finds no room.
      */
-    public place(owner: Unit, body: PlacedBody): Unit|null {
+    public place(owner: Unit|null, body: PlacedBody): Unit|null {
         const tangible = body.tangible ?? true
         const size = body.size ?? 1
-        if(tangible && !this.free(body.at, null, UNIT_RADIUS * size)){
+        const direction = body.direction ?? owner?.direction ?? Vector2.DOWN
+        const hitbox = (body.hitbox ?? UNIT_HITBOX).scaled(size)
+        if(tangible && !this.free(body.at, null, hitbox, 0, direction, body.bounded ?? true)){
+            if(!owner) throw new Error(`There is no room for ${body.name} at ${body.at}.`)
             this.events.push({ type: "skipped", unit: owner, reason: "pas de place pour l'invocation" })
             return null
         }
@@ -1412,11 +1525,12 @@ export class Battle {
         const acting = cards.length > 0
         const reach = {
             targetable: body.targetable ?? true, touchable: body.touchable ?? true, movable: body.movable ?? true,
+            bounded: body.bounded ?? true,
         }
         const placed = new Unit({
-            name: body.name, sprite: body.sprite, team: owner.team, controller: "bot", position: body.at,
-            direction: body.direction ?? owner.direction, hearts: body.hearts, decks: acting ? [cards] : [],
-            decisive: false, zone: body.zone ?? null,
+            name: body.name, sprite: body.sprite, team: owner?.team ?? this.scenery, controller: "bot",
+            position: body.at, direction, hearts: body.hearts, decks: acting ? [cards] : [],
+            decisive: false, zone: body.zone ?? null, hitbox: body.hitbox,
             bases: acting
                 ? {
                     size, tangible, ...reach, ordered: true, draw: cards.length, firstDraw: cards.length,
@@ -1570,6 +1684,8 @@ export class Battle {
      * The strides of a unit being gathered as one move: where it started, how fast it goes, and how long its
      * strides took so far, in seconds. None when none.
      */
+    #scenery: Team|null = null
+
     #glide: { readonly unit: Unit, readonly from: Pose, readonly speed: number, seconds: number }|null = null
 
     #pass = 0
@@ -1888,6 +2004,8 @@ export class Battle {
         for(const unit of this.units) unit.stepsPlayed.length = 0
         // The hazards gone off or worn out vanish: nothing is left of them.
         for(const hazard of this.units.filter(unit => unit.zone && !unit.alive)) this.vanish(hazard)
+        // What sailed out of the arena, wholly beyond a wall, is gone with it.
+        for(const body of this.units.filter(unit => !unit.bounded && this.#outside(unit))) this.vanish(body)
         this.#pass = 0
         this.actor = null
         this.#checkOver()
@@ -1983,20 +2101,6 @@ export class Battle {
 }
 
 
-/**
- * How far along a line, a meter long direction from a point, it enters a disc, none when it misses it or
- * the disc lies behind. A line starting inside the disc enters it at once.
- */
-function entryDistance(from: Vector2, direction: Vector2, center: Vector2, radius: number): number|null {
-    const offset = center.minus(from)
-    const along = direction.dot(offset)
-    const across = offset.dot(offset) - along * along
-    if(across > radius * radius) return null
-    const entry = along - Math.sqrt(radius * radius - across)
-    if(along + Math.sqrt(radius * radius - across) < 0) return null
-    return Math.max(0, entry)
-}
-
 /** What a unit is at a rest: what it would enter with now, and what it holds beyond that. */
 function unitState(unit: Unit): UnitState {
     const bases = Object.fromEntries(Object.entries(unit.stats).map(([name, stat]) => [name, stat.base]))
@@ -2007,7 +2111,7 @@ function unitState(unit: Unit): UnitState {
             direction: unit.direction, hearts: unit.hearts.all, decks: unit.decks.all.map(() => []),
             unlimited: unit.unlimited,
             items: unit.items,
-            usables: unit.usables, decisive: unit.decisive, zone: unit.zone,
+            usables: unit.usables, decisive: unit.decisive, zone: unit.zone, hitbox: unit.baseHitbox,
         },
         hand: [...unit.hand],
         decks: unit.decks.all.map(deck => ({ pile: [...deck.pile], discard: [...deck.discard] })),
@@ -2047,6 +2151,12 @@ export interface PlacedBody {
 
     /** The ground it covers, when it lies on it. None by default. */
     readonly zone?: Area|null
+
+    /** The shape of its body at size 1, a disc by default. */
+    readonly hitbox?: Hitbox
+
+    /** Do the walls of the arena stop it? Yes by default. */
+    readonly bounded?: boolean
 }
 
 /** An item plugged into a unit: what it was given, and what it kept, to take back once unplugged. */

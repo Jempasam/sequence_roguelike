@@ -11,9 +11,11 @@ import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 
 /** Where a shot of the catalog goes from a pose: the line it covers, on to the first body it meets. */
-export function shotLine(battle: Battle, unit: Unit, pose: Pose): { area: Area, end: Vector2, target: Unit|null } {
-    const { end, unit: target } = battle.ray(unit, SHOT_RANGE * unit.stats.throwRange.value, pose)
-    return { area: Areas.line(pose.position, end, BOLT_WIDTH), end, target }
+export function shotLine(
+    battle: Battle, unit: Unit, pose: Pose,
+): { area: Area, start: Vector2, end: Vector2, target: Unit|null } {
+    const { start, end, unit: target } = battle.ray(unit, SHOT_RANGE * unit.stats.throwRange.value, pose)
+    return { area: Areas.line(start, end, BOLT_WIDTH), start, end, target }
 }
 
 /** How many hearts a shot takes: the hearts of a shot of the catalog, the precision of the unit added. */
@@ -27,7 +29,7 @@ export function shotHearts(unit: Unit): number {
  * @returns The units it hit.
  */
 export function fireShot(battle: Battle, unit: Unit): Unit[] {
-    const { area, end } = shotLine(battle, unit, unit)
-    fly(battle, unit.position, end, PHYSICAL_COLOR)
+    const { area, start, end } = shotLine(battle, unit, unit)
+    fly(battle, start, end, PHYSICAL_COLOR)
     return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL)
 }

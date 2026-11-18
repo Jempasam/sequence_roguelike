@@ -1,23 +1,15 @@
 import type { Rng } from "../../base/Rng"
-import { GARRISON_GOBLIN, KAMIKAZE_ROBOT, GOBLIN_WRESTLER, GOBLIN_PILOT, SNIPER, GOBLIN_MECHA } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { INVENTOR_HALT } from "../../halt/subs/gift/InventorHalt"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { FACTORY_FIGHTS } from "../fights/factoryFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [GARRISON_GOBLIN, KAMIKAZE_ROBOT, GOBLIN_WRESTLER],
-    middle: [GOBLIN_PILOT, SNIPER, KAMIKAZE_ROBOT],
-    deep: [GOBLIN_PILOT, SNIPER, KAMIKAZE_ROBOT, GOBLIN_PILOT],
-}
 
 /** Usine gobelin: Des robots, des gobelins pilotes, et un mécha-gobelin au bout. Plus d'inventeurs et de forges. */
 export class FactoryFloor extends AbstractFloor {
@@ -30,8 +22,8 @@ export class FactoryFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, GOBLIN_MECHA, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(FACTORY_FIGHTS, category, layer, rng)
     }
 }
 

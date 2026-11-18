@@ -1,5 +1,6 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
@@ -8,7 +9,7 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the memory gap of the catalog reaches ahead, in meters. */
-const GAP_RANGE = 4
+const GAP_RANGE = 4 - UNIT_RADIUS
 
 /** How many of its next trees the unit hit forgets: its next turn. */
 const GAP_TREES = 1

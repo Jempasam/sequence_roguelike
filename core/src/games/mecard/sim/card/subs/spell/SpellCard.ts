@@ -1,5 +1,6 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Element } from "../../../element/Element"
 import { ACTION, ELEMENT } from "../../CardType"
 
@@ -11,8 +12,8 @@ import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
-/** How far the spell of the catalog reaches, in meters. */
-const SPELL_RANGE = 4
+/** How far the spell of the catalog reaches from the edge of the unit, in meters. */
+const SPELL_RANGE = 4 - UNIT_RADIUS
 
 /** How many hearts the spell of the catalog takes. */
 const SPELL_DAMAGE = 1
@@ -52,16 +53,16 @@ export class SpellCard extends AbstractCard<Action, Element> {
             use: function (ctx){
                 const { battle, unit } = ctx
                 // The bolt stops on the first body it meets.
-                const { end } = battle.ray(unit, card.range)
-                fly(battle, unit.position, end, color)
-                const area = Areas.line(unit.position, end, BOLT_WIDTH)
+                const { start, end } = battle.ray(unit, card.range)
+                fly(battle, start, end, color)
+                const area = Areas.line(start, end, BOLT_WIDTH)
                 const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL)
                 if(hit) element.applyNegative(ctx, hit)
             },
             preview: ctx => {
                 const { battle, unit, pose } = ctx
-                const { end, unit: target } = battle.ray(unit, card.range, pose)
-                const path = Previews.polygon(Areas.line(pose.position, end, BOLT_WIDTH), color)
+                const { start, end, unit: target } = battle.ray(unit, card.range, pose)
+                const path = Previews.polygon(Areas.line(start, end, BOLT_WIDTH), color)
                 if(!target) return Previews.still(pose, path)
                 return Previews.still(pose, path, Previews.label(target.position, element.word, NOTE_COLOR))
             },

@@ -195,6 +195,9 @@ export class BattleSignals {
     /** A unit ran into another on a move of its own. */
     public readonly bumped: Observable<BumpSignal>
 
+    /** A unit ran into another on any move, its own or forced: the two bodies in contact. */
+    public readonly collided: Observable<BumpSignal>
+
     /** A unit starts one of its steps. */
     public readonly stepStarted: Observable<StepSignal>
 
@@ -268,6 +271,7 @@ export class BattleSignals {
         this.moved = signal()
         this.blinked = signal()
         this.bumped = signal()
+        this.collided = signal()
         this.stepStarted = signal()
         this.cardActivated = signal()
         this.cardInvalid = signal()

@@ -1,5 +1,6 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { Parroting } from "../../../process/subs/Parroting"
 
@@ -9,7 +10,7 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the parrot of the catalog reaches ahead, in meters. */
-const PARROT_RANGE = 6
+const PARROT_RANGE = 6 - UNIT_RADIUS
 
 /** What a parrot finding nobody says. */
 const NOBODY = "personne en face"

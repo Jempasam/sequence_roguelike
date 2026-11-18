@@ -93,8 +93,8 @@ export const RUN = using("Course", "devient la course de sa bête.", Rarity.COMM
 
 export const FURY = using("Fureur", "devient la course de sa bête, puis sa morsure.", Rarity.RARE, beast => [...beast.run, ...beast.bite])
 
-export const TRANSMUTATION = using("Transmutation", "devient l'invocation du corps de sa bête, qui joue sa course et sa morsure.", Rarity.RARE, beast => {
-    return [summonCardOf(beast, beast, beast)]
+export const TRANSMUTATION = using("Transmutation", "devient le corps de sa bête, avec sa course et sa morsure à leur place.", Rarity.RARE, beast => {
+    return bodyCards(beast.body, beast)
 })
 
 /** The body of the beast it takes set down now, playing its run and its bite: an action, with nothing left to rewrite. */
@@ -120,13 +120,13 @@ export const SUMMONING = new SummoningCard()
 
 /** The run and the bite of the beast it takes played now, and kept as a fleeting collage in the hand. */
 export const TOTAL_TRANSFORMATION = new InputRewriteCard("Transformation totale", [
-    "Fin de préparation : devient la course de sa bête, puis sa morsure, et en met un ",
+    "Fin de préparation : devient le corps de sa bête, avec sa course et sa morsure à leur place, et en met un ",
     FUSION.as("collage"), " temporaire dans ta main.",
 ], Rarity.EPIC, BEAST, (_ctx, _spot, beast) => {
-    return { cards: [...beast.run, ...beast.bite], consumed: 0, acting: true }
+    return { cards: bodyCards(beast.body, beast), consumed: 0, acting: true }
 }, ({ battle, unit }, beast) => {
-    // A beast with a run and no bite, or the other way round, gives one card: no collage of one.
-    const collage = collageOf([...beast.run, ...beast.bite])
+    // A body of one card gives no collage: no collage of one.
+    const collage = collageOf(bodyCards(beast.body, beast))
     if(collage) battle.giveFleetingCard(unit, collage)
 })
 

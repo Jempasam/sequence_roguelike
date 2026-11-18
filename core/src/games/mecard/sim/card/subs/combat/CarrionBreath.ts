@@ -1,5 +1,6 @@
 import { CONTROL_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { STINKING, stenchRadius } from "../../../status/subs/Stench"
 
@@ -10,7 +11,7 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the breath of the catalog reaches, in meters: a short cone. */
-const BREATH_RANGE = 2.5
+const BREATH_RANGE = 2.5 - UNIT_RADIUS
 
 /** The cosine of half the angle of the cone of the breath: a cone of 60°. */
 const BREATH_COS_HALF = Math.cos(Math.PI / 6)
@@ -22,13 +23,13 @@ const BREATH_ROUNDS = 2
 function breathing(range: number, cosHalf: number, rounds: number): Action {
     return {
         use: function ({ battle, unit }){
-            const cone = coneFrom(unit, range, cosHalf)
+            const cone = coneFrom(unit, unit, range, cosHalf)
             const reached = battle.fetch(cone, unit)
             hold(battle, SHORT_TIME, [Previews.polygon(cone, CONTROL_COLOR)])
             for(const target of reached) battle.applyStatus(target, STINKING, rounds)
         },
         preview: ({ battle, unit, pose }) => {
-            const cone = coneFrom(pose, range, cosHalf)
+            const cone = coneFrom(unit, pose, range, cosHalf)
             const shown = battle.fetch(cone, unit).map(target => Previews.label(target.position, "puanteur", NOTE_COLOR))
             return Previews.still(pose, Previews.polygon(cone, CONTROL_COLOR), ...shown)
         },

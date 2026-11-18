@@ -3,6 +3,7 @@ import { DISTANCE } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
@@ -11,7 +12,7 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far around the unit the angel looks for an ally, in meters. */
-const FLIGHT_RADIUS = 6
+const FLIGHT_RADIUS = 6 - UNIT_RADIUS
 
 /** How far in front of its ally the unit lands, from center to center, in meters: just off its face. */
 const FRONT_GAP = 0.05
@@ -22,14 +23,15 @@ const FLIGHT_TIME = 0.15
 /** What the flight says when no ally is around. */
 const NOBODY = "aucun allié"
 
-/** The ally farthest from a point within the circle of the flight, none when there is no ally in it. */
-function farthestAlly(battle: Battle, unit: Unit, from: Vector2): Unit|null {
+/** The ally farthest from a unit at a pose within the circle of the flight, from its edge, none when there is no ally in it. */
+function farthestAlly(battle: Battle, unit: Unit, pose: Pose): Unit|null {
     let found: Unit|null = null
     let best = -Infinity
     for(const other of battle.bodies){
         if(other === unit || other.team !== unit.team) continue
-        const distance = other.position.distance(from)
-        if(distance > FLIGHT_RADIUS || distance <= best) continue
+        if(unit.hitbox.gap(pose, other.hitbox, other) > FLIGHT_RADIUS) continue
+        const distance = other.position.distance(pose.position)
+        if(distance <= best) continue
         found = other
         best = distance
     }
@@ -44,7 +46,7 @@ function frontOf(unit: Unit, ally: Unit): { at: Vector2, facing: Vector2 } {
 
 function flying(): Action {
     const spot = (battle: Battle, unit: Unit, pose: Pose) => {
-        const ally = farthestAlly(battle, unit, pose.position)
+        const ally = farthestAlly(battle, unit, pose)
         return ally && frontOf(unit, ally)
     }
     return {

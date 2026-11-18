@@ -5,6 +5,7 @@ import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { Heart } from "../../../heart/Heart"
@@ -21,7 +22,7 @@ import * as Previews from "../../../battle/preview/Previews"
 const KNIFE_DAMAGE = 1
 
 /** How far the knife flies, in meters, before the reach of the unit. */
-const KNIFE_RANGE = 5
+const KNIFE_RANGE = 5 - UNIT_RADIUS
 
 /** How wide the way of the knife is, in meters: a thin line. */
 const KNIFE_WIDTH = 0.3
@@ -53,7 +54,7 @@ export const MAGIC_KNIFE = new ActionCard("Couteau magique", [
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
         const end = landing(battle, unit, unit)
-        battle.strike(unit, wayOf(unit.position, end), KNIFE_DAMAGE, DamageType.PHYSICAL)
+        battle.strike(unit, wayOf(unit.muzzle(), end), KNIFE_DAMAGE, DamageType.PHYSICAL)
         const knife = battle.place(unit, {
             sprite: visual("units/spirit"), name: "Couteau de lancer", at: end, direction: unit.direction,
             hearts: [new Heart(SOLID_HEART)], tangible: false, targetable: false, touchable: false, movable: false,
@@ -63,7 +64,7 @@ export const MAGIC_KNIFE = new ActionCard("Couteau magique", [
     },
     preview: ({ battle, unit, pose }) => {
         const end = landing(battle, unit, pose)
-        const way = wayOf(pose.position, end)
+        const way = wayOf(unit.muzzle(pose), end)
         return Previews.still(
             pose, Previews.polygon(way, PHYSICAL_COLOR), Previews.polygon(wayOf(end, pose.position), PHYSICAL_COLOR),
             Previews.label(end, "couteau", NOTE_COLOR),

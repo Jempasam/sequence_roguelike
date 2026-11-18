@@ -4,7 +4,7 @@ import { visual } from "../../../base/Visual"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
-import { UNIT_RADIUS } from "../../../battle/Unit"
+import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { HeartCount } from "../../../battle/words"
@@ -27,7 +27,7 @@ import * as Previews from "../../../battle/preview/Previews"
 const SWAP_TIME = 0.15
 
 /** How far ahead a piece is set down, in meters: at the contact. */
-const AHEAD = 1
+const AHEAD = 1 - UNIT_RADIUS
 
 /** How many hearts each piece lives by, before the summoning of the unit. */
 const PAWN_HEARTS = 1
@@ -37,16 +37,16 @@ const BISHOP_HEARTS = 1
 const QUEEN_HEARTS = 3
 
 /** How far a promotion reaches, in meters. */
-const PROMOTION_RANGE = 4
+const PROMOTION_RANGE = 4 - UNIT_RADIUS
 
 /** How many rounds a promoted ally is a piece for. */
 const PROMOTION_ROUNDS = 2
 
 /** How far around the unit the pieces take a check, in meters. */
-const CHECK_RADIUS = 6
+const CHECK_RADIUS = 6 - UNIT_RADIUS
 
 /** How far a piece strikes when it is checked, in meters, and how wide. */
-const CHECK_REACH = 1.5
+const CHECK_REACH = 1.5 - UNIT_RADIUS
 const CHECK_WIDTH = 0.6
 
 /** How many hearts a piece in check takes from an enemy, before its strength. */
@@ -70,9 +70,9 @@ interface Piece {
     readonly equip?: (battle: Battle, body: Unit, owner: Unit) => void
 }
 
-/** The spot where a piece stands, from a pose. */
-function spotOf(pose: Pose): Vector2 {
-    return pose.position.plus(pose.direction.times(AHEAD))
+/** The spot where a piece stands, ahead of the edge of a unit at a pose. */
+function spotOf(unit: Unit, pose: Pose): Vector2 {
+    return unit.muzzle(pose).plus(pose.direction.times(AHEAD))
 }
 
 /** A card setting down a piece: a body with no deck, which plays what its owner has it play. */
@@ -81,7 +81,7 @@ function pieceCard(piece: Piece): ActionCard {
         use: function ({ battle, unit }){
             const body = battle.place(unit, {
                 sprite: visual(`units/${piece.sprite}`),
-                name: piece.name, at: spotOf(unit), direction: unit.direction,
+                name: piece.name, at: spotOf(unit, unit), direction: unit.direction,
                 hearts: summonedHearts(unit, piece.hearts),
             })
             if(body){
@@ -91,8 +91,8 @@ function pieceCard(piece: Piece): ActionCard {
             hold(battle, SHORT_TIME)
         },
         preview: ({ battle, unit, pose }) => {
-            const spot = spotOf(pose)
-            if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+            const spot = spotOf(unit, pose)
+            if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
             return Previews.still(pose, summonShown(spot))
         },
     }
@@ -160,12 +160,12 @@ export const PROMOTION = new ActionCard("Promotion", [
     " rounds.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        const ally = battle.nearestAlly(unit, PROMOTION_RANGE)
+        const ally = battle.nearestAllyFromEdge(unit, PROMOTION_RANGE)
         if(ally) battle.applyStatus(ally, CHESS_PIECE, PROMOTION_ROUNDS)
         hold(battle, SHORT_TIME, [Previews.label(unit.position, "promotion", NOTE_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        const ally = battle.nearestAlly(unit, PROMOTION_RANGE, pose.position)
+        const ally = battle.nearestAllyFromEdge(unit, PROMOTION_RANGE, pose)
         return Previews.still(pose, Previews.label(ally?.position ?? pose.position, ally ? "promotion" : "personne en vue", NOTE_COLOR))
     },
 })
@@ -201,9 +201,10 @@ export const CASTLING = new ActionCard("Roque", [
     },
 })
 
-/** The ground a piece in check strikes: ahead of it, a short narrow band. */
-function checkArea(at: Vector2, way: Vector2) {
-    return Areas.line(at, at.plus(way.times(CHECK_REACH)), CHECK_WIDTH)
+/** The ground a piece in check strikes: ahead of the edge of its body, a short narrow band. */
+function checkArea(piece: Unit, way: Vector2) {
+    const from = piece.muzzle({ position: piece.position, direction: way })
+    return Areas.line(from, from.plus(way.times(CHECK_REACH)), CHECK_WIDTH)
 }
 
 /** Every piece around turns to the nearest enemy and thrusts. */
@@ -213,22 +214,22 @@ export const CHECK = new ActionCard("Échec", [
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         for(const piece of piecesOf(battle, unit)){
-            if(piece.position.distance(unit.position) > CHECK_RADIUS) continue
+            if(unit.hitbox.gap(unit, piece.hitbox, piece) > CHECK_RADIUS) continue
             const enemy = battle.nearestEnemy(piece)
             const way = enemy ? enemy.position.minus(piece.position).normalized : null
             if(!way) continue
             battle.turn(piece, way)
-            battle.strike(piece, checkArea(piece.position, way), CHECK_DAMAGE + piece.stats.strength.value, DamageType.PHYSICAL)
+            battle.strike(piece, checkArea(piece, way), CHECK_DAMAGE + piece.stats.strength.value, DamageType.PHYSICAL)
         }
         hold(battle, SHORT_TIME, [Previews.label(unit.position, "échec", NOTE_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
         const shown = piecesOf(battle, unit)
-            .filter(piece => piece.position.distance(pose.position) <= CHECK_RADIUS)
+            .filter(piece => unit.hitbox.gap(pose, piece.hitbox, piece) <= CHECK_RADIUS)
             .flatMap(piece => {
                 const enemy = battle.nearestEnemy(piece)
                 const way = enemy ? enemy.position.minus(piece.position).normalized : null
-                return way ? [Previews.polygon(checkArea(piece.position, way), PHYSICAL_COLOR)] : []
+                return way ? [Previews.polygon(checkArea(piece, way), PHYSICAL_COLOR)] : []
             })
         return Previews.still(pose, ...shown)
     },

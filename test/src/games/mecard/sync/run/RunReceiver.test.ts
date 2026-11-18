@@ -19,11 +19,11 @@ function session(seed = 11) {
 function fight(run: Run): void {
     const { travel } = run
     const before = travel.journey.places.find(place => {
-        return travel.journey.nextOf(place).some(next => next.monsters.length > 0)
+        return travel.journey.nextOf(place).some(next => next.fight !== null)
     })
     if(!before) throw new Error("The map leads to no fight.")
     travel.jump(before)
-    const place = travel.next.find(next => next.monsters.length > 0)
+    const place = travel.next.find(next => next.fight !== null)
     if(!place) throw new Error("The map leads to no fight.")
     travel.go(place)
     travel.advance()

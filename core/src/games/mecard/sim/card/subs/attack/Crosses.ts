@@ -2,6 +2,7 @@ import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { frenchNumber } from "../../../battle/words"
@@ -17,11 +18,11 @@ import * as Previews from "../../../battle/preview/Previews"
 /** The two segments of the cutting cross of the catalog: an X, crossing a meter ahead. */
 const X_LENGTH = 2
 const X_WIDTH = 0.4
-const X_AHEAD = 1
+const X_AHEAD = 1 - UNIT_RADIUS
 
 function xAreas(pose: Pose, unit: Unit): Area[] {
     const stretch = unit.stats.meleeRange.value
-    const center = pose.position.plus(pose.direction.times(X_AHEAD * stretch))
+    const center = unit.muzzle(pose).plus(pose.direction.times(X_AHEAD * stretch))
     return [
         centeredSegment(center, pose.direction.eighth(1), X_LENGTH * stretch, X_WIDTH),
         centeredSegment(center, pose.direction.eighth(-1), X_LENGTH * stretch, X_WIDTH),
@@ -51,14 +52,14 @@ export const CROSS_CUT = new ActionCard("Taille croisée", [
 /** The bars of the fishing cross, in meters, and how far ahead its center lies. */
 const FISHING_BAR = 2
 const FISHING_WIDTH = 0.5
-const FISHING_AHEAD = 1.5
+const FISHING_AHEAD = 1.5 - UNIT_RADIUS
 
 /** How much gold a kill of the fishing gives, and the share of its hearts under which a unit is hurt harder. */
 const FISHING_GOLD = 10
 const FISHING_LOW = 0.5
 
 function fishingCenter(pose: Pose, unit: Unit) {
-    return pose.position.plus(pose.direction.times(FISHING_AHEAD * unit.stats.meleeRange.value))
+    return unit.muzzle(pose).plus(pose.direction.times(FISHING_AHEAD * unit.stats.meleeRange.value))
 }
 
 /** Is a unit under the share of its hearts at which the fishing hurts twice as much? */
@@ -109,8 +110,8 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
 const WAVES = 4
 
 /** The reach of the scythe of death: the crescent of the scythe. */
-const REAP_INNER = 1
-const REAP_OUTER = 2
+const REAP_INNER = 1 - UNIT_RADIUS
+const REAP_OUTER = 2 - UNIT_RADIUS
 const REAP_COS_HALF = 0.5
 
 /** How far a wave on the whole map reaches, in meters: farther than any arena. */
@@ -118,7 +119,7 @@ const EVERYWHERE = 1000
 
 function reapArea(pose: Pose, unit: Unit): Area {
     const stretch = unit.stats.meleeRange.value
-    return Areas.crescent(pose.position, pose.direction, REAP_INNER * stretch, REAP_OUTER * stretch, REAP_COS_HALF)
+    return Areas.crescent(unit.muzzle(pose), pose.direction, REAP_INNER * stretch, REAP_OUTER * stretch, REAP_COS_HALF)
 }
 
 /** A scythe whose every kill makes the next wave hurt everyone, itself apart. */

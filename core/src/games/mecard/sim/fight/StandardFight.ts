@@ -5,8 +5,9 @@ import type { Unit } from "../battle/Unit"
 import type { Monster } from "../catalog/monsters"
 import { Heart } from "../heart/Heart"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
-import { ARENA_SIZE, monsterStart, partyStarts, pillarsFor } from "../run/formation"
-import { firstDeck, monsterHearts } from "../run/Hero"
+import type { Spot } from "../run/Journey"
+import { ARENA_SIZE, monsterStart, partyStarts } from "../run/formation"
+import { firstDeck, heroOf, monsterHearts } from "../run/Hero"
 import type { Hero } from "../run/Hero"
 import type { Run } from "../run/Run"
 
@@ -14,25 +15,32 @@ import type { Fight, FightResult } from "./Fight"
 import type { FightType } from "./FightType"
 
 /**
- * The fight of the party against some monsters, in an arena with pillars: every character of the party on its
- * side, one unit for each, every monster on the other.
+ * The fight of the party against some monsters, in an arena with the hazards its type lays out, every
+ * character of the party on its side, one unit for each.
+ *
+ * @remarks
+ * It only makes its battle and takes the party back from it: the battle is the engine of the rules, and the
+ * {@link Travel} fights it. It is its type that says which monsters stand in the arena, and how.
  */
 export class StandardFight implements Fight {
 
 
+    public readonly monsters: readonly Monster[]
+
     public readonly battle: Battle
 
     constructor(
+        /** The fight it is. */
         public readonly type: FightType,
 
         /** The run whose party fights. */
         private readonly run: Run,
 
-        public readonly monsters: readonly Monster[],
+        /** Where the place it is fought on lies. */
+        place: Spot,
     ){
         const { rng, heroesTeam, monstersTeam, heroes } = run
         const starts = partyStarts(heroes.length)
-        const pillars = pillarsFor(starts, rng)
         const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), rng.int(2 ** 31))
         battle.bot = run.bot
         heroes.forEach((hero, index) => {
@@ -45,18 +53,40 @@ export class StandardFight implements Fight {
             battle.refill(unit)
             this.#units.set(hero, unit)
         })
-        monsters.forEach((monster, index) => {
-            battle.add({
-                name: `${monster.name} ${index + 1}`, sprite: monster.sprite, team: monstersTeam,
-                controller: "bot",
-                position: monsterStart(index), direction: Vector2.DOWN,
-                hearts: monsterHearts(monster.hearts + run.travel.floor.level - 1), decks: [monster.cards],
-                bases: {
-                    draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true, size: monster.size ?? 1,
-                },
-            })
+        const level = run.travel.floor.level
+        const monsters: Monster[] = []
+        let placed = 0
+        type.populate({
+            rng, level, layer: place.layer,
+            addKit: (kit, pose = {}) => {
+                const index = placed++
+                const fighter = heroOf(kit)
+                const unit = battle.add({
+                    name: fighter.name, sprite: fighter.sprite, team: monstersTeam,
+                    controller: pose.controller ?? "bot",
+                    position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
+                    hearts: fighter.hearts, decks: fighter.decks, unlimited: fighter.unlimited, items: fighter.items,
+                    usables: fighter.usables, bases: fighter.bases,
+                })
+                battle.refill(unit)
+            },
+            add: (monster, pose = {}) => {
+                const index = placed++
+                monsters.push(monster)
+                battle.add({
+                    name: `${monster.name} ${monsters.length}`, sprite: monster.sprite, team: monstersTeam,
+                    controller: pose.controller ?? "bot",
+                    position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
+                    hearts: monsterHearts(monster.hearts + level - 1), decks: [monster.cards],
+                    bases: {
+                        draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true,
+                        size: monster.size ?? 1,
+                    },
+                })
+            },
         })
-        for(const { center, radius } of pillars) battle.addPillar(center, radius)
+        this.monsters = monsters
+        for(const { type: hazard, at, direction } of type.hazards ?? []) hazard.lay(battle, at, direction)
         // The battle knows no purse: what the heroes win in it goes to the one of the run.
         battle.onGetGold.add(({ unit, amount }) => {
             if(unit.team === heroesTeam) run.gold += amount
@@ -81,6 +111,7 @@ export class StandardFight implements Fight {
             }
             const fell = !hero.hearts.some(heart => !heart.isEmpty)
             if(won && fell) hero.hearts[0] = new Heart(RED_HEART)
+            if(won) for(const item of hero.items) item.afterFight?.({ hearts: hero.hearts, fell })
         }
         return won ? "won" : "lost"
     }

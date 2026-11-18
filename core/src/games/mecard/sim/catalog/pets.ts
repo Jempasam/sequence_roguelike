@@ -12,6 +12,7 @@ import { STEP } from "../card/subs/movement/Step"
 import { WAIT } from "../card/subs/movement/Wait"
 import { CONJURATION, SMALL_SPELL } from "../card/subs/spell/ElementActions"
 import { FIRE, WATER } from "../card/subs/spell/ElementCard"
+import { BUBBLE_BODY } from "../item/subs/summon/BubbleBody"
 import { monster } from "./monsters"
 import type { Monster } from "./monsters"
 import { visual } from "../base/Visual"
@@ -82,8 +83,19 @@ export const BOAR = monster({
     ],
 })
 
+/** The animated bubbles: they hold a body of bubble, so they burst at the first touch. */
+export const BUBBLE_PET = monster({
+    name: "Bulle animée", sprite: visual("units/animated_bubble"), hearts: 3, draw: 3,
+    cards: [
+        AIM, STEP, WAIT,
+        PATH_AIM, STEP, SWEEP,
+        SIDESTEP, WAIT, WAIT,
+    ],
+    items: [BUBBLE_BODY],
+})
+
 /** Every pet a trainer may offer. */
-export const ALL_PETS: readonly Pet[] = [WOLF, BEAR, HAWK, SALAMANDER, OTTER, BOAR]
+export const ALL_PETS: readonly Pet[] = [WOLF, BEAR, HAWK, SALAMANDER, OTTER, BOAR, BUBBLE_PET]
 
 /** The pets a trainer offers: all of them for now. */
 export const LOOT_PETS: readonly Pet[] = ALL_PETS

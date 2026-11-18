@@ -169,6 +169,7 @@ export type AssetPath =
     | "mecard/halts/strategist.png"
     | "mecard/halts/tavern.png"
     | "mecard/halts/trainer.png"
+    | "mecard/halts/weaver.png"
     | "mecard/halts/witch.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
@@ -181,6 +182,7 @@ export type AssetPath =
     | "mecard/items/blood_pact.png"
     | "mecard/items/boots.png"
     | "mecard/items/bottle_bag.png"
+    | "mecard/items/bubble_body.png"
     | "mecard/items/demon_fang.png"
     | "mecard/items/dodge_scepter.png"
     | "mecard/items/doll.png"
@@ -192,11 +194,14 @@ export type AssetPath =
     | "mecard/items/gear.png"
     | "mecard/items/glass_heart.png"
     | "mecard/items/grimoire.png"
+    | "mecard/items/heart_bomb.png"
     | "mecard/items/horseshoe.png"
     | "mecard/items/hourglass.png"
     | "mecard/items/king_crown.png"
     | "mecard/items/magnet.png"
     | "mecard/items/med_kit.png"
+    | "mecard/items/phoenix_heart.png"
+    | "mecard/items/plaster.png"
     | "mecard/items/potion_bag.png"
     | "mecard/items/reactor.png"
     | "mecard/items/roller.png"
@@ -362,6 +367,7 @@ export type AssetPath =
     | "mecard/statuses/barrel.png"
     | "mecard/statuses/bleeding.png"
     | "mecard/statuses/bloodlust.png"
+    | "mecard/statuses/bubble.png"
     | "mecard/statuses/burn.png"
     | "mecard/statuses/burning_ground.png"
     | "mecard/statuses/chess_piece.png"
@@ -372,10 +378,12 @@ export type AssetPath =
     | "mecard/statuses/demonic.png"
     | "mecard/statuses/disarm.png"
     | "mecard/statuses/dodge.png"
+    | "mecard/statuses/explosive.png"
     | "mecard/statuses/fleeting.png"
     | "mecard/statuses/fragile.png"
     | "mecard/statuses/frenzy.png"
     | "mecard/statuses/furious.png"
+    | "mecard/statuses/giant.png"
     | "mecard/statuses/healing.png"
     | "mecard/statuses/mark.png"
     | "mecard/statuses/mine.png"
@@ -385,11 +393,13 @@ export type AssetPath =
     | "mecard/statuses/possessed.png"
     | "mecard/statuses/puddle.png"
     | "mecard/statuses/rage.png"
+    | "mecard/statuses/resurrection.png"
     | "mecard/statuses/ritual.png"
     | "mecard/statuses/rocky.png"
     | "mecard/statuses/rooted.png"
     | "mecard/statuses/sliding_parry.png"
     | "mecard/statuses/slow.png"
+    | "mecard/statuses/soapy.png"
     | "mecard/statuses/soul_link.png"
     | "mecard/statuses/soul_shield.png"
     | "mecard/statuses/stench.png"
@@ -425,6 +435,7 @@ export type AssetPath =
     | "mecard/travel/map/shade.png"
     | "mecard/units/acrobat.png"
     | "mecard/units/amog.png"
+    | "mecard/units/animated_bubble.png"
     | "mecard/units/apothecary.png"
     | "mecard/units/archer.png"
     | "mecard/units/artificer.png"
@@ -441,12 +452,19 @@ export type AssetPath =
     | "mecard/units/bomb.png"
     | "mecard/units/brawler.png"
     | "mecard/units/brute.png"
+    | "mecard/units/bubble.png"
+    | "mecard/units/bubble_mage.png"
+    | "mecard/units/bubbler.png"
     | "mecard/units/bull.png"
     | "mecard/units/bullfighter.png"
+    | "mecard/units/bush.png"
+    | "mecard/units/cannon.json"
+    | "mecard/units/cannon.png"
     | "mecard/units/chess_knight.png"
     | "mecard/units/chess_player.png"
     | "mecard/units/chronomancer.png"
     | "mecard/units/coin.png"
+    | "mecard/units/conveyor.png"
     | "mecard/units/dark_lord.png"
     | "mecard/units/demonist.png"
     | "mecard/units/devil.png"
@@ -460,11 +478,15 @@ export type AssetPath =
     | "mecard/units/fire_lizard.png"
     | "mecard/units/fire_mage.png"
     | "mecard/units/fisher.png"
+    | "mecard/units/flamethrower.json"
+    | "mecard/units/flamethrower.png"
     | "mecard/units/fox.png"
     | "mecard/units/frog.png"
     | "mecard/units/frost_giant.png"
     | "mecard/units/garrison_goblin.png"
     | "mecard/units/geomancer.png"
+    | "mecard/units/geyser.json"
+    | "mecard/units/geyser.png"
     | "mecard/units/ghost.png"
     | "mecard/units/ghost_shogun.png"
     | "mecard/units/glass_man.png"
@@ -480,6 +502,8 @@ export type AssetPath =
     | "mecard/units/harpoon_pirate.png"
     | "mecard/units/haunting_ghost.png"
     | "mecard/units/hawk.png"
+    | "mecard/units/hole.json"
+    | "mecard/units/hole.png"
     | "mecard/units/horse.png"
     | "mecard/units/hunter.png"
     | "mecard/units/hydra.png"
@@ -509,15 +533,21 @@ export type AssetPath =
     | "mecard/units/pawn.png"
     | "mecard/units/pikeman.png"
     | "mecard/units/pillar.png"
+    | "mecard/units/piston.json"
+    | "mecard/units/piston.png"
     | "mecard/units/plant_mage.png"
     | "mecard/units/prestidigitator.png"
     | "mecard/units/priest.png"
+    | "mecard/units/puddle.json"
     | "mecard/units/puddle.png"
     | "mecard/units/puppeteer.png"
     | "mecard/units/pyromancer.png"
     | "mecard/units/queen.png"
     | "mecard/units/ram.png"
     | "mecard/units/rider.png"
+    | "mecard/units/ring_rope.json"
+    | "mecard/units/ring_rope.png"
+    | "mecard/units/robot.json"
     | "mecard/units/robot.png"
     | "mecard/units/robot2.png"
     | "mecard/units/rock.png"
@@ -528,6 +558,7 @@ export type AssetPath =
     | "mecard/units/shadow_thief.png"
     | "mecard/units/shaman.png"
     | "mecard/units/shield_guard.png"
+    | "mecard/units/ship.png"
     | "mecard/units/skeleton_reaper.png"
     | "mecard/units/slime.png"
     | "mecard/units/snake.png"
@@ -541,14 +572,51 @@ export type AssetPath =
     | "mecard/units/swamp_sorcerer.png"
     | "mecard/units/swordsman.png"
     | "mecard/units/tempest_mage.png"
+    | "mecard/units/test/barriers/fence.json"
+    | "mecard/units/test/barriers/fence.png"
+    | "mecard/units/test/barriers/rail.json"
+    | "mecard/units/test/barriers/rail.png"
+    | "mecard/units/test/floating/eye.json"
+    | "mecard/units/test/floating/eye.png"
+    | "mecard/units/test/floating/orb.json"
+    | "mecard/units/test/floating/orb.png"
+    | "mecard/units/test/grounds/grass.json"
+    | "mecard/units/test/grounds/grass.png"
+    | "mecard/units/test/grounds/water.json"
+    | "mecard/units/test/grounds/water.png"
+    | "mecard/units/test/machines/arrow.json"
+    | "mecard/units/test/machines/arrow.png"
+    | "mecard/units/test/machines/turret.json"
+    | "mecard/units/test/machines/turret.png"
+    | "mecard/units/test/plants/bush.json"
+    | "mecard/units/test/plants/bush.png"
+    | "mecard/units/test/plants/post.json"
+    | "mecard/units/test/plants/post.png"
+    | "mecard/units/test/rugs/grate.json"
+    | "mecard/units/test/rugs/grate.png"
+    | "mecard/units/test/rugs/rug.json"
+    | "mecard/units/test/rugs/rug.png"
+    | "mecard/units/test/statues/statue_cat.json"
+    | "mecard/units/test/statues/statue_cat.png"
+    | "mecard/units/test/statues/statue_knight.json"
+    | "mecard/units/test/statues/statue_knight.png"
+    | "mecard/units/test/walls/brick_wall.json"
+    | "mecard/units/test/walls/brick_wall.png"
+    | "mecard/units/test/walls/stone_block.json"
+    | "mecard/units/test/walls/stone_block.png"
     | "mecard/units/thorn_tank.png"
     | "mecard/units/thorns.png"
+    | "mecard/units/torii.json"
+    | "mecard/units/torii.png"
     | "mecard/units/tornado.png"
     | "mecard/units/totem.png"
     | "mecard/units/toxic_toad.png"
+    | "mecard/units/tree.png"
     | "mecard/units/troll.png"
     | "mecard/units/turret_engineer.png"
     | "mecard/units/vengeful_spirit.png"
+    | "mecard/units/wall.json"
+    | "mecard/units/wall.png"
     | "mecard/units/wandering_samurai.png"
     | "mecard/units/wave.png"
     | "mecard/units/werewolf.png"
@@ -568,6 +636,7 @@ export type AssetPath =
     | "mecard/usables/mixer.png"
     | "mecard/usables/pawn_powder.png"
     | "mecard/usables/plant_bag.png"
+    | "mecard/usables/resurrection.png"
     | "mecard/usables/shield_flask.png"
     | "mecard/usables/silence_jar.png"
     | "mecard/usables/spring.png"
@@ -744,6 +813,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/halts/strategist.png",
     "mecard/halts/tavern.png",
     "mecard/halts/trainer.png",
+    "mecard/halts/weaver.png",
     "mecard/halts/witch.png",
     "mecard/hud/bag.png",
     "mecard/hud/booster.png",
@@ -756,6 +826,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/blood_pact.png",
     "mecard/items/boots.png",
     "mecard/items/bottle_bag.png",
+    "mecard/items/bubble_body.png",
     "mecard/items/demon_fang.png",
     "mecard/items/dodge_scepter.png",
     "mecard/items/doll.png",
@@ -767,11 +838,14 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/gear.png",
     "mecard/items/glass_heart.png",
     "mecard/items/grimoire.png",
+    "mecard/items/heart_bomb.png",
     "mecard/items/horseshoe.png",
     "mecard/items/hourglass.png",
     "mecard/items/king_crown.png",
     "mecard/items/magnet.png",
     "mecard/items/med_kit.png",
+    "mecard/items/phoenix_heart.png",
+    "mecard/items/plaster.png",
     "mecard/items/potion_bag.png",
     "mecard/items/reactor.png",
     "mecard/items/roller.png",
@@ -937,6 +1011,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/statuses/barrel.png",
     "mecard/statuses/bleeding.png",
     "mecard/statuses/bloodlust.png",
+    "mecard/statuses/bubble.png",
     "mecard/statuses/burn.png",
     "mecard/statuses/burning_ground.png",
     "mecard/statuses/chess_piece.png",
@@ -947,10 +1022,12 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/statuses/demonic.png",
     "mecard/statuses/disarm.png",
     "mecard/statuses/dodge.png",
+    "mecard/statuses/explosive.png",
     "mecard/statuses/fleeting.png",
     "mecard/statuses/fragile.png",
     "mecard/statuses/frenzy.png",
     "mecard/statuses/furious.png",
+    "mecard/statuses/giant.png",
     "mecard/statuses/healing.png",
     "mecard/statuses/mark.png",
     "mecard/statuses/mine.png",
@@ -960,11 +1037,13 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/statuses/possessed.png",
     "mecard/statuses/puddle.png",
     "mecard/statuses/rage.png",
+    "mecard/statuses/resurrection.png",
     "mecard/statuses/ritual.png",
     "mecard/statuses/rocky.png",
     "mecard/statuses/rooted.png",
     "mecard/statuses/sliding_parry.png",
     "mecard/statuses/slow.png",
+    "mecard/statuses/soapy.png",
     "mecard/statuses/soul_link.png",
     "mecard/statuses/soul_shield.png",
     "mecard/statuses/stench.png",
@@ -1000,6 +1079,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/travel/map/shade.png",
     "mecard/units/acrobat.png",
     "mecard/units/amog.png",
+    "mecard/units/animated_bubble.png",
     "mecard/units/apothecary.png",
     "mecard/units/archer.png",
     "mecard/units/artificer.png",
@@ -1016,12 +1096,19 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/bomb.png",
     "mecard/units/brawler.png",
     "mecard/units/brute.png",
+    "mecard/units/bubble.png",
+    "mecard/units/bubble_mage.png",
+    "mecard/units/bubbler.png",
     "mecard/units/bull.png",
     "mecard/units/bullfighter.png",
+    "mecard/units/bush.png",
+    "mecard/units/cannon.json",
+    "mecard/units/cannon.png",
     "mecard/units/chess_knight.png",
     "mecard/units/chess_player.png",
     "mecard/units/chronomancer.png",
     "mecard/units/coin.png",
+    "mecard/units/conveyor.png",
     "mecard/units/dark_lord.png",
     "mecard/units/demonist.png",
     "mecard/units/devil.png",
@@ -1035,11 +1122,15 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/fire_lizard.png",
     "mecard/units/fire_mage.png",
     "mecard/units/fisher.png",
+    "mecard/units/flamethrower.json",
+    "mecard/units/flamethrower.png",
     "mecard/units/fox.png",
     "mecard/units/frog.png",
     "mecard/units/frost_giant.png",
     "mecard/units/garrison_goblin.png",
     "mecard/units/geomancer.png",
+    "mecard/units/geyser.json",
+    "mecard/units/geyser.png",
     "mecard/units/ghost.png",
     "mecard/units/ghost_shogun.png",
     "mecard/units/glass_man.png",
@@ -1055,6 +1146,8 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/harpoon_pirate.png",
     "mecard/units/haunting_ghost.png",
     "mecard/units/hawk.png",
+    "mecard/units/hole.json",
+    "mecard/units/hole.png",
     "mecard/units/horse.png",
     "mecard/units/hunter.png",
     "mecard/units/hydra.png",
@@ -1084,15 +1177,21 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/pawn.png",
     "mecard/units/pikeman.png",
     "mecard/units/pillar.png",
+    "mecard/units/piston.json",
+    "mecard/units/piston.png",
     "mecard/units/plant_mage.png",
     "mecard/units/prestidigitator.png",
     "mecard/units/priest.png",
+    "mecard/units/puddle.json",
     "mecard/units/puddle.png",
     "mecard/units/puppeteer.png",
     "mecard/units/pyromancer.png",
     "mecard/units/queen.png",
     "mecard/units/ram.png",
     "mecard/units/rider.png",
+    "mecard/units/ring_rope.json",
+    "mecard/units/ring_rope.png",
+    "mecard/units/robot.json",
     "mecard/units/robot.png",
     "mecard/units/robot2.png",
     "mecard/units/rock.png",
@@ -1103,6 +1202,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/shadow_thief.png",
     "mecard/units/shaman.png",
     "mecard/units/shield_guard.png",
+    "mecard/units/ship.png",
     "mecard/units/skeleton_reaper.png",
     "mecard/units/slime.png",
     "mecard/units/snake.png",
@@ -1116,14 +1216,51 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/swamp_sorcerer.png",
     "mecard/units/swordsman.png",
     "mecard/units/tempest_mage.png",
+    "mecard/units/test/barriers/fence.json",
+    "mecard/units/test/barriers/fence.png",
+    "mecard/units/test/barriers/rail.json",
+    "mecard/units/test/barriers/rail.png",
+    "mecard/units/test/floating/eye.json",
+    "mecard/units/test/floating/eye.png",
+    "mecard/units/test/floating/orb.json",
+    "mecard/units/test/floating/orb.png",
+    "mecard/units/test/grounds/grass.json",
+    "mecard/units/test/grounds/grass.png",
+    "mecard/units/test/grounds/water.json",
+    "mecard/units/test/grounds/water.png",
+    "mecard/units/test/machines/arrow.json",
+    "mecard/units/test/machines/arrow.png",
+    "mecard/units/test/machines/turret.json",
+    "mecard/units/test/machines/turret.png",
+    "mecard/units/test/plants/bush.json",
+    "mecard/units/test/plants/bush.png",
+    "mecard/units/test/plants/post.json",
+    "mecard/units/test/plants/post.png",
+    "mecard/units/test/rugs/grate.json",
+    "mecard/units/test/rugs/grate.png",
+    "mecard/units/test/rugs/rug.json",
+    "mecard/units/test/rugs/rug.png",
+    "mecard/units/test/statues/statue_cat.json",
+    "mecard/units/test/statues/statue_cat.png",
+    "mecard/units/test/statues/statue_knight.json",
+    "mecard/units/test/statues/statue_knight.png",
+    "mecard/units/test/walls/brick_wall.json",
+    "mecard/units/test/walls/brick_wall.png",
+    "mecard/units/test/walls/stone_block.json",
+    "mecard/units/test/walls/stone_block.png",
     "mecard/units/thorn_tank.png",
     "mecard/units/thorns.png",
+    "mecard/units/torii.json",
+    "mecard/units/torii.png",
     "mecard/units/tornado.png",
     "mecard/units/totem.png",
     "mecard/units/toxic_toad.png",
+    "mecard/units/tree.png",
     "mecard/units/troll.png",
     "mecard/units/turret_engineer.png",
     "mecard/units/vengeful_spirit.png",
+    "mecard/units/wall.json",
+    "mecard/units/wall.png",
     "mecard/units/wandering_samurai.png",
     "mecard/units/wave.png",
     "mecard/units/werewolf.png",
@@ -1143,6 +1280,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/usables/mixer.png",
     "mecard/usables/pawn_powder.png",
     "mecard/usables/plant_bag.png",
+    "mecard/usables/resurrection.png",
     "mecard/usables/shield_flask.png",
     "mecard/usables/silence_jar.png",
     "mecard/usables/spring.png",

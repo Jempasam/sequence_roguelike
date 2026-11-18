@@ -1,0 +1,51 @@
+{
+  "size": [
+    12,
+    8
+  ],
+  "palette": [
+    {
+      "color": "#f2efe6",
+      "alpha": 1,
+      "light": 0,
+      "reflection": 0
+    },
+    {
+      "color": "#3fa34d",
+      "alpha": 1,
+      "light": 0,
+      "reflection": 0
+    },
+    {
+      "color": "#15151a",
+      "alpha": 1,
+      "light": 0,
+      "reflection": 0
+    },
+    {
+      "color": "#8a4a52",
+      "alpha": 1,
+      "light": 0,
+      "reflection": 0
+    }
+  ],
+  "pixels": {
+    "materials": [
+      "............",
+      "...333333...",
+      "..30000003..",
+      ".3000112003.",
+      ".3000112003.",
+      "..30000003..",
+      "...333333...",
+      "............"
+    ]
+  },
+  "filters": [
+    "auto_depth"
+  ],
+  "render": {
+    "preset": "shaded",
+    "light": 135
+  }
+}

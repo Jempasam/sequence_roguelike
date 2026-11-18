@@ -1,7 +1,7 @@
-import type { SaveSlot } from "../../../../engine/save"
-import type { Observer } from "../../sim/base/Observable"
-import type { Run } from "../../sim/run/Run"
-import type { RunSave } from "../../sim/save/runSave"
+import type { SaveSlot } from "../../../engine/save"
+import type { Observer } from "../sim/base/Observable"
+import type { Run } from "../sim/run/Run"
+import type { RunSave } from "../sim/save/runSave"
 
 /**
  * Keeps a run in a slot of the player's storage: it writes the run as it stands whenever a halt or a fight

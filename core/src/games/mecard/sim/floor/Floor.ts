@@ -1,6 +1,5 @@
 import type { Visual } from "../base/Visual"
 import type { Rng } from "../base/Rng"
-import type { Monster } from "../catalog/monsters"
 import type { SceneLook } from "../halt/SceneLook"
 import type { HaltType } from "../halt/HaltType"
 import type { Place, PlaceInfo, Spot } from "../run/Journey"
@@ -41,8 +40,8 @@ export interface FloorContext {
     /** The random numbers the map is drawn from. */
     readonly rng: Rng
 
-    /** Lay a fight on the map, with its monsters, and the halt visited once it is won, none for none. */
-    addFight(type: FightType, monsters: readonly Monster[], at: Spot, halt?: HaltType|null): Place
+    /** Lay a fight on the map, and the halt visited once it is won, none for none. */
+    addFight(type: FightType, at: Spot, halt?: HaltType|null): Place
 
     /** Lay a halt on the map. */
     addHalt(type: HaltType, at: Spot): Place
@@ -51,7 +50,7 @@ export interface FloorContext {
     link(from: Place, to: Place): void
 }
 
-/** A floor the party goes through: it fills its map with its places, and the monsters living there. */
+/** A floor the party goes through: it fills its map with its places, the fights and the halts. */
 export interface Floor {
     readonly type: FloorType
 

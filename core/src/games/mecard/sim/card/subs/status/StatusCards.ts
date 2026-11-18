@@ -8,6 +8,7 @@ import { CONCENTRATED, CONCENTRATION_RANGE, FURIOUS } from "../../../status/subs
 import { PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { StatusType } from "../../../status/Status"
 
 import { ActionCard } from "../ActionCard"
@@ -17,20 +18,20 @@ import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** The reach of the weakening blows: a short wide band ahead. */
-const WEAKENING_LENGTH = 1.5
+const WEAKENING_LENGTH = 1.5 - UNIT_RADIUS
 const WEAKENING_WIDTH = 0.8
 
 /** The segment of the marks and of the fragility: the mark reaches farther, the fragility is a dagger's. */
-const MARK_LENGTH = 1.5
+const MARK_LENGTH = 1.5 - UNIT_RADIUS
 const MARK_WIDTH = 0.4
-const DAGGER_LENGTH = 1.1
+const DAGGER_LENGTH = 1.1 - UNIT_RADIUS
 const DAGGER_WIDTH = 0.4
 
 /** How many rounds a mark waits for the attack that is doubled. */
 const MARK_ROUNDS = 3
 
 /** How far the rampart reaches around its unit, in meters. */
-const RAMPART_RADIUS = 1.5
+const RAMPART_RADIUS = 1.5 - UNIT_RADIUS
 
 /** An action of the unit on itself, giving a status of a level. */
 function giving(type: StatusType, level: number, what: string): Action {
@@ -59,14 +60,14 @@ export const WEAKENING_BLOWS = new ActionCard("Coups affaiblissant", [
     "prennent un écho de ", 1, "+", FORCE, " à chaque blessure.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
-        const area = ahead(unit, WEAKENING_LENGTH, WEAKENING_WIDTH)
+        const area = ahead(unit, unit, WEAKENING_LENGTH, WEAKENING_WIDTH)
         for(const target of battle.fetch(area, unit)){
             battle.startProcess(target, new WeakeningBlows(1 + unit.stats.strength.value))
         }
         hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        const area = ahead(pose, WEAKENING_LENGTH, WEAKENING_WIDTH)
+        const area = ahead(unit, pose, WEAKENING_LENGTH, WEAKENING_WIDTH)
         return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...battle.fetch(area, unit).map(ring))
     },
 })

@@ -11,6 +11,9 @@ export type ImagePath = Extract<AssetPath, `${string}.png`>
 /** The path of an image of named layers shipped with the game, an OpenRaster file. */
 export type LayeredImagePath = Extract<AssetPath, `${string}.ora`>
 
+/** The path of a file of data shipped with the game, a JSON file. */
+export type JsonPath = Extract<AssetPath, `${string}.json`>
+
 /**
  * Loads the files shipped with the game, by their typed path.
  *
@@ -59,6 +62,20 @@ export class Assets {
         } catch(error){
             if(error instanceof OraError) throw new AssetError(path, error.reason, error)
             throw error
+        }
+    }
+
+    /**
+     * Load a file of data, its JSON read as it is: what it holds is for the consumer to check.
+     *
+     * @throws {@link AssetError} When the file cannot be read, or is not valid JSON.
+     */
+    public async json(path: JsonPath): Promise<unknown> {
+        const bytes = await this.bytes(path)
+        try {
+            return JSON.parse(new TextDecoder().decode(bytes))
+        } catch(error){
+            throw new AssetError(path, "invalid", error)
         }
     }
 

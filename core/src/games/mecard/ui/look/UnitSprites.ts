@@ -1,7 +1,10 @@
 import { Atlas } from "../../../../engine/atlas"
+import { AssetError } from "../../../../engine/assets"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import type { Gpu, Sprite } from "../../../../engine/gpu"
 import { ALL_ITEMS, ALL_USABLES } from "../../sim/catalog"
+import { allHalts } from "../../sim/catalog/halts"
+import { ALL_FLOORS } from "../../sim/catalog/floors"
 import type { StatusType } from "../../sim/status/Status"
 import { STATUS_FAMILIES, STATUS_TYPES } from "../../sim/status/statusTypes"
 import { Rope } from "../../../../engine/ui"
@@ -11,149 +14,21 @@ import { loadBoosterFrame } from "../hud/BoosterView"
 import { visual } from "../../sim/base/Visual"
 import type { Visual } from "../../sim/base/Visual"
 import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
-import { loadPictures } from "./visualPath"
+import { DEFAULT_LOOK, readSpriteLook } from "./spriteLook"
+import type { SpriteLook } from "./spriteLook"
+import { dataPathOf, loadPictures, shippedPictures } from "./visualPath"
 
 /** The giant floating hand standing for a party of none on the map: it is no unit, so no kit names it. */
 export const HAND_VISUAL: Visual = visual("units/hand")
 
-/** The picture of each sprite a unit may name, a chibi drawn face-on, 12 by 14. */
-export const SPRITE_KEYS: readonly string[] = [
-    "units/hand",
-    "units/lancer",
-    "units/swordsman",
-    "units/archer",
-    "units/brawler",
-    "units/artificer",
-    "units/mage",
-    "units/assassin",
-    "units/apothecary",
-    "units/puppeteer",
-    "units/prestidigitator",
-    "units/spectre",
-    "units/pikeman",
-    "units/pyromancer",
-    "units/priest",
-    "units/fisher",
-    "units/spiritist",
-    "units/bullfighter",
-    "units/chronomancer",
-    "units/rider",
-    "units/martyr",
-    "units/explosive_goblin",
-    "units/gravitationist",
-    "units/druid", "units/geomancer", "units/plant_mage",
-    "units/gunner",
-    "units/hypnotist",
-    "units/knight",
-    "units/shadow_thief",
-    "units/tempest_mage",
-    "units/demonist",
-    "units/acrobat",
-    "units/black_knight",
-    "units/bleeder",
-    "units/turret_engineer",
-    "units/duelist",
-    "units/swamp_sorcerer",
-    "units/shadow_samurai",
-    "units/chess_player", "units/glass_man", "units/horse",
-    "units/pawn", "units/rook", "units/chess_knight", "units/bishop", "units/queen",
-    "units/goblin",
-    "units/monster_archer",
-    "units/brute",
-    "units/hunter",
-    "units/berserker",
-    "units/golem",
-    "units/troll",
-    "units/megalaser",
-    "units/devil",
-    "units/hydra", "units/lich_king", "units/dark_lord", "units/frost_giant",
-    "units/magma_dragon", "units/kraken_captain", "units/goblin_mecha", "units/ghost_shogun",
-    "units/mechanic",
-    "units/bull",
-    "units/kamikaze_robot",
-    "units/fire_mage",
-    "units/elf_assassin",
-    "units/goblin_rider",
-    "units/stone_golem",
-    "units/slime",
-    "units/elf_archer",
-    "units/ice_mage",
-    "units/imp",
-    "units/fire_lizard",
-    "units/skeleton_reaper",
-    "units/mad_alchemist",
-    "units/goblin_wrestler",
-    "units/goblin_pilot",
-    "units/orc_battle_shaman",
-    "units/haunting_ghost",
-    "units/shield_guard",
-    "units/thorn_tank",
-    "units/sniper",
-    "units/harpoon_pirate",
-    "units/toxic_toad",
-    "units/garrison_goblin",
-    "units/werewolf",
-    "units/ogre_crusher",
-    "units/iron_knight",
-    "units/wandering_samurai",
-    "units/mind_controller",
-    "units/vengeful_spirit",
-    "units/ghost",
-    "units/wolf",
-    "units/bear",
-    "units/hawk",
-    "units/fox",
-    "units/shaman",
-    "units/big_bad_wolf",
-    "units/beast_warrior",
-    "units/spellblade",
-    "units/witcher",
-    "units/salamander",
-    "units/otter",
-    "units/boar",
-    "units/robot",
-    "units/tornado",
-    "units/wave",
-    "units/rock",
-    "units/pillar",
-    "units/mine",
-    "units/shadow",
-    "units/spirit",
-    "units/coin",
-    "units/log",
-    "units/stone",
-    "units/barrel",
-    "units/totem",
-    "units/thorns",
-    "units/bomb",
-    "units/fire",
-    "units/puddle",
-]
+/** The pictures of the units, a chibi drawn face-on, 12 by 14: every file under `units/`. */
+const unitKeys = (): string[] => shippedPictures("units")
 
-/** The icons of the processes, 7 by 7, by the key their visual gives. */
-export const ICON_KEYS: readonly string[] = [
-    "processes/strength",
-    "processes/horse",
-    "processes/haste",
-    "processes/shadow_link",
-    "processes/vanishing",
-    "processes/laser_link",
-    "processes/hook",
-    "processes/iron_chain",
-    "processes/spirit_anchor",
-    "processes/parrot",
-    "processes/exo_nerf",
-    "processes/ethereal",
-    "processes/haunting",
-    "processes/skewer",
-]
+/** The icons of the processes, 7 by 7, by the key their visual gives: every file under `processes/`. */
+const iconKeys = (): string[] => shippedPictures("processes")
 
-/** The pictures stretched between two units tied together, by the visual of their tie. */
-export const TETHER_KEYS: readonly string[] = [
-    "tethers/laser",
-    "tethers/grapple",
-    "tethers/iron_chain",
-]
+/** The pictures stretched between two units tied together, by the visual of their tie: every file under `tethers/`. */
+const tetherKeys = (): string[] => shippedPictures("tethers")
 
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
 const CARD_BACK_PATHS: readonly ImagePath[] = [
@@ -177,6 +52,11 @@ export class UnitSprites {
     /** The sprite a unit names, none before the sprites are loaded, or for a name with none. */
     public of(visual: Visual|null): Sprite|null {
         return visual ? this.#pictures.get(visual.visual) ?? null : null
+    }
+
+    /** How the picture of a visual is drawn over a hitbox, as its JSON file says: the default for one without. */
+    public look(visual: Visual|null): SpriteLook {
+        return visual ? this.#looks.get(visual.visual) ?? DEFAULT_LOOK : DEFAULT_LOOK
     }
 
     /** The icon of a process, by the visual it gives, none before they are loaded or for an unknown one. */
@@ -254,7 +134,9 @@ export class UnitSprites {
     public async load(gpu: Gpu, assets: Assets): Promise<void> {
         const statuses = [...STATUS_TYPES, ...STATUS_FAMILIES].map(type => type.visual.visual)
         const things = [...ALL_ITEMS, ...ALL_USABLES].map(thing => thing.icon.visual)
-        const keys = [...new Set([...SPRITE_KEYS, ...ICON_KEYS, ...TETHER_KEYS, ...statuses, ...things])]
+        const halts = allHalts().map(halt => halt.icon.visual)
+        const floors = ALL_FLOORS.map(floor => floor.icon.visual)
+        const keys = [...new Set([...unitKeys(), ...iconKeys(), ...tetherKeys(), ...statuses, ...things, ...halts, ...floors])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
         const [named, fixedPictures, bag, booster] = await Promise.all([
             loadPictures(assets, keys),
@@ -266,7 +148,15 @@ export class UnitSprites {
         this.#booster = booster
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll([...named.map(({ pixels }) => ({ pixels })), ...fixedPictures.map(pixels => ({ pixels }))])
-        named.forEach(({ key }, index) => this.#pictures.set(key, atlas.sprite(entries[index])))
+        named.forEach(({ key, data }, index) => {
+            this.#pictures.set(key, atlas.sprite(entries[index]))
+            if(data === null) return
+            try {
+                this.#looks.set(key, readSpriteLook(data))
+            } catch(error){
+                throw new AssetError(dataPathOf(key), "invalid", error)
+            }
+        })
         const rest = entries.slice(named.length)
         this.#cardBacks = rest.slice(0, CARD_BACK_PATHS.length).map(entry => atlas.sprite(entry))
         this.#invalidCard = atlas.sprite(rest[CARD_BACK_PATHS.length])
@@ -279,6 +169,7 @@ export class UnitSprites {
 
 
     readonly #pictures = new Map<string, Sprite>()
+    readonly #looks = new Map<string, SpriteLook>()
     readonly #tethers = new Map<string, Rope>()
     #ready = false
     readonly #listeners: (() => void)[] = []

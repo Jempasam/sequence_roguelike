@@ -1,5 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
-import type { Action } from "../../../battle/Action"
+import type { Action, Pose } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Area } from "../../../battle/Area"
@@ -17,7 +18,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the shout and the taunt reach, in meters. */
-const SHOUT_RADIUS = 1.5
+const SHOUT_RADIUS = 1.5 - UNIT_RADIUS
 
 /** How long the lines splitting the arena for the orientation are, each way, in meters. */
 const SPLIT_LENGTH = 40
@@ -26,13 +27,13 @@ const SPLIT_LENGTH = 40
 const GLARE_COS_HALF = Math.SQRT1_2
 
 /** How far the icy glare reaches, in meters. */
-const GLARE_RADIUS = 3
+const GLARE_RADIUS = 3 - UNIT_RADIUS
 
 /** The cosine of a turn of 45° at most: what a unit facing the one who glares is within. */
 const GLARE_FACING = Math.SQRT1_2
 
 /** How far behind the unit the about-face stuns, in meters, and how wide that is. */
-const ABOUT_FACE_LENGTH = 1
+const ABOUT_FACE_LENGTH = 1 - UNIT_RADIUS
 const ABOUT_FACE_WIDTH = 0.7
 
 /** Which way a unit looks away from another: straight away, or none when they are at the same spot. */
@@ -47,21 +48,19 @@ function towards(to: Vector2): (unit: Unit) => Vector2|null {
 
 /** An action turning the units around its unit, each toward a direction of its own. */
 function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null): Action {
-    const area = (pose: { position: Vector2 }): Area => {
-        return Areas.circle(pose.position, SHOUT_RADIUS)
-    }
+    const area = (unit: Unit, pose: Pose): Area => unit.around(SHOUT_RADIUS, pose)
     return {
         use: function ({ battle, unit }){
-            const turned = turnUnitsIn(battle, area(unit), unit, directionOf(unit.position))
-            hold(battle, WORD_TIME, [Previews.polygon(area(unit), CONTROL_COLOR), ...turned.map(other => {
+            const turned = turnUnitsIn(battle, area(unit, unit), unit, directionOf(unit.position))
+            hold(battle, WORD_TIME, [Previews.polygon(area(unit, unit), CONTROL_COLOR), ...turned.map(other => {
                 return Previews.arrow(
                     [other.position, other.position.plus(other.direction.times(TURN_LENGTH))], MOVE_WIDTH, CONTROL_COLOR,
                 )
             })])
         },
         preview: ({ battle, unit, pose }) => {
-            const turnings = turnsIn(battle, area(pose), unit, directionOf(pose.position))
-            return Previews.still(pose, Previews.polygon(area(pose), RANGE_COLOR), ...turnings.map(turning))
+            const turnings = turnsIn(battle, area(unit, pose), unit, directionOf(pose.position))
+            return Previews.still(pose, Previews.polygon(area(unit, pose), RANGE_COLOR), ...turnings.map(turning))
         },
     }
 }
@@ -169,7 +168,7 @@ function aiming(
             const { pose, unit } = ctx
             // A reach with no end draws no circle.
             const circles: Indicator[] = Number.isFinite(radius(unit))
-                ? [Previews.polygon(Areas.circle(pose.position, radius(unit)), RANGE_COLOR)]
+                ? [Previews.polygon(unit.around(radius(unit), pose), RANGE_COLOR)]
                 : []
             const found = aimed(ctx)
             if(!found) return Previews.still(pose, ...circles, Previews.label(pose.position, nobody, NOTE_COLOR))
@@ -182,14 +181,17 @@ function aiming(
 }
 
 /** How far the energetic aim looks for an enemy, in meters. */
-const ENERGETIC_RANGE = 2
+const ENERGETIC_RANGE = 2 - UNIT_RADIUS
 
-/** An aim at the nearest enemy within a short reach, stunning an enemy it had to turn far to reach. */
+/** An aim at the nearest enemy within a short reach of the edge of the body, stunning an enemy it had to turn far to reach. */
 export const ENERGETIC_AIM = new ActionCard("Visée énergique", [
-    "Se tourne vers l'ennemi le plus proche, jusqu'à ", ENERGETIC_RANGE, " ", DISTANCE, ". Si cela demande plus d'un quart ",
+    "Se tourne vers l'ennemi le plus proche, jusqu'à ", frenchNumber(ENERGETIC_RANGE), " ", DISTANCE, ". Si cela demande plus d'un quart ",
     "de tour, il est étourdi.",
 ], Rarity.RARE, aiming(
-    ({ battle, unit, pose }, range) => battle.nearestEnemy(unit, range, pose.position),
+    ({ battle, unit, pose }, range) => {
+        const near = battle.enemiesOf(unit).filter(enemy => unit.hitbox.gap(pose, enemy.hitbox, enemy) <= range)
+        return closest(near, pose.position)
+    },
     () => ENERGETIC_RANGE, true, "personne à viser",
 ))
 
@@ -207,8 +209,9 @@ export const ALLY_AIM = new ActionCard("Viser allié", [
 
 
 /** Where the about-face stuns: just behind the unit. */
-function behind(pose: { position: Vector2, direction: Vector2 }): Area {
-    return Areas.line(pose.position, pose.position.minus(pose.direction.times(ABOUT_FACE_LENGTH)), ABOUT_FACE_WIDTH)
+function behind(unit: Unit, pose: Pose): Area {
+    const from = unit.muzzle(pose, pose.direction.opposite)
+    return Areas.line(from, from.minus(pose.direction.times(ABOUT_FACE_LENGTH)), ABOUT_FACE_WIDTH)
 }
 
 /** A half turn, stunning the nearest unit behind. */
@@ -217,15 +220,15 @@ export const ABOUT_FACE = new ActionCard("Volte-face", [
 ], Rarity.COMMON, {
     use: function (ctx){
         const { battle, unit } = ctx
-        const hit = closest(battle.fetch(behind(unit), unit), unit.position)
+        const hit = closest(battle.fetch(behind(unit, unit), unit), unit.position)
         turn(ctx, unit.direction.opposite)
         if(hit) battle.stun(hit)
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = Previews.polygon(behind(pose), RANGE_COLOR)
+        const zone = Previews.polygon(behind(unit, pose), RANGE_COLOR)
         const away = pose.direction.opposite
         const half = Previews.arrow([pose.position, pose.position.plus(away.times(TURN_LENGTH))], MOVE_WIDTH, MOVE_COLOR)
-        const hit = closest(battle.fetch(behind(pose), unit), pose.position)
+        const hit = closest(battle.fetch(behind(unit, pose), unit), pose.position)
         const stunned = hit ? [Previews.label(hit.position, "étourdi", NOTE_COLOR)] : []
         return Previews.still({ ...pose, direction: away }, zone, half, ...stunned)
     },
@@ -233,8 +236,8 @@ export const ABOUT_FACE = new ActionCard("Volte-face", [
 
 
 /** The units of a sector that face its apex within an eighth of a turn each way: those the glare freezes. */
-function glared(battle: Battle, unit: Unit, pose: { position: Vector2, direction: Vector2 }): Unit[] {
-    const area: Area = Areas.arc(pose.position, pose.direction, GLARE_RADIUS, GLARE_COS_HALF)
+function glared(battle: Battle, unit: Unit, pose: Pose): Unit[] {
+    const area: Area = Areas.arc(unit.muzzle(pose), pose.direction, GLARE_RADIUS, GLARE_COS_HALF)
     return battle.fetch(area, unit).filter(other => {
         const toward = pose.position.minus(other.position).normalized
         return toward !== null && other.direction.dot(toward) >= GLARE_FACING
@@ -248,10 +251,10 @@ export const ICY_GLARE = new ActionCard("Regard glaçant", [
     use: function ({ battle, unit }){
         const frozen = glared(battle, unit, unit)
         for(const other of frozen) battle.stun(other)
-        hold(battle, WORD_TIME, [Previews.polygon(Areas.arc(unit.position, unit.direction, GLARE_RADIUS, GLARE_COS_HALF), CONTROL_COLOR)])
+        hold(battle, WORD_TIME, [Previews.polygon(Areas.arc(unit.muzzle(), unit.direction, GLARE_RADIUS, GLARE_COS_HALF), CONTROL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        const zone = Previews.polygon(Areas.arc(pose.position, pose.direction, GLARE_RADIUS, GLARE_COS_HALF), RANGE_COLOR)
+        const zone = Previews.polygon(Areas.arc(unit.muzzle(pose), pose.direction, GLARE_RADIUS, GLARE_COS_HALF), RANGE_COLOR)
         return Previews.still(pose, zone, ...glared(battle, unit, pose).map(other => {
             return Previews.label(other.position, "étourdi", NOTE_COLOR)
         }))

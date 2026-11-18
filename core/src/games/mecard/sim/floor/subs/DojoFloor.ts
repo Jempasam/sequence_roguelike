@@ -1,23 +1,15 @@
 import type { Rng } from "../../base/Rng"
-import { WANDERING_SAMURAI, ELF_ASSASSIN, GOBLIN, BERSERKER, ORC_BATTLE_SHAMAN, GHOST_SHOGUN } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
 import { ENCHANTER_HALT } from "../../halt/subs/deck/EnchanterHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { DOJO_FIGHTS } from "../fights/dojoFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [WANDERING_SAMURAI, ELF_ASSASSIN, GOBLIN],
-    middle: [BERSERKER, WANDERING_SAMURAI, ELF_ASSASSIN],
-    deep: [WANDERING_SAMURAI, ORC_BATTLE_SHAMAN, BERSERKER, ELF_ASSASSIN],
-}
 
 /** Dojo: Des lames rapides, et un shogun fantôme au bout. Plus de dresseurs et d'enchanteurs. */
 export class DojoFloor extends AbstractFloor {
@@ -30,8 +22,8 @@ export class DojoFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, GHOST_SHOGUN, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(DOJO_FIGHTS, category, layer, rng)
     }
 }
 

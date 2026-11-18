@@ -50,8 +50,8 @@ function crossing(invoked: Element, applied: Element): Action {
             invoked.invoke(ctx, position, direction, applied)
             hold(ctx.battle, SHORT_TIME)
         },
-        preview: ({ battle, pose }) => {
-            const center = conjured(battle, pose).position
+        preview: ({ battle, unit, pose }) => {
+            const center = conjured(battle, unit, pose).position
             const color = { ...applied.color, a: SPOT_OPACITY }
             return Previews.still(pose, Previews.polygon(Areas.circle(center, UNIT_RADIUS), color))
         },

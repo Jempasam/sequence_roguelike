@@ -1,6 +1,8 @@
 import { existsSync, statSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 
+import { allFightTypes } from "@game/core/mecard"
+
 import { choiceOf, integerOf, isSet, listOf, parseArgs, valueOf, valuesOf } from "./args"
 import type { OptionSpec } from "./args"
 import { normalize, UsageError } from "./errors"
@@ -10,7 +12,7 @@ import type { Row } from "./match"
 import { DEFAULT_OUTPUTS, parseOutputs } from "./outputs"
 import { FORMATS } from "./report"
 import type { Format, Presentation } from "./report"
-import { FIGHT_TYPES, fightsFinder } from "./scenario"
+import { FIGHT_CATEGORIES, fightsFinder } from "./scenario"
 import type { Ais, Setup } from "./scenario"
 import { parseStrategy, SMART } from "./strategies"
 import type { Strategy } from "./strategies"
@@ -170,7 +172,17 @@ export async function planOf(args: readonly string[]): Promise<Plan> {
 
     const level = integerOf(valueOf(parsed, "level") ?? "1", "--level", 1)
     const layers = parseLayers(valueOf(parsed, "layer") ?? "0-3")
-    const fightType = choiceOf(valueOf(parsed, "fight") ?? "battle", "--fight", Object.keys(FIGHT_TYPES) as (keyof typeof FIGHT_TYPES)[])
+    const fightText = valueOf(parsed, "fight") ?? "battle"
+    const categoryIds = Object.keys(FIGHT_CATEGORIES) as (keyof typeof FIGHT_CATEGORIES)[]
+    const asCategory = categoryIds.find(id => id === fightText)
+    if(asCategory === undefined && !allFightTypes().some(type => type.id === fightText)){
+        throw new UsageError(
+            `--fight : « ${fightText} » invalide. Valeurs permises : ${categoryIds.join(", ")}, ou l'id d'un combat précis `
+            + "(npm run cli -- list fights).",
+        )
+    }
+    const fightType = FIGHT_CATEGORIES[asCategory ?? "battle"]
+    const fightId = asCategory === undefined ? fightText : undefined
     const games = integerOf(valueOf(parsed, "games") ?? String(DEFAULT_GAMES), "--games", 1)
     const seed = integerOf(valueOf(parsed, "seed") ?? String(DEFAULT_SEED), "--seed", 0, 2 ** 32 - 1)
     const maxRounds = integerOf(valueOf(parsed, "max-rounds") ?? String(DEFAULT_MAX_ROUNDS), "--max-rounds", 1)
@@ -198,13 +210,13 @@ export async function planOf(args: readonly string[]): Promise<Plan> {
         roster,
         level,
         layers,
-        fightType: FIGHT_TYPES[fightType],
+        fightType,
         maxRounds,
         stall,
         softWin: isSet(parsed, "soft-win"),
         seed,
         journal: log !== null,
-        fightsOf: fightsFinder({ level, layers, fightType: FIGHT_TYPES[fightType], seed }),
+        fightsOf: fightsFinder({ level, layers, fightType, fightId, seed }),
     }
     const world = { roster, fightsOf: base.fightsOf }
     const descriptions = matches.map(text => parseMatch(text, roster))

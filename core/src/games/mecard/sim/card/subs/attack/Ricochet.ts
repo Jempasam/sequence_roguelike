@@ -4,6 +4,7 @@ import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
@@ -60,14 +61,17 @@ interface Bouncing {
     readonly renewing: boolean
 }
 
-/** The lines a shot follows from a pose: straight ahead, then off what it meets, unless a unit. */
+/**
+ * The lines a shot follows from a pose: straight ahead from the edge of its unit, then off what it meets, unless
+ * a unit. The first line is a body radius shorter than the range, which a bounce gives back whole.
+ */
 function lines(battle: Battle, unit: Unit, pose: Pose, { range, bounces, renewing }: Bouncing): Line[] {
     const result: Line[] = []
-    let from = pose.position
+    let from = unit.muzzle(pose)
     let direction = pose.direction
-    let left = range
+    let left = range - UNIT_RADIUS
     for(let bounce = 0; ; bounce++){
-        const hit = battle.ray(unit, left, { position: from, direction })
+        const hit = battle.rayFrom(unit, left, { position: from, direction })
         const travelled = from.distance(hit.end)
         result.push({ from, to: hit.end })
         if(hit.unit || bounce >= bounces || travelled >= left - WALL_SLACK) return result

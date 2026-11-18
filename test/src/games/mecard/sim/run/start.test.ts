@@ -4,7 +4,7 @@ import type { Place, PlaceType } from "@game/core/mecard"
 
 /** The sort of fight or of halt a place holds, the fight first. */
 function typeOf(place: Place): PlaceType {
-    return place.fight ?? place.halt!
+    return place.fight?.category ?? place.halt!
 }
 
 describe("the start of a run", () => {

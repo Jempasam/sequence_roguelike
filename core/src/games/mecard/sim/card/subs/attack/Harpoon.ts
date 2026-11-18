@@ -2,6 +2,7 @@ import { rgba } from "../../../base/Rgba"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
@@ -13,7 +14,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the harpoon of the catalog flies, in meters, before the reach of the unit. */
-const HARPOON_RANGE = 4
+const HARPOON_RANGE = 4 - UNIT_RADIUS
 
 /** How many hearts the harpoon of the catalog takes, before the precision of the unit. */
 const HARPOON_DAMAGE = 1
@@ -55,16 +56,16 @@ export class HarpoonCard extends ActionCard {
         return {
             use: function (ctx){
                 const { battle, unit } = ctx
-                const { end, unit: target } = battle.ray(unit, reach(unit))
-                fly(battle, unit.position, end, HARPOON_COLOR)
+                const { start, end, unit: target } = battle.ray(unit, reach(unit))
+                fly(battle, start, end, HARPOON_COLOR)
                 if(!target) return
-                const area = Areas.line(unit.position, end, BOLT_WIDTH)
+                const area = Areas.line(start, end, BOLT_WIDTH)
                 battle.strike(unit, area, amount + unit.stats.precision.value, DamageType.PHYSICAL)
                 if(target.alive) travel(ctx, unit.direction, pulled(unit), PULL_SPEED)
             },
             preview: ({ battle, unit, pose }) => {
-                const { end, unit: target } = battle.ray(unit, reach(unit), pose)
-                const rope = Previews.arrow([pose.position, end], MOVE_WIDTH / 2, HARPOON_COLOR)
+                const { start, end, unit: target } = battle.ray(unit, reach(unit), pose)
+                const rope = Previews.arrow([start, end], MOVE_WIDTH / 2, HARPOON_COLOR)
                 if(!target) return Previews.still(pose, rope, Previews.label(end, "raté", NOTE_COLOR))
                 const gone = battle.moveSpot(unit, pose.position, pose.direction, pulled(unit))
                 const pull = Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)

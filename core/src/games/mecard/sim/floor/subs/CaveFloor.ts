@@ -1,16 +1,13 @@
 import type { Rng } from "../../base/Rng"
-import { ARCHER, BRUTE, GOBLIN, GOLEM, SLIME } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { encounter } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { CAVE_FIGHTS } from "../fights/caveFights"
 import type { FloorType } from "../Floor"
 
 import { AbstractFloor } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives in the cave. */
-const MONSTERS: readonly Monster[] = [GOBLIN, ARCHER, BRUTE, SLIME]
 
 /** The cave: where every run starts, a bit of everything on the way. */
 export class CaveFloor extends AbstractFloor {
@@ -19,8 +16,8 @@ export class CaveFloor extends AbstractFloor {
     public readonly type: FloorType = CAVE_FLOOR
 
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return encounter(MONSTERS, GOLEM, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(CAVE_FIGHTS, category, layer, rng)
     }
 }
 

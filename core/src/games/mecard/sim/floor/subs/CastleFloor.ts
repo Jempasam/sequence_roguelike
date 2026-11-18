@@ -1,24 +1,16 @@
 import type { Rng } from "../../base/Rng"
-import { SHIELD_GUARD, GARRISON_GOBLIN, SNIPER, IRON_KNIGHT, THORN_TANK, MIND_CONTROLLER, DARK_LORD } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { STRATEGIST_HALT } from "../../halt/subs/deck/StrategistHalt"
 import { MERCHANT_HALT } from "../../halt/subs/gift/MerchantHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { CASTLE_FIGHTS } from "../fights/castleFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [SHIELD_GUARD, GARRISON_GOBLIN, SNIPER],
-    middle: [IRON_KNIGHT, THORN_TANK, SHIELD_GUARD],
-    deep: [IRON_KNIGHT, MIND_CONTROLLER, THORN_TANK, SNIPER],
-}
 
 /** Château: Des gardes, des chevaliers et un seigneur noir au bout. Plus de forges, de stratèges et de marchands. */
 export class CastleFloor extends AbstractFloor {
@@ -31,8 +23,8 @@ export class CastleFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, DARK_LORD, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(CASTLE_FIGHTS, category, layer, rng)
     }
 }
 

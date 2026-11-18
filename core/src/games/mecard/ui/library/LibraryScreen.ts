@@ -1,6 +1,6 @@
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
-import { Box, Button, Label, NineSlice, Panel, Scroll, TextInput, WrapBox } from "../../../../engine/ui"
+import { Bar, Box, Button, Label, NineSlice, Panel, Scroll, TextInput, WrapBox } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import { concat, plainText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
@@ -17,6 +17,9 @@ const BACKDROP = new Color(0.12, 0.11, 0.17)
 
 /** The space around and between things, in virtual pixels. */
 const MARGIN = 4
+
+/** The height of the bar between two categories of tabs, about a tab's. */
+const BAR_HEIGHT = 14
 
 /** How wide a card of an entry is, the space between two, and the frame around the cards of an entry. */
 const CARD_WIDTH = 44
@@ -197,6 +200,10 @@ export class LibraryScreen {
         // A wrapping box, so the tabs sit in the middle when they fit, and scroll when they do not.
         const row = new WrapBox({ gap: 2 })
         this.#sections.forEach((section, index) => {
+            if(index > 0 && section.group !== this.#sections[index - 1].group){
+                // A thin bar as high as a tab marks where a category ends.
+                row.add(new Bar(2, BAR_HEIGHT))
+            }
             const tab = new Button(this.theme, section.title, index === this.#selected ? { looks: chosenLooks } : {})
             tab.onActivate = () => { this.selected = index }
             row.add(tab)

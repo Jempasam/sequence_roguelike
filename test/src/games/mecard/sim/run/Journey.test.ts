@@ -1,13 +1,14 @@
 import { describe, expect, test } from "vitest"
 import {
-    BATTLE, BOSS, CAVE_FLOOR, ELITE, EXIT_HALT, FOREST_FLOOR, FORGE_HALT, GOBLIN, HOSPITAL_HALT, Journey, LAYERS, MINE_FLOOR, Rng,
+    ALL_FIGHT_CATEGORIES, BATTLE, BOSS, CAVE_FLOOR, ELITE, EXIT_HALT, FOREST_FLOOR, FORGE_HALT, GOBLIN, HOSPITAL_HALT, Journey, LAYERS, MINE_FLOOR, Rng,
     SHOP_HALT, TAVERN_HALT, zipped,
 } from "@game/core/mecard"
-import type { FightType, Place, PlaceType } from "@game/core/mecard"
+import type { FightCategory, Place, PlaceType } from "@game/core/mecard"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 
 /** The sort of fight or of halt a place holds, the fight first. */
 function typeOf(place: Place): PlaceType {
-    return place.fight ?? place.halt!
+    return place.fight?.category ?? place.halt!
 }
 
 // --- Fixture builders ---
@@ -75,11 +76,11 @@ describe("Journey", () => {
         }
     })
 
-    test("any seed → monsters on every fight, none on a halt", () => {
+    test("any seed → a fight on every fight place, none on a halt", () => {
         for(const journey of journeys()){
             for(const place of journey.places){
-                const fight = [BATTLE, ELITE, BOSS].includes(typeOf(place) as FightType)
-                expect(place.monsters.length > 0).toBe(fight)
+                const fight = ALL_FIGHT_CATEGORIES.includes(typeOf(place) as FightCategory)
+                expect(place.fight !== null).toBe(fight)
             }
         }
     })
@@ -95,16 +96,17 @@ describe("a free map", () => {
         const map = emptyMap()
         const first = map.addHalt(SHOP_HALT, { layer: 3, across: 0.2 })
         const second = map.addHalt(FORGE_HALT, { layer: 0, across: 0.9 })
-        const third = map.addFight(BATTLE, [GOBLIN], { layer: 1, across: 0.5 })
+        const third = map.addFight(fightOf(BATTLE, GOBLIN), { layer: 1, across: 0.5 })
         map.link(first, third)
         map.link(second, first)
         expect(map.entries).toEqual([second])
         expect(map.nextOf(null)).toEqual([second])
     })
 
-    test("a fight laid → holds its monsters", () => {
-        const fight = emptyMap().addFight(ELITE, [GOBLIN], { layer: 0, across: 0.5 })
-        expect(fight.monsters).toEqual([GOBLIN])
+    test("a fight laid → holds its fight", () => {
+        const type = fightOf(ELITE, GOBLIN)
+        const fight = emptyMap().addFight(type, { layer: 0, across: 0.5 })
+        expect(fight.fight).toBe(type)
     })
 
     test("several places leading nowhere → each leads to every exit", () => {

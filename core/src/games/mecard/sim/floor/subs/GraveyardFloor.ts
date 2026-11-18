@@ -1,25 +1,17 @@
 import type { Rng } from "../../base/Rng"
-import { GHOST, SKELETON_REAPER, HAUNTING_GHOST, VENGEFUL_SPIRIT, WEREWOLF, LICH_KING } from "../../catalog/monsters"
-import type { Monster } from "../../catalog/monsters"
 import { sceneLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { NECROMANCER_HALT } from "../../halt/subs/party/NecromancerHalt"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
+import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
-import { tieredEncounter } from "../encounter"
-import type { Tiers } from "../encounter"
+import { laidIn } from "../fights/designed"
+import { GRAVEYARD_FIGHTS } from "../fights/graveyardFights"
 import type { FloorType } from "../Floor"
 import { AbstractFloor, reweighted } from "./AbstractFloor"
 import type { PlaceWeights } from "./AbstractFloor"
 import { visual } from "../../base/Visual"
-
-/** Who lives on this floor, by depth. */
-const TIERS: Tiers = {
-    shallow: [GHOST, SKELETON_REAPER, HAUNTING_GHOST],
-    middle: [VENGEFUL_SPIRIT, WEREWOLF, GHOST],
-    deep: [VENGEFUL_SPIRIT, SKELETON_REAPER, WEREWOLF, HAUNTING_GHOST],
-}
 
 /** Cimetière: Des morts qui ne restent pas couchés, et un roi liche au bout. Plus de nécromanciens, d'autels et d'élites. */
 export class GraveyardFloor extends AbstractFloor {
@@ -32,8 +24,8 @@ export class GraveyardFloor extends AbstractFloor {
         )
     }
 
-    protected monsters(fight: FightType, layer: number, rng: Rng): Monster[] {
-        return tieredEncounter(TIERS, LICH_KING, fight, layer, this.level, rng)
+    protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
+        return laidIn(GRAVEYARD_FIGHTS, category, layer, rng)
     }
 }
 

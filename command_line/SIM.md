@@ -11,6 +11,7 @@ npm run cli -- sim --match "<alliés>/<adversaires>" [options]
 - Une ligne est un combat décrit par `--match` (ou l'un des combats que ses `{}` énumèrent). Sa première colonne, par défaut, est le **winrate** = victoires / (victoires + défaites + nuls), du côté des alliés (le côté gauche du `/`).
 - `--out` choisit les colonnes : `n` (nombre de combats), `ci` (marge de l'intervalle de confiance à 95 %, en points de pourcentage), `draws`, `timeouts`, `rounds` (moyens), `errors` (effets en erreur), `wins`, `softwins`, `losses`, `softlosses`. `total` n'est pas une colonne : il ajoute une dernière ligne avec tous les combats du tableau réunis.
 - **Timeout** : un combat encore en cours après `--max-rounds` (60), ou bloqué (`--stall` rounds de suite sans qu'aucune unité ne gagne ni ne perde de vie : par exemple deux unités qui ne se rencontrent jamais). Il est compté à part, hors du winrate. Beaucoup de timeouts signalent un pilotage qui ne finit pas les combats (voir `--ai`).
+- **L'arène est vide** : `sim` ne pose aucun hazard (pilier, mur, canon, etc.), même pour un combat tiré d'un biome (`--fight`). Les hazards sont ceux d'un combat du jeu (`list hazards`, `list fights`) et ne sont pas encore joués ici.
 - Les lignes sont indépendantes : même `--seed`, même résultat, quelles que soient les autres lignes ou descriptions. La graine d'une ligne ne dépend que de **qui joue** (les combattants de la ligne), pas de la façon dont c'est écrit.
 
 ## `--match` : décrire les combats
@@ -174,7 +175,7 @@ Les `smartN` approchent mieux un joueur qui réfléchit que `deck`, au prix de p
 | `--ai` | voir plus haut | `kit=smart`, `monster=deck`, `pet=deck` |
 | `--level` | entier ≥ 1 : niveau d'étage (PV des monstres, +1 monstre par niveau) | `1` |
 | `--layer` | `n` ou `a-b` : couche(s) de la carte du biome où piocher les combats (0 = premiers, 11 = boss) | `0-3` |
-| `--fight` | sorte de combat piochée sur la carte : `battle`, `elite` (couche 4 au plus tôt), `boss` | `battle` |
+| `--fight` | sorte de combat piochée sur la carte : `battle`, `elite` (couche 4 au plus tôt), `boss` ; ou l'id d'un combat précis (`npm run cli -- list fights`), pris où la carte le pose, `--layer` ignoré | `battle` |
 | `--games` | combats **par ligne** | `30` |
 | `--seed` | entier | `1` |
 | `--max-rounds` | rounds avant timeout | `60` |
@@ -187,6 +188,8 @@ Les `smartN` approchent mieux un joueur qui réfléchit que `deck`, au prix de p
 | `--format` | `table`, `csv`, `json` | `table` |
 | `--log` | fichier : le journal complet de chaque combat joué (chaînes, cartes, mouvements, vie, statuts, usables…) ; son dossier doit exister | aucun |
 | `--quiet` | ni progression ni confirmation | non |
+
+Les combats de la catégorie Agression (contre des kits joués par la meilleure IA) figurent dans `list fights`, mais `sim` refuse de les jouer : il ne sait pas encore faire combattre un kit côté adverse.
 
 `--layer`, `--fight` et `--level` sont **globaux** : ils s'appliquent à toutes les sources `fight:` / `biome:` de la commande. Les anciennes options `--of`, `--pool`, `--show` et `--def` n'existent plus (le sujet est une source de `--match`, les coéquipiers se décrivent dans `--match`, les valeurs de `--show` sont des colonnes de `--out`, les combattants définis s'écrivent en place ou dans un fichier `.def` lu comme une source) : les utiliser donne un message qui dit quoi écrire.
 

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { AssetError, MemoryStorage, SaveSlot } from "@game/core"
 import type { Assets } from "@game/core"
-import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
+import { HISTORY_FORMAT, HISTORY_SLOT_KEY, RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
 import { MecardGame } from "@game/core/mecard/game"
 import type { MecardNetwork } from "@game/core/mecard/game"
 import { COOP_SEATS, FIXED_SEATS, LocalRoom, LocalSync, RunGuest, RunReceiver } from "@game/core/mecard/sync"
@@ -99,6 +99,27 @@ describe("MecardGame, its menu and its saves", () => {
         game.run.defeated.notify(game.run)
         await settle()
         expect(await slot.load()).toBeNull()
+    })
+
+    test("the party fell → the game is in the history, shown from the menu with its party", async() => {
+        const { game, ui } = await keeping()
+        const storage = await new MemoryStorage().open()
+        game.keepHistory(new SaveSlot(storage!, HISTORY_SLOT_KEY, HISTORY_FORMAT))
+        game.run.gold = 42
+        game.run.defeated.notify(game.run)
+        await settle()
+        game.menu.frame()
+        game.menu.historyButton?.activate()
+        await settle()
+        expect(game.history.visible).toBe(true)
+        expect(game.menu.visible).toBe(false)
+        expect(game.history.entries.map(entry => entry.gold)).toEqual([42])
+        expect(game.history.entries[0].heroes.length).toBe(game.run.heroes.length)
+        game.history.frame({ events: [], dt: 0 } as never)
+        expect(ui.layers.map(layer => layer.name)).toContain("history")
+        game.history.backButton.activate()
+        expect(game.menu.visible).toBe(true)
+        expect(game.history.visible).toBe(false)
     })
 
     test("New game over a kept run → asked, then the run is a new one", async() => {

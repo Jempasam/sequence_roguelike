@@ -51,10 +51,11 @@ function searched(battle: Battle, unit: Unit, from: Vector2, target: Unit, conta
         const known = standing.get(cell)
         if(known !== undefined) return known
         const point = pointOf(cell)
+        const at = { position: point, direction: unit.direction }
         const clearOfOthers = !unit.tangible || others.every(other => {
-            return other.position.distance(point) >= unit.radius + other.radius - COLLISION_SLACK
+            return unit.hitbox.gap(at, other.hitbox, other) >= -COLLISION_SLACK
         })
-        const can = clearOfOthers && !battle.arena.solid(point, unit.radius)
+        const can = clearOfOthers && !(unit.bounded && unit.hitbox.crossesWalls(at, battle.arena))
         standing.set(cell, can)
         return can
     }

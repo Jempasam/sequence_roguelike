@@ -82,6 +82,23 @@ export function depthAi(
     })
 }
 
+/** What makes an AI from the random numbers it draws from: one AI for each unit, none shared. */
+export type AiMaker = (rng: Rng) => UnitController
+
+/** The depth of the levels of the AIs of the other units that {@link BEST_AI} calls. */
+const BEST_AI_DEPTH = 1
+
+/**
+ * The best AI there is, to play the fighters that must not be an easy win: the latest `smartN`, set to the
+ * last version at each new one.
+ *
+ * @remarks
+ * A maker, not an AI: an AI keeps the random numbers it draws from, and they must be those of the fight it plays.
+ */
+export const BEST_AI: AiMaker = rng => new LookaheadAi(
+    rng, DEFAULT_CANDIDATES, true, SMART_VARIANTS[LATEST_SMART], BEST_AI_DEPTH,
+)
+
 /** The name of an AI of the catalog. */
 export type AiName = typeof AI_NAMES[number]
 

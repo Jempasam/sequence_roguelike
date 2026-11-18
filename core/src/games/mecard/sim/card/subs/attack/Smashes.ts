@@ -3,6 +3,7 @@ import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { frenchNumber, HeartCount } from "../../../battle/words"
@@ -15,30 +16,34 @@ import * as Areas from "../../../battle/area/Areas"
 /** How many hearts the suplex of the catalog takes, before twice the strength of the unit. */
 const SUPLEX_DAMAGE = 4
 
-/** How long and wide, in meters, the square the suplex grabs in is, glued to the back of the unit. */
+/** How wide, in meters, the zone the suplex grabs in is, and how far it reaches behind the unit, glued to its back. */
 const SUPLEX_SIDE = 1
+const SUPLEX_REACH = SUPLEX_SIDE - UNIT_RADIUS
 
-/** The reach of the great thrust of the catalog, in meters, and how far from the unit it starts. */
-const GREAT_THRUST_REACH = 3
-const GREAT_THRUST_START = 1
+/** The reach of the great thrust of the catalog, in meters, and how far from the edge of the unit it starts. */
+const GREAT_THRUST_REACH = 3 - UNIT_RADIUS
+const GREAT_THRUST_START = 1 - UNIT_RADIUS
 const GREAT_THRUST_WIDTH = 0.5
 
 /** How many meters make one more heart of the great thrust. */
 const GREAT_THRUST_PER = 2
 
-/** The circle the demonic strike hits: its radius and how far ahead of the unit it is centered, in meters. */
+/** The circle the demonic strike hits: its radius and how far ahead of the edge of the unit it is centered, in meters. */
 const DEMONIC_RADIUS = 1
-const DEMONIC_AHEAD = 1
+const DEMONIC_AHEAD = 1 - UNIT_RADIUS
 
 /** How many hearts the demonic strike takes, before the strength of the unit. */
 const DEMONIC_DAMAGE = 2
 
 /** How far around the unit the quake reaches, in meters. */
-const QUAKE_RADIUS = 1.2
+const QUAKE_RADIUS = 1.2 - UNIT_RADIUS
 
 /** How many hearts the sacrifice of the catalog takes, before twice the strength, and what it costs its unit. */
 const SACRIFICE_DAMAGE = 2
 const SACRIFICE_COST = 1
+
+/** How far ahead of the edge of the unit the sacrifice of the catalog reaches, in meters. */
+const SACRIFICE_REACH = 2 - UNIT_RADIUS
 
 /** The unit of some the nearest to a point, none for none. */
 export function nearestOf(units: readonly Unit[], from: Vector2): Unit|null {
@@ -87,7 +92,8 @@ export class SuplexCard extends SingleBlow {
 
     constructor(){
         super("Suplex", [
-            "Projette l'", UNIT, " la plus proche derrière, dans un carré de ", SUPLEX_SIDE, "×", ALLONGE, " ", DISTANCE, " : ",
+            "Projette l'", UNIT, " la plus proche derrière, sur ", frenchNumber(SUPLEX_REACH), "×", ALLONGE, " ", DISTANCE,
+            " de profondeur et ", SUPLEX_SIDE, " ", DISTANCE, " de large : ",
             SUPLEX_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, ", et elle est étourdie.",
         ], Rarity.RARE, SUPLEX_DAMAGE)
     }
@@ -97,8 +103,9 @@ export class SuplexCard extends SingleBlow {
     }
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.minus(pose.direction.times(SUPLEX_SIDE * unit.stats.meleeRange.value * progress))
-        return Areas.line(pose.position, to, SUPLEX_SIDE)
+        const from = unit.muzzle(pose, pose.direction.opposite)
+        const to = from.minus(pose.direction.times(SUPLEX_REACH * unit.stats.meleeRange.value * progress))
+        return Areas.line(from, to, SUPLEX_SIDE)
     }
 
     protected scaleOf(): number { return 1 }
@@ -116,7 +123,8 @@ export class GreatThrustCard extends SingleBlow {
 
     constructor(){
         super("Grande estoc", [
-            "Perce sur ", GREAT_THRUST_REACH, "×", ALLONGE, " ", DISTANCE, " devant, sauf le premier mètre : ", 1, " ",
+            "Perce sur ", frenchNumber(GREAT_THRUST_REACH), "×", ALLONGE, " ", DISTANCE, " devant, sauf les ",
+            frenchNumber(GREAT_THRUST_START), " premiers : ", 1, " ",
             DamageType.PHYSICAL, " à l'", UNIT, " la plus proche, et un de plus tous les ", GREAT_THRUST_PER, " ",
             DISTANCE, " de distance.",
         ], Rarity.RARE, 1)
@@ -127,7 +135,7 @@ export class GreatThrustCard extends SingleBlow {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value
-        const from = pose.position.plus(pose.direction.times(GREAT_THRUST_START))
+        const from = unit.muzzle(pose).plus(pose.direction.times(GREAT_THRUST_START))
         const to = from.plus(pose.direction.times((GREAT_THRUST_REACH * stretch - GREAT_THRUST_START) * progress))
         return Areas.line(from, to, GREAT_THRUST_WIDTH)
     }
@@ -152,7 +160,7 @@ export class DemonicStrikeCard extends BlowCard {
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
         const stretch = unit.stats.meleeRange.value
-        const center = pose.position.plus(pose.direction.times(DEMONIC_AHEAD * stretch))
+        const center = unit.muzzle(pose).plus(pose.direction.times(DEMONIC_AHEAD * stretch))
         return Areas.circle(center, DEMONIC_RADIUS * stretch * progress)
     }
 
@@ -177,7 +185,7 @@ export class QuakeCard extends BlowCard {
     }
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        return Areas.circle(pose.position, QUAKE_RADIUS * unit.stats.meleeRange.value * progress)
+        return unit.around(QUAKE_RADIUS * unit.stats.meleeRange.value * progress, pose)
     }
 }
 
@@ -189,7 +197,8 @@ export class SacrificeCard extends BlowCard {
 
     constructor(){
         super("Coup du sacrifice", [
-            "Perd ", new HeartCount(SACRIFICE_COST), " pour frapper sur ", 2, "×", ALLONGE, " ", DISTANCE, " devant : ",
+            "Perd ", new HeartCount(SACRIFICE_COST), " pour frapper sur ", frenchNumber(SACRIFICE_REACH), "×", ALLONGE, " ",
+            DISTANCE, " devant : ",
             SACRIFICE_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ".",
         ], Rarity.RARE, SACRIFICE_DAMAGE)
     }
@@ -199,8 +208,9 @@ export class SacrificeCard extends BlowCard {
     }
 
     public reach(_battle: Battle, unit: Unit, pose: Pose, progress: number): Area {
-        const to = pose.position.plus(pose.direction.times(2 * unit.stats.meleeRange.value * progress))
-        return Areas.line(pose.position, to, 0.5)
+        const from = unit.muzzle(pose)
+        const to = from.plus(pose.direction.times(SACRIFICE_REACH * unit.stats.meleeRange.value * progress))
+        return Areas.line(from, to, 0.5)
     }
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {

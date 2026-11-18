@@ -9,9 +9,10 @@ import { SHORT_TIME, hold } from "./playing"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
-/** A segment ahead of a pose, from its center. */
-export function ahead(pose: Pose, length: number, width: number): Area {
-    return Areas.line(pose.position, pose.position.plus(pose.direction.times(length)), width)
+/** A segment ahead of a unit at a pose, from the edge of its body. */
+export function ahead(unit: Unit, pose: Pose, length: number, width: number): Area {
+    const from = unit.muzzle(pose)
+    return Areas.line(from, from.plus(pose.direction.times(length)), width)
 }
 
 /** The unit of some the nearest to a point, none for none. */
@@ -30,7 +31,7 @@ export function nearest(units: readonly Unit[], from: Vector2): Unit|null {
 
 /** A ring around a unit, in a preview. */
 export function ring(unit: Unit) {
-    return Previews.polygon(Areas.circle(unit.position, unit.radius), HAZARD_COLOR)
+    return Previews.polygon(unit.hitbox.outline(unit), HAZARD_COLOR)
 }
 
 /**
@@ -42,13 +43,13 @@ export function onFirstAhead(
 ): Action {
     return {
         use: function ({ battle, unit }){
-            const area = ahead(unit, length, width)
+            const area = ahead(unit, unit, length, width)
             const target = nearest(battle.fetch(area, unit), unit.position)
             if(target) effect(battle, unit, target)
             hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
         },
         preview: ({ battle, unit, pose }) => {
-            const area = ahead(pose, length, width)
+            const area = ahead(unit, pose, length, width)
             const target = nearest(battle.fetch(area, unit), pose.position)
             return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...target ? [ring(target), Previews.label(target.position, what, NOTE_COLOR)] : [])
         },
@@ -66,24 +67,26 @@ export function onSelf(effect: (battle: Battle, unit: Unit) => void, what: strin
     }
 }
 
-/** An action that does something to every unit of a circle around its unit, itself maybe included. */
+/**
+ * An action that does something to every unit within a distance of the body of its unit, itself maybe included:
+ * the distance counts from the edge of the body, all around.
+ */
 export function onCircle(
     radius: number, who: (unit: Unit, other: Unit) => boolean, effect: (battle: Battle, unit: Unit, other: Unit) => void,
     what: string,
 ): Action {
-    const around = (pose: Pose): Area => (Areas.circle(pose.position, radius))
     const chosen = (battle: Battle, unit: Unit, pose: Pose) => {
         return battle.touchables.filter(other => {
-            return who(unit, other) && other.position.distance(pose.position) <= radius + other.radius
+            return who(unit, other) && unit.hitbox.gap(pose, other.hitbox, other) <= radius
         })
     }
     return {
         use: function ({ battle, unit }){
             for(const other of chosen(battle, unit, unit)) effect(battle, unit, other)
-            hold(battle, SHORT_TIME, [Previews.polygon(around(unit), RANGE_COLOR)])
+            hold(battle, SHORT_TIME, [Previews.polygon(unit.around(radius), RANGE_COLOR)])
         },
         preview: ({ battle, unit, pose }) => {
-            return Previews.still(pose, Previews.polygon(around(pose), RANGE_COLOR), ...chosen(battle, unit, pose).flatMap(other => {
+            return Previews.still(pose, Previews.polygon(unit.around(radius, pose), RANGE_COLOR), ...chosen(battle, unit, pose).flatMap(other => {
                 return [ring(other), Previews.label(other.position, what, NOTE_COLOR)]
             }))
         },

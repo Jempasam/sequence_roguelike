@@ -1,7 +1,7 @@
 import { plainText } from "@game/core"
 import type { Text } from "@game/core"
 import {
-    ALL_BOOSTERS, ALL_CARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES,
+    allFightTypes, ALL_BOOSTERS, ALL_CARDS, ALL_HAZARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES,
 } from "@game/core/mecard"
 import { mecardDisplay } from "@game/core/mecard/text-display"
 
@@ -40,6 +40,7 @@ interface Unit {
     readonly draw: number
     readonly size?: number
     readonly cards: readonly { readonly name: string }[]
+    readonly items?: readonly { readonly name: string }[]
 }
 
 function described(values: readonly Described[]): readonly CatalogEntry[] {
@@ -54,6 +55,7 @@ function units(values: readonly Unit[]): readonly CatalogEntry[] {
             `pioche ${value.draw}`,
             ...value.size === undefined ? [] : [`taille ${value.size}`],
             `cartes ${names(value.cards)}`,
+            ...value.items?.length ? [`objets ${names(value.items)}`] : [],
         ].join(", "),
     }))
 }
@@ -71,6 +73,14 @@ export const CATALOGS: readonly Catalog[] = [
         ].join(", "),
     })) },
     { name: "monsters", entries: () => units(ALL_MONSTERS) },
+    { name: "fights", entries: () => allFightTypes().map(type => ({
+        name: type.name,
+        description: `${type.category.name} : ${oneLine(type.description)}`,
+    })) },
+    { name: "hazards", entries: () => ALL_HAZARDS.map(hazard => ({
+        name: hazard.name,
+        description: `${oneLine(hazard.description)} (cartes ${names(hazard.bodies.flatMap(each => each.body.cards ?? []))})`,
+    })) },
     { name: "pets", entries: () => units(ALL_PETS) },
     { name: "items", entries: () => described(ALL_ITEMS) },
     { name: "usables", entries: () => described(ALL_USABLES) },

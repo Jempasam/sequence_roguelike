@@ -25,6 +25,18 @@ const GAP = 4
 /** The title of the game. */
 const TITLE = "Dungeon of the Mecard"
 
+/** The buttons of the menu, each none while it is not shown. */
+interface MenuButtons {
+    readonly new: Button|null
+    readonly continue: Button|null
+    readonly yes: Button|null
+    readonly no: Button|null
+    readonly guide: Button|null
+    readonly history: Button|null
+}
+
+const NO_BUTTONS: MenuButtons = { new: null, continue: null, yes: null, no: null, guide: null, history: null }
+
 /** What the menu asks of its game. */
 export interface MainMenuOptions {
     /** Start a new run, the one kept, if any, forgotten. */
@@ -35,6 +47,9 @@ export interface MainMenuOptions {
 
     /** Open the guide. */
     openGuide(): void
+
+    /** Open the history of the games that ended. */
+    openHistory(): void
 
     /** Tell the players something went wrong. */
     report(text: string): void
@@ -76,6 +91,9 @@ export class MainMenuScreen {
 
     /** The button of the guide, under the one that goes on, none while a new game is asked to be confirmed. */
     public get guideButton(): Button|null { return this.#buttons.guide }
+
+    /** The button of the history, under the guide's, none while a new game is asked to be confirmed. */
+    public get historyButton(): Button|null { return this.#buttons.history }
 
     /** The button of a new game, none while it is asked to be confirmed. */
     public get newButton(): Button|null { return this.#buttons.new }
@@ -119,7 +137,7 @@ export class MainMenuScreen {
         const { theme, ui, options } = this
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
-        this.#buttons = { new: null, continue: null, yes: null, no: null, guide: null }
+        this.#buttons = NO_BUTTONS
         if(this.#backdrop) content.add(this.#backdrop, { x: "stretch", y: "stretch" })
         // As wide as its widest line, which the buttons stretch to.
         const column = new Box("column", { gap: GAP, align: "stretch" })
@@ -140,7 +158,7 @@ export class MainMenuScreen {
             }
             column.add(yes)
             column.add(no)
-            this.#buttons = { new: null, continue: null, yes, no, guide: null }
+            this.#buttons = { ...NO_BUTTONS, yes, no }
         } else {
             const fresh = new Button(theme, "Nouvelle partie")
             fresh.onActivate = () => {
@@ -156,7 +174,10 @@ export class MainMenuScreen {
             const guide = new Button(theme, "Guide")
             guide.onActivate = () => options.openGuide()
             column.add(guide)
-            this.#buttons = { new: fresh, continue: resume, yes: null, no: null, guide }
+            const history = new Button(theme, "Historique")
+            history.onActivate = () => options.openHistory()
+            column.add(history)
+            this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, guide, history }
         }
         // Right of the middle, where the cabin of the landscape is not.
         content.add(column, { x: "center", y: "center", offsetX: Math.round(ui.width * SIDE_SHARE) })
@@ -180,9 +201,7 @@ export class MainMenuScreen {
     /** The size of the interface it was laid out for, none before the first frame. */
     #size = ""
 
-    #buttons: {
-        new: Button|null, continue: Button|null, yes: Button|null, no: Button|null, guide: Button|null,
-    } = { new: null, continue: null, yes: null, no: null, guide: null }
+    #buttons: MenuButtons = NO_BUTTONS
 
     /** Load the pictures of the background: the menu stays on its plain color when they cannot be. */
     async #load(assets: Assets): Promise<void> {

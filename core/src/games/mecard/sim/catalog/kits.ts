@@ -5,6 +5,8 @@ import type { Usable } from "../usable/Usable"
 import type { HeartGroup } from "../heart/Heart"
 import { BLACK_HEART, PINK_HEART, RED_HEART } from "../heart/subs"
 import {
+    KAMIKAZE, VIOLET_BUBBLE, GREEN_BUBBLE, RED_BUBBLE, ORANGE_BUBBLE, ELEMENTAL_BUBBLE, FIERY_BUBBLE, PROGRAMMED_BUBBLE,
+    INSPIRATION, INFLATE,
     ABOUT_FACE, AIM, ANTIDOTE, ARMOR_PLATING, ASSASSIN_BLOW, ASSASSIN_STEP, ASSASSINATION, BACK_DASH, BANDAGE,
     BATTERING_RAM, BLACK_HOLE, AURA, BLAZE_CARD, BLEED, BLINK, BLOCK, BLOOD_AXE, BLOODLUST_CARD, BOMB, BOTTLE,
     BOUNCE_DASH, BOW_MODULE, BRAMBLES_CARD, BULL_MODULE, CATCH, CHARGE, CHARM, COATED_BLADE, COIN,
@@ -586,6 +588,28 @@ export const HORSE_KIT: Kit = {
     hearts: [reds(5)],
 }
 
+/** Blows bubbles that copy what it does: a kamikaze, a sweep, all copied. */
+export const BUBBLER_KIT: Kit = {
+    name: "Souffleur de bulles",
+    sprite: visual("units/bubbler"),
+    cards: [...BASICS, VIOLET_BUBBLE, GREEN_BUBBLE, RED_BUBBLE, ORANGE_BUBBLE, KAMIKAZE, SWEEP, INSPIRATION],
+    items: [],
+    usables: [MAGIC_WATCH],
+    hearts: [reds(4)],
+}
+
+/** Charges its bubbles with elements, and programs them with the chain: it has no blow of its own. */
+export const BUBBLE_MAGE_KIT: Kit = {
+    name: "Mage des bulles",
+    sprite: visual("units/bubble_mage"),
+    cards: [
+        ...BASICS, VIOLET_BUBBLE, ELEMENTAL_BUBBLE, ELEMENTAL_BUBBLE, FIERY_BUBBLE, WIND, LIGHTNING, PROGRAMMED_BUBBLE, INFLATE,
+    ],
+    items: [GRIMOIRE],
+    usables: [MAGIC_WATCH],
+    hearts: [reds(4)],
+}
+
 /** The kits a run starts with. */
 export const STARTING_KITS: readonly Kit[] = []
 
@@ -597,7 +621,7 @@ export const ALL_KITS: readonly Kit[] = [
     GRAVITATIONIST_KIT, DRUID_KIT, GUNNER_KIT, HYPNOTIST_KIT, KNIGHT_KIT, SHADOW_THIEF_KIT, TEMPEST_MAGE_KIT,
     DEMONIST_KIT, ACROBAT_KIT, BLACK_KNIGHT_KIT, BLEEDER_KIT, TURRET_ENGINEER_KIT, DUELIST_KIT,
     SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT, SHAMAN_KIT, BEAST_WARRIOR_KIT, BIG_BAD_WOLF_KIT,SPELLBLADE_KIT, GEOMANCER_KIT, PLANT_MAGE_KIT, WITCHER_KIT,
-    CHESS_PLAYER_KIT, GLASS_MAN_KIT, HORSE_KIT,
+    CHESS_PLAYER_KIT, GLASS_MAN_KIT, HORSE_KIT, BUBBLER_KIT, BUBBLE_MAGE_KIT,
 ]
 
 /** How many things of one list a second list shares, each one counted as many times as both hold it. */

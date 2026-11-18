@@ -17,6 +17,8 @@ import { BARRELS, SPLASHING } from "../status/subs/Splashing"
 import { COATED, COATS } from "../status/subs/Coated"
 import { SOAKED, SOAKS } from "../status/subs/Soaked"
 import { RITUAL_STATUS, RITUAL_STATUSES } from "../status/subs/RitualStatus"
+import { ELEMENT_COATING, ELEMENT_COATINGS } from "../status/subs/ElementCoating"
+import { POTION_COATING, POTION_COATINGS } from "../status/subs/PotionCoating"
 import { ENCHANTED, ENCHANTMENTS } from "../status/subs/EnchantedBlade"
 
 import { ELEMENT_CODECS, POTION_NAMES } from "./catalogNames"
@@ -70,6 +72,8 @@ function elementCodec(
 export const STATUS_CODECS = new Codecs<StatusType>("status", [
     routeCodec("status", STATUS_TYPES),
     doseCodec("coated", COATED, COATS),
+    doseCodec("potion-coating", POTION_COATING, POTION_COATINGS),
+    elementCodec("element-coating", ELEMENT_COATING, ELEMENT_COATINGS),
     doseCodec("soaked", SOAKED, SOAKS),
     doseCodec("barrel", SPLASHING, BARRELS),
     doseCodec("puddle", PUDDLE_HAZARD, PUDDLES),

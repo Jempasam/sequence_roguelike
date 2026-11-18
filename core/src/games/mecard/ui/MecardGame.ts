@@ -15,7 +15,10 @@ import type { SyncRoom, SyncSender } from "../sync/SyncChannel"
 
 import type { SaveSlot } from "../../../engine/save"
 import type { RunSave } from "../sim/save/runSave"
-import { RunSaver } from "../sync/run/RunSaver"
+import { RunSaver } from "../persist/RunSaver"
+import { RunHistorian } from "../persist/RunHistorian"
+import type { History } from "../sim/save/historySave"
+import { HistoryScreen } from "./history/HistoryScreen"
 
 import { LiveContext, registerCommands } from "./commands"
 import type { MecardContext, MecardHost } from "./commands"
@@ -29,6 +32,7 @@ import { RunSoundLink } from "./sound/RunSoundLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { ArmScreen } from "./travel/ArmScreen"
 import { ParallaxScreen } from "./travel/ParallaxScreen"
+import { SpriteBenchScreen } from "./look/SpriteBenchScreen"
 import type { Visual } from "../sim/base/Visual"
 
 /** The share of the height of the screen the console takes, from the top. */
@@ -79,6 +83,9 @@ export class MecardGame {
     /** The main menu. */
     public get menu(): MainMenuScreen { return this.#menu }
 
+    /** The history of the games that ended. */
+    public get history(): HistoryScreen { return this.#history }
+
     constructor(
         theme: Theme,
 
@@ -121,19 +128,25 @@ export class MecardGame {
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
             report: text => this.#console.print(text),
-            leave: () => this.#travelOn(),
+            leave: () => this.#leaveBench(),
         }, assets)
         this.#arm = new ArmScreen(theme, ui, {
             report: text => this.#console.print(text),
-            leave: () => this.#travelOn(),
+            leave: () => this.#leaveBench(),
         }, assets)
         this.#parallax = new ParallaxScreen(theme, ui, {
             report: text => this.#console.print(text),
             print: text => this.#console.print(text),
             clipboard,
-            leave: () => this.#travelOn(),
+            leave: () => this.#leaveBench(),
         }, assets)
-        this.#library = new LibraryScreen(theme, ui, { leave: () => this.#travelOn() }, sprites)
+        this.#spriteBench = new SpriteBenchScreen(theme, ui, {
+            report: text => this.#console.print(text),
+            print: text => this.#console.print(text),
+            clipboard,
+            leave: () => this.#leaveBench(),
+        }, sprites)
+        this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites)
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: uiSound,
             // The party fell: its save is gone, back to the menu to start again.
@@ -145,7 +158,7 @@ export class MecardGame {
             if(!(error instanceof AssetError)) throw error
             this.#console.print(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
-        const actions: Omit<MecardHost, "run"|"battle"> = {
+        const actions: Omit<MecardHost, "run"|"battle"|"playing"> = {
             print: text => this.#console.print(text),
             refresh: () => {
                 const { battleScreen, travelScreen } = this.#screen
@@ -169,6 +182,7 @@ export class MecardGame {
             showPnj: () => this.#pnjOn(),
             showArm: () => this.#armOn(),
             showParallax: parallax => this.#parallaxOn(parallax),
+            showSprites: sprite => this.#spritesOn(sprite),
             showLibrary: () => this.#libraryOn(),
             hostGame: (mode, policy) => this.hostGame(mode, policy),
             connect: (code, guest) => this.#connect(code, guest),
@@ -181,7 +195,7 @@ export class MecardGame {
                 })
             },
         }
-        const host = (): MecardHost => ({ ...actions, run: this.run, battle: this.battle })
+        const host = (): MecardHost => ({ ...actions, playing: this.#playing, run: this.run, battle: this.battle })
         this.#console = new Console<MecardContext>(new LiveContext(host))
         registerCommands(this.#console)
         this.#console.print("Console : tape help pour la liste des commandes.")
@@ -192,10 +206,12 @@ export class MecardGame {
             newGame: () => this.#startNewGame(),
             continueGame: () => this.#continueGame(),
             openGuide: () => this.#guideOn(),
+            openHistory: () => void this.#historyOn(),
             report: text => this.#console.print(text),
         }, assets)
         // Over the menu, which it replaces while it is read.
         this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() })
+        this.#history = new HistoryScreen(theme, ui, { leave: () => this.#menuOn() }, sprites)
         // Over the menu and the guide too, so it can be opened from the main menu.
         ui.addLayer("console").content.add(this.#consoleView, { x: "start", y: "start", offsetX: 4, offsetY: 4 })
         this.#menuOn()
@@ -208,6 +224,7 @@ export class MecardGame {
         this.ui.handle(input)
         this.#openConsole(input)
         if(this.#guide.visible) this.#guide.frame(input)
+        else if(this.#history.visible) this.#history.frame(input)
         else if(this.#menu.visible) this.#menu.frame()
         else if(this.#pnj.visible) this.#pnj.frame()
         else if(this.#arm.visible) this.#arm.frame()
@@ -226,6 +243,16 @@ export class MecardGame {
         this.#saver?.dispose()
         this.#saver = new RunSaver(this.run, slot, text => this.#console.print(text))
         if(this.#menu.visible) void this.#readSave()
+    }
+
+    /**
+     * Write each game that ends in a slot from now on, and show the games it holds in the history of the menu.
+     * Until then, nothing is written and the history is empty.
+     */
+    public keepHistory(slot: SaveSlot<History>): void {
+        this.#historySlot = slot
+        this.#historian?.dispose()
+        this.#historian = new RunHistorian(this.run, slot, () => this.#seed, text => this.#console.print(text))
     }
 
     /** Print what went wrong in the console. */
@@ -263,8 +290,10 @@ export class MecardGame {
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
         if(this.#saver) this.#saver.engine = this.run
+        if(this.#historian) this.#historian.engine = this.run
         if(this.#sound) this.#sound.engine = this.run
         this.#screen.engine = this.run
+        this.#playing = true
         this.#travelOn()
     }
 
@@ -273,10 +302,14 @@ export class MecardGame {
     readonly #guide: GuideScreen
     #saves: SaveSlot<RunSave>|null = null
     #saver: RunSaver|null = null
+    readonly #history: HistoryScreen
+    #historySlot: SaveSlot<History>|null = null
+    #historian: RunHistorian|null = null
     readonly #screen: RunScreen
     readonly #pnj: PnjScreen
     readonly #arm: ArmScreen
     readonly #parallax: ParallaxScreen
+    readonly #spriteBench: SpriteBenchScreen
     readonly #library: LibraryScreen
     readonly #broadcaster: RunBroadcaster|null
     readonly #sound: RunSoundLink|null
@@ -291,6 +324,12 @@ export class MecardGame {
     #host: RunHost|null = null
 
     #seed: number
+
+    /** Whether a run is started: not while the main menu waits for a new game or the one kept. */
+    #playing = false
+
+    /** Whether the bench shown was opened from the menu, rather than from the run. */
+    #benchFromMenu = false
 
     /** A run of the current seed, the errors of what listens to it told in the console. */
     #newRun(): Run {
@@ -360,10 +399,25 @@ export class MecardGame {
         this.#pnj.visible = false
         this.#arm.visible = false
         this.#parallax.visible = false
+        this.#spriteBench.visible = false
         this.#library.visible = false
         this.#guide.visible = false
+        this.#history.visible = false
         this.#menu.visible = true
+        this.#playing = false
         void this.#readSave()
+    }
+
+    /** Show the history alone, the menu left where it stands, with the games kept. */
+    async #historyOn(): Promise<void> {
+        try {
+            this.#history.entries = (await this.#historySlot?.load())?.entries ?? []
+        } catch(error){
+            this.#history.entries = []
+            this.#console.print(`L'historique n'a pas pu être lu : ${String(error)}`)
+        }
+        this.#menu.visible = false
+        this.#history.visible = true
     }
 
     /** Show the guide alone, the menu left where it stands. */
@@ -402,6 +456,7 @@ export class MecardGame {
             this.run.backToMap()
             this.run.load(save)
             this.#menu.visible = false
+            this.#playing = true
             this.#travelOn()
         }, (error: unknown) => {
             this.#console.print(`La sauvegarde n'a pas pu être lue : ${String(error)}`)
@@ -412,47 +467,69 @@ export class MecardGame {
     #benchesOff(): void {
         this.#menu.visible = false
         this.#guide.visible = false
+        this.#history.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
         this.#parallax.visible = false
+        this.#spriteBench.visible = false
         this.#library.visible = false
         if(!this.#screen.visible) this.#screen.visible = true
     }
 
-    /** Show the bench of the characters alone, the run left where it stands. */
-    #pnjOn(): void {
+    /**
+     * Hide all that a bench lies over, the menu and the guide too, and remember where it was opened from: the
+     * menu, or the run. Going from a bench to another keeps what was remembered.
+     */
+    #openBench(): void {
+        if(this.#menu.visible || this.#guide.visible) this.#benchFromMenu = true
+        else if(this.#screen.visible) this.#benchFromMenu = false
+        this.#menu.visible = false
+        this.#guide.visible = false
+        this.#history.visible = false
         this.#screen.visible = false
+        this.#pnj.visible = false
         this.#arm.visible = false
         this.#parallax.visible = false
+        this.#spriteBench.visible = false
         this.#library.visible = false
+    }
+
+    /** Leave a bench for where it was opened from: the menu, or the run. */
+    #leaveBench(): void {
+        if(this.#benchFromMenu) this.#menuOn()
+        else this.#travelOn()
+        this.#benchFromMenu = false
+    }
+
+    /** Show the bench of the characters alone, the run left where it stands. */
+    #pnjOn(): void {
+        this.#openBench()
         this.#pnj.visible = true
     }
 
     /** Show the bench of the forearm alone, the run left where it stands. */
     #armOn(): void {
-        this.#screen.visible = false
-        this.#pnj.visible = false
-        this.#parallax.visible = false
-        this.#library.visible = false
+        this.#openBench()
         this.#arm.visible = true
     }
 
     /** Show the bench of the parallaxes alone, on the one a visual names, the run left where it stands. */
     #parallaxOn(parallax: Visual): void {
-        this.#screen.visible = false
-        this.#pnj.visible = false
-        this.#arm.visible = false
-        this.#library.visible = false
+        this.#openBench()
         this.#parallax.visible = true
         this.#parallax.show(parallax)
     }
 
+    /** Show the bench of the sprites alone, on the one a visual names, the run left where it stands. */
+    #spritesOn(sprite: Visual|null): void {
+        this.#openBench()
+        this.#spriteBench.visible = true
+        this.#spriteBench.show(sprite)
+    }
+
     /** Show the catalogue alone, the run left where it stands. */
     #libraryOn(): void {
-        this.#screen.visible = false
-        this.#pnj.visible = false
-        this.#arm.visible = false
-        this.#parallax.visible = false
+        this.#openBench()
         this.#library.visible = true
     }
 

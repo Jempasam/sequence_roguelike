@@ -44,11 +44,11 @@ function entriesOf(setup: ReturnType<typeof uiSetup>): number {
 // --- Tests ---
 
 describe("LibraryScreen", () => {
-    test("made → eleven tabs, the cards first, hidden until shown", () => {
+    test("made → twelve tabs, the cards first, hidden until shown", () => {
         const setup = uiSetup({}, 320, 180)
         const screen = new LibraryScreen(setup.theme, setup.ui, { leave: () => {} }, NO_SPRITES)
         expect(screen.visible).toBe(false)
-        expect(screen.titles).toHaveLength(11)
+        expect(screen.titles).toHaveLength(16)
         expect(screen.titles[0]).toBe("Cartes")
     })
 

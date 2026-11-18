@@ -6,11 +6,12 @@
 //                                  a .pic.json against its .png, any file of a parallax folder against its .ora;
 //   npm run art:preview -- <folder> also writes a preview.png in each parallax folder built, to help create it;
 //                                  no other command writes one
+// A .json beside a .pic.json (units/wolf.json for units/wolf.pic.json) is copied beside the .png: the data of the picture.
 // A folder holding a parallax.json is assembled into one painting, <folder>.ora (see buildParallax.ts).
 // The picture project is looked for next to this repository, or where PICTURE points to.
 
 import { execFileSync } from "node:child_process"
-import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { basename, dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -56,6 +57,18 @@ for(const document of documents){
     mkdirSync(dirname(out), { recursive: true })
     execFileSync(process.execPath, [PICTURE, "generate", document, "-o", out, "-s", "1"], { stdio: "ignore" })
     console.log(`Rendered ${path}`)
+}
+// A .json beside a document, of the name of its picture, is its data: copied to the same path, so the game finds it
+// next to the .png. A parallax.json is no data of a picture, and a folder holding one is a painting.
+const data = files.filter(file => file.endsWith(".json") && !file.endsWith(EXTENSION) && basename(file) !== PARALLAX_SPEC)
+    .filter(file => !paintings.some(folder => file.startsWith(folder + sep)))
+for(const file of data){
+    const path = relative(ART, file).split(sep).join("/")
+    const out = join(GENERATED, path)
+    if(changedOnly && !isStale(out, [file])) continue
+    mkdirSync(dirname(out), { recursive: true })
+    copyFileSync(file, out)
+    console.log(`Copied ${path}`)
 }
 execFileSync(process.execPath, [join(REPO, "scripts", "indexAssets.ts")], { stdio: "inherit" })
 

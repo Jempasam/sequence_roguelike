@@ -29,6 +29,9 @@ interface Game {
 
     /** The games connected to, in order: their code, and whether to play. */
     readonly connections: (readonly [string, boolean])[]
+
+    /** Whether a run is started, the main menu waiting when not. */
+    readonly state: { playing: boolean }
 }
 
 /** A console over a run, its first battle started. */
@@ -41,7 +44,9 @@ function game(): Game {
     const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
     const connections: (readonly [string, boolean])[] = []
     const board = { text: "" }
+    const state = { playing: true }
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
+        playing: state.playing,
         run, battle,
         print: text => made.print(text),
         refresh: () => {},
@@ -63,13 +68,14 @@ function game(): Game {
         showArm: () => {},
         showLibrary: () => {},
         showParallax: () => {},
+        showSprites: () => {},
         playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),
     })))
     registerCommands(made)
     return {
-        console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, board,
+        console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, board, state,
     }
 }
 
@@ -104,6 +110,26 @@ describe("Mecard commands", () => {
         const { console } = game()
         console.submit("help hand")
         expect(console.lines.some(line => line.text.includes("hand draw"))).toBe(true)
+    })
+
+    test("at the main menu, no run started → the commands on units, the run and the battle say so", () => {
+        const { console, state, run } = game()
+        state.playing = false
+        const gold = run.gold
+        for(const line of ["hand list Lancier", "unit heal Lancier","battle info", "run gold 5", "travel info"]){
+            console.submit(line)
+        }
+        expect(errors(console)).toHaveLength(5)
+        expect(errors(console).every(text => text.includes("Aucune partie démarrée"))).toBe(true)
+        expect(run.gold).toBe(gold)
+    })
+
+    test("at the main menu → the catalogue and the lists of the game still answer", () => {
+        const { console, state } = game()
+        state.playing = false
+        console.submit("catalogue")
+        console.submit("card list")
+        expect(errors(console)).toEqual([])
     })
 
     test("hand add then hand remove → the card in hand then out, the chain planned again", () => {
@@ -502,7 +528,8 @@ describe("Mecard battle commands", () => {
         console.submit("battle edit Lancier monster Gobelin")
         expect(errors(console)).toEqual([])
         expect(battle().units.includes(unit)).toBe(false)
-        const goblin = named(battle(), "Gobelin")
+        const goblin = battle().living.find(each => each.name.startsWith("Gobelin") && each.team === team)
+        if(!goblin) throw new Error("No goblin on the side of the replaced unit.")
         expect(goblin.team).toBe(team)
         expect(goblin.controller).toBe(controller)
         expect(goblin.position).toBe(position)

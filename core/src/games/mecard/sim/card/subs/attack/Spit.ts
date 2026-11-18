@@ -2,6 +2,7 @@ import { rgba } from "../../../base/Rgba"
 import { MOVE_WIDTH } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import { Slowness, SLOWED } from "../../../status/subs/Slowness"
 
 import { ActionCard } from "../ActionCard"
@@ -12,7 +13,7 @@ import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the spit of the catalog flies, in meters, before the reach of the unit. */
-const SPIT_RANGE = 3
+const SPIT_RANGE = 3 - UNIT_RADIUS
 
 /** How many rounds the spit of the catalog slows for: the end of this one counts, so the next one bites. */
 const SPIT_ROUNDS = 2
@@ -41,14 +42,14 @@ export class SpitCard extends ActionCard {
     static #spitting(range: number, rounds: number): Action {
         return {
             use: function ({ battle, unit }){
-                const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value)
-                fly(battle, unit.position, end, SPIT_COLOR)
+                const { start, end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value)
+                fly(battle, start, end, SPIT_COLOR)
                 if(hit) battle.applyStatus(hit, SLOWED, rounds)
             },
             preview: ({ battle, unit, pose }) => {
-                const { end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value, pose)
-                const area: Area = Areas.line(pose.position, end, BOLT_WIDTH)
-                return Previews.still(pose, ...Previews.strike([area], hit ? [hit] : []), Previews.arrow([pose.position, end], MOVE_WIDTH / 2, SPIT_COLOR))
+                const { start, end, unit: hit } = battle.ray(unit, range * unit.stats.throwRange.value, pose)
+                const area: Area = Areas.line(start, end, BOLT_WIDTH)
+                return Previews.still(pose, ...Previews.strike([area], hit ? [hit] : []), Previews.arrow([start, end], MOVE_WIDTH / 2, SPIT_COLOR))
             },
         }
     }

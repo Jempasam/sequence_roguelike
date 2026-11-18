@@ -2,6 +2,7 @@ import type { Vector2 } from "../../../base/Vector2"
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
@@ -11,7 +12,7 @@ import { DISTANCE, UNIT } from "../../../base/keywords"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the charm and the fear of the catalog reach, in meters. */
-const CONTROL_RANGE = 3
+const CONTROL_RANGE = 3 - UNIT_RADIUS
 
 /** How far the charm and the fear of the catalog walk their target, in meters: a step. */
 const CONTROL_WALK = 2

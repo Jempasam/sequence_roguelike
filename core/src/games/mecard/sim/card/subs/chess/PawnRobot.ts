@@ -3,7 +3,8 @@ import { CARTE, DISTANCE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Action, Pose } from "../../../battle/Action"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { UNIT_RADIUS } from "../../../battle/Unit"
+import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
+import type { Unit } from "../../../battle/Unit"
 import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -19,7 +20,7 @@ import { PLAYED_BY_LAST } from "./ChessCards"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far ahead the robot stands, in meters. */
-const ROBOT_AHEAD = 1
+const ROBOT_AHEAD = 1 - UNIT_RADIUS
 
 /** How many shield hearts the small robot lives by, before the summoning of the unit. */
 const ROBOT_HEARTS = 1
@@ -27,9 +28,9 @@ const ROBOT_HEARTS = 1
 /** How many rounds the robot is a piece of chess for. */
 const ROBOT_PIECE_ROUNDS = 3
 
-/** Where the robot stands, from a pose. */
-function spotOf(pose: Pose): Vector2 {
-    return pose.position.plus(pose.direction.times(ROBOT_AHEAD))
+/** Where the robot stands, ahead of the edge of a unit at a pose. */
+function spotOf(unit: Unit, pose: Pose): Vector2 {
+    return unit.muzzle(pose).plus(pose.direction.times(ROBOT_AHEAD))
 }
 
 /**
@@ -56,7 +57,7 @@ export class PawnRobotCard extends AbstractCard<Action, Module> {
             use: function ({ battle, unit }){
                 const count = ROBOT_HEARTS + unit.stats.summon.value
                 const robot = battle.place(unit, {
-                    sprite: visual("units/robot"), name: "Petit robot", at: spotOf(unit), direction: unit.direction,
+                    sprite: visual("units/robot"), name: "Petit robot", at: spotOf(unit, unit), direction: unit.direction,
                     hearts: Heart.many(SHIELD_HEART, count),
                     cards: module.cards(options => battle.rng.pick(options) ?? options[0]),
                 })
@@ -69,8 +70,8 @@ export class PawnRobotCard extends AbstractCard<Action, Module> {
                 hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const spot = spotOf(pose)
-                if(!battle.free(spot, unit, UNIT_RADIUS)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
+                const spot = spotOf(unit, pose)
+                if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
                 return Previews.still(pose, summonShown(spot))
             },
         }

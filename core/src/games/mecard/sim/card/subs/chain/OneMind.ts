@@ -4,6 +4,7 @@ import type { Action, Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { Card } from "../../Card"
@@ -12,11 +13,10 @@ import { ModifierCard } from "../ModifierCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { inOrder } from "../tools/sequence"
 import { Rarity } from "../../Rarity"
-import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the one mind of the catalog reaches around its caster, in meters. */
-const ONE_MIND_RANGE = 4
+const ONE_MIND_RANGE = 4 - UNIT_RADIUS
 
 /** How many keywords two cards have to share for one to be changed into the other. */
 const SHARED_KEYWORDS = 2
@@ -65,8 +65,8 @@ export class OneMindCard extends ModifierCard {
 
 
     static #convincing(range: number, shared: number, given: Card|null): Action {
-        const zone = (pose: Pose): Area => (Areas.circle(pose.position, range))
-        const reached = (battle: Battle, unit: Unit, pose: Pose): Unit[] => battle.fetch(zone(pose), unit)
+        const zone = (unit: Unit, pose: Pose): Area => unit.around(range, pose)
+        const reached = (battle: Battle, unit: Unit, pose: Pose): Unit[] => battle.fetch(zone(unit, pose), unit)
         // Which cards of a unit would change.
         const changing = (unit: Unit): Card[] => {
             return given ? unit.unplayed().filter(card => resembles(card, given, shared)) : []
@@ -74,12 +74,12 @@ export class OneMindCard extends ModifierCard {
         return {
             use: function ({ battle, unit }){
                 const units = reached(battle, unit, unit)
-                hold(battle, SHORT_TIME, [Previews.polygon(zone(unit), CONTROL_COLOR)])
+                hold(battle, SHORT_TIME, [Previews.polygon(zone(unit, unit), CONTROL_COLOR)])
                 if(!given) return
                 for(const target of units) battle.rewriteChain(target, card => resembles(card, given, shared), given)
             },
             preview: ({ battle, unit, pose }) => {
-                const shown: Indicator[] = [Previews.polygon(zone(pose), CONTROL_COLOR)]
+                const shown: Indicator[] = [Previews.polygon(zone(unit, pose), CONTROL_COLOR)]
                 for(const target of reached(battle, unit, pose)){
                     const count = changing(target).length
                     if(count > 0) shown.push(Previews.label(target.position, `${count} ➜ ${given}`, NOTE_COLOR))

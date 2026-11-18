@@ -61,7 +61,7 @@ export class Puddle extends HazardStatus {
         const zone = (): Area => unit.zone ?? Areas.circle(unit.position, PUDDLE_RADIUS)
         this.hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
-            if(Areas.checkCircle(zone(), to, mover.radius) && !Areas.checkCircle(zone(), from, mover.radius)){
+            if(mover.hitbox.touches({ position: to, direction: mover.direction }, zone()) && !mover.hitbox.touches({ position: from, direction: mover.direction }, zone())){
                 pour(battle, this.dose, mover, this.poured)
             }
         }))

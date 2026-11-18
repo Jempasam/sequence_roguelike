@@ -20,6 +20,7 @@ function menu() {
         newGame: () => told.push("new"),
         continueGame: () => told.push("continue"),
         openGuide: () => told.push("guide"),
+        openHistory: () => told.push("history"),
         report: text => told.push(`report: ${text}`),
     }, NO_ASSETS)
     screen.visible = true
@@ -36,6 +37,12 @@ describe("MainMenuScreen", () => {
         screen.continueButton?.activate()
         screen.newButton?.activate()
         expect(told).toEqual(["new"])
+    })
+
+    test("History → tells the history is opened", () => {
+        const { screen, told } = menu()
+        screen.historyButton?.activate()
+        expect(told).toEqual(["history"])
     })
 
     test("a game kept → Continue available and tells it", () => {

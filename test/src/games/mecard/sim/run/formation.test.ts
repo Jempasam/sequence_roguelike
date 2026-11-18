@@ -1,10 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { ARENA_SIZE, monsterStart, partyStarts, pillarsFor, Rng, UNIT_RADIUS } from "@game/core/mecard"
-
-// --- Fixture builders ---
-
-/** Seeds whose pillars, drawn one after the other, once left no room for the last one and never ended. */
-const STUCK_SEEDS = [257, 365, 526, 579]
+import { ARENA_SIZE, hazardSpot, monsterSpot, monsterStart, partyStarts } from "@game/core/mecard"
 
 // --- Tests ---
 
@@ -33,26 +28,14 @@ describe("monsterStart", () => {
     })
 })
 
-describe("pillarsFor", () => {
-    test("seeds → three pillars, room to walk between them, clear of where the party stands", () => {
-        const starts = partyStarts(3)
-        for(const seed of [1, 2, 3, ...STUCK_SEEDS]){
-            const pillars = pillarsFor(starts, new Rng(seed))
-            expect(pillars, `seed ${seed}`).toHaveLength(3)
-            for(const [index, pillar] of pillars.entries()){
-                for(const other of pillars.slice(index + 1)){
-                    expect(pillar.center.distance(other.center)).toBeGreaterThanOrEqual(2)
-                }
-                for(const start of starts){
-                    expect(pillar.center.distance(start)).toBeGreaterThan(pillar.radius + UNIT_RADIUS)
-                }
-            }
-        }
+describe("hazardSpot", () => {
+    test("a column and a row of the middle → the same grid as the monsters", () => {
+        expect(hazardSpot(3, 0).equals(monsterSpot(3, 0))).toBe(true)
+        expect(hazardSpot(3, 3).x).toBeCloseTo(4.5)
+        expect(hazardSpot(3, 3).y).toBeCloseTo(4.5)
     })
 
-    test("many seeds → always ends", () => {
-        for(let seed = 1; seed <= 1500; seed++){
-            expect(pillarsFor(partyStarts(1), new Rng(seed))).toHaveLength(3)
-        }
+    test("half a column → the edge between two spots", () => {
+        expect(hazardSpot(2.5, 3).x).toBeCloseTo(4)
     })
 })

@@ -34,7 +34,7 @@ function rankOf(travel: Travel): number {
 
 /** A place of a sort on the map, the first there. */
 function placeOf(travel: Travel, type: PlaceType): Place {
-    const place = travel.journey.places.find(each => (each.fight ?? each.halt) === type)
+    const place = travel.journey.places.find(each => (each.fight?.category ?? each.halt) === type)
     if(!place) throw new Error(`The map has no ${type.id}.`)
     return place
 }

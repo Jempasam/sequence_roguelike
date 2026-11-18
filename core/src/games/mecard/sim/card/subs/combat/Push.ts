@@ -51,7 +51,7 @@ export class PushCard extends ActionCard {
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
-                const zone = touchZone(pose)
+                const zone = touchZone(unit, pose)
                 if(!target) return Previews.still(pose, zone, Previews.label(pose.position, "personne à pousser", NOTE_COLOR))
                 const pushed = battle.moveSpot(target, target.position, pose.direction, distance)
                 return Previews.still(pose, zone, ...Previews.strike([], [target]), Previews.arrow([target.position, pushed.to], MOVE_WIDTH, CONTROL_COLOR))

@@ -1,15 +1,17 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BUTCHER_HALT, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
-import { isHalt } from "@game/core/mecard"
-import type { CardsDialog, ConfirmDialog, Dialog, FightType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { BATTLE, BOSS, BUTCHER_HALT, ELITE, GOBLIN, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
+import type { CardsDialog, ConfirmDialog, Dialog, FightCategory, HaltType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---
 
 /** A new place of a sort, on no map. */
 function placeOf(type: PlaceType): Place {
-    const where = { layer: 1, across: 0.5, next: [], exitTo: null, monsters: [] }
-    return isHalt(type) ? { ...where, fight: null, halt: type } : { ...where, fight: type as FightType, halt: null }
+    const where = { layer: 1, across: 0.5, next: [], exitTo: null }
+    return [BATTLE, ELITE, BOSS].includes(type as FightCategory)
+        ? { ...where, fight: fightOf(type as FightCategory, GOBLIN), halt: null }
+        : { ...where, fight: null, halt: type as HaltType }
 }
 
 /** The last dialog opened, of the sort the test knows it is. */
@@ -26,9 +28,9 @@ function logOf(travel: Travel): string[] {
     travel.moved.add(() => log.push("moved"))
     travel.visitStarted.add(halt => log.push(`visit ${halt.title}`))
     travel.visitEnded.add(halt => log.push(`end ${halt.title}`))
-    travel.fightReached.add(place => log.push(`fight ${(place.fight ?? place.halt!).id}`))
-    travel.fightEntered.add(place => log.push(`fought ${(place.fight ?? place.halt!).id}`))
-    travel.fightLeft.add(place => log.push(`left ${(place.fight ?? place.halt!).id}`))
+    travel.fightReached.add(place => log.push(`fight ${(place.fight?.category ?? place.halt!).id}`))
+    travel.fightEntered.add(place => log.push(`fought ${(place.fight?.category ?? place.halt!).id}`))
+    travel.fightLeft.add(place => log.push(`left ${(place.fight?.category ?? place.halt!).id}`))
     travel.offerAsked.add(() => log.push("offer"))
     travel.heroAsked.add(dialog => log.push(dialog.follows ? "hero follows" : "hero"))
     travel.cardsAsked.add(() => log.push("cards"))

@@ -20,12 +20,12 @@ function stuttering(range: number, cosHalf: number): Action {
         use: function ({ battle, unit }){
             const target = closestInCone(battle, unit, unit, range, cosHalf)
             if(!target) battle.events.push({ type: "skipped", unit, reason: NOBODY })
-            hold(battle, SHORT_TIME, aimedCone(unit, range, cosHalf, target, NOBODY))
+            hold(battle, SHORT_TIME, aimedCone(unit, unit, range, cosHalf, target, NOBODY))
             if(target && !battle.repeatLast(target)) battle.events.push({ type: "skipped", unit, reason: NOTHING })
         },
         preview: ({ battle, unit, pose }) => {
             const target = closestInCone(battle, unit, pose, range, cosHalf)
-            const shown = aimedCone(pose, range, cosHalf, target, NOBODY)
+            const shown = aimedCone(unit, pose, range, cosHalf, target, NOBODY)
             if(!target) return Previews.still(pose, ...shown)
             const word = target.lastTree.length > 0 ? "bégaie" : NOTHING
             return Previews.still(pose, ...shown, Previews.label(target.position, word, NOTE_COLOR))

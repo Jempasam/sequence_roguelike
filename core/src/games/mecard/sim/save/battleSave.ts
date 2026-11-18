@@ -10,6 +10,9 @@ import { Team } from "../battle/Team"
 import type { Area } from "../battle/Area"
 import type { BattleState, UnitState } from "../battle/BattleState"
 import type { Controller, StatBases } from "../battle/Unit"
+import { UNIT_HITBOX } from "../battle/Unit"
+import type { SavedHitbox } from "../battle/hitbox/Hitbox"
+import { loadedHitbox } from "../battle/hitbox/loadedHitbox"
 import { CardChain } from "../card/CardChain"
 import { handIndexOf } from "../card/Card"
 import type { Card } from "../card/Card"
@@ -22,7 +25,7 @@ import { CARD_CODECS, HEART_NAMES, ITEM_NAMES, USABLE_NAMES } from "./catalogNam
 import { STATUS_CODECS } from "./statusCodecs"
 
 /** The version of the shape of a save, raised whenever it changes, so an old save is refused clearly. */
-export const BATTLE_SAVE_VERSION = 15
+export const BATTLE_SAVE_VERSION = 16
 
 /** A point or a direction, as `[x, y]`. */
 type SavedVector = readonly [number, number]
@@ -101,6 +104,9 @@ export interface SavedUnit {
 
     /** The ground it covers, for a body lying on it, none for one standing. */
     readonly zone: SavedArea|null
+
+    /** The shape of its body at size 1. */
+    readonly hitbox: SavedHitbox
 }
 
 /** A zone of the arena, written down: its points as pairs, in turn. */
@@ -393,6 +399,7 @@ function savedUnit(unit: UnitState, team: number, pile: (cards: readonly Card[])
         bases: unit.bases,
         decisive: spec.decisive ?? true,
         zone: spec.zone ? savedArea(spec.zone) : null,
+        hitbox: (spec.hitbox ?? UNIT_HITBOX).save(),
     }
 }
 
@@ -412,6 +419,7 @@ function loadedUnit(unit: SavedUnit, teams: readonly Team[], card: (saved: Saved
             decks: unit.decks.map(() => []), unlimited: cards(unit.unlimited), items: unit.items.map(name => ITEM_NAMES.of(name)),
             usables: unit.usables.map(([name, charges]) => new Carried(USABLE_NAMES.of(name), charges)),
             decisive: unit.decisive, zone: unit.zone ? loadedArea(unit.zone) : null,
+            hitbox: loadedHitbox(unit.hitbox),
         },
         hand: cards(unit.hand),
         decks: unit.decks.map(deck => ({ pile: cards(deck.pile), discard: cards(deck.discard) })),

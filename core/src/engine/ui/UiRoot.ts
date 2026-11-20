@@ -1,5 +1,5 @@
 import { Painter, RenderTexture, TextureSurface } from "../gpu"
-import type { Gpu, TargetSurface } from "../gpu"
+import type { Gpu, Sprite, TargetSurface } from "../gpu"
 import type { ActionMap, ActionOccurrence, InputFrame } from "../input"
 import type { ClipboardPort } from "../../platform"
 
@@ -13,6 +13,7 @@ import { uiActions } from "./input/UiAction"
 import type { UiAction } from "./input/UiAction"
 import { RoutedEvent } from "./input/UiEvent"
 import { Layer } from "./Layer"
+import type { LayerOptions } from "./Layer"
 import { Rect } from "./Rect"
 import { Repaint } from "./Repaint"
 
@@ -41,11 +42,44 @@ export interface UiRootOptions {
      * a component drawing out of its bounds refused? Off by default.
      */
     readonly debug?: boolean
+
+    /**
+     * Is the interface drawn into a texture of its own, the mix, at the resolution of the interface, then laid
+     * on the screen in one quad? True by default, as a low resolution interface needs it: the mix is drawn
+     * again only where a layer changed, and nothing at all when none did. False draws every layer straight
+     * on the screen, scaled up, and everything again at each frame, as a screen with double or triple
+     * buffering keeps nothing from one frame to the next.
+     */
+    readonly composeInTexture?: boolean
+}
+
+/** The texture of a layer that asked for one, which keeps what it holds while the layer does not change. */
+class LayerBuffer {
+
+    /** The zones of its texture to draw again at the next render. */
+    public readonly region = new DirtyRegion()
+
+    public texture: RenderTexture|null = null
+    public surface: TextureSurface|null = null
+
+    /** Make its texture, at a size, to be drawn whole. */
+    public allocate(gpu: Gpu, width: number, height: number): void {
+        this.texture = new RenderTexture(gpu, width, height)
+        this.surface = new TextureSurface(gpu, this.texture)
+        this.region.addAll()
+    }
+
+    /** Free its texture, made again when needed. */
+    public release(): void {
+        this.texture?.dispose()
+        this.texture = null
+        this.surface = null
+    }
 }
 
 /**
  * The interface of the game: menus, HUD and debug tools, a retained tree of components in layers, drawn
- * into a texture of its own and laid on the screen every frame in one quad.
+ * into a transparent texture, the mix, and laid on the screen every frame in one quad.
  *
  * @remarks
  * The content of the screen is undefined after `present()`, so part of it cannot be drawn again while the
@@ -53,10 +87,16 @@ export interface UiRootOptions {
  * again only where something changed, and laid over the world each frame. In premultiplied alpha, "over"
  * is associative, so composing in a texture then laying it equals drawing directly.
  *
+ * Every layer draws into the mix, unless it asks for a texture of its own with
+ * `addLayer(name, { texture: true })`: the mix then holds a copy of it, laid at its place in the order. A
+ * layer that changes rarely, over one that changes every frame, so stays as it was while the other is drawn
+ * again, and only its copy is laid again. The mix is drawn again only when a layer was marked, and not at
+ * all in a frame where none was.
+ *
  * The frame of `game` calls, in order: {@link UiRoot.handle} before the gameplay tables read the input, so a
  * click on the HUD never reaches the world; then sets the values of the widgets; then
  * {@link UiRoot.update}; then {@link UiRoot.render}, after the world. A frame where nothing changed only
- * lays the texture on the screen. Rendering presents nothing: `gpu.flush()` and `present()` stay with the
+ * lays the mix on the screen. Rendering presents nothing: `gpu.flush()` and `present()` stay with the
  * frame of `game`.
  *
  * Built by `game` and injected, with no singleton, so it is tested without a platform.
@@ -84,17 +124,16 @@ export class UiRoot {
         this.#preferredScale = options.scale ?? null
         this.#clipboard = options.clipboard ?? null
         this.#scale = this.#scaleFor(screen.height)
-        const width = Math.ceil(screen.width / this.#scale)
-        const height = Math.ceil(screen.height / this.#scale)
-        this.#texture = new RenderTexture(gpu, Math.max(1, width), Math.max(1, height))
-        this.#surface = new TextureSurface(gpu, this.#texture)
-        this.#painter = new Painter(gpu, this.#surface, { blends: UI_BLENDS })
+        this.#width = Math.max(1, Math.ceil(screen.width / this.#scale))
+        this.#height = Math.max(1, Math.ceil(screen.height / this.#scale))
+        this.#composes = options.composeInTexture ?? true
+        this.#region.resize(this.#width, this.#height)
+        this.#painter = new Painter(gpu, screen, { blends: UI_BLENDS })
         this.#repaint = new Repaint(this.#painter, this.debug)
         this.#focus = new Focus(() => this.#scope())
         this.#pointer = new PointerRouting(() => this.#layers, this.#focus, (kind, component, button) => {
             for(const listener of [...this.#interactionListeners]) listener(kind, component, button)
         })
-        this.#region.resize(this.#texture.width, this.#texture.height)
     }
 
 
@@ -108,10 +147,16 @@ export class UiRoot {
      *
      * @throws {@link Error} When a layer already has that name.
      */
-    public addLayer(name: string): Layer {
+    public addLayer(name: string, options: LayerOptions = {}): Layer {
         if(this.#layers.some(layer => layer.name === name)) throw new Error(`The interface already has a layer "${name}".`)
-        const layer = new Layer(name, this.#host)
+        const layer = new Layer(name, this.#host, options)
         this.#layers.push(layer)
+        this.#layerOfContent.set(layer.content, layer)
+        if(layer.hasOwnTexture){
+            const buffer = new LayerBuffer()
+            buffer.region.resize(this.#width, this.#height)
+            this.#buffers.set(layer, buffer)
+        }
         this.#fullRedraw = true
         return layer
     }
@@ -148,12 +193,9 @@ export class UiRoot {
         this.#preferredScale = scale
     }
 
-    /** The size of the texture, in virtual pixels. */
-    public get width(): number { return this.#texture.width }
-    public get height(): number { return this.#texture.height }
-
-    /** The texture the interface is drawn into, replaced when the screen changes size. */
-    public get texture(): RenderTexture { return this.#texture }
+    /** The size of the textures, in virtual pixels. */
+    public get width(): number { return this.#width }
+    public get height(): number { return this.#height }
 
     /** The component with the focus, none when nothing has it. */
     public get focused(): Component|null { return this.#focus.focused }
@@ -262,35 +304,92 @@ export class UiRoot {
     }
 
     /**
-     * Lay out what was marked, draw again the zones that changed into the texture, then lay the texture on
-     * the screen in one quad, scaled up.
+     * Lay out what was marked, draw again the zones that changed, into the texture of the layers that have
+     * one, then into the mix, then lay the mix on the screen in one quad, scaled up. A frame where no layer
+     * was marked writes into no texture.
      */
     public render(): void {
         this.#fit()
         this.#layout()
         this.#collect()
-        this.#repaint.draw(this.#layers, this.#region)
-        this.#region.clear()
         const painter = this.#painter
+        for(const [layer, buffer] of this.#buffers){
+            if(!buffer.texture){
+                // Nothing shows in it yet: nothing to draw, nor to keep.
+                if(layer.isEmpty){
+                    buffer.region.clear()
+                    continue
+                }
+                buffer.allocate(this.gpu, this.#width, this.#height)
+                // The mix holds a copy of it, laid whole.
+                this.#region.addAll()
+            }
+            if(buffer.region.isEmpty || !buffer.surface) continue
+            painter.setTarget(buffer.surface)
+            this.#repaint.draw([layer], buffer.region)
+            buffer.region.clear()
+        }
+        if(!this.#composes){
+            // Straight on the screen, which keeps nothing: everything is drawn again at each frame.
+            this.#region.addAll()
+            painter.setTarget(this.screen)
+            painter.push()
+            // The depth of the screen is undefined after a present and a resize: no test against it.
+            painter.setDepthTest("always")
+            painter.scale(this.#scale)
+            this.#repaint.draw(this.#layers, this.#region, this.#copyOf)
+            painter.pop()
+            this.#region.clear()
+            return
+        }
+        const mix = this.#mix ?? this.#makeMix()
+        const mixSurface = this.#mixSurface
+        if(mixSurface && !this.#region.isEmpty){
+            painter.setTarget(mixSurface)
+            this.#repaint.draw(this.#layers, this.#region, this.#copyOf)
+            this.#region.clear()
+        }
         painter.setTarget(this.screen)
         painter.push()
         painter.setBlend("alpha")
+        painter.setDepthTest("always")
         painter.scale(this.#scale)
-        painter.sprite(this.#texture.sprite, 0, 0)
+        painter.sprite(mix.sprite, 0, 0)
         painter.pop()
-        painter.setTarget(this.#surface)
     }
 
-    /** Free the texture. Disposing twice does nothing. */
+    /** Free the textures. Disposing twice does nothing. */
     public dispose(): void {
         this.#listeners.clear()
         this.#interactionListeners.clear()
-        this.#texture.dispose()
+        for(const buffer of this.#buffers.values()) buffer.release()
+        this.#mix?.dispose()
+        this.#mix = null
+        this.#mixSurface = null
     }
 
 
     readonly #layers: Layer[] = []
+
+    /** The layers that asked for a texture of their own. */
+    readonly #buffers = new Map<Layer, LayerBuffer>()
+
+    /** The layer of a content, for every layer. */
+    readonly #layerOfContent = new Map<Component, Layer>()
+
+    /** Is there a mix, or does the interface draw straight on the screen? */
+    readonly #composes: boolean
+
+    /** The mix: what every layer draws, laid on the screen at each frame. None until the first render. */
+    #mix: RenderTexture|null = null
+    #mixSurface: TextureSurface|null = null
+
+    /** The zones of the mix, or of the screen drawn straight, to draw again at the next render. */
     readonly #region = new DirtyRegion()
+
+    /** The copy of a layer with a texture of its own, as the mix holds it, none for another layer. */
+    readonly #copyOf = (layer: Layer): Sprite|null => this.#buffers.get(layer)?.texture?.sprite ?? null
+
     readonly #painter: Painter
     readonly #repaint: Repaint
     readonly #focus: Focus
@@ -300,8 +399,8 @@ export class UiRoot {
     readonly #ticking = new Set<Component>()
     readonly #listeners = new Set<(dt: number) => void>()
     readonly #interactionListeners = new Set<PointerInteractionListener>()
-    #texture: RenderTexture
-    #surface: TextureSurface
+    #width: number
+    #height: number
     #scale: number
     #preferredScale: number|null
     #focusVisible = false
@@ -337,7 +436,12 @@ export class UiRoot {
                 // The content of a layer is laid out at every render anyway, over the whole texture.
                 if(component.parent) this.#layoutRoots.add(component)
             },
-            addArea: rect => this.#region.add(rect),
+            addArea: (component, rect) => {
+                const layer = this.#layerOf(component)
+                if(!layer) return
+                this.#buffers.get(layer)?.region.add(rect)
+                this.#region.add(rect)
+            },
             noteLeaving: component => {
                 this.#focus.noteLeaving(component)
                 this.#pointer.noteLeaving(component)
@@ -404,30 +508,48 @@ export class UiRoot {
         return this.#preferredScale ?? Math.max(1, Math.floor(screenHeight / MIN_VIRTUAL_HEIGHT))
     }
 
+    /** The layer a component is in, none when it is in none. */
+    #layerOf(component: Component): Layer|undefined {
+        return this.#layerOfContent.get(internals.topOf(component))
+    }
+
+    /** Make the mix, at the size of the interface, to be drawn whole. */
+    #makeMix(): RenderTexture {
+        const mix = new RenderTexture(this.gpu, this.#width, this.#height)
+        this.#mix = mix
+        this.#mixSurface = new TextureSurface(this.gpu, mix)
+        this.#region.addAll()
+        return mix
+    }
+
     /**
-     * Follow the size of the screen and the scale: the texture is replaced by one of the new size, since a
-     * texture only grows and everything is drawn again anyway.
+     * Follow the size of the screen and the scale: the textures are replaced by ones of the new size, since
+     * a texture only grows and everything is drawn again anyway.
      */
     #fit(): void {
         const scale = this.#scaleFor(this.screen.height)
         const width = Math.max(1, Math.ceil(this.screen.width / scale))
         const height = Math.max(1, Math.ceil(this.screen.height / scale))
-        const isSame = scale === this.#scale
-            && width === this.#texture.width && height === this.#texture.height
+        const isSame = scale === this.#scale && width === this.#width && height === this.#height
         if(isSame) return
         this.#scale = scale
-        this.#texture.dispose()
-        this.#texture = new RenderTexture(this.gpu, width, height)
-        // The camera of a surface is fitted to its texture once, so a new one follows the new size.
-        this.#surface = new TextureSurface(this.gpu, this.#texture)
-        this.#painter.setTarget(this.#surface)
+        this.#width = width
+        this.#height = height
+        // The camera of a surface is fitted to its texture once: a new texture, made when needed, follows.
+        for(const buffer of this.#buffers.values()){
+            buffer.release()
+            buffer.region.resize(width, height)
+        }
+        this.#mix?.dispose()
+        this.#mix = null
+        this.#mixSurface = null
         this.#region.resize(width, height)
         this.#fullRedraw = true
     }
 
     /** Lay out the contents of the layers over the whole texture, then the boundaries marked inside them. */
     #layout(): void {
-        const whole = this.#whole.set(0, 0, this.#texture.width, this.#texture.height)
+        const whole = this.#whole.set(0, 0, this.#width, this.#height)
         for(const layer of this.#layers){
             if(this.#fullRedraw) internals.markLayout(layer.content)
             internals.place(layer.content, whole)
@@ -448,6 +570,10 @@ export class UiRoot {
     #collect(): void {
         const dirty = this.#dirty
         if(this.#fullRedraw){
+            for(const buffer of this.#buffers.values()){
+                buffer.region.clear()
+                buffer.region.addAll()
+            }
             this.#region.clear()
             this.#region.addAll()
             this.#fullRedraw = false
@@ -456,8 +582,12 @@ export class UiRoot {
             for(const component of dirty){
                 if(internals.shownHostOf(component) !== this.#host || hasDirtyContainer(component)) continue
                 if(!internals.absoluteArea(component, area)) continue
-                if(this.#repaint.isHidden(component, area, this.#layers)) continue
-                this.#region.add(area)
+                const layer = this.#layerOf(component)
+                if(!layer) continue
+                // A layer with a texture keeps its own pixels right, whatever another layer hides.
+                const buffer = this.#buffers.get(layer)
+                if(buffer && !this.#repaint.isHidden(component, area, [layer])) buffer.region.add(area)
+                if(!this.#repaint.isHidden(component, area, this.#layers)) this.#region.add(area)
             }
         }
         for(const component of dirty) internals.clearDirty(component)

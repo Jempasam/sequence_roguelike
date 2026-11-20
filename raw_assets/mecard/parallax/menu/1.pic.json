@@ -1,0 +1,21 @@
+{
+    "size": [288, 164],
+    "seed": 1,
+    "palette": [
+        {"color": "#2a78d8", "light": 0.2}, {"color": "#3f92e4", "light": 0.2}, {"color": "#5ab0f0", "light": 0.2},
+        {"color": "#8ccdf8", "light": 0.25}, {"color": "#b8e4ff", "light": 0.3}, {"color": "#fffdf4", "light": 0.4}
+    ],
+    "shapes": [
+        {"box": [0, 0, 288, 164], "material": 4, "depth": 1},
+        {"box": [0, 0, 288, 84], "material": 3, "depth": 1},
+        {"box": [0, 0, 288, 62], "material": 2, "depth": 1},
+        {"box": [0, 0, 288, 42], "material": 1, "depth": 1},
+        {"box": [0, 0, 288, 22], "material": 0, "depth": 1},
+        {"box": [0, 84, 288, 6], "fill": {"pattern": "stripes", "width": 2, "axis": "x", "materials": [3, 4]}, "depth": 1},
+        {"box": [0, 62, 288, 6], "fill": {"pattern": "stripes", "width": 2, "axis": "x", "materials": [2, 3]}, "depth": 1},
+        {"box": [0, 42, 288, 6], "fill": {"pattern": "stripes", "width": 2, "axis": "x", "materials": [1, 2]}, "depth": 1},
+        {"box": [0, 22, 288, 6], "fill": {"pattern": "stripes", "width": 2, "axis": "x", "materials": [0, 1]}, "depth": 1},
+        {"ellipse": [150, 62, 30, 9], "material": 5, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [162, 56, 18, 9], "material": 5, "depth": [2, 3], "relief": "dome"}
+    ]
+}

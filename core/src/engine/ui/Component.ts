@@ -39,8 +39,8 @@ export interface ComponentHost {
     /** Take a component to lay out again at the next render, with the bounds it has. */
     noteLayout(component: Component): void
 
-    /** Take a zone to draw again, in coordinates of the texture. */
-    addArea(rect: Readonly<Rect>): void
+    /** Take a zone to draw again, in coordinates of the texture, of the layer a component is in. */
+    addArea(component: Component, rect: Readonly<Rect>): void
 
     /** Hear that a component is about to be hidden or removed, with everything inside it. */
     noteLeaving(component: Component): void
@@ -61,6 +61,7 @@ export interface Internals {
     setParent(component: Component, parent: Container<unknown>|null): void
     setLayerHost(component: Component, host: ComponentHost|null): void
     hostOf(component: Component): ComponentHost|null
+    topOf(component: Component): Component
     shownHostOf(component: Component): ComponentHost|null
     toAbsolute(component: Component, area: Rect): boolean
     place(component: Component, rect: Readonly<Rect>): void
@@ -74,6 +75,7 @@ export interface Internals {
     localPoint(component: Component, x: number, y: number, out: { x: number, y: number }): boolean
     isPosed(component: Component): boolean
     opaqueArea(component: Component): Readonly<Rect>|null
+    paintedArea(component: Component): Readonly<Rect>|null
     paint(component: Component, painter: Painter, clip: Readonly<Rect>): void
     handle(component: Component, event: UiEvent): void
     isInteractive(component: Component): boolean
@@ -238,6 +240,15 @@ export abstract class Component {
         return null
     }
 
+    /**
+     * The zone it draws in, in its own coordinates, when narrower than its bounds: a component that draws
+     * again only where it changed (see `invalidateArea`) says where it may draw, which debug checks. None
+     * by default, its whole bounds.
+     */
+    protected paintedRect(): Readonly<Rect>|null {
+        return null
+    }
+
     /** Lay its own content out once its bounds are known. Does nothing by default. */
     protected arranged(): void {}
 
@@ -324,7 +335,7 @@ export abstract class Component {
         if(!host) return
         const area = Component.#scratch.copyFrom(rect).intersect(Component.#ownRect(this))
         if(!this.#toAbsolute(area)) return
-        host.addArea(area)
+        host.addArea(this, area)
     }
 
 
@@ -339,6 +350,7 @@ export abstract class Component {
             component.#layerHost = host
         }
         internals.hostOf = component => component.#host()
+        internals.topOf = component => Component.#topOf(component)
         internals.shownHostOf = component => component.#hostIfShown()
         internals.toAbsolute = (component, area) => component.#toAbsolute(area)
         internals.place = (component, rect) => component.#place(rect)
@@ -359,6 +371,7 @@ export abstract class Component {
             return component.#toAbsoluteFromParent(out)
         }
         internals.opaqueArea = component => component.opaqueRect()
+        internals.paintedArea = component => component.paintedRect()
         internals.paint = (component, painter, clip) => component.paint(painter, clip)
         internals.handle = (component, event) => component.handle(event)
         internals.isInteractive = component => component.interactive
@@ -459,7 +472,7 @@ export abstract class Component {
         if(moved){
             const host = this.#hostIfShown()
             const old = Component.#scratch
-            if(host && !bounds.isEmpty && internals.absoluteArea(this, old)) host.addArea(old)
+            if(host && !bounds.isEmpty && internals.absoluteArea(this, old)) host.addArea(this, old)
             bounds.copyFrom(rect)
             this.invalidate()
         }
@@ -475,7 +488,7 @@ export abstract class Component {
         if(!host) return
         host.noteLeaving(this)
         const area = Component.#scratch
-        if(internals.absoluteArea(this, area)) host.addArea(area)
+        if(internals.absoluteArea(this, area)) host.addArea(this, area)
     }
 
     /**

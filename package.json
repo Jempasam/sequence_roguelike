@@ -18,6 +18,7 @@
         "web:build:docs": "node scripts/buildWebDocs.ts",
         "desktop": "npm run dev -w @game/desktop",
         "desktop:build": "npm run build -w @game/desktop",
+        "desktop:build:debug": "npm run build:debug -w @game/desktop",
         "desktop:build:node": "npm run build:node -w @game/desktop",
         "desktop:start": "npm run start -w @game/desktop",
         "desktop:start:node": "npm run start:node -w @game/desktop",

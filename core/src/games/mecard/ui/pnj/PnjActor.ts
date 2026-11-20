@@ -87,8 +87,12 @@ export class PnjActor {
         this.#playing = []
     }
 
-    /** Move the gaze and the animations on by a frame, then pose the character. */
-    public update(dt: number): void {
+    /**
+     * Move the gaze and the animations on by a frame, then pose the character.
+     *
+     * @returns Did the pose change, so the character is to be drawn again?
+     */
+    public update(dt: number): boolean {
         const looking = this.#looking
         const goal = this.#goal
         const head = 1 - Math.exp(-HEAD_RATE * dt)
@@ -101,7 +105,7 @@ export class PnjActor {
         if(this.#playing.some(each => each.time >= each.animation.duration)){
             this.#playing = this.#playing.filter(each => each.time < each.animation.duration)
         }
-        this.#pose()
+        return this.#pose()
     }
 
 
@@ -115,9 +119,10 @@ export class PnjActor {
 
     /**
      * Pose the character: the gaze, and over it the sum of the animations. `turn` turns the body and the
-     * head together, `headTurn` turns the head from the side the body faces toward the other.
+     * head together, `headTurn` turns the head from the side the body faces toward the other. Tells whether
+     * the pose changed.
      */
-    #pose(): void {
+    #pose(): boolean {
         const looking = this.#looking
         let { orientation, headFacing, head, lean } = looking
         let headTurn = 0
@@ -137,8 +142,12 @@ export class PnjActor {
         posed.headTurn = clamp(headFacing - side * headTurn - posed.orientation, -1, 1)
         posed.head = clamp(head, -1, 1)
         posed.lean = clamp(lean, -1, 1)
-        this.pnj.setGaze(posed)
-        this.pnj.squash = clamp(squash, 0, 1)
+        const pnj = this.pnj
+        const was = [pnj.orientation, pnj.headTurn, pnj.head, pnj.lean, pnj.squash]
+        pnj.setGaze(posed)
+        pnj.squash = clamp(squash, 0, 1)
+        return pnj.orientation !== was[0] || pnj.headTurn !== was[1] || pnj.head !== was[2]
+            || pnj.lean !== was[3] || pnj.squash !== was[4]
     }
 }
 

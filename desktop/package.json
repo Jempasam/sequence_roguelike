@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "node build/dev.mjs",
         "build": "node build/build.mjs",
+        "build:debug": "node build/build.mjs --console",
         "build:node": "node build/build.mjs --no-sea",
         "start": "node build/start.mjs",
         "start:node": "node build/start.mjs --node",

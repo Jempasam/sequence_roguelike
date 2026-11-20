@@ -1,0 +1,30 @@
+{
+    "size": [288, 164],
+    "seed": 6,
+    "palette": ["#7ac060", "#3a8a3c", "#6a4a28", "#a0dc70", "#2c6e30", "#8a6a40"],
+    "shapes": [
+        {"polygon": [[0, 106], [40, 102], [80, 106], [130, 103], [180, 106], [230, 101], [270, 105], [288, 103], [288, 164], [0, 164]], "material": 0, "depth": [3, 5], "relief": "round-y"},
+        {"box": [0, 106, 288, 58], "fill": {"pattern": "noise", "density": 0.05, "radius": 1, "materials": [null, 3]}},
+        {"box": [0, 120, 288, 44], "fill": {"pattern": "noise", "density": 0.03, "radius": 1, "materials": [null, 4]}},
+        {"box": [39, 96, 2, 8], "material": 2, "depth": 4},
+        {"box": [39, 96, 1, 8], "material": 5, "depth": 5},
+        {"ellipse": [32, 84, 16, 16], "material": 4, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [33, 84, 13, 13], "material": 1, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [34, 85, 6, 5], "material": 3, "depth": [5, 6]},
+        {"box": [69, 97, 2, 8], "material": 2, "depth": 4},
+        {"box": [69, 97, 1, 8], "material": 5, "depth": 5},
+        {"ellipse": [62, 86, 16, 14], "material": 4, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [63, 86, 13, 12], "material": 1, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [64, 87, 6, 5], "material": 3, "depth": [5, 6]},
+        {"box": [203, 90, 3, 12], "material": 2, "depth": 4},
+        {"box": [203, 90, 1, 12], "material": 5, "depth": 5},
+        {"ellipse": [191, 70, 26, 26], "material": 4, "depth": [4, 7], "relief": "dome"},
+        {"ellipse": [193, 71, 21, 21], "material": 1, "depth": [4, 7], "relief": "dome"},
+        {"ellipse": [195, 73, 10, 9], "material": 3, "depth": [5, 7]},
+        {"box": [246, 96, 2, 8], "material": 2, "depth": 4},
+        {"box": [246, 96, 1, 8], "material": 5, "depth": 5},
+        {"ellipse": [239, 85, 16, 15], "material": 4, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [240, 85, 13, 12], "material": 1, "depth": [4, 6], "relief": "dome"},
+        {"ellipse": [241, 86, 6, 5], "material": 3, "depth": [5, 6]}
+    ]
+}

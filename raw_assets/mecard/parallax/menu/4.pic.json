@@ -1,0 +1,13 @@
+{
+    "size": [288, 164],
+    "seed": 4,
+    "palette": ["#3a8a44", "#5cb85c", "#2c6e38", "#8ad070", "#4aa04c", "#6a9a70"],
+    "shapes": [
+        {"polygon": [[0, 92], [30, 88], [60, 92], [100, 87], [140, 91], [180, 86], [220, 91], [260, 88], [288, 90], [288, 164], [0, 164]], "material": 0, "depth": [3, 5], "relief": "round-y"},
+        {"polygon": [[0, 94], [30, 90], [60, 94], [100, 89], [140, 93], [180, 88], [220, 93], [260, 90], [288, 92], [288, 100], [0, 102]], "material": 5, "depth": [3, 4]},
+        {"box": [0, 100, 288, 64], "fill": {"pattern": "noise", "density": 0.08, "radius": 1, "materials": [null, 4]}},
+        {"box": [0, 92, 288, 72], "fill": {"pattern": "noise", "density": 0.05, "radius": 1, "materials": [null, 1]}},
+        {"box": [0, 110, 288, 54], "fill": {"pattern": "noise", "density": 0.02, "radius": 0, "materials": [null, 3]}},
+        {"box": [0, 120, 288, 44], "fill": {"pattern": "noise", "density": 0.03, "radius": 2, "materials": [null, 2]}}
+    ]
+}

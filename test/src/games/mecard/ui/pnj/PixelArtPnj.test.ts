@@ -288,4 +288,15 @@ describe("PixelArtActor", () => {
         for(let step = 0; step < 100; step++) actor.update(0.05)
         expect(pnj.orientation).toBeCloseTo(-1, 1)
     })
+
+    test("update → tells whether the pose changed: yes while it turns, no once it stands still", () => {
+        const actor = new PixelArtActor(pnjOf(BODY))
+        expect(actor.update(0.05)).toBe(false)
+        actor.look(-1000, 0)
+        expect(actor.update(0.05)).toBe(true)
+        let moving = true
+        for(let step = 0; step < 2000 && moving; step++) moving = actor.update(0.05)
+        expect(moving).toBe(false)
+        expect(actor.update(0.05)).toBe(false)
+    })
 })

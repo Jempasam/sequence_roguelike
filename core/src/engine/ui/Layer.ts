@@ -2,6 +2,16 @@ import { internals } from "./Component"
 import type { ComponentHost } from "./Component"
 import { Stack } from "./layout/Stack"
 
+/** How a layer is set up. */
+export interface LayerOptions {
+    /**
+     * Does it draw into a texture of its own, kept while it does not change? False by default: it then
+     * shares the texture of the layers next to it with none of their own, drawn again whenever one of
+     * them changes. A layer that changes rarely, over one that changes every frame, wants one.
+     */
+    readonly texture?: boolean
+}
+
 /**
  * A plane of the interface over the whole texture: the menus and the HUD, the popups, the debug panels.
  * The layers draw in the order the game created them, and take the pointer in the reverse order.
@@ -20,13 +30,19 @@ export class Layer {
     /** What the layer shows, given the whole texture. */
     public readonly content = new Stack()
 
+    /** Does it draw into a texture of its own? */
+    public readonly hasOwnTexture: boolean
+
     /** Built by `UiRoot.addLayer`. */
     constructor(
         /** The name the game gave it, unique in its interface. */
         public readonly name: string,
 
         host: ComponentHost,
+
+        options: LayerOptions = {},
     ){
+        this.hasOwnTexture = options.texture ?? false
         internals.setLayerHost(this.content, host)
     }
 

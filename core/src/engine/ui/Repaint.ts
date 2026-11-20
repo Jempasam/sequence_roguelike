@@ -1,4 +1,4 @@
-import type { Painter } from "../gpu"
+import type { Painter, Sprite } from "../gpu"
 import { Color } from "../math"
 
 import { internals } from "./Component"
@@ -8,6 +8,9 @@ import type { DirtyRegion } from "./DirtyRegion"
 import type { Layer } from "./Layer"
 import { applyPose } from "./Pose"
 import { Rect } from "./Rect"
+
+/** No layer keeps a texture of its own. */
+const NO_COPY = (): Sprite|null => null
 
 /** What a zone with nothing opaque below is cleared to before it is drawn again. */
 const TRANSPARENT = new Color(0, 0, 0, 0)
@@ -36,7 +39,9 @@ const HIDDEN: Start = { kind: "hidden" }
  * hidden. Each zone looks for its start. It goes down from the root into the child holding the zone, the
  * last one in a container whose children overlap, until no child holds it whole. Then it climbs back to
  * the first component whose opaque zone covers it, checking on the way, in each container whose children
- * overlap, the siblings drawn after: one that is opaque over the whole zone hides it.
+ * overlap, the siblings drawn after: one that is opaque over the whole zone hides it. When a layer holds
+ * nothing opaque over the zone, the search goes on in the layer below: the clear below happens only when no
+ * layer covers the zone.
  *
  * The zone is then cut to a scissor, cleared to transparent when nothing opaque lies below, and drawn from
  * the root, skipping what comes before the start in the drawing order: the `paint` of its containers and
@@ -75,12 +80,19 @@ export class Repaint {
         return false
     }
 
-    /** Draw again every zone of a region. */
-    public draw(layers: readonly Layer[], region: DirtyRegion): void {
+    /**
+     * Draw again every zone of a region.
+     *
+     * @param copyOf - The picture of a layer that keeps a texture of its own, none for another: it is laid
+     * over the zone, whole, instead of drawing its components again.
+     */
+    public draw(
+        layers: readonly Layer[], region: DirtyRegion, copyOf: (layer: Layer) => Sprite|null = NO_COPY,
+    ): void {
         const painter = this.painter
         painter.push()
         painter.setBlend("alpha")
-        for(const rect of region.rects) this.#drawZone(layers, rect)
+        for(const rect of region.rects) this.#drawZone(layers, rect, copyOf)
         painter.pop()
     }
 
@@ -95,7 +107,7 @@ export class Repaint {
         return this.#clips[depth]
     }
 
-    #drawZone(layers: readonly Layer[], rect: Readonly<Rect>): void {
+    #drawZone(layers: readonly Layer[], rect: Readonly<Rect>, copyOf: (layer: Layer) => Sprite|null): void {
         const start = this.#startOf(layers, rect)
         if(start.kind === "hidden") return
         const painter = this.painter
@@ -106,8 +118,15 @@ export class Repaint {
         const path = start.kind === "component" ? ancestorsOf(start.component) : null
         const first = start.kind === "component" ? start.layer : 0
         for(let index = first; index < layers.length; index++){
+            const layer = layers[index]
+            const copy = copyOf(layer)
+            if(copy){
+                // Its own texture is right already, whole: laid over the zone, nothing to skip in its tree.
+                if(layer.content.visible) painter.sprite(copy, 0, 0)
+                continue
+            }
             const onPath = path !== null && index === first
-            this.#walk(layers[index].content, rect, 0, 0, 0, onPath ? path : null, 0, false)
+            this.#walk(layer.content, rect, 0, 0, 0, onPath ? path : null, 0, false)
         }
         painter.pop()
     }
@@ -115,17 +134,27 @@ export class Repaint {
 
     //// The start ////
 
+    /**
+     * The layers are asked from the top down, each the same question: does it hide what lies below the zone?
+     * The first that does gives the start. When none does, nothing hides the zone, and it is cleared.
+     */
     #startOf(layers: readonly Layer[], rect: Readonly<Rect>): Start {
-        let top = -1
-        for(let index = layers.length - 1; index >= 0 && top < 0; index--){
-            if(this.#touches(layers[index], rect)) top = index
+        for(let index = layers.length - 1; index >= 0; index--){
+            const layer = layers[index]
+            if(!this.#touches(layer, rect)) continue
+            const start = this.#startIn(layer, index, rect)
+            if(start) return start
         }
-        if(top < 0) return ROOT
-        let from: Component = this.#deepestHolding(layers[top].content, rect)
+        return ROOT
+    }
+
+    /** Where a layer starts a zone, none when nothing in it is opaque over the whole zone. */
+    #startIn(layer: Layer, index: number, rect: Readonly<Rect>): Start|null {
+        let from: Component = this.#deepestHolding(layer.content, rect)
         for(;;){
-            if(this.#covers(from, rect)) return { kind: "component", layer: top, component: from }
+            if(this.#covers(from, rect)) return { kind: "component", layer: index, component: from }
             const parent = from.parent
-            if(!parent) return ROOT
+            if(!parent) return null
             if(parent.childrenMayOverlap && this.#coveredAfter(parent, from, rect)) return HIDDEN
             from = parent
         }
@@ -274,9 +303,14 @@ export class Repaint {
         const reach = this.debug ? painter.endReach() : null
         painter.pop()
         if(!reach || unchecked) return
+        // The zone it declares, when it draws again only where it changed, else its bounds.
+        const zone = internals.paintedArea(component)
         const { width, height } = component.bounds
-        const isInside = reach.left >= x && reach.top >= y
-            && reach.right <= x + width && reach.bottom <= y + height
+        const left = zone ? x + zone.x : x
+        const top = zone ? y + zone.y : y
+        const right = zone ? left + zone.width : x + width
+        const bottom = zone ? top + zone.height : y + height
+        const isInside = reach.left >= left && reach.top >= top && reach.right <= right && reach.bottom <= bottom
         if(!isInside){
             throw new Error(`A ${component.constructor.name} of ${width}×${height} at (${x}, ${y}) drew from`
                 + ` (${reach.left}, ${reach.top}) to (${reach.right}, ${reach.bottom}), out of its bounds. It`

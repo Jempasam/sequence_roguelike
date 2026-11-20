@@ -34,6 +34,7 @@ npm install
 | `npm run web:build` | `web/dist/`, à servir tel quel, depuis n'importe quel sous-chemin. Dossier cible : variable `WEB_OUT_DIR` (relative au dossier où npm est lancé, ou absolue ; le dossier est vidé avant le build), ex. `$env:WEB_OUT_DIR="docs"; npm run web:build` (PowerShell) ou `WEB_OUT_DIR=docs npm run web:build` (bash). |
 | `npm run web:build:docs` | Le même build, dans `docs/` (vidé avant). |
 | `npm run desktop:build` | `desktop/dist/<os>-<arch>/` : l'exécutable (Node SEA), `native/` et `assets/` (celui du dépôt et `generated_assets/`, fusionnés). Uniquement pour la machine courante. |
+| `npm run desktop:build:debug` | Comme `desktop:build`, mais l'exécutable Windows garde sa console (logs et erreurs visibles). Sans elle, `desktop:build` produit un exécutable sans console. |
 | `npm run desktop:build:node` | Le même dossier, avec `main.cjs` à la place de l'exécutable. Utile pour savoir si un problème vient du bundle ou de la SEA. |
 | `npm run desktop:start` / `desktop:start:node` | Lance ce qui a été construit. |
 | `npm run server:build` | `server/dist/main.js`, à déployer avec un `npm install`. |

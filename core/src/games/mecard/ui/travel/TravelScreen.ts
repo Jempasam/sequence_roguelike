@@ -253,7 +253,12 @@ export class TravelScreen {
         this.animations = new AnimationChain(error => options.report(String(error)))
         this.#engine = engine
         this.#locks = options.locks ?? NO_TRAVEL_LOCKS
-        this.#layer = ui.addLayer("travel")
+        // The background moves with the pointer, drawn again while the panels over it, in a texture of their
+        // own, stay as they were.
+        this.#backdropLayer = ui.addLayer("background")
+        this.#layer = ui.addLayer("ui", { texture: true })
+        // Over the panels, apart from them: the hand follows the pointer, and draws again where it moves.
+        this.#foregroundLayer = ui.addLayer("foreground")
         this.#scenes = new TravelScenes(ui.gpu, assets, ui, text => this.options.report(text))
         this.#scroll = new Scroll(theme, { width: MARGIN, height: MARGIN })
         this.#partyScroll = new Scroll(theme, { axis: "horizontal", width: MARGIN, height: MARGIN })
@@ -281,6 +286,8 @@ export class TravelScreen {
 
     public set visible(visible: boolean){
         this.#layer.content.visible = visible
+        this.#backdropLayer.content.visible = visible
+        this.#foregroundLayer.content.visible = visible
     }
 
     /** Show the map, what was being walked over at once, the party to go on from where it stands. */
@@ -337,7 +344,11 @@ export class TravelScreen {
     /** Build the panels again, from the run as it stands. */
     public refresh(): void {
         const content = this.#layer.content
+        const backdropContent = this.#backdropLayer.content
         for(const child of [...content.children]) content.remove(child)
+        for(const child of [...backdropContent.children]) backdropContent.remove(child)
+        const foregroundContent = this.#foregroundLayer.content
+        for(const child of [...foregroundContent.children]) foregroundContent.remove(child)
         const visiting = this.#visiting
         const look = visiting?.look ?? this.engine.floor.type.look
         const { r, g, b } = look.color
@@ -346,10 +357,10 @@ export class TravelScreen {
         const scene = visiting
             ? this.#scenes.haltScene(look, () => this.refresh(), failed)
             : this.#scenes.mapScene(look, () => this.refresh(), failed)
-        if(scene) content.add(scene.backdrop, { x: "stretch", y: "stretch" })
+        if(scene) backdropContent.add(scene.backdrop, { x: "stretch", y: "stretch" })
         if(scene?.pnj){
             scene.pnj.parent?.remove(scene.pnj)
-            content.add(scene.pnj, { x: "stretch", y: "stretch" })
+            backdropContent.add(scene.pnj, { x: "stretch", y: "stretch" })
         }
         this.#scene = scene
         this.#bubble = null
@@ -369,7 +380,7 @@ export class TravelScreen {
             const border = new Panel(this.theme, { background: scene.border, padding: 0, interactive: false })
             content.add(border, { x: "stretch", y: "stretch" })
         }
-        content.add(this.#arm, { x: "stretch", y: "stretch" })
+        foregroundContent.add(this.#arm, { x: "stretch", y: "stretch" })
         if(this.#queued) this.#flush()
     }
 
@@ -386,6 +397,12 @@ export class TravelScreen {
 
 
     readonly #layer: Layer
+
+    /** The layer under it, holding the backdrop of the scene. */
+    readonly #backdropLayer: Layer
+
+    /** The layer over it, holding the hand that points at the pointer. */
+    readonly #foregroundLayer: Layer
 
     #engine: Travel
 

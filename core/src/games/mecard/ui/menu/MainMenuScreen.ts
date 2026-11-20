@@ -1,20 +1,24 @@
 import { AssetError } from "../../../../engine/assets"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import { Sprite, Texture } from "../../../../engine/gpu"
-import { Box, Button, Label, Parallax } from "../../../../engine/ui"
+import { Box, Button, Image, Label, Parallax } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
 
-import { CHOSEN_TEXT, DIM_TEXT, TEXT_OUTLINE } from "../look/theme"
+import { DIM_TEXT, TEXT_OUTLINE } from "../look/theme"
+import { parallaxSource } from "../look/visualPath"
+import { LoadingOverlay } from "../run/LoadingOverlay"
+import { loadParallaxPictures } from "../travel/parallaxPictures"
+import { rangedOf, SCENE_WARPS } from "../travel/TravelScenes"
+import type { SceneRanges } from "../travel/TravelScenes"
 
-/** The pictures of the background, from the farthest to the nearest. */
-export const MENU_LAYERS: readonly ImagePath[] = [
-    "mecard/menu/1.png", "mecard/menu/2.png", "mecard/menu/3.png", "mecard/menu/4.png",
-    "mecard/menu/5.png", "mecard/menu/6.png", "mecard/menu/7.png", "mecard/menu/8.png", "mecard/menu/9.png",
-]
+/** The parallax of the background, a name under `mecard/parallax/`. */
+export const MENU_PARALLAX = "menu"
 
-/** How far the farthest and the nearest layers follow the pointer, in virtual pixels. */
-const FAR_DEPTH = 10
-const NEAR_DEPTH = 60
+/** How far the layers follow the pointer, in virtual pixels, where their painting does not say. */
+const MENU_DEPTHS: SceneRanges = {
+    x: { far: 10, near: 60 },
+    y: { far: 5, near: 25 },
+}
 
 /** How far right of the middle the menu lies, as a share of the width. */
 const SIDE_SHARE = 0.16
@@ -22,8 +26,8 @@ const SIDE_SHARE = 0.16
 /** The space between two buttons, in virtual pixels. */
 const GAP = 4
 
-/** The title of the game. */
-const TITLE = "Dungeon of the Mecard"
+/** The picture of the title of the game, over the buttons. */
+export const TITLE_PICTURE: ImagePath = "mecard/menu/title.png"
 
 /** The buttons of the menu, each none while it is not shown. */
 interface MenuButtons {
@@ -77,6 +81,7 @@ export class MainMenuScreen {
     public set visible(visible: boolean){
         if(visible === this.visible) return
         this.#layer.content.visible = visible
+        this.#backdropLayer.content.visible = visible
         if(visible){
             this.#confirming = false
             this.#size = ""
@@ -136,9 +141,14 @@ export class MainMenuScreen {
         /** Where the pictures of the background come from. */
         assets: Assets,
     ){
-        this.#layer = ui.addLayer("menu")
+        // The background moves with the pointer, drawn again while the buttons over it, in a texture of
+        // their own, stay as they were.
+        this.#backdropLayer = ui.addLayer("menu-backdrop")
+        this.#layer = ui.addLayer("menu", { texture: true })
+        this.#backdropLayer.content.visible = false
         this.#layer.content.visible = false
-        void this.#load(assets)
+        this.#loading = new LoadingOverlay(ui, theme, "menu-loading")
+        void this.#loading.during(this.#load(assets))
     }
 
 
@@ -154,13 +164,16 @@ export class MainMenuScreen {
     public refresh(): void {
         const { theme, ui, options } = this
         const content = this.#layer.content
+        const backdropContent = this.#backdropLayer.content
         for(const child of [...content.children]) content.remove(child)
+        for(const child of [...backdropContent.children]) backdropContent.remove(child)
         this.#buttons = NO_BUTTONS
-        if(this.#backdrop) content.add(this.#backdrop, { x: "stretch", y: "stretch" })
-        // As wide as its widest line, which the buttons stretch to.
+        if(this.#backdrop) backdropContent.add(this.#backdrop, { x: "stretch", y: "stretch" })
+        // The title over the buttons, which stretch to their own widest line, not to the title's.
+        const stack = new Box("column", { gap: GAP, align: "center" })
+        if(this.#title) stack.add(new Image(this.#title))
         const column = new Box("column", { gap: GAP, align: "stretch" })
-        const title = new Label(theme, TITLE, { color: CHOSEN_TEXT, outline: TEXT_OUTLINE, align: "center" })
-        column.add(title)
+        stack.add(column)
         if(this.#confirming){
             const asked = "Une partie est en cours. L'écraser ?"
             column.add(new Label(theme, asked, { color: DIM_TEXT, outline: TEXT_OUTLINE, align: "center" }))
@@ -201,7 +214,7 @@ export class MainMenuScreen {
             this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, multiplayer, guide, history }
         }
         // Right of the middle, where the cabin of the landscape is not.
-        content.add(column, { x: "center", y: "center", offsetX: Math.round(ui.width * SIDE_SHARE) })
+        content.add(stack, { x: "center", y: "center", offsetX: Math.round(ui.width * SIDE_SHARE) })
     }
 
     /** Free the pictures of the background. */
@@ -213,10 +226,19 @@ export class MainMenuScreen {
 
 
     readonly #layer: Layer
+
+    /** The layer under it, holding the background. */
+    readonly #backdropLayer: Layer
+
+    /** The sign shown while the pictures of the menu load. */
+    readonly #loading: LoadingOverlay
     #hasSave = false
     #hasNetwork = false
     #confirming = false
     #backdrop: Parallax|null = null
+
+    /** The picture of the title, none while it is not loaded or cannot be. */
+    #title: Sprite|null = null
     #textures: Texture[] = []
     #disposed = false
 
@@ -225,23 +247,46 @@ export class MainMenuScreen {
 
     #buttons: MenuButtons = NO_BUTTONS
 
+    /** Load the picture of the title: the menu goes without it when it cannot be. */
+    async #loadTitle(assets: Assets): Promise<void> {
+        let pixels
+        try {
+            pixels = await assets.image(TITLE_PICTURE)
+        } catch(error){
+            if(!(error instanceof AssetError)) throw error
+            this.options.report(`Le titre du menu n'a pas pu être chargé : ${error.message}`)
+            return
+        }
+        if(this.#disposed) return
+        const texture = Texture.fromPixels(this.ui.gpu, pixels)
+        this.#textures.push(texture)
+        this.#title = Sprite.whole(texture)
+        this.refresh()
+    }
+
     /** Load the pictures of the background: the menu stays on its plain color when they cannot be. */
     async #load(assets: Assets): Promise<void> {
-        let pictures
+        await this.#loadTitle(assets)
+        let backdrop
         try {
-            pictures = await Promise.all(MENU_LAYERS.map(path => assets.image(path)))
+            backdrop = await loadParallaxPictures(assets, parallaxSource(MENU_PARALLAX))
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             this.options.report(`Le fond du menu n'a pas pu être chargé : ${error.message}`)
             return
         }
         if(this.#disposed) return
-        this.#textures = pictures.map(picture => Texture.fromPixels(this.ui.gpu, picture))
-        const count = this.#textures.length
-        this.#backdrop = new Parallax(this.#textures.map((texture, index) => ({
-            sprite: Sprite.whole(texture),
-            depth: Math.round(FAR_DEPTH + (NEAR_DEPTH - FAR_DEPTH) * index / Math.max(1, count - 1)),
-        })))
+        for(const warning of backdrop.warnings) this.options.report(warning)
+        const layers = backdrop.layers
+        this.#textures = layers.map(layer => Texture.fromPixels(this.ui.gpu, layer.pixels))
+        const depths = backdrop.ranges.depth ?? MENU_DEPTHS
+        const warps = backdrop.ranges.warp ?? SCENE_WARPS
+        this.#backdrop = new Parallax(layers.map((layer, index) => ({
+            sprite: Sprite.whole(this.#textures[index]),
+            depth: layer.depth ?? rangedOf(index, layers.length, depths),
+            warp: layer.warp ?? rangedOf(index, layers.length, warps),
+            ...layer.place && { place: layer.place },
+        })), { opaque: true })
         this.refresh()
     }
 }

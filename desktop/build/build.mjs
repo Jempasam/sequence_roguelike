@@ -4,6 +4,8 @@
 //   assets/          a copy of the repo's assets/ and generated_assets/, merged
 // With --no-sea, the bundle stays there as main.cjs instead of the executable, to run with
 // `node main.cjs`. Same bundle, same layout, so it tells a bundling problem from a SEA one.
+// On Windows the executable is a GUI one (no console window); --console keeps node's console subsystem,
+// to see the logs and errors (npm run desktop:build:debug).
 // Cross-building is not supported: SEA injects into the running node binary, and the addons are the
 // prebuilt ones npm installed for this machine.
 
@@ -21,6 +23,7 @@ const MAIN = join(OUT, "main.cjs")
 const BLOB_DIRECTORY = join(DESKTOP, "dist", "sea")
 const EXE = join(OUT, process.platform === "win32" ? "roguelike.exe" : "roguelike")
 const SEA = !process.argv.includes("--no-sea")
+const CONSOLE = process.argv.includes("--console")
 const SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2"
 
 // Writes main.cjs and native/ into OUT, see vite.config.ts.
@@ -51,6 +54,15 @@ async function seaInject(){
         machoSegmentName: process.platform === "darwin" ? "NODE_SEA" : undefined,
     })
     if(process.platform === "darwin") execFileSync("codesign", ["--sign", "-", EXE])
+    if(process.platform === "win32" && !CONSOLE) setWindowsGuiSubsystem(EXE)
     // The executable carries the bundle, so the release folder does not ship it twice.
     rmSync(MAIN)
+}
+
+// node.exe is a console program (PE subsystem 3): Windows opens a console for it. Subsystem 2 is the GUI one.
+function setWindowsGuiSubsystem(path){
+    const bytes = readFileSync(path)
+    const subsystem = bytes.readUInt32LE(0x3C) + 0x5C // e_lfanew, then the Subsystem field of the optional header
+    bytes.writeUInt16LE(2, subsystem)
+    writeFileSync(path, bytes)
 }

@@ -56,6 +56,13 @@ export interface ParallaxOptions {
 
     /** How many strips a layer that bends is cut in along each axis, a whole number from 1, 5 by default. */
     readonly warpStrips?: number
+
+    /**
+     * Does it cover its whole bounds with opaque pixels, so nothing below is drawn again nor cleared when
+     * it changes? Declared, not checked: a placed layer holding too little would leave stale pixels.
+     * False by default.
+     */
+    readonly opaque?: boolean
 }
 
 /** How thin a strip of a layer that bends may get, as a share of an even one. */
@@ -119,6 +126,7 @@ export class Parallax extends Component {
         if(!Number.isInteger(strips) || strips < 1) throw new Error(`A parallax cuts its layers in a whole number of strips from 1, not ${strips}.`)
         this.warpStrips = strips
         this.#tint = options.tint ?? null
+        this.opaque = options.opaque ?? false
         this.#shifts = layers.map(() => ({ x: 0, y: 0 }))
         this.#crops = layers.map(() => [])
         this.#bends = layers.some(layer => warpOf(layer).x !== 0 || warpOf(layer).y !== 0)
@@ -136,8 +144,16 @@ export class Parallax extends Component {
         this.invalidate()
     }
 
+    /** Does it cover its whole bounds with opaque pixels, as declared? */
+    public readonly opaque: boolean
+
     protected computeHint(): SizeHint {
         return EMPTY_HINT
+    }
+
+    protected override opaqueRect(): Readonly<Rect>|null {
+        if(!this.opaque) return null
+        return this.#opaqueArea.set(0, 0, this.bounds.width, this.bounds.height)
     }
 
     /** Start following the pointer, the layers already where it puts them, so the first drawing is right. */
@@ -186,6 +202,7 @@ export class Parallax extends Component {
     readonly #crops: (Sprite|null)[][]
 
     readonly #area = new Rect()
+    readonly #opaqueArea = new Rect()
     readonly #mapping: Mapping = { sx: 0, sy: 0, sw: 0, sh: 0, dx: 0, dy: 0, dw: 0, dh: 0 }
     readonly #cell: Mapping = { sx: 0, sy: 0, sw: 0, sh: 0, dx: 0, dy: 0, dw: 0, dh: 0 }
 

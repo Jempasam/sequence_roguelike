@@ -77,8 +77,12 @@ export class PixelArtActor {
         this.#playing = []
     }
 
-    /** Move the gaze and the animations on by a frame, then pose the character. */
-    public update(dt: number): void {
+    /**
+     * Move the gaze and the animations on by a frame, then pose the character.
+     *
+     * @returns Did the pose change, so the character is to be drawn again?
+     */
+    public update(dt: number): boolean {
         const looking = this.#looking
         const goal = this.#goal
         const body = 1 - Math.exp(-BODY_RATE * dt)
@@ -88,7 +92,7 @@ export class PixelArtActor {
         if(this.#playing.some(each => each.time >= each.animation.duration)){
             this.#playing = this.#playing.filter(each => each.time < each.animation.duration)
         }
-        this.#pose()
+        return this.#pose()
     }
 
 
@@ -96,8 +100,8 @@ export class PixelArtActor {
     #goal: PixelArtGaze
     #playing: Playing[] = []
 
-    /** Pose the character: the gaze, and over it the sum of the animations. */
-    #pose(): void {
+    /** Pose the character: the gaze, and over it the sum of the animations. Tells whether the pose changed. */
+    #pose(): boolean {
         const looking = this.#looking
         let { orientation, lean } = looking
         let narrowing = 0
@@ -109,11 +113,14 @@ export class PixelArtActor {
             squash += trackAt(animation, "squash", time)
         }
         const side = orientation < 0 ? -1 : 1
-        this.pnj.setGaze({
+        const pnj = this.pnj
+        const was = [pnj.orientation, pnj.lean, pnj.squash]
+        pnj.setGaze({
             orientation: clamp(side * Math.max(0, Math.abs(orientation) - narrowing), -1, 1),
             lean: clamp(lean, -1, 1),
         })
-        this.pnj.squash = clamp(squash, 0, 1)
+        pnj.squash = clamp(squash, 0, 1)
+        return pnj.orientation !== was[0] || pnj.lean !== was[1] || pnj.squash !== was[2]
     }
 }
 

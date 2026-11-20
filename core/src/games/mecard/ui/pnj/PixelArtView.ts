@@ -1,6 +1,6 @@
 import type { Painter } from "../../../../engine/gpu"
 import type { Color } from "../../../../engine/math"
-import { Component, EMPTY_HINT } from "../../../../engine/ui"
+import { Component, EMPTY_HINT, Rect } from "../../../../engine/ui"
 import type { SizeHint, UiEvent } from "../../../../engine/ui"
 
 import type { PixelArtActor } from "./PixelArtActor"
@@ -12,6 +12,14 @@ const HEIGHT_SHARE = 0.8
 
 /** The space under its feet, in its height. */
 const FEET_MARGIN = 0.05
+
+/**
+ * The zone it may draw in around its feet, in its height: to each side, above and below. It leaves room
+ * for a hat, a lean, a squash and what it carries.
+ */
+const ZONE_SIDE = 0.6
+const ZONE_ABOVE = 1.25
+const ZONE_BELOW = 0.1
 
 /** How much wider a hat of size 1 is than its place on the head, which it barely covers. */
 const HAT_COVER = 1.15
@@ -138,13 +146,20 @@ export class PixelArtView extends Component {
     }
 
     protected override tick(dt: number): void {
+        const before = this.#zoneInto(this.#was)
         const pointer = this.#pointer
+        let changed = false
         if(pointer){
-            this.#follow(pointer)
+            changed = this.#follow(pointer)
             if(this.followsPointer) this.#look(pointer.pointerX, pointer.pointerY)
         }
-        if(this.animated) this.actor.update(dt)
-        this.invalidate()
+        if(this.animated && this.actor.update(dt)) changed = true
+        // Only where the character was and is now, and only when something moved.
+        if(changed) this.invalidateArea(before.union(this.#zoneInto(this.#now)))
+    }
+
+    protected override paintedRect(): Readonly<Rect> {
+        return this.#zoneInto(this.#now)
     }
 
     protected override handle(event: UiEvent): void {
@@ -240,15 +255,35 @@ export class PixelArtView extends Component {
         this.actor.look((x - feetX - this.#shiftX) / scale, (y - feetY - this.#shiftY) / scale)
     }
 
-    /** Move against the pointer by its depth, as a parallax moves its layers. */
-    #follow(pointer: PnjPointer): void {
+    readonly #was = new Rect()
+    readonly #now = new Rect()
+
+    /**
+     * Write the zone it may draw in, in its own coordinates: around its feet, a share of its height wide and
+     * high enough for its hat, its lean and what it carries. Nothing is drawn out of it.
+     */
+    #zoneInto(out: Rect): Rect {
+        const reach = this.actor.pnj.layout.height * this.#scale
+        const [feetX, feetY] = this.#feet
+        const x = feetX + this.#shiftX
+        const y = feetY + this.#shiftY
+        const left = Math.floor(x - reach * ZONE_SIDE)
+        const top = Math.floor(y - reach * ZONE_ABOVE)
+        return out.set(left, top, Math.ceil(x + reach * ZONE_SIDE) - left, Math.ceil(y + reach * ZONE_BELOW) - top)
+    }
+
+    /** Move against the pointer by its depth, as a parallax moves its layers. Tells whether it moved. */
+    #follow(pointer: PnjPointer): boolean {
         const { width, height } = this.bounds
-        if(width === 0 || height === 0) return
+        if(width === 0 || height === 0) return false
+        const wasX = this.#shiftX
+        const wasY = this.#shiftY
         // Where the pointer is, from -1 on the left or top edge to 1 on the other.
         const along = (at: number, length: number) => {
             return Math.max(-1, Math.min(1, (at - length / 2) / (length / 2)))
         }
         this.#shiftX = -Math.round(along(pointer.pointerX, width) * this.#depth.x)
         this.#shiftY = -Math.round(along(pointer.pointerY, height) * this.#depth.y)
+        return this.#shiftX !== wasX || this.#shiftY !== wasY
     }
 }

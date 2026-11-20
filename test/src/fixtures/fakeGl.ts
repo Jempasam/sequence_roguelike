@@ -16,6 +16,15 @@ export interface FakeGl {
 
     /** The name of a constant, from its value. */
     nameOf(value: unknown): string|undefined
+
+    /**
+     * How many times each framebuffer was cleared or drawn into since the last `resetWrites`, the screen
+     * being `null`. A draw is counted once the batch sent it, so flush the GPU before reading.
+     */
+    readonly writes: Map<object|null, number>
+
+    /** Forget the writes counted so far. */
+    resetWrites(): void
 }
 
 /** How the fake GPU differs from a default one. */
@@ -107,12 +116,18 @@ export function fakeGl(options: FakeGlOptions = {}): FakeGl {
         },
         checkFramebufferStatus: () => constantOf("FRAMEBUFFER_COMPLETE"),
     }
+    let bound: object|null = null
+    const writes = new Map<object|null, number>()
     const gl = new Proxy({}, {
         get(_, property){
             if(typeof property !== "string") return undefined
             if(/^[A-Z][A-Z0-9_]*$/.test(property)) return constantOf(property)
             return (...args: unknown[]) => {
                 calls.push({ name: property, args })
+                if(property === "bindFramebuffer") bound = (args[1] as object|null|undefined) ?? null
+                if(property === "clear" || property === "drawElements" || property === "drawArrays"){
+                    writes.set(bound, (writes.get(bound) ?? 0) + 1)
+                }
                 return methods[property]?.(...args as never[])
             }
         },
@@ -120,6 +135,8 @@ export function fakeGl(options: FakeGlOptions = {}): FakeGl {
     return {
         gl,
         calls,
+        writes,
+        resetWrites: () => writes.clear(),
         callsOf: name => calls.filter(call => call.name === name),
         nameOf: value => typeof value === "number" ? names.get(value) : undefined,
     }

@@ -225,15 +225,7 @@ export type AssetPath =
     | "mecard/items/tactics_book.png"
     | "mecard/items/whetstone.png"
     | "mecard/items/wings.png"
-    | "mecard/menu/1.png"
-    | "mecard/menu/2.png"
-    | "mecard/menu/3.png"
-    | "mecard/menu/4.png"
-    | "mecard/menu/5.png"
-    | "mecard/menu/6.png"
-    | "mecard/menu/7.png"
-    | "mecard/menu/8.png"
-    | "mecard/menu/9.png"
+    | "mecard/menu/title.png"
     | "mecard/parallax/alchemist.ora"
     | "mecard/parallax/alley.ora"
     | "mecard/parallax/altar.ora"
@@ -261,6 +253,7 @@ export type AssetPath =
     | "mecard/parallax/magician.ora"
     | "mecard/parallax/map.ora"
     | "mecard/parallax/meadow.ora"
+    | "mecard/parallax/menu.ora"
     | "mecard/parallax/merchant.ora"
     | "mecard/parallax/mine.ora"
     | "mecard/parallax/necromancer.ora"
@@ -876,15 +869,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/tactics_book.png",
     "mecard/items/whetstone.png",
     "mecard/items/wings.png",
-    "mecard/menu/1.png",
-    "mecard/menu/2.png",
-    "mecard/menu/3.png",
-    "mecard/menu/4.png",
-    "mecard/menu/5.png",
-    "mecard/menu/6.png",
-    "mecard/menu/7.png",
-    "mecard/menu/8.png",
-    "mecard/menu/9.png",
+    "mecard/menu/title.png",
     "mecard/parallax/alchemist.ora",
     "mecard/parallax/alley.ora",
     "mecard/parallax/altar.ora",
@@ -912,6 +897,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/parallax/magician.ora",
     "mecard/parallax/map.ora",
     "mecard/parallax/meadow.ora",
+    "mecard/parallax/menu.ora",
     "mecard/parallax/merchant.ora",
     "mecard/parallax/mine.ora",
     "mecard/parallax/necromancer.ora",

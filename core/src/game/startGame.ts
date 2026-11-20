@@ -95,8 +95,11 @@ export function startGame(platform: Platform): { dispose(): void } {
         world.clear(BACKGROUND, true)
         game.frame(input.beginFrame(dt), painter, dt)
         painter.setTarget(screen)
-        screen.clear(BACKGROUND)
+        // The world covers the screen but for its bands, the only part cleared.
+        clearBands(painter, screen.width, screen.height, offsetX, offsetY, LOW_RES_WIDTH * scale, LOW_RES_HEIGHT * scale)
         painter.push()
+        // The depth of the screen is undefined after a present and a resize, and it has no use: no test.
+        painter.setDepthTest("always")
         painter.translate(offsetX, offsetY)
         painter.scale(scale)
         painter.sprite(lowRes.sprite, 0, 0)
@@ -116,6 +119,29 @@ export function startGame(platform: Platform): { dispose(): void } {
             lowRes.dispose()
             gpu.dispose()
         },
+    }
+}
+
+/**
+ * Clear the bands of the screen around the world, drawn at `(x, y)` over `width × height` pixels: nothing
+ * when the world covers the whole screen. The painter draws in the screen.
+ */
+function clearBands(
+    painter: Painter, screenWidth: number, screenHeight: number,
+    x: number, y: number, width: number, height: number,
+): void {
+    const bands = [
+        [0, 0, screenWidth, y],
+        [0, y + height, screenWidth, screenHeight - y - height],
+        [0, y, x, height],
+        [x + width, y, screenWidth - x - width, height],
+    ]
+    for(const [bandX, bandY, bandWidth, bandHeight] of bands){
+        if(bandWidth <= 0 || bandHeight <= 0) continue
+        painter.push()
+        painter.clip(bandX, bandY, bandWidth, bandHeight)
+        painter.clear(BACKGROUND)
+        painter.pop()
     }
 }
 

@@ -1,0 +1,30 @@
+{
+    "size": [816, 444],
+    "ranges": "d=10:60,5:25 w=0:0",
+    "render": {
+        "light": 43,
+        "steps": [
+            "occlusion",
+            "shadow",
+            "reflection",
+            {"id": "contrast", "between": 0.9, "towards": "#c4e098"},
+            "alpha_thickness",
+            {"id": "outer_outline", "different_mat": true},
+            "casted_shadow",
+            "gloom",
+            "smooth",
+            {"id": "tint", "color": "#e8d060", "amount": 0.12}
+        ]
+    },
+    "layers": [
+        {"name": "9", "picture": "9.pic.json", "at": [-24, -24]},
+        {"name": "8", "picture": "8.pic.json", "at": [-24, -24]},
+        {"name": "7", "picture": "7.pic.json", "at": [-24, -24]},
+        {"name": "6", "picture": "6.pic.json", "at": [-24, -42]},
+        {"name": "5", "picture": "5.pic.json", "at": [-24, -24]},
+        {"name": "4", "picture": "4.pic.json", "at": [-24, -42]},
+        {"name": "3", "picture": "3.pic.json", "at": [-24, -60]},
+        {"name": "2", "picture": "2.pic.json", "at": [-24, -24]},
+        {"name": "1", "picture": "1.pic.json", "at": [-24, -24]}
+    ]
+}

@@ -110,7 +110,7 @@ Un document de calque :
 }
 ```
 
-4 matériaux au plus par calque (`palette`) : quand il en faut plus, répartir sur deux calques. Les formes sont posées
+Autant de matériaux que nécessaire par calque (`palette`, 36 au plus ; les rangées de pixels les nomment `0`–`9` puis `a`–`z`). Seul l'éditeur web de `picture` ne charge que 4 matériaux. Les formes sont posées
 dans l'ordre, la suivante recouvre la précédente. `seed` fixe le hasard des motifs.
 
 Pour chaque élément, choisir la source dans cet ordre :
@@ -301,6 +301,14 @@ Par fond, ne changent que `light`, `towards` et `tint.color` (boucher : 270, `#7
   - un damier en `box` explicites, pas en `tiles` + `odd` (aléatoire) ; une toile tissée en `stripes` larges avec
     `depths` ; des fils tendus en `stripes` fines avec un matériau `null` ;
   - deux lumières de couleurs différentes dans un calque coûtent deux matériaux.
+- **Menu principal** (9 calques, extérieur lumineux, calques à 6 à 11 matériaux) :
+  - plus de 4 matériaux par calque est permis (ombre et lumière d'une montagne, plusieurs verts, bois/pierre/toit
+    séparés) ; seul l'éditeur web de `picture` en charge 4 ;
+  - `contrast` à 0,7 délave un extérieur clair : 0,9 garde les couleurs ;
+  - un rocher se lit mieux en polygone irrégulier habillé de `tiles` (`offset` 0,5) qu'en ellipse `dome`, avec une
+    crête claire et un cadre de pierres claires autour de l'entrée ;
+  - un dégradé de ciel : une `box` par teinte, une bande de `stripes` fines (`width` 2, `axis` `"x"` pour des bandes
+    horizontales) à chaque jonction ; `axis` `"y"` donne des bandes verticales.
 - **Images libres (dresseur, dompteur, fonds génériques)** :
   - chercher par l'API de Commons (`generator=search`, namespace 6, `iiprop=extmetadata`, garder
     `LicenseShortName` CC0 ou Public domain), avec un User-Agent et en espaçant les requêtes (limite de débit,

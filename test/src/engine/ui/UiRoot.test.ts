@@ -124,6 +124,43 @@ describe("UiRoot.render", () => {
         expect(painted).toEqual([])
     })
 
+    test("an opaque layer under a transparent one → drawn from it, without clearing", () => {
+        const setup = uiSetup()
+        const backdrop = new Probe("backdrop", [100, 100], { opaque: true })
+        setup.main.content.add(backdrop)
+        setup.popup.content.add(new Probe("button", [10, 10]))
+        settle(setup.ui)
+        const clears = clearsOf(setup)
+        backdrop.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual(["backdrop", "button"])
+        expect(clearsOf(setup)).toBe(clears)
+    })
+
+    test("no layer opaque over the zone → cleared, then every layer drawn", () => {
+        const setup = uiSetup()
+        const back = new Probe("back", [100, 100])
+        setup.main.content.add(back)
+        setup.popup.content.add(new Probe("button", [10, 10]))
+        settle(setup.ui)
+        const clears = clearsOf(setup)
+        back.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual(["back", "button"])
+        expect(clearsOf(setup)).toBe(clears + 1)
+    })
+
+    test("an opaque layer over a changing one → nothing drawn", () => {
+        const setup = uiSetup()
+        const under = new Probe("under", [10, 10])
+        setup.main.content.add(under, { offsetX: 10, offsetY: 10 })
+        setup.popup.content.add(new Probe("cover", [50, 50], { opaque: true }))
+        settle(setup.ui)
+        under.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual([])
+    })
+
     test("a sibling crossing part of it → drawn again after it", () => {
         const setup = uiSetup()
         const panel = new ProbeStack("panel", true)
@@ -355,5 +392,136 @@ describe("UiRoot size", () => {
         gfx.resize(800, 200)
         ui.render()
         expect([ui.width, ui.height]).toEqual([800, 200])
+    })
+})
+
+describe("UiRoot layers with a texture of their own", () => {
+    test("a layer over one that changes, with a texture of its own → not drawn again", () => {
+        const setup = uiSetup()
+        const own = setup.ui.addLayer("own", { texture: true })
+        own.content.add(new Probe("over", [10, 10]))
+        const moving = new Probe("moving", [10, 10])
+        setup.main.content.add(moving)
+        setup.ui.render()
+        painted.length = 0
+        moving.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual(["moving"])
+    })
+
+    test("a layer over one that changes, sharing its texture → drawn again over it", () => {
+        const setup = uiSetup()
+        setup.popup.content.add(new Probe("over", [10, 10]))
+        const moving = new Probe("moving", [10, 10])
+        setup.main.content.add(moving)
+        setup.ui.render()
+        painted.length = 0
+        moving.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual(["moving", "over"])
+    })
+
+    test("the layer with a texture changing → its components drawn again, the others far from it kept", () => {
+        const setup = uiSetup()
+        const own = setup.ui.addLayer("own", { texture: true })
+        const changing = new Probe("changing", [10, 10])
+        own.content.add(changing)
+        setup.main.content.add(new Probe("far", [10, 10]), { x: "start", y: "start", offsetX: 200, offsetY: 100 })
+        setup.ui.render()
+        painted.length = 0
+        changing.invalidate()
+        setup.ui.render()
+        expect(painted).toEqual(["changing"])
+    })
+
+    test("the screen changing size → everything is drawn again, in every texture", () => {
+        const gfx = fakeGfx(fakeGl().gl, 640, 360)
+        const gpu = new Gpu(gfx)
+        const ui = new UiRoot(gpu, new ScreenSurface(gpu), { scale: 1 })
+        painted.length = 0
+        ui.addLayer("a").content.add(new Probe("a", [10, 10]))
+        ui.addLayer("b", { texture: true }).content.add(new Probe("b", [10, 10]))
+        ui.render()
+        painted.length = 0
+        gfx.resize(800, 400)
+        ui.render()
+        expect([...painted].sort()).toEqual(["a", "b"])
+    })
+})
+
+describe("UiRoot mix", () => {
+    /** The textures written by a render, the screen not counted: the mix, and the layers with their own. */
+    function texturesWritten(setup: UiSetup): number {
+        setup.gpu.flush()
+        return [...setup.fake.writes.keys()].filter(target => target !== null).length
+    }
+
+    /** Render, send what was drawn, and count the textures written by it alone. */
+    function renderCounting(setup: UiSetup): number {
+        setup.gpu.flush()
+        setup.fake.resetWrites()
+        setup.ui.render()
+        return texturesWritten(setup)
+    }
+
+    test("nothing marked → no texture written, the mix laid on the screen all the same", () => {
+        const setup = uiSetup()
+        setup.main.content.add(new Probe("a", [10, 10]))
+        setup.ui.addLayer("own", { texture: true }).content.add(new Probe("b", [10, 10]))
+        setup.ui.render()
+        expect(renderCounting(setup)).toBe(0)
+        expect(setup.fake.writes.get(null) ?? 0).toBeGreaterThan(0)
+    })
+
+    test("a layer without a texture marked → only the mix is written", () => {
+        const setup = uiSetup()
+        const moving = new Probe("moving", [10, 10])
+        setup.main.content.add(moving)
+        setup.ui.addLayer("own", { texture: true }).content.add(new Probe("kept", [10, 10]))
+        setup.ui.render()
+        moving.invalidate()
+        expect(renderCounting(setup)).toBe(1)
+    })
+
+    test("a layer with a texture marked → its texture, then the mix, are written", () => {
+        const setup = uiSetup()
+        const changing = new Probe("changing", [10, 10])
+        setup.ui.addLayer("own", { texture: true }).content.add(changing)
+        setup.main.content.add(new Probe("far", [10, 10]), { x: "start", y: "start", offsetX: 200, offsetY: 100 })
+        setup.ui.render()
+        changing.invalidate()
+        expect(renderCounting(setup)).toBe(2)
+    })
+
+    test("a component of a layer with a texture leaving → its zone is cleared in the layer and in the mix", () => {
+        const setup = uiSetup()
+        const own = setup.ui.addLayer("own", { texture: true })
+        const leaving = new Probe("leaving", [10, 10])
+        own.content.add(leaving)
+        setup.ui.render()
+        own.content.remove(leaving)
+        expect(renderCounting(setup)).toBe(2)
+    })
+
+    test("a layer with a texture first shown → drawn whole in its texture, then laid whole in the mix", () => {
+        const setup = uiSetup()
+        const own = setup.ui.addLayer("own", { texture: true })
+        setup.ui.render()
+        painted.length = 0
+        own.content.add(new Probe("late", [10, 10]))
+        expect(renderCounting(setup)).toBe(2)
+        expect(painted).toEqual(["late"])
+    })
+
+    test("composeInTexture false → no mix, every layer drawn on the screen at each frame", () => {
+        const setup = uiSetup({ composeInTexture: false })
+        setup.main.content.add(new Probe("a", [10, 10]))
+        setup.ui.addLayer("own", { texture: true }).content.add(new Probe("b", [10, 10]))
+        setup.ui.render()
+        painted.length = 0
+        // The layer with its own texture keeps it, and is laid on the screen again.
+        expect(renderCounting(setup)).toBe(0)
+        expect(painted).toEqual(["a"])
+        expect(setup.fake.writes.get(null) ?? 0).toBeGreaterThan(0)
     })
 })

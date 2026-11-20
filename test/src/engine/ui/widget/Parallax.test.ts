@@ -29,6 +29,21 @@ function pointAt(setup: UiSetup, x: number, y: number): void {
 // --- Tests ---
 
 describe("Parallax", () => {
+    test("declared opaque, the pointer moving → drawn again with no clear, and not declared → cleared", () => {
+        const clears = (opaque: boolean): number => {
+            const setup = uiSetup()
+            const texture = new Texture(setup.gpu, 400, 240)
+            const parallax = new Parallax([{ sprite: Sprite.whole(texture), depth: 30 }], { opaque })
+            setup.main.content.add(parallax, { x: "stretch", y: "stretch" })
+            setup.ui.render()
+            const before = setup.fake.callsOf("clear").length
+            pointAt(setup, 300, 20)
+            return setup.fake.callsOf("clear").length - before
+        }
+        expect(clears(true)).toBe(0)
+        expect(clears(false)).toBeGreaterThan(0)
+    })
+
     test("the pointer going around → drawn within its bounds in debug, with no error", () => {
         const setup = uiSetup({ debug: true })
         background(setup)

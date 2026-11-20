@@ -6,7 +6,8 @@ import {
 } from "./platform"
 
 // peerjss://0.peerjs.com
-const SIGNALING_SERVER = `ws://${location.hostname}:8787`
+// `ws://${location.hostname}:8787`
+const SIGNALING_SERVER = `peerjss://0.peerjs.com`
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game")
 if(!canvas) throw new Error("index.html has no <canvas id=\"game\">.")

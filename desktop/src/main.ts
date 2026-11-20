@@ -42,11 +42,36 @@ const game = startGame({
     connect,
 })
 
-/** Settles once the window has closed, so a host such as build/dev.mjs knows when to shut down. */
-export const closed = new Promise<void>(resolve => window.on("close", () => {
-    game.dispose()
-    resolve()
-}))
+/**
+ * Settles when the program shuts down, just before it exits. The window is not destroyed: the end of the
+ * process closes it, and the process ends whatever keeps Node alive (sockets, native threads).
+ */
+let resolveClosed: () => void = () => {}
+let shuttingDown = false
+export const closed = new Promise<void>(resolve => {
+    resolveClosed = resolve
+})
+
+window.on("beforeClose", event => {
+    // The window is kept as it is until the process ends.
+    event.prevent()
+    shutdown()
+})
+
+function shutdown(): void {
+    if(shuttingDown) return
+    shuttingDown = true
+    try {
+        game.dispose()
+    }
+    catch(error){
+        console.error("The game did not dispose cleanly:", error)
+    }
+    finally {
+        resolveClosed()
+        process.exit(0)
+    }
+}
 
 function syncOf(): NetSync|undefined {
     if(args.view === undefined) return undefined
@@ -62,5 +87,5 @@ function connect(code: string, guest: boolean): void {
     const options = ["--view", code, "--signal", signaling, ...guest ? ["--guest"] : []]
     const program = [...process.execArgv, ...process.argv.slice(1, 2), ...options]
     spawn(process.execPath, program, { detached: true, stdio: "inherit" }).unref()
-    window.destroy()
+    shutdown()
 }

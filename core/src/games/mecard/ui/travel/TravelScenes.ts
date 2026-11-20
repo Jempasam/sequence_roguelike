@@ -239,7 +239,7 @@ export class TravelScenes {
                 depth: layer.depth ?? rangedOf(index, layers.length, depths),
                 warp: layer.warp ?? rangedOf(index, layers.length, warps),
                 ...layer.place && { place: layer.place },
-            })), { tint: tintOf(look.parallax) }),
+            })), { tint: tintOf(look.parallax), opaque: true }),
             border: new NineSlice(Sprite.whole(border), { left: side, right: side, top: end, bottom: end }, {
                 border: { left: across, right: across, top: down, bottom: down },
             }),

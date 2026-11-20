@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { ARM_POINTS, ARM_SETTINGS, armPose } from "@game/core/mecard/arm"
+import { Sprite, Texture } from "@game/core"
+import { ARM_POINTS, ARM_SETTINGS, PointingArm, armPose } from "@game/core/mecard/arm"
 import type { ArmPose } from "@game/core/mecard/arm"
+
+import { painted, Probe, uiSetup } from "../../../../fixtures/uiFixtures"
 
 // --- Fixture builders ---
 
@@ -98,5 +101,30 @@ describe("armPose", () => {
 
     test("gives the same pose for the same point", () => {
         expect(poseAt(123, 45)).toEqual(poseAt(123, 45))
+    })
+})
+
+describe("PointingArm drawn again", () => {
+    test("the pointer moving → only around the forearm, what lies far from it is kept", () => {
+        const setup = uiSetup({ debug: true })
+        const far = new Probe("far", [10, 10])
+        setup.main.content.add(far)
+        const arm = new PointingArm(setup.ui)
+        arm.sprite = Sprite.whole(new Texture(setup.gpu, ARM_POINTS.width, ARM_POINTS.height))
+        arm.appear()
+        setup.main.content.add(arm, { x: "stretch", y: "stretch" })
+        const move = (x: number, y: number): void => {
+            setup.port.send({ type: "pointer-move", x, y })
+            setup.frame()
+            setup.ui.update(1 / 60)
+            setup.ui.render()
+        }
+        move(250, 100)
+        for(let frame = 0; frame < 120; frame++) move(250, 100)
+        painted.length = 0
+        const from = arm.pose
+        for(const [x, y] of [[230, 90], [270, 110], [260, 60], [210, 120]]) move(x, y)
+        expect(arm.pose).not.toEqual(from)
+        expect(painted).not.toContain("far")
     })
 })

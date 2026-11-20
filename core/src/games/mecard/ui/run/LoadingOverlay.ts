@@ -81,10 +81,10 @@ class Veil extends Component {
 export class LoadingOverlay {
 
 
-    constructor(ui: UiRoot, theme: Theme){
+    constructor(ui: UiRoot, theme: Theme, layer = "loading"){
         this.#label = new Label(theme, "Chargement…", { align: "end", outline: new Color(0, 0, 0) })
         this.#label.visible = false
-        const content = ui.addLayer("loading").content
+        const content = ui.addLayer(layer).content
         content.add(this.#veil, { x: "stretch", y: "stretch" })
         content.add(this.#label, { x: "end", y: "end", offsetX: MARGIN, offsetY: MARGIN })
     }

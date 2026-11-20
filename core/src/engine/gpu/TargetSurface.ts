@@ -31,6 +31,9 @@ export interface TargetSurface extends Surface {
     /**
      * Clear the whole target to a color, and its depth when asked. A painter clears within its clip
      * instead, with `Painter.clear`.
+     *
+     * A clear is never implicit, a target keeps what it holds from a frame to the next: skip it when what
+     * follows draws over everything. The screen is the exception, whose content is undefined once presented.
      */
     clear(color: Color, depth?: boolean): void
 }

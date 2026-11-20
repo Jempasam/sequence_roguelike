@@ -1,7 +1,7 @@
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import { Sprite, Texture } from "../../../../engine/gpu"
 import type { Gpu, Painter } from "../../../../engine/gpu"
-import { Component, EMPTY_HINT } from "../../../../engine/ui"
+import { Component, EMPTY_HINT, Rect } from "../../../../engine/ui"
 import type { SizeHint } from "../../../../engine/ui"
 
 /** Where the pointer is, in virtual pixels of the interface: the interface itself. */
@@ -242,11 +242,19 @@ export class PointingArm extends Component {
     }
 
     protected override tick(dt: number): void {
+        const before = this.#boxInto(this.#was)
         const glided = this.glide(this.pointer.pointerX, this.pointer.pointerY, dt)
         const rose = this.#rise(dt)
         if(!glided && !rose) return
-        this.invalidate()
+        // One rectangle around where it was and where it is, stretched as it is over the whole interface.
+        const after = this.#boxInto(this.#now)
+        const zone = before && after ? before.union(after) : before ?? after
+        if(zone) this.invalidateArea(zone)
         this.onMove?.(this)
+    }
+
+    protected override paintedRect(): Readonly<Rect>|null {
+        return this.#boxInto(this.#now)
     }
 
     protected paint(painter: Painter): void {
@@ -263,6 +271,40 @@ export class PointingArm extends Component {
         painter.pop()
     }
 
+
+    readonly #was = new Rect()
+    readonly #now = new Rect()
+
+    /**
+     * Write the zone it draws in now, in its own coordinates: the box of its picture, scaled and turned
+     * about its tip, put where its pose stands and sunk. None while nothing is drawn.
+     */
+    #boxInto(out: Rect): Rect|null {
+        const pose = this.#pose
+        if(!this.#sprite || !pose || this.#shown === 0) return null
+        const { scale } = this.settings
+        const { width, height, tipX, tipY } = this.points
+        const cos = Math.cos(pose.tilt)
+        const sin = Math.sin(pose.tilt)
+        let left = Infinity
+        let top = Infinity
+        let right = -Infinity
+        let bottom = -Infinity
+        for(const x of [0, width]){
+            for(const y of [0, height]){
+                const dx = (x - tipX) * scale
+                const dy = (y - tipY) * scale
+                left = Math.min(left, dx * cos - dy * sin)
+                right = Math.max(right, dx * cos - dy * sin)
+                top = Math.min(top, dx * sin + dy * cos)
+                bottom = Math.max(bottom, dx * sin + dy * cos)
+            }
+        }
+        const originY = pose.y + this.#sunk(pose)
+        const x = Math.floor(pose.x + left) - 1
+        const y = Math.floor(originY + top) - 1
+        return out.set(x, y, Math.ceil(pose.x + right) + 1 - x, Math.ceil(originY + bottom) + 1 - y)
+    }
 
     #sprite: Sprite|null = null
     #pose: ArmPose|null = null

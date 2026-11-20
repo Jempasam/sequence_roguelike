@@ -14,6 +14,11 @@ export const MAX_NAME_LENGTH = 64
 /** The most members a room may be created for. A mesh of N members opens N(N-1)/2 connections. */
 export const MAX_CAPACITY = 64
 
+/** The longest code a client may choose for its room, in characters. */
+export const MAX_CODE_LENGTH = 32
+
+const ROOM_CODE = new RegExp(`^[A-Za-z0-9-]{1,${MAX_CODE_LENGTH}}$`)
+
 /** A message of the protocol that came in another shape: the other side is not up to date, or broken. */
 export class ProtocolError extends Error {
 
@@ -46,6 +51,7 @@ export function readClientMessage(text: string): ClientMessage {
                 name: limited(message.name, "name", MAX_NAME_LENGTH),
                 data: data(message.data),
                 capacity: capacity(message.capacity),
+                ...message.code === undefined ? {} : { code: roomCode(message.code) },
             }
         case "join":
             return { type: "join", code: string(message.code, "code"), data: data(message.data) }
@@ -155,6 +161,13 @@ function capacity(value: unknown): number {
     return count
 }
 
+/** A code a client chose for its room: letters, digits and dashes, in capitals as `find` reads them. */
+function roomCode(value: unknown): string {
+    const code = string(value, "code")
+    if(!ROOM_CODE.test(code)) throw new ProtocolError(`code is "${code.slice(0, 40)}", out of 1 to ${MAX_CODE_LENGTH} letters, digits and dashes.`)
+    return code.toUpperCase()
+}
+
 function shape(value: unknown): RoomShape {
     if(value !== "star" && value !== "mesh") throw new ProtocolError(`shape is ${String(value)}, neither star nor mesh.`)
     return value
@@ -162,6 +175,7 @@ function shape(value: unknown): RoomShape {
 
 function refusal(value: unknown): RoomRefusal {
     const isRefusal = value === "not-found" || value === "full" || value === "refused" || value === "closed"
+        || value === "taken"
     if(!isRefusal) throw new ProtocolError(`reason is ${String(value)}, no refusal.`)
     return value
 }

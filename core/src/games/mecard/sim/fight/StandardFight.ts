@@ -7,7 +7,7 @@ import { Heart } from "../heart/Heart"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
 import type { Spot } from "../run/Journey"
 import { ARENA_SIZE, monsterStart, partyStarts } from "../run/formation"
-import { firstDeck, heroOf, monsterHearts } from "../run/Hero"
+import { firstDeck, heroOf, heroSpec, monsterHearts } from "../run/Hero"
 import type { Hero } from "../run/Hero"
 import type { Run } from "../run/Run"
 
@@ -44,12 +44,7 @@ export class StandardFight implements Fight {
         const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), rng.int(2 ** 31))
         battle.bot = run.bot
         heroes.forEach((hero, index) => {
-            const unit = battle.add({
-                name: hero.name, sprite: hero.sprite, team: heroesTeam, controller: hero.controller,
-                position: starts[index], direction: Vector2.UP,
-                hearts: hero.hearts, decks: hero.decks, unlimited: hero.unlimited, items: hero.items,
-                usables: hero.usables, bases: hero.bases,
-            })
+            const unit = battle.add(heroSpec(hero, heroesTeam, starts[index], Vector2.UP))
             battle.refill(unit)
             this.#units.set(hero, unit)
         })
@@ -66,7 +61,7 @@ export class StandardFight implements Fight {
                     controller: pose.controller ?? "bot",
                     position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
                     hearts: fighter.hearts, decks: fighter.decks, unlimited: fighter.unlimited, items: fighter.items,
-                    usables: fighter.usables, bases: fighter.bases,
+                    usables: fighter.usables, bases: { ...fighter.bases, showChain: true, showHand: true },
                 })
                 battle.refill(unit)
             },

@@ -1,3 +1,5 @@
+import type { SyncLink, SyncPeer, SyncRoom } from "../../../platform"
+
 /** Where the messages of a game go: a channel to the viewers, whatever carries them. */
 export interface SyncSender {
     /** Send a message to every viewer connected. */
@@ -17,25 +19,7 @@ export interface SyncSource {
 }
 
 /** The way between this client and one other, in both directions. */
-export interface SyncLink extends SyncSource {
-    /** Send a message to the other client. */
-    send(message: string): void
-}
-
-/** A client connected to the host. */
-export interface SyncPeer extends SyncLink {
-    /** What tells it from the others, for as long as it stays. */
-    readonly id: string
-}
-
-/** The clients connected to the host, each on its own link. */
-export interface SyncRoom {
-    /** Hear each client that connects, until the returned handle is disposed. */
-    onJoin(handler: (peer: SyncPeer) => void): { dispose(): void }
-
-    /** Hear each client that leaves, until the returned handle is disposed. */
-    onLeave(handler: (peer: SyncPeer) => void): { dispose(): void }
-}
+export type { SyncLink, SyncPeer, SyncRoom } from "../../../platform"
 
 /**
  * What a part of a game talks about, so several share one channel: each hears only the messages of its own
@@ -102,6 +86,67 @@ export const SEAT_TOPIC = new SyncTopic("seat")
 /** A client giving the host its chains. */
 export const PLAN_TOPIC = new SyncTopic("plan")
 
+/** The host telling every client which seats can be asked for, and who holds them. */
+export const SEAT_OFFER_TOPIC = new SyncTopic("seat-offer")
+
+/** A client asking the host for a seat. */
+export const SEAT_TAKE_TOPIC = new SyncTopic("seat-take")
+
+/** A client giving a seat back to the host. */
+export const SEAT_RELEASE_TOPIC = new SyncTopic("seat-release")
+
+/** The host telling the clients who came to play. */
+export const GATHER_MEMBERS_TOPIC = new SyncTopic("gather-members")
+
+/** The host telling a client that came that the game starts. */
+export const GATHER_START_TOPIC = new SyncTopic("gather-start")
+
+/** The host telling a client that came that there is no room left for it. */
+export const GATHER_FULL_TOPIC = new SyncTopic("gather-full")
+
+/** The host telling a client that came that the game started already. */
+export const GATHER_LATE_TOPIC = new SyncTopic("gather-late")
+
+/**
+ * A client of a gathering saying whether it is ready, `1` or `0`. A {@link Relay} on the same topic shows the
+ * others, which then hear it with the id of who said it.
+ */
+export const READY_TOPIC = new SyncTopic("ready")
+
+/** The host asking a client for the team it brings to a duel, and the client's answer. */
+export const TEAM_TOPIC = new SyncTopic("team")
+
+/**
+ * The group chat: every member says a line, and a {@link Relay} on the same topic shows the others, which hear
+ * it with the id of who said it.
+ */
+export const CHAT_TOPIC = new SyncTopic("chat")
+
+/** A client of a lobby telling the host who it is: its name, and the version of the lobby it speaks. */
+export const PROFILE_TOPIC = new SyncTopic("profile")
+
+/** The host telling everyone who is in the lobby, as a state: whoever connects is told how it stands. */
+export const ROSTER_TOPIC = new SyncTopic("roster")
+
+/** The host telling a client who it is in the lobby, the name it was given and the id the others know it by. */
+export const ROSTER_SELF_TOPIC = new SyncTopic("roster-self")
+
+/** The host telling a client it is not let into the lobby, with the version of the lobby it speaks. */
+export const PROFILE_REFUSED_TOPIC = new SyncTopic("profile-refused")
+
+/**
+ * The host telling everyone which mode of game the lobby is set on, with its settings, and whether it is being
+ * played, as a state: whoever connects is told how it stands, and one that comes in the middle of a game knows
+ * it is late.
+ */
+export const LOBBY_MODE_TOPIC = new SyncTopic("lobby-mode")
+
+/** The host telling how long is left before a deadline, none when there is none. */
+export const DEADLINE_TOPIC = new SyncTopic("deadline")
+
+/** The host telling that a deadline came. */
+export const DEADLINE_EXPIRED_TOPIC = new SyncTopic("deadline-expired")
+
 /**
  * A channel within the program, from one sender to every listener: what the tests synchronize through,
  * and the shape every transport takes.
@@ -157,9 +202,19 @@ export class LocalSync implements SyncSender, SyncSource {
     }
 }
 
+
+/** One client of a {@link LocalRoom}: the ends of its link, and whether its connection is dropped. */
+interface LocalClient {
+    readonly peer: SyncPeer
+    readonly host: Set<(message: string) => void>
+    isDropped: boolean
+}
+
 /**
  * A room within the program, each client on a link of its own, delivered at once: what the tests play
- * through, and the shape every transport takes.
+ * through, and the shape every transport takes. A test makes a client lose its connection with
+ * {@link LocalRoom.drop}, bring it back with {@link LocalRoom.back}, and leave for good with
+ * {@link LocalRoom.leave}.
  */
 export class LocalRoom implements SyncRoom {
 
@@ -167,6 +222,16 @@ export class LocalRoom implements SyncRoom {
     public onJoin(handler: (peer: SyncPeer) => void): { dispose(): void } {
         this.#joins.add(handler)
         return { dispose: () => this.#joins.delete(handler) }
+    }
+
+    public onLost(handler: (peer: SyncPeer) => void): { dispose(): void } {
+        this.#losses.add(handler)
+        return { dispose: () => this.#losses.delete(handler) }
+    }
+
+    public onBack(handler: (peer: SyncPeer) => void): { dispose(): void } {
+        this.#backs.add(handler)
+        return { dispose: () => this.#backs.delete(handler) }
     }
 
     public onLeave(handler: (peer: SyncPeer) => void): { dispose(): void } {
@@ -182,25 +247,57 @@ export class LocalRoom implements SyncRoom {
             handlers.add(handler)
             return { dispose: () => handlers.delete(handler) }
         }
-        const tell = (handlers: Set<(message: string) => void>) => (message: string) => {
-            for(const handler of [...handlers]) handler(message)
+        const local: LocalClient = {
+            host,
+            isDropped: false,
+            peer: {
+                id,
+                send: message => {
+                    if(local.isDropped) return
+                    for(const handler of [...client]) handler(message)
+                },
+                listen: hear(host),
+            },
         }
-        const peer: SyncPeer = { id, send: tell(client), listen: hear(host) }
-        this.#peers.set(id, peer)
-        for(const handler of [...this.#joins]) handler(peer)
-        return { send: tell(host), listen: hear(client) }
+        this.#clients.set(id, local)
+        for(const handler of [...this.#joins]) handler(local.peer)
+        return {
+            send: message => {
+                if(local.isDropped) return
+                for(const handler of [...host]) handler(message)
+            },
+            listen: hear(client),
+        }
     }
 
-    /** Disconnect a client. */
+    /** Lose the connection of a client, which may come back: what is sent either way is dropped meanwhile. */
+    public drop(id: string): void {
+        const client = this.#clients.get(id)
+        if(!client || client.isDropped) return
+        client.isDropped = true
+        for(const handler of [...this.#losses]) handler(client.peer)
+    }
+
+    /** Bring back the connection of a client that was dropped. */
+    public back(id: string): void {
+        const client = this.#clients.get(id)
+        if(!client || !client.isDropped) return
+        client.isDropped = false
+        for(const handler of [...this.#backs]) handler(client.peer)
+    }
+
+    /** Disconnect a client for good. A client that is not connected is left alone. */
     public leave(id: string): void {
-        const peer = this.#peers.get(id)
-        if(!peer) throw new Error(`No client ${id} is connected.`)
-        this.#peers.delete(id)
-        for(const handler of [...this.#leaves]) handler(peer)
+        const client = this.#clients.get(id)
+        if(!client) return
+        this.#clients.delete(id)
+        for(const handler of [...this.#leaves]) handler(client.peer)
     }
 
 
-    readonly #peers = new Map<string, SyncPeer>()
+    readonly #clients = new Map<string, LocalClient>()
     readonly #joins = new Set<(peer: SyncPeer) => void>()
+    readonly #losses = new Set<(peer: SyncPeer) => void>()
+    readonly #backs = new Set<(peer: SyncPeer) => void>()
     readonly #leaves = new Set<(peer: SyncPeer) => void>()
 }

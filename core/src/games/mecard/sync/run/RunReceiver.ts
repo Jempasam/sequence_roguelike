@@ -1,8 +1,11 @@
 import type { Run } from "../../sim/run/Run"
 
+import { Fault } from "../../../../engine/net/Fault"
 import { BattleReceiver } from "../battle/BattleReceiver"
 import { BATTLE_TOPIC, RUN_TOPIC, TRAVEL_TOPIC } from "../SyncChannel"
 import type { SyncSource } from "../SyncChannel"
+import { forward, signal, UnloadableFault } from "../faults"
+import { detailOf } from "../read"
 import { TravelReceiver } from "../travel/TravelReceiver"
 import { readRunMessage } from "./RunMessage"
 import type { RunMessage, RunRest } from "./RunMessage"
@@ -18,10 +21,12 @@ export class RunReceiver {
     /** What takes in the journey. */
     public readonly travel: TravelReceiver
 
-    /** What takes in the rounds of the battle being fought. */
+    /**
+     * What takes in the rounds of the battle being fought. It is made inside the constructor, before the
+     * first message of the run can be heard, which a channel may replay at once.
+     */
     public get battle(): BattleReceiver {
-        if(!this.#battle) throw new Error("A viewer takes the rounds in once it listens.")
-        return this.#battle
+        return this.#battle as BattleReceiver
     }
 
     /** The run watched. */
@@ -34,44 +39,42 @@ export class RunReceiver {
         this.#watch()
     }
 
-    /**
-     * What hears that a message of any part of the run could not be read or taken in. A failure nobody hears
-     * is thrown, so it is never silent.
-     */
-    public get onError(): ((error: unknown) => void)|null { return this.#onError }
-
-    public set onError(onError: ((error: unknown) => void)|null){
-        this.#onError = onError
-        this.travel.onError = onError
-        this.battle.onError = onError
-    }
+    /** Told of a message of any part of the run that could not be read or taken in: it is left out. */
+    public readonly faulted = signal<Fault>()
 
     constructor(engine: Run, source: SyncSource){
         this.#engine = engine
         this.travel = new TravelReceiver(engine.travel, TRAVEL_TOPIC.source(source))
+        this.#forwarding = [forward(this.travel, this, false)]
         // The rounds last: a viewer connecting must have joined the battle before it hears them.
         this.#listening = RUN_TOPIC.source(source).listen(text => this.receive(text))
         this.#battle = new BattleReceiver(engine.battle, BATTLE_TOPIC.source(source))
+        this.#forwarding.push(forward(this.#battle, this, false))
     }
 
 
     /** Take a message in. */
     public receive(text: string): void {
+        const message = readRunMessage(text)
+        if(message instanceof Fault){
+            this.faulted.notify(message)
+            return
+        }
         try {
-            const message = readRunMessage(text)
             if(this.#isStale(message)) return
             this.#heard = { number: message.number, sequence: message.sequence }
             if(message.kind === "save") this.#applySave(message)
             else this.#engine.joinBattle(message.save)
             this.#watch()
         } catch(error){
-            this.#fail(error)
+            this.faulted.notify(new UnloadableFault(RUN_TOPIC.name, detailOf(error)))
         }
     }
 
     /** Stop listening, and leave the run watched as it is. */
     public dispose(): void {
         this.#listening.dispose()
+        for(const handle of this.#forwarding) handle.dispose()
         this.travel.dispose()
         this.battle.dispose()
     }
@@ -84,7 +87,7 @@ export class RunReceiver {
     /** What takes the rounds in, none until it listens. */
     #battle: BattleReceiver|null = null
 
-    #onError: ((error: unknown) => void)|null = null
+    #forwarding: { dispose(): void }[] = []
 
     /** The run and the message last heard, none before the first. */
     #heard: { readonly number: number, readonly sequence: number }|null = null
@@ -104,10 +107,5 @@ export class RunReceiver {
     /** Take the rounds in for the battle being fought, none out of one. */
     #watch(): void {
         if(this.#battle) this.#battle.engine = this.#engine.battle
-    }
-
-    #fail(error: unknown): void {
-        if(!this.#onError) throw error
-        this.#onError(error)
     }
 }

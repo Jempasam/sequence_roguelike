@@ -79,7 +79,7 @@ function reasonOf(code: number, reason: string, url: string, wasOpen: boolean): 
     const said = reason === "" ? "" : `: ${reason}`
     switch(code){
         case NORMAL_CLOSURE:
-            return new NetError("closed", `${url} closed the connection${said}.`)
+            return new NetError("closed", `${url} closed the connection (${code})${said}.`)
         case PROTOCOL_ERROR:
         case UNSUPPORTED_DATA:
             return new NetError("protocol", `${url} refused what this end sent${said}.`)

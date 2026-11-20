@@ -1,5 +1,9 @@
 import type { SavedCard } from "../../sim/save/battleSave"
 
+import { PLAN_TOPIC } from "../SyncChannel"
+import { UnreadableFault } from "../faults"
+import { readJson, wrongShape } from "../read"
+
 /** What a unit is to play this round, as a save writes it down. */
 export interface UnitPlan {
     /** The unit, by its name. */
@@ -25,15 +29,12 @@ export function writePlanMessage(message: PlanMessage): string {
     return JSON.stringify(message)
 }
 
-/**
- * A message as received.
- *
- * @throws {@link Error} When it is no message of a plan.
- */
-export function readPlanMessage(text: string): PlanMessage {
-    const message = JSON.parse(text) as Partial<PlanMessage>|null
+/** A message as received, or why it cannot be read. */
+export function readPlanMessage(text: string): PlanMessage|UnreadableFault {
+    const message = readJson(PLAN_TOPIC.name, text) as Partial<PlanMessage>|null|UnreadableFault
+    if(message instanceof UnreadableFault) return message
     const isMessage = typeof message === "object" && message !== null
         && typeof message.round === "number" && Array.isArray(message.plans)
-    if(!isMessage) throw new Error("A message of the plans came in another shape: is the other client up to date?")
+    if(!isMessage) return wrongShape(PLAN_TOPIC.name, text, "message of the plans")
     return message as PlanMessage
 }

@@ -2,8 +2,10 @@ import type { Observer } from "../../sim/base/Observable"
 import type { Run } from "../../sim/run/Run"
 
 import { BattleGuest } from "../battle/BattleGuest"
+import { Fault } from "../../../../engine/net/Fault"
 import { JOIN_TOPIC, PLAN_TOPIC, SEAT_TOPIC } from "../SyncChannel"
 import type { SyncLink } from "../SyncChannel"
+import { forward, signal } from "../faults"
 import { readSeatMessage } from "./SeatMessage"
 
 /**
@@ -31,10 +33,8 @@ export class RunGuest {
         this.#follow()
     }
 
-    /**
-     * What hears that a message could not be read. A failure nobody hears is thrown, so it is never silent.
-     */
-    public onError: ((error: unknown) => void)|null = null
+    /** Told of a message that could not be read, or a plan that could not be given: it is left out. */
+    public readonly faulted = signal<Fault>()
 
     constructor(
         engine: Run,
@@ -47,6 +47,7 @@ export class RunGuest {
     ){
         this.#engine = engine
         this.#battle = new BattleGuest(engine.battle, PLAN_TOPIC.link(link), () => this.#units)
+        this.#forwarding = forward(this.#battle, this, false)
         this.#registerObservers()
         this.#listening = SEAT_TOPIC.link(link).listen(text => this.receive(text))
         JOIN_TOPIC.link(link).send("")
@@ -55,12 +56,13 @@ export class RunGuest {
 
     /** Take a message in. */
     public receive(text: string): void {
-        try {
-            this.#units = readSeatMessage(text).units
-            this.seated(this.#units)
-        } catch(error){
-            this.#fail(error)
+        const message = readSeatMessage(text)
+        if(message instanceof Fault){
+            this.faulted.notify(message)
+            return
         }
+        this.#units = message.units
+        this.seated(this.#units)
     }
 
     /** Give the host what was committed for its units: the client is ready. */
@@ -71,10 +73,12 @@ export class RunGuest {
     /** Stop playing, and leave the run as it is. */
     public dispose(): void {
         this.#unregisterObservers()
+        this.#forwarding.dispose()
         this.#listening.dispose()
     }
 
 
+    readonly #forwarding: { dispose(): void }
     readonly #battle: BattleGuest
     readonly #listening: { dispose(): void }
 
@@ -100,10 +104,5 @@ export class RunGuest {
     /** Play the battle being fought, none out of one. */
     #follow(): void {
         this.#battle.engine = this.#engine.battle
-    }
-
-    #fail(error: unknown): void {
-        if(!this.onError) throw error
-        this.onError(error)
     }
 }

@@ -416,6 +416,28 @@ export class Travel {
         return place
     }
 
+    /**
+     * Lay a whole row of halts in the map, one behind each place of a row: the map is told redrawn.
+     *
+     * @param layer - The row it takes, from 0, the rows from there moving down: see Journey.insertLayer.
+     * @throws {@link Error} When the row is not one the map has room for.
+     */
+    public layLayer(type: HaltType, layer: number): readonly Place[] {
+        const places = this.journey.insertLayer(type, layer)
+        this.mapDrawn.notify(this.journey)
+        return places
+    }
+
+    /**
+     * The next place holding a sort of halt on the floor being gone through: the lowest one on a row strictly
+     * past the one the party stands on, none when there is none.
+     */
+    public nextPlaceOf(type: HaltType): Place|null {
+        const row = this.#place?.layer ?? -1
+        const ahead = this.journey.places.filter(place => place.halt === type && place.layer > row)
+        return ahead.reduce<Place|null>((lowest, place) => !lowest || place.layer < lowest.layer ? place : lowest, null)
+    }
+
     /** Go into a floor, its map new, the party standing before its first layer. */
     public enterFloor(floor: Floor): void {
         this.depth++

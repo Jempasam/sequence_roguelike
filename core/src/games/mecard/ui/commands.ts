@@ -50,6 +50,9 @@ import { MINE_HAZARD } from "../sim/hazard/subs/Mine"
 import { Rng } from "../sim/base/Rng"
 import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, randomSeats } from "../sync/run/Seats"
 import type { SeatMode, SeatPolicy } from "../sync/run/Seats"
+import { wrapHue } from "../sync/chat/ChatMessage"
+import type { ChatAuthor } from "../sync/chat/ChatMessage"
+import { hueOfName } from "../sync/lobby/Profile"
 
 import { chainText, heartsText } from "./describe"
 import { placeTransitions } from "./travel/placeLooks"
@@ -129,6 +132,17 @@ export interface MecardContext extends CommandContext {
      * @throws {@link Error} With no network.
      */
     connect(code: string, guest: boolean): void
+
+    /**
+     * Open a group chat on a session of its own, and show it.
+     *
+     * @param code - The code of the room to join, none when hosting.
+     * @throws {@link Error} With no network, or when a chat is open already.
+     */
+    openChat(role: "host"|"join", code: string|null, author: ChatAuthor): void
+
+    /** Close the group chat, if one is open. */
+    leaveChat(): void
 }
 
 /** What the game gives the context of the commands, read at each command. */
@@ -174,6 +188,10 @@ export class LiveContext implements MecardContext {
     }
     public hostGame(mode: SeatMode|null, policy: SeatPolicy): void { this.host().hostGame(mode, policy) }
     public connect(code: string, guest: boolean): void { this.host().connect(code, guest) }
+    public openChat(role: "host"|"join", code: string|null, author: ChatAuthor): void {
+        this.host().openChat(role, code, author)
+    }
+    public leaveChat(): void { this.host().leaveChat() }
 }
 
 
@@ -352,6 +370,27 @@ const INTENT = named("l'intention", () => [
     { word: "spectate", guest: false },
     { word: "play", guest: true },
 ] as const, intent => intent.word)
+
+/** The name a player speaks by in a chat: one word, as the console reads words. */
+const CHAT_NAME: Arg<MecardContext, string> = {
+    complete: () => [],
+    read: (_, word) => word ?? "Joueur",
+}
+
+/** The hue a player speaks in, in a chat: a number of degrees, the one of the name by default. */
+const CHAT_HUE: Arg<MecardContext, number|null> = optional({
+    complete: () => [],
+    read: (_, word) => {
+        if(word === undefined) return new Error("Il manque la teinte.")
+        const value = Number(word)
+        return Number.isFinite(value) ? wrapHue(value) : new Error("La teinte : un nombre de degrés (0 à 360).")
+    },
+} as Arg<MecardContext, number|null>, null)
+
+/** Who speaks in a chat, from the words typed. */
+function authorOf(name: string, hue: number|null): ChatAuthor {
+    return { name, hue: hue ?? hueOfName(name) }
+}
 
 /** A character of the party other than the one read first. */
 const OTHER_HERO: Arg<MecardContext, Hero> = named("le héros", (ctx, [first]) => {
@@ -1183,6 +1222,14 @@ function networkCommands(): Readonly<Record<string, Command<MecardContext, unkno
             }),
         connect: command("connect <code> <spectate|play> : rejoint une partie hébergée.",
             [ROOM_CODE, INTENT], (ctx, code, intent) => ctx.connect(code, intent.guest)),
+        chat: group("chat", "le chat de groupe, sur une session à part de la partie.", {
+            host: command("chat host [pseudo] [couleur] : ouvre un chat de groupe et donne son code.",
+                [CHAT_NAME, CHAT_HUE], (ctx, name, hue) => ctx.openChat("host", null, authorOf(name, hue))),
+            join: command("chat join <code> [pseudo] [couleur] : rejoint le chat de groupe d'un code.",
+                [ROOM_CODE, CHAT_NAME, CHAT_HUE],
+                (ctx, code, name, hue) => ctx.openChat("join", code, authorOf(name, hue))),
+            leave: command("chat leave : quitte le chat de groupe.", [], ctx => ctx.leaveChat()),
+        }),
     }
 }
 

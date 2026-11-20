@@ -3,7 +3,7 @@ import type { Peer } from "@game/core"
 import type { Member } from "@game/server/protocol"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
-import { nextMessage, nodeNet, once, startNetServer } from "../../fixtures/netServer"
+import { nextMessage, nodeNet, once, signalingOf, startNetServer } from "../../fixtures/netServer"
 import type { NetServer } from "../../fixtures/netServer"
 
 // --- Fixture builders ---
@@ -12,13 +12,13 @@ let server: NetServer
 const opened: { close(): void }[] = []
 
 async function create(data: string): Promise<PTPSymSocket> {
-    const socket = await PTPSymSocket.create(nodeNet(), server.url, { name: "lobby", data })
+    const socket = await PTPSymSocket.create(nodeNet(), signalingOf(server.url), { name: "lobby", data })
     opened.push(socket)
     return socket
 }
 
 async function join(code: string, data: string): Promise<PTPSymSocket> {
-    const socket = await PTPSymSocket.join(nodeNet(), server.url, code, { data })
+    const socket = await PTPSymSocket.join(nodeNet(), signalingOf(server.url), code, { data })
     opened.push(socket)
     return socket
 }
@@ -89,7 +89,7 @@ describe("PTPSymSocket", () => {
     })
 
     test("joining a star → refused, a symmetric socket is for a mesh", async() => {
-        const host = await PTPHostSocket.open(nodeNet(), server.url, { name: "game" })
+        const host = await PTPHostSocket.open(nodeNet(), signalingOf(server.url), { name: "game" })
         opened.push(host)
         await expect(join(host.code, "b")).rejects.toThrow(/mesh/)
     })

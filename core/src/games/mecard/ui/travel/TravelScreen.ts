@@ -1,3 +1,4 @@
+import { FRAME_THICKNESS } from "../look/wood"
 import { AssetError } from "../../../../engine/assets"
 import type { Assets } from "../../../../engine/assets"
 import type { Visual } from "../../sim/base/Visual"
@@ -854,9 +855,9 @@ export class TravelScreen {
         const column = new Box("column", { gap: MARGIN, align: "stretch" })
         column.fixedSize = { width: this.#sideWidth, height: this.ui.height - 2 * MARGIN }
         column.add(this.#where())
-        column.add(this.#panel(this.#partyScroll))
+        column.add(this.#panel(this.#partyScroll, true))
         this.#fillParty()
-        column.add(this.#panel(this.#detail), { grow: 1 })
+        column.add(this.#panel(this.#detail, true), { grow: 1 })
         this.#fillDetail()
         return column
     }
@@ -868,7 +869,7 @@ export class TravelScreen {
         const place = this.#visiting?.title ?? floor.type.name
         column.add(this.#label(place, CHOSEN_TEXT))
         column.add(this.#label(`Niveau ${floor.level} · Profondeur ${depth} · ${this.run.gold} or`, DIM_TEXT))
-        return this.#panel(column)
+        return this.#panel(column, true)
     }
 
     /** The characters of the party in a row, the one shown lit, a click on one showing it. */
@@ -882,10 +883,10 @@ export class TravelScreen {
             block.add(this.#hearts(hero))
             const things = hero.items.length + hero.usables.length
             block.add(this.#label(`${allCards(hero).length} cartes · ${things} objets`, DIM_TEXT))
-            const tile = new HoverPanel(this.theme, {
-                background: NineSlice.flat(this.theme.white, hero === shown ? SELECTED_TILE : TILE),
-                padding: 2,
-            })
+            const wood = this.sprites.wood
+            const tile = new HoverPanel(this.theme, wood
+                ? { background: hero === shown ? wood.frameActive : wood.frame, padding: 2 + FRAME_THICKNESS }
+                : { background: NineSlice.flat(this.theme.white, hero === shown ? SELECTED_TILE : TILE), padding: 2 })
             tile.content = withPicture(this.sprites, hero.sprite, block)
             tile.onPick = () => this.#select(hero)
             tallest = Math.max(tallest, tile.measure(Infinity).preferredHeight)
@@ -1216,10 +1217,13 @@ export class TravelScreen {
         return view
     }
 
-    /** A panel in the color of the place, the scene showing through. */
-    #panel(content: Component): Panel {
+    /** A wooden panel, or one in the color of the place when there is no wood; its inside lets the scene show through when asked. */
+    #panel(content: Component, transparent = false): Panel {
         content.parent?.remove(content)
-        const panel = new Panel(this.theme, { background: this.#veil })
+        const wood = this.sprites.wood
+        const panel = new Panel(this.theme, wood
+            ? { background: transparent ? wood.frameTransparent : wood.frame, padding: FRAME_THICKNESS + 1 }
+            : { background: this.#veil })
         panel.content = content
         return panel
     }

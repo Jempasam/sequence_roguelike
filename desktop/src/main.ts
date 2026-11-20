@@ -1,10 +1,10 @@
 import { spawn } from "node:child_process"
 import { parseArgs } from "node:util"
 import { video } from "@kmamal/sdl"
-import { NetSync, startGame } from "@game/core"
+import { Fault, NetSync, signalingAt, startGame } from "@game/core"
 
 import { assetsDirectories, saveDirectory } from "./directories"
-import { FsAssets, FsStorage, NodeNet, SdlClipboard, SdlGfx, SdlInput, SdlLoop } from "./platform"
+import { FsAssets, FsStorage, NodeNet, NodeTimer, SdlClipboard, SdlGfx, SdlInput, SdlLoop } from "./platform"
 
 /** The signaling server when `--signal` names no other: the one `npm run server` starts on this host. */
 const DEFAULT_SIGNALING = "ws://localhost:8787"
@@ -15,6 +15,7 @@ const { values: args } = parseArgs({
     strict: true,
 })
 const net = new NodeNet()
+const timer = new NodeTimer()
 const signaling = args.signal ?? DEFAULT_SIGNALING
 const sync = syncOf()
 
@@ -35,6 +36,7 @@ const game = startGame({
     assets: new FsAssets(assetsDirectories()),
     storage: new FsStorage(saveDirectory()),
     net,
+    timer,
     signaling,
     sync,
     connect,
@@ -48,8 +50,10 @@ export const closed = new Promise<void>(resolve => window.on("close", () => {
 
 function syncOf(): NetSync|undefined {
     if(args.view === undefined) return undefined
-    const viewing = NetSync.view(net, signaling, args.view, args.guest)
-    viewing.ready.catch(error => console.error(`Could not watch the game ${args.view}:`, error))
+    const viewing = NetSync.view(net, signalingAt(net, timer, signaling), args.view, timer, args.guest)
+    void viewing.ready.then(ready => {
+        if(ready instanceof Fault) console.error(`Could not watch the game ${args.view}:`, ready.describe())
+    })
     return viewing
 }
 

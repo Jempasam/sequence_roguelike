@@ -34,6 +34,19 @@ export const AGGRESSION: FightCategory = {
     transition: visual("cave", { coloration: [0.9, 0.5, 0.1] }),
 }
 
+/**
+ * A fight against adventurers as {@link AGGRESSION} is, but whose chains the party does not see: only their hands,
+ * until the round plays. Every fight of that one is also fought this way.
+ */
+export const AMBUSH: FightCategory = {
+    id: "ambush",
+    name: "Embuscade",
+    description: "Des aventuriers t'attaquent, joués par la meilleure IA : tu vois leur main, mais pas leur chaîne. Une halte de récompense si tu gagnes.",
+    icon: AGGRESSION.icon,
+    glow: rgba(1, 0.15, 0.15),
+    transition: visual("cave", { coloration: [0.9, 0.15, 0.15] }),
+}
+
 /** The fight against the guardian of a floor. */
 export const BOSS: FightCategory = {
     id: "boss",
@@ -45,7 +58,7 @@ export const BOSS: FightCategory = {
 }
 
 /** The sorts of fight. */
-export const ALL_FIGHT_CATEGORIES: readonly FightCategory[] = [BATTLE, ELITE, AGGRESSION, BOSS]
+export const ALL_FIGHT_CATEGORIES: readonly FightCategory[] = [BATTLE, ELITE, AGGRESSION, AMBUSH, BOSS]
 
 /**
  * The sort of fight with an id.

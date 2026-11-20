@@ -168,6 +168,18 @@ export class UnitStats {
     /** Is its deck kept in order, never shuffled? */
     public readonly ordered = new Attribute(false)
 
+    /**
+     * Is its chain shown to those who do not plan it, during a preparation? Yes by default. Shown with
+     * {@link UnitStats.showHand}, its chain is what is shown once it holds a card.
+     */
+    public readonly showChain = new Attribute(true)
+
+    /**
+     * Is its hand shown to those who do not plan it, during a preparation? No by default. Shown when its
+     * chain is not, or is still empty.
+     */
+    public readonly showHand = new Attribute(false)
+
     /** Its size: how much bigger than the base its body is, a factor of its radius. */
     public readonly size = new Attribute(1)
 

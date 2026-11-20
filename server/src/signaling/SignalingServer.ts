@@ -130,8 +130,9 @@ export class SignalingServer {
             case "create":
                 this.#ensureOutside(session)
                 session.data = message.data
-                const { shape, name, capacity } = message
-                this.#rooms.create(session, { shape, name, capacity })
+                const { shape, name, capacity, code } = message
+                // A code taken is not the client's fault: it may ask again under another, on the same socket.
+                if(!this.#rooms.create(session, { shape, name, capacity }, code)) session.send({ type: "refused", reason: "taken" })
                 break
             case "join": {
                 this.#ensureOutside(session)

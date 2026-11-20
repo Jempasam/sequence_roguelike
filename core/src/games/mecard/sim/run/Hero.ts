@@ -6,7 +6,7 @@ import { Arena } from "../battle/Arena"
 import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
 import { UnitStats } from "../battle/Unit"
-import type { Controller, StatBases } from "../battle/Unit"
+import type { Controller, StatBases, UnitSpec } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import { UNLIMITED_CARDS } from "../catalog/cards"
 import type { Kit } from "../catalog/kits"
@@ -68,7 +68,8 @@ export function heroOf(kit: Kit, name = kit.name): Hero {
     return hero({
         name, sprite: kit.sprite, controller: "player", decks: [[...kit.cards]],
         unlimited: UNLIMITED_CARDS, hearts: Heart.groups(kit.hearts), items: [...kit.items],
-        usables: kit.usables.map(usable => new Carried(usable)), bases: {},
+        usables: kit.usables.map(usable => new Carried(usable)),
+        bases: { showChain: false, showHand: true },
     })
 }
 
@@ -103,7 +104,21 @@ export function foeOf(monster: Monster, name: string, level = 1): Hero {
 
 /** A kind of monster the players plan, as a hero: the ally it would be, in their hands. */
 export function recruitOf(monster: Monster, name: string): Hero {
-    return hero({ ...allyOf(monster, name), controller: "player", unlimited: UNLIMITED_CARDS })
+    const ally = allyOf(monster, name)
+    return hero({
+        ...ally, controller: "player", unlimited: UNLIMITED_CARDS,
+        bases: { ...ally.bases, showChain: false, showHand: true },
+    })
+}
+
+/** What brings a character into a battle: the unit it is there, standing where it is told. */
+export function heroSpec(character: Hero, team: Team, position: Vector2, direction: Vector2): UnitSpec {
+    return {
+        name: character.name, sprite: character.sprite, team, controller: character.controller,
+        position, direction,
+        hearts: character.hearts, decks: character.decks, unlimited: character.unlimited, items: character.items,
+        usables: character.usables, bases: character.bases,
+    }
 }
 
 /**

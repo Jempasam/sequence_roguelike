@@ -1,6 +1,6 @@
 import type { IceServer, PeerSignal } from "@game/server/protocol"
 
-import type { NetPort } from "../../platform"
+import type { Cancel, NetPort, TimerPort } from "../../platform"
 import type { ChannelKind, Connection, ConnectionState } from "./Connection"
 import { ConnectionLife } from "./ConnectionLife"
 import { NetError } from "./NetError"
@@ -16,6 +16,14 @@ const CHANNELS: Record<ChannelKind, RTCDataChannelInit> = {
  * that answers it and receives them.
  */
 export type PeerRole = "offerer"|"answerer"
+
+/** How long a connection may take to open before it is given up, when it is asked to be. */
+export interface OpenDeadline {
+    readonly timer: TimerPort
+
+    /** In milliseconds. */
+    readonly ms: number
+}
 
 /** The way the signals of one peer connection go to the other peer and come back, through a server. */
 export interface SignalPath {
@@ -33,6 +41,9 @@ export interface SignalPath {
  * Only the offerer makes the channels, and the answerer receives them: node-datachannel starts a
  * negotiation of its own as soon as a channel is made, which on the answering side would cross the offer.
  * Candidates that come before the description they belong to are kept until it is set.
+ *
+ * A connection with an {@link OpenDeadline} that is not open when it passes ends as unreachable: the other
+ * end may be gone while the signaling still tells of it, and nothing else would ever say so.
  */
 export class PeerConnection implements Connection {
 
@@ -46,8 +57,14 @@ export class PeerConnection implements Connection {
 
         public readonly role: PeerRole,
         signals: SignalPath,
+        deadline?: OpenDeadline,
     ){
         this.#signals = signals
+        if(deadline){
+            this.#waiting = deadline.timer.after(deadline.ms, () => {
+                this.#end("unreachable", `${peer} did not answer in ${deadline.ms} ms.`)
+            })
+        }
         const peerConnection = net.createPeer({
             iceServers: iceServers.map(server => ({
                 urls: [...server.urls], username: server.username, credential: server.credential,
@@ -110,6 +127,9 @@ export class PeerConnection implements Connection {
     readonly #life = new ConnectionLife()
     readonly #channels = new Map<ChannelKind, RTCDataChannel>()
 
+    /** The wait for the connection to open, none when it has no deadline or it is over. */
+    #waiting: Cancel|null = null
+
     /** The candidates heard before the description of the other side was set. */
     readonly #early: RTCIceCandidateInit[] = []
 
@@ -118,6 +138,7 @@ export class PeerConnection implements Connection {
 
     #end(reason: "unreachable"|"protocol"|"closed", message: string, cause?: unknown): void {
         if(!this.#life.end(new NetError(reason, message, { cause }))) return
+        this.#waiting?.cancel()
         this.#listening.dispose()
         this.#peer.close()
     }
@@ -170,7 +191,9 @@ export class PeerConnection implements Connection {
         this.#channels.set(kind, channel)
         channel.onopen = () => {
             const isEveryOpen = [...this.#channels.values()].filter(open => open.readyState === "open").length === 2
-            if(isEveryOpen) this.#life.open()
+            if(!isEveryOpen) return
+            this.#waiting?.cancel()
+            this.#life.open()
         }
         channel.onmessage = event => {
             if(typeof event.data === "string") this.#life.messages.emit({ message: event.data, channel: kind })

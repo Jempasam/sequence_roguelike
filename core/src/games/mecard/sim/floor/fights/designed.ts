@@ -7,6 +7,7 @@ import type { Monster } from "../../catalog/monsters"
 import { KitFightType } from "../../fight/KitFightType"
 import type { FightStage } from "../../fight/Fight"
 import type { FightCategory } from "../../fight/FightCategory"
+import { AMBUSH } from "../../fight/fights"
 import { fightType } from "../../fight/FightType"
 import type { FightType, Laying } from "../../fight/FightType"
 import type { HazardType } from "../../hazard/HazardType"
@@ -108,8 +109,13 @@ export function lay(type: HazardType, column: number, row: number, direction?: V
  * @throws {@link Error} When the floor has none for the category and the layer.
  */
 export function laidIn(fights: readonly Laid[], category: FightCategory, layer: number, rng: Rng): FightType {
-    const fitting = fights.filter(each => each.type.category === category && each.from <= layer && layer <= each.to)
+    const fitting = fights.filter(each => each.from <= layer && layer <= each.to && fightsAs(each.type, category))
     const chosen = rng.pick(fitting)
     if(!chosen) throw new Error(`The floor has no fight of category "${category.id}" for layer ${layer}.`)
-    return chosen.type
+    return chosen.type instanceof KitFightType && category === AMBUSH ? chosen.type.ambush : chosen.type
+}
+
+/** May a fight be fought as a category says: its own, or the ambush for any fight against kits? */
+function fightsAs(type: FightType, category: FightCategory): boolean {
+    return type.category === category || category === AMBUSH && type instanceof KitFightType
 }

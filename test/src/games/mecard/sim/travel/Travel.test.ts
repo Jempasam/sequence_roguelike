@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BOSS, BUTCHER_HALT, ELITE, GOBLIN, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
-import type { CardsDialog, ConfirmDialog, Dialog, FightCategory, HaltType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { BATTLE, BOSS, BUTCHER_HALT, DUEL_HALT, ELITE, GOBLIN, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
+import type { CardsDialog, ConfirmDialog, Dialog, DuelHalt, FightCategory, HaltType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
@@ -409,5 +409,55 @@ describe("Run, the party told", () => {
 
     test("a character not in the party → cannot be sent away", () => {
         expect(() => startedRun(3).fire(startedRun(4).heroes[0])).toThrow()
+    })
+})
+
+describe("Travel, the next place of a sort", () => {
+    test("two halts laid → the lowest row past the party, strictly", () => {
+        const { travel } = startedRun(5)
+        const first = travel.layHalt(DUEL_HALT, 3)
+        const second = travel.layHalt(DUEL_HALT, 6)
+        expect(travel.nextPlaceOf(DUEL_HALT)).toBe(first)
+        travel.jump(first)
+        expect(travel.nextPlaceOf(DUEL_HALT)).toBe(second)
+        travel.jump(second)
+        expect(travel.nextPlaceOf(DUEL_HALT)).toBeNull()
+    })
+
+    test("no halt of the sort on the floor → none", () => {
+        expect(startedRun(5).travel.nextPlaceOf(DUEL_HALT)).toBeNull()
+    })
+})
+
+describe("Travel, sent to a halt", () => {
+    test("a party sent to the halt of a duel → the visit open, locked until released", () => {
+        const run = startedRun(5)
+        const { travel } = run
+        const place = travel.layHalt(DUEL_HALT, 4)
+        run.backToMap()
+        travel.jump(place)
+        const halt = travel.haltOf(place) as DuelHalt
+        travel.go(place)
+        travel.enter()
+        expect(travel.halt).toBe(halt)
+        expect(halt.locked).toBe(true)
+        travel.leave()
+        expect(travel.phase).toBe("visit")
+        const released: number[] = []
+        halt.released.add(() => released.push(1))
+        halt.release()
+        halt.release()
+        expect(released).toEqual([1])
+        travel.leave()
+        expect(travel.phase).toBe("map")
+    })
+
+    test("back to the map → no defeat", () => {
+        const run = startedRun(5)
+        let defeats = 0
+        run.defeated.add(() => defeats++)
+        run.backToMap()
+        expect(defeats).toBe(0)
+        expect(run.phase).toBe("travel")
     })
 })

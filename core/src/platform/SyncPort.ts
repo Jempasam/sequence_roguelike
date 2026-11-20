@@ -10,9 +10,14 @@ export interface SyncLink {
     listen(handler: (message: string) => void): { dispose(): void }
 }
 
-/** A client connected to the main client. */
+/**
+ * A client connected to the main client. What is sent to it while its connection is lost is kept, up to a
+ * limit, and given in order when the connection comes back, before the main client is told so by
+ * {@link SyncRoom.onBack}; the oldest messages are lost beyond the limit. What it hears is heard on the same
+ * link through every connection.
+ */
 export interface SyncPeer extends SyncLink {
-    /** What tells it from the others, for as long as it stays. */
+    /** What tells it from the others, for as long as it stays, a lost connection included. */
     readonly id: string
 }
 
@@ -21,7 +26,16 @@ export interface SyncRoom {
     /** Hear each client that connects, until the returned handle is disposed. */
     onJoin(handler: (peer: SyncPeer) => void): { dispose(): void }
 
-    /** Hear each client that leaves, or whose connection is lost, until the returned handle is disposed. */
+    /** Hear each client whose connection is lost and may come back, until the returned handle is disposed. */
+    onLost(handler: (peer: SyncPeer) => void): { dispose(): void }
+
+    /**
+     * Hear each client whose connection came back, until the returned handle is disposed. What was told to
+     * every client connecting is to be told again to this one, which lost it.
+     */
+    onBack(handler: (peer: SyncPeer) => void): { dispose(): void }
+
+    /** Hear each client that left for good, until the returned handle is disposed. */
     onLeave(handler: (peer: SyncPeer) => void): { dispose(): void }
 }
 

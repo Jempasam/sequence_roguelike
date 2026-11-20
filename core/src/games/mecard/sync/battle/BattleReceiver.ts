@@ -1,7 +1,11 @@
 import type { Battle } from "../../sim/battle/Battle"
 import type { BattleSave } from "../../sim/save/battleSave"
 
+import { Fault } from "../../../../engine/net/Fault"
+import { BATTLE_TOPIC } from "../SyncChannel"
 import type { SyncSource } from "../SyncChannel"
+import { signal, UnloadableFault } from "../faults"
+import { detailOf } from "../read"
 import { readBattleMessage } from "./BattleMessage"
 import type { BattleMessage } from "./BattleMessage"
 
@@ -30,11 +34,8 @@ export class BattleReceiver {
     /** What hears of a drift of the simulation from the main client's, nothing when none. */
     public onDesync: ((desync: BattleDesync) => void)|null = null
 
-    /**
-     * What hears that a message could not be read or loaded. A failure nobody hears is thrown, so it is
-     * never silent.
-     */
-    public onError: ((error: unknown) => void)|null = null
+    /** Told of a message that could not be read or loaded: it is left out. */
+    public readonly faulted = signal<Fault>()
 
     constructor(engine: Battle|null, source: SyncSource){
         this.engine = engine
@@ -44,14 +45,18 @@ export class BattleReceiver {
 
     /** Take a message in. */
     public receive(text: string): void {
+        const message = readBattleMessage(text)
+        if(message instanceof Fault){
+            this.faulted.notify(message)
+            return
+        }
         try {
-            const message = readBattleMessage(text)
             const battle = this.engine
             if(!battle || this.#isStale(message)) return
             this.#applySave(battle, message)
             if(message.kind === "launch") battle.advance()
         } catch(error){
-            this.#fail(error)
+            this.faulted.notify(new UnloadableFault(BATTLE_TOPIC.name, detailOf(error)))
         }
     }
 
@@ -95,11 +100,6 @@ export class BattleReceiver {
         if(own !== comparable(message.save, message.secret)){
             this.onDesync?.({ number: message.number, round: message.save.round })
         }
-    }
-
-    #fail(error: unknown): void {
-        if(!this.onError) throw error
-        this.onError(error)
     }
 }
 

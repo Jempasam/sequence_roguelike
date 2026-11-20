@@ -1,12 +1,11 @@
 import { PROTOCOL_VERSION, ProtocolError, readServerMessage, writeMessage } from "@game/server/protocol"
-import type {
-    ClientMessage, IceServer, JsonValue, PeerSignal, RoomShape, ServerMessage,
-} from "@game/server/protocol"
+import type { ClientMessage, IceServer, JsonValue, PeerSignal, ServerMessage } from "@game/server/protocol"
 
-import type { NetPort } from "../../platform"
+import type { NetPort, TimerPort } from "../../platform"
 import { ClientSocket } from "./ClientSocket"
 import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
+import type { RoomCreation, RoomEntry, RoomEvent, Signaling } from "./Signaling"
 
 /** What a refusal to enter a room is told as. */
 const REFUSAL_TEXT = {
@@ -14,39 +13,38 @@ const REFUSAL_TEXT = {
     "full": "The room is full.",
     "refused": "The owner of the room refused to let this member in.",
     "closed": "The room closed while this member waited to enter.",
+    "taken": "Another room has this code already.",
 } as const
 
-/** The room a client entered, as the server described it. */
-export type RoomEntry = Omit<Extract<ServerMessage, { type: "entered" }>, "type">
-
-/** What the server tells a member of a room, once it is in. */
-export type RoomEvent = Extract<ServerMessage, { type: "knocking"|"joined"|"left"|"changed"|"owner"|"signal" }>
-
-/** What a room is created with. */
-export interface RoomCreation {
-    readonly shape: RoomShape
-    readonly name: string
-    readonly data: JsonValue
-
-    /** The most members the room holds, its owner included. */
-    readonly capacity: number
-}
+/** How long the server may take to welcome a client before it is given up, in milliseconds. */
+export const WELCOME_TIMEOUT = 8_000
 
 /**
- * A client of the signaling server, for one room: it says hello, creates or joins the room, then hears of
- * the members and passes the signals of WebRTC. Leaving the room is closing the client.
+ * A client of the signaling server of the game, for one room: it says hello, creates or joins the room, then
+ * hears of the members and passes the signals of WebRTC. Leaving the room is closing the client.
  */
-export class SignalingClient {
+export class SignalingClient implements Signaling {
 
 
     /**
      * Reach a signaling server and say hello.
      *
-     * @throws {@link NetError} When the server cannot be reached, or speaks another version.
+     * @param timer - Where time goes, to give up on a server that accepts the connection but never welcomes
+     * the client: the connection is closed then, rather than left open for ever. Without it, there is no limit.
+     * @throws {@link NetError} When the server cannot be reached, or speaks another version, or is silent.
      */
-    public static async connect(net: NetPort, url: string): Promise<SignalingClient> {
+    public static async connect(
+        net: NetPort, url: string, timer?: TimerPort, welcomeTimeout = WELCOME_TIMEOUT,
+    ): Promise<SignalingClient> {
         const client = new SignalingClient(net, url)
-        await client.welcomed
+        const wait = timer?.after(welcomeTimeout, () => {
+            client.#socket.closeFor(new NetError("unreachable", `${url} did not welcome the client in time.`))
+        })
+        try {
+            await client.welcomed
+        } finally {
+            wait?.cancel()
+        }
         return client
     }
 
@@ -77,7 +75,8 @@ export class SignalingClient {
     /**
      * Create a room and enter it as its owner.
      *
-     * @throws {@link NetError} When the connection is lost meanwhile.
+     * @throws {@link NetError} When the code asked for is taken (`"taken"`, and the client may ask again
+     * under another), or the connection is lost meanwhile.
      */
     public create(room: RoomCreation): Promise<RoomEntry> {
         return this.#enter({ type: "create", ...room })

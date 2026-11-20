@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { AssetError, MemoryStorage, SaveSlot } from "@game/core"
-import type { Assets } from "@game/core"
+import { AssetError, ManualScheduler, MemoryStorage, SaveSlot, UnreachableFault } from "@game/core"
+import type { Assets, Fault } from "@game/core"
 import { HISTORY_FORMAT, HISTORY_SLOT_KEY, RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
 import { MecardGame } from "@game/core/mecard/game"
 import type { MecardNetwork } from "@game/core/mecard/game"
-import { COOP_SEATS, FIXED_SEATS, LocalRoom, LocalSync, RunGuest, RunReceiver } from "@game/core/mecard/sync"
+import { COOP_SEATS, FIXED_SEATS, LobbyGuest, LocalRoom, LocalSync, RunGuest, RunReceiver } from "@game/core/mecard/sync"
 import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core/mecard"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
@@ -18,13 +18,15 @@ const NO_ASSETS = new Proxy({}, {
 }) as unknown as Assets
 
 /** A game with a network within the program, the rooms it opened and the games it left for. */
-function playing(ready: Promise<string> = Promise.resolve("K7QX2M")) {
+function playing(ready: Promise<string|Fault> = Promise.resolve("K7QX2M")) {
     const setup = uiSetup({}, 620, 348)
     const channel = new LocalSync()
     const room = new LocalRoom()
     const connections: (readonly [string, boolean])[] = []
     let opened = 0
+    let joined = 0
     const network: MecardNetwork = {
+        timer: new ManualScheduler(),
         open: () => {
             opened++
             return {
@@ -34,10 +36,15 @@ function playing(ready: Promise<string> = Promise.resolve("K7QX2M")) {
             }
         },
         connect: (code, guest) => connections.push([code, guest]),
+        directory: () => new Promise(() => {}),
+        join: () => {
+            joined++
+            return { link: null, ready, ended: { add: () => ({ dispose: () => {} }) }, close: () => {} }
+        },
     }
     const toWorld = (x: number, y: number) => [x, y] as const
     const game = new MecardGame(setup.theme, setup.ui, NO_ASSETS, 3, toWorld, toWorld, null, network)
-    return { game, channel, room, connections, opened: () => opened }
+    return { game, channel, room, connections, opened: () => opened, joined: () => joined }
 }
 
 /** A game keeping its run in a slot of memory, and the slot. */
@@ -138,6 +145,54 @@ describe("MecardGame, its menu and its saves", () => {
     })
 })
 
+describe("MecardGame, its lobby", () => {
+    test("with a network → Multiplayer opens the lobby alone, and leaving it comes back to the menu", () => {
+        const { game } = playing()
+        game.menu.frame()
+        expect(game.menu.multiplayerButton?.enabled).toBe(true)
+        expect(game.lobby?.visible).toBe(false)
+        game.menu.multiplayerButton?.activate()
+        expect(game.menu.visible).toBe(false)
+        expect(game.lobby?.visible).toBe(true)
+        game.lobby?.frame()
+        game.lobby?.connection.leaveButton?.activate()
+        expect(game.lobby?.visible).toBe(false)
+        expect(game.menu.visible).toBe(true)
+    })
+
+    test("a race started from the lobby → the screen shows a run of its own, the player's one left as it was", async() => {
+        const { game, room, channel } = playing()
+        const before = game.run
+        game.menu.multiplayerButton?.activate()
+        const lobby = game.lobby!
+        lobby.frame()
+        lobby.connection.nameInput.text = "Hôte"
+        lobby.connection.hostButton?.activate()
+        await settle()
+        lobby.frame()
+        const ana = new LobbyGuest(room.join("ana"), channel, "Ana", lobby.controller.modes)
+        expect(lobby.controller.selection?.select("versus")).toBeNull()
+        lobby.controller.start()
+        await settle()
+        expect(lobby.visible).toBe(false)
+        expect(game.menu.visible).toBe(false)
+        expect(ana.playing).toBe(true)
+        expect(game.run).toBe(before)
+        // The host leaves the race: back to the lobby, the session open, the client out of its game.
+        lobby.controller.stop()
+        expect(lobby.visible).toBe(true)
+        expect(ana.playing).toBe(false)
+    })
+
+    test("no network → Multiplayer greyed out", () => {
+        const setup = uiSetup({}, 620, 348)
+        const toWorld = (x: number, y: number) => [x, y] as const
+        const game = new MecardGame(setup.theme, setup.ui, NO_ASSETS, 3, toWorld, toWorld)
+        game.menu.frame()
+        expect(game.menu.multiplayerButton?.enabled).toBe(false)
+    })
+})
+
 describe("MecardGame.hostGame", () => {
     test("no network → refused", () => {
         const setup = uiSetup({}, 620, 348)
@@ -195,7 +250,7 @@ describe("MecardGame.hostGame", () => {
     })
 
     test("a room that never opens → the game hostable again", async() => {
-        const { game, opened } = playing(Promise.reject(new Error("no server")))
+        const { game, opened } = playing(Promise.resolve(new UnreachableFault("no server")))
         game.hostGame(null, FIXED_SEATS)
         await new Promise(resolve => setTimeout(resolve))
         game.hostGame(null, FIXED_SEATS)

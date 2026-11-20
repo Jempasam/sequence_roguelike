@@ -1,3 +1,4 @@
+import type { Color } from "../../math"
 import type { Painter } from "../../gpu"
 
 import type { Component } from "../Component"
@@ -14,6 +15,10 @@ import { Label } from "./Label"
 export interface ButtonOptions {
     /** Its frames in each state, with their padding, those of the buttons of the theme by default. */
     readonly looks?: StateLooks & { readonly padding: number }
+
+    /** The color of its text, and of its text while it is disabled: those of the theme by default. */
+    readonly textColor?: Color
+    readonly disabledTextColor?: Color
 
     /** Can it be activated? Yes by default. */
     readonly enabled?: boolean
@@ -45,6 +50,8 @@ export class Button extends ContentContainer {
     ){
         super()
         this.#looks = options.looks ?? theme.button
+        this.#textColor = options.textColor ?? null
+        this.#disabledTextColor = options.disabledTextColor ?? null
         this.#enabled = options.enabled ?? true
         this.#label = typeof content === "string" ? new Label(theme, content, { align: "center" }) : null
         this.content = this.#label ?? content as Component
@@ -145,6 +152,8 @@ export class Button extends ContentContainer {
 
 
     readonly #looks: StateLooks & { readonly padding: number }
+    readonly #textColor: Color|null
+    readonly #disabledTextColor: Color|null
     readonly #label: Label|null
     #enabled: boolean
     #pressed = false
@@ -164,6 +173,7 @@ export class Button extends ContentContainer {
     /** Give the label it made the color of its state. */
     #colorLabel(): void {
         if(!this.#label) return
-        this.#label.color = this.#enabled ? this.theme.textColor : this.theme.disabledTextColor
+        const { textColor, disabledTextColor } = this.theme
+        this.#label.color = this.#enabled ? this.#textColor ?? textColor : this.#disabledTextColor ?? disabledTextColor
     }
 }

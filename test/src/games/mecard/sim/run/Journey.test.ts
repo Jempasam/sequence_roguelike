@@ -136,6 +136,69 @@ describe("a free map", () => {
     })
 })
 
+describe("Journey.insertLayer", () => {
+    test("a row in the middle → a halt behind each place of the row before, leading where it led", () => {
+        for(const journey of journeys()){
+            const before = journey.layers
+            const led = before[4].map(place => [...place.next])
+            const laid = journey.insertLayer(FORGE_HALT, 5)
+            const after = journey.layers
+            expect(laid).toHaveLength(before[4].length)
+            expect(after).toHaveLength(before.length + 1)
+            expect(after[5]).toEqual(laid)
+            expect(after[4]).toEqual(before[4])
+            after[4].forEach((place, index) => {
+                // One to one with the place before, and on from there as the place went on.
+                expect(place.next).toEqual([laid[index]])
+                expect(laid[index].next).toEqual(led[index])
+                expect(laid[index].across).toBe(place.across)
+            })
+            for(const place of after[6]) expect(place.layer).toBe(6)
+            expect(after[6]).toEqual(before[5])
+        }
+    })
+
+    test("the first row → a way in in front of each place of it", () => {
+        const journey = journeys()[0]
+        const entries = journey.entries
+        const laid = journey.insertLayer(TAVERN_HALT, 0)
+        expect(journey.entries).toEqual(laid)
+        expect(laid).toHaveLength(entries.length)
+        laid.forEach((halt, index) => expect(halt.next).toEqual([entries[index]]))
+    })
+
+    test("past the last row of a map with exits → one behind each place of it, leading to the exits, which stay last", () => {
+        const journey = journeys()[0]
+        const rows = journey.layers.length - 1
+        const exits = journey.layers[rows]
+        const last = journey.layers[rows - 1]
+        const laid = journey.insertLayer(FORGE_HALT, rows)
+        expect(journey.layers[rows]).toEqual(laid)
+        expect(journey.layers[rows + 1]).toEqual(exits)
+        expect(laid).toHaveLength(last.length)
+        for(const halt of laid) expect(halt.next).toEqual(exits)
+        for(const place of last) expect(place.next).toHaveLength(1)
+        expect(journey.places.slice(-exits.length)).toEqual(exits)
+    })
+
+    test("past the last row of a map with no exits → halts that lead nowhere", () => {
+        const journey = emptyMap()
+        const first = journey.addHalt(TAVERN_HALT, { layer: 0, across: 0.25 })
+        const second = journey.addHalt(TAVERN_HALT, { layer: 0, across: 0.75 })
+        const laid = journey.insertLayer(FORGE_HALT, 1)
+        expect(laid).toHaveLength(2)
+        expect(first.next).toEqual([laid[0]])
+        expect(second.next).toEqual([laid[1]])
+        for(const halt of laid) expect(halt.next).toEqual([])
+    })
+
+    test("a row the map has no room for → refused", () => {
+        const journey = journeys()[0]
+        expect(() => journey.insertLayer(FORGE_HALT, -1)).toThrow()
+        expect(() => journey.insertLayer(FORGE_HALT, journey.layers.length)).toThrow()
+    })
+})
+
 describe("zipped", () => {
     test("any widths → from the first to the last of both, no two links crossing", () => {
         for(const [from, to] of [[1, 3], [3, 1], [4, 2], [2, 4], [3, 3]]){

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT,
+    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT,
     fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, SWORDSMAN_KIT, Vector2,
 } from "@game/core/mecard"
 import type { FightType, Visual } from "@game/core/mecard"
@@ -50,6 +50,48 @@ describe("a fight made", () => {
         expect(fight.monsters).toEqual([GOLEM, GOBLIN])
         const [golem] = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
         expect(golem.position).toEqual(corner)
+    })
+
+    test("a fight against kits → its ambush is its twin", () => {
+        const run = startedRun(1)
+        const type = new KitFightType({
+            id: "test-kits", name: "Aventuriers", description: "Deux kits.", icon: BATTLE.icon, category: AGGRESSION,
+            kits: [SWORDSMAN_KIT, ARCHER_KIT],
+        })
+        const { ambush } = type
+        expect(ambush).toBe(type.ambush)
+        expect(ambush.id).toBe("test-kits-embuscade")
+        expect(ambush.category).toBe(AMBUSH)
+        expect(ambush.icon).toBe(type.icon)
+        expect(ambush.kits).toEqual(type.kits)
+        expect(ambush.ambush).toBe(ambush)
+        const foesOf = (fight: FightType) => fight.create(run, AT).battle.units.filter(unit => unit.team === run.monstersTeam)
+        for(const fight of [type, ambush]){
+            const shown = foesOf(fight).map(unit => [unit.stats.showChain.value, unit.stats.showHand.value])
+            expect(shown).toEqual([[true, true], [true, true]])
+        }
+    })
+
+    test("every fight against kits → has its ambush among the fights of the catalog", () => {
+        const types = allFightTypes()
+        const kitFights = types.filter((type): type is KitFightType => type instanceof KitFightType && !type.hiddenChains)
+        expect(kitFights.length).toBeGreaterThan(0)
+        for(const type of kitFights) expect(types).toContain(type.ambush)
+    })
+
+    test("a fight against kits → what its units show of their cards is kept through a save", () => {
+        const run = startedRun(1)
+        const type = new KitFightType({
+            id: "test-kits", name: "Aventuriers", description: "Deux kits.", icon: BATTLE.icon, category: AGGRESSION,
+            kits: [SWORDSMAN_KIT],
+        }).ambush
+        const { battle } = type.create(run, AT)
+        const loaded = battle.clone()
+        const foe = loaded.units.find(unit => unit.team.name === run.monstersTeam.name)!
+        expect([foe.stats.showChain.value, foe.stats.showHand.value]).toEqual([true, true])
+        for(const hero of loaded.units.filter(unit => unit.team.name !== run.monstersTeam.name)){
+            expect([hero.stats.showChain.value, hero.stats.showHand.value]).toEqual([false, true])
+        }
     })
 
     test("a fight against kits → a unit of the monsters' team for each, played by an AI of its own, no monster", () => {

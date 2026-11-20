@@ -5,6 +5,7 @@ import type { ChannelKind } from "./Connection"
 import type { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { JoinOptions, Peer, RoomOptions } from "./Room"
+import type { SignalingConnector } from "./Signaling"
 
 /**
  * A member of a room where everyone is equal: a mesh room, with one WebRTC connection to every other
@@ -20,27 +21,27 @@ export class PTPSymSocket {
     /**
      * Create a mesh room and enter it, alone at first.
      *
-     * @param url - The address of the signaling server.
+     * @param connect - Reaches the signaling server.
      * @throws {@link NetError} When the server cannot be reached.
      */
-    public static async create(net: NetPort, url: string, options: RoomOptions): Promise<PTPSymSocket> {
-        return new PTPSymSocket(await Room.create(net, url, "mesh", options))
+    public static async create(net: NetPort, connect: SignalingConnector, options: RoomOptions): Promise<PTPSymSocket> {
+        return new PTPSymSocket(await Room.create(net, connect, "mesh", options))
     }
 
     /**
      * Enter a mesh room by its code. The connections to the members open afterwards, each told by
      * {@link PTPSymSocket.onPeer}.
      *
-     * @param url - The address of the signaling server.
+     * @param connect - Reaches the signaling server.
      * @throws {@link NetError} When the room is not found, full, or refuses, or the server cannot be reached.
      */
     public static async join(
         net: NetPort,
-        url: string,
+        connect: SignalingConnector,
         code: string,
         options: JoinOptions = {},
     ): Promise<PTPSymSocket> {
-        const room = await Room.join(net, url, code, options)
+        const room = await Room.join(net, connect, code, options)
         if(room.shape !== "mesh"){
             room.close()
             throw new Error(`The room ${code} is a ${room.shape}, where a symmetric socket joins a mesh.`)

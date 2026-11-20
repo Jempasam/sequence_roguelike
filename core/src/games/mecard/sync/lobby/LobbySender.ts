@@ -1,0 +1,59 @@
+import type { SyncSender } from "../SyncChannel"
+
+import type { LobbyRoom } from "./LobbyRoom"
+
+/**
+ * Where a game played in a lobby sends what it tells its clients: the sender of the network, that also
+ * greets the clients already there.
+ *
+ * @remarks
+ * A sender gives its first messages to each client that connects, and those in the lobby connected before the
+ * game was there to give them. {@link LobbySender.greetAll} gives them at once, in the order they were asked
+ * for, as a client connecting is given them. Clients that connect afterwards are greeted by the network, for
+ * what is asked here is asked of it too.
+ */
+export class LobbySender implements SyncSender {
+
+
+    constructor(
+        private readonly sender: SyncSender,
+
+        /** The clients of the lobby, which are greeted. */
+        private readonly room: LobbyRoom,
+    ){}
+
+
+    public send(message: string): void {
+        this.sender.send(message)
+    }
+
+    public onPeer(initial: () => string|null): { dispose(): void } {
+        const entry = { initial, handle: this.sender.onPeer(initial) }
+        this.#peers.add(entry)
+        return {
+            dispose: () => {
+                this.#peers.delete(entry)
+                entry.handle.dispose()
+            },
+        }
+    }
+
+    /** Give each client that is reachable now the first messages, as they stand. */
+    public greetAll(): void {
+        for(const peer of this.room.reachable){
+            for(const { initial } of [...this.#peers]){
+                const message = initial()
+                if(message !== null) peer.send(message)
+            }
+        }
+    }
+
+    /** Stop asking the network to give the first messages. */
+    public dispose(): void {
+        for(const { handle } of [...this.#peers]) handle.dispose()
+        this.#peers.clear()
+    }
+
+
+    readonly #peers = new Set<{ initial: () => string|null, handle: { dispose(): void } }>()
+}

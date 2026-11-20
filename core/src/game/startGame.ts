@@ -4,11 +4,12 @@ import type { SoundSettingsSave } from "../engine/audio"
 import { Gpu, Painter, RenderTexture, ScreenSurface, TextureSurface } from "../engine/gpu"
 import { InputSystem } from "../engine/input"
 import { Color } from "../engine/math"
-import { NetSync } from "../engine/net"
+import { NetSync, signalingAt } from "../engine/net"
 import { SaveSlot } from "../engine/save"
 import { UiRoot } from "../engine/ui"
 import { HISTORY_FORMAT, HISTORY_SLOT_KEY } from "../games/mecard/sim/save/historySave"
 import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "../games/mecard/sim/save/runSlot"
+import { HostDirectory } from "../games/mecard/sync/hosts/HostDirectory"
 import { MecardGame, MecardViewer, mecardTheme } from "../games/mecard/ui"
 import type { MecardNetwork } from "../games/mecard/ui"
 import type { Platform, PlayerStorage } from "../platform"
@@ -110,7 +111,7 @@ export function startGame(platform: Platform): { dispose(): void } {
             loop.stop()
             closed = true
             if(storage) void storage.close()
-            if(game instanceof MecardViewer) game.dispose()
+            if(game instanceof MecardViewer || game instanceof MecardGame) game.dispose()
             ui.dispose()
             lowRes.dispose()
             gpu.dispose()
@@ -119,9 +120,16 @@ export function startGame(platform: Platform): { dispose(): void } {
 }
 
 /** How the game reaches the others, none on a platform missing a part of it. */
-function networkOf({ net, signaling, connect }: Platform): MecardNetwork|null {
-    if(!net || signaling === undefined || !connect) return null
-    return { open: () => NetSync.host(net, signaling, ROOM_NAME), connect }
+function networkOf({ net, timer, signaling, connect }: Platform): MecardNetwork|null {
+    if(!net || !timer || signaling === undefined || !connect) return null
+    const signalingConnector = signalingAt(net, timer, signaling)
+    return {
+        open: () => NetSync.host(net, signalingConnector, ROOM_NAME, timer),
+        connect,
+        join: code => NetSync.view(net, signalingConnector, code, timer, true),
+        directory: () => HostDirectory.open(net, signalingConnector, timer),
+        timer,
+    }
 }
 
 /** Read the sound settings kept, and keep them from then on each time they change. */

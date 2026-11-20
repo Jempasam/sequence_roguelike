@@ -2,7 +2,7 @@ import { NetError, PTPClientSocket, PTPHostSocket } from "@game/core"
 import type { Peer } from "@game/core"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
-import { nextMessage, nextOnChannel, nodeNet, once, startNetServer } from "../../fixtures/netServer"
+import { nextMessage, nextOnChannel, nodeNet, once, signalingOf, startNetServer } from "../../fixtures/netServer"
 import type { NetServer } from "../../fixtures/netServer"
 
 // --- Fixture builders ---
@@ -11,13 +11,14 @@ let server: NetServer
 const opened: { close(): void }[] = []
 
 async function host(options: Parameters<typeof PTPHostSocket.open>[2] = { name: "game" }): Promise<PTPHostSocket> {
-    const socket = await PTPHostSocket.open(nodeNet(), server.url, options)
+    const socket = await PTPHostSocket.open(nodeNet(), signalingOf(server.url), options)
     opened.push(socket)
     return socket
 }
 
 async function join(code: string, data: string, relayOnly = false): Promise<PTPClientSocket> {
-    const socket = await PTPClientSocket.join(nodeNet(relayOnly), server.url, code, { data })
+    const net = nodeNet(relayOnly)
+    const socket = await PTPClientSocket.join(net, signalingOf(server.url, net), code, { data })
     opened.push(socket)
     return socket
 }

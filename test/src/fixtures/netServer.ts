@@ -1,8 +1,11 @@
-import type { ChannelKind, Connection, NetPort } from "@game/core"
+import { signalingAt } from "@game/core"
+import type { ChannelKind, Connection, NetPort, SignalingConnector } from "@game/core"
 import { IceConfig, SignalingServer } from "@game/server/signaling"
 import { StunServer } from "@game/server/stun"
 import { RelayPolicy, TurnCredentials, TurnServer } from "@game/server/turn"
 import { RTCPeerConnection as DataChannelPeer } from "node-datachannel/polyfill"
+
+import { REAL_TIMER } from "./peerServer"
 
 /** The servers of the network, on free ports of this host: signaling, STUN and TURN. */
 export interface NetServer {
@@ -55,6 +58,11 @@ export function nodeNet(relayOnly = false): NetPort {
             return peer as unknown as RTCPeerConnection
         },
     }
+}
+
+/** The connector of the signaling at an address, over the network of Node and the real time. */
+export function signalingOf(url: string, net: NetPort = nodeNet()): SignalingConnector {
+    return signalingAt(net, REAL_TIMER, url)
 }
 
 /** The first event a register function tells of, as a promise. */

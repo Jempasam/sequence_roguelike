@@ -1,3 +1,4 @@
+import type { Color } from "../../../../engine/math"
 import type { Sprite } from "../../../../engine/gpu"
 import { NineSlice } from "../../../../engine/ui"
 import type { ImagePath } from "../../../../engine/assets"
@@ -20,12 +21,14 @@ export const PAPER_MARGIN = 10
  *
  * @param paper - The sprite of {@link PAPER_PATH}.
  * @param scale - The whole factor it is drawn at.
+ * @param color - What it is multiplied by, white by default: a darker paper.
  */
-export function paperFrame(paper: Sprite, scale: number): NineSlice {
+export function paperFrame(paper: Sprite, scale: number, color?: Color): NineSlice {
     const margin = PAPER_MARGIN
     const drawn = margin * scale
     return new NineSlice(paper, { left: margin, top: margin, right: margin, bottom: margin }, {
         opaqueCenter: true,
+        ...color ? { color } : {},
         border: { left: drawn, top: drawn, right: drawn, bottom: drawn },
         tiling: { mirror: true },
     })

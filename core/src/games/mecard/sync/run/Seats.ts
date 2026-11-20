@@ -1,5 +1,8 @@
+import type { Fault } from "../../../../engine/net/Fault"
 import type { Rng } from "../../sim/base/Rng"
 import type { Run } from "../../sim/run/Run"
+
+import { NotCandidateFault, NotHeldFault, SeatTakenFault } from "../faults"
 
 /** What can be given to someone to play, by its name: the units of a battle are made anew at each load. */
 export interface Seatable {
@@ -38,11 +41,24 @@ export const ENEMY_SEATS: SeatMode = {
     enterBattle: seats => seats.clear(),
 }
 
+/**
+ * Every unit belongs to the client that brought it, given with {@link Seats.assign} and never chosen: there
+ * is nothing to give out, to keep for the host or to prepare, and the battle is hosted as it is.
+ */
+export const OWN_UNITS: SeatMode = {
+    candidates: () => [],
+    seatHost: () => {},
+    enterBattle: () => {},
+}
+
 /** How a seat is picked among those free. */
 export interface SeatPolicy {
     /** The seat taken among those free, none when none suits. */
     pick(free: readonly Seatable[]): Seatable|null
 }
+
+/** No seat is given by itself: what the clients ask for, and are given, fills the seats. */
+export const NO_PICK: SeatPolicy = { pick: () => null }
 
 /** The first seat free. */
 export const FIXED_SEATS: SeatPolicy = { pick: free => free[0] ?? null }
@@ -84,6 +100,39 @@ export class Seats {
         if(this.unitsOf(guest).length > 0) return
         const picked = this.policy.pick(this.#free(run))
         if(picked) this.#held.set(picked.name, guest)
+    }
+
+    /**
+     * Give a client a seat it asked for, when it is free and may be given. A client holding another seat
+     * gives it up for this one: it is an exchange, a client plays one seat.
+     *
+     * @returns Why it could not be given, none when it was.
+     */
+    public claim(guest: string, name: string, run: Run): Fault|null {
+        const isCandidate = this.mode.candidates(run).some(each => each.name === name)
+        if(!isCandidate) return new NotCandidateFault(guest, name)
+        if(this.#host === name) return new SeatTakenFault(guest, name, null)
+        const holder = this.#held.get(name)
+        if(holder !== undefined && holder !== guest) return new SeatTakenFault(guest, name, holder)
+        this.drop(guest)
+        this.#held.set(name, guest)
+        return null
+    }
+
+    /**
+     * Free a seat a client holds.
+     *
+     * @returns Why it could not be, none when it was.
+     */
+    public release(guest: string, name: string): Fault|null {
+        if(this.#held.get(name) !== guest) return new NotHeldFault(guest, name)
+        this.#held.delete(name)
+        return null
+    }
+
+    /** Give a client the units it brought, whatever the mode would give out: it is theirs, not a choice. */
+    public assign(guest: string, names: readonly string[]): void {
+        for(const name of names) this.#held.set(name, guest)
     }
 
     /** Keep a free seat for the host, when it keeps none yet. */

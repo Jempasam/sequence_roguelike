@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { FusionCard, DeckAi, savedCard, STEP, THRUST } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
-import { PLAN_TOPIC, writePlanMessage } from "@game/core/mecard/sync"
+import { BattleHost, NO_PICK, OWN_UNITS, PLAN_TOPIC, Seats, writePlanMessage } from "@game/core/mecard/sync"
 
 import { connected, fight, hosted, unitOf } from "../fixtures"
 import type { Hosted, Playing } from "../fixtures"
@@ -17,9 +17,23 @@ function preparing() {
     return { session, client, battle }
 }
 
+/** A battle hosted with one client that plays on the very battle, its first unit seated, a round opened. */
+function direct() {
+    const battle = fight(hosted().run)
+    const seats = new Seats(OWN_UNITS, NO_PICK)
+    const name = battle.units.find(each => each.controller === "player")?.name ?? ""
+    seats.assign("a", [name])
+    let told = 0
+    const host = new BattleHost(battle, seats, () => told++)
+    battle.advance()
+    return { battle, host, unit: unitOf(battle, name), told: () => told }
+}
+
 /** Commit what the host plays. */
 function hostCommits({ host }: Hosted, battle: Battle): void {
-    for(const unit of battle.awaited.units) if(!host.isGuests(unit)) battle.commit(unit, new DeckAi().decide(unit).chain)
+    for(const unit of battle.awaited.units){
+        if(!host.isGuests(unit)) battle.commit(unit, new DeckAi().decide(unit).chain)
+    }
 }
 
 /** Commit what a client plays on its own battle. */
@@ -102,7 +116,7 @@ describe("BattleHost", () => {
     test("a plan for a unit of another → told, and planned as a bot", () => {
         const { session, client, battle } = preparing()
         const errors: unknown[] = []
-        session.host.onError = error => errors.push(error)
+        session.host.faulted.add(fault => errors.push(fault))
         const plan = { unit: session.run.heroes[0].name, cards: [], usables: [] }
         PLAN_TOPIC.link(client.link).send(writePlanMessage({ round: battle.round, plans: [plan] }))
         expect(errors).toHaveLength(1)
@@ -113,7 +127,7 @@ describe("BattleHost", () => {
     test("a message that means nothing → told, and the client planned as a bot", () => {
         const { session, client, battle } = preparing()
         const errors: unknown[] = []
-        session.host.onError = error => errors.push(error)
+        session.host.faulted.add(fault => errors.push(fault))
         PLAN_TOPIC.link(client.link).send("{}")
         expect(errors).toHaveLength(1)
         expect(battle.planOf(unitOf(battle, client.guest.units[0]))).toBeDefined()
@@ -125,6 +139,42 @@ describe("BattleHost", () => {
         hostCommits(session, battle)
         session.host.ready()
         expect(session.told()).toBe(0)
+    })
+
+    test("a client committing in the battle itself → ready once it has no unit left to plan", () => {
+        const { battle, host, unit, told } = direct()
+        host.ready()
+        battle.commit(unit, new DeckAi().decide(unit).chain)
+        host.committed("a")
+        expect(told()).toBe(1)
+    })
+
+    test("a client committing in the battle with a unit still to plan → nothing happens", () => {
+        const { battle, host, unit, told } = direct()
+        host.ready()
+        host.committed("a")
+        expect(told()).toBe(0)
+        battle.commit(unit, new DeckAi().decide(unit).chain)
+        host.committed("a")
+        expect(told()).toBe(1)
+    })
+
+    test("a client committing in the battle twice, or late → left out", () => {
+        const { battle, host, unit, told } = direct()
+        battle.commit(unit, new DeckAi().decide(unit).chain)
+        host.committed("a")
+        host.committed("a")
+        host.ready()
+        expect(told()).toBe(1)
+        host.committed("a")
+        expect(told()).toBe(1)
+    })
+
+    test("a client that is not waited for committing → left out", () => {
+        const { host, told } = direct()
+        host.ready()
+        host.committed("nobody")
+        expect(told()).toBe(0)
     })
 
     test("a client leaving, the host ready → planned as a bot, the host told", () => {

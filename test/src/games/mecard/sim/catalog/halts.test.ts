@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { allHalts, haltById, placeTypeById } from "@game/core/mecard"
+import { allHalts, DUEL_HALT, haltById, lootHalts, placeTypeById } from "@game/core/mecard"
 import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltFixtures"
 
 // --- Fixture builders ---
@@ -16,6 +16,11 @@ describe("halts", () => {
     test.each(CASES)("$kind → found again by its id", ({ kind, type }) => {
         expect(haltById(kind)).toBe(type)
         expect(placeTypeById(kind)).toBe(type)
+    })
+
+    test("the halt of the duels → in the catalog, and in no list a floor draws from", () => {
+        expect(haltById("duel")).toBe(DUEL_HALT)
+        expect(lootHalts()).not.toContain(DUEL_HALT)
     })
 
     test("ids → no two sorts of halt share one", () => {
@@ -54,7 +59,8 @@ describe("halts", () => {
         expect(again.log).toEqual(first.log)
     })
 
-    test.each(CASES)("$kind → an impact exactly when the run changed", ({ type }) => {
+    // The halt of the duels offers nothing and changes nothing: it only waits.
+    test.each(CASES.filter(({ type }) => type !== DUEL_HALT))("$kind → an impact exactly when the run changed", ({ type }) => {
         let impacts = 0
         for(let seed = 0; seed < SEEDS; seed++){
             const run = preparedRun(seed)

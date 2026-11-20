@@ -30,6 +30,9 @@ interface Game {
     /** The games connected to, in order: their code, and whether to play. */
     readonly connections: (readonly [string, boolean])[]
 
+    /** The chats opened or left, in order: the role, the code, the name and the color of the author. */
+    readonly chats: (readonly [string, string|null, string, string])[]
+
     /** Whether a run is started, the main menu waiting when not. */
     readonly state: { playing: boolean }
 }
@@ -43,6 +46,7 @@ function game(): Game {
     const transitions: (readonly [string, number, boolean])[] = []
     const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
     const connections: (readonly [string, boolean])[] = []
+    const chats: (readonly [string, string|null, string, string])[] = []
     const board = { text: "" }
     const state = { playing: true }
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
@@ -72,10 +76,13 @@ function game(): Game {
         playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),
+        openChat: (role, code, author) => chats.push([role, code, author.name, author.color]),
+        leaveChat: () => chats.push(["leave", null, "", "red"]),
     })))
     registerCommands(made)
     return {
-        console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, board, state,
+        console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, chats, board,
+        state,
     }
 }
 
@@ -399,6 +406,32 @@ describe("Mecard commands", () => {
         console.submit("connect K7QX2M")
         expect(connections).toEqual([])
         expect(errors(console)).toHaveLength(1)
+    })
+
+    test("chat host → opens a chat as the name and color given, red Joueur by default", () => {
+        const { console, chats } = game()
+        console.submit("chat host Alice blue")
+        console.submit("chat host")
+        expect(chats).toEqual([["host", null, "Alice", "blue"], ["host", null, "Joueur", "red"]])
+    })
+
+    test("chat join → the code, then the name and color", () => {
+        const { console, chats } = game()
+        console.submit("chat join K7QX2M Bob green")
+        expect(chats).toEqual([["join", "K7QX2M", "Bob", "green"]])
+    })
+
+    test("chat join with an unknown color → an error, nothing opened", () => {
+        const { console, chats } = game()
+        console.submit("chat join K7QX2M Bob chartreuse")
+        expect(chats).toEqual([])
+        expect(errors(console)).toHaveLength(1)
+    })
+
+    test("chat leave → leaves the chat", () => {
+        const { console, chats } = game()
+        console.submit("chat leave")
+        expect(chats).toEqual([["leave", null, "", "red"]])
     })
 })
 

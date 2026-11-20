@@ -81,12 +81,12 @@ export class MecardViewer {
         this.run.loaded.add(started)
         this.run.battleStarted.add(started)
         this.#receiver = new RunReceiver(this.run, source)
-        this.#receiver.onError = error => this.#warn(error instanceof Error ? error.message : String(error))
+        this.#receiver.faulted.add(fault => this.#warn(fault.describe()))
         this.#receiver.battle.onDesync = ({ round }) => this.#warn(`Désynchronisé au round ${round} : rattrapé.`)
         this.#receiver.travel.onDesync = () => this.#warn("Désynchronisé sur la carte : rattrapé.")
         if(link){
-            this.#guest = new RunGuest(this.run, link, units => { this.#screen.locks = playing(units) })
-            this.#guest.onError = error => this.#warn(error instanceof Error ? error.message : String(error))
+            this.#guest = new RunGuest(this.run, link, units => { this.#screen.locks = locksForUnits(units) })
+            this.#guest.faulted.add(fault => this.#warn(fault.describe()))
         }
     }
 
@@ -125,6 +125,7 @@ export class MecardViewer {
 
     /** Say what went wrong where the waiting line is, over the journey. */
     #warn(text: string): void {
+        console.error(text)
         this.#waiting.text = text
         this.#waiting.color = WARNING_TEXT
         this.#waiting.visible = true
@@ -132,7 +133,7 @@ export class MecardViewer {
 }
 
 /** What may be done with units to play: planning them, then saying so. Everything else stays locked. */
-function playing(units: readonly string[]): RunLocks {
+export function locksForUnits(units: readonly string[]): RunLocks {
     if(units.length === 0) return ALL_RUN_LOCKS
     return { ...ALL_RUN_LOCKS, battle: { isLocked: unit => !units.includes(unit.name), round: "ready" } }
 }

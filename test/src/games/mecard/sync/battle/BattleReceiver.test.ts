@@ -161,10 +161,10 @@ describe("BattleReceiver", () => {
         expect(loads).toBe(1)
     })
 
-    test("a message in another shape → told to onError, nothing loaded", () => {
+    test("a message in another shape → told as a fault, nothing loaded", () => {
         const viewer = new BattleReceiver(empty(), new LocalSync())
         const errors: unknown[] = []
-        viewer.onError = error => errors.push(error)
+        viewer.faulted.add(fault => errors.push(fault))
         let loads = 0
         watched(viewer).loaded.add(() => loads++)
         viewer.receive("{\"kind\":\"hello\"}")

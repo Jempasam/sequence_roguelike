@@ -21,6 +21,7 @@ function menu() {
         continueGame: () => told.push("continue"),
         openGuide: () => told.push("guide"),
         openHistory: () => told.push("history"),
+        openMultiplayer: () => told.push("multiplayer"),
         report: text => told.push(`report: ${text}`),
     }, NO_ASSETS)
     screen.visible = true
@@ -43,6 +44,17 @@ describe("MainMenuScreen", () => {
         const { screen, told } = menu()
         screen.historyButton?.activate()
         expect(told).toEqual(["history"])
+    })
+
+    test("Multiplayer → greyed out without a network, tells the lobby is opened with one", () => {
+        const { screen, told } = menu()
+        expect(screen.multiplayerButton?.enabled).toBe(false)
+        screen.multiplayerButton?.activate()
+        expect(told).toEqual([])
+        screen.hasNetwork = true
+        expect(screen.multiplayerButton?.enabled).toBe(true)
+        screen.multiplayerButton?.activate()
+        expect(told).toEqual(["multiplayer"])
     })
 
     test("a game kept → Continue available and tells it", () => {

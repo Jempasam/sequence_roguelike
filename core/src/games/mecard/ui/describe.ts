@@ -76,5 +76,7 @@ export function attributeLines(stats: UnitStats): StatLine[] {
         numberStat("Alchimie", stats.alchemy),
         { name: "Mobilité", value: mobile ? "libre" : "immobilisé", base: null, change: mobile ? "same" : "down" },
         flagStat("Deck ordonné", stats.ordered),
+        flagStat("Chaîne visible", stats.showChain),
+        flagStat("Main visible", stats.showHand),
     ]
 }

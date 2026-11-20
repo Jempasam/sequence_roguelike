@@ -12,13 +12,14 @@
     },
     "dependencies": {
         "@game/command_line": "*",
-        "@game/server": "*",
         "@game/core": "*",
+        "@game/server": "*",
         "fflate": "^0.8.2",
         "node-datachannel": "^0.33.6"
     },
     "devDependencies": {
         "@types/node": "^24.19.2",
+        "peer": "^1.0.2",
         "vite": "^8.3.5"
     }
 }

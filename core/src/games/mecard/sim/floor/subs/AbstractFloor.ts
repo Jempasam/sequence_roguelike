@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { AGGRESSION, ALL_FIGHT_CATEGORIES, BATTLE, BOSS, ELITE } from "../../fight/fights"
+import { AGGRESSION, ALL_FIGHT_CATEGORIES, AMBUSH, BATTLE, BOSS, ELITE } from "../../fight/fights"
 import { ALCHEMIST_HALT } from "../../halt/subs/deck/AlchemistHalt"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { ANTIQUARIAN_HALT } from "../../halt/subs/deck/AntiquarianHalt"
@@ -58,7 +58,8 @@ const MOST_PLANS = 32
 
 /** The halt that pays for each sort of fight, laid after it on the map. */
 const REWARDS: ReadonlyMap<FightCategory, HaltType> = new Map([
-    [BATTLE, BATTLE_REWARD_HALT], [ELITE, ELITE_REWARD_HALT], [AGGRESSION, ELITE_REWARD_HALT], [BOSS, BOSS_REWARD_HALT],
+    [BATTLE, BATTLE_REWARD_HALT], [ELITE, ELITE_REWARD_HALT], [AGGRESSION, ELITE_REWARD_HALT], [AMBUSH, ELITE_REWARD_HALT],
+    [BOSS, BOSS_REWARD_HALT],
 ])
 
 /** What a place of a floor may hold: a category of fight, or a halt. */
@@ -90,7 +91,7 @@ export function reweighted(
 /** How often each sort of place turns up on a floor that says nothing else. */
 const WEIGHTS: PlaceWeights = new Map<PlaceSort, number>([
     ...([
-        [BATTLE, 28], [ELITE, 7], [AGGRESSION, 5], [HOSPITAL_HALT, 5], [SHOP_HALT, 5], [CHEST_HALT, 6], [REMOVAL_HALT, 4],
+        [BATTLE, 28], [ELITE, 7], [AGGRESSION, 5], [AMBUSH, 3], [HOSPITAL_HALT, 5], [SHOP_HALT, 5], [CHEST_HALT, 6], [REMOVAL_HALT, 4],
         [ALTAR_HALT, 3], [FORGE_HALT, 4], [BUTCHER_HALT, 2], [ENCHANTER_HALT, 4], [ALCHEMIST_HALT, 3],
         [MERCHANT_HALT, 4], [WITCH_HALT, 3], [INVENTOR_HALT, 3], [TAVERN_HALT, 2], [TRAINER_HALT, 2],
         [MASTER_TRAINER_HALT, 1], [MASTER_MAGICIAN_HALT, 1], [MASTER_INVENTOR_HALT, 1], [DEMON_HALT, 1],
@@ -192,7 +193,7 @@ export abstract class AbstractFloor implements Floor {
     /** The sorts a place of a layer may be, with their weights, the places next to it known. */
     #allowed(layer: number, around: readonly PlannedPlace[]): [PlaceSort, number][] {
         return [...this.weights()].filter(([type]) => {
-            if((type === ELITE || type === AGGRESSION) && layer < FIRST_ELITE_LAYER) return false
+            if((type === ELITE || type === AGGRESSION || type === AMBUSH) && layer < FIRST_ELITE_LAYER) return false
             if(type === SHOP_HALT && layer === 1) return false
             return type === BATTLE || !around.some(place => place.type === type)
         })

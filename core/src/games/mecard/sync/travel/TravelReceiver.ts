@@ -1,7 +1,11 @@
 import { placeAt } from "../../sim/save/travelSave"
 import type { Travel } from "../../sim/travel/Travel"
 
+import { Fault } from "../../../../engine/net/Fault"
+import { TRAVEL_TOPIC } from "../SyncChannel"
 import type { SyncSource } from "../SyncChannel"
+import { signal, UnloadableFault } from "../faults"
+import { detailOf } from "../read"
 import { readTravelMessage } from "./TravelMessage"
 import type { TravelMessage, TravelMove, TravelRest } from "./TravelMessage"
 
@@ -28,11 +32,8 @@ export class TravelReceiver {
     /** What hears that a move was lost, nothing when none. */
     public onDesync: ((desync: TravelDesync) => void)|null = null
 
-    /**
-     * What hears that a message could not be read or taken in. A failure nobody hears is thrown, so it is
-     * never silent.
-     */
-    public onError: ((error: unknown) => void)|null = null
+    /** Told of a message that could not be read or taken in: it is left out. */
+    public readonly faulted = signal<Fault>()
 
     constructor(engine: Travel, source: SyncSource){
         this.engine = engine
@@ -42,14 +43,18 @@ export class TravelReceiver {
 
     /** Take a message in. */
     public receive(text: string): void {
+        const message = readTravelMessage(text)
+        if(message instanceof Fault){
+            this.faulted.notify(message)
+            return
+        }
         try {
-            const message = readTravelMessage(text)
             if(this.#isStale(message)) return
             this.#heard = { number: message.number, sequence: message.sequence }
             if(message.kind === "save") this.#applySave(message)
             else this.#move(message)
         } catch(error){
-            this.#fail(error)
+            this.faulted.notify(new UnloadableFault(TRAVEL_TOPIC.name, detailOf(error)))
         }
     }
 
@@ -96,10 +101,5 @@ export class TravelReceiver {
         if(!isSameMap) return
         const own = travel.place && travel.journey.places.indexOf(travel.place)
         if(own !== save.place) this.onDesync?.({ number, sequence })
-    }
-
-    #fail(error: unknown): void {
-        if(!this.onError) throw error
-        this.onError(error)
     }
 }

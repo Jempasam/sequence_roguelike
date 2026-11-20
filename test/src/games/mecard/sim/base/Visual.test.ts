@@ -79,7 +79,7 @@ describe("the pictures the catalog names", () => {
     })
 
     test("the fights → a file of the game each, and the letter the map writes while it loads", () => {
-        expect(ALL_FIGHT_CATEGORIES.map(each => each.icon.letter)).toEqual(["C", "É", "B"])
+        expect(ALL_FIGHT_CATEGORIES.map(each => each.icon.letter)).toEqual(["C", "É", "A", "A", "B"])
         expect(missingFiles(ALL_FIGHT_CATEGORIES.map(each => each.icon))).toEqual([])
     })
 

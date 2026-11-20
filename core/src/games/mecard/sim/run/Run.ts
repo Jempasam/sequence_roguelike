@@ -13,6 +13,7 @@ import type { Card } from "../card/Card"
 import type { Fight } from "../fight/Fight"
 import { EMPTY_FIGHT } from "../fight/fights"
 import { FIRST_FLOOR } from "../catalog/floors"
+import type { FloorType } from "../floor/Floor"
 import { freeHalts } from "../catalog/halts"
 import { TAVERN_HALT } from "../halt/subs/gift/TavernHalt"
 import { STARTING_KITS } from "../catalog/kits"
@@ -162,6 +163,9 @@ export class Run {
 
         /** Where the error of a listener goes: thrown on by default, so none is lost. */
         public readonly report: ErrorSink = rethrow,
+
+        /** The sort of floor the run starts on. */
+        firstFloor: FloorType = FIRST_FLOOR,
     ){
         this.phaseChanged = new Observable(report)
         this.battleStarted = new Observable(report)
@@ -177,7 +181,7 @@ export class Run {
         this.loaded = new Observable(report)
         this.rng = new Rng(seed)
         this.heroes = STARTING_KITS.map(kit => heroOf(kit))
-        this.travel = new Travel(this, FIRST_FLOOR.create(1))
+        this.travel = new Travel(this, firstFloor.create(1))
         // The party starts alone: a tavern to hire, a tavern again, a free halt, before the floor itself.
         const bonus = this.rng.pick(freeHalts()) ?? TAVERN_HALT
         this.travel.journey.addEntries([TAVERN_HALT, TAVERN_HALT, bonus])

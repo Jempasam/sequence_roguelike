@@ -141,18 +141,18 @@ describe("TravelReceiver", () => {
         expect(loads).toBe(1)
     })
 
-    test("a message in another shape → told to onError, nothing loaded", () => {
+    test("a message in another shape → told as a fault, nothing loaded", () => {
         const viewer = new TravelReceiver(startedRun(0).travel, new LocalSync())
         const errors: unknown[] = []
-        viewer.onError = error => errors.push(error)
+        viewer.faulted.add(fault => errors.push(fault))
         viewer.receive("{\"kind\":\"hello\"}")
         expect(errors).toHaveLength(1)
     })
 
-    test("a place the map does not have → told to onError", () => {
+    test("a place the map does not have → told as a fault", () => {
         const { viewer } = session()
         const errors: unknown[] = []
-        viewer.onError = error => errors.push(error)
+        viewer.faulted.add(fault => errors.push(fault))
         viewer.receive(writeTravelMessage({ kind: "moved", number: 1, sequence: 5, from: null, to: 9999, depth: 1 }))
         expect(errors).toHaveLength(1)
     })
@@ -212,8 +212,8 @@ describe("SyncTopic", () => {
         const battles = new BattleReceiver(startedRun(0).newBattle(), BATTLE_TOPIC.source(channel))
         const journeys = new TravelReceiver(startedRun(0).travel, TRAVEL_TOPIC.source(channel))
         const errors: unknown[] = []
-        battles.onError = error => errors.push(error)
-        journeys.onError = error => errors.push(error)
+        battles.faulted.add(fault => errors.push(fault))
+        journeys.faulted.add(fault => errors.push(fault))
         const run = startedRun(11)
         new TravelBroadcaster(run.travel, TRAVEL_TOPIC.sender(channel))
         new BattleBroadcaster(started(run), BATTLE_TOPIC.sender(channel))

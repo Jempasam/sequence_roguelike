@@ -38,6 +38,7 @@ import { WITCH_HALT } from "../halt/subs/gift/WitchHalt"
 import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../halt/subs/party/NecromancerHalt"
+import { DUEL_HALT } from "../halt/subs/duel/DuelHalt"
 import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
 import { MASTER_CHEST_HALT } from "../halt/subs/master/MasterChestHalt"
 import { GREAT_CHEST_HALT } from "../halt/subs/great/GreatChestHalt"
@@ -107,9 +108,17 @@ export function rewardHalts(): readonly HaltType[] {
     return [BATTLE_REWARD_HALT, ELITE_REWARD_HALT, BOSS_REWARD_HALT, MONSTER_LOOTING_REWARD_HALT]
 }
 
+/**
+ * The sorts of halt only a game mode lays: no floor draws them, nor does anything generate them, but a save
+ * reading the place of one finds it here.
+ */
+export function modeHalts(): readonly HaltType[] {
+    return [DUEL_HALT]
+}
+
 /** Every sort of halt. */
 export function allHalts(): readonly HaltType[] {
-    return [...lootHalts(), ...rewardHalts(), EXIT_HALT]
+    return [...lootHalts(), ...rewardHalts(), ...modeHalts(), EXIT_HALT]
 }
 
 /**

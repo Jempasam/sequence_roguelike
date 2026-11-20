@@ -2,7 +2,7 @@
  * The version of the protocol between the clients and the signaling server. A client of another version is
  * refused at its `hello`, since the two would misread each other.
  */
-export const PROTOCOL_VERSION = 1
+export const PROTOCOL_VERSION = 2
 
 /** A value that JSON carries as it is: what the members of a room tell each other about themselves. */
 export type JsonValue = null|boolean|number|string|readonly JsonValue[]|{ readonly [key: string]: JsonValue }
@@ -51,8 +51,9 @@ export type PeerSignal =
  * - `"full"`: the room holds as many members as it may.
  * - `"refused"`: the owner refused the member.
  * - `"closed"`: the room closed, or its owner left while the member waited.
+ * - `"taken"`: a room was asked for under a code that another open room has already.
  */
-export type RoomRefusal = "not-found"|"full"|"refused"|"closed"
+export type RoomRefusal = "not-found"|"full"|"refused"|"closed"|"taken"
 
 /** What a client sends the server. */
 export type ClientMessage =
@@ -63,6 +64,12 @@ export type ClientMessage =
         readonly name: string
         readonly data: JsonValue
         readonly capacity: number
+
+        /**
+         * The code the room is to have, so that others know where to find it beforehand. The server makes one
+         * up when there is none, and refuses with `"taken"` when an open room has it already.
+         */
+        readonly code?: string
     }
     | { readonly type: "join", readonly code: string, readonly data: JsonValue }
     | { readonly type: "admit", readonly member: string, readonly accepted: boolean }

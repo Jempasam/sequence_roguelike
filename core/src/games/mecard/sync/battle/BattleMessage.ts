@@ -1,6 +1,10 @@
 import { BATTLE_SAVE_VERSION } from "../../sim/save/battleSave"
 import type { BattleSave } from "../../sim/save/battleSave"
 
+import { BATTLE_TOPIC } from "../SyncChannel"
+import { UnreadableFault } from "../faults"
+import { readJson, wrongShape, wrongVersion } from "../read"
+
 /**
  * When a message is sent: at the start of a preparation, the round drawn, so a viewer catches up with
  * whatever its own simulation missed; or at its end, every chain committed, so the viewer plays the round.
@@ -28,20 +32,17 @@ export function writeBattleMessage(message: BattleMessage): string {
     return JSON.stringify(message)
 }
 
-/**
- * A message as received.
- *
- * @throws {@link Error} When it is no message of a battle, or of another version of the save.
- */
-export function readBattleMessage(text: string): BattleMessage {
-    const message = JSON.parse(text) as Partial<BattleMessage>|null
+/** A message as received, or why it cannot be read: it is no message of a battle, or of another version. */
+export function readBattleMessage(text: string): BattleMessage|UnreadableFault {
+    const message = readJson(BATTLE_TOPIC.name, text) as Partial<BattleMessage>|null|UnreadableFault
+    if(message instanceof UnreadableFault) return message
     const isMessage = typeof message === "object" && message !== null
         && (message.kind === "save" || message.kind === "launch")
         && typeof message.number === "number" && typeof message.sequence === "number"
         && typeof message.save === "object" && message.save !== null
-    if(!isMessage) throw new Error("A message of the battle came in another shape: is the other client up to date?")
+    if(!isMessage) return wrongShape(BATTLE_TOPIC.name, text, "message of the battle")
     if(message.save.version !== BATTLE_SAVE_VERSION){
-        throw new Error(`The other client saves battles in version ${message.save.version}, this one in ${BATTLE_SAVE_VERSION}.`)
+        return wrongVersion(BATTLE_TOPIC.name, text, message.save.version, BATTLE_SAVE_VERSION)
     }
     return message as BattleMessage
 }

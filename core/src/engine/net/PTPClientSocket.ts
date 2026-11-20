@@ -5,6 +5,7 @@ import type { ChannelKind, Connection, ConnectionState } from "./Connection"
 import { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { JoinOptions, Peer } from "./Room"
+import type { SignalingConnector } from "./Signaling"
 
 /**
  * A client of a game hosted by another player: a member of the host's star room, with a single WebRTC
@@ -16,16 +17,16 @@ export class PTPClientSocket implements Connection {
     /**
      * Join a host by the code of its room, and wait until the connection to it is open.
      *
-     * @param url - The address of the signaling server.
+     * @param connect - Reaches the signaling server.
      * @throws {@link NetError} When the room is not found, full, or refuses, or the host cannot be reached.
      */
     public static async join(
         net: NetPort,
-        url: string,
+        connect: SignalingConnector,
         code: string,
         options: JoinOptions = {},
     ): Promise<PTPClientSocket> {
-        const room = await Room.join(net, url, code, options)
+        const room = await Room.join(net, connect, code, options)
         if(room.shape !== "star"){
             room.close()
             throw new Error(`The room ${code} is a ${room.shape}, where a client socket joins a star.`)

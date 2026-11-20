@@ -1,3 +1,4 @@
+import { KitFightType } from "../fight/KitFightType"
 import type { FightType } from "../fight/FightType"
 import { CASTLE_FIGHTS } from "../floor/fights/castleFights"
 import { CAVE_FIGHTS } from "../floor/fights/caveFights"
@@ -24,7 +25,9 @@ export function allFightTypes(): readonly FightType[] {
         CAVE_FIGHTS, FOREST_FIGHTS, MINE_FIGHTS, HELL_FIGHTS, SWAMP_FIGHTS, TUNDRA_FIGHTS, CASTLE_FIGHTS, DOJO_FIGHTS,
         GRAVEYARD_FIGHTS, VOLCANO_FIGHTS, FACTORY_FIGHTS, HARBOR_FIGHTS,
     ]
-    return [...floors.flatMap(fights => fights.map(each => each.type)), EMPTY_FIGHT]
+    const laid = floors.flatMap(fights => fights.map(each => each.type))
+    const ambushes = laid.filter(type => type instanceof KitFightType).map(type => type.ambush)
+    return [...laid, ...ambushes, EMPTY_FIGHT]
 }
 
 /**

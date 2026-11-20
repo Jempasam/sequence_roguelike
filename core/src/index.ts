@@ -47,13 +47,23 @@ export type {
 } from "./engine/console"
 export { Color, Mat4, Quat, Vec3 } from "./engine/math"
 export {
-    ClientSocket, DEFAULT_CAPACITY, MemoryConnection, NetError, NetSync, PeerConnection, PTPClientSocket,
-    PTPHostSocket, PTPSymSocket, Room, SignalingClient,
+    BadSecretFault, ClientSocket, ConnectionLostFault, DEFAULT_CAPACITY, DEFAULT_OPEN_TIMEOUT,
+    Fault, faultOf, HostLostServerFault,
+    ManualScheduler, MemoryConnection, NetError, NetSync, NotHostFault, Outbox, OUTBOX_LIMIT, OutboxFullFault,
+    PeerConnection, PeerJsConnection, PeerJsSignaling, PTPClientSocket, PTPHostSocket, PTPSharedSocket, PTPSymSocket, QueuedPeer,
+    RANDOM_TEXT,
+    readSession,
+    RefusedFault, Room, RoomFullFault, RoomNotFoundFault, RoomTakenFault,
+    SESSION_VERSION, SessionClient, SessionExpiredFault, SessionHost, SessionPeer, SignalingClient, signalingAt,
+    UnreachableFault, VersionMismatchFault, writeSession,
 } from "./engine/net"
 export type {
     Admission, ChannelKind, Connection, ConnectionState, JoinOptions, NetErrorReason, Peer, PeerRole,
-    RoomCreation, RoomEntry, RoomEvent, RoomOptions, SignalPath,
+    OpenDeadline, PeerJsConnectionOptions, PeerJsKind, PeerJsRelayed, RandomText, RoomCreation, RoomEntry, RoomEvent, RoomOptions, RoomTiming, SessionClientOptions,
+    SessionHostOptions, SessionInfo, SessionLink, SessionSocket, SharedOptions, SharedRole, Signaling, SignalingConnector,
+    SignalPath,
 } from "./engine/net"
+export { Listeners } from "./engine/net"
 export { MemoryStorage, SaveError, SaveSlot } from "./engine/save"
 export type { Migration, SaveErrorReason, SaveFormat } from "./engine/save"
 export { BitmapFont, TextLayout } from "./engine/text"
@@ -87,6 +97,6 @@ export { startGame } from "./game"
 export { GAMEPAD_BUTTONS } from "./platform"
 export type {
     AssetsPort, AudioPort, AudioStage, BiquadKind, ClipboardPort, FilterContext, PlayOptions, Sound, GamepadAxis, GamepadButton, GamepadState, GfxPort, InputPort, LoopPort,
-    NetPort, Platform, PlayerStorage, RawInputEvent, StoragePort, SyncLink, SyncPeer, SyncPort, SyncRole,
-    SyncRoom,
+    Cancel, NetPort, Platform, PlayerStorage, RawInputEvent, StoragePort, SyncLink, SyncPeer, SyncPort,
+    SyncRole, SyncRoom, TimerPort,
 } from "./platform"

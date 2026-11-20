@@ -14,6 +14,8 @@ import { loadBoosterFrame } from "../hud/BoosterView"
 import { visual } from "../../sim/base/Visual"
 import type { Visual } from "../../sim/base/Visual"
 import { PAPER_PATH, PATH_PICTURE, SHADE_PICTURE } from "./paper"
+import { loadWood } from "./wood"
+import type { Wood } from "./wood"
 import { DEFAULT_LOOK, readSpriteLook } from "./spriteLook"
 import type { SpriteLook } from "./spriteLook"
 import { dataPathOf, loadPictures, shippedPictures } from "./visualPath"
@@ -99,6 +101,11 @@ export class UnitSprites {
         return this.#booster
     }
 
+    /** The wood of the frames, planks and backgrounds, none before it is loaded. */
+    public get wood(): Wood|null {
+        return this.#wood
+    }
+
     /** The darker spot under what stands on the arena, none before it is loaded. */
     public get shade(): Sprite|null {
         return this.#shade
@@ -138,13 +145,15 @@ export class UnitSprites {
         const floors = ALL_FLOORS.map(floor => floor.icon.visual)
         const keys = [...new Set([...unitKeys(), ...iconKeys(), ...tetherKeys(), ...statuses, ...things, ...halts, ...floors])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
-        const [named, fixedPictures, bag, booster] = await Promise.all([
+        const [named, fixedPictures, bag, booster, wood] = await Promise.all([
             loadPictures(assets, keys),
             Promise.all(fixed.map(path => assets.image(path))),
             BagView.loadFrame(gpu, assets),
             loadBoosterFrame(gpu, assets),
+            loadWood(gpu, assets),
         ])
         this.#bag = bag
+        this.#wood = wood
         this.#booster = booster
         const atlas = new Atlas(gpu, { initialSize: 64 })
         const entries = atlas.addAll([...named.map(({ pixels }) => ({ pixels })), ...fixedPictures.map(pixels => ({ pixels }))])
@@ -180,4 +189,5 @@ export class UnitSprites {
     #shade: Sprite|null = null
     #bag: NineSlice|null = null
     #booster: NineSlice|null = null
+    #wood: Wood|null = null
 }

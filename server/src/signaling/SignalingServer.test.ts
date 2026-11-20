@@ -131,6 +131,39 @@ describe("SignalingServer rooms", () => {
         expect(entered.members).toEqual([])
     })
 
+    test("create with a code → entered under it, in capitals, and found by either case", async() => {
+        const client = await greeted()
+        await client.send({ type: "create", shape: "star", name: "hub", data: null, capacity: 4, code: "hub-0" })
+        const entered = await client.next("entered")
+        expect(entered.code).toBe("HUB-0")
+        const guest = await greeted()
+        await guest.send({ type: "join", code: "hub-0", data: null })
+        await client.next("knocking")
+    })
+
+    test("create with a code taken → refused taken, then free again once its room is over", async() => {
+        const first = await greeted()
+        await first.send({ type: "create", shape: "star", name: "hub", data: null, capacity: 4, code: "HUB-1" })
+        await first.next("entered")
+        const second = await greeted()
+        await second.send({ type: "create", shape: "star", name: "hub", data: null, capacity: 4, code: "hub-1" })
+        expect((await second.next("refused")).reason).toBe("taken")
+        // The socket is still good: it may ask again, under another code, or the same once the room is gone.
+        first.socket.close()
+        await first.closed
+        // The server forgets the room when it sees the socket close, which the client may see first.
+        while(server.rooms > 0) await new Promise(resolve => setTimeout(resolve, 5))
+        await second.send({ type: "create", shape: "star", name: "hub", data: null, capacity: 4, code: "HUB-1" })
+        await second.next("entered")
+    })
+
+    test("create with a code out of the alphabet → error and closed", async() => {
+        const client = await greeted()
+        await client.send({ type: "create", shape: "star", name: "hub", data: null, capacity: 4, code: "no spaces" })
+        await client.next("error")
+        expect(await client.closed).toBe(1002)
+    })
+
     test("unknown code → refused not-found", async() => {
         const client = await greeted()
         await client.send({ type: "join", code: "NOPE22", data: null })

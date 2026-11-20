@@ -5,6 +5,7 @@ import type { ChannelKind } from "./Connection"
 import type { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { Peer, RoomOptions } from "./Room"
+import type { SignalingConnector } from "./Signaling"
 
 /**
  * The host of a game, which players connect to: a star room it owns, with one WebRTC connection to each
@@ -20,11 +21,11 @@ export class PTPHostSocket {
     /**
      * Open a room on a signaling server and wait for clients.
      *
-     * @param url - The address of the signaling server.
+     * @param connect - Reaches the signaling server.
      * @throws {@link NetError} When the server cannot be reached.
      */
-    public static async open(net: NetPort, url: string, options: RoomOptions): Promise<PTPHostSocket> {
-        return new PTPHostSocket(await Room.create(net, url, "star", options))
+    public static async open(net: NetPort, connect: SignalingConnector, options: RoomOptions): Promise<PTPHostSocket> {
+        return new PTPHostSocket(await Room.create(net, connect, "star", options))
     }
 
 

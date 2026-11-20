@@ -116,6 +116,48 @@ export class Journey implements FloorContext {
         return halt
     }
 
+    /**
+     * Lay a whole row of halts between two rows of the map, one behind each place of the row before: the place
+     * leads to its halt alone, and the halt leads where the place led, so every path goes on as it went, through
+     * a halt more. The rows from that place on, the exits' too, move down one. In the first row, nothing leading
+     * to the places of the row it takes the place of, there is one in front of each, a way in; past the last row
+     * of the map, the halts lead to the exits if there are any, and nowhere otherwise.
+     *
+     * @param layer - Where the row lies once laid, from 0: from the first row to just past the last.
+     * @returns The halts laid, from left to right: as many as the row before has, or the row after in the first.
+     * @throws {@link Error} When the row is not one from the first to just past the last before the exits.
+     */
+    public insertLayer(type: HaltType, layer: number): readonly Place[] {
+        const layers = this.layers
+        const rows = layers.length - (this.exits.length > 0 ? 1 : 0)
+        if(layer < 0 || layer > rows) throw new Error(`The map has ${rows} rows: no row ${layer} to lay between them.`)
+        const before = layers[layer - 1] ?? []
+        const after = layers[layer] ?? []
+        for(const place of this.#places) if(place.layer >= layer) (place as { layer: number }).layer++
+        const laid: Place[] = []
+        if(before.length > 0){
+            for(const place of before){
+                const halt = this.addHalt(type, { layer, across: place.across })
+                halt.next.push(...place.next)
+                place.next.splice(0, place.next.length, halt)
+                laid.push(halt)
+            }
+        } else {
+            for(const place of after){
+                const halt = this.addHalt(type, { layer, across: place.across })
+                halt.next.push(place)
+                laid.push(halt)
+            }
+        }
+        // Before the exits, which stay the last, as a save reads them.
+        const firstExit = this.#places.findIndex(place => place.exitTo !== null)
+        if(firstExit >= 0 && firstExit < this.#places.length - laid.length){
+            this.#places.splice(this.#places.length - laid.length, laid.length)
+            this.#places.splice(firstExit, 0, ...laid)
+        }
+        return laid
+    }
+
     /** Make a place lead to another. */
     public link(from: Place, to: Place): void {
         from.next.push(to)

@@ -7,6 +7,7 @@ import type { Run } from "../run/Run"
 
 import type { Fight, FightStage } from "./Fight"
 import type { FightCategory } from "./FightCategory"
+import { AMBUSH } from "./fights"
 import type { FightType, Laying } from "./FightType"
 import { StandardFight } from "./StandardFight"
 
@@ -25,11 +26,17 @@ export interface KitFightSpec {
 
     /** The kits the party fights, each one fighter, in the order they stand. */
     readonly kits: readonly Kit[]
+
+    /** Do the kits keep their chains from the party during a preparation, their hands shown in their stead? No by default. */
+    readonly hiddenChains?: boolean
 }
 
 /**
  * A fight of the party against kits rather than monsters: adventurers who fight with a character's cards,
  * items and usables, each played by the {@link BEST_AI}. It is fought as any {@link StandardFight}.
+ *
+ * @remarks
+ * Every one has a twin, its {@link ambush}: the same kits and hazards, fought with their chains hidden.
  */
 export class KitFightType implements FightType {
 
@@ -43,7 +50,10 @@ export class KitFightType implements FightType {
     /** The kits the party fights. */
     public readonly kits: readonly Kit[]
 
-    constructor(spec: KitFightSpec) {
+    /** Do the kits keep their chains from the party during a preparation, their hands shown in their stead? */
+    public readonly hiddenChains: boolean
+
+    constructor(private readonly spec: KitFightSpec) {
         this.id = spec.id
         this.name = spec.name
         this.description = spec.description
@@ -51,6 +61,19 @@ export class KitFightType implements FightType {
         this.category = spec.category
         this.hazards = spec.hazards
         this.kits = spec.kits
+        this.hiddenChains = spec.hiddenChains ?? false
+    }
+
+    /**
+     * The same fight with the chains of its kits hidden, of the {@link AMBUSH} category: always the same
+     * value, so that a save finds it by its id.
+     */
+    public get ambush(): KitFightType {
+        if(this.hiddenChains) return this
+        this.#ambush ??= new KitFightType({
+            ...this.spec, id: `${this.id}-embuscade`, category: AMBUSH, hiddenChains: true,
+        })
+        return this.#ambush
     }
 
     public populate(stage: FightStage): void {
@@ -60,4 +83,6 @@ export class KitFightType implements FightType {
     public create(run: Run, place: Spot): Fight {
         return new StandardFight(this, run, place)
     }
+
+    #ambush: KitFightType|undefined
 }

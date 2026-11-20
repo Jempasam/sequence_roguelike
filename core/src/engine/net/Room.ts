@@ -1,15 +1,29 @@
 import type { JsonValue, Member, PeerSignal, RoomShape } from "@game/server/protocol"
 
-import type { NetPort } from "../../platform"
+import type { NetPort, TimerPort } from "../../platform"
 import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
 import { PeerConnection } from "./PeerConnection"
-import type { PeerRole } from "./PeerConnection"
-import { SignalingClient } from "./SignalingClient"
-import type { RoomEntry, RoomEvent } from "./SignalingClient"
+import type { OpenDeadline, PeerRole } from "./PeerConnection"
+import type { RoomEntry, RoomEvent, Signaling, SignalingConnector } from "./Signaling"
 
 /** The most members a room holds when nothing else is asked: a mesh of 8 opens 28 connections. */
 export const DEFAULT_CAPACITY = 8
+
+/** How long a connection to a member may take to open, in milliseconds, when a timer is given. */
+export const DEFAULT_OPEN_TIMEOUT = 15_000
+
+/** What a room needs to measure time: the deadlines of its connections. */
+export interface RoomTiming {
+    /** Where time goes, for the connections to have a deadline. */
+    readonly timer?: TimerPort
+
+    /**
+     * How long a connection to a member may take to open before it is given up, in milliseconds. It is
+     * {@link DEFAULT_OPEN_TIMEOUT} when there is a timer, and there is no deadline without one.
+     */
+    readonly openTimeout?: number
+}
 
 /**
  * Whether the owner of a room lets a newcomer in, from what it says about itself. It may take its time,
@@ -24,9 +38,12 @@ export interface Peer {
 }
 
 /** What a room is created with. */
-export interface RoomOptions {
+export interface RoomOptions extends RoomTiming {
     /** The name of the room, which every member is told. */
     readonly name: string
+
+    /** The code of the room, for others to find it beforehand. One is made up when there is none. */
+    readonly code?: string
 
     /** What this member says about itself, which every member linked to it reads. */
     readonly data?: JsonValue
@@ -39,7 +56,7 @@ export interface RoomOptions {
 }
 
 /** What a room is joined with. */
-export interface JoinOptions {
+export interface JoinOptions extends RoomTiming {
     /** What this member says about itself, which every member linked to it reads. */
     readonly data?: JsonValue
 
@@ -64,22 +81,25 @@ export class Room {
     /**
      * Create a room on a signaling server, and own it.
      *
-     * @throws {@link NetError} When the server cannot be reached.
+     * @param connect - Reaches the signaling, whichever it is: a relay of peer ids holds stars only.
+     * @throws {@link NetError} When the server cannot be reached, or the code asked for is taken (`"taken"`).
+     * @throws {@link Error} When the signaling cannot hold a room of this shape.
      */
     public static async create(
         net: NetPort,
-        url: string,
+        connect: SignalingConnector,
         shape: RoomShape,
         options: RoomOptions,
     ): Promise<Room> {
-        const client = await SignalingClient.connect(net, url)
+        const client = await connect()
         const entry = await entered(client, client.create({
             shape,
             name: options.name,
             data: options.data ?? null,
             capacity: options.capacity ?? DEFAULT_CAPACITY,
+            ...options.code === undefined ? {} : { code: options.code },
         }))
-        return new Room(net, client, entry, options.admit)
+        return new Room(net, client, entry, options)
     }
 
     /**
@@ -89,13 +109,13 @@ export class Room {
      */
     public static async join(
         net: NetPort,
-        url: string,
+        connect: SignalingConnector,
         code: string,
         options: JoinOptions = {},
     ): Promise<Room> {
-        const client = await SignalingClient.connect(net, url)
+        const client = await connect()
         const entry = await entered(client, client.join(code, options.data ?? null))
-        return new Room(net, client, entry, options.admit)
+        return new Room(net, client, entry, options)
     }
 
 
@@ -105,10 +125,18 @@ export class Room {
     public readonly shape: RoomShape
 
 
-    constructor(net: NetPort, client: SignalingClient, entry: RoomEntry, admit?: Admission){
+    constructor(
+        net: NetPort,
+        client: Signaling,
+        entry: RoomEntry,
+        options: Pick<RoomOptions, "admit"|"timer"|"openTimeout"> = {},
+    ){
         this.#net = net
         this.#client = client
-        this.#admit = admit ?? (() => true)
+        this.#admit = options.admit ?? (() => true)
+        if(options.timer){
+            this.#deadline = { timer: options.timer, ms: options.openTimeout ?? DEFAULT_OPEN_TIMEOUT }
+        }
         this.code = entry.code
         this.name = entry.name
         this.shape = entry.shape
@@ -174,8 +202,9 @@ export class Room {
 
 
     readonly #net: NetPort
-    readonly #client: SignalingClient
+    readonly #client: Signaling
     readonly #admit: Admission
+    readonly #deadline: OpenDeadline|undefined
     readonly #listening: { dispose(): void }
     #self: Member
     #owner: string
@@ -248,7 +277,7 @@ export class Room {
                 if(this.isOpen) this.#client.signal(member.id, signal)
             },
             listen: handler => signals.add(handler),
-        })
+        }, this.#deadline)
         this.#peers.set(member.id, { member, connection })
         void connection.opened.then(() => {
             const peer = this.#peers.get(member.id)
@@ -283,7 +312,7 @@ export class Room {
 }
 
 /** The entry into a room, the client disconnected when it fails, since a client is for one room. */
-async function entered(client: SignalingClient, entry: Promise<RoomEntry>): Promise<RoomEntry> {
+async function entered(client: Signaling, entry: Promise<RoomEntry>): Promise<RoomEntry> {
     try {
         return await entry
     } catch(error){

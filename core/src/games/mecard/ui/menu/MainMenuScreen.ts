@@ -33,9 +33,12 @@ interface MenuButtons {
     readonly no: Button|null
     readonly guide: Button|null
     readonly history: Button|null
+    readonly multiplayer: Button|null
 }
 
-const NO_BUTTONS: MenuButtons = { new: null, continue: null, yes: null, no: null, guide: null, history: null }
+const NO_BUTTONS: MenuButtons = {
+    new: null, continue: null, yes: null, no: null, guide: null, history: null, multiplayer: null,
+}
 
 /** What the menu asks of its game. */
 export interface MainMenuOptions {
@@ -50,6 +53,9 @@ export interface MainMenuOptions {
 
     /** Open the history of the games that ended. */
     openHistory(): void
+
+    /** Open the lobby, where the player hosts a room or joins one. */
+    openMultiplayer(): void
 
     /** Tell the players something went wrong. */
     report(text: string): void
@@ -85,6 +91,18 @@ export class MainMenuScreen {
         this.#hasSave = hasSave
         this.refresh()
     }
+
+    /** Can the game be played with others? Greys the button that opens the lobby when it cannot. */
+    public get hasNetwork(): boolean { return this.#hasNetwork }
+
+    public set hasNetwork(hasNetwork: boolean){
+        if(hasNetwork === this.#hasNetwork) return
+        this.#hasNetwork = hasNetwork
+        this.refresh()
+    }
+
+    /** The button of the lobby, none while a new game is asked to be confirmed. */
+    public get multiplayerButton(): Button|null { return this.#buttons.multiplayer }
 
     /** Is the player asked to confirm a new game? */
     public get confirming(): boolean { return this.#confirming }
@@ -171,13 +189,16 @@ export class MainMenuScreen {
             resume.onActivate = () => options.continueGame()
             column.add(fresh)
             column.add(resume)
+            const multiplayer = new Button(theme, "Multijoueur", { enabled: this.#hasNetwork })
+            multiplayer.onActivate = () => options.openMultiplayer()
+            column.add(multiplayer)
             const guide = new Button(theme, "Guide")
             guide.onActivate = () => options.openGuide()
             column.add(guide)
             const history = new Button(theme, "Historique")
             history.onActivate = () => options.openHistory()
             column.add(history)
-            this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, guide, history }
+            this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, multiplayer, guide, history }
         }
         // Right of the middle, where the cabin of the landscape is not.
         content.add(column, { x: "center", y: "center", offsetX: Math.round(ui.width * SIDE_SHARE) })
@@ -193,6 +214,7 @@ export class MainMenuScreen {
 
     readonly #layer: Layer
     #hasSave = false
+    #hasNetwork = false
     #confirming = false
     #backdrop: Parallax|null = null
     #textures: Texture[] = []

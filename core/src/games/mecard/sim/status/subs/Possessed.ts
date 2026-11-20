@@ -6,10 +6,11 @@ import { StatusType, statusVisual } from "../Status"
 
 /** A possession: another will drives the unit. A clone of the unit is not possessed. */
 export const POSSESSED = new StatusType("possédé", statusVisual("possessed", 0.7, 0.45, 0.95), "neutral", level => new Possessed(level), {
-    cloned: false, description: "Son paquet est mélangé à chaque remplissage." })
+    cloned: false, description: "Son paquet est mélangé à chaque remplissage, sa chaîne est cachée et sa main visible." })
 
 /**
- * Possessed: the deck of the unit is shuffled at each refill, whatever it is.
+ * Possessed: the deck of the unit is shuffled at each refill, whatever it is, and its chain is hidden, its
+ * hand shown.
  *
  * @remarks
  * What it does is plugged in by {@link Possessed.init} alone, so a battle loaded has it back. Shuffling the
@@ -26,10 +27,14 @@ export class Possessed extends BaseStatus {
 
     public init({ unit }: UnitContext): void {
         unit.stats.ordered.add(this.#key, new Forced(false))
+        unit.stats.showChain.add(this.#key, new Forced(false))
+        unit.stats.showHand.add(this.#key, new Forced(true))
     }
 
     public remove({ unit }: UnitContext): void {
         unit.stats.ordered.remove(this.#key)
+        unit.stats.showChain.remove(this.#key)
+        unit.stats.showHand.remove(this.#key)
     }
 
 

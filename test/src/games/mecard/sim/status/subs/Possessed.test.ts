@@ -28,11 +28,19 @@ describe("Possessed", () => {
         expect(firstDraw.value).toBe(firstBefore)
     })
 
-    test("taken off → the deck in order again", () => {
+    test("applied → its chain hidden, its hand shown", () => {
+        const { battle, unit } = monster()
+        expect([unit.stats.showChain.value, unit.stats.showHand.value]).toEqual([true, false])
+        battle.applyStatus(unit, POSSESSED, 1)
+        expect([unit.stats.showChain.value, unit.stats.showHand.value]).toEqual([false, true])
+    })
+
+    test("taken off → the deck in order again, its chain shown, its hand hidden", () => {
         const { battle, unit } = monster()
         battle.applyStatus(unit, POSSESSED, 1)
         battle.removeStatus(unit, POSSESSED)
         expect(unit.stats.ordered.value).toBe(true)
+        expect([unit.stats.showChain.value, unit.stats.showHand.value]).toEqual([true, false])
     })
 
     test("a battle saved and loaded → still possessed, its modifier back", () => {

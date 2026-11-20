@@ -25,6 +25,7 @@
         "server:build": "npm run build -w @game/server",
         "cli": "npm run start -w @game/command_line --",
         "test": "vitest run",
+        "test:changed": "vitest run --changed",
         "typecheck": "npm run wasm && npm run typecheck --workspaces",
         "lint": "eslint .",
         "assets": "node scripts/indexAssets.ts",

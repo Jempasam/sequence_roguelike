@@ -155,6 +155,7 @@ export type AssetPath =
     | "mecard/halts/chest.png"
     | "mecard/halts/deadly-fight.png"
     | "mecard/halts/demon.png"
+    | "mecard/halts/duel.png"
     | "mecard/halts/enchanter.png"
     | "mecard/halts/fight.png"
     | "mecard/halts/forge.png"
@@ -173,6 +174,12 @@ export type AssetPath =
     | "mecard/halts/witch.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
+    | "mecard/hud/paper.png"
+    | "mecard/hud/wood_block.png"
+    | "mecard/hud/wood_frame.png"
+    | "mecard/hud/wood_frame_active.png"
+    | "mecard/hud/wood_frame_transparent.png"
+    | "mecard/hud/wood_plank.png"
     | "mecard/items/alembic.png"
     | "mecard/items/amulet.png"
     | "mecard/items/ashtray.png"
@@ -799,6 +806,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/halts/chest.png",
     "mecard/halts/deadly-fight.png",
     "mecard/halts/demon.png",
+    "mecard/halts/duel.png",
     "mecard/halts/enchanter.png",
     "mecard/halts/fight.png",
     "mecard/halts/forge.png",
@@ -817,6 +825,12 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/halts/witch.png",
     "mecard/hud/bag.png",
     "mecard/hud/booster.png",
+    "mecard/hud/paper.png",
+    "mecard/hud/wood_block.png",
+    "mecard/hud/wood_frame.png",
+    "mecard/hud/wood_frame_active.png",
+    "mecard/hud/wood_frame_transparent.png",
+    "mecard/hud/wood_plank.png",
     "mecard/items/alembic.png",
     "mecard/items/amulet.png",
     "mecard/items/ashtray.png",

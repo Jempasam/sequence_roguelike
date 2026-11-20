@@ -574,9 +574,9 @@ export class Hud {
             const block = new Box("column", { gap: 1 })
             block.add(head)
             if(crowded) block.add(hearts)
-            block.add(this.#showsHand(unit)
-                ? this.#openHand(unit, "mini")
-                : this.#scrolled(this.#looked(unit, roots, "mini")))
+            const showing = this.#shown(unit)
+            if(showing === "hand") block.add(this.#openHand(unit, "mini"))
+            else if(showing === "chain") block.add(this.#scrolled(this.#looked(unit, roots, "mini")))
             column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block, 2, 1)))
         })
         this.#units.parent?.remove(this.#units)
@@ -666,9 +666,9 @@ export class Hud {
             this.#chainRead = draft.chain.size
             this.#chainScroll.content = this.#chain(draft, deckOf)
             this.#place(this.#hand(draft, deckOf), grid.hand)
-        } else if(this.#showsHand(unit)){
+        } else if(this.#shown(unit) === "hand"){
             this.#place(this.#openHand(unit, "hand"), grid.hand)
-        } else {
+        } else if(this.#shown(unit) === "chain"){
             this.#chainScroll.content = this.#looked(unit, this.#shownRoots(unit), "chain")
             if(mode === "playing" && unit.team === viewpoint) this.#place(this.#drawing(unit, null), grid.hand)
         }
@@ -760,15 +760,21 @@ export class Hud {
     }
 
     /**
-     * Does a unit show its hand rather than its chain? During the preparation, an enemy a player plays, or
-     * an ally the players may not plan, greyed out, until it commits:
-     * its chain stays hidden until the reveal, and its hand, face up, tells exactly what it can play.
+     * What a unit shows of its cards to those who do not plan it. Outside the preparation, its chain. During
+     * it, as its stats say: its chain when it shows it and does not show its hand, or when it shows both and
+     * the chain holds a card; else its hand when it shows it; else nothing.
      */
+    #shown(unit: Unit): "hand"|"chain"|"none" {
+        if(this.host.mode !== "planning") return "chain"
+        const { showChain, showHand } = unit.stats
+        const chained = (this.host.battle.planOf(unit)?.cards.length ?? 0) > 0
+        if(showChain.value && (!showHand.value || chained)) return "chain"
+        return showHand.value ? "hand" : "none"
+    }
+
+    /** Does a unit show its hand rather than its chain? */
     #showsHand(unit: Unit): boolean {
-        const { battle, mode, viewpoint } = this.host
-        if(mode !== "planning" || unit.controller !== "player") return false
-        const lockedAlly = this.host.isLocked(unit) && !battle.planOf(unit)
-        return unit.team !== viewpoint || lockedAlly
+        return this.#shown(unit) === "hand"
     }
 
     /**

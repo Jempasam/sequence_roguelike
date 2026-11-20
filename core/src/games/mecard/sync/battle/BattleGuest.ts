@@ -2,7 +2,10 @@ import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 import { savedCard } from "../../sim/save/battleSave"
 
+import { Fault } from "../../../../engine/net/Fault"
+import { PLAN_TOPIC } from "../SyncChannel"
 import type { SyncLink } from "../SyncChannel"
+import { signal, UnloadableFault } from "../faults"
 import { writePlanMessage } from "./PlanMessage"
 import type { UnitPlan } from "./PlanMessage"
 
@@ -15,6 +18,9 @@ export class BattleGuest {
 
     /** The battle played, none between two. */
     public engine: Battle|null
+
+    /** Told of what could not be done: a client that is ready with no battle to play. */
+    public readonly faulted = signal<Fault>()
 
     constructor(
         engine: Battle|null,
@@ -32,7 +38,10 @@ export class BattleGuest {
     /** Give the host what was committed for its units: the client is ready. */
     public ready(): void {
         const battle = this.engine
-        if(!battle) throw new Error("A client is ready for a battle being fought only.")
+        if(!battle){
+            this.faulted.notify(new UnloadableFault(PLAN_TOPIC.name, "A client is ready for a battle being fought only."))
+            return
+        }
         const units = new Set(this.units())
         const played = battle.initiative.filter(unit => units.has(unit.name))
         const plans = played.flatMap(unit => this.#planOf(battle, unit))

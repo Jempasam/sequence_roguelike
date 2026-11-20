@@ -49,6 +49,8 @@
         "./mecard/guide-blocks": "./src/games/mecard/ui/guide/GuideBlocks.ts",
         "./mecard/guide-content": "./src/games/mecard/ui/guide/guide.ts",
         "./mecard/menu": "./src/games/mecard/ui/menu/MainMenuScreen.ts",
+        "./mecard/lobby-ui": "./src/games/mecard/ui/lobby/index.ts",
+        "./mecard/duel-ui": "./src/games/mecard/ui/duel/RaceHud.ts",
         "./mecard/game": "./src/games/mecard/ui/MecardGame.ts"
     },
     "scripts": {

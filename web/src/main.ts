@@ -1,10 +1,12 @@
-import { NetSync, startGame } from "@game/core"
+import { Fault, NetSync, signalingAt, startGame } from "@game/core"
 import type { SyncPort } from "@game/core"
 
-import { BrowserNet, FetchAssets, IndexedDbStorage, TabSync, WebAudio, WebClipboard, WebGfx, WebInput, WebLoop } from "./platform"
+import {
+    BrowserNet, FetchAssets, IndexedDbStorage, TabSync, WebAudio, WebClipboard, WebGfx, WebInput, WebLoop, WebTimer,
+} from "./platform"
 
-/** The port of the signaling server when `?signal` gives no other address: the one `npm run server` uses. */
-const SIGNALING_PORT = 8787
+// peerjss://0.peerjs.com
+const SIGNALING_SERVER = `ws://${location.hostname}:8787`
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game")
 if(!canvas) throw new Error("index.html has no <canvas id=\"game\">.")
@@ -14,7 +16,8 @@ if(!canvas) throw new Error("index.html has no <canvas id=\"game\">.")
 // signaling server.
 const query = new URLSearchParams(location.search)
 const net = new BrowserNet()
-const signaling = query.get("signal") ?? `ws://${location.hostname}:${SIGNALING_PORT}`
+const timer = new WebTimer()
+const signaling = query.get("signal") ?? SIGNALING_SERVER
 const viewed = query.get("view")
 const sync = syncOf()
 
@@ -37,6 +40,7 @@ startGame({
     assets: new FetchAssets(import.meta.env.BASE_URL, BUILD_ID),
     storage: new IndexedDbStorage(indexedDB, navigator.locks, () => navigator.storage.persist()),
     net,
+    timer,
     signaling,
     sync,
     connect,
@@ -44,8 +48,10 @@ startGame({
 
 function syncOf(): SyncPort {
     if(viewed){
-        const viewing = NetSync.view(net, signaling, viewed, query.has("guest"))
-        viewing.ready.catch(error => console.error(`Could not watch the game ${viewed}:`, error))
+        const viewing = NetSync.view(net, signalingAt(net, timer, signaling), viewed, timer, query.has("guest"))
+        void viewing.ready.then(ready => {
+            if(ready instanceof Fault) console.error(`Could not watch the game ${viewed}:`, ready.describe())
+        })
         return viewing
     }
     return new TabSync(query.has("view") ? "viewer" : "main")

@@ -88,10 +88,10 @@ describe("RunReceiver", () => {
         expect(textOf(viewer)).toBe(textOf(next))
     })
 
-    test("a message in another shape → told to onError", () => {
+    test("a message in another shape → told as a fault", () => {
         const { receiver } = session()
         const errors: unknown[] = []
-        receiver.onError = error => errors.push(error)
+        receiver.faulted.add(fault => errors.push(fault))
         receiver.receive("{\"kind\":\"hello\"}")
         expect(errors).toHaveLength(1)
     })

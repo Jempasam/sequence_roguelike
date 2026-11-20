@@ -1,37 +1,34 @@
+import type { SyncRoom } from "../../../../platform"
+import type { Fault } from "../../../../engine/net/Fault"
 import type { Observer } from "../../sim/base/Observable"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
 import { POSSESSED } from "../../sim/status/subs/Possessed"
 
 import { BattleHost } from "../battle/BattleHost"
-import { JOIN_TOPIC, PLAN_TOPIC, SEAT_TOPIC } from "../SyncChannel"
-import type { SyncLink, SyncPeer, SyncRoom } from "../SyncChannel"
-import { writeSeatMessage } from "./SeatMessage"
+import { forward, signal } from "../faults"
+import { Gathering, MANUAL } from "../Gathering"
+import type { Member } from "../Gathering"
+import { PLAN_TOPIC } from "../SyncChannel"
+import { SeatDealer } from "./SeatDealer"
 import { Seats } from "./Seats"
 import type { Seatable, SeatMode, SeatPolicy } from "./Seats"
-
-/** A client that came to play. */
-interface Guest {
-    /** The way to tell it what it plays. */
-    readonly seats: SyncLink
-
-    /** What it was last told. */
-    told: string
-}
-
-/** What a client that plays nothing was told, before anything is said. */
-const NO_SEAT = writeSeatMessage({ units: [] })
 
 /**
  * The host of a run played by several clients: it tells each client that came to play what it plays, and has
  * a {@link BattleHost} take in the plans.
  *
  * @remarks
+ * It is made of a {@link Gathering} that welcomes whoever comes, a {@link SeatDealer} that tells each client
+ * what it plays, and a {@link BattleHost}; what it keeps is the bots it hands to a client.
+ *
  * A client watching says nothing, and is never given anything. What is told of the run goes through a
  * RunBroadcaster, made after this one, so a battle it sends has its units given already. A seat coming free
  * or taken during a battle counts from the next round: who is waited for never changes within a round, but
  * for those who leave. A bot given to a client is possessed, its deck shuffled, for as long as it is played:
  * the deck of a bot is a loop, which leaves a player no choice.
+ *
+ * A client whose connection is lost keeps its seats, and its units are played as bots until it is back.
  */
 export class RunHost {
 
@@ -49,15 +46,20 @@ export class RunHost {
         this.#reseat()
     }
 
-    /**
-     * What hears that a plan could not be read or taken in. A failure nobody hears is thrown, so it is never
-     * silent.
-     */
-    public get onError(): ((error: unknown) => void)|null { return this.#battle.onError }
+    /** Told of what was dealt with: a plan that could not be read or taken in, a client turned away. */
+    public readonly faulted = signal<Fault>()
 
-    public set onError(onError: ((error: unknown) => void)|null){
-        this.#battle.onError = onError
-    }
+    /** Who plays what, which a {@link SeatChoice} changes when a client asks. */
+    public get seats(): Seats { return this.#seats }
+
+    /** What tells each client what it plays. */
+    public get dealer(): SeatDealer { return this.#dealer }
+
+    /** Told of each client that came to play. */
+    public readonly guestJoined = signal<string>()
+
+    /** Told of each client that left for good. */
+    public readonly guestLeft = signal<string>()
 
     constructor(
         engine: Run,
@@ -75,7 +77,17 @@ export class RunHost {
         this.#engine = engine
         this.#seats = new Seats(mode, policy)
         this.#battle = new BattleHost(null, this.#seats, everyoneReady)
-        this.#room = [room.onJoin(peer => this.#greet(peer)), room.onLeave(peer => this.#part(peer))]
+        this.#dealer = new SeatDealer(this.#seats, room)
+        this.#gathering = new Gathering(room, MANUAL)
+        this.#forwarding = [forward(this.#battle, this, false), forward(this.#gathering, this, false)]
+        this.#room = [
+            this.#gathering.memberJoined.add(member => this.#welcome(member)),
+            this.#gathering.memberLeft.add(member => this.#part(member)),
+        ]
+        this.#lifelines = [
+            room.onLost(peer => this.#battle.lost(peer.id)),
+            room.onBack(peer => this.#battle.back(peer.id)),
+        ]
         this.#registerObservers()
         this.#reseat()
     }
@@ -95,20 +107,25 @@ export class RunHost {
     public dispose(): void {
         this.#unregisterObservers()
         this.#leaveBattle()
-        for(const handle of this.#room) handle.dispose()
+        for(const observer of this.#room) observer.remove()
+        for(const handle of this.#lifelines) handle.dispose()
+        for(const handle of this.#forwarding) handle.dispose()
         for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
+        this.#gathering.dispose()
+        this.#dealer.dispose()
         this.#battle.dispose()
     }
 
 
     readonly #seats: Seats
     readonly #battle: BattleHost
-    readonly #room: readonly { dispose(): void }[]
+    readonly #dealer: SeatDealer
+    readonly #gathering: Gathering
+    readonly #forwarding: readonly { dispose(): void }[]
+    readonly #room: readonly Observer[]
+    readonly #lifelines: readonly { dispose(): void }[]
 
-    /** The clients that came to play, in the order they came, by their ids. */
-    readonly #guests = new Map<string, Guest>()
-
-    /** What it hears from each client connected. */
+    /** What it hears from each client that came to play. */
     readonly #listening = new Map<string, { dispose(): void }[]>()
 
     /** The units of the battle that are bots but for the client playing them, by their names. */
@@ -140,26 +157,22 @@ export class RunHost {
         this.#observers = []
     }
 
-    /** Listen to a client connecting: it may say it came to play. */
-    #greet(peer: SyncPeer): void {
-        const join = JOIN_TOPIC.link(peer).listen(() => this.#welcome(peer))
-        this.#listening.set(peer.id, [join])
-    }
-
     /** Take a client that came to play in, given something at once unless a battle is being fought. */
-    #welcome(peer: SyncPeer): void {
-        if(this.#guests.has(peer.id)) return
-        this.#guests.set(peer.id, { seats: SEAT_TOPIC.link(peer), told: NO_SEAT })
-        const plans = PLAN_TOPIC.link(peer).listen(text => this.#battle.receive(peer.id, text))
-        this.#listening.get(peer.id)?.push(plans)
+    #welcome({ id, peer }: Member): void {
+        // A run is hosted for clients only: a member playing on the host itself has no seat to be dealt.
+        if(!peer) return
+        this.#dealer.add(peer)
+        const plans = PLAN_TOPIC.link(peer).listen(text => this.#battle.receive(id, text))
+        this.#listening.set(id, [plans])
+        this.guestJoined.notify(id)
         if(!this.#engine.battle) this.#deal()
     }
 
     /** Let a client go, what it played given back: the round goes on without it. */
-    #part({ id }: SyncPeer): void {
+    #part({ id }: Member): void {
         for(const handle of this.#listening.get(id) ?? []) handle.dispose()
         this.#listening.delete(id)
-        if(!this.#guests.delete(id)) return
+        if(!this.#dealer.has(id)) return
         this.#battle.fillIn(id)
         const { battle } = this.#engine
         for(const name of this.#seats.unitsOf(id)){
@@ -168,8 +181,9 @@ export class RunHost {
             battle?.control(unit, "bot")
             battle?.removeStatus(unit, POSSESSED)
         }
-        this.#seats.drop(id)
-        this.#battle.left(id)
+        this.#dealer.remove(id)
+        this.#battle.gone(id)
+        this.guestLeft.notify(id)
     }
 
     /** Give the seats for a battle that starts, then host it. */
@@ -202,15 +216,6 @@ export class RunHost {
 
     /** Give a seat to whoever has none, the host first, then tell those whose seats changed. */
     #deal(): void {
-        const run = this.#engine
-        const seats = this.#seats
-        seats.mode.seatHost(seats, run)
-        for(const id of this.#guests.keys()) seats.seat(id, run)
-        for(const [id, guest] of this.#guests){
-            const text = writeSeatMessage({ units: seats.unitsOf(id) })
-            if(text === guest.told) continue
-            guest.told = text
-            guest.seats.send(text)
-        }
+        this.#dealer.deal(this.#engine)
     }
 }

@@ -1,5 +1,6 @@
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 import { UnreadableFault } from "../faults"
+import type { SettingValues } from "../lobby/Setting"
 import { readJson, wrongShape } from "../read"
 
 /** How a client takes part in a game: it plays, or it only watches. */
@@ -11,6 +12,9 @@ export interface ParticipateMessage {
 
     /** The game it is about: a client of another game is not heard. */
     readonly game: number
+
+    /** What it set for itself, by the id of each setting: for a `join`, none when it has nothing to set. */
+    readonly options?: SettingValues
 }
 
 /** What the host tells a client of its part in a game. */
@@ -40,11 +44,15 @@ function objectOf(topic: string, text: string, what: string): Record<string, unk
 export function readParticipateMessage(text: string): ParticipateMessage|UnreadableFault {
     const read = objectOf(PARTICIPATE_TOPIC.name, text, "request to take part")
     if(read instanceof UnreadableFault) return read
-    const { kind, game } = read
+    const { kind, game, options } = read
     if((kind !== "join" && kind !== "quit") || typeof game !== "number"){
         return wrongShape(PARTICIPATE_TOPIC.name, text, "request to take part")
     }
-    return { kind, game }
+    if(options === undefined) return { kind, game }
+    const isValues = typeof options === "object" && options !== null && !Array.isArray(options)
+        && Object.values(options).every(value => typeof value === "string" || typeof value === "number")
+    if(!isValues) return wrongShape(PARTICIPATE_TOPIC.name, text, "request to take part")
+    return { kind, game, options: options as SettingValues }
 }
 
 export function readParticipationMessage(text: string): ParticipationMessage|UnreadableFault {

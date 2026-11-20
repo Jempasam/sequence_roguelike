@@ -2,7 +2,7 @@ import { Color } from "../../../../engine/math"
 import { Box, Label, NineSlice, Panel } from "../../../../engine/ui"
 import type { Chat } from "../../sync/chat/Chat"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
-import { paperFrame } from "../look/paper"
+import { PAPER_MARGIN, paperFrame } from "../look/paper"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { ClipboardPort } from "../../../../platform"
 import { ChatPanel } from "../chat/ChatPanel"
@@ -11,6 +11,7 @@ import { ConnectionPanel } from "./ConnectionPanel"
 import { HostListPanel } from "./HostListPanel"
 import type { LobbyController } from "./LobbyController"
 import { ModeList } from "./ModeList"
+import { ParticipantSettingsBar, PARTICIPANT_BAR_HEIGHT } from "./ParticipantSettingsBar"
 
 /** The color behind the lobby. */
 const BACKDROP = new Color(0.1, 0.06, 0.03)
@@ -61,6 +62,7 @@ export class LobbyScreen {
     public get hosts(): HostListPanel { return this.#hosts }
     public get connection(): ConnectionPanel { return this.#connection }
     public get chat(): ChatPanel { return this.#chat }
+    public get participant(): ParticipantSettingsBar { return this.#participant }
 
     /** What heads the screen. */
     public get title(): string { return this.#title.text }
@@ -93,8 +95,12 @@ export class LobbyScreen {
         )
         const chatPanel = this.#framed(this.#chat.root, true)
         this.#sidePanel = chatPanel
+        this.#participant = new ParticipantSettingsBar(theme, controller, right - 2 * WOOD_PADDING)
+        this.#participantPanel = this.#framed(this.#participant.root)
+        this.#participantPanel.visible = false
         const rightColumn = new Box("column", { gap: MARGIN, align: "stretch" })
         rightColumn.add(connectionPanel)
+        rightColumn.add(this.#participantPanel)
         rightColumn.add(chatPanel, { grow: 1 })
         const row = new Box("row", { gap: MARGIN, align: "stretch" })
         row.add(modesPanel)
@@ -104,14 +110,15 @@ export class LobbyScreen {
         column.add(row, { grow: 1 })
         sprites?.whenLoaded(() => {
             const wood = sprites.wood
-            if(!wood) return
-            const beige = beigeButton(theme)
-            titlePanel.background = beige.looks?.normal ?? null
-            titlePanel.padding = WOOD_PADDING
-            if(beige.textColor) this.#title.color = beige.textColor
-            for(const panel of this.#woodPanels) panel.background = wood.frame
+            if(wood) for(const panel of this.#woodPanels) panel.background = wood.frame
             const paper = sprites.paper
-            if(paper) for(const panel of this.#paperPanels) panel.background = paperFrame(paper, 1)
+            if(paper){
+                titlePanel.background = paperFrame(paper, 1)
+                titlePanel.padding = Math.max(WOOD_PADDING, PAPER_MARGIN)
+                const beige = beigeButton(theme)
+                if(beige.textColor) this.#title.color = beige.textColor
+                for(const panel of this.#paperPanels) panel.background = paperFrame(paper, 1)
+            }
             this.#dirty = true
         })
         this.#layer.content.add(column, { x: "stretch", y: "stretch" })
@@ -131,9 +138,11 @@ export class LobbyScreen {
         this.#modes.resize(left - inner)
         this.#connection.resize(right - inner)
         this.#chat.resize(right - inner)
+        this.#participant.resize(right - inner)
         const connectionHeight = Math.max(1, Math.floor(height * CONNECTION_SHARE) - inner)
         this.#connection.root.resize(right - inner, connectionHeight)
-        this.#hosts.resize(right - inner, height - connectionHeight - 2 * inner - MARGIN)
+        const barHeight = this.#participantPanel.visible ? PARTICIPANT_BAR_HEIGHT + inner + MARGIN : 0
+        this.#hosts.resize(right - inner, height - connectionHeight - 2 * inner - MARGIN - barHeight)
         const faults = this.controller.takeFaults()
         if(faults.length > 0){
             this.#connection.notice = faults[faults.length - 1].describe()
@@ -146,6 +155,9 @@ export class LobbyScreen {
         this.#title.text = name === null ? TITLE : `${TITLE} - ${name}`
         this.#modes.refresh()
         this.#connection.refresh()
+        // Under the room, what the player sets for itself in the mode of the room, when there is anything to.
+        this.#participant.refresh()
+        this.#participantPanel.visible = this.controller.phase === "connected" && !this.#participant.isEmpty
         // Out of a room there is no chat to show: the rooms to join take its place.
         const isListing = this.controller.phase === "disconnected"
         this.#sidePanel.content = isListing ? this.#hosts.root : this.#chat.root
@@ -168,6 +180,8 @@ export class LobbyScreen {
     readonly #chat: ChatPanel
     readonly #hosts: HostListPanel
     readonly #sidePanel: Panel
+    readonly #participant: ParticipantSettingsBar
+    readonly #participantPanel: Panel
     readonly #title: Label
     readonly #woodPanels: Panel[] = []
     readonly #paperPanels: Panel[] = []

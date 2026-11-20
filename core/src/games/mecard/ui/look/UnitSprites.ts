@@ -32,6 +32,10 @@ const iconKeys = (): string[] => shippedPictures("processes")
 /** The pictures stretched between two units tied together, by the visual of their tie: every file under `tethers/`. */
 const tetherKeys = (): string[] => shippedPictures("tethers")
 
+/** The keys of the eyes of the button of the tactical view: the normal view, then the tactical one. */
+const EYE_OPEN = "hud/eye_open"
+const EYE_CLOSED = "hud/eye_closed"
+
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
 const CARD_BACK_PATHS: readonly ImagePath[] = [
     "mecard/cards/back.png", "mecard/cards/back_2.png", "mecard/cards/back_3.png", "mecard/cards/back_4.png",
@@ -74,6 +78,11 @@ export class UnitSprites {
     /** The picture of an item or a usable, by its visual, none before it is loaded. */
     public thing(icon: Visual): Sprite|null {
         return this.#pictures.get(icon.visual) ?? null
+    }
+
+    /** The eye of the button of the tactical view, open or closed, none before it is loaded. */
+    public eye(open: boolean): Sprite|null {
+        return this.#pictures.get(open ? EYE_OPEN : EYE_CLOSED) ?? null
     }
 
     /** The back of the cards of a deck, by its place among the decks, none before it is loaded. */
@@ -143,7 +152,10 @@ export class UnitSprites {
         const things = [...ALL_ITEMS, ...ALL_USABLES].map(thing => thing.icon.visual)
         const halts = allHalts().map(halt => halt.icon.visual)
         const floors = ALL_FLOORS.map(floor => floor.icon.visual)
-        const keys = [...new Set([...unitKeys(), ...iconKeys(), ...tetherKeys(), ...statuses, ...things, ...halts, ...floors])]
+        const keys = [...new Set([
+            ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...statuses, ...things, ...halts, ...floors,
+            EYE_OPEN, EYE_CLOSED,
+        ])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
         const [named, fixedPictures, bag, booster, wood] = await Promise.all([
             loadPictures(assets, keys),

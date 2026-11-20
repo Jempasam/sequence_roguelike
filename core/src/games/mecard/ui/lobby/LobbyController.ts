@@ -7,6 +7,8 @@ import { Lobby } from "../../sync/lobby/Lobby"
 import { LobbyGuest } from "../../sync/lobby/LobbyGuest"
 import type { LobbyMode } from "../../sync/lobby/LobbyMode"
 import type { ModeSelection } from "../../sync/lobby/ModeSelection"
+import { ParticipantChoices } from "../../sync/lobby/ParticipantChoices"
+import type { Setting, SettingValue, SettingValues } from "../../sync/lobby/Setting"
 import type { ModeSelectionView } from "../../sync/lobby/ModeSelectionView"
 import type { RosterEntry } from "../../sync/lobby/RosterMessage"
 import type { JoinedRoom, OpenedRoom } from "../MecardGame"
@@ -136,6 +138,29 @@ export class LobbyController {
     /** What the host decided, for a client. */
     public get view(): ModeSelectionView|null { return this.#guest?.selection ?? null }
 
+    /** What the player sets for itself in the mode the room is set on: none out of a room, or with none to set. */
+    public get participantSettings(): readonly Setting[] {
+        const mode = this.#currentMode()
+        return mode?.participantSettings ?? []
+    }
+
+    /** What the player has set, the initial values standing for what it did not. */
+    public get participantValues(): SettingValues {
+        const mode = this.#currentMode()
+        return mode ? this.#choices.valuesFor(mode) : {}
+    }
+
+    /** May the player still set what it is for itself: not once it is in the game. */
+    public get canSetParticipant(): boolean { return !this.playing }
+
+    /** Set one thing for itself, before it joins the game. */
+    public setParticipant(setting: Setting, value: SettingValue): void {
+        const mode = this.#currentMode()
+        if(!mode || !this.canSetParticipant) return
+        this.#choices.set(mode, setting, value)
+        this.changed.notify()
+    }
+
     /** Open a room and be its host. */
     public host(name: string): void {
         if(this.#phase !== "disconnected") return
@@ -145,7 +170,7 @@ export class LobbyController {
             this.#fail(new NoClientsFault())
             return
         }
-        const lobby = new Lobby(room.room, room, name, this.modes)
+        const lobby = new Lobby(room.room, room, name, this.modes, this.#choices)
         this.#lobby = lobby
         this.#close = () => room.close()
         // The room ends when its connection to the server is lost for good: nobody can join it any more.
@@ -174,7 +199,7 @@ export class LobbyController {
             this.#fail(new NoHostLinkFault())
             return
         }
-        const guest = new LobbyGuest(link, link, name, this.modes)
+        const guest = new LobbyGuest(link, link, name, this.modes, this.#choices)
         this.#guest = guest
         // Told to the host before the connection closes, so it does not wait for the client to come back.
         this.#close = () => {
@@ -254,6 +279,15 @@ export class LobbyController {
     #announced: string|null = null
     #handles: { dispose?(): void, remove?(): void }[] = []
     readonly #faults: Fault[] = []
+
+    readonly #choices = new ParticipantChoices()
+
+    /** The mode the room is set on, none out of a room. */
+    #currentMode(): LobbyMode|null {
+        if(this.#lobby) return this.#lobby.selection.mode
+        const id = this.#guest?.selection.state?.mode
+        return id === undefined ? null : this.modes.find(each => each.id === id) ?? null
+    }
 
     #follow(handles: readonly { remove(): void }[]): void {
         this.#handles.push(...handles)

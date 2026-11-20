@@ -16,8 +16,12 @@ export interface Chat {
     /** Told of what came on the chat and could not be read. */
     readonly faulted: Observable<Fault>
 
-    /** Say a line to everyone. */
-    say(text: string): void
+    /**
+     * Say a line to everyone.
+     *
+     * @param author - Who says it, this member for none: the host may speak as the game.
+     */
+    say(text: string, author?: ChatAuthor): void
 
     /** Stop hearing and saying. It does not close the session the chat was made on. */
     dispose(): void

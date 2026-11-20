@@ -9,6 +9,7 @@ import type { SyncRoom, SyncSender } from "../SyncChannel"
 import { LobbyRoom } from "./LobbyRoom"
 import type { LobbyMode, ModeRun } from "./LobbyMode"
 import { LockedFault, ModeSelection } from "./ModeSelection"
+import { ParticipantChoices } from "./ParticipantChoices"
 import { hueOfName } from "./Profile"
 import { Roster } from "./Roster"
 import { checkValues } from "./Setting"
@@ -42,6 +43,9 @@ export class Lobby {
 
         /** The modes offered, the first of which the lobby is set on at first. */
         modes: readonly LobbyMode[],
+
+        /** What the host sets for itself, told to the game it starts. */
+        private readonly choices: ParticipantChoices = new ParticipantChoices(),
     ){
         this.#room = new LobbyRoom(room)
         this.#sender = sender
@@ -65,8 +69,8 @@ export class Lobby {
         const { mode, values } = this.selection
         const invalid = checkValues(mode.settings, values)
         if(invalid) return invalid
-        const stage = new HostStage(this.#room, this.#sender, this.selection.nextGame)
-        const run = mode.host(stage, values)
+        const stage = new HostStage(this.#room, this.#sender, this.selection.nextGame, this.chat)
+        const run = mode.host(stage, values, this.choices.valuesFor(mode))
         if(run instanceof Fault){
             stage.dispose()
             return run

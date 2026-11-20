@@ -6,7 +6,7 @@ import type { Battle } from "../../sim/battle/Battle"
 import { duelSave } from "../../sim/duel/duelBattle"
 import type { DuelParty } from "../../sim/duel/duelBattle"
 import { loadBattle } from "../../sim/save/battleSave"
-import type { SavedUnit } from "../../sim/save/battleSave"
+import type { BattleSave, SavedUnit } from "../../sim/save/battleSave"
 
 import { BattleBroadcaster } from "../battle/BattleBroadcaster"
 import { BattleHost } from "../battle/BattleHost"
@@ -37,13 +37,25 @@ export interface DuelDecision {
     readonly losers: readonly string[]
 }
 
+/**
+ * Where the battles of the duels are made, when they are not told by a broadcaster of the round: a game that holds
+ * its battles itself, as a game of the runner does.
+ */
+export interface DuelBattles {
+    /** Make the battle of a duel from its save, none when it cannot be made. */
+    open(fight: DuelFight, save: BattleSave): Battle|null
+
+    /** The duel is over for the clients that followed it. */
+    close(fight: DuelFight): void
+}
+
 /** A duel being fought. */
 interface Fighting {
     readonly fight: DuelFight
     readonly battle: Battle
     readonly host: BattleHost
     readonly seats: Seats
-    readonly broadcaster: BattleBroadcaster
+    readonly broadcaster: BattleBroadcaster|null
     readonly handles: { dispose(): void }[]
     readonly observers: Observer[]
 
@@ -114,6 +126,9 @@ export class DuelRound {
          * apart from those of the rounds before, so a client never takes a duel for the one it fought.
          */
         private readonly base = 0,
+
+        /** Where the battles are made, none for ones made here and told on the sender. */
+        private readonly battles: DuelBattles|null = null,
     ){
         this.#handles = [
             room.onLost(peer => this.#each(peer.id, fighting => fighting.host.lost(peer.id))),
@@ -175,7 +190,8 @@ export class DuelRound {
         for(const handle of this.#handles) handle.dispose()
         for(const fighting of this.#fightings.values()){
             this.#release(fighting)
-            fighting.broadcaster.dispose()
+            fighting.broadcaster?.dispose()
+            this.battles?.close(fighting.fight)
         }
         this.#told.clear()
     }
@@ -216,7 +232,9 @@ export class DuelRound {
         let names: string[]
         try {
             const save = duelSave(parties, this.rng.int(2 ** 31))
-            battle = loadBattle(save)
+            const opened = this.battles ? this.battles.open(fight, save) : loadBattle(save)
+            if(!opened) throw new Error("the battle could not be made.")
+            battle = opened
             names = save.units.map(unit => unit.name)
         } catch(error){
             this.faulted.notify(new DuelBuildFault(fight.number, detailOf(error)))
@@ -238,7 +256,7 @@ export class DuelRound {
             isAgain: false,
             isDone: false,
             host: new BattleHost(battle, seats, () => this.#step(fighting)),
-            broadcaster: new BattleBroadcaster(battle, duelBattleTopic(fight.number).sender(this.sender)),
+            broadcaster: this.battles ? null : new BattleBroadcaster(battle, duelBattleTopic(fight.number).sender(this.sender)),
         }
         this.#fightings.set(fight.number, fighting)
         for(const id of fight.sides.flat()){

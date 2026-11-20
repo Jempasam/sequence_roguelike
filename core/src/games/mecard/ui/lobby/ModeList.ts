@@ -1,5 +1,5 @@
 import { Color } from "../../../../engine/math"
-import { Box, Button, Label, NineSlice, Panel, Scroll } from "../../../../engine/ui"
+import { Box, Button, Label, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
 import type { LobbyMode } from "../../sync/lobby/LobbyMode"
 import type { ModeState } from "../../sync/lobby/LobbyMessage"
@@ -89,6 +89,8 @@ export class ModeList {
             title.onActivate = () => this.#select(mode)
             this.#titles.set(mode.id, title)
             body.add(title)
+            const onPaper = this.sprites?.paper != null
+            body.add(new Paragraph(theme, mode.description, { color: onPaper ? DIM_INK_TEXT : DIM_TEXT }))
             const buttons = new Map<string, Button>()
             for(const setting of mode.settings){
                 body.add(this.#row(setting, chosen, canChange, values[setting.id], buttons))

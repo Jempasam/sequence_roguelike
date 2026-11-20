@@ -23,14 +23,19 @@ import type { ChatAuthor } from "../sync/chat/ChatMessage"
 import { ChatScreen } from "./chat/ChatScreen"
 import { LobbyController } from "./lobby/LobbyController"
 import { LobbyScreen } from "./lobby/LobbyScreen"
-import { duelRaceMode, versusMode } from "../sync/lobby/modes/DuelRaceMode"
-import type { RaceBench, RaceScreen } from "../sync/lobby/modes/DuelRaceMode"
+import { duelRaceTable, versusTable } from "../sync/lobby/modes/DuelRaceTableMode"
+
+import type { RaceScreen, RaceTableBench } from "../sync/lobby/modes/DuelRaceTableMode"
 import type { DuelRacePlayer } from "../sync/modes/players/DuelRacePlayer"
 import type { DuelAccess } from "../sync/modes/players/HubPort"
 import { RaceTab } from "./duel/RaceTab"
 import type { RaceTabAlign } from "./duel/RaceTab"
-import { runCoopMode, runEnemyMode } from "../sync/lobby/modes/RunMode"
-import type { HostedRun, JoinedRun, RunBench } from "../sync/lobby/modes/RunMode"
+import { randomDuelMode } from "../sync/lobby/modes/RandomDuelMode"
+import type { DuelBench } from "../sync/lobby/modes/RandomDuelMode"
+import { gameModeAsLobbyMode } from "../sync/mode/gameModeAsLobbyMode"
+import { runCoopTable, runEnemyTable, runMixedTable } from "../sync/lobby/modes/RunTableMode"
+import type { TableBench } from "../sync/lobby/modes/RunTableMode"
+import type { Seatable } from "../sync/run/Seats"
 import { TEST_MODE } from "../sync/lobby/modes/TestMode"
 
 import type { SaveSlot } from "../../../engine/save"
@@ -47,10 +52,11 @@ import { UnitSprites } from "./look/UnitSprites"
 import { GuideScreen } from "./guide/GuideScreen"
 import { MainMenuScreen } from "./menu/MainMenuScreen"
 import { PnjScreen } from "./pnj/PnjScreen"
-import { ALL_RUN_LOCKS, NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
+import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { locksForUnits } from "./MecardViewer"
 import { RunSoundLink } from "./sound/RunSoundLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
+import { QuitPopup } from "./hud/QuitPopup"
 import { ArmScreen } from "./travel/ArmScreen"
 import { ParallaxScreen } from "./travel/ParallaxScreen"
 import { SpriteBenchScreen } from "./look/SpriteBenchScreen"
@@ -296,9 +302,14 @@ export class MecardGame {
         this.#chat = new ChatScreen(theme, ui, { leave: () => this.leaveChat() })
         this.#menu.hasNetwork = network !== null
         this.#bench = {
-            host: () => this.#hostShared(),
-            join: () => this.#joinShared(),
             race: firstFloor => this.#raceShared(firstFloor),
+            newRun: () => this.#newSharedRun(),
+            showOwned: (run, isGuests, ready, over) => this.#showOwned(run, isGuests, ready, over),
+            showSeat: (run, units, ready) => this.#showSeat(run, units, ready),
+            startRound: () => this.#screen.battleScreen.startRound(),
+            hideRun: () => this.#hideTable(),
+            showBattle: (battle, units, ready) => this.#showDuel(battle, units, ready),
+            hideBattle: () => this.#hideDuel(),
             report: text => this.#console.print(text),
             timer: network?.timer ?? IDLE_TIMER,
         }
@@ -306,8 +317,13 @@ export class MecardGame {
             sprites, onLeave: () => this.#leaveShared(),
         })
         const modes = [
-            TEST_MODE, runCoopMode(this.#bench), runEnemyMode(this.#bench),
-            duelRaceMode(this.#bench), versusMode(this.#bench),
+            TEST_MODE,
+            gameModeAsLobbyMode(runCoopTable(this.#bench), this.#bench),
+            gameModeAsLobbyMode(runEnemyTable(this.#bench), this.#bench),
+            gameModeAsLobbyMode(runMixedTable(this.#bench), this.#bench),
+            gameModeAsLobbyMode(duelRaceTable(this.#bench), this.#bench),
+            gameModeAsLobbyMode(versusTable(this.#bench), this.#bench),
+            gameModeAsLobbyMode(randomDuelMode(this.#bench), this.#bench),
         ]
         this.#lobbyController = network ? new LobbyController(network, modes) : null
         this.#lobby = this.#lobbyController ? new LobbyScreen(theme, ui, this.#lobbyController, {
@@ -320,6 +336,8 @@ export class MecardGame {
         this.#exit = ui.addLayer("shared")
         this.#exit.content.add(exit, { x: "end", y: "start", offsetX: -4, offsetY: 4 })
         this.#exit.content.visible = false
+        // The popup layer: over the run and its exit button, under the console.
+        this.#quit = new QuitPopup(theme, ui.addLayer("popup"))
         // Over the menu and the guide too, so it can be opened from the main menu.
         ui.addLayer("console").content.add(this.#consoleView, { x: "start", y: "start", offsetX: 4, offsetY: 4 })
         this.#menuOn()
@@ -331,6 +349,7 @@ export class MecardGame {
         this.#consoleView.resize(this.ui.width - 8, Math.floor(this.ui.height * CONSOLE_SHARE))
         this.ui.handle(input)
         this.#openConsole(input)
+        this.#askToQuit()
         if(this.#guide.visible) this.#guide.frame(input)
         else if(this.#history.visible) this.#history.frame(input)
         else if(this.#chat.visible) this.#chat.frame()
@@ -478,12 +497,24 @@ export class MecardGame {
     readonly #lobbyController: LobbyController|null
     readonly #exit: Layer
 
+    /** The popup that asks whether to go back to the main menu. */
+    readonly #quit: QuitPopup
+
     /** The run of a lobby the screen shows in place of the one of the player, none when there is none. */
     #shared: { onReady: (() => void)|null, onOver?: (() => void)|null }|null = null
     #sharedCount = 0
 
+    /** The duel of a lobby the screen shows, with the run it is played on, none when there is none. */
+    #duel: { onReady: (() => void)|null, readonly run: Run }|null = null
+
+    /** The run of a table the screen shows, with what it tells the screen. */
+    #table: {
+        readonly run: Run
+        readonly shared: { onReady: (() => void)|null, onOver?: (() => void)|null }
+    }|null = null
+
     /** What the modes of the lobby ask of the screen. */
-    readonly #bench: RunBench & RaceBench
+    readonly #bench: RaceTableBench & DuelBench & TableBench
     readonly #raceTab: RaceTab
 
     /** The group chat open, and what closes its session, none when there is none. */
@@ -517,6 +548,27 @@ export class MecardGame {
                 && !event.consumed
         })
         if(pressed) this.#consoleView.open()
+    }
+
+    /** Ask whether to go back to the main menu when `cancel` was pressed over the run and nothing took the press. */
+    #askToQuit(): void {
+        if(!this.#screen.visible || this.#quit.isOpen) return
+        for(const occurrence of this.ui.actions.occurrences){
+            if(occurrence.action !== "cancel" || occurrence.consumed) continue
+            occurrence.consume()
+            this.#quit.open(() => this.#quitToMenu())
+            return
+        }
+    }
+
+    /** Leave the run for the main menu: a lobby game is left as its button does, a game alone is put aside. */
+    #quitToMenu(): void {
+        if(this.#shared){
+            this.#leaveShared()
+            return
+        }
+        this.#stopHosting()
+        this.#menuOn()
     }
 
     /** Have the clients of a room play units, the screen waiting for them. */
@@ -631,6 +683,7 @@ export class MecardGame {
 
     /** Show the main menu alone, with the choice of going on if a run is kept. */
     #menuOn(): void {
+        this.#quit.close()
         this.#screen.visible = false
         this.#pnj.visible = false
         this.#arm.visible = false
@@ -665,43 +718,42 @@ export class MecardGame {
         this.#lobby.visible = true
     }
 
-    /** Show a new run for the lobby to host, in place of the one of the player, which is left as it is. */
-    #hostShared(): HostedRun {
-        const run = this.#newSharedRun()
-        const hosted: HostedRun = {
-            run,
-            startRound: () => this.#screen.battleScreen.startRound(),
-            lockGuests: isGuests => {
-                this.#screen.locks = { ...NO_RUN_LOCKS, battle: { isLocked: unit => isGuests(unit), round: "gather" } }
-            },
-            onReady: null,
-            onOver: null,
-            close: () => this.#closeShared(hosted),
-        }
-        this.#shared = hosted
+    /**
+     * Show the run of a table to its owner, who plays what the clients do not. Told again when who plays what
+     * changes: the run is shown once.
+     */
+    #showOwned(run: Run, isGuests: (unit: Seatable) => boolean, ready: () => void, over: () => void): void {
+        const first = this.#table?.run !== run
+        const shared = { onReady: ready, onOver: over }
+        this.#table = { run, shared }
+        this.#shared = shared
+        this.#screen.locks = { ...NO_RUN_LOCKS, battle: { isLocked: unit => isGuests(unit), round: "gather" } }
+        if(!first) return
         this.#screen.engine = run
         this.#travelOn()
-        return hosted
     }
 
-    /** Show the run another client plays for the lobby, once there is something to show of it. */
-    #joinShared(): JoinedRun {
-        const run = this.#newSharedRun()
-        const joined: JoinedRun = {
-            run,
-            seat: units => { this.#screen.locks = locksForUnits(units) },
-            onReady: null,
-            close: () => this.#closeShared(joined),
-        }
-        this.#shared = joined
+    /** Show the run of a table to a client, which plays the units it is given, once there is a run to show. */
+    #showSeat(run: Run, units: readonly string[], ready: () => void): void {
+        const first = this.#table?.run !== run
+        const shared = { onReady: ready }
+        this.#table = { run, shared }
+        this.#shared = shared
+        this.#screen.locks = locksForUnits(units)
+        if(!first) return
         this.#screen.engine = run
-        this.#screen.locks = ALL_RUN_LOCKS
         const show = (): void => {
-            if(this.#shared === joined && !this.#screen.visible) this.#benchesOff()
+            if(this.#table?.run === run && !this.#screen.visible) this.#benchesOff()
         }
         run.loaded.add(show)
         run.battleStarted.add(show)
-        return joined
+    }
+
+    /** Take the run of a table off the screen. */
+    #hideTable(): void {
+        const table = this.#table
+        this.#table = null
+        if(table) this.#closeShared(table.shared)
     }
 
     /** A run of its own for a lobby, which the saves of the player never see. */
@@ -767,6 +819,32 @@ export class MecardGame {
             shared.onReady = null
             for(const observer of observers) observer.remove()
         }
+    }
+
+    /**
+     * Show a duel of a lobby on a run of its own, with only the units given to plan: the player says it is ready with
+     * the same button as in any battle. The map never shows, for the game has none.
+     */
+    #showDuel(battle: Battle, units: readonly string[], ready: () => void): void {
+        let duel = this.#duel
+        if(!duel){
+            duel = { onReady: null, run: this.#newSharedRun() }
+            this.#duel = duel
+            this.#shared = duel
+            this.#screen.engine = duel.run
+        }
+        duel.onReady = ready
+        this.#screen.locks = locksForUnits(units)
+        this.#benchesOff()
+        duel.run.backToMap()
+        duel.run.playBattle(battle)
+    }
+
+    /** Take the duel of a lobby off the screen: the lobby is shown while the next one is waited for. */
+    #hideDuel(): void {
+        const duel = this.#duel
+        this.#duel = null
+        if(duel) this.#closeShared(duel)
     }
 
     /** Take the run of a lobby off the screen, the player's own back in its place, and show the lobby. */

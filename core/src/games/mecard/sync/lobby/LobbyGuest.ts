@@ -9,6 +9,7 @@ import type { SyncLink, SyncSource } from "../SyncChannel"
 import type { LobbyMode, ModeRun } from "./LobbyMode"
 import { UnknownModeFault } from "./ModeSelection"
 import { ModeSelectionView } from "./ModeSelectionView"
+import { ParticipantChoices } from "./ParticipantChoices"
 import { hueOfName } from "./Profile"
 import { RosterView } from "./RosterView"
 import { checkValues } from "./Setting"
@@ -44,6 +45,9 @@ export class LobbyGuest {
 
         /** The modes the host may offer. */
         private readonly modes: readonly LobbyMode[],
+
+        /** What this client sets for itself, told to the game as it joins. */
+        private readonly choices: ParticipantChoices = new ParticipantChoices(),
     ){
         this.roster = new RosterView(link, source, name)
         this.selection = new ModeSelectionView(source)
@@ -122,7 +126,12 @@ export class LobbyGuest {
         if(!state) return
         if(state.playing && !this.#inGame){
             this.#inGame = true
-            this.#join(state.mode, state.values, previous === null ? "spectator" : "player", state.game)
+            const isLate = previous === null
+            // A client that comes late to a mode it has things to set for waits for it to say so: it joins by
+            // itself with {@link LobbyGuest.rejoin}.
+            const moded = this.modes.find(each => each.id === state.mode)
+            if(isLate && (moded?.participantSettings?.length ?? 0) > 0) return
+            this.#join(state.mode, state.values, isLate ? "spectator" : "player", state.game)
         } else if(!state.playing && this.#inGame){
             this.#inGame = false
             this.#stop()
@@ -142,10 +151,9 @@ export class LobbyGuest {
             this.faulted.notify(invalid)
             return
         }
-        const stage = new GuestStage(
-            role === "player" ? this.link : null, this.source, this.roster.self?.id ?? null, game,
-        )
-        const run = mode.guest(stage, values, role)
+        // A client that comes late has the link too: it says it joins, and the manager says what it holds.
+        const stage = new GuestStage(this.link, this.source, this.roster.self?.id ?? null, game)
+        const run = mode.guest(stage, values, role, this.choices.valuesFor(mode))
         if(run instanceof Fault){
             stage.dispose()
             this.faulted.notify(run)

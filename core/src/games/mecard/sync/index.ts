@@ -17,6 +17,7 @@
  */
 
 export * from "./battle/BattleBroadcaster"
+export * from "./battle/BattleDriver"
 export * from "./battle/BattleGuest"
 export * from "./battle/BattleHost"
 export * from "./battle/BattleReceiver"
@@ -40,6 +41,7 @@ export * from "./Relay"
 export * from "./TeamRequest"
 export * from "./hosts/HostDirectory"
 export * from "./lobby"
+export * from "./mode"
 export * from "./modes"
 export * from "./SyncChannel"
 export * from "./battle/BattleMessage"

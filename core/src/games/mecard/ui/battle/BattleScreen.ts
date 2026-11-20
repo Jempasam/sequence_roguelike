@@ -1,7 +1,7 @@
 import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
-import { AnimationChain, Box, Button, FrameClock, instant, NineSlice } from "../../../../engine/ui"
+import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
@@ -20,7 +20,7 @@ import type { RootPreview } from "../../sim/card/CardChain"
 
 import { BattleAnimations } from "./BattleAnimations"
 import { PlayControl } from "../hud/PlayControl"
-import { PlayControlView } from "../hud/PlayControlView"
+import { CONTROLS_FRAME, PlayControlView } from "../hud/PlayControlView"
 import { BattleScene } from "./BattleScene"
 import { ArenaView } from "./ArenaView"
 import { BrownBackdrop } from "./BrownBackdrop"
@@ -254,9 +254,11 @@ export class BattleScreen implements HudHost {
         const controls = ui.addLayer("battle-controls")
         this.#controlsView = new PlayControlView(theme, this.#playControl)
         this.#controlsRow.add(this.#controlsView)
-        this.#controlsRow.add(this.#tacticalButton())
         controls.content.add(this.#controlsRow, { x: "start", y: "start" })
         this.#controls = controls
+        // At the top right corner of the arena, placed with it by each frame.
+        this.#tactical = this.#tacticalButton()
+        controls.content.add(this.#tactical, { x: "end", y: "start" })
         this.#statusList = new StatusList(theme, controls, sprites, (unit, status, over) => {
             this.#hoverStatus(unit, status, over)
         }, (unit, process, over) => this.#hoverProcess(unit, process, over))
@@ -264,7 +266,10 @@ export class BattleScreen implements HudHost {
         this.#connectInputs()
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
-        sprites.whenLoaded(() => this.refresh())
+        sprites.whenLoaded(() => {
+            this.#showTactical()
+            this.refresh()
+        })
     }
 
 
@@ -413,9 +418,12 @@ export class BattleScreen implements HudHost {
     readonly #playControl: PlayControl
     readonly #controlsView: PlayControlView
 
-    /** The playing controls and the button of the tactical view, side by side. */
+    /** The playing controls, at the top left corner of the arena. */
     readonly #controlsRow = new Box("row", { gap: 2 })
     readonly #controls: Layer
+
+    /** The button of the tactical view, at the top right corner of the arena. */
+    #tactical: Panel
 
     /** The arena as a component, in the layer under the hearts. */
     readonly #arenaView: ArenaView
@@ -654,18 +662,39 @@ export class BattleScreen implements HudHost {
         this.refresh()
     }
 
-    /** The button turning the tactical view of the arena on and off, lit up while it is on. */
-    #tacticalButton(): Button {
+    /**
+     * The button turning the tactical view of the arena on and off: an open eye in the normal view, a closed
+     * one in the tactical view, which lights the button up.
+     */
+    #tacticalButton(): Panel {
         const { theme } = this.options
         const lit = { ...theme.button, normal: NineSlice.flat(theme.white, TACTICAL_ON) }
-        const button = new Button(theme, "Tac", this.#board.tactical ? { looks: lit } : {})
+        const tactical = this.#board.tactical
+        const eye = new Image(this.sprites.eye(!tactical))
+        const button = new Button(theme, eye, tactical ? { looks: lit } : {})
         button.onActivate = () => {
             this.#board.tactical = !this.#board.tactical
-            const next = this.#tacticalButton()
-            this.#controlsRow.remove(button)
-            this.#controlsRow.add(next)
+            this.#showTactical()
         }
-        return button
+        // Framed as the playing controls are.
+        const frame = new Panel(theme, { background: NineSlice.flat(theme.white, CONTROLS_FRAME), padding: 1 })
+        frame.content = button
+        return frame
+    }
+
+    /** Put a button of the tactical view built from what is shown in the place of the one there. */
+    #showTactical(): void {
+        const next = this.#tacticalButton()
+        const content = this.#controls.content
+        content.remove(this.#tactical)
+        this.#tactical = next
+        content.add(next, { x: "end", y: "start", ...this.#tacticalOffset() })
+    }
+
+    /** The offsets laying the button of the tactical view at the top right corner of the arena. */
+    #tacticalOffset(): { offsetX: number, offsetY: number } {
+        const room = this.#arenaRoom
+        return room ? { offsetX: this.ui.width - room.right, offsetY: room.top } : { offsetX: 0, offsetY: 0 }
     }
 
     #skip(): void {
@@ -689,6 +718,11 @@ export class BattleScreen implements HudHost {
         }
         if(!last || last.left !== room.left || last.top !== room.top){
             this.#controls.content.setSlot(this.#controlsRow, { offsetX: room.left, offsetY: room.top })
+        }
+        if(!last || last.right !== room.right || last.top !== room.top){
+            this.#controls.content.setSlot(this.#tactical, {
+                offsetX: this.ui.width - room.right, offsetY: room.top,
+            })
         }
         this.#arenaRoom = room
         return room

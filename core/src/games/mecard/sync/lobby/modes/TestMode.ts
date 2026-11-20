@@ -9,6 +9,7 @@ import { ChoiceSetting, RangeSetting } from "../Setting"
 export const TEST_MODE: LobbyMode = {
     id: "test",
     title: "Test",
+    description: "Ne joue rien : sert à essayer le lobby.",
     settings: [
         new ChoiceSetting("ambiance", "Ambiance", ["calme", "agitée"]),
         new RangeSetting("joueurs", "Joueurs", 1, 8, 1, 4),

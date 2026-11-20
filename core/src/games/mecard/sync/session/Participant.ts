@@ -35,6 +35,9 @@ export class Participant {
     public connection: Connection = "connected"
     public presence: Presence = "spectator"
 
+    /** What it set for itself when it last said it joins, unchecked: none until it said. */
+    public options: Readonly<Record<string, string|number>> = {}
+
     /** What the mode tied to it, as the mode names it: none for a mode with nothing to give. */
     public seat: string|null = null
 

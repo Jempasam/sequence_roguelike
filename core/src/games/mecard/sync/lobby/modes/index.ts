@@ -3,6 +3,7 @@
  * The kinds of game a lobby offers.
  */
 
-export * from "./DuelRaceMode"
-export * from "./RunMode"
+export * from "./DuelRaceTableMode"
+export * from "./RandomDuelMode"
+export * from "./RunTableMode"
 export * from "./TestMode"

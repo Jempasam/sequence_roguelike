@@ -2,6 +2,7 @@ import type { Fault } from "../../../../engine/net/Fault"
 import type { SyncPeer, SyncRoom } from "../../../../platform"
 
 import { signal, UnreadableFault } from "../faults"
+import type { SettingValues } from "../lobby/Setting"
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 
 import { readParticipateMessage, writeParticipationMessage } from "./ParticipationMessage"
@@ -14,6 +15,9 @@ export interface Arrival {
 
     /** The way to tell it things, none for the host. */
     readonly peer: SyncPeer|null
+
+    /** What it set for itself when it said it joins, as it said it: the mode checks it. */
+    readonly options?: SettingValues
 }
 
 /** What a mode makes of someone who comes, or comes back, while its game is played. */
@@ -136,13 +140,13 @@ export class Participation {
      *
      * @returns What it was given.
      */
-    public addLocal(id: string): ParticipationMessage {
-        return this.#join({ id, peer: null })
+    public addLocal(id: string, options?: SettingValues): ParticipationMessage {
+        return this.#join({ id, peer: null, options })
     }
 
     /** Have a client far away take part, as its message does: for a client that says it in another way. */
-    public join(peer: SyncPeer): ParticipationMessage {
-        return this.#join({ id: peer.id, peer })
+    public join(peer: SyncPeer, options?: SettingValues): ParticipationMessage {
+        return this.#join({ id: peer.id, peer, options })
     }
 
     /** The host leaves the game by itself, as a client does with its message. */
@@ -175,7 +179,7 @@ export class Participation {
             return
         }
         if(message.game !== this.game) return
-        if(message.kind === "join") this.#join({ id: peer.id, peer })
+        if(message.kind === "join") this.#join({ id: peer.id, peer, options: message.options })
         else this.#quit(peer.id)
     }
 

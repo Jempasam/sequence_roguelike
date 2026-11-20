@@ -482,7 +482,7 @@ export class Hud {
         column.add(this.#label("Journal", paper ? INK_TEXT : CHOSEN_TEXT))
         column.add(this.#journal, { grow: 1 })
         if(!paper) return column
-        const sheet = new Panel(this.theme, { background: paperFrame(paper, 1), padding: PAPER_MARGIN / 2 })
+        const sheet = new Panel(this.theme, { background: paperFrame(paper, 1), padding: PAPER_MARGIN / 2 + 3 })
         sheet.content = column
         return sheet
     }

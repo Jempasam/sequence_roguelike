@@ -2,6 +2,7 @@ import { Fault } from "../../../../engine/net/Fault"
 import type { Cancel, TimerPort } from "../../../../platform"
 
 import { signal, UnreadableFault } from "../faults"
+import type { SettingValues } from "../lobby/Setting"
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 import type { SyncLink } from "../SyncChannel"
 
@@ -67,8 +68,9 @@ export class ParticipationReceiver {
      * Say it joins. It is a call of its own, so what listens to the answer is added first: a host may answer
      * at once. Saying it while it waits for the answer changes nothing.
      */
-    public join(): void {
+    public join(options?: SettingValues): void {
         if(this.#retry || this.#state) return
+        this.#options = options
         this.#tries = 0
         this.#ask()
     }
@@ -93,10 +95,13 @@ export class ParticipationReceiver {
     #state: ParticipationMessage|null = null
     #retry: Cancel|null = null
     #tries = 0
+    #options: SettingValues|undefined = undefined
 
     #ask(): void {
         this.#tries++
-        PARTICIPATE_TOPIC.link(this.link).send(writeParticipateMessage({ kind: "join", game: this.game }))
+        PARTICIPATE_TOPIC.link(this.link).send(
+            writeParticipateMessage({ kind: "join", game: this.game, options: this.#options }),
+        )
         // Heard at once, by a host that answers at once: nothing to wait for.
         if(this.#state || !this.timer) return
         this.#retry = this.timer.after(this.retryMs, () => {

@@ -3,6 +3,7 @@ import type { SyncRoom } from "../../../../platform"
 
 import { signal } from "../faults"
 import { LobbyRoom } from "../lobby/LobbyRoom"
+import type { SettingValues } from "../lobby/Setting"
 import { Admissions, Participation } from "../participation/Participation"
 import type { Admission, Arrival, ParticipationPolicy } from "../participation/Participation"
 import { FeedRoom } from "./FeedRoom"
@@ -103,8 +104,8 @@ export class GameSession {
      *
      * @returns The participant of the host.
      */
-    public addLocal(id: string): Participant {
-        this.participation.addLocal(id)
+    public addLocal(id: string, options?: SettingValues): Participant {
+        this.participation.addLocal(id, options)
         return this.#make({ id, peer: null })
     }
 
@@ -134,6 +135,7 @@ export class GameSession {
 
     #admit(who: Arrival): Admission {
         const participant = this.#make(who)
+        participant.options = who.options ?? {}
         const admission = this.#policy?.admit(who) ?? Admissions.spectate()
         const wasPlayer = participant.isPlayer
         participant.presence = admission.kind === "seat" ? "player" : "spectator"

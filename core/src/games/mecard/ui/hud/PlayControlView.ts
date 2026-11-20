@@ -4,8 +4,8 @@ import type { Theme } from "../../../../engine/ui"
 
 import type { PlayControl, PlayMode } from "./PlayControl"
 
-/** The frame around the buttons. */
-const OUTLINE = new Color(0, 0, 0)
+/** The frame around the buttons: a brown light enough to stand out of the very dark brown behind the battle. */
+export const CONTROLS_FRAME = new Color(0.45, 0.32, 0.18)
 
 /** The frame behind the button of the mode playing. */
 const ACTIVE = new Color(0.45, 0.38, 0.15, 0.9)
@@ -31,7 +31,7 @@ export class PlayControlView extends Panel {
         theme: Theme,
         public readonly control: PlayControl,
     ){
-        super(theme, { background: NineSlice.flat(theme.white, OUTLINE), padding: 1 })
+        super(theme, { background: NineSlice.flat(theme.white, CONTROLS_FRAME), padding: 1 })
         this.content = this.#row
         control.onChange = () => this.#build()
         this.#build()

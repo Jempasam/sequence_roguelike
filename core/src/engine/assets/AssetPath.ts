@@ -174,6 +174,8 @@ export type AssetPath =
     | "mecard/halts/witch.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
+    | "mecard/hud/eye_closed.png"
+    | "mecard/hud/eye_open.png"
     | "mecard/hud/icon/angry.png"
     | "mecard/hud/icon/bravo.png"
     | "mecard/hud/icon/character.png"
@@ -862,6 +864,8 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/halts/witch.png",
     "mecard/hud/bag.png",
     "mecard/hud/booster.png",
+    "mecard/hud/eye_closed.png",
+    "mecard/hud/eye_open.png",
     "mecard/hud/icon/angry.png",
     "mecard/hud/icon/bravo.png",
     "mecard/hud/icon/character.png",

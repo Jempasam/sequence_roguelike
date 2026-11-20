@@ -1,0 +1,22 @@
+{
+  "palette": [
+    { "color": "#f4f1ea", "reflection": 0.1 },
+    { "color": "#2f7bff", "reflection": 0.4 },
+    { "color": "#2a1d1a" },
+    { "color": "#05060a" }
+  ],
+  "pixels": {
+    "materials": [
+      "..............",
+      "..............",
+      ".22........22.",
+      "..22......22..",
+      "....222222....",
+      "..2..2..2..2..",
+      "..............",
+      ".............."
+    ]
+  },
+  "filters": ["auto_depth"],
+  "render": { "steps": ["occlusion", "shadow", "reflection", "alpha_thickness", { "id": "outer_outline", "different_mat": true }, "casted_shadow"], "light": 135 }
+}

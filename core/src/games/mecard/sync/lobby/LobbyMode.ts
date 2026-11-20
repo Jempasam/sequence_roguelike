@@ -36,11 +36,22 @@ export interface LobbyMode {
     /** What it is called to the players. */
     readonly title: string
 
+    /** What it does, in a sentence or two, as the lobby shows it. */
+    readonly description: string
+
     readonly settings: readonly Setting[]
 
-    /** Play it from the main client, or say why it cannot be. The values fit the settings. */
-    host(stage: HostStage, values: SettingValues): ModeRun|Fault
+    /**
+     * What each participant sets for itself, by choices: told to the manager when it joins. None by default.
+     */
+    readonly participantSettings?: readonly Setting[]
 
-    /** Play it from a client, or say why it cannot be. */
-    guest(stage: GuestStage, values: SettingValues, role: LobbyRole): ModeRun|Fault
+    /**
+     * Play it from the main client, or say why it cannot be. The values fit the settings; `mine` is what the
+     * host sets for itself, and fits the participant settings.
+     */
+    host(stage: HostStage, values: SettingValues, mine?: SettingValues): ModeRun|Fault
+
+    /** Play it from a client, or say why it cannot be. `mine` is what this client sets for itself. */
+    guest(stage: GuestStage, values: SettingValues, role: LobbyRole, mine?: SettingValues): ModeRun|Fault
 }

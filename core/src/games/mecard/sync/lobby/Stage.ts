@@ -1,4 +1,5 @@
 import type { SyncLink, SyncPeer, SyncRoom } from "../../../../platform"
+import type { Chat } from "../chat/Chat"
 import type { SyncSender, SyncSource } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
@@ -55,6 +56,9 @@ export class HostStage {
 
         /** The number of the game, which what its clients say is told apart by. */
         public readonly game: number = 0,
+
+        /** The chat of the lobby, which the game may say lines in: none when there is not one. */
+        public readonly chat: Chat|null = null,
     ){
         this.room = {
             onJoin: handler => this.#handles.track(lobby.onJoin(handler)),

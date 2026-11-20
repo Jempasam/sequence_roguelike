@@ -37,9 +37,9 @@ export class ChatHost implements Chat {
     }
 
 
-    public say(text: string): void {
+    public say(text: string, author: ChatAuthor = this.self): void {
         if(this.#isDisposed) return
-        this.#relay.send(writeChatMessage({ author: this.self, text }))
+        this.#relay.send(writeChatMessage({ author, text }))
     }
 
     public dispose(): void {

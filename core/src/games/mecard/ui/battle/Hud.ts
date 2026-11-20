@@ -1,7 +1,7 @@
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
-import type { Component, Layer, Theme } from "../../../../engine/ui"
+import type { Component, Image, Layer, Theme } from "../../../../engine/ui"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { CARTE, UNIT } from "../../sim/base/keywords"
@@ -25,6 +25,9 @@ import { CardChain } from "../../sim/card/CardChain"
 
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { DetailBox } from "../hud/DetailBox"
+import { SlotView } from "../hud/SlotView"
+import { previewDraw } from "./drawPreview"
+import type { DrawPreview } from "./drawPreview"
 import { processText, statusText, StatusProcessList } from "../hud/StatusProcessList"
 import { heartsRow, heartText } from "../hud/HeartView"
 import { HoverPanel } from "../hud/HoverPanel"
@@ -67,11 +70,24 @@ const INFO_LINES = 3
 /** What it says while the round is not the players' to start. */
 const WAITING = "En attente..."
 
+/** How long the button of the round stays disabled after it changed, in seconds, so a click meant for the last one misses. */
+const ROUND_BUTTON_LOCK = 1
+
+/** What the button of the round says to skip, by where it goes. */
+const SKIP_TEXT = {
+    draw: "Passer jusqu'à la pioche",
+    preparation: "Passer la pioche",
+    end: "Passer jusqu'à la fin",
+} as const
+
 /** What the card info says while nothing is hovered. */
 const HINT = ["Clique une ", CARTE, " de ta main pour la poser dans ta chaîne, une ", CARTE, " de ta chaîne pour la reprendre. Survole pour voir ce qu'elle fait, clic droit pour figer ce texte."]
 
 /** The color behind a unit highlighted in the panels. */
 const HIGHLIGHT = new Color(0.3, 0.45, 0.75, 0.55)
+
+/** The outline of the sprite of the unit selected or highlighted. */
+const PICTURE_EDGE = new Color(1, 1, 1)
 
 /** How fast the list of the units goes to the unit followed, in virtual pixels per second. */
 const FOLLOW_SPEED = 240
@@ -104,6 +120,9 @@ export interface HudHost {
 
     /** May the round being shown be skipped? */
     readonly skippable: boolean
+
+    /** Where skipping goes: the draw of the next round, the preparation after it, or the end of the battle. */
+    readonly skipTarget: keyof typeof SKIP_TEXT
 
     /** Does the button of the round only say the players are ready? */
     readonly saysReady: boolean
@@ -208,6 +227,7 @@ export class Hud {
         for(const child of [...content.children]) content.remove(child)
         this.#info.tell(null)
         this.#standsFor.clear()
+        this.#pictures.clear()
         this.#lit = null
         this.#highlight = NineSlice.flat(this.theme.white, HIGHLIGHT)
         this.#selected = NineSlice.flat(this.theme.white, SELECTED)
@@ -235,9 +255,12 @@ export class Hud {
         const unlit = this.#lit ? this.#standsFor.get(this.#lit) : undefined
         const lit = unit ? this.#standsFor.get(unit) : undefined
         // A unit no more highlighted keeps the frame of the selection when it is selected.
-        const back = this.#lit === this.host.active ? this.#selected : null
+        const kept = this.#lit === this.host.active
+        const back = kept ? this.#selected : null
         for(const panel of unlit ?? []) panel.background = back
         for(const panel of lit ?? []) panel.background = this.#highlight
+        for(const image of (this.#lit ? this.#pictures.get(this.#lit) : undefined) ?? []) image.edge = kept ? PICTURE_EDGE : null
+        for(const image of (unit ? this.#pictures.get(unit) : undefined) ?? []) image.edge = PICTURE_EDGE
         this.#lit = unit
     }
 
@@ -249,6 +272,10 @@ export class Hud {
 
     /** Go on toward the unit followed, once laid out. The player scrolling the list stops it. */
     public frame(dt: number): void {
+        if(this.#roundLock > 0){
+            this.#roundLock = Math.max(0, this.#roundLock - dt)
+            if(this.#roundLock === 0 && this.#roundButton) this.#roundButton.enabled = true
+        }
         const scroll = this.#units
         const panel = this.#followed ? this.#standsFor.get(this.#followed)?.[0] : undefined
         if(!panel || scroll.offset !== this.#followedAt){
@@ -299,6 +326,15 @@ export class Hud {
     readonly #chainScroll: Scroll
 
     /** The unit the list of the units goes to, none when none. */
+    /** The text the button of the round had at the last build, to tell when it changes. */
+    #roundKey = ""
+
+    /** How long the button of the round stays disabled, in seconds. */
+    #roundLock = 0
+
+    /** The button of the round now shown, none when the round shows a text. */
+    #roundButton: Button|null = null
+
     #followed: Unit|null = null
 
     /** Where the list stood when it last moved toward it. */
@@ -312,6 +348,9 @@ export class Hud {
 
     /** The panels standing for each unit, lit up while it is highlighted. */
     readonly #standsFor = new Map<Unit, HoverPanel[]>()
+
+    /** The sprites standing for each unit in the panels, outlined while it is highlighted or selected. */
+    readonly #pictures = new Map<Unit, Image[]>()
 
     /** The unit lit up, none when none. */
     #lit: Unit|null = null
@@ -539,7 +578,7 @@ export class Hud {
      * its chain, in a scroll: the round and its phase above, the button below.
      */
     #right(): Component {
-        const { battle, scene, mode, drafts, viewpoint, depth } = this.host
+        const { battle, scene, mode, depth } = this.host
         const phase = battle.phase === "over" ? "fin" : mode === "planning" ? "préparation" : "exécution"
         const panel = new Box("column", { gap: 3 })
         panel.add(this.#label(`Profondeur ${depth} · Round ${battle.round} · ${phase}`, CHOSEN_TEXT))
@@ -547,10 +586,7 @@ export class Hud {
         scene.order.filter(unit => scene.alive(unit)).forEach((unit, index) => {
             const shown = scene.of(unit)
             if(index > 0) column.add(new TurnArrow(this.theme), { align: "center" })
-            const ally = unit.team === viewpoint
-            const draft = mode === "planning" && ally ? drafts.get(unit) : undefined
-            const planned = draft?.chain.view().map(view => stripOfView(view))
-            const roots = planned ?? this.#shownRoots(unit)
+            const roots = this.#shownRoots(unit)
             const head = new Box("row", { gap: 2, align: "center" })
             const steps = mode === "playing" ? ` [${shown?.steps ?? 0}]` : ""
             head.add(this.#label(`${unit.name}${steps}`, colorOf(unit)))
@@ -576,8 +612,11 @@ export class Hud {
             if(crowded) block.add(hearts)
             const showing = this.#shown(unit)
             if(showing === "hand") block.add(this.#openHand(unit, "mini"))
-            else if(showing === "chain") block.add(this.#scrolled(this.#looked(unit, roots, "mini")))
-            column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block, 2, 1)))
+            else if(showing === "chain" || showing === "plan") block.add(this.#scrolled(this.#looked(unit, roots, "mini")))
+            column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block, 2, 1, image => {
+                if(unit === this.host.active) image.edge = PICTURE_EDGE
+                this.#pictures.set(unit, [...this.#pictures.get(unit) ?? [], image])
+            })))
         })
         this.#units.parent?.remove(this.#units)
         this.#units.content = column
@@ -588,26 +627,40 @@ export class Hud {
 
     /** What the round is at: the button of the players, or that it is another's to start. */
     #roundControl(): Component {
-        const { mode, launchable, skippable, saysReady } = this.host
-        if(mode === "planning"){
-            if(!launchable) return this.#label(WAITING, DIM_TEXT)
-            const word = saysReady ? "Prêt" : "Lancer le round"
-            return this.#button(word, () => this.actions.launch(), CHOSEN_TEXT)
+        const { mode, launchable, skippable, saysReady, skipTarget } = this.host
+        this.#roundButton = null
+        if(mode === "planning" && launchable){
+            return this.#roundButtonOf(saysReady ? "Prêt" : "Lancer le round", () => this.actions.launch(), CHOSEN_TEXT)
         }
-        if(skippable) return this.#button("Passer la fin du round", () => this.actions.skip())
+        if(mode !== "planning" && skippable){
+            return this.#roundButtonOf(SKIP_TEXT[skipTarget], () => this.actions.skip())
+        }
+        this.#roundKey = WAITING
         return this.#label(WAITING, DIM_TEXT)
+    }
+
+    /** The button of the round, disabled for a while when its text is not the one it had at the last build. */
+    #roundButtonOf(text: string, activate: () => void, color?: Color): Button {
+        if(text !== this.#roundKey){
+            this.#roundKey = text
+            this.#roundLock = ROUND_BUTTON_LOCK
+        }
+        const button = this.#button(text, activate, color)
+        button.enabled = this.#roundLock <= 0
+        this.#roundButton = button
+        return button
     }
 
     /**
      * The chain of a unit as the screen shows it: as it is being read while a round plays, what it read
-     * greyed out and what is being looked at marked, and as it was committed otherwise.
+     * greyed out and what is being looked at marked, and as it is planned otherwise.
      */
     #shownRoots(unit: Unit): StripCard[] {
-        const { battle, mode, scene } = this.host
+        const { mode, scene } = this.host
         // The end of the preparation plays its cards before the mode turns to playing: what is lit is shown.
         const replayed = mode === "playing" || scene.litCards?.unit === unit
         const shown = replayed ? scene.of(unit)?.chain : undefined
-        if(!shown) return (battle.planOf(unit)?.view() ?? []).map(view => stripOfView(view))
+        if(!shown) return unit.plan.view().map(view => stripOfView(view))
         const lit = scene.litCards?.unit === unit ? scene.litCards : null
         const marks = { cursor: shown.cursor, lit, borrowed: shown.borrowed }
         return new CardChain(shown.cards).view().map(view => stripOfView(view, marks))
@@ -668,7 +721,7 @@ export class Hud {
             this.#place(this.#hand(draft, deckOf), grid.hand)
         } else if(this.#shown(unit) === "hand"){
             this.#place(this.#openHand(unit, "hand"), grid.hand)
-        } else if(this.#shown(unit) === "chain"){
+        } else if(this.#shown(unit) === "chain" || this.#shown(unit) === "plan"){
             this.#chainScroll.content = this.#looked(unit, this.#shownRoots(unit), "chain")
             if(mode === "playing" && unit.team === viewpoint) this.#place(this.#drawing(unit, null), grid.hand)
         }
@@ -683,12 +736,21 @@ export class Hud {
         const row = new Box("row", { gap: GAP, align: "center" })
         const count = this.#shownHandSize(unit)
         let room = zone.right - zone.left
+        // What the next draw gives, told only to the player who is planning the unit.
+        const draft = this.#draft()
+        const preview = draft && draft.unit === unit && !this.host.scene.drawer
+            ? previewDraw(unit, draft.available.length)
+            : null
         if(count !== null){
-            const label = this.#label(`${count}/${unit.stats.handSize.value}`, DIM_TEXT)
+            // The cards drawn, and in brackets how many would be with room enough in the hand.
+            const drawing = preview
+                ? ` +${preview.drawn.length}${preview.wanted > preview.drawn.length ? ` (${preview.wanted})` : ""}`
+                : ""
+            const label = this.#label(`${count}/${unit.stats.handSize.value}${drawing}`, DIM_TEXT)
             room -= label.measure(Infinity).preferredWidth + GAP
             row.add(label)
         }
-        row.add(this.#decks(unit, room))
+        row.add(this.#decks(unit, room, preview))
         return row
     }
 
@@ -743,14 +805,19 @@ export class Hud {
      * overlapping when they pass the room given, in virtual pixels. The hover of one says how many cards
      * it holds.
      */
-    #decks(unit: Unit, room: number): Component {
+    #decks(unit: Unit, room: number, preview: DrawPreview|null = null): Component {
         const { decks, cursor } = this.#shownDecks(unit)
         const hand = new OverflowContainer({ gap: 1 })
         decks.forEach(({ pile, discard }, index) => {
             const next = decks.length > 1 && index === cursor
-            const view = new DeckPile(this.theme, this.host.sprites.cardBack(index), pile, next)
+            const coming = preview?.drawn.filter(each => each.deck === index) ?? []
+            const view = new DeckPile(this.theme, this.host.sprites.cardBack(index), pile, next, coming.length)
             const name = deckName(index, decks.length)
-            view.onHover = over => this.showInfo(over ? concat(name, ` : ${pile} `, CARTE.as("cartes"), `, ${discard} en défausse.`) : null)
+            // The cards the next draw takes from it, by name, a card after a reshuffle being unknown.
+            const upcoming = coming.length > 0
+                ? ` Prochaines : ${coming.map(each => each.card?.name ?? "?").join(", ")}.`
+                : ""
+            view.onHover = over => this.showInfo(over ? concat(name, ` : ${pile} `, CARTE.as("cartes"), `, ${discard} en défausse.${upcoming}`) : null)
             this.#piles.set(index, view)
             hand.add(view)
         })
@@ -760,16 +827,21 @@ export class Hud {
     }
 
     /**
-     * What a unit shows of its cards to those who do not plan it. Outside the preparation, its chain. During
-     * it, as its stats say: its chain when it shows it and does not show its hand, or when it shows both and
-     * the chain holds a card; else its hand when it shows it; else nothing.
+     * What a unit shows of its cards. Outside the preparation, its chain. During it, in this order: its chain
+     * when it shows it and it holds a card, its plan when it shows its chain and it holds a card, its hand when
+     * it shows it, else its chain, empty, when it shows it, else nothing. What a unit shows is what its stats
+     * say, but the units of the players are shown to them whole.
      */
-    #shown(unit: Unit): "hand"|"chain"|"none" {
-        if(this.host.mode !== "planning") return "chain"
-        const { showChain, showHand } = unit.stats
-        const chained = (this.host.battle.planOf(unit)?.cards.length ?? 0) > 0
-        if(showChain.value && (!showHand.value || chained)) return "chain"
-        return showHand.value ? "hand" : "none"
+    #shown(unit: Unit): "chain"|"plan"|"hand"|"none" {
+        const { mode, viewpoint } = this.host
+        if(mode !== "planning") return "chain"
+        const own = unit.team === viewpoint && unit.controller === "player"
+        const showChain = own || unit.stats.showChain.value
+        const showHand = own || unit.stats.showHand.value
+        if(showChain && unit.chain.cards.length > 0) return "chain"
+        if(showChain && unit.plan.cards.length > 0) return "plan"
+        if(showHand) return "hand"
+        return showChain ? "chain" : "none"
     }
 
     /** Does a unit show its hand rather than its chain? */
@@ -818,11 +890,17 @@ export class Hud {
     /** The chain being put together, its cards linked to what they take, or a word when it is empty. */
     #chain(draft: Draft, deckOf: (card: Card) => number|null): Component {
         const { cards } = draft.chain
+        // What is left of the room of the chain, in a place as large as a card, after the last one.
+        const remaining = Math.max(0, draft.unit.stats.chainSize.value - draft.chain.size)
+        const slot = remaining > 0 ? new SlotView(this.theme, String(remaining)) : null
         if(cards.length === 0){
             const empty = this.#label("Ta chaîne est vide : clique ta main.", DIM_TEXT)
             const width = empty.measure(Infinity).preferredWidth
             empty.fixedSize = { width, height: CARD_LOOKS.chain.height + LINK_ROOM }
-            return empty
+            const row = new Box("row", { gap: 2, align: "start" })
+            if(slot) row.add(slot)
+            row.add(empty)
+            return row
         }
         const active = draft.active
         return new FlatStrip(this.theme, cards.map((card, place) => ({ card, active: active[place] })), draft.groups, {
@@ -830,7 +908,7 @@ export class Hud {
             hover: (place, over) => this.host.hoverRoot(draft.unit, draft.rootOf(place), over, cards[place]),
             variant: (place, variant) => this.actions.variant(place, variant),
             deckOf,
-        })
+        }, slot)
     }
 
     /**

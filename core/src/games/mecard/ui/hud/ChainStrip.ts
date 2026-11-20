@@ -233,6 +233,9 @@ export class FlatStrip extends Stack {
         cards: readonly FlatCard[],
         groups: readonly FlatGroup[],
         host: FlatStripHost,
+
+        /** What comes after the last card, in the row, none when nothing does. */
+        tail: Component|null = null,
     ){
         super()
         const row = new Box("row", { gap: 2, align: "start" })
@@ -247,6 +250,7 @@ export class FlatStrip extends Stack {
             row.add(view)
             return view
         })
+        if(tail) row.add(tail)
         const links: Link[] = groups.flatMap(({ places, type }) => places.slice(1).map((place, index) => ({
             from: views[places[index]], to: views[place], color: linkOf(type),
         })))

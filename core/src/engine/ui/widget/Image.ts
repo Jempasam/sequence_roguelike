@@ -73,6 +73,16 @@ export class Image extends Component {
     }
 
 
+    /** The color of the outline of one pixel drawn around the sprite, none for none. Setting the same one does nothing. */
+    public get edge(): Readonly<Color>|null { return this.#edge }
+
+    public set edge(edge: Readonly<Color>|null){
+        if(edge === this.#edge || (edge && this.#edge?.equals(edge))) return
+        this.#edge = edge?.clone() ?? null
+        this.invalidate()
+    }
+
+
     protected computeHint(): SizeHint {
         const sprite = this.#sprite
         if(!sprite) return EMPTY_HINT
@@ -85,9 +95,16 @@ export class Image extends Component {
         const scale = this.#scale
         const x = offsetOf(this.#alignX, this.bounds.width - sprite.width * scale)
         const y = offsetOf(this.#alignY, this.bounds.height - sprite.height * scale)
-        painter.setTint(this.#tint)
         painter.translate(x, y)
         painter.scale(scale)
+        const edge = this.#edge
+        if(edge){
+            painter.setColorMode("mask")
+            painter.setTint(edge)
+            for(const [dx, dy] of AROUND) painter.sprite(sprite, sprite.originX + dx, sprite.originY + dy)
+            painter.setColorMode("modulate")
+        }
+        painter.setTint(this.#tint)
         painter.sprite(sprite, sprite.originX, sprite.originY)
     }
 
@@ -103,4 +120,10 @@ export class Image extends Component {
     readonly #alignX: Exclude<Align, "stretch">
     readonly #alignY: Exclude<Align, "stretch">
     readonly #tint: Color
+    #edge: Color|null = null
 }
+
+/** The eight ways a sprite is drawn again around itself to outline it. */
+const AROUND: readonly (readonly [number, number])[] = [
+    [-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1],
+]

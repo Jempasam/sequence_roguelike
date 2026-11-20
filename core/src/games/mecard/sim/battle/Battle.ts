@@ -647,7 +647,7 @@ export class Battle {
      * @throws {@link Error} When it is not the preparation, the chain is not valid, or a card is neither in hand
      *   nor one the unit plays unlimited and has not played yet this round.
      */
-    public commit(unit: Unit, chain: CardChain): void {
+    public commit(unit: Unit, chain: CardChain = unit.plan): void {
         if(this.phase !== "preparation") throw new Error("Chains are committed during the preparation only.")
         const problems = chain.problems(unit.stats.chainSize.value)
         if(problems.length > 0) throw new Error(problems.join(" "))
@@ -664,6 +664,7 @@ export class Battle {
             played.push(...hand.splice(index, 1))
         })
         unit.hand.splice(0, unit.hand.length, ...hand)
+        if(unit.plan !== chain) unit.setPlan(chain)
         this.#plans.set(unit, chain)
         this.#played.set(unit, played)
     }
@@ -701,7 +702,9 @@ export class Battle {
         // Read to its end rather than laid twice: a last card taking an input would take the copy's first.
         unit.readChain()
         unit.steps.push(...unit.steps)
-        this.#plans.set(unit, new CardChain([...plan.cards, ...plan.cards]))
+        const doubled = new CardChain([...plan.cards, ...plan.cards])
+        this.#plans.set(unit, doubled)
+        unit.setPlan(doubled)
         this.events.push({ type: "status", unit, text: "chaîne doublée" })
     }
 
@@ -1619,6 +1622,7 @@ export class Battle {
         const chain = CardChain.leftToRight(unit.hand, unit.stats.chainSize.value)
         for(const card of chain.cards) unit.hand.splice(unit.hand.indexOf(card), 1)
         this.#plans.set(unit, chain)
+        unit.setPlan(chain)
         this.#played.set(unit, [...chain.cards])
     }
 
@@ -1821,7 +1825,11 @@ export class Battle {
         this.winner = state.winner
         // An index out of the units, written by a save made before a vanished unit was left out, is skipped.
         this.initiative = state.initiative.map(index => units[index]).filter(unit => unit !== undefined)
-        for(const [index, chain] of state.plans) if(units[index]) this.#plans.set(units[index], chain)
+        for(const [index, chain] of state.plans){
+            if(!units[index]) continue
+            this.#plans.set(units[index], chain)
+            units[index].setPlan(chain)
+        }
         for(const [index, cards] of state.played) if(units[index]) this.#played.set(units[index], [...cards])
         for(const [index, used] of state.activated) if(units[index]) this.#activated.set(units[index], [...used])
         for(const [index, owner] of state.owners) if(units[index] && units[owner]) units[index].owner = units[owner]
@@ -1840,7 +1848,10 @@ export class Battle {
         this.signals.phase.notify("draw")
         this.#plans.clear()
         this.#activated.clear()
-        for(const unit of this.units) unit.takeChain(new CardChain())
+        for(const unit of this.units){
+            unit.takeChain(new CardChain())
+            unit.setPlan(new CardChain())
+        }
         this.initiative = this.#initiativeOf(this.round)
         for(const unit of this.initiative) this.#draw(unit)
         this.phase = "preparation"

@@ -72,6 +72,11 @@ const TETHER_THICKNESS = 0.2
 /** How much smaller a clone is drawn than it is. */
 const VANISHING_SCALE = 0.75
 
+/** The eight ways a lit sprite is drawn again around itself to outline it, in pixels. */
+const AROUND: readonly (readonly [number, number])[] = [
+    [-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1],
+]
+
 /** How many sides the outline of a hitbox is drawn with. */
 const HITBOX_SIDES = 24
 
@@ -254,7 +259,7 @@ export class BoardView {
      */
     #drawBody(painter: Painter, shown: SceneUnit): void {
         const { unit } = shown
-        const lit = unit === this.chosen || unit === this.acting || unit === this.highlighted
+        const lit = this.#isLit(unit)
         const hitbox = this.#hitboxOf(unit)
         this.#drawShade(painter, shown, hitbox)
         painter.setBlend("alpha")
@@ -404,9 +409,27 @@ export class BoardView {
         const { unit } = shown
         const look = this.sprites.look(unit.sprite)
         painter.setBlend("alpha")
+        const mode = modeOf(look, unit.hitbox)
+        const metrics = hitboxMetrics(unit.hitbox, shown)
+        if(this.#isLit(unit)){
+            painter.setColorMode("mask")
+            painter.setTint(this.#faded.set(1, 1, 1, shown.opacity))
+            for(const [dx, dy] of AROUND){
+                painter.push()
+                painter.translate(dx, dy)
+                drawSprite(painter, sprite, mode, look, metrics, this.#view())
+                painter.pop()
+            }
+            painter.setColorMode("modulate")
+        }
         painter.setTint(this.#coloredBy(unit.sprite, shown.opacity))
-        drawSprite(painter, sprite, modeOf(look, unit.hitbox), look, hitboxMetrics(unit.hitbox, shown), this.#view())
+        drawSprite(painter, sprite, mode, look, metrics, this.#view())
         painter.setBlend("cutout")
+    }
+
+    /** Is a unit planned, acting or hovered: lit, its hitbox and its sprite outlined? */
+    #isLit(unit: Unit): boolean {
+        return unit === this.chosen || unit === this.acting || unit === this.highlighted
     }
 
     /** Where the arena lies on the screen, for the pictures to be drawn in it. */

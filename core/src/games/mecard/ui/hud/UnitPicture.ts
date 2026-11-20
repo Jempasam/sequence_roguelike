@@ -11,11 +11,14 @@ import type { UnitSprites } from "../look/UnitSprites"
  */
 export function withPicture(
     sprites: UnitSprites, sprite: Visual|null, content: Component, gap = 2, grow = 0,
+    onPicture?: (image: Image) => void,
 ): Component {
     const picture = sprites.of(sprite)
     if(!picture) return content
     const row = new Box("row", { gap, align: "center" })
-    row.add(new Image(picture))
+    const image = new Image(picture)
+    onPicture?.(image)
+    row.add(image)
     row.add(content, { grow })
     return row
 }

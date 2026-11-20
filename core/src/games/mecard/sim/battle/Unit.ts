@@ -22,7 +22,7 @@ import type { Battle } from "./Battle"
 import { Decks } from "./Decks"
 import type {
     ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent, DeathEvent, HitEvent,
-    IncomingShove, MoveEvent,
+    IncomingShove, MoveEvent, PlanChangeEvent,
 } from "./events"
 import type { Area } from "./Area"
 import { Disk } from "./hitbox/Disk"
@@ -263,6 +263,9 @@ export class Unit {
     /** Its chain changed, or its reading went on. */
     public readonly onChainChange: Observable<ChainChangeEvent>
 
+    /** The chain it puts together for this round changed, committed or not. */
+    public readonly onPlanChange: Observable<PlanChangeEvent>
+
     /** Its chain holds {@link MAX_CHAIN_CARDS} cards or more. */
     public readonly onChainOverflow: Observable<ChainOverflowEvent>
 
@@ -314,6 +317,15 @@ export class Unit {
     /** What it reads its steps from this round: what it committed, once rewritten. */
     public chain = new CardChain()
 
+    /**
+     * The chain it puts together for this round, committed or not, before it is rewritten: its cards stay in
+     * its hand until it is committed. Changed by {@link Unit.placeInPlan}, {@link Unit.removeFromPlan},
+     * {@link Unit.swapInPlan} and {@link Unit.setPlan}, which tell {@link Unit.onPlanChange}.
+     */
+    public get plan(): CardChain {
+        return this.#plan
+    }
+
     /** The first card of the last tree of its chain it started playing, none before it plays any. */
     public lastPlayed: Card|null = null
 
@@ -358,6 +370,7 @@ export class Unit {
         this.onCardInvalid = new Observable(report)
         this.onChainChange = new Observable(report)
         this.onChainOverflow = new Observable(report)
+        this.onPlanChange = new Observable(report)
         this.onPrep = new Observable(report)
         this.name = spec.name
         this.sprite = spec.sprite ?? null
@@ -475,6 +488,36 @@ export class Unit {
         chain.watcher = this.#watcher
         this.#watcher.changed()
     }
+
+    /** Put a card at the end of the plan, whether or not there is room: the caller tells. */
+    public placeInPlan(card: Card): void {
+        this.#plan.cards.push(card)
+        this.#planChanged()
+    }
+
+    /** Take the card at a place out of the plan. */
+    public removeFromPlan(place: number): void {
+        this.#plan.cards.splice(place, 1)
+        this.#planChanged()
+    }
+
+    /** Put a card at a place of the plan in place of the one there. */
+    public swapInPlan(place: number, card: Card): void {
+        this.#plan.cards[place] = card
+        this.#planChanged()
+    }
+
+    /** Put another chain as the plan, in place of the one before. */
+    public setPlan(chain: CardChain): void {
+        this.#plan = chain
+        this.#planChanged()
+    }
+
+    #planChanged(): void {
+        this.onPlanChange.notify({ unit: this, cards: [...this.#plan.cards] })
+    }
+
+    #plan = new CardChain()
 
     /** Build the preparations of its chain and rewrite it, each acting on the battle. */
     public prepare(): void {

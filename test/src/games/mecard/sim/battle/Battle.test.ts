@@ -30,6 +30,49 @@ describe("Battle.commit", () => {
     })
 })
 
+describe("Unit.plan", () => {
+    test("placed, swapped and removed cards → each change told, the hand untouched", () => {
+        const on = battle()
+        const planner = unit(on, 3, 3, { hand: [STEP, WAIT, SLASH] })
+        unit(on, 0, 0, { team: MONSTERS })
+        on.startRound()
+        const told: string[][] = []
+        planner.onPlanChange.add(event => told.push(event.cards.map(card => card.name)))
+        planner.placeInPlan(STEP)
+        planner.placeInPlan(WAIT)
+        planner.swapInPlan(1, SLASH)
+        planner.removeFromPlan(0)
+        expect(planner.plan.cards).toEqual([SLASH])
+        expect(told).toEqual([[STEP.name], [STEP.name, WAIT.name], [STEP.name, SLASH.name], [SLASH.name]])
+        expect(planner.hand).toEqual([STEP, WAIT, SLASH])
+    })
+
+    test("committed without a chain → its plan, its cards leave the hand", () => {
+        const on = battle()
+        const planner = unit(on, 3, 3, { hand: [STEP, WAIT, SLASH] })
+        unit(on, 0, 0, { team: MONSTERS })
+        on.startRound()
+        planner.placeInPlan(STEP)
+        planner.placeInPlan(WAIT)
+        on.commit(planner)
+        expect(on.planOf(planner)).toBe(planner.plan)
+        expect(planner.hand).toEqual([SLASH])
+    })
+
+    test("a new round → the plan empty again", () => {
+        const on = battle()
+        const planner = unit(on, 3, 3, { hand: [STEP, WAIT, SLASH] })
+        unit(on, 0, 0, { team: MONSTERS })
+        on.startRound()
+        on.commit(planner, chain(STEP))
+        expect(planner.plan.cards).toEqual([STEP])
+        on.endPreparation()
+        on.playRound()
+        on.startRound()
+        expect(planner.plan.cards).toEqual([])
+    })
+})
+
 describe("Battle round", () => {
     test("two units → one step each in turn, the order shifting each round", () => {
         const on = battle()

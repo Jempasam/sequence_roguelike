@@ -125,7 +125,10 @@ export class BattleScreen implements HudHost {
 
     public mode: Mode = "planning"
     public readonly drafts = new Map<Unit, Draft>()
+    /** The unit the panels follow: the chain, the statuses, the draft. It may move while a round plays. */
     public active: Unit|null = null
+    /** The unit the player selected: lit on the arena in the preparation, and back to active when the round ends. */
+    #chosen: Unit|null = null
     public readonly log: Text[] = []
     public warning: Text|null = null
 
@@ -192,6 +195,12 @@ export class BattleScreen implements HudHost {
         return this.#locks.round === "launch" || this.#locks.round === "gather"
     }
 
+    /** Where skipping goes: the draw of the next round, the preparation after it, or the end of the battle. */
+    public get skipTarget(): "draw"|"preparation"|"end" {
+        const { phase } = this.#engine
+        return phase === "over" ? "end" : phase === "preparation" ? "preparation" : "draw"
+    }
+
     /** Does the button of the round only say the players are ready? */
     public get saysReady(): boolean {
         return this.#locks.round !== "launch"
@@ -218,10 +227,14 @@ export class BattleScreen implements HudHost {
         }
         this.#battleAnimations.onSelect = unit => {
             this.active = unit
-            this.#board.chosen = unit
+            // While a round plays, the arena lights the unit acting: the selection is not touched.
+            if(this.mode !== "playing"){
+                this.#chosen = unit
+                this.#board.chosen = unit
+            }
             this.#hud.follow(unit)
         }
-        this.#board = new BoardView(theme.font, theme.white, this.scene, sprites)
+        this.#board =new BoardView(theme.font, theme.white, this.scene, sprites)
         // Made before the panels, so they lie over it, and the hearts between.
         const floor = ui.addLayer("battle-floor")
         this.#arenaView = new ArenaView(theme, this.#board, engine, sprites)
@@ -336,7 +349,13 @@ export class BattleScreen implements HudHost {
     /** Start the chain of a unit over, when cards it may hold left the hand: it is planned again. */
     public handChanged(unit: Unit): void {
         if(this.mode !== "planning" || !this.drafts.has(unit)) return
-        this.drafts.set(unit, new Draft(unit))
+        this.drafts.set(unit, this.#newDraft(unit))
+    }
+
+    /** A draft of a unit with its plan emptied: its cards are all in the hand again. */
+    #newDraft(unit: Unit): Draft {
+        if(unit.plan.cards.length > 0) unit.setPlan(new CardChain())
+        return new Draft(unit)
     }
 
     /** Show the rest of what is being shown back at once. */
@@ -409,6 +428,9 @@ export class BattleScreen implements HudHost {
     /** What it listens to on the battle shown. */
     #observers: Observer[] = []
 
+    /** The observers of the plans of the units: they change with the units of the battle. */
+    #planObservers: Observer[] = []
+
     /** Did the players say they are ready, for another to launch the round? */
     #ready = false
 
@@ -471,7 +493,10 @@ export class BattleScreen implements HudHost {
                     this.#fill(take, phase)
                 }))
             }),
-            battle.loaded.add(() => this.#showLoaded()),
+            battle.loaded.add(() => {
+                this.#watchPlans()
+                this.#showLoaded()
+            }),
             // Not chained: the planning panel closes at once, whatever holds the replay of what comes.
             battle.preparationEnding.add(() => {
                 this.#launched = true
@@ -479,11 +504,22 @@ export class BattleScreen implements HudHost {
                 this.refresh()
             }),
         ]
+        this.#watchPlans()
+    }
+
+    /** Show the panels again when the plan of a unit changes while the players put their chains together. */
+    #watchPlans(): void {
+        for(const observer of this.#planObservers) observer.remove()
+        const battle = this.#engine
+        this.#planObservers = battle.units.map(unit => unit.onPlanChange.add(() => {
+            if(this.mode === "planning" && battle.phase === "preparation") this.refresh()
+        }))
     }
 
     #unregisterObservers(): void {
-        for(const observer of this.#observers) observer.remove()
+        for(const observer of [...this.#observers, ...this.#planObservers]) observer.remove()
         this.#observers = []
+        this.#planObservers = []
     }
 
     /** Drop what waits to be played, and end what is going on. */
@@ -529,6 +565,7 @@ export class BattleScreen implements HudHost {
 
     #choose(unit: Unit): void {
         this.active = unit
+        this.#chosen = unit
         this.#board.chosen = unit
         this.#hud.follow(unit)
         this.warning = null
@@ -537,19 +574,19 @@ export class BattleScreen implements HudHost {
 
     #pick(card: Card): void {
         const placement = this.#draft()?.place(card)
+        const before = this.warning
         this.warning = placement === "full" ? ["La chaîne est pleine : reprends une ", CARTE, " avant d'en poser une autre."]
             : null
-        this.refresh()
+        // A card placed is told by the plan of the unit; a warning alone is not.
+        if(placement !== "placed" || before !== null) this.refresh()
     }
 
     #remove(place: number): void {
         this.#draft()?.remove(place)
-        this.refresh()
     }
 
     #variant(place: number, variant: Card): void {
         this.#draft()?.variant(place, variant)
-        this.refresh()
     }
 
     #variantTo(variant: Card): void {
@@ -749,6 +786,7 @@ export class BattleScreen implements HudHost {
         this.drafts.clear()
         this.#openDrafts()
         this.active = [...this.drafts.keys()][0] ?? this.#sameUnit(this.active)
+        this.#chosen = this.active
         this.#board.chosen = this.active
         this.#board.acting = null
         this.#readEvents()
@@ -760,7 +798,7 @@ export class BattleScreen implements HudHost {
         const battle = this.#engine
         for(const unit of battle.initiative){
             if(this.isLocked(unit)) this.drafts.delete(unit)
-            else if(unit.controller === "player" && !this.drafts.has(unit)) this.drafts.set(unit, new Draft(unit))
+            else if(unit.controller === "player" && !this.drafts.has(unit)) this.drafts.set(unit, this.#newDraft(unit))
         }
     }
 
@@ -797,6 +835,11 @@ export class BattleScreen implements HudHost {
         this.#board.acting = null
         this.mode = "planning"
         this.drafts.clear()
+        // The unit selected before the round is the one followed again.
+        const chosen = this.#chosen && this.#engine.units.includes(this.#chosen) ? this.#chosen : this.#sameUnit(this.#chosen)
+        this.#chosen = chosen
+        this.#board.chosen = chosen
+        if(chosen) this.active = chosen
         this.#readEvents()
         this.refresh()
         this.options.over(this.#engine)

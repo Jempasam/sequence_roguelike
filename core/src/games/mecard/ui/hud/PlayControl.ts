@@ -1,10 +1,10 @@
 import type { Animation, FrameClock } from "../../../../engine/ui"
 
-/** How a replay plays: stopped, slowly, at its pace, or at once. */
-export type PlayMode = "pause"|"slow"|"play"|"fast"
+/** How a replay plays: stopped, slowly, a bit slower than its pace, at its pace, or at once. */
+export type PlayMode = "pause"|"slow"|"calm"|"play"|"fast"
 
 /** How long a stop of the replay lasts in each mode, in seconds, none in the fast one. */
-export const SPEED_TIME: Readonly<Record<PlayMode, number>> = { pause: 0.5, slow: 2, play: 1, fast: 0 }
+export const SPEED_TIME: Readonly<Record<PlayMode, number>> = { pause: 0.5, slow: 2, calm: 1.5, play: 1, fast: 0 }
 
 /** How often the mode is read again while waiting, in seconds. */
 export const POLL_TIME = 0.05

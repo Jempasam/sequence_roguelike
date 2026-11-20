@@ -123,6 +123,12 @@ export interface ChainChangeEvent {
     readonly borrowed: readonly number[]
 }
 
+/** The chain a unit puts together for this round as it is once it changed: a copy of its cards. */
+export interface PlanChangeEvent {
+    readonly unit: Unit
+    readonly cards: readonly Card[]
+}
+
 /** A unit changing cell. */
 export interface MoveEvent {
     readonly unit: Unit

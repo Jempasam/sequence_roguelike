@@ -50,7 +50,10 @@ export interface Group {
 export class Draft {
 
 
-    public readonly chain = new CardChain()
+    /** The chain being put together: the plan of the unit, which tells its changes. */
+    public get chain(): CardChain {
+        return this.unit.plan
+    }
 
     /** The places in the belt of the unit of what it is to use at the start of the execution. */
     public readonly used = new Set<number>()
@@ -183,7 +186,7 @@ export class Draft {
      */
     public place(card: Card): Placement {
         if(!this.hasRoom) return "full"
-        this.chain.cards.push(card)
+        this.unit.placeInPlan(card)
         return "placed"
     }
 
@@ -199,13 +202,13 @@ export class Draft {
         // The card of the chain stands for a card of the hand, or the unit plays the variant unlimited.
         const left = this.#handLeftBy(this.chain.cards.filter((_, at) => at !== place))
         if(!this.unit.unlimited.includes(variant) && handIndexOf(left, variant) < 0) return false
-        this.chain.cards[place] = variant
+        this.unit.swapInPlan(place, variant)
         return true
     }
 
     /** Take a card of the chain back to the hand. */
     public remove(place: number): void {
-        this.chain.cards.splice(place, 1)
+        this.unit.removeFromPlan(place)
     }
 
     /** What a root of the chain would do, after the roots before it, none when there is no such root. */

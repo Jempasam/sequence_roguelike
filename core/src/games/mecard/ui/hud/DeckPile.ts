@@ -1,8 +1,10 @@
 import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
+import { TextLayout } from "../../../../engine/text"
 import { Component, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme } from "../../../../engine/ui"
 
+import { TEXT_OUTLINE } from "../look/theme"
 import { CARD_LOOKS } from "./CardView"
 
 /** How many cards of a pile each card drawn under the top one stands for. */
@@ -41,8 +43,12 @@ export class DeckPile extends Component {
 
         /** Is it the next one drawn from, among several? */
         public readonly next: boolean,
+
+        /** How many cards the next draw takes from it: they are told on its top card. */
+        public readonly drawing: number = 0,
     ){
         super()
+        this.#text = new TextLayout(theme.font, theme.textScale)
     }
 
 
@@ -71,6 +77,17 @@ export class DeckPile extends Component {
             this.#card(painter, MAX_LAYERS - layer, width, height)
         }
         if(this.next) this.#frame(painter, MAX_LAYERS, width, height, NEXT)
+        if(this.drawing > 0){
+            // How many cards it gives, in white on a black outline, against the top edge of the top card.
+            const label = `+${this.drawing}`
+            const text = this.#text
+            text.drawOutlined(
+                painter, label,
+                MAX_LAYERS + Math.floor((width - text.widthOf(label)) / 2),
+                MAX_LAYERS + 1,
+                WHITE, TEXT_OUTLINE,
+            )
+        }
         painter.pop()
     }
 
@@ -78,6 +95,8 @@ export class DeckPile extends Component {
         this.onHover?.(this.hovered)
     }
 
+
+    readonly #text: TextLayout
 
     /** One card from its back, at a distance from the corner of the pile. */
     #card(painter: Painter, shift: number, width: number, height: number): void {

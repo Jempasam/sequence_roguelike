@@ -14,13 +14,14 @@ const ACTIVE = new Color(0.45, 0.38, 0.15, 0.9)
 const BUTTONS: readonly { readonly text: string, readonly mode: PlayMode|null }[] = [
     { text: "||", mode: "pause" },
     { text: ">", mode: "slow" },
-    { text: ">>", mode: "play" },
-    { text: ">>>", mode: "fast" },
+    { text: ">>", mode: "calm" },
+    { text: ">>>", mode: "play" },
+    { text: ">>>>", mode: "fast" },
     { text: "|>", mode: null },
 ]
 
 /**
- * A row of buttons choosing how a replay plays: pause, slow, play, fast forward, and a step to take while
+ * A row of buttons choosing how a replay plays: pause, slow, calm, play, fast forward, and a step to take while
  * paused. The one of the mode playing is lit up.
  */
 export class PlayControlView extends Panel {

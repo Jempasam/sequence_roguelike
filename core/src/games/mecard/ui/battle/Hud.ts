@@ -33,7 +33,9 @@ import { heartsRow, heartText } from "../hud/HeartView"
 import { HoverPanel } from "../hud/HoverPanel"
 import { TurnArrow } from "../hud/TurnArrow"
 import { colorOf } from "../look/colors"
-import { CHOSEN_TEXT, DIM_TEXT, STAT_DOWN, STAT_UP, WARNING_TEXT } from "../look/theme"
+import { CHOSEN_TEXT, DIM_INK_TEXT, DIM_TEXT, INK_TEXT, STAT_DOWN, STAT_UP, WARNING_TEXT } from "../look/theme"
+import { PAPER_MARGIN, paperFrame } from "../look/paper"
+import { FRAME_THICKNESS } from "../look/wood"
 import { decksOf } from "./BattleScene"
 import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
 import { BagView, SLOT_SIZE } from "../hud/BagView"
@@ -84,7 +86,7 @@ const SKIP_TEXT = {
 const HINT = ["Clique une ", CARTE, " de ta main pour la poser dans ta chaîne, une ", CARTE, " de ta chaîne pour la reprendre. Survole pour voir ce qu'elle fait, clic droit pour figer ce texte."]
 
 /** The color behind a unit highlighted in the panels. */
-const HIGHLIGHT = new Color(0.3, 0.45, 0.75, 0.55)
+const HIGHLIGHT = new Color(0.75, 0.4, 0.2, 0.55)
 
 /** The outline of the sprite of the unit selected or highlighted. */
 const PICTURE_EDGE = new Color(1, 1, 1)
@@ -388,18 +390,19 @@ export class Hud {
     /** Where the zones lie: the rows under the arena are as tall as what they show. */
     #grid(): BattleGrid {
         const { width, height } = this.size()
-        const { font, panel, scrollbar, textScale } = this.theme
+        const { font, scrollbar, textScale } = this.theme
+        const padding = this.#panelPadding()
         // The label, the bag wrapping its slots in the width of the zone, and the padding of the panel.
         const frame = this.host.sprites.bag?.border.left ?? 0
-        const inside = sideWidth(width) - 2 * (panel.padding + frame)
+        const inside = sideWidth(width) - 2 * (padding + frame)
         const count = stacked(this.#draft()?.unit.usables ?? [], carried => carried.usable).length
         const rows = Math.ceil(count / Math.max(1, Math.floor(inside / SLOT_SIZE)))
-        const beltHeight = font.lineHeight * textScale + 1 + rows * SLOT_SIZE + 2 * frame + 2 * panel.padding + 2
+        const beltHeight = font.lineHeight * textScale + 1 + rows * SLOT_SIZE + 2 * frame + 2 * padding + 2
         return battleGrid(width, height, {
             chain: CARD_LOOKS.chain.height + LINK_ROOM + scrollbar.width,
             hand: PILE_HEIGHT,
             usables: this.#draft()?.unit.usables.length ? beltHeight : 0,
-            info: INFO_LINES * font.lineHeight * textScale + 2 * (panel.padding + this.#info.padding),
+            info: INFO_LINES * font.lineHeight * textScale + 2 * (padding + this.#info.padding),
         })
     }
 
@@ -411,9 +414,15 @@ export class Hud {
 
     /** A panel around what a zone shows. */
     #panel(content: Component): Panel {
-        const panel = new Panel(this.theme)
+        const wood = this.host.sprites.wood
+        const panel = new Panel(this.theme, wood ? { background: wood.frame, padding: FRAME_THICKNESS + 1 } : {})
         panel.content = content
         return panel
+    }
+
+    /** The space between the edge of a panel and what it holds: the wood of its frame, once loaded. */
+    #panelPadding(): number {
+        return this.host.sprites.wood ? FRAME_THICKNESS + 1 : this.theme.panel.padding
     }
 
     /** The card being drawn, over everything, from the pile built with the hand to its place in it. */
@@ -462,15 +471,20 @@ export class Hud {
     #journalled(): Component {
         const lines = new Box("column", { gap: 3 })
         const { log } = this.host
-        for(const line of log.slice(-LOG_LINES)) lines.add(this.#paragraph(line, DIM_TEXT))
+        // Written on paper, once it is loaded: in ink.
+        const paper = this.host.sprites.paper
+        for(const line of log.slice(-LOG_LINES)) lines.add(this.#paragraph(line, paper ? DIM_INK_TEXT : DIM_TEXT))
         this.#journal.parent?.remove(this.#journal)
         this.#journal.content = lines
         if(log.length !== this.#logRead) this.#journal.scrollToEnd()
         this.#logRead = log.length
         const column = new Box("column", { gap: 3 })
-        column.add(this.#label("Journal", CHOSEN_TEXT))
+        column.add(this.#label("Journal", paper ? INK_TEXT : CHOSEN_TEXT))
         column.add(this.#journal, { grow: 1 })
-        return column
+        if(!paper) return column
+        const sheet = new Panel(this.theme, { background: paperFrame(paper, 1), padding: PAPER_MARGIN / 2 })
+        sheet.content = column
+        return sheet
     }
 
     /** The text about what is hovered, or the hint fitting what the player may do. */

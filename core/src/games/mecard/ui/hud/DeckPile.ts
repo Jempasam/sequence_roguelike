@@ -16,9 +16,9 @@ const MAX_LAYERS = 6
 /** How tall a pile is at its thickest, in virtual pixels. */
 export const PILE_HEIGHT = CARD_LOOKS.hand.height + MAX_LAYERS
 
-const BACK = new Color(0.16, 0.14, 0.26)
-const EDGE = new Color(0.05, 0.04, 0.08)
-const EMPTY = new Color(0.3, 0.28, 0.36)
+const BACK = new Color(0.3, 0.2, 0.12)
+const EDGE = new Color(0.2, 0.12, 0.06)
+const EMPTY = new Color(0.4, 0.3, 0.2)
 const NEXT = new Color(1, 0.85, 0.35)
 const WHITE = new Color(1, 1, 1)
 

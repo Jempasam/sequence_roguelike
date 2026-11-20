@@ -7,6 +7,9 @@ import type { Rng } from "../../../sim/base/Rng"
 import { Asker } from "../../Asker"
 import { Deadline } from "../../Deadline"
 import { Gathering, MANUAL } from "../../Gathering"
+import { Admissions } from "../../participation/Participation"
+import type { GameSession } from "../../session/GameSession"
+import type { Admission, Arrival } from "../../participation/Participation"
 import type { Member } from "../../Gathering"
 import { LAST_STATE, Relay } from "../../Relay"
 import { READY_TOPIC, TEAM_TOPIC } from "../../SyncChannel"
@@ -69,7 +72,7 @@ export class DuelRaceHost {
 
     constructor(
         private readonly rules: DuelRules,
-        private readonly room: SyncRoom,
+        room: SyncRoom,
         private readonly sender: SyncSender,
         timer: TimerPort,
 
@@ -77,13 +80,28 @@ export class DuelRaceHost {
         private readonly rng: Rng,
 
         private readonly penalty: LatePenalty = KICK_TO_DUEL,
+
+        /** What a lobby adds: the number of the game, and how a client already in the lobby is greeted. */
+        private readonly lobby: {
+            readonly game?: number
+            readonly greet?: (peer: SyncPeer) => void
+
+            /** The people of the game: the bricks then follow its room of the players, which hears of who quits. */
+            readonly session?: GameSession
+        } = {},
     ){
-        this.gathering = new Gathering(room, MANUAL)
-        this.#relay = new Relay(PROGRESS_TOPIC, room, sender, LAST_STATE)
+        // Someone that comes once the race started may play it, if the rules say so: the mode alone decides.
+        this.gathering = new Gathering(room, MANUAL, {
+            game: lobby.game, late: who => this.#admit(who), session: lobby.session,
+        })
+        // What a player does is heard from the players alone, and a player that quits is heard to leave.
+        const players = lobby.session?.room ?? room
+        this.#playersRoom = players
+        this.#relay = new Relay(PROGRESS_TOPIC, players, sender, LAST_STATE)
         // What each player says of being ready is shown to the others, in the lobby.
-        this.#readiness = new Relay(READY_TOPIC, room, sender, LAST_STATE)
+        this.#readiness = new Relay(READY_TOPIC, players, sender, LAST_STATE)
         this.#deadline = new Deadline(timer, sender)
-        this.#asker = new Asker(TEAM_TOPIC, room, timer)
+        this.#asker = new Asker(TEAM_TOPIC, players, timer)
         this.#request = new TeamRequest(this.#asker, rules.teamTimeoutMs)
         this.#players = new Players(this.gathering, this.#request)
         this.#book = new ProgressBook(this.#relay)
@@ -93,10 +111,13 @@ export class DuelRaceHost {
         this.#observers = [
             this.gathering.started.add(members => this.#begin(members)),
             this.#book.progressed.add(({ id, progress }) => this.#heard(id, progress)),
+            this.gathering.memberLeft.add(member => this.#left(member.id)),
+            this.gathering.memberJoined.add(member => this.#joined(member)),
         ]
         this.#handles = [
-            room.onLeave(peer => this.#gone(peer)),
-            room.onLost(peer => this.faulted.notify(new ConnectionLostFault(peer.id))),
+            players.onLost(peer => this.faulted.notify(new ConnectionLostFault(peer.id))),
+            // What a player said and was told while its connection was lost is said again.
+            players.onBack(peer => this.#players.playerOf(peer.id)?.refresh()),
         ]
     }
 
@@ -164,6 +185,7 @@ export class DuelRaceHost {
     }
 
 
+    readonly #playersRoom: SyncRoom
     readonly #relay: Relay
     readonly #readiness: Relay
     readonly #deadline: Deadline
@@ -178,6 +200,10 @@ export class DuelRaceHost {
     readonly #observers: readonly Observer[]
     readonly #handles: readonly { dispose(): void }[]
     #raceObservers: Observer[] = []
+
+
+    /** The players that left the race, which they never play again: they only watch. */
+    readonly #abandoned = new Set<string>()
     #lifeBook: LifeBook|null = null
     #arrival: ArrivalWatch|null = null
     #round: DuelRound|null = null
@@ -226,7 +252,7 @@ export class DuelRaceHost {
             this.#check()
             return
         }
-        const round = new DuelRound(this.room, this.sender, id => this.#players.playerOf(id),
+        const round = new DuelRound(this.#playersRoom, this.sender, id => this.#players.playerOf(id),
             rules.matching, this.rng, ++this.#rounds * 1_000)
         this.#round = round
         const spectators = this.gathering.members.map(member => member.id).filter(id => !players.includes(id))
@@ -262,11 +288,40 @@ export class DuelRaceHost {
         for(const id of this.#lifeBook?.alive() ?? []) this.#players.playerOf(id)?.resume()
     }
 
-    /** A player left for good: it is out, and a race left with one player is won. */
-    #gone(peer: SyncPeer): void {
-        this.#lifeBook?.eliminate(peer.id)
+    /**
+     * What someone that comes once the race started is given: a place of its own, as a new player, when the rules
+     * let it come now, and only to watch otherwise, as one that left the race always does.
+     */
+    #admit(who: Arrival): Admission {
+        const lifeBook = this.#lifeBook
+        if(!lifeBook || this.#isOver || this.#abandoned.has(who.id)) return Admissions.spectate()
+        const state = {
+            rounds: this.#rounds,
+            arrivalStarted: this.#arrival?.isStarted ?? false,
+            lives: lifeBook.alive().map(id => lifeBook.livesOf(id)),
+        }
+        if(!this.rules.lateJoin.admits(state)) return Admissions.spectate()
+        lifeBook.add(who.id, this.rules.lateJoin.lives(state))
+        return Admissions.seat(who.id)
+    }
+
+    /**
+     * A player left the race, by itself or for good: it is out at once, and never plays it again. A race left
+     * with one player is won.
+     */
+    #left(id: string): void {
+        this.#abandoned.add(id)
+        this.#lifeBook?.eliminate(id)
+        // Without a session the round does not hear of a player that quits and stays in the room: it is told here.
+        if(!this.lobby.session) this.#round?.leave(id)
         this.#arrival?.check()
         this.#check()
+    }
+
+    /** A player came to a race that started: it is told how the race stands, as a client connecting is. */
+    #joined(member: Member): void {
+        if(!this.#lifeBook || !this.gathering.isStarted) return
+        if(member.peer) this.lobby.greet?.(member.peer)
     }
 
     /** Is the race over: one player or none is left, with no round being fought? */

@@ -44,6 +44,9 @@ export class LocalLink implements DuelPlayer, HubPort {
 
     public readonly kicked = signal<void>()
     public readonly resumed = signal<void>()
+
+    /** Never told: what a local player says is never lost. */
+    public readonly asked = signal<void>()
     public readonly raceWon = signal<string>()
     public readonly raceFinished = signal<void>()
     public readonly fighting = signal<DuelFighting>()
@@ -138,6 +141,11 @@ export class LocalLink implements DuelPlayer, HubPort {
 
     public resume(): void {
         this.resumed.notify()
+    }
+
+    /** The connection of a local player is never lost: it has nothing to say again. */
+    public refresh(): void {
+        // Nothing missed, nothing to ask.
     }
 
     /** The connection of a local player never comes back, for it is never lost. */

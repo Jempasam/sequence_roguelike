@@ -1,10 +1,16 @@
-import type { SyncLink, SyncPeer, SyncRoom } from "../../../platform"
+import type { SyncLink, SyncPeer, SyncRoom, TimerPort } from "../../../platform"
 import type { Fault } from "../../../engine/net/Fault"
 import type { Deadline } from "./Deadline"
 import {
     GATHER_FULL_TOPIC, GATHER_LATE_TOPIC, GATHER_MEMBERS_TOPIC, GATHER_START_TOPIC, JOIN_TOPIC, READY_TOPIC,
 } from "./SyncChannel"
-import { AlreadyStartedFault, GatheringFullFault, signal, UnreadableFault } from "./faults"
+import { AlreadyStartedFault, GatheringFullFault, release, signal, UnreadableFault } from "./faults"
+import type { Handle } from "./faults"
+import type { GameSession } from "./session/GameSession"
+import { Admissions, Participation } from "./participation/Participation"
+import type { Admission, Arrival } from "./participation/Participation"
+import { ParticipationReceiver } from "./participation/ParticipationReceiver"
+import type { ParticipationMessage } from "./participation/ParticipationMessage"
 import { readJson, wrongShape } from "./read"
 
 /** A client that came to play. */
@@ -37,6 +43,18 @@ export interface GatheringOptions {
 
     /** A time limit: when it comes, the gathering tells it, and starts nothing. */
     readonly deadline?: Deadline
+
+    /** The number of the game it gathers for, so what a client says of another game is not heard. */
+    readonly game?: number
+
+    /**
+     * What becomes of a client that comes once it started: the mode decides, as it alone knows what is left to
+     * take. A client is turned away with {@link AlreadyStartedFault} when the mode says nothing.
+     */
+    readonly late?: (who: Arrival) => Admission
+
+    /** The session of the game, which keeps who takes part: the gathering is then a part of its mode. */
+    readonly session?: GameSession
 }
 
 /**
@@ -45,10 +63,12 @@ export interface GatheringOptions {
  *
  * @remarks
  * Its rule says when it starts by itself. The host may also start it, and a game that welcomes whoever
- * comes, as a run does, never starts it. A client that comes when there is no room, or once it started, is
- * told, and is not a member.
+ * comes, as a run does, never starts it. A client that comes when there is no room is told, and is not a
+ * member. One that comes once it started is dealt with by the mode, through {@link GatheringOptions.late}.
  *
- * A client whose connection comes back is told again what it missed.
+ * It is made on a {@link Participation}, which keeps who takes part and turns what the room and the clients
+ * say into events: a member whose connection is lost keeps its place, one that leaves the game or the room
+ * does not. A client whose connection comes back is told again what it missed.
  */
 export class Gathering {
 
@@ -56,8 +76,14 @@ export class Gathering {
     /** Told of each client that came. */
     public readonly memberJoined = signal<Member>()
 
-    /** Told of each member that left for good. */
+    /** Told of each member that left for good, or left the game by itself. */
     public readonly memberLeft = signal<Member>()
+
+    /** Told of each member whose connection is lost: it keeps its place. */
+    public readonly memberLost = signal<Member>()
+
+    /** Told of each member whose connection came back. */
+    public readonly memberBack = signal<Member>()
 
     /** Told of each member that says it is ready, or not any more: see {@link Gathering.isReady}. */
     public readonly readyChanged = signal<Member>()
@@ -76,10 +102,24 @@ export class Gathering {
         private readonly rule: StartRule,
         private readonly options: GatheringOptions = {},
     ){
+        const policy = {
+            admit: (who: Arrival) => this.#admit(who),
+            onLost: (who: Arrival) => this.#lost(who),
+            onBack: (who: Arrival) => this.#back(who),
+            onQuit: (who: Arrival) => this.#left(who),
+            onGone: (who: Arrival) => this.#left(who),
+        }
+        // Made on the session of the game when there is one, which then tells the bricks of the mode who leaves.
+        const { session } = options
+        this.#participation = session ? session.participation : new Participation(room, options.game ?? 0, policy)
+        this.#isOwner = !session
         this.#handles = [
+            ...(session ? [session.bind(policy)] : []),
             room.onJoin(peer => this.#listen(peer)),
-            room.onBack(peer => this.#tell(peer)),
-            room.onLeave(peer => this.#leave(peer)),
+            room.onLeave(peer => this.#forget(peer)),
+            this.#participation.joined.add(who => this.#joined(who)),
+            // What the host asked of itself is answered by the return of the call, not told.
+            this.#participation.faulted.add(fault => { if(!this.#isLocalCall) this.faulted.notify(fault) }),
         ]
         const deadline = options.deadline?.expired.add(() => this.expired.notify(this.members))
         if(deadline) this.#handles.push({ dispose: () => deadline.remove() })
@@ -92,6 +132,9 @@ export class Gathering {
     }
 
     public get isStarted(): boolean { return this.#isStarted }
+
+    /** What keeps who takes part. */
+    public get participation(): Participation { return this.#participation }
 
     /** Did a member say it is ready? */
     public isReady(id: string): boolean {
@@ -122,11 +165,11 @@ export class Gathering {
     public addLocal(id: string): Member|Fault {
         const known = this.#members.get(id)
         if(known) return known
-        const fault = this.#refusal(id)
-        if(fault) return fault
-        const member: Member = { id, peer: null }
-        this.#admit(member)
-        return member
+        this.#refused = null
+        this.#isLocalCall = true
+        this.#participation.addLocal(id)
+        this.#isLocalCall = false
+        return this.#members.get(id) ?? this.#refused ?? new AlreadyStartedFault(id)
     }
 
     /** Say whether a member is ready, as a client says it: a member playing on the host has no other way. */
@@ -140,25 +183,37 @@ export class Gathering {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) release(handle)
         for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
         this.#listening.clear()
+        if(this.#isOwner) this.#participation.dispose()
     }
 
 
-    readonly #handles: { dispose(): void }[]
+    readonly #participation: Participation
+    readonly #isOwner: boolean
+    readonly #handles: Handle[]
     readonly #members = new Map<string, Member>()
     readonly #listening = new Map<string, { dispose(): void }[]>()
     readonly #ready = new Set<string>()
     #isStarted = false
 
-    /** Listen to a client that connects: it may say it came to play, then that it is ready. */
+    /** Why the last client was turned away, for the host that asked to be taken in. */
+    #refused: Fault|null = null
+    #isLocalCall = false
+
+    /** Listen to a client that connects: it may say it is ready, or that it came to play the old way. */
     #listen(peer: SyncPeer): void {
         this.#listening.get(peer.id)?.forEach(handle => handle.dispose())
         this.#listening.set(peer.id, [
-            JOIN_TOPIC.link(peer).listen(() => this.#welcome(peer)),
+            JOIN_TOPIC.link(peer).listen(() => { this.#participation.join(peer) }),
             READY_TOPIC.link(peer).listen(text => this.#readied(peer.id, text)),
         ])
+    }
+
+    #forget(peer: SyncPeer): void {
+        for(const handle of this.#listening.get(peer.id) ?? []) handle.dispose()
+        this.#listening.delete(peer.id)
     }
 
     /** What a member says of being ready: `1` or `0`, anything else is left out. A non-member is unheard. */
@@ -167,53 +222,72 @@ export class Gathering {
         this.setReady(id, text === "1")
     }
 
-    #welcome(peer: SyncPeer): void {
-        if(this.#members.has(peer.id)) return
-        const fault = this.#refusal(peer.id)
-        if(fault instanceof AlreadyStartedFault) GATHER_LATE_TOPIC.link(peer).send("")
-        else if(fault) GATHER_FULL_TOPIC.link(peer).send("")
-        if(fault){
-            this.faulted.notify(fault)
-            return
-        }
-        this.#admit({ id: peer.id, peer })
+    /** What a client that says it comes is given: a place, or the reason it has none. */
+    #admit(who: Arrival): Admission {
+        const admission = this.#decide(who)
+        if(admission.kind === "refuse") this.#turnAway(who, admission.fault)
+        return admission
     }
 
-    /** Why a newcomer is turned away, none when it is taken in. */
-    #refusal(id: string): Fault|null {
-        if(this.#isStarted) return new AlreadyStartedFault(id)
+    /** A place, once the game started what the mode makes of the newcomer, or the reason it has none. */
+    #decide(who: Arrival): Admission {
+        if(this.#isStarted) return this.options.late?.(who) ?? Admissions.refuse(new AlreadyStartedFault(who.id))
         const { capacity } = this.options
-        if(capacity !== undefined && this.#members.size >= capacity) return new GatheringFullFault(id)
-        return null
+        if(capacity !== undefined && this.#members.size >= capacity){
+            return Admissions.refuse(new GatheringFullFault(who.id))
+        }
+        return Admissions.seat(who.id)
     }
 
-    #admit(member: Member): void {
+    /** Tell a client that is turned away why, in the words of the topic that says it. */
+    #turnAway(who: Arrival, fault: Fault): void {
+        this.#refused = fault
+        if(!who.peer) return
+        if(fault instanceof AlreadyStartedFault) GATHER_LATE_TOPIC.link(who.peer).send("")
+        else if(fault instanceof GatheringFullFault) GATHER_FULL_TOPIC.link(who.peer).send("")
+    }
+
+    /** Someone was given its part: a player is a member. */
+    #joined(who: Arrival): void {
+        const state = this.#participation.stateOf(who.id)
+        if(!state || state.role !== "player") return
+        const member: Member = { id: who.id, peer: who.peer }
         this.#members.set(member.id, member)
         this.memberJoined.notify(member)
         this.#tellAll()
         if(!this.#isStarted && this.rule.shouldStart(this.members)) this.start()
     }
 
-    #leave(peer: SyncPeer): void {
-        for(const handle of this.#listening.get(peer.id) ?? []) handle.dispose()
-        this.#listening.delete(peer.id)
-        const member = this.#members.get(peer.id)
+    #left(who: Arrival): void {
+        const member = this.#members.get(who.id)
         if(!member) return
-        this.#members.delete(peer.id)
-        this.#ready.delete(peer.id)
+        this.#members.delete(who.id)
+        this.#ready.delete(who.id)
         this.memberLeft.notify(member)
         this.#tellAll()
     }
 
+    #lost(who: Arrival): void {
+        const member = this.#members.get(who.id)
+        if(member) this.memberLost.notify(member)
+    }
+
+    #back(who: Arrival): void {
+        const member = this.#members.get(who.id)
+        if(!member) return
+        this.#tell(member)
+        this.memberBack.notify(member)
+    }
+
     /** Tell a client who came, and that it started if it did. */
-    #tell(peer: SyncPeer): void {
-        if(!this.#members.has(peer.id)) return
+    #tell({ peer, id }: Member): void {
+        if(!peer || !this.#members.has(id)) return
         GATHER_MEMBERS_TOPIC.link(peer).send(JSON.stringify([...this.#members.keys()]))
         if(this.#isStarted) GATHER_START_TOPIC.link(peer).send("")
     }
 
     #tellAll(): void {
-        for(const { peer } of this.#members.values()) if(peer) this.#tell(peer)
+        for(const member of this.#members.values()) this.#tell(member)
     }
 }
 
@@ -221,7 +295,8 @@ export class Gathering {
  * A client of a {@link Gathering}: it says it came, hears who else did, and that the game starts.
  *
  * @remarks
- * A refusal, no room left or a game started already, ends it: the client is not a member.
+ * It says it comes through a {@link ParticipationReceiver}, so it says it again until the host answers when it
+ * is given a timer. A refusal, no room left or a mode that turns it away, ends it: the client is not a member.
  */
 export class Attendee {
 
@@ -232,28 +307,46 @@ export class Attendee {
     /** Told once, when the game starts. */
     public readonly started = signal<void>()
 
+    /** Told each time what the client holds changes, the first time included. */
+    public readonly participationChanged = signal<ParticipationMessage>()
+
     /** Told of a message that could not be read: it is left out. */
     public readonly faulted = signal<Fault>()
 
     /** Told once, when the client is turned away. */
     public readonly ended = signal<Fault>()
 
-    constructor(private readonly link: SyncLink){
+    constructor(
+        private readonly link: SyncLink,
+        options: { readonly game?: number, readonly timer?: TimerPort } = {},
+    ){
+        this.#participation = new ParticipationReceiver(link, options.game ?? 0, options.timer ?? null)
         this.#handles = [
             GATHER_MEMBERS_TOPIC.source(link).listen(text => this.#members(text)),
             GATHER_START_TOPIC.source(link).listen(() => this.started.notify()),
             GATHER_FULL_TOPIC.source(link).listen(() => this.#end(new GatheringFullFault(null))),
             GATHER_LATE_TOPIC.source(link).listen(() => this.#end(new AlreadyStartedFault(null))),
+            this.#participation.changed.add(state => this.participationChanged.notify(state)),
+            this.#participation.faulted.add(fault => this.faulted.notify(fault)),
+            this.#participation.ended.add(fault => this.#end(fault)),
         ]
     }
 
+
+    /** What the host says the client holds, none until it said. */
+    public get participation(): ParticipationMessage|null { return this.#participation.state }
 
     /**
      * Say it came to play. It is a call of its own, so what listens to the answer is added first: a channel
      * may answer at once.
      */
     public join(): void {
-        JOIN_TOPIC.link(this.link).send("")
+        this.#participation.join()
+    }
+
+    /** Say it leaves the game, and may come back to it. */
+    public quit(): void {
+        this.#participation.quit()
     }
 
     /** Say whether the client is ready, as the host and the others hear it. */
@@ -263,11 +356,13 @@ export class Attendee {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) release(handle)
+        this.#participation.dispose()
     }
 
 
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #participation: ParticipationReceiver
+    readonly #handles: readonly Handle[]
 
     #members(text: string): void {
         const ids = readJson(GATHER_MEMBERS_TOPIC.name, text)

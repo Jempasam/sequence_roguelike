@@ -359,6 +359,14 @@ export class DuelRound {
         this.allDecided.notify()
     }
 
+    /**
+     * A player left the game while staying in the room, which the round does not hear of from the room: its units
+     * are played as bots, as for one that left for good, and a camp that left altogether loses.
+     */
+    public leave(id: string): void {
+        this.#leave(id)
+    }
+
     /** Stop hearing the players of a duel. Its battle is still told to a client coming back. */
     #release(fighting: Fighting): void {
         for(const handle of fighting.handles) handle.dispose()

@@ -93,6 +93,9 @@ export interface HubPort {
     /** Told when the hub lets the player go on with its journey. */
     readonly resumed: Observable<void>
 
+    /** Told when the hub asks where the player stands again, as its connection came back. */
+    readonly asked: Observable<void>
+
     /** Told, with the winner, when the race is won. */
     readonly raceWon: Observable<string>
 

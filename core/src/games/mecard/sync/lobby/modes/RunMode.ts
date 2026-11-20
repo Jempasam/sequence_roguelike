@@ -91,7 +91,10 @@ export class RunMode implements LobbyMode {
         const hosted = this.bench.host()
         const policy = values.places === "aléatoires" ? randomSeats(new Rng(Date.now())) : FIXED_SEATS
         // Made first: a battle told to the clients has its units given already.
-        const host = new RunHost(hosted.run, stage.room, this.seats, policy, () => hosted.startRound())
+        const host = new RunHost(hosted.run, stage.room, this.seats, policy, () => hosted.startRound(), {
+            game: stage.game,
+            greet: peer => stage.sender.greet(peer),
+        })
         host.faulted.add(fault => this.bench.report(fault.describe()))
         hosted.lockGuests(unit => host.isGuests(unit))
         hosted.onReady = () => host.ready()
@@ -118,13 +121,14 @@ export class RunMode implements LobbyMode {
         receiver.travel.onDesync = () => this.bench.report("Désynchronisé sur la carte : rattrapé.")
         let guest: RunGuest|null = null
         if(role === "player" && stage.link){
-            guest = new RunGuest(joined.run, stage.link, units => joined.seat(units))
+            guest = new RunGuest(joined.run, stage.link, units => joined.seat(units), stage.game)
             guest.faulted.add(fault => this.bench.report(fault.describe()))
             const playing = guest
             joined.onReady = () => playing.ready()
         }
         return {
             ended: signal<Fault|null>(),
+            quit: guest ? () => guest?.quit() : undefined,
             dispose: () => {
                 joined.onReady = null
                 guest?.dispose()

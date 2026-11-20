@@ -1,5 +1,7 @@
 import type { SyncPeer, SyncRoom } from "../../../../platform"
 
+import { QUIT_ROOM_TOPIC } from "../SyncChannel"
+
 /** What hears the clients that connect or are lost: the handler, and the clients it was told of already. */
 interface Hearing {
     readonly handler: (peer: SyncPeer) => void
@@ -77,11 +79,14 @@ export class LobbyRoom implements SyncRoom {
         this.#losing.clear()
         this.#returning.clear()
         this.#leaving.clear()
+        for(const handle of this.#quitting.values()) handle.dispose()
+        this.#quitting.clear()
     }
 
 
     readonly #handles: readonly { dispose(): void }[]
     readonly #present = new Map<string, SyncPeer>()
+    readonly #quitting = new Map<string, { dispose(): void }>()
     readonly #lost = new Set<string>()
     readonly #joining = new Set<Hearing>()
     readonly #losing = new Set<Hearing>()
@@ -95,6 +100,9 @@ export class LobbyRoom implements SyncRoom {
     }
 
     #join(peer: SyncPeer): void {
+        this.#quitting.get(peer.id)?.dispose()
+        // A client says it leaves for good before it closes: nothing is waited for, as for one that is lost.
+        this.#quitting.set(peer.id, QUIT_ROOM_TOPIC.link(peer).listen(() => this.#leave(peer)))
         this.#present.set(peer.id, peer)
         for(const entry of [...this.#joining]) this.#tell(entry, peer)
     }
@@ -111,6 +119,10 @@ export class LobbyRoom implements SyncRoom {
     }
 
     #leave(peer: SyncPeer): void {
+        this.#quitting.get(peer.id)?.dispose()
+        this.#quitting.delete(peer.id)
+        // Said by the client then by the network: the second tells nothing new.
+        if(!this.#present.has(peer.id)) return
         this.#present.delete(peer.id)
         this.#lost.delete(peer.id)
         for(const entry of this.#joining) entry.told.delete(peer.id)

@@ -65,6 +65,12 @@ export class DuelRacePlayer {
     /** Where the others stand. */
     public readonly others: ProgressView
 
+    /** How many floors the map of the race has in all, none when it goes on without end. */
+    public readonly floors: number|null
+
+    /** How many lives each player started with. */
+    public readonly maxLives: number
+
     constructor(
         rules: DuelRules,
 
@@ -83,6 +89,8 @@ export class DuelRacePlayer {
         this.lives = hub.lives
         this.deadline = hub.deadline
         this.others = hub.others
+        this.floors = rules.floors ?? null
+        this.maxLives = rules.lives
         this.layers = new DuelLayers(run, rules.duelEvery, rules.closing ?? false)
         this.#broadcaster = new ProgressBroadcaster(run.travel, {
             send: progress => hub.sendProgress(progress),
@@ -97,6 +105,8 @@ export class DuelRacePlayer {
         this.#observers = [
             hub.kicked.add(() => this.contestant.kick()),
             hub.resumed.add(() => this.contestant.resume()),
+            // The connection came back: what was said while it was lost is said again.
+            hub.asked.add(() => this.#broadcaster.resend()),
             hub.lives.eliminated.add(id => { if(id === this.id) this.eliminated.notify() }),
             hub.ended.add(() => this.dispose()),
         ]

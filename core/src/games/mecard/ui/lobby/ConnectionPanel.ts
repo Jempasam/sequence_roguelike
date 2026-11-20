@@ -148,6 +148,7 @@ export class ConnectionPanel {
 
     #connected(column: Box): void {
         const { theme, controller } = this
+        if(controller.isReconnecting) column.add(new Label(theme, "Connexion perdue, reconnexion...", { color: WARNING_TEXT }))
         column.add(new Label(theme, `Code : ${controller.code ?? ""}`, { color: CHOSEN_TEXT }))
         const clipboard = this.clipboard
         if(clipboard){
@@ -171,6 +172,12 @@ export class ConnectionPanel {
             }
             column.add(start)
         } else if(controller.playing) column.add(new Label(theme, "Partie en cours...", { color: CHOSEN_TEXT }))
+        else if(controller.canRejoin){
+            column.add(new Label(theme, "Partie en cours...", { color: CHOSEN_TEXT }))
+            const rejoin = new Button(theme, "Rejoindre la partie", beigeButton(theme))
+            rejoin.onActivate = () => controller.rejoin()
+            column.add(rejoin)
+        }
         const leave = new Button(theme, "Quitter", beigeButton(theme))
         leave.onActivate = () => controller.leave()
         column.add(leave)

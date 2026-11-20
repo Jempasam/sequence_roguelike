@@ -14,6 +14,12 @@ export interface ModeRun {
 
     /** Stop the game, whatever state it is in. The stage is the lobby's to drop. */
     dispose(): void
+
+    /**
+     * Leave the game while it goes on for the others, and stay in the room: a client says so to the main client,
+     * which keeps what it needs, or not. A game that cannot be left this way has none.
+     */
+    quit?(): void
 }
 
 /**

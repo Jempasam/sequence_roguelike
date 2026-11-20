@@ -9,6 +9,9 @@ export interface SeatOffer {
 
     /** The id of the client holding each seat that is held, by the name of the unit. */
     readonly held: { readonly [unit: string]: string }
+
+    /** The id of the client a seat that was freed is kept for, by the name of the unit: nobody else is given it yet. */
+    readonly reserved?: { readonly [unit: string]: string }
 }
 
 /** A client wishing for a seat, or giving one back. */
@@ -30,6 +33,8 @@ export function readSeatOfferMessage(text: string): SeatOffer|UnreadableFault {
         && Array.isArray(message.candidates) && message.candidates.every(each => typeof each === "string")
         && typeof message.held === "object" && message.held !== null && !Array.isArray(message.held)
         && Object.values(message.held).every(each => typeof each === "string")
+        && (message.reserved === undefined || (typeof message.reserved === "object" && message.reserved !== null
+            && !Array.isArray(message.reserved) && Object.values(message.reserved).every(each => typeof each === "string")))
     if(!isOffer) return wrongShape(SEAT_OFFER_TOPIC.name, text, "offer of seats")
     return message as SeatOffer
 }

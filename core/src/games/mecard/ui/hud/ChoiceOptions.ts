@@ -27,8 +27,8 @@ const CARD_GAP = 2
 export const CARD_OVERLAP = Math.floor(CARD_LOOKS.hand.width / 2)
 
 /** The edge of an option, light so the option stands out, and its face, lighter than the panels. */
-const OPTION_EDGE = new Color(0.88, 0.85, 0.96)
-const OPTION_FACE = new Color(0.17, 0.15, 0.25)
+const OPTION_EDGE = new Color(0.88, 0.8, 0.62)
+const OPTION_FACE = new Color(0.22, 0.13, 0.07)
 
 /** What an option shows besides its cards and its text. */
 export interface OptionExtras {

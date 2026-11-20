@@ -9,7 +9,7 @@ import { PointingArm } from "./PointingArm"
 import type { ArmSettings } from "./PointingArm"
 
 /** The color behind the forearm. */
-const BACKDROP = new Color(0.12, 0.11, 0.17)
+const BACKDROP = new Color(0.1, 0.06, 0.03)
 
 /** The width of the panel of the controls, in virtual pixels, and the space around and between things. */
 const SIDE_WIDTH = 150

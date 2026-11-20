@@ -65,7 +65,7 @@ export class Lobby {
         const { mode, values } = this.selection
         const invalid = checkValues(mode.settings, values)
         if(invalid) return invalid
-        const stage = new HostStage(this.#room, this.#sender)
+        const stage = new HostStage(this.#room, this.#sender, this.selection.nextGame)
         const run = mode.host(stage, values)
         if(run instanceof Fault){
             stage.dispose()

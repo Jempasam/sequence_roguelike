@@ -4,6 +4,8 @@ import type { Matching, TeamSize } from "../Matching"
 import { randomTeams, shrinking } from "../Matching"
 import { LOSERS_LOSE_ONE } from "./DuelOutcome"
 import type { DuelOutcome } from "./DuelOutcome"
+import { UNTIL_FIRST_ARRIVAL } from "./LateJoin"
+import type { LateJoin } from "./LateJoin"
 
 /** What a race of duels is played by: all the rules of the mode, given to it as one object. */
 export interface DuelRules {
@@ -15,6 +17,12 @@ export interface DuelRules {
 
     /** One row of halts of the duels every this many rows of the map. */
     readonly duelEvery: number
+
+    /**
+     * How many floors the map of the race has in all, none when it goes on without end: what a player reads
+     * its progress against.
+     */
+    readonly floors?: number
 
     /** Is a row of them laid past the last row of the map too? No by default. */
     readonly closing?: boolean
@@ -30,6 +38,9 @@ export interface DuelRules {
 
     /** How long a player has to give its team for a duel, in milliseconds. */
     readonly teamTimeoutMs: number
+
+    /** Whether someone may come to the race once it started, as a player of its own, and with how many lives. */
+    readonly lateJoin: LateJoin
 }
 
 /**
@@ -48,6 +59,7 @@ export function duelRules(rng: Rng, changes: Partial<DuelRules> = {}): DuelRules
         matching: randomTeams(rng, teamSize),
         outcome: LOSERS_LOSE_ONE,
         teamTimeoutMs: 10_000,
+        lateJoin: UNTIL_FIRST_ARRIVAL,
         ...changes,
     }
 }

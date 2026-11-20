@@ -9,7 +9,7 @@ const HEIGHT = 7
 /** The width of the head of the arrow, in virtual pixels. */
 const HEAD = 7
 
-const COLOR = new Color(0.55, 0.53, 0.63)
+const COLOR = new Color(0.72, 0.64, 0.48)
 
 /** An arrow pointing down, between two units in the order of play: the one above plays before. */
 export class TurnArrow extends Component {

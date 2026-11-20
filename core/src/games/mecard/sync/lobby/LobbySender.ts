@@ -1,4 +1,4 @@
-import type { SyncSender } from "../SyncChannel"
+import type { SyncPeer, SyncSender } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
 
@@ -40,11 +40,17 @@ export class LobbySender implements SyncSender {
 
     /** Give each client that is reachable now the first messages, as they stand. */
     public greetAll(): void {
-        for(const peer of this.room.reachable){
-            for(const { initial } of [...this.#peers]){
-                const message = initial()
-                if(message !== null) peer.send(message)
-            }
+        for(const peer of this.room.reachable) this.greet(peer)
+    }
+
+    /**
+     * Give one client the first messages, as they stand: one that joins the game while it is played is no client
+     * connecting, so the network does not greet it.
+     */
+    public greet(peer: SyncPeer): void {
+        for(const { initial } of [...this.#peers]){
+            const message = initial()
+            if(message !== null) peer.send(message)
         }
     }
 

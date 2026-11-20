@@ -1,4 +1,4 @@
-import type { LifeBook } from "./LifeBook"
+import type { LifeLedger } from "./LifeBook"
 
 /** What the hub does to a player late to the duels: polymorphic, so a mode chooses its penalty. */
 export interface LatePenalty {
@@ -7,7 +7,7 @@ export interface LatePenalty {
      *
      * @param kick - Tells the player to go to the duels at once.
      */
-    penalize(id: string, lifeBook: LifeBook, kick: (id: string) => void): void
+    penalize(id: string, lifeBook: LifeLedger, kick: (id: string) => void): void
 }
 
 /** The player loses a life, and is sent to the duels. */

@@ -6,7 +6,8 @@ import {
     DuelRaceGuest, DuelRaceHost, duelRules, fixed, LocalRoom, LocalSync, NotEnoughPlayersFault, randomTeams,
     shrinking,
 } from "@game/core/mecard/sync"
-import type { DuelDecision, Matched, TeamSize } from "@game/core/mecard/sync"
+import { NEVER } from "@game/core/mecard/sync"
+import type { DuelDecision, LateJoin, Matched, TeamSize } from "@game/core/mecard/sync"
 import { describe, expect, test } from "vitest"
 
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -22,10 +23,12 @@ interface Options {
     readonly lives?: number
     readonly teamSize?: TeamSize
     readonly idle?: readonly string[]
+    readonly lateJoin?: LateJoin
 }
 
 interface Race {
     readonly room: LocalRoom
+    readonly channel: LocalSync
     readonly timer: ManualScheduler
     readonly host: DuelRaceHost
     readonly runs: Map<string, Run>
@@ -42,6 +45,7 @@ interface Race {
     readonly rounds: number[]
     readonly eliminated: string[]
     readonly guestWon: string[]
+    readonly rules: ReturnType<typeof duelRules>
     finished(): number
 }
 
@@ -54,6 +58,7 @@ function racing(ids: readonly string[], options: Options = {}): Race {
     const lives = options.lives ?? 2
     const rules = duelRules(new Rng(5), {
         lives, duelEvery: 2, arrivalMs: 1_000, teamSize, matching: randomTeams(new Rng(6), teamSize),
+        ...(options.lateJoin ? { lateJoin: options.lateJoin } : {}),
     })
     const host = new DuelRaceHost(rules, room, channel, timer, new Rng(7))
     const history = new Map<string, number[]>(ids.map(id => [id, [lives]]))
@@ -88,8 +93,8 @@ function racing(ids: readonly string[], options: Options = {}): Race {
     host.start()
     host.lifeBook?.lifeLost.add(({ id, left }) => history.get(id)?.push(left))
     return {
-        room, timer, host, runs, guests, players, idle: new Set(options.idle ?? []), history, won, matched,
-        decided, faults, rounds, eliminated, guestWon, finished: () => finished,
+        room, channel, timer, host, runs, guests, players, idle: new Set(options.idle ?? []), history, won, matched,
+        decided, faults, rounds, eliminated, guestWon, rules, finished: () => finished,
     }
 }
 
@@ -228,6 +233,7 @@ describe("DuelRace", () => {
         const race = racing(["a", "b"], { lives: 3 })
         race.room.leave("a")
         race.room.leave("b")
+        race.timer.advance(31_000)
         expect(race.finished() + race.won.length).toBe(1)
     })
 
@@ -252,5 +258,96 @@ describe("DuelRace", () => {
         expect(ended).toHaveLength(1)
         expect(ended[0]).toBeInstanceOf(NotEnoughPlayersFault)
         expect(host.lifeBook).toBeNull()
+    })
+})
+
+/** Someone comes to a race that started, with a run of its own, and plays it as the others do. */
+function comes(race: Race, id: string, number = 20): DuelRaceGuest {
+    const run = startedRun(number)
+    const guest = new DuelRaceGuest(race.rules, race.room.join(id), race.channel, race.timer, run, id)
+    race.runs.set(id, run)
+    race.guests.set(id, guest)
+    race.players.set(id, new Player(id, guest.view, () => guest.ready()))
+    return guest
+}
+
+describe("DuelRace, players coming and going", () => {
+    test("a player that quits → out at once, never waited for, and the others go on", async() => {
+        const race = racing(["a", "b", "c"], { lives: 3 })
+        race.guests.get("c")?.quit()
+        expect(race.host.lifeBook?.isAlive("c")).toBe(false)
+        await playOut(race, each => each.rounds.length > 0)
+        expect(race.rounds.length).toBeGreaterThan(0)
+        // It is not late, nor matched: nothing more is taken from it.
+        expect(race.history.get("c")).toEqual([3])
+    })
+
+    test("a player that quits in the middle of a round → its units are played as bots, and the race ends", async() => {
+        const race = racing(["a", "b", "c", "d"], { lives: 2 })
+        await playOut(race, each => each.host.round !== null)
+        const [leaver] = race.host.round?.fights.flatMap(fight => fight.sides.flat()) ?? []
+        expect(leaver).toBeDefined()
+        race.guests.get(leaver)?.quit()
+        race.runs.delete(leaver)
+        await playOut(race)
+        expect(isOver(race)).toBe(true)
+        expect(race.host.lifeBook?.isAlive(leaver)).toBe(false)
+    })
+
+    test("a player that abandoned and comes back → only watches, with no lives given again", () => {
+        const race = racing(["a", "b", "c"], { lives: 3 })
+        race.guests.get("b")?.quit()
+        const back = comes(race, "b")
+        expect(back.attendee.participation?.role).toBe("spectator")
+        expect(race.host.lifeBook?.isAlive("b")).toBe(false)
+    })
+
+    test("someone that comes before any player arrived at the duels → a new player, with the fewest lives of the others", () => {
+        const race = racing(["a", "b", "c"], { lives: 3 })
+        race.host.lifeBook?.lose("b")
+        race.host.lifeBook?.lose("b")
+        const guest = comes(race, "z")
+        expect(guest.attendee.participation).toEqual({ game: 0, role: "player", seat: "z" })
+        expect(race.host.lifeBook?.livesOf("z")).toBe(1)
+        expect(race.host.gathering.memberOf("z")).not.toBeNull()
+        expect(race.host.lifeBook?.alive()).toEqual(["a", "b", "c", "z"])
+    })
+
+    test("someone that comes once a player arrived at the duels → only watches", async() => {
+        const race = racing(["a", "b", "c"], { lives: 3, idle: ["b", "c"] })
+        await playOut(race, each => each.host.arrival?.isStarted === true)
+        expect(race.host.arrival?.isStarted).toBe(true)
+        const guest = comes(race, "z")
+        expect(guest.attendee.participation?.role).toBe("spectator")
+        expect(race.host.lifeBook?.alive()).toEqual(["a", "b", "c"])
+        expect(race.faults).toEqual([])
+    })
+
+    test("a rule that lets nobody come → the newcomer only watches, even at the start", () => {
+        const race = racing(["a", "b"], { lives: 3, lateJoin: NEVER })
+        expect(comes(race, "z").attendee.participation?.role).toBe("spectator")
+    })
+
+    test("a newcomer → plays on with the others, and the race ends with it counted", async() => {
+        const race = racing(["a", "b"], { lives: 2 })
+        comes(race, "z")
+        await playOut(race)
+        expect(isOver(race)).toBe(true)
+        expect(race.history.get("a")).toBeDefined()
+        expect(race.host.lifeBook?.alive().length ?? 2).toBeLessThanOrEqual(1)
+    })
+
+    test("a newcomer is told how the race stands: the lives of the others", () => {
+        const race = racing(["a", "b"], { lives: 3 })
+        race.host.lifeBook?.lose("a")
+        const guest = comes(race, "z")
+        expect(guest.lives.livesOf("a")).toBe(2)
+    })
+
+    test("everyone but one quits → the last one left wins at once", () => {
+        const race = racing(["a", "b", "c"], { lives: 3 })
+        race.guests.get("b")?.quit()
+        race.guests.get("c")?.quit()
+        expect(race.won).toEqual(["a"])
     })
 })

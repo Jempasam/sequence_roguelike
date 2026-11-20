@@ -5,6 +5,12 @@ import type { LivesView } from "../players/HubPort"
 import { LIVES_TOPIC } from "./topics"
 import { readLifeMessage, writeLifeMessage } from "./LifeMessage"
 
+/** What a duel or a penalty takes lives with: a player, by its id. */
+export interface LifeLedger {
+    /** A player loses a life. */
+    lose(id: string): void
+}
+
 /**
  * The lives of the players of a race of duels, which the hub keeps and tells everyone. The simulation knows
  * nothing of them: a life is a rule of the mode.
@@ -15,9 +21,11 @@ import { readLifeMessage, writeLifeMessage } from "./LifeMessage"
  * the hub calls once it applied everything a duel or a round changed: players eliminated together leave no
  * winner, which telling it at each change would give away.
  *
+ * A player may come to a race that started, with the lives the mode gives it: see {@link LifeBook.add}.
+ *
  * It is also the lives a player that plays on the hub reads, as a {@link LivesView}.
  */
-export class LifeBook implements LivesView {
+export class LifeBook implements LivesView, LifeLedger {
 
 
     /** Told of each life lost, with the lives left. */
@@ -59,6 +67,18 @@ export class LifeBook implements LivesView {
         return [...this.#lives].filter(([, lives]) => lives > 0).map(([id]) => id)
     }
 
+    /**
+     * A player comes to the race with these lives, after it started. Nothing is done for one that is known: it
+     * keeps what it has, so a player out is never given lives again.
+     */
+    public add(id: string, lives: number): void {
+        if(this.#lives.has(id)) return
+        this.#lives.set(id, lives)
+        this.#count++
+        this.livesChanged.notify({ id, lives })
+        this.#sender.send(this.#message())
+    }
+
     /** A player loses a life, and is eliminated at the last one. A player that is out loses nothing more. */
     public lose(id: string): void {
         const lives = this.#lives.get(id)
@@ -93,7 +113,7 @@ export class LifeBook implements LivesView {
 
 
     readonly #lives = new Map<string, number>()
-    readonly #count: number
+    #count: number
     readonly #sender: SyncSender
     readonly #handle: { dispose(): void }
 

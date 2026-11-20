@@ -12,7 +12,7 @@ import type { BoardView, WorldRect } from "./BoardView"
 const PAPER_SCALE = 1
 
 /** What the arena lies on while the paper is not loaded. */
-const BARE = new Color(0.1, 0.09, 0.13)
+const BARE = new Color(0.14, 0.09, 0.05)
 
 /**
  * The arena of the battle as a component of the interface: the worn paper of the maps, opaque, and the

@@ -26,7 +26,8 @@ export const CAVE_FLOOR: FloorType = {
     name: "Grotte",
     description: "Des gobelins et leurs amis, gardés par un golem runique. Un peu de tout sur le chemin.",
     icon: visual("floors/cave/logo"),
-    look: sceneLook(20, 18, 31, "map"),
+    // The cave has no frame of its own: it keeps that of the generic map.
+    look: { ...sceneLook(20, 18, 31, "cave"), border: visual("border/map") },
     decorations: [
         { picture: visual("floors/cave/bigshroom"), size: 2 },
         { picture: visual("floors/cave/stalagmite"), size: 2 },

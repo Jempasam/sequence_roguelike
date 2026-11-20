@@ -72,6 +72,28 @@ describe("run modes in a lobby", () => {
         expect(ana.playing).toBe(false)
     })
 
+    test("a client that quits the game → back in the lobby, its seats given back, and it may play again", async() => {
+        const { screen, joined } = bench()
+        const modes = [runCoopMode(screen)]
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        const lobby = new Lobby(room, channel, "Hôte", modes)
+        const ana = new LobbyGuest(room.join("a"), channel, "Ana", modes)
+        lobby.start()
+        await settle()
+        expect(ana.quitGame()).toBe(true)
+        expect(ana.playing).toBe(false)
+        expect(ana.gameGoing).toBe(true)
+        expect(lobby.playing).toBe(true)
+        expect(joined[0].closed).toBe(true)
+        ana.rejoin()
+        await settle()
+        expect(ana.playing).toBe(true)
+        expect(joined).toHaveLength(2)
+        // Given a hero again, as the first time.
+        expect(joined[1].seats.at(-1)?.length ?? 0).toBeGreaterThan(0)
+    })
+
     test("the party falls on the host → the game is over, and the lobby is free again", async() => {
         const { screen, hosted } = bench()
         const modes = [runCoopMode(screen)]

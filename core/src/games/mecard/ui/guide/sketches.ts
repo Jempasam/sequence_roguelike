@@ -123,7 +123,7 @@ const METRE = 14
 const CELL_WIDTH = 70
 const CELL_HEIGHT = 58
 
-const FLOOR_COLOR = new Color(0.12, 0.11, 0.17)
+const FLOOR_COLOR = new Color(0.1, 0.06, 0.03)
 const UNIT_COLOR = new Color(0.35, 0.6, 1)
 const ZONE_COLOR = new Color(1, 0.45, 0.35, 0.6)
 const ARROW_COLOR = new Color(1, 1, 1)

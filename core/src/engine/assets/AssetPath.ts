@@ -174,6 +174,49 @@ export type AssetPath =
     | "mecard/halts/witch.png"
     | "mecard/hud/bag.png"
     | "mecard/hud/booster.png"
+    | "mecard/hud/icon/angry.png"
+    | "mecard/hud/icon/bravo.png"
+    | "mecard/hud/icon/character.png"
+    | "mecard/hud/icon/character_empty.png"
+    | "mecard/hud/icon/copy.png"
+    | "mecard/hud/icon/cut.png"
+    | "mecard/hud/icon/defeat.png"
+    | "mecard/hud/icon/embarrassed.png"
+    | "mecard/hud/icon/happy.png"
+    | "mecard/hud/icon/heart.png"
+    | "mecard/hud/icon/heart_empty.png"
+    | "mecard/hud/icon/love.png"
+    | "mecard/hud/icon/map_pin.png"
+    | "mecard/hud/icon/paste.png"
+    | "mecard/hud/icon/sad.png"
+    | "mecard/hud/icon/smile.png"
+    | "mecard/hud/icon/tongue.png"
+    | "mecard/hud/icon/trash.png"
+    | "mecard/hud/icon/victory.png"
+    | "mecard/hud/icon/vomit.png"
+    | "mecard/hud/jauge/bevel_empty.png"
+    | "mecard/hud/jauge/bevel_fill.png"
+    | "mecard/hud/jauge/diag_empty.png"
+    | "mecard/hud/jauge/diag_fill.png"
+    | "mecard/hud/jauge/pill_empty.png"
+    | "mecard/hud/jauge/pill_fill.png"
+    | "mecard/hud/jauge/segmented_empty.png"
+    | "mecard/hud/jauge/segmented_fill.png"
+    | "mecard/hud/jauge/simple_empty.png"
+    | "mecard/hud/jauge/simple_fill.png"
+    | "mecard/hud/jauge/thin_empty.png"
+    | "mecard/hud/jauge/thin_fill.png"
+    | "mecard/hud/line/chain.png"
+    | "mecard/hud/line/dashed.png"
+    | "mecard/hud/line/dotted.png"
+    | "mecard/hud/line/double.png"
+    | "mecard/hud/line/solid.png"
+    | "mecard/hud/line/zigzag.png"
+    | "mecard/hud/panel/double.png"
+    | "mecard/hud/panel/ornate.png"
+    | "mecard/hud/panel/plain.png"
+    | "mecard/hud/panel/riveted.png"
+    | "mecard/hud/panel/torn.png"
     | "mecard/hud/paper.png"
     | "mecard/hud/wood_block.png"
     | "mecard/hud/wood_frame.png"
@@ -234,6 +277,7 @@ export type AssetPath =
     | "mecard/parallax/bag.ora"
     | "mecard/parallax/butcher.ora"
     | "mecard/parallax/castle.ora"
+    | "mecard/parallax/cave.ora"
     | "mecard/parallax/chest.ora"
     | "mecard/parallax/creature.ora"
     | "mecard/parallax/demon.ora"
@@ -818,6 +862,49 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/halts/witch.png",
     "mecard/hud/bag.png",
     "mecard/hud/booster.png",
+    "mecard/hud/icon/angry.png",
+    "mecard/hud/icon/bravo.png",
+    "mecard/hud/icon/character.png",
+    "mecard/hud/icon/character_empty.png",
+    "mecard/hud/icon/copy.png",
+    "mecard/hud/icon/cut.png",
+    "mecard/hud/icon/defeat.png",
+    "mecard/hud/icon/embarrassed.png",
+    "mecard/hud/icon/happy.png",
+    "mecard/hud/icon/heart.png",
+    "mecard/hud/icon/heart_empty.png",
+    "mecard/hud/icon/love.png",
+    "mecard/hud/icon/map_pin.png",
+    "mecard/hud/icon/paste.png",
+    "mecard/hud/icon/sad.png",
+    "mecard/hud/icon/smile.png",
+    "mecard/hud/icon/tongue.png",
+    "mecard/hud/icon/trash.png",
+    "mecard/hud/icon/victory.png",
+    "mecard/hud/icon/vomit.png",
+    "mecard/hud/jauge/bevel_empty.png",
+    "mecard/hud/jauge/bevel_fill.png",
+    "mecard/hud/jauge/diag_empty.png",
+    "mecard/hud/jauge/diag_fill.png",
+    "mecard/hud/jauge/pill_empty.png",
+    "mecard/hud/jauge/pill_fill.png",
+    "mecard/hud/jauge/segmented_empty.png",
+    "mecard/hud/jauge/segmented_fill.png",
+    "mecard/hud/jauge/simple_empty.png",
+    "mecard/hud/jauge/simple_fill.png",
+    "mecard/hud/jauge/thin_empty.png",
+    "mecard/hud/jauge/thin_fill.png",
+    "mecard/hud/line/chain.png",
+    "mecard/hud/line/dashed.png",
+    "mecard/hud/line/dotted.png",
+    "mecard/hud/line/double.png",
+    "mecard/hud/line/solid.png",
+    "mecard/hud/line/zigzag.png",
+    "mecard/hud/panel/double.png",
+    "mecard/hud/panel/ornate.png",
+    "mecard/hud/panel/plain.png",
+    "mecard/hud/panel/riveted.png",
+    "mecard/hud/panel/torn.png",
     "mecard/hud/paper.png",
     "mecard/hud/wood_block.png",
     "mecard/hud/wood_frame.png",
@@ -878,6 +965,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/parallax/bag.ora",
     "mecard/parallax/butcher.ora",
     "mecard/parallax/castle.ora",
+    "mecard/parallax/cave.ora",
     "mecard/parallax/chest.ora",
     "mecard/parallax/creature.ora",
     "mecard/parallax/demon.ora",

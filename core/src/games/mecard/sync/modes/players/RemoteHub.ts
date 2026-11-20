@@ -15,7 +15,7 @@ import type { Progress } from "../../progress/ProgressMessage"
 import { ProgressReceiver } from "../../progress/ProgressReceiver"
 import { DuelView } from "../DuelView"
 import { LivesReceiver } from "../duelRace/LifeBook"
-import { KickReceiver, ResumeReceiver } from "../duelRace/orders"
+import { KickReceiver, ResendReceiver, ResumeReceiver } from "../duelRace/orders"
 import { readRaceEndMessage } from "../duelRace/RaceEndMessage"
 import { PROGRESS_TOPIC, RACE_END_TOPIC } from "../duelRace/topics"
 import type { DuelFighting, DuelWatching, HubPort } from "./HubPort"
@@ -55,6 +55,7 @@ export class RemoteHub implements HubPort {
 
     public readonly kicked: Observable<void>
     public readonly resumed: Observable<void>
+    public readonly asked: Observable<void>
     public readonly raceWon = signal<string>()
     public readonly raceFinished = signal<void>()
     public readonly fighting = signal<DuelFighting>()
@@ -69,14 +70,19 @@ export class RemoteHub implements HubPort {
         /** Where what the hub tells everyone is heard. */
         source: SyncSource,
         timer: TimerPort,
+
+        /** The number of the game, which what the hub tells is told apart by. */
+        game = 0,
     ){
-        this.attendee = new Attendee(link)
+        this.attendee = new Attendee(link, { game, timer })
         this.view = new DuelView(link, source)
         this.others = new ProgressReceiver(source)
         this.lives = new LivesReceiver(source)
         this.deadline = new DeadlineReceiver(timer, source)
         this.#kick = new KickReceiver(link)
         this.#resume = new ResumeReceiver(link)
+        this.#resend = new ResendReceiver(link)
+        this.asked = this.#resend.asked
         this.kicked = this.#kick.kicked
         this.resumed = this.#resume.resumed
         this.duelOver = this.view.duelOver
@@ -132,6 +138,7 @@ export class RemoteHub implements HubPort {
         for(const handle of this.#listening) handle.dispose()
         this.#kick.dispose()
         this.#resume.dispose()
+        this.#resend.dispose()
         this.others.dispose()
         this.lives.dispose()
         this.deadline.dispose()
@@ -142,6 +149,7 @@ export class RemoteHub implements HubPort {
 
     readonly #kick: KickReceiver
     readonly #resume: ResumeReceiver
+    readonly #resend: ResendReceiver
     readonly #forwarding: readonly { dispose(): void }[]
     readonly #observers: readonly Observer[]
     readonly #listening: readonly { dispose(): void }[]

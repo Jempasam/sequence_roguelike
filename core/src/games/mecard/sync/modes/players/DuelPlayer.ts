@@ -60,6 +60,9 @@ export interface DuelPlayer {
     /** The connection of the player came back: what it was told of its duel is told again. */
     back(): void
 
+    /** The connection of the player came back: it is told what it may have missed, and asked where it stands. */
+    refresh(): void
+
     /** The race is over: who won it, none when nobody did. */
     end(winner: string|null): void
 }

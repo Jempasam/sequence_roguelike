@@ -3,7 +3,8 @@ import type { Run } from "../../sim/run/Run"
 
 import { BattleGuest } from "../battle/BattleGuest"
 import { Fault } from "../../../../engine/net/Fault"
-import { JOIN_TOPIC, PLAN_TOPIC, SEAT_TOPIC } from "../SyncChannel"
+import { JOIN_TOPIC, PARTICIPATE_TOPIC, PLAN_TOPIC, SEAT_TOPIC } from "../SyncChannel"
+import { writeParticipateMessage } from "../participation/ParticipationMessage"
 import type { SyncLink } from "../SyncChannel"
 import { forward, signal } from "../faults"
 import { readSeatMessage } from "./SeatMessage"
@@ -44,7 +45,11 @@ export class RunGuest {
 
         /** Told what it plays, each time it changes. */
         public readonly seated: (units: readonly string[]) => void,
+
+        /** The number of the game, which what the client says is told apart by. */
+        private readonly game = 0,
     ){
+        this.#link = link
         this.#engine = engine
         this.#battle = new BattleGuest(engine.battle, PLAN_TOPIC.link(link), () => this.#units)
         this.#forwarding = forward(this.#battle, this, false)
@@ -65,6 +70,11 @@ export class RunGuest {
         this.seated(this.#units)
     }
 
+    /** Leave the game, and stay in the room: the host takes the seats back, and the client may join again. */
+    public quit(): void {
+        PARTICIPATE_TOPIC.link(this.#link).send(writeParticipateMessage({ kind: "quit", game: this.game }))
+    }
+
     /** Give the host what was committed for its units: the client is ready. */
     public ready(): void {
         this.#battle.ready()
@@ -78,6 +88,7 @@ export class RunGuest {
     }
 
 
+    readonly #link: SyncLink
     readonly #forwarding: { dispose(): void }
     readonly #battle: BattleGuest
     readonly #listening: { dispose(): void }

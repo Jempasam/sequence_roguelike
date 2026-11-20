@@ -87,7 +87,7 @@ const PAPER_PADDING = 16
 const VEIL_ALPHA = 0.62
 
 /** The face of a character of the party in its row, and of the one selected. */
-const TILE = new Color(0.1, 0.09, 0.14, 0.8)
+const TILE = new Color(0.1, 0.06, 0.03, 0.8)
 const SELECTED_TILE = new Color(0.3, 0.26, 0.42, 0.9)
 
 /** How the texts of a dialog are written, to read on the scene. */
@@ -228,7 +228,7 @@ export class TravelScreen {
         this.#stopAnimations()
         this.#engine = travel
         this.#registerObservers()
-        this.animations.add(instant(() => this.#fill()))
+        this.animations.add(() => this.#fillLoaded())
     }
 
     /** What the players may not do. */
@@ -277,7 +277,7 @@ export class TravelScreen {
         ])
         sprites.whenLoaded(() => this.refresh())
         this.#registerObservers()
-        this.animations.add(instant(() => this.#fill()))
+        this.animations.add(() => this.#fillLoaded())
     }
 
 
@@ -306,11 +306,23 @@ export class TravelScreen {
      * sign of loading shows only if the map is not loaded yet, such as the one of a new floor.
      */
     public async prepareBack(): Promise<void> {
-        const floor = this.engine.floor.type
-        if(!this.#scenes.hasMap(floor.look)){
-            await this.options.loading(this.#scenes.loadMap(floor.look, error => this.#sceneFailed(floor.name, error)))
-        }
+        await this.#loadFloorScene()
         await this.options.ready(BACK_VISUAL)
+    }
+
+    /** Load the scene of the map of the floor, behind the sign of loading, unless it is loaded already. */
+    async #loadFloorScene(): Promise<void> {
+        const floor = this.engine.floor.type
+        if(this.#scenes.hasMap(floor.look)) return
+        await this.options.loading(this.#scenes.loadMap(floor.look, error => this.#sceneFailed(floor.name, error)))
+    }
+
+    /** Read the whole of the travel once the scene of its floor is loaded. */
+    async #fillLoaded(): Promise<void> {
+        // Let the host finish building: its sign of loading does not exist yet while this screen is constructed.
+        await Promise.resolve()
+        await this.#loadFloorScene()
+        this.#fill()
     }
 
     /** Stop showing the travel. */
@@ -536,11 +548,11 @@ export class TravelScreen {
             travel.phaseChanged.add(phase => {
                 if(phase === "entering") this.animations.add(instant(() => this.#enter(travel)))
             }),
-            travel.mapDrawn.add(() => this.animations.add(instant(() => this.#fill()))),
+            travel.mapDrawn.add(() => this.animations.add(() => this.#fillLoaded())),
             travel.loaded.add(() => {
                 // A map that stands makes what was on its way to it pointless.
                 this.#stopAnimations()
-                this.animations.add(instant(() => this.#fill()))
+                this.animations.add(() => this.#fillLoaded())
             }),
             travel.offerAsked.add(dialog => this.#showOffer(dialog)),
             travel.heroAsked.add(dialog => this.#showHero(dialog)),
@@ -874,7 +886,7 @@ export class TravelScreen {
         column.add(this.#where())
         column.add(this.#panel(this.#partyScroll, true))
         this.#fillParty()
-        column.add(this.#panel(this.#detail, true), { grow: 1 })
+        column.add(this.#panel(this.#detail, true, true), { grow: 1 })
         this.#fillDetail()
         return column
     }
@@ -1109,7 +1121,9 @@ export class TravelScreen {
             if(over) steps[depth]?.show?.(index)
             this.#tell(over ? steps[depth]?.tell(index) ?? null : null)
         }
-        return this.#haltFrame(null, middle, dialog, null)
+        // In the scroll like the other dialogs: the options ask for their whole height, so without it they
+        // would push the way out of the screen.
+        return this.#haltFrame(null, this.#scrolled(middle), dialog, null)
     }
 
     /** What a dialog shows, in its scroll. */
@@ -1235,12 +1249,16 @@ export class TravelScreen {
     }
 
     /** A wooden panel, or one in the color of the place when there is no wood; its inside lets the scene show through when asked. */
-    #panel(content: Component, transparent = false): Panel {
+    #panel(content: Component, transparent = false, squeezable = false): Panel {
         content.parent?.remove(content)
         const wood = this.sprites.wood
         const panel = new Panel(this.theme, wood
-            ? { background: transparent ? wood.frameTransparent : wood.frame, padding: FRAME_THICKNESS + 1 }
-            : { background: this.#veil })
+            ? {
+                background: transparent ? wood.frameTransparent : wood.frame,
+                padding: FRAME_THICKNESS + 1,
+                squeezable,
+            }
+            : { background: this.#veil, squeezable })
         panel.content = content
         return panel
     }

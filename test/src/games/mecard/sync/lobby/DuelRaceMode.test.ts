@@ -3,7 +3,7 @@ import type { Fault } from "@game/core"
 import { DUEL_HALT, LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
 import {
     duelRaceMode, GuestStage, initialValues, JOIN_WAIT_MS, Lobby, LobbyGuest, LocalRoom, LocalSync,
-    NotEnoughPlayersFault, RaceStartedFault, UnknownPlayerFault, versusMode,
+    NotEnoughPlayersFault, RACE_OVER_LINGER_MS, RaceStartedFault, UnknownPlayerFault, versusMode,
 } from "@game/core/mecard/sync"
 import type { DuelRacePlayer, RaceBench, RaceScreen } from "@game/core/mecard/sync"
 import type { FloorType } from "@game/core/mecard"
@@ -139,4 +139,89 @@ describe("races in a lobby", () => {
         expect(mode.settings.map(setting => setting.id)).toEqual(["vies", "arrivee", "equipe", "frequence"])
         expect(versusMode(raceBench).settings.map(setting => setting.id)).toEqual(["equipe", "hauteur"])
     })
+
+    test("a client that quits the game → back in the lobby, the race going on, and it may come back to it", async() => {
+        const { raceBench, screens } = bench()
+        const modes = [duelRaceMode(raceBench)]
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        const lobby = new Lobby(room, channel, "Hôte", modes)
+        const ana = new LobbyGuest(room.join("a"), channel, "Ana", modes)
+        new LobbyGuest(room.join("b"), channel, "Bob", modes)
+        lobby.start()
+        await settle()
+        expect(ana.quitGame()).toBe(true)
+        // Out of the game, still in the room, the host's game going on.
+        expect(ana.playing).toBe(false)
+        expect(ana.gameGoing).toBe(true)
+        expect(lobby.playing).toBe(true)
+        expect(screens[1].closed).toBe(true)
+        ana.rejoin()
+        await settle()
+        expect(ana.playing).toBe(true)
+        expect(screens).toHaveLength(4)
+    })
+
+    test("a client that has no game to quit → left as it is", () => {
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        new Lobby(room, channel, "Hôte", [duelRaceMode(bench().raceBench)])
+        const ana = new LobbyGuest(room.join("a"), channel, "Ana", [duelRaceMode(bench().raceBench)])
+        expect(ana.quitGame()).toBe(false)
+        ana.rejoin()
+        expect(ana.playing).toBe(false)
+    })
+
+    test("a race that is won → the players read it, then the lobby is theirs again", async() => {
+        const { raceBench, timer } = bench()
+        const modes = [duelRaceMode(raceBench)]
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        const lobby = new Lobby(room, channel, "Hôte", modes)
+        const ana = new LobbyGuest(room.join("a"), channel, "Ana", modes)
+        lobby.start()
+        await settle()
+        // The only other player quits and does not come back: the host wins.
+        ana.quitGame()
+        timer.advance(31_000)
+        expect(lobby.playing).toBe(true)
+        timer.advance(RACE_OVER_LINGER_MS + 1)
+        expect(lobby.playing).toBe(false)
+        expect(lobby.selection.playing).toBe(false)
+    })
+
+    test("a client that quits and another that comes → once the place is open, the other takes it from the lobby", async() => {
+        const { raceBench, timer, screens } = bench()
+        const modes = [duelRaceMode(raceBench)]
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        const lobby = new Lobby(room, channel, "Hôte", modes)
+        const ana = new LobbyGuest(room.join("a"), channel, "Ana", modes)
+        new LobbyGuest(room.join("b"), channel, "Bob", modes)
+        lobby.start()
+        await settle()
+        const late = new LobbyGuest(room.join("late"), channel, "Tard", modes)
+        await settle()
+        // Late for the race, and no place to take: it watches, and says so.
+        expect(late.playing).toBe(false)
+        expect(late.gameGoing).toBe(true)
+        late.rejoin()
+        await settle()
+        expect(late.playing).toBe(false)
+        ana.quitGame()
+        // Kept for who left: the other still has no place.
+        late.rejoin()
+        await settle()
+        expect(late.playing).toBe(false)
+        timer.advance(16_000)
+        late.rejoin()
+        await settle()
+        expect(late.playing).toBe(true)
+        expect(screens.length).toBeGreaterThan(3)
+        // The one that left finds its place taken: it only watches.
+        ana.rejoin()
+        await settle()
+        expect(ana.playing).toBe(false)
+    })
 })
+

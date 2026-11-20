@@ -23,6 +23,7 @@ import { PlayControl } from "../hud/PlayControl"
 import { PlayControlView } from "../hud/PlayControlView"
 import { BattleScene } from "./BattleScene"
 import { ArenaView } from "./ArenaView"
+import { BrownBackdrop } from "./BrownBackdrop"
 import { BoardView } from "./BoardView"
 import { Draft } from "./Draft"
 import { Hud } from "./Hud"
@@ -239,6 +240,8 @@ export class BattleScreen implements HudHost {
         const floor = ui.addLayer("battle-floor")
         this.#arenaView = new ArenaView(theme, this.#board, engine, sprites)
         this.#floor = floor
+        // Under the arena, over the whole screen: very dark brown where nothing else lies.
+        floor.content.add(new BrownBackdrop(theme), { x: "stretch", y: "stretch" })
         const arena = ui.addLayer("battle-arena")
         this.#arenaHearts = new ArenaHearts(theme, arena, sprites, (unit, heart, over) => {
             this.hoverUnit(unit, over)

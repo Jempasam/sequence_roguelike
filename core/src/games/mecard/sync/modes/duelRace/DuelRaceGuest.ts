@@ -75,8 +75,11 @@ export class DuelRaceGuest {
 
         /** The id of this player, which the hub knows it by. */
         id: string,
+
+        /** The number of the game, which what the hub tells is told apart by. */
+        game = 0,
     ){
-        this.hub = new RemoteHub(link, source, timer)
+        this.hub = new RemoteHub(link, source, timer, game)
         this.player = new DuelRacePlayer(rules, this.hub, run, id)
         this.won = this.player.won
         this.finished = this.player.finished
@@ -96,6 +99,11 @@ export class DuelRaceGuest {
     /** Give the hub what was committed for the units of the player in its duel: it is ready. */
     public ready(): void {
         this.view.ready()
+    }
+
+    /** Leave the race by itself: the hub keeps the place for a while, and the player may come back to it. */
+    public quit(): void {
+        this.attendee.quit()
     }
 
     /** Stop, the party let go from the halt of the duels it waits at: the run goes on alone. */

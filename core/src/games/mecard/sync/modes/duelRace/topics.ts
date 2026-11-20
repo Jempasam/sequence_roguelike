@@ -12,5 +12,8 @@ export const KICK_TOPIC = new SyncTopic("kick")
 /** The hub telling a player that the duels are over: it may go on with its journey. */
 export const RESUME_TOPIC = new SyncTopic("resume")
 
+/** The hub asking a player whose connection came back to say again where it stands, as it may have been lost. */
+export const RESEND_TOPIC = new SyncTopic("resend")
+
 /** The hub telling everyone that the race is over, and who won it, none when nobody did. */
 export const RACE_END_TOPIC = new SyncTopic("race-end")

@@ -18,7 +18,7 @@ const HEART_WIDTH = 3
 const HEART_GAP = 1
 
 /** The face of an empty heart, inside its edge in the color of its kind. */
-const EMPTY = new Color(0.12, 0.1, 0.14)
+const EMPTY = new Color(0.17, 0.1, 0.06)
 
 /**
  * A heart of a unit in the color of its kind; an empty one only its edge, dark inside. It tells when the

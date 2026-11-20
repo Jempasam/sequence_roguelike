@@ -1,5 +1,6 @@
 import { Fault } from "../../../../engine/net/Fault"
 import type { Chat } from "../../sync/chat/Chat"
+import { QUIT_ROOM_TOPIC } from "../../sync/SyncChannel"
 import { signal } from "../../sync/faults"
 import type { HostBoard, HostEntry } from "../../sync/hosts/HostDirectory"
 import { Lobby } from "../../sync/lobby/Lobby"
@@ -74,6 +75,9 @@ export class LobbyController {
 
     public get phase(): LobbyPhase { return this.#phase }
 
+    /** Is the connection to the room lost, the player trying to come back to it? */
+    public get isReconnecting(): boolean { return this.#isReconnecting }
+
     /** The code of the room, none until it is open. */
     public get code(): string|null { return this.#code }
 
@@ -85,6 +89,12 @@ export class LobbyController {
 
     /** Is a game being played? */
     public get playing(): boolean { return this.#lobby?.playing ?? this.#guest?.playing ?? false }
+
+    /** Does the host play a game this client is not in, which it may come back to? */
+    public get canRejoin(): boolean {
+        const guest = this.#guest
+        return guest !== null && guest.gameGoing && !guest.playing
+    }
 
     /** The rooms hosted by the players looking, none while the list is not reached. */
     public get hosts(): readonly HostEntry[] { return this.#directory?.hosts ?? [] }
@@ -138,6 +148,9 @@ export class LobbyController {
         const lobby = new Lobby(room.room, room, name, this.modes)
         this.#lobby = lobby
         this.#close = () => room.close()
+        // The room ends when its connection to the server is lost for good: nobody can join it any more.
+        const ended = room.ended?.add(fault => this.#lost(fault))
+        if(ended) this.#handles.push(ended)
         this.#follow([
             lobby.roster.changed.add(() => this.changed.notify()),
             lobby.selection.changed.add(() => this.changed.notify()),
@@ -163,8 +176,16 @@ export class LobbyController {
         }
         const guest = new LobbyGuest(link, link, name, this.modes)
         this.#guest = guest
-        this.#close = () => joined.close()
+        // Told to the host before the connection closes, so it does not wait for the client to come back.
+        this.#close = () => {
+            QUIT_ROOM_TOPIC.link(link).send("")
+            joined.close()
+        }
         const ended = joined.ended.add(fault => this.#lost(fault))
+        for(const handle of [
+            joined.reconnecting?.add(() => this.#reconnection(true)),
+            joined.reconnected?.add(() => this.#reconnection(false)),
+        ]) if(handle) this.#handles.push(handle)
         this.#follow([
             guest.roster.changed,
             guest.selection.changed,
@@ -180,6 +201,21 @@ export class LobbyController {
     public start(): void {
         const fault = this.#lobby?.start() ?? null
         if(fault) this.#faults.push(fault)
+        this.changed.notify()
+    }
+
+    /**
+     * Leave the game being played and stay in the room, as a client.
+     *
+     * @returns Whether it could: the host ends the game instead, and a game that cannot be left this way is not.
+     */
+    public quitGame(): boolean {
+        return this.#guest?.quitGame() ?? false
+    }
+
+    /** Come back to the game being played, as a client that left it. */
+    public rejoin(): void {
+        this.#guest?.rejoin()
         this.changed.notify()
     }
 
@@ -212,6 +248,7 @@ export class LobbyController {
     #directoryHandle: { remove(): void }|null = null
     #isWatching = false
     #opening = false
+    #isReconnecting = false
 
     /** The code of the room the directory lists, none when it lists none. */
     #announced: string|null = null
@@ -231,6 +268,12 @@ export class LobbyController {
         this.#error = null
         this.changed.notify()
         return session
+    }
+
+    #reconnection(isReconnecting: boolean): void {
+        if(this.#isReconnecting === isReconnecting) return
+        this.#isReconnecting = isReconnecting
+        this.changed.notify()
     }
 
     #fault(fault: Fault): void {
@@ -333,6 +376,7 @@ export class LobbyController {
         close?.()
         this.#phase = "disconnected"
         this.#code = null
+        this.#isReconnecting = false
         this.#publish()
         if(!this.#isWatching) this.#closeDirectory()
     }

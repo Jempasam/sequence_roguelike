@@ -27,7 +27,8 @@ import { duelRaceMode, versusMode } from "../sync/lobby/modes/DuelRaceMode"
 import type { RaceBench, RaceScreen } from "../sync/lobby/modes/DuelRaceMode"
 import type { DuelRacePlayer } from "../sync/modes/players/DuelRacePlayer"
 import type { DuelAccess } from "../sync/modes/players/HubPort"
-import { RaceHud } from "./duel/RaceHud"
+import { RaceTab } from "./duel/RaceTab"
+import type { RaceTabAlign } from "./duel/RaceTab"
 import { runCoopMode, runEnemyMode } from "../sync/lobby/modes/RunMode"
 import type { HostedRun, JoinedRun, RunBench } from "../sync/lobby/modes/RunMode"
 import { TEST_MODE } from "../sync/lobby/modes/TestMode"
@@ -58,6 +59,12 @@ import type { Visual } from "../sim/base/Visual"
 /** The share of the height of the screen the console takes, from the top. */
 const CONSOLE_SHARE = 0.45
 
+/**
+ * Where the tab of a race lies across the screen, by what the run shows under it: moved to leave the
+ * interface of the screen free.
+ */
+const RACE_TAB_ALIGN: Readonly<Record<"map"|"battle", RaceTabAlign>> = { map: "center", battle: "center" }
+
 /** Time that never passes: what the modes that need none are given when there is no network. */
 const IDLE_TIMER: TimerPort = { after: () => ({ cancel: () => {} }), now: () => 0 }
 
@@ -68,6 +75,9 @@ export interface OpenedRoom extends SyncSender {
 
     /** Settles with the code of the room once it is open, or with why it never opens. It never rejects. */
     readonly ready: Promise<string|Fault>
+
+    /** Told once, when the room cannot be kept: its connection to the server is lost for good. */
+    readonly ended?: { add(handler: (fault: Fault) => void): { dispose(): void } }
 
     /** Close the room. */
     close(): void
@@ -105,6 +115,12 @@ export interface JoinedRoom {
 
     /** Told once, when the room cannot be kept. */
     readonly ended: { add(handler: (fault: Fault) => void): { dispose(): void } }
+
+    /** Told each time the connection is lost and the client tries to come back to the room. */
+    readonly reconnecting?: { add(handler: () => void): { dispose(): void } }
+
+    /** Told each time the client is back in the room. */
+    readonly reconnected?: { add(handler: () => void): { dispose(): void } }
 
     /** Leave the room. */
     close(): void
@@ -286,7 +302,9 @@ export class MecardGame {
             report: text => this.#console.print(text),
             timer: network?.timer ?? IDLE_TIMER,
         }
-        this.#raceHud = new RaceHud(theme, ui, () => this.#lobbyController?.members ?? [])
+        this.#raceTab = new RaceTab(theme, ui, () => this.#lobbyController?.members ?? [], {
+            sprites, onLeave: () => this.#leaveShared(),
+        })
         const modes = [
             TEST_MODE, runCoopMode(this.#bench), runEnemyMode(this.#bench),
             duelRaceMode(this.#bench), versusMode(this.#bench),
@@ -322,9 +340,11 @@ export class MecardGame {
         else if(this.#arm.visible) this.#arm.frame()
         else if(this.#parallax.visible) this.#parallax.frame()
         else if(this.#library.visible) this.#library.frame(input)
-        this.#exit.content.visible = this.#shared !== null && this.#screen.visible
-        this.#raceHud.visible = this.#shared !== null && this.#screen.visible
-        this.#raceHud.frame()
+        // The tab of a race holds its own way out: the button only lies over the other shared games.
+        this.#exit.content.visible = this.#shared !== null && this.#screen.visible && !this.#raceTab.active
+        this.#raceTab.visible = this.#shared !== null && this.#screen.visible
+        this.#raceTab.align = RACE_TAB_ALIGN[this.#raceTabSpot()]
+        this.#raceTab.frame(dt)
         this.#screen.frame(input, world, dt)
     }
 
@@ -464,7 +484,7 @@ export class MecardGame {
 
     /** What the modes of the lobby ask of the screen. */
     readonly #bench: RunBench & RaceBench
-    readonly #raceHud: RaceHud
+    readonly #raceTab: RaceTab
 
     /** The group chat open, and what closes its session, none when there is none. */
     #opened: OpenedChat|null = null
@@ -705,10 +725,15 @@ export class MecardGame {
             follow: player => disposers.push(this.#followRace(run, shared, player)),
             close: () => {
                 for(const dispose of disposers) dispose()
-                this.#raceHud.detach()
+                this.#raceTab.detach()
                 this.#closeShared(shared)
             },
         }
+    }
+
+    /** What the run shows under the tab of the race: the battle, or the map. */
+    #raceTabSpot(): "map"|"battle" {
+        return this.#screen.battleScreen.visible ? "battle" : "map"
     }
 
     /**
@@ -720,7 +745,7 @@ export class MecardGame {
     #followRace(
         run: Run, shared: { onReady: (() => void)|null }, player: DuelRacePlayer,
     ): () => void {
-        this.#raceHud.follow(player)
+        this.#raceTab.follow(player)
         let access: { readonly units: readonly string[], submit(): void }|null = null
         const show = (duel: DuelAccess): void => {
             access = duel
@@ -754,11 +779,14 @@ export class MecardGame {
         if(this.#lobby) this.#lobby.visible = true
     }
 
-    /** Leave the run of the lobby: the host ends it for everyone, a client leaves the room. */
+    /**
+     * Leave the run of the lobby: the host ends it for everyone, a client leaves the game and stays in the room,
+     * or leaves the room for a game that cannot be left on its own.
+     */
     #leaveShared(): void {
         const controller = this.#lobbyController
         if(controller?.isHost) controller.stop()
-        else this.#leaveLobby()
+        else if(!controller?.quitGame()) this.#leaveLobby()
     }
 
     /** Leave the lobby, and the room if the player is in one, for the menu. */

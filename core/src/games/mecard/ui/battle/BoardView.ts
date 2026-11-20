@@ -35,7 +35,7 @@ const ARROW_HEAD = 5
 
 /** The ink of the grid, as the paths of the map of the journey. */
 const GRID = new Color(0.3, 0.2, 0.13, 0.35)
-const INK = new Color(0.05, 0.04, 0.08)
+const INK = new Color(0.1, 0.06, 0.03)
 const NOTICED = NOTICE_EDGE
 
 /** The dot of a hazard in the tactical view. */

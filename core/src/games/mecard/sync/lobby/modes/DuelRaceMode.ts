@@ -87,6 +87,9 @@ export class HubRefusedFault extends Fault {
     }
 }
 
+/** How long the players read the end of a race before they are back in the lobby, in ms. */
+export const RACE_OVER_LINGER_MS = 10_000
+
 /** How long the hub waits for the clients of the lobby, before it starts with those that joined, in ms. */
 export const JOIN_WAIT_MS = 10_000
 
@@ -124,7 +127,11 @@ export class DuelRaceMode implements LobbyMode {
         const rules = this.course.rules(values, new Rng(Date.now()))
         const screen = this.bench.race(this.course.floor(values))
         const { timer } = this.bench
-        const race = new DuelRaceHost(rules, stage.room, stage.sender, timer, new Rng(Date.now() + 1))
+        const race = new DuelRaceHost(rules, stage.room, stage.sender, timer, new Rng(Date.now() + 1), undefined, {
+            game: stage.game,
+            greet: peer => stage.sender.greet(peer),
+            session: stage.session,
+        })
         const link = race.addLocal(HOST_ID)
         if(!(link instanceof LocalLink)){
             race.dispose()
@@ -136,6 +143,13 @@ export class DuelRaceMode implements LobbyMode {
         race.faulted.add(fault => this.bench.report(fault.describe()))
         const ended = signal<Fault|null>()
         race.ended.add(fault => ended.notify(fault))
+        // Once the race is over the players read who won, then the lobby is theirs again.
+        const over = (): void => {
+            lingering = timer.after(RACE_OVER_LINGER_MS, () => ended.notify(null))
+        }
+        let lingering: { cancel(): void }|null = null
+        race.won.add(over)
+        race.finished.add(over)
         // Starts once everyone of the lobby joined, or with those that did after a while.
         const expected = 1 + stage.reachable.length
         const waiting = timer.after(JOIN_WAIT_MS, () => race.start())
@@ -145,6 +159,7 @@ export class DuelRaceMode implements LobbyMode {
         return {
             ended,
             dispose: () => {
+                lingering?.cancel()
                 waiting.cancel()
                 joined.remove()
                 player.dispose()
@@ -160,13 +175,24 @@ export class DuelRaceMode implements LobbyMode {
         const rules = this.course.rules(values, new Rng(0))
         const screen = this.bench.race(this.course.floor(values))
         const { timer } = this.bench
-        const guest = new DuelRaceGuest(rules, stage.link, stage.source, timer, screen.run, stage.id)
+        const guest = new DuelRaceGuest(rules, stage.link, stage.source, timer, screen.run, stage.id, stage.game)
+        // The hub may have answered at once: what it holds is known as soon as it is asked.
+        if(guest.attendee.participation?.role === "spectator"){
+            guest.dispose()
+            screen.close()
+            return new RaceStartedFault()
+        }
         screen.follow(guest.player)
         guest.faulted.add(fault => this.bench.report(fault.describe()))
         const ended = signal<Fault|null>()
         guest.ended.add(fault => ended.notify(fault))
+        // A client the hub makes a spectator of, as it answers later, is turned away as well.
+        guest.attendee.participationChanged.add(state => {
+            if(state.role === "spectator") ended.notify(new RaceStartedFault())
+        })
         return {
             ended,
+            quit: () => guest.quit(),
             dispose: () => {
                 guest.dispose()
                 screen.close()
@@ -211,6 +237,8 @@ export function versusMode(bench: RaceBench): LobbyMode {
             // No row of the duels in the middle of the map: the one at its end.
             duelEvery: 1_000,
             closing: true,
+            // The map is the one floor of the workshop.
+            floors: 1,
         }),
         floor: values => upgradeFloorType(Number(values.hauteur)),
     }

@@ -14,7 +14,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 // --- Fixture builders ---
 
 function progress(atDuel: boolean): Progress {
-    return { floor: 1, depth: 1, layer: 1, atDuel, inBattle: false, inHalt: false }
+    return { floor: 1, depth: 1, layer: 1, rows: 0, atDuel, inBattle: false, inHalt: false }
 }
 
 /** A watch over some players, with a time that moves by hand. */

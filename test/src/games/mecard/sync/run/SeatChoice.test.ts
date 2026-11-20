@@ -2,7 +2,7 @@ import { SWORDSMAN_KIT } from "@game/core/mecard"
 import type { Fault } from "@game/core"
 import {
     COOP_SEATS, DeniedFault, ENEMY_SEATS, FIRST_COME, FIXED_SEATS, HostApproves, NO_PICK, NotCandidateFault,
-    NotHeldFault, SeatChoice, SeatPicker, SeatTakenFault,
+    NotHeldFault, RunSeatContext, SeatChoice, SeatPicker, SeatTakenFault,
 } from "@game/core/mecard/sync"
 import type { SeatArbiter, SeatMode, SeatPolicy } from "@game/core/mecard/sync"
 import { describe, expect, test } from "vitest"
@@ -27,7 +27,7 @@ function choosing(
     arbiter: SeatArbiter = FIRST_COME,
 ): Choosing {
     const session = hosted(mode, policy)
-    const choice = new SeatChoice(session.host.dealer, session.room, session.channel, arbiter, session.run)
+    const choice = new SeatChoice(session.host.dealer, session.room, session.channel, arbiter, new RunSeatContext(session.run))
     const faults: Fault[] = []
     choice.faulted.add(fault => faults.push(fault))
     return {

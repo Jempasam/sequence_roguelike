@@ -6,7 +6,7 @@ import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import { plainText } from "../../../../semantic"
 import { typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
-import { TEXT_OUTLINE } from "../look/theme"
+import { DIM_INK_TEXT, INK_TEXT, TEXT_OUTLINE } from "../look/theme"
 import { topMark } from "../look/topMark"
 import { keyColorOf, variantEntries, variantKindOf } from "../look/variantKind"
 import type { VariantEntry, VariantKind } from "../look/variantKind"
@@ -42,24 +42,24 @@ export const CARD_LOOKS: Readonly<Record<CardPlace, CardLook>> = {
     mini: { width: 32, height: 24, padding: 2, band: 2, lines: 2, foot: false },
 }
 
-/** The face of a card by the deck it comes from, in turn, in the tones of the backs of the decks. */
+/** The face of a card by the deck it comes from, in turn: paper, a little different for each deck. */
 const FACES: readonly Color[] = [
-    new Color(0.16, 0.14, 0.22), new Color(0.25, 0.1, 0.14),
-    new Color(0.08, 0.2, 0.16), new Color(0.25, 0.18, 0.07),
+    new Color(0.9, 0.83, 0.68), new Color(0.92, 0.8, 0.66),
+    new Color(0.86, 0.84, 0.66), new Color(0.91, 0.82, 0.6),
 ]
 
-/** The same, under the pointer. */
+/** The same, under the pointer: lighter. */
 const FACES_HOVERED: readonly Color[] = [
-    new Color(0.24, 0.21, 0.32), new Color(0.37, 0.16, 0.21),
-    new Color(0.13, 0.3, 0.24), new Color(0.37, 0.27, 0.11),
+    new Color(0.97, 0.91, 0.77), new Color(0.98, 0.89, 0.75),
+    new Color(0.94, 0.92, 0.75), new Color(0.98, 0.9, 0.69),
 ]
 
-const BACK = new Color(0.1, 0.09, 0.14)
-const EDGE = new Color(0.05, 0.04, 0.08)
+const BACK = new Color(0.3, 0.2, 0.12)
+const EDGE = new Color(0.2, 0.12, 0.06)
 const PICKED_EDGE = new Color(1, 0.85, 0.35)
 
-/** The edge of a card played unlimited: white, under the yellow one of a card chosen. */
-const UNLIMITED_EDGE = new Color(1, 1, 1)
+/** The edge of a card played unlimited: dark brown on paper, under the yellow one of a card chosen. */
+const UNLIMITED_EDGE = new Color(0.35, 0.18, 0.05)
 
 /** The edge of a card another unit put in the chain: the violet of control. */
 const BORROWED_EDGE = new Color(0.85, 0.5, 1)
@@ -69,8 +69,8 @@ const BORROWED_EDGE = new Color(0.85, 0.5, 1)
  * shade lighter than the disc.
  */
 const DIAL_LOOK = {
-    face: new Color(0.05, 0.04, 0.08), dot: new Color(0.95, 0.92, 0.86), needle: new Color(0.95, 0.92, 0.86),
-    tick: new Color(0.13, 0.12, 0.19),
+    face: new Color(0.2, 0.12, 0.06), dot: new Color(1, 0.96, 0.8), needle: new Color(1, 0.96, 0.8),
+    tick: new Color(0.32, 0.2, 0.1),
 }
 
 /** The dials found already, by how many directions they offer. */
@@ -87,18 +87,18 @@ function dialOf(steps: number): Dial {
 }
 
 /** The disc of the dial under the pointer. */
-const DIAL_HOVERED = new Color(0.22, 0.2, 0.3)
+const DIAL_HOVERED = new Color(0.4, 0.26, 0.13)
 const HAND_DIAL_RADIUS = 11
 const CHAIN_DIAL_RADIUS = 9
 
 /** The chips offering the variants of a card: their color, under the pointer, and chosen. */
-const CHIP = new Color(0.05, 0.04, 0.08)
-const CHIP_HOVERED = new Color(0.22, 0.2, 0.3)
+const CHIP = new Color(0.2, 0.12, 0.06)
+const CHIP_HOVERED = new Color(0.4, 0.26, 0.13)
 const CHIP_CHOSEN = new Color(1, 0.85, 0.35)
 
 /** The text on a chip, and on a chosen one, which is light. */
-const CHIP_TEXT = new Color(0.95, 0.92, 0.86)
-const CHIP_CHOSEN_TEXT = new Color(0.1, 0.09, 0.14)
+const CHIP_TEXT = new Color(1, 0.96, 0.8)
+const CHIP_CHOSEN_TEXT = new Color(0.2, 0.12, 0.05)
 
 /** How tall a chip is, in virtual pixels, and how many sit on a row. */
 const CHIP_HEIGHT = 9
@@ -114,7 +114,7 @@ interface Rect {
     readonly width: number
     readonly height: number
 }
-const NAME = new Color(0.95, 0.92, 0.86)
+const NAME = INK_TEXT
 
 /** How much of its color the mark on the band of a card keeps: the same color, darker. */
 const MARK_SHADE = 0.45
@@ -140,10 +140,10 @@ const MARK_HEIGHT = 5
 
 /** How long the line of a mark is, 1 pixel thick, on the middle row of the band, before its triangle. */
 const MARK_LINE = 4
-const FOOT = new Color(0.6, 0.58, 0.68)
+const FOOT = DIM_INK_TEXT
 
 /** The color of the frame of a card the viewer may not see. */
-const HIDDEN = new Color(0.4, 0.38, 0.48)
+const HIDDEN = new Color(0.5, 0.36, 0.22)
 
 /** The glyph over the limit between two held cards: white, outlined in black. */
 const GLYPH = new Color(1, 1, 1)
@@ -156,7 +156,7 @@ const GLYPH_SCALE = 2
 const INPUT_STRIP = 3
 
 /** The veil over a card that cannot be picked. */
-const VEIL = new Color(0.05, 0.04, 0.08, 0.6)
+const VEIL = new Color(0.12, 0.07, 0.03, 0.6)
 
 /** How many cards a card holds, at every depth, drawn at their full width: more are drawn narrower. */
 const FULL_HELD = 3

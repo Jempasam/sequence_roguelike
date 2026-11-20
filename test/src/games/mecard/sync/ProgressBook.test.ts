@@ -9,7 +9,7 @@ import { describe, expect, test } from "vitest"
 // --- Fixture builders ---
 
 function progress(depth: number): Progress {
-    return { floor: 1, depth, layer: depth, atDuel: false, inBattle: false, inHalt: false }
+    return { floor: 1, depth, layer: depth, rows: 0, atDuel: false, inBattle: false, inHalt: false }
 }
 
 function booked() {

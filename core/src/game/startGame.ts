@@ -19,7 +19,7 @@ const LOW_RES_WIDTH = 320
 const LOW_RES_HEIGHT = 180
 
 /** The color of the world behind the board, and of the screen around the upscaled world. */
-const BACKGROUND = new Color(0.05, 0.04, 0.08)
+const BACKGROUND = new Color(0.1, 0.06, 0.03)
 
 /** The seed of the first run, drawn at each launch. Each new run takes the next one. */
 const firstSeed = (): number => Math.floor(Math.random() * 0x7fffffff)

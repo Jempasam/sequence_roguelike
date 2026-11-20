@@ -3,7 +3,7 @@ import type { Painter } from "../../gpu"
 import { ContentContainer } from "../Container"
 import type { NineSlice } from "../NineSlice"
 import { Rect } from "../Rect"
-import { EMPTY_HINT, paddedHint } from "../SizeHint"
+import { EMPTY_HINT, paddedHint, sizeHint } from "../SizeHint"
 import type { SizeHint } from "../SizeHint"
 import type { Theme } from "../Theme"
 
@@ -17,6 +17,12 @@ export interface PanelOptions {
 
     /** Does it stop the pointer over its bounds, so a click on it never reaches the world? Yes by default. */
     readonly interactive?: boolean
+
+    /**
+     * Does it accept down to its frame, whatever its content asks? Its minimum height is then the margins
+     * of its frame, its preferred size staying the one of its content. No by default.
+     */
+    readonly squeezable?: boolean
 }
 
 /**
@@ -39,6 +45,7 @@ export class Panel extends ContentContainer {
         this.#background = options.background === undefined ? theme.panel.background : options.background
         this.#padding = options.padding ?? theme.panel.padding
         this.#interactive = options.interactive ?? true
+        this.#squeezable = options.squeezable ?? false
     }
 
 
@@ -69,7 +76,11 @@ export class Panel extends ContentContainer {
         const padding = this.#padding
         const content = this.content
         const hint = content?.visible ? content.measure(maxWidth - 2 * padding) : EMPTY_HINT
-        return paddedHint(hint, 2 * padding, 2 * padding)
+        const padded = paddedHint(hint, 2 * padding, 2 * padding)
+        if(!this.#squeezable) return padded
+        const border = this.#background?.border
+        const frame = border ? border.top + border.bottom : 0
+        return sizeHint(padded.minWidth, frame, padded.preferredWidth, padded.preferredHeight)
     }
 
     protected override arranged(): void {
@@ -97,6 +108,7 @@ export class Panel extends ContentContainer {
     #background: NineSlice|null
     #padding: number
     readonly #interactive: boolean
+    readonly #squeezable: boolean
     readonly #rect = new Rect()
     readonly #opaque = new Rect()
 }

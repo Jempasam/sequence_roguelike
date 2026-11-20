@@ -27,14 +27,14 @@ const NO_SEAT = writeSeatMessage({ units: [] })
  * may have missed it, and it would otherwise never be told again, since it would look the same as the last
  * time.
  */
-export class SeatDealer {
+export class SeatDealer<C = Run> {
 
 
     /** Told of each client told what it plays, with the units. */
     public readonly seated = signal<{ readonly id: string, readonly units: readonly string[] }>()
 
     constructor(
-        public readonly seats: Seats,
+        public readonly seats: Seats<C>,
         room: SyncRoom,
     ){
         this.#handle = room.onBack(peer => this.#again(peer))
@@ -64,10 +64,10 @@ export class SeatDealer {
     }
 
     /** Give a seat to whoever has none, the host first, then tell those whose seats changed. */
-    public deal(run: Run): void {
+    public deal(context: C): void {
         const { seats } = this
-        seats.mode.seatHost(seats, run)
-        for(const id of this.#guests.keys()) seats.seat(id, run)
+        seats.mode.seatHost(seats, context)
+        for(const id of this.#guests.keys()) seats.seat(id, context)
         for(const [id, guest] of this.#guests){
             const text = writeSeatMessage({ units: seats.unitsOf(id) })
             if(text === guest.told) continue

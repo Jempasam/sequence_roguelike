@@ -73,8 +73,11 @@ export class ModeSelection {
 
     /** What everyone is told. */
     public get state(): ModeState {
-        return { mode: this.#mode.id, values: this.#values, playing: this.#playing }
+        return { mode: this.#mode.id, values: this.#values, playing: this.#playing, game: this.#game }
     }
+
+    /** The number the next game will have. */
+    public get nextGame(): number { return this.#game + 1 }
 
     /** Set the lobby on another mode, its settings back to what they are worth at first. */
     public select(id: string): Fault|null {
@@ -105,6 +108,7 @@ export class ModeSelection {
         const fault = checkValues(this.#mode.settings, this.#values)
         if(fault) return fault
         this.#playing = true
+        this.#game++
         this.#tell()
         return null
     }
@@ -127,6 +131,7 @@ export class ModeSelection {
     #mode: LobbyMode
     #values: SettingValues
     #playing = false
+    #game = 0
 
     #tell(): void {
         this.#sender.send(writeModeState(this.state))

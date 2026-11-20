@@ -7,7 +7,7 @@ import { pixelFont } from "./pixelFont"
 import { mecardDisplay } from "./textDisplay"
 
 /** The color of the text that matters less: hints, hidden cards. */
-export const DIM_TEXT = new Color(0.55, 0.55, 0.65)
+export const DIM_TEXT = new Color(0.72, 0.64, 0.48)
 
 /** The color of what is chosen: the selected card, the hero being planned. */
 export const CHOSEN_TEXT = new Color(1, 0.85, 0.35)
@@ -47,6 +47,20 @@ export function brownButtonLooks(theme: Theme): Theme["button"] {
     return looks
 }
 
+/** The options of a brown button under a yellowish white text. Cached by theme. */
+const BROWN_BUTTONS = new WeakMap<Theme, ButtonOptions>()
+
+export function brownButton(theme: Theme): ButtonOptions {
+    const known = BROWN_BUTTONS.get(theme)
+    if(known) return known
+    const options: ButtonOptions = {
+        looks: brownButtonLooks(theme),
+        textColor: new Color(1, 0.96, 0.8), disabledTextColor: new Color(0.6, 0.55, 0.4),
+    }
+    BROWN_BUTTONS.set(theme, options)
+    return options
+}
+
 /** The options of a button over a dark background: a beige frame under dark brown text. Cached by theme. */
 const BEIGE_BUTTONS = new WeakMap<Theme, ButtonOptions>()
 
@@ -73,27 +87,27 @@ export function mecardTheme(gpu: Gpu): Theme {
     const { font, white } = pixelFont(gpu)
     const flat = (r: number, g: number, b: number, a = 1) => NineSlice.flat(white, new Color(r, g, b, a))
     const looks = (): StateLooks => ({
-        normal: flat(0.2, 0.18, 0.28), hovered: flat(0.32, 0.28, 0.44), pressed: flat(0.12, 0.1, 0.18),
-        focused: flat(0.3, 0.3, 0.5), disabled: flat(0.14, 0.13, 0.18),
+        normal: flat(0.24, 0.14, 0.07), hovered: flat(0.36, 0.22, 0.11), pressed: flat(0.15, 0.08, 0.04),
+        focused: flat(0.4, 0.26, 0.12), disabled: flat(0.2, 0.15, 0.11),
     })
     return {
         font, textScale: 1, white,
-        textColor: new Color(0.93, 0.9, 0.85), disabledTextColor: new Color(0.42, 0.4, 0.48),
+        textColor: new Color(1, 0.96, 0.8), disabledTextColor: new Color(0.6, 0.55, 0.4),
         textDisplay: mecardDisplay,
         focusRing: flat(1, 0.85, 0.35, 0.6),
-        panel: { background: flat(0.08, 0.07, 0.12, 0.94), padding: 4 },
+        panel: { background: flat(0.12, 0.08, 0.05, 0.94), padding: 4 },
         button: { ...looks(), padding: 2 },
         slider: {
             track: flat(0.2, 0.2, 0.2), thumb: flat(0.8, 0.8, 0.8), thumbWidth: 4, width: 44, height: 8,
         },
         scrollbar: {
-            track: flat(0.15, 0.14, 0.2), thumb: flat(0.5, 0.45, 0.6), thumbHover: flat(0.78, 0.72, 0.9), width: 4, minThumb: 6,
+            track: flat(0.17, 0.11, 0.07), thumb: flat(0.55, 0.42, 0.26), thumbHover: flat(0.8, 0.68, 0.45), width: 4, minThumb: 6,
         },
         textInput: {
             background: flat(0, 0, 0), padding: 2, width: 60,
-            cursorColor: new Color(), selectionColor: new Color(0.3, 0.3, 0.7),
+            cursorColor: new Color(), selectionColor: new Color(0.55, 0.38, 0.12),
         },
-        menu: { background: flat(0.08, 0.07, 0.12), padding: 1, entry: { ...looks(), padding: 1 } },
-        tooltip: { background: flat(0.02, 0.02, 0.05, 0.95), padding: 2 },
+        menu: { background: flat(0.12, 0.08, 0.05), padding: 1, entry: { ...looks(), padding: 1 } },
+        tooltip: { background: flat(0.06, 0.04, 0.02, 0.95), padding: 2 },
     }
 }

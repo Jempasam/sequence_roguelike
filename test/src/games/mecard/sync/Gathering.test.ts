@@ -1,10 +1,10 @@
 import { ManualScheduler } from "@game/core"
 import type { Fault } from "@game/core"
 import {
-    AlreadyStartedFault, Attendee, Deadline, DeadlineReceiver, GatheringFullFault, Gathering, LocalRoom,
+    Admissions, AlreadyStartedFault, Attendee, Deadline, DeadlineReceiver, GatheringFullFault, Gathering, LocalRoom,
     LocalSync, MANUAL, whenCount,
 } from "@game/core/mecard/sync"
-import type { Member, StartRule, SyncLink } from "@game/core/mecard/sync"
+import type { GatheringOptions, Member, StartRule, SyncLink } from "@game/core/mecard/sync"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---
@@ -348,5 +348,63 @@ describe("Deadline", () => {
         channel.send("deadline:{\"remainingMs\":\"soon\"}")
         expect(faults).toHaveLength(1)
         expect(client.remaining()).toBe(null)
+    })
+})
+
+describe("Gathering, once it started", () => {
+    function startedWith(late?: GatheringOptions["late"]): Gathered & { readonly lost: string[], readonly back: string[] } {
+        const room = new LocalRoom()
+        const gathering = new Gathering(room, MANUAL, { late })
+        const joined: string[] = []
+        const left: string[] = []
+        const lost: string[] = []
+        const back: string[] = []
+        const faults: Fault[] = []
+        gathering.memberJoined.add(member => joined.push(member.id))
+        gathering.memberLeft.add(member => left.push(member.id))
+        gathering.memberLost.add(member => lost.push(member.id))
+        gathering.memberBack.add(member => back.push(member.id))
+        gathering.faulted.add(fault => faults.push(fault))
+        attending(room, "a")
+        gathering.start()
+        return { room, gathering, joined, left, started: [], faults, lost, back }
+    }
+
+    test("the mode gives a place to a client that comes → a member, told the game started", () => {
+        const { room, gathering } = startedWith(who => Admissions.seat(who.id))
+        let started = 0
+        const late = attending(room, "late")
+        late.attendee.started.add(() => started++)
+        // The answer came as it joined, before the listener was added: told again when the others change.
+        expect(gathering.memberOf("late")).not.toBeNull()
+        attending(room, "next")
+        expect(started).toBe(1)
+    })
+
+    test("the mode makes it a spectator → no member, no fault, not turned away", () => {
+        const { room, gathering, faults } = startedWith(() => Admissions.spectate())
+        const { attendee } = attending(room, "late")
+        expect(gathering.memberOf("late")).toBeNull()
+        expect(faults).toEqual([])
+        expect(attendee.participation?.role).toBe("spectator")
+    })
+
+    test("a member whose connection is lost and comes back → told of both, and still a member", () => {
+        const { room, gathering, lost, back } = startedWith()
+        room.drop("a")
+        expect(lost).toEqual(["a"])
+        expect(gathering.memberOf("a")).not.toBeNull()
+        room.back("a")
+        expect(back).toEqual(["a"])
+    })
+
+    test("a member that quits the game → told it left, and a client that comes is dealt with as a newcomer", () => {
+        const { room, gathering, left } = startedWith(who => Admissions.seat(who.id))
+        const { attendee } = attending(room, "b")
+        attendee.quit()
+        expect(left).toEqual(["b"])
+        expect(gathering.memberOf("b")).toBeNull()
+        attendee.join()
+        expect(gathering.memberOf("b")).not.toBeNull()
     })
 })

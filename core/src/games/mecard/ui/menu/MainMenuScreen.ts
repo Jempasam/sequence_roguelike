@@ -4,7 +4,7 @@ import { Sprite, Texture } from "../../../../engine/gpu"
 import { Box, Button, Image, Label, Parallax } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
 
-import { DIM_TEXT, TEXT_OUTLINE } from "../look/theme"
+import { brownButton, DIM_TEXT, TEXT_OUTLINE } from "../look/theme"
 import { parallaxSource } from "../look/visualPath"
 import { LoadingOverlay } from "../run/LoadingOverlay"
 import { loadParallaxPictures } from "../travel/parallaxPictures"
@@ -177,12 +177,12 @@ export class MainMenuScreen {
         if(this.#confirming){
             const asked = "Une partie est en cours. L'écraser ?"
             column.add(new Label(theme, asked, { color: DIM_TEXT, outline: TEXT_OUTLINE, align: "center" }))
-            const yes = new Button(theme, "Oui, écraser")
+            const yes = new Button(theme, "Oui, écraser", brownButton(theme))
             yes.onActivate = () => {
                 this.#confirming = false
                 options.newGame()
             }
-            const no = new Button(theme, "Non")
+            const no = new Button(theme, "Non", brownButton(theme))
             no.onActivate = () => {
                 this.#confirming = false
                 this.refresh()
@@ -191,24 +191,24 @@ export class MainMenuScreen {
             column.add(no)
             this.#buttons = { ...NO_BUTTONS, yes, no }
         } else {
-            const fresh = new Button(theme, "Nouvelle partie")
+            const fresh = new Button(theme, "Nouvelle partie", brownButton(theme))
             fresh.onActivate = () => {
                 if(this.#hasSave){
                     this.#confirming = true
                     this.refresh()
                 } else options.newGame()
             }
-            const resume = new Button(theme, "Continuer", { enabled: this.#hasSave })
+            const resume = new Button(theme, "Continuer", { ...brownButton(theme), enabled: this.#hasSave })
             resume.onActivate = () => options.continueGame()
             column.add(fresh)
             column.add(resume)
-            const multiplayer = new Button(theme, "Multijoueur", { enabled: this.#hasNetwork })
+            const multiplayer = new Button(theme, "Multijoueur", { ...brownButton(theme), enabled: this.#hasNetwork })
             multiplayer.onActivate = () => options.openMultiplayer()
             column.add(multiplayer)
-            const guide = new Button(theme, "Guide")
+            const guide = new Button(theme, "Guide", brownButton(theme))
             guide.onActivate = () => options.openGuide()
             column.add(guide)
-            const history = new Button(theme, "Historique")
+            const history = new Button(theme, "Historique", brownButton(theme))
             history.onActivate = () => options.openHistory()
             column.add(history)
             this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, multiplayer, guide, history }

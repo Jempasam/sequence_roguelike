@@ -8,7 +8,7 @@ import { ChatPanel } from "./ChatPanel"
 export { hueColor } from "./ChatPanel"
 
 /** The color behind the chat. */
-const BACKDROP = new Color(0.12, 0.11, 0.17)
+const BACKDROP = new Color(0.1, 0.06, 0.03)
 
 /** The space around and between things, in virtual pixels. */
 const MARGIN = 4

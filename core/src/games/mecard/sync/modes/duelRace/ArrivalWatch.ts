@@ -41,6 +41,9 @@ export class ArrivalWatch {
     }
 
 
+    /** Did the first player of the round arrive, so the others are being waited for? */
+    public get isStarted(): boolean { return this.#isStarted }
+
     /** Is a player there, by the last progress heard of it? */
     public isThere(id: string): boolean {
         return this.#there.get(id) === true
@@ -70,6 +73,14 @@ export class ArrivalWatch {
         this.#isDone = true
         this.deadline.cancel()
         this.allArrived.notify()
+    }
+
+    /**
+     * The round could not be made with the players there: it is waited for again, to be told once more when
+     * everyone is there, as it will be when a lane is taken or one is out.
+     */
+    public reopen(): void {
+        this.#isDone = false
     }
 
     /** Begin the next round: nobody is there, and no time runs. */

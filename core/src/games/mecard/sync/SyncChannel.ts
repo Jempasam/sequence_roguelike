@@ -141,6 +141,21 @@ export const PROFILE_REFUSED_TOPIC = new SyncTopic("profile-refused")
  */
 export const LOBBY_MODE_TOPIC = new SyncTopic("lobby-mode")
 
+/**
+ * A client of a game saying it takes part (`join`) or leaves it (`quit`), whichever moment of the game it is.
+ * Both are idempotent: a client says them again until it is heard.
+ */
+export const PARTICIPATE_TOPIC = new SyncTopic("participate")
+
+/**
+ * The host telling a client how it takes part in the game, as a state: its role, and the seat it holds. It is
+ * told again whenever the client joins again or its connection comes back.
+ */
+export const PARTICIPATION_TOPIC = new SyncTopic("participation")
+
+/** A client telling the host it leaves the room for good, just before it closes its connection. */
+export const QUIT_ROOM_TOPIC = new SyncTopic("quit-room")
+
 /** The host telling how long is left before a deadline, none when there is none. */
 export const DEADLINE_TOPIC = new SyncTopic("deadline")
 

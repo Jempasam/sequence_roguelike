@@ -1,4 +1,4 @@
-import type { SyncRoom } from "../../../../platform"
+import type { SyncPeer, SyncRoom } from "../../../../platform"
 import type { Fault } from "../../../../engine/net/Fault"
 import type { Observer } from "../../sim/base/Observable"
 import type { Battle } from "../../sim/battle/Battle"
@@ -73,12 +73,19 @@ export class RunHost {
 
         /** Told once a round when the host and every client it waits for are ready. */
         everyoneReady: () => void,
+
+        /** What a lobby adds: the number of the game, and how a client that comes back is given the run again. */
+        lobby: {
+            readonly game?: number
+            readonly greet?: (peer: SyncPeer) => void
+        } = {},
     ){
+        this.#greet = lobby.greet ?? null
         this.#engine = engine
         this.#seats = new Seats(mode, policy)
         this.#battle = new BattleHost(null, this.#seats, everyoneReady)
         this.#dealer = new SeatDealer(this.#seats, room)
-        this.#gathering = new Gathering(room, MANUAL)
+        this.#gathering = new Gathering(room, MANUAL, { game: lobby.game })
         this.#forwarding = [forward(this.#battle, this, false), forward(this.#gathering, this, false)]
         this.#room = [
             this.#gathering.memberJoined.add(member => this.#welcome(member)),
@@ -152,6 +159,9 @@ export class RunHost {
         ]
     }
 
+    readonly #greet: ((peer: SyncPeer) => void)|null
+    readonly #seen = new Set<string>()
+
     #unregisterObservers(): void {
         for(const observer of this.#observers) observer.remove()
         this.#observers = []
@@ -162,6 +172,9 @@ export class RunHost {
         // A run is hosted for clients only: a member playing on the host itself has no seat to be dealt.
         if(!peer) return
         this.#dealer.add(peer)
+        // A client that left the game and comes back is no client connecting: nothing greets it but the host.
+        if(this.#seen.has(id)) this.#greet?.(peer)
+        this.#seen.add(id)
         const plans = PLAN_TOPIC.link(peer).listen(text => this.#battle.receive(id, text))
         this.#listening.set(id, [plans])
         this.guestJoined.notify(id)

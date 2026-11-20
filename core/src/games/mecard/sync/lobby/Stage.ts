@@ -2,6 +2,7 @@ import type { SyncLink, SyncPeer, SyncRoom } from "../../../../platform"
 import type { SyncSender, SyncSource } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
+import { GameSession } from "../session/GameSession"
 import { LobbySender } from "./LobbySender"
 
 /** What a stage keeps to drop with it: the handles of what its game listens to. */
@@ -48,7 +49,13 @@ export class HostStage {
     /** Where the game tells its clients, greeting those already there. */
     public readonly sender: LobbySender
 
-    constructor(private readonly lobby: LobbyRoom, sender: SyncSender){
+    constructor(
+        private readonly lobby: LobbyRoom,
+        sender: SyncSender,
+
+        /** The number of the game, which what its clients say is told apart by. */
+        public readonly game: number = 0,
+    ){
         this.room = {
             onJoin: handler => this.#handles.track(lobby.onJoin(handler)),
             onLost: handler => this.#handles.track(lobby.onLost(handler)),
@@ -64,6 +71,16 @@ export class HostStage {
         return this.lobby.reachable
     }
 
+    /**
+     * The people of the game, which the bricks of its mode follow as a room of the players alone. It is made when
+     * the mode asks for it, for it answers the clients that say they take part: a mode that has its own people
+     * must not have two answer.
+     */
+    public get session(): GameSession {
+        this.#session ??= new GameSession(this.lobby, this.game)
+        return this.#session
+    }
+
     /** Give each client of the lobby what a client connecting is given, once the game is there to give it. */
     public greetAll(): void {
         this.sender.greetAll()
@@ -71,12 +88,14 @@ export class HostStage {
 
     /** Stop everything the game asked of the lobby. */
     public dispose(): void {
+        this.#session?.dispose()
         this.sender.dispose()
         this.#handles.disposeAll()
     }
 
 
     readonly #handles = new Handles()
+    #session: GameSession|null = null
 }
 
 /**
@@ -98,6 +117,9 @@ export class GuestStage {
 
         /** The id the main client knows this client by, none while it is not told. */
         public readonly id: string|null = null,
+
+        /** The number of the game the host tells, which what is said is told apart by. */
+        public readonly game: number = 0,
     ){
         this.link = link === null ? null : {
             send: message => link.send(message),

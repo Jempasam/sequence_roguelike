@@ -9,7 +9,7 @@ import type { TeamRequest } from "../../TeamRequest"
 import { writeDuelFightMessage, writeDuelWatchMessage } from "../DuelMessage"
 import { DUEL_FIGHT_TOPIC, DUEL_WATCH_TOPIC, duelPlanTopic } from "../topics"
 import { writeRaceEndMessage } from "../duelRace/RaceEndMessage"
-import { KICK_TOPIC, RACE_END_TOPIC, RESUME_TOPIC } from "../duelRace/topics"
+import { KICK_TOPIC, RACE_END_TOPIC, RESEND_TOPIC, RESUME_TOPIC } from "../duelRace/topics"
 import type { DuelFought, DuelPlayer, DuelWatched } from "./DuelPlayer"
 
 /**
@@ -60,15 +60,28 @@ export class RemotePlayer implements DuelPlayer {
     }
 
     public kick(): void {
+        this.#order = KICK_TOPIC
         KICK_TOPIC.link(this.peer).send("")
     }
 
     public resume(): void {
+        // Letting go is not told again: a party that went on and waits at the next duels would be let go of.
+        this.#order = null
         RESUME_TOPIC.link(this.peer).send("")
     }
 
+    /**
+     * Tell the client again what it may have missed while its connection was lost: the duel it was told of, and
+     * the order to go to the duels when it was the last one, which a client already there ignores.
+     */
     public back(): void {
         this.#told?.topic.link(this.peer).send(this.#told.text)
+        this.#order?.link(this.peer).send("")
+    }
+
+    public refresh(): void {
+        this.#order?.link(this.peer).send("")
+        RESEND_TOPIC.link(this.peer).send("")
     }
 
     public end(winner: string|null): void {
@@ -77,6 +90,9 @@ export class RemotePlayer implements DuelPlayer {
 
 
     #told: { readonly topic: SyncTopic, readonly text: string }|null = null
+
+    /** The order to go to the duels the client was given last, none once it was let go. */
+    #order: SyncTopic|null = null
 
     #tell(topic: SyncTopic, text: string): void {
         this.#told = { topic, text }

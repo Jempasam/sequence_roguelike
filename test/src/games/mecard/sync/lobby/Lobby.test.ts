@@ -1,6 +1,6 @@
 import {
     ChoiceSetting, LockedFault, Lobby, LobbyGuest, LocalRoom, LocalSync, RangeSetting, UnknownModeFault,
-    InvalidSettingFault, writeModeState, LOBBY_MODE_TOPIC,
+    InvalidSettingFault, writeModeState, LOBBY_MODE_TOPIC, QUIT_ROOM_TOPIC,
 } from "@game/core/mecard/sync"
 import type { GuestStage, HostStage, LobbyMode, LobbyRole, ModeRun, SettingValues } from "@game/core/mecard/sync"
 import { Observable } from "@game/core/mecard"
@@ -55,7 +55,7 @@ describe("ModeSelection", () => {
         const { room, channel, lobby } = hosting(new Recorded("a"), new Recorded("b"))
         const ana = new LobbyGuest(room.join("a"), channel, "Ana", [])
         expect(lobby.selection.mode.id).toBe("a")
-        expect(ana.selection.state).toEqual({ mode: "a", values: { size: "small", lives: 3 }, playing: false })
+        expect(ana.selection.state).toEqual({ mode: "a", values: { size: "small", lives: 3 }, playing: false, game: 0 })
     })
 
     test("host selects and sets → clients follow; bad values are refused and told to nobody", () => {
@@ -68,7 +68,7 @@ describe("ModeSelection", () => {
         expect(lobby.selection.set("nope", 1)).toBeInstanceOf(InvalidSettingFault)
         expect(ana.selection.state?.values.lives).toBe(5)
         expect(lobby.selection.select("b")).toBeNull()
-        expect(ana.selection.state).toEqual({ mode: "b", values: { size: "small", lives: 3 }, playing: false })
+        expect(ana.selection.state).toEqual({ mode: "b", values: { size: "small", lives: 3 }, playing: false, game: 0 })
         expect(lobby.selection.select("zzz")).toBeInstanceOf(UnknownModeFault)
     })
 
@@ -172,7 +172,7 @@ describe("Lobby", () => {
         const ana = new LobbyGuest(room.join("a"), channel, "Ana", [mode])
         const faults: Fault[] = []
         ana.faulted.add(fault => faults.push(fault))
-        channel.send(`${LOBBY_MODE_TOPIC.name}:${writeModeState({ mode: "a", values: { size: "huge", lives: 3 }, playing: true })}`)
+        channel.send(`${LOBBY_MODE_TOPIC.name}:${writeModeState({ mode: "a", values: { size: "huge", lives: 3 }, playing: true, game: 1 })}`)
         expect(faults[0]).toBeInstanceOf(InvalidSettingFault)
         expect(ana.playing).toBe(false)
     })
@@ -191,4 +191,18 @@ describe("chat and roster in the lobby", () => {
         expect(heard).toEqual(["Ana 2: salut", "Ana: coucou"])
         expect(lobby.roster.members.map(member => member.name)).toEqual(["Hôte", "Ana", "Ana 2"])
     })
+
+    test("a client that says it leaves the room → gone at once, without waiting for the network, and only once", () => {
+        const { room, channel, lobby } = hosting(new Recorded("a"))
+        const link = room.join("ana")
+        const ana = new LobbyGuest(link, channel, "Ana", [new Recorded("a")])
+        expect(lobby.roster.members.map(member => member.name)).toEqual(["Hôte", "Ana"])
+        QUIT_ROOM_TOPIC.link(link).send("")
+        expect(lobby.roster.members.map(member => member.name)).toEqual(["Hôte"])
+        // The network tells it later: nothing more happens.
+        room.leave("ana")
+        expect(lobby.roster.members.map(member => member.name)).toEqual(["Hôte"])
+        ana.dispose()
+    })
 })
+

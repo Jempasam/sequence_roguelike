@@ -13,7 +13,7 @@ import { GUIDE } from "./guide"
 import type { GuideBlock } from "./GuideBlocks"
 
 /** The color behind the guide. */
-const BACKDROP = new Color(0.12, 0.11, 0.17)
+const BACKDROP = new Color(0.1, 0.06, 0.03)
 
 /** The space around the guide and between its parts, in virtual pixels. */
 const MARGIN = 4

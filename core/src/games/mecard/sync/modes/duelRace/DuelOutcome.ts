@@ -1,5 +1,5 @@
 import type { DuelFight } from "../DuelRound"
-import type { LifeBook } from "./LifeBook"
+import type { LifeLedger } from "./LifeBook"
 
 /** What a duel costs the players, polymorphic so a mode chooses the rules of its lives. */
 export interface DuelOutcome {
@@ -8,7 +8,7 @@ export interface DuelOutcome {
      *
      * @param winner - The index of the camp that won, none for a draw.
      */
-    apply(fight: DuelFight, winner: number|null, lifeBook: LifeBook): void
+    apply(fight: DuelFight, winner: number|null, lifeBook: LifeLedger): void
 }
 
 /** Each player of the camp that lost loses a life, and a draw costs nobody anything. */

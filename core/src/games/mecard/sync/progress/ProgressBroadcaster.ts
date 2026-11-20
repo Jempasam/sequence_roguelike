@@ -28,10 +28,10 @@ export class ProgressBroadcaster {
         private readonly sink: ProgressSink,
     ){
         this.#observers = [
-            travel.moved.add(() => this.#send()),
+            travel.moved.add(() => this.#move()),
             travel.phaseChanged.add(() => this.#send()),
-            travel.floorEntered.add(() => this.#send()),
-            travel.loaded.add(() => this.#send()),
+            travel.floorEntered.add(() => this.#move()),
+            travel.loaded.add(() => this.#move()),
         ]
         this.#send()
     }
@@ -40,11 +40,14 @@ export class ProgressBroadcaster {
     /** Where the journey stands now. */
     public snapshot(): Progress {
         const { travel } = this
+        const { journey } = travel
         return {
             floor: travel.floor.level,
             depth: travel.depth,
             layer: travel.place?.layer ?? -1,
-            atDuel: travel.phase === "visit" && travel.halt?.type === DUEL_HALT,
+            // The same count as the rows of the duels are laid by: the row of the exits is not one of the map.
+            rows: journey.layers.length - (journey.exits.length > 0 ? 1 : 0),
+            atDuel: this.#isForced || (travel.phase === "visit" && travel.halt?.type === DUEL_HALT),
             inBattle: travel.phase === "fight",
             inHalt: travel.phase === "visit",
         }
@@ -52,6 +55,7 @@ export class ProgressBroadcaster {
 
     /** Say that the party waits at the duels, whatever the journey says: it has none ahead to be sent to. */
     public forceAtDuel(): void {
+        this.#isForced = true
         const progress = { ...this.snapshot(), atDuel: true }
         this.#last = writeProgressMessage(progress)
         this.sink.send(progress)
@@ -71,6 +75,15 @@ export class ProgressBroadcaster {
 
     readonly #observers: readonly Observer[]
     #last: string|null = null
+
+    /** Does the party wait at the duels with none ahead? What it says of itself stays so until it moves. */
+    #isForced = false
+
+    /** The journey moved: the party waits at the duels no more, unless it is there. */
+    #move(): void {
+        this.#isForced = false
+        this.#send()
+    }
 
     #send(): void {
         const progress = this.snapshot()

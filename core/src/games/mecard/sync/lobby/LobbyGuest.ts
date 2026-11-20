@@ -65,6 +65,30 @@ export class LobbyGuest {
     /** Is a game being played by this client? */
     public get playing(): boolean { return this.#run !== null }
 
+    /** Does the host say a game is being played, whether or not this client plays it? */
+    public get gameGoing(): boolean { return this.#inGame }
+
+    /**
+     * Leave the game that goes on for the others, and stay in the room: the game is told, and may keep a place
+     * for this client.
+     *
+     * @returns Whether the game could be left that way: one that cannot is left as it is.
+     */
+    public quitGame(): boolean {
+        const run = this.#run
+        if(!run?.quit) return false
+        run.quit()
+        this.#stop()
+        return true
+    }
+
+    /** Come back to the game being played, which the mode may give a place back, or have it only watched. */
+    public rejoin(): void {
+        const { state } = this.selection
+        if(!state?.playing || this.#run) return
+        this.#join(state.mode, state.values, "player", state.game)
+    }
+
     /** Stop the game and the chat, and stop listening. It leaves the session open. */
     public dispose(): void {
         this.#stop()
@@ -98,14 +122,16 @@ export class LobbyGuest {
         if(!state) return
         if(state.playing && !this.#inGame){
             this.#inGame = true
-            this.#join(state.mode, state.values, previous === null ? "spectator" : "player")
+            this.#join(state.mode, state.values, previous === null ? "spectator" : "player", state.game)
         } else if(!state.playing && this.#inGame){
             this.#inGame = false
             this.#stop()
         }
     }
 
-    #join(id: string, values: Readonly<Record<string, string|number>>, role: "player"|"spectator"): void {
+    #join(
+        id: string, values: Readonly<Record<string, string|number>>, role: "player"|"spectator", game: number,
+    ): void {
         const mode = this.modes.find(each => each.id === id)
         if(!mode){
             this.faulted.notify(new UnknownModeFault(id))
@@ -116,7 +142,9 @@ export class LobbyGuest {
             this.faulted.notify(invalid)
             return
         }
-        const stage = new GuestStage(role === "player" ? this.link : null, this.source, this.roster.self?.id ?? null)
+        const stage = new GuestStage(
+            role === "player" ? this.link : null, this.source, this.roster.self?.id ?? null, game,
+        )
         const run = mode.guest(stage, values, role)
         if(run instanceof Fault){
             stage.dispose()

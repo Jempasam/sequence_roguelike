@@ -13,6 +13,9 @@ export interface Progress {
     /** The row of the map it stands on, none before the first place. */
     readonly layer: number
 
+    /** How many rows the map of the floor has, the one of the exits left out: 0 when it is not known. */
+    readonly rows: number
+
     /** Does it wait at a halt of the duels? */
     readonly atDuel: boolean
 
@@ -37,5 +40,7 @@ export function readProgressMessage(text: string): Progress|UnreadableFault {
         && typeof message.layer === "number" && typeof message.atDuel === "boolean"
         && typeof message.inBattle === "boolean" && typeof message.inHalt === "boolean"
     if(!isProgress) return wrongShape(PROGRESS_TOPIC.name, text, "message of a progress")
-    return message as Progress
+    // A peer that does not tell the rows of its map is read as not knowing them.
+    const rows = typeof message.rows === "number" ? message.rows : 0
+    return { ...message, rows } as Progress
 }

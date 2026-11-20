@@ -85,6 +85,13 @@ déjà (`GameSession`, `Participation`, `Run/BattleBroadcaster`, `Run/BattleRece
 - Un refus d'intention est rejoué (resynchro) quand le propriétaire est le gestionnaire ; pour un propriétaire client,
   il n'y a pas de retour.
 
+- **Réglages par participant** : `GameModeDef.participantSettings` (des `ChoiceSetting`) déclare ce que chaque client règle pour
+  lui-même, dans la barre sous la zone de connexion du lobby ([ParticipantSettingsBar](../../ui/lobby/ParticipantSettingsBar.ts)).
+  Les valeurs partent avec le `join` du message `participate` (`options`), sont vérifiées par le gestionnaire (initiales si
+  invalides) et lues par le mode dans `onJoin(ctx, who)` via `who.options`. Verrouillés une fois dans la partie ; un client qui
+  arrive en retard à un mode qui en a attend son clic sur « Rejoindre la partie ». Premier usage : « Run mixte »
+  ([RunTableMode.ts](../lobby/modes/RunTableMode.ts)), réglage `camp` (allié / ennemi), sièges par `mixedSeats`.
+
 ## Écrire un mode
 
 ```ts

@@ -1,7 +1,7 @@
 import { BULL, ELF_ARCHER, ELF_ASSASSIN, GOBLIN_RIDER, HUNTER, TROLL } from "../../catalog/monsters"
 import { BUSH, ROCK_BLOCK, TREE } from "../../catalog/hazards"
 import { AGGRESSION, BATTLE, BOSS, ELITE } from "../../fight/fights"
-import { HUNTER_KIT, DRUID_KIT } from "../../catalog/kits"
+import { HUNTER_KIT, DRUID_KIT, TAXIDERMIST_KIT } from "../../catalog/kits"
 import { designed, designedKits, lay, put } from "./designed"
 
 /** The fights of the forest: hunters and fast blades, a troll at the end. */
@@ -11,6 +11,12 @@ export const FOREST_FIGHTS = [
         hazards: [lay(TREE, 2, 3), lay(TREE, 4, 3)],
         description: "Un chasseur et un druide te prennent pour leur gibier.",
         kits: [HUNTER_KIT, DRUID_KIT],
+    }),
+    designedKits({
+        category: AGGRESSION, layers: [3, 8], name: "Naturalistes de la forêt",
+        hazards: [lay(TREE, 2, 3), lay(BUSH, 4, 3)],
+        description: "Un taxidermiste et un druide empaillent tout ce qui bouge.",
+        kits: [TAXIDERMIST_KIT, DRUID_KIT],
     }),
     designed({
         category: BATTLE, layers: [0, 4], name: "Chasseurs à l'affût",

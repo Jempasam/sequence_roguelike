@@ -601,6 +601,7 @@ export class Travel {
     /** A map filled by the floor, its exits leading to the floors after it. */
     #newJourney(): Journey {
         const map = new Journey(this.run.rng)
+        map.fights = { depth: this.depth, ghosts: this.run.ghosts }
         this.floor.fillMap(map)
         map.addExits(exitsOf(this.floor), EXIT_HALT)
         return map

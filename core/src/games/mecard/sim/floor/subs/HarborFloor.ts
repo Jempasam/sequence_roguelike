@@ -24,7 +24,7 @@ export class HarborFloor extends AbstractFloor {
     }
 
     protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
-        return laidIn(HARBOR_FIGHTS, category, layer, rng)
+        return laidIn(HARBOR_FIGHTS, category, layer, rng, this.fightContext)
     }
 }
 

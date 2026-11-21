@@ -33,25 +33,30 @@ export class PlayControlView extends Panel {
     ){
         super(theme, { background: NineSlice.flat(theme.white, CONTROLS_FRAME), padding: 1 })
         this.content = this.#row
-        control.onChange = () => this.#build()
-        this.#build()
+        this.#lit = { ...theme.button, normal: NineSlice.flat(theme.white, ACTIVE) }
+        for(const { text, mode } of BUTTONS){
+            const button = new Button(theme, text)
+            button.onActivate = () => {
+                if(mode === null) this.control.step()
+                else this.control.mode = mode
+            }
+            this.#buttons.push(button)
+            this.#row.add(button)
+        }
+        control.onChange = () => this.#light()
+        this.#light()
     }
 
 
     /** The buttons, a pixel apart: the white of the panel behind shows as a frame around each. */
     readonly #row = new Box("row", { gap: 1 })
+    readonly #buttons: Button[] = []
+    readonly #lit: Button["looks"]
 
-    /** Lay the buttons again from the mode. */
-    #build(): void {
-        for(const child of [...this.#row.children]) this.#row.remove(child)
-        const lit = { ...this.theme.button, normal: NineSlice.flat(this.theme.white, ACTIVE) }
-        for(const { text, mode } of BUTTONS){
-            const button = new Button(this.theme, text, mode !== null && mode === this.control.mode ? { looks: lit } : {})
-            button.onActivate = () => {
-                if(mode === null) this.control.step()
-                else this.control.mode = mode
-            }
-            this.#row.add(button)
-        }
+    /** Light up the button of the mode playing, and only it. */
+    #light(): void {
+        BUTTONS.forEach(({ mode }, index) => {
+            this.#buttons[index].looks = mode !== null && mode === this.control.mode ? this.#lit : this.theme.button
+        })
     }
 }

@@ -1,5 +1,5 @@
-import { checkValues, initialValues } from "./Setting"
-import type { Setting, SettingValue, SettingValues } from "./Setting"
+import { checkValues, initialValues } from "../../sim/mode/Setting"
+import type { Setting, SettingValue, SettingValues } from "../../sim/mode/Setting"
 
 /** A mode, as far as what its participants set for themselves goes. */
 export interface ParticipantModed {

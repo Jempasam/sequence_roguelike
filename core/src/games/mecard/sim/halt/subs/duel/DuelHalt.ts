@@ -2,6 +2,7 @@ import { visual } from "../../../base/Visual"
 import { Observable } from "../../../base/Observable"
 import { rgba } from "../../../base/Rgba"
 import type { Run } from "../../../run/Run"
+import type { Halt } from "../../Halt"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
@@ -47,12 +48,33 @@ export class DuelHalt extends AbstractHalt {
         this.released.notify()
     }
 
+    public override get hasImpact(): boolean {
+        return super.hasImpact || (this.#reward?.hasImpact ?? false)
+    }
+
     public start(ctx: HaltContext): void {
-        ctx.tell("Les autres arrivent…")
+        this.#ctx = ctx
+        if(this.#reward) this.#reward.start(ctx)
+        else ctx.tell("Les autres arrivent…")
+    }
+
+    /**
+     * The party won its duel: it is paid what the halt it was given says, in place of the waiting, once it is
+     * visited. A party that already waits is paid at once.
+     *
+     * @param reward - What pays for the duel, none for none.
+     */
+    public win(reward: Halt|null): void {
+        if(this.#reward || !reward) return
+        this.#reward = reward
+        this.impact()
+        if(this.#ctx) reward.start(this.#ctx)
     }
 
 
     #isReleased = false
+    #ctx: HaltContext|null = null
+    #reward: Halt|null = null
 }
 
 /** The sort of the halt of the duels, which no floor lays: a game mode lays it. */

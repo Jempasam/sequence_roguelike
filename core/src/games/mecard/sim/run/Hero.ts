@@ -96,7 +96,7 @@ export function foeOf(monster: Monster, name: string, level = 1): Hero {
     return hero({
         name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
         unlimited: [], hearts: monsterHearts(monster.hearts + level - 1),
-        items: [],
+        items: [...monster.items ?? []],
         usables: [],
         bases: { draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true, size: monster.size ?? 1 },
     })

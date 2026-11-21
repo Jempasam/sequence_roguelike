@@ -1,9 +1,6 @@
 /**
  * @packageDocumentation
- * The kinds of game a lobby offers.
+ * The kinds of game a lobby offers that the sync holds itself.
  */
 
-export * from "./DuelRaceTableMode"
-export * from "./RandomDuelMode"
-export * from "./RunTableMode"
 export * from "./TestMode"

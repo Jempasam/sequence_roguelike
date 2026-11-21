@@ -40,6 +40,7 @@ export class GreatMagicianHalt extends CardGiftHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Choisis un booster", this.#boosters, boosterShown, chosen => {
+            this.run.boosterOpened.notify(chosen)
             this.give(ctx, openBooster(this.run.rng, chosen))
         })
     }

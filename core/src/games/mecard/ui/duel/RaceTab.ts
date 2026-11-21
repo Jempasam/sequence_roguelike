@@ -4,8 +4,8 @@ import { Component, NineSlice, sizeHint } from "../../../../engine/ui"
 import type { Rope, SizeHint, Theme, UiEvent, UiRoot, Layer } from "../../../../engine/ui"
 import { TextLayout } from "../../../../engine/text"
 import type { Observer } from "../../sim/base/Observable"
-import type { DuelFighting, DuelWatching } from "../../sync/modes/players/HubPort"
-import type { DuelRacePlayer } from "../../sync/modes/players/DuelRacePlayer"
+import type { DuelFighting, DuelWatching } from "../../sim/mode/subs/duelRace/players/HubPort"
+import type { DuelRacePlayer } from "../../sim/mode/subs/duelRace/players/DuelRacePlayer"
 import type { RosterEntry } from "../../sync/lobby/RosterMessage"
 import { hueOfName } from "../../sync/lobby/Profile"
 import { hueColor } from "../chat/ChatPanel"
@@ -663,6 +663,8 @@ export class RaceTab {
     }
 
     #nameOf(id: string): string {
+        // A player that left the game has no name any more, whoever it was.
+        if(this.#player?.lives.isGone?.(id)) return "???"
         return this.members().find(member => member.id === id)?.name ?? id
     }
 

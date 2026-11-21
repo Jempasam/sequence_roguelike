@@ -67,16 +67,21 @@ export class Tabs extends Box {
 
     /** Build the tabs and the page shown again, from the state of now. */
     public refresh(): void {
-        for(const tab of [...this.#header.children]) this.#header.remove(tab)
-        this.#pages.forEach((page, index) => {
-            const chosen = index === this.#selected
-            const tab = new Button(this.theme, page.title, chosen ? { looks: this.#chosenLooks } : {})
-            tab.onActivate = () => {
-                if(index === this.#selected) return
-                this.selected = index
-                this.onSelect?.(index)
-            }
-            this.#header.add(tab)
+        // The tabs are made once: only which one is chosen changes.
+        if(this.#tabs.length === 0){
+            this.#pages.forEach((page, index) => {
+                const tab = new Button(this.theme, page.title)
+                tab.onActivate = () => {
+                    if(index === this.#selected) return
+                    this.selected = index
+                    this.onSelect?.(index)
+                }
+                this.#tabs.push(tab)
+                this.#header.add(tab)
+            })
+        }
+        this.#tabs.forEach((tab, index) => {
+            tab.looks = index === this.#selected ? this.#chosenLooks : this.theme.button
         })
         if(this.#page) this.remove(this.#page)
         const page = this.#pages[this.#selected].build()
@@ -88,6 +93,7 @@ export class Tabs extends Box {
 
     readonly #pages: readonly TabPage[]
     readonly #header: Box
+    readonly #tabs: Button[] = []
     readonly #chosenLooks: StateLooks & { readonly padding: number }
     #selected: number
 

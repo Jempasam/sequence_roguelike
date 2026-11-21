@@ -28,17 +28,20 @@ import {
     MEMORY_GAP, ONE_MIND, PARROT, PAS_DE_DEUX, STUTTER, SYNCHRONISATION, PIERCING_SPEAR,
     ARC_STEP, ARC_TURN, POSSESSION, HAUNT, ETHEREAL_FORM, PLAGIARISM,
     PAWN_CARD, ROOK_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, CASTLING, REFLECTION, GLASS_KNIFE, BEAR_TRAP, MISDIRECTION,
-    STRIDE, SHY_AWAY, KICK,
+    STRIDE, SHY_AWAY, KICK, TRANSFUSION, EPIDEMIC, STUFFING, TAMING_MARK,
+    SCARIFICATION, PLAGUE_MASK, AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, TROPHY,
 } from "../card/subs"
 import {
     BACK_EYES, ALEMBIC, BOOTS, BLOOD_PACT, CHIPPED_BLADE, DEMON_FANG, DODGE_SCEPTER, DOLL, ECHO_ITEM, ELEMENT_BAG,
     BOTTLE_BAG, FANG, FISHER_GLOVE, GEAR, GRIMOIRE, HOURGLASS, MAGNET, ROSARY, SCARY_MASK, SCOPE, SPYGLASS, STICKY_SOLES,
     STRENGTH_BELT, TORERO_CAPE, WHETSTONE, FANG_NECKLACE, PREDATOR_EYE, SOUL_LANTERN, WINGS, TACTICS_BOOK, GLASS_CORE,
+    SALT_GLASS, PEDOMETER, SCAVENGER_NOSE,
 } from "../item/subs"
 import {
     BLOOD_FLASK, CALM_INFUSION, COCAINE, COOL_SYRUP, DEMON_ELIXIR, ENERGIZER, FIRE_FLASK, FISHING_CARD,
     FOLDING_TURRET, FURY_ELIXIR, GLUE_FLASK, GLUE_TUBE, HASTE_ELIXIR, HEALING_POTION, INFLATABLE_DECOY,
     MAGIC_WATCH, PLANT_BAG, SHARPENING_STONE, SHIELD_FLASK, STRENGTH_ELIXIR, THRUST_BOTTLE, WHISTLE, WIZARD_STAFF, WRENCH,
+    ICE_CONE, TAXIDERMY_KIT,
 } from "../usable/subs"
 import {
     BIG_SHOTGUN, BLOODY_COMBO, BLUE_VENGEANCE, COVERING_FIRE, CRUSH, HUNTER_FUSION, MEGA_THRUST, QUAKE_SEISM,
@@ -610,6 +613,36 @@ export const BUBBLE_MAGE_KIT: Kit = {
     hearts: [reds(4)],
 }
 
+/** Drinks what ails the others, passes it on, and spreads it: the statuses it suffers are what it fights with. */
+export const PLAGUE_DOCTOR_KIT: Kit = {
+    name: "Médecin de la peste",
+    sprite: visual("units/plague_doctor"),
+    cards: deckAround(THROWN_POTION, BOTTLE, POISON, SCARIFICATION, TRANSFUSION, EPIDEMIC, PLAGUE_MASK),
+    items: [SALT_GLASS],
+    usables: [ICE_CONE],
+    hearts: [reds(6)],
+}
+
+/** Stuffs the enemies that fall close to him, and has them fight for him. */
+export const TAXIDERMIST_KIT: Kit = {
+    name: "Taxidermiste",
+    sprite: visual("units/taxidermist"),
+    cards: closeDeckAround(DAGGER, AUTOPSY, STUFFING, STUFFING_PAD, TROPHY),
+    items: [PEDOMETER],
+    usables: [TAXIDERMY_KIT],
+    hearts: [reds(5)],
+}
+
+/** Tames the enemies it kills: the next to fall joins the team for good. */
+export const TAMER_KIT: Kit = {
+    name: "Taximage",
+    sprite: visual("units/tamer"),
+    cards: closeDeckAround(WHIP, TAMING_MARK, LURE, MUZZLE, TREAT),
+    items: [SCAVENGER_NOSE],
+    usables: [],
+    hearts: [reds(4)],
+}
+
 /** The kits a run starts with. */
 export const STARTING_KITS: readonly Kit[] = []
 
@@ -621,7 +654,7 @@ export const ALL_KITS: readonly Kit[] = [
     GRAVITATIONIST_KIT, DRUID_KIT, GUNNER_KIT, HYPNOTIST_KIT, KNIGHT_KIT, SHADOW_THIEF_KIT, TEMPEST_MAGE_KIT,
     DEMONIST_KIT, ACROBAT_KIT, BLACK_KNIGHT_KIT, BLEEDER_KIT, TURRET_ENGINEER_KIT, DUELIST_KIT,
     SWAMP_SORCERER_KIT, SHADOW_SAMURAI_KIT, SHAMAN_KIT, BEAST_WARRIOR_KIT, BIG_BAD_WOLF_KIT,SPELLBLADE_KIT, GEOMANCER_KIT, PLANT_MAGE_KIT, WITCHER_KIT,
-    CHESS_PLAYER_KIT, GLASS_MAN_KIT, HORSE_KIT, BUBBLER_KIT, BUBBLE_MAGE_KIT,
+    CHESS_PLAYER_KIT, GLASS_MAN_KIT, HORSE_KIT, BUBBLER_KIT, BUBBLE_MAGE_KIT, PLAGUE_DOCTOR_KIT, TAXIDERMIST_KIT, TAMER_KIT,
 ]
 
 /** How many things of one list a second list shares, each one counted as many times as both hold it. */

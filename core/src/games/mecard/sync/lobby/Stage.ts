@@ -4,33 +4,8 @@ import type { SyncSender, SyncSource } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
 import { GameSession } from "../session/GameSession"
+import { Scope } from "../Scope"
 import { LobbySender } from "./LobbySender"
-
-/** What a stage keeps to drop with it: the handles of what its game listens to. */
-class Handles {
-
-
-    /** Keep a handle, dropped with the stage or when its owner disposes it first. */
-    public track(handle: { dispose(): void }): { dispose(): void } {
-        const tracked = {
-            dispose: () => {
-                this.#handles.delete(tracked)
-                handle.dispose()
-            },
-        }
-        this.#handles.add(tracked)
-        return tracked
-    }
-
-    /** Dispose every handle kept. */
-    public disposeAll(): void {
-        for(const handle of [...this.#handles]) handle.dispose()
-        this.#handles.clear()
-    }
-
-
-    readonly #handles = new Set<{ dispose(): void }>()
-}
 
 /**
  * Where a game played from a lobby talks, on the main client: the clients of the lobby and the way to tell them
@@ -94,11 +69,12 @@ export class HostStage {
     public dispose(): void {
         this.#session?.dispose()
         this.sender.dispose()
-        this.#handles.disposeAll()
+        this.#handles.dispose()
     }
 
 
-    readonly #handles = new Handles()
+    /** What the game listens to, dropped with the stage. */
+    readonly #handles = new Scope()
     #session: GameSession|null = null
 }
 
@@ -135,9 +111,10 @@ export class GuestStage {
 
     /** Stop listening to everything the game still does. */
     public dispose(): void {
-        this.#handles.disposeAll()
+        this.#handles.dispose()
     }
 
 
-    readonly #handles = new Handles()
+    /** What the game listens to, dropped with the stage. */
+    readonly #handles = new Scope()
 }

@@ -71,6 +71,7 @@ function game(): Game {
         showPnj: () => {},
         showArm: () => {},
         showLibrary: () => {},
+        clearCatalog: () => 0,
         showParallax: () => {},
         showSprites: () => {},
         playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),

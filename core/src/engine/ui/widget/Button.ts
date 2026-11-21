@@ -70,6 +70,24 @@ export class Button extends ContentContainer {
         this.invalidate()
     }
 
+    /** Its frames in each state, with their padding. */
+    public get looks(): StateLooks & { readonly padding: number } { return this.#looks }
+
+    public set looks(looks: StateLooks & { readonly padding: number }){
+        if(looks === this.#looks) return
+        const padding = this.#looks.padding
+        this.#looks = looks
+        if(looks.padding !== padding) this.invalidateLayout()
+        this.invalidate()
+    }
+
+    /** The text it shows, empty when it shows a component. Setting the same one does nothing. */
+    public get text(): string { return this.#label?.text ?? "" }
+
+    public set text(text: string){
+        if(this.#label) this.#label.text = text
+    }
+
     /** Is it held down by the pointer? */
     public get pressed(): boolean { return this.#pressed }
 
@@ -151,7 +169,7 @@ export class Button extends ContentContainer {
     }
 
 
-    readonly #looks: StateLooks & { readonly padding: number }
+    #looks: StateLooks & { readonly padding: number }
     readonly #textColor: Color|null
     readonly #disabledTextColor: Color|null
     readonly #label: Label|null

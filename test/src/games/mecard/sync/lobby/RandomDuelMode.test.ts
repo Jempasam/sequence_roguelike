@@ -58,7 +58,7 @@ describe("the random duel", () => {
     test("three players → two fight a duel they plan, the third watches it, and all are back once it is over", async() => {
         const timer = new ManualScheduler()
         const screens = [new Screen(timer), new Screen(timer), new Screen(timer)]
-        const [host, ana, bob] = screens.map(screen => [gameModeAsLobbyMode(randomDuelMode(screen), screen)])
+        const [host, ana, bob] = screens.map(screen => [gameModeAsLobbyMode(randomDuelMode(screen), screen, screen.timer)])
         const room = new LocalRoom()
         const channel = new LocalSync()
         const lobby = new Lobby(room, channel, "Hôte", host)
@@ -72,8 +72,7 @@ describe("the random duel", () => {
         // The duel is shown to all three, and played by two.
         for(let turn = 0; turn < 500 && screens.some(screen => screen.shown.length === 0 || screen.shown[0].battle.phase !== "over"); turn++){
             for(const screen of screens) screen.act()
-            await settle()
-        }
+            await settle()        }
         expect(screens.every(screen => screen.shown.length >= 1)).toBe(true)
         const players = screens.filter(screen => screen.shown[0].units.length > 0)
         expect(players).toHaveLength(2)
@@ -82,6 +81,42 @@ describe("the random duel", () => {
         timer.advance(RANDOM_DUEL_PAUSE_MS + 1)
         await settle()
         expect(screens.every(screen => screen.hidden >= 1)).toBe(true)
+        lobby.stop()
+    })
+
+    test("a fighter whose connection is lost and comes back → the duel goes on without waiting for ever, it plays its units again, and the duel ends", async() => {
+        const timer = new ManualScheduler()
+        const screens = [new Screen(timer), new Screen(timer), new Screen(timer)]
+        const [host, ana, bob] = screens.map(screen => [gameModeAsLobbyMode(randomDuelMode(screen), screen, screen.timer)])
+        const room = new LocalRoom()
+        const channel = new LocalSync()
+        const lobby = new Lobby(room, channel, "Hôte", host)
+        new LobbyGuest(room.join("a"), channel, "Ana", ana)
+        new LobbyGuest(room.join("b"), channel, "Bob", bob)
+        expect(lobby.start()).toBeNull()
+        await settle()
+        for(let turn = 0; turn < 50 && screens.some(screen => screen.shown.length === 0); turn++) await settle()
+        // Whoever of the guests fights: which does depends on the draw, so what is asserted holds for any.
+        const fighter = [1, 2].find(index => screens[index].shown[0].units.length > 0)
+        if(fighter === undefined) throw new Error("No guest fights.")
+        const id = fighter === 1 ? "a" : "b"
+        const before = screens[fighter].shown.length
+        room.drop(id)
+        for(let turn = 0; turn < 60; turn++){
+            for(const screen of screens) if(screen !== screens[fighter]) screen.act()
+            await settle()
+        }
+        room.back(id)
+        await settle()
+        // The owner of the duel plays it on its own engine, which is not shown again; a follower is shown it
+        // again, with the units it plays: they are its own again. Either way the screen holds the duel.
+        expect(screens[fighter].shown.length).toBeGreaterThanOrEqual(before)
+        expect(screens[fighter].shown.at(-1)?.units.length).toBeGreaterThan(0)
+        for(let turn = 0; turn < 800 && screens.some(screen => screen.shown.at(-1)?.battle.phase !== "over"); turn++){
+            for(const screen of screens) screen.act()
+            await settle()
+        }
+        expect(screens.every(screen => screen.shown.at(-1)?.battle.phase === "over")).toBe(true)
         lobby.stop()
     })
 })

@@ -4,6 +4,7 @@ import type { Battle } from "../battle/Battle"
 import type { Controller } from "../battle/Unit"
 import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
+import type { Hero } from "../run/Hero"
 
 import type { FightType } from "./FightType"
 
@@ -41,6 +42,9 @@ export interface FightStage {
 
     /** Put a kit in the arena, on the side of the monsters: a character as the party's are, with its own cards, items and usables. */
     addKit(kit: Kit, pose?: MonsterPose): void
+
+    /** Put a character already made in the arena, on the side of the monsters: one of a game of the past, as it stood. */
+    addHero(hero: Hero, pose?: MonsterPose): void
 }
 
 /**

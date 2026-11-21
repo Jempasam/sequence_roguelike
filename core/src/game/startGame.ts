@@ -7,6 +7,7 @@ import { Color } from "../engine/math"
 import { NetSync, signalingAt } from "../engine/net"
 import { SaveSlot } from "../engine/save"
 import { UiRoot } from "../engine/ui"
+import { CATALOG_FORMAT, CATALOG_SLOT_KEY } from "../games/mecard/sim/save/catalogSave"
 import { HISTORY_FORMAT, HISTORY_SLOT_KEY } from "../games/mecard/sim/save/historySave"
 import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "../games/mecard/sim/save/runSlot"
 import { HostDirectory } from "../games/mecard/sync/hosts/HostDirectory"
@@ -80,6 +81,7 @@ export function startGame(platform: Platform): { dispose(): void } {
             storage = opened
             game.keep(new SaveSlot(opened, RUN_SLOT_KEY, RUN_SAVE_FORMAT))
             game.keepHistory(new SaveSlot(opened, HISTORY_SLOT_KEY, HISTORY_FORMAT))
+            game.keepCatalog(new SaveSlot(opened, CATALOG_SLOT_KEY, CATALOG_FORMAT))
             const soundSlot = new SaveSlot(opened, SOUND_SLOT_KEY, SOUND_SETTINGS_FORMAT)
             keepSoundSettings(soundSettings, soundSlot, text => game.report(text))
         }, (error: unknown) => game.report(`Les sauvegardes ne sont pas disponibles : ${String(error)}`))

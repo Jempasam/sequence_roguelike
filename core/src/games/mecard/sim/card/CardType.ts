@@ -1,3 +1,5 @@
+import type { Text } from "../../../../semantic"
+import { colored, rgba } from "../base/Rgba"
 import type { Action, UnitContext } from "../battle/Action"
 import type { Unit } from "../battle/Unit"
 import type { Element } from "../element/Element"
@@ -21,7 +23,15 @@ export class CardType<T> {
         /** What the slot of this type is called on a card. */
         public readonly name: string,
     ){}
+
+
+    public toString(): string { return this.name }
+
+    public toSemString(): Text { return colored(CARD_TYPE_COLOR, this.name) }
 }
+
+/** The color the name of a card type is written in. */
+const CARD_TYPE_COLOR = rgba(0.7, 0.85, 0.95)
 
 /** What a preparation does to the battle: its unit and its battle, and where it stands in the chain. */
 export interface PrepareContext extends UnitContext {
@@ -128,6 +138,12 @@ export type BodyPart = Card|"run"|"bite"
 export interface Beast {
     readonly name: string
 
+    /** Its name, for the console. */
+    toString(): string
+
+    /** Its name in its color. */
+    toSemString(): Text
+
     /** How its body looks, summoned. */
     readonly sprite: Visual
 
@@ -143,6 +159,14 @@ export interface Beast {
     /** The chain its body plays round after round, where the run and the bite given, its own or another beast's, stand. */
     readonly body: readonly BodyPart[]
 }
+
+/** A beast, made from all of it but how it tells itself. */
+export function beast(spec: Omit<Beast, "toString"|"toSemString">): Beast {
+    return { ...spec, toString: () => spec.name, toSemString: () => colored(BEAST_COLOR, spec.name) }
+}
+
+/** The color the name of a beast is written in. */
+const BEAST_COLOR = rgba(0.55, 0.8, 0.4)
 
 /** A spirit of nature, for a card using its run, its bite or its body. */
 export const BEAST = new CardType<Beast>("bête")

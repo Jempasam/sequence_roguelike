@@ -13,7 +13,7 @@ import { visual } from "../../../base/Visual"
 
 /** A booster, closed, and what it holds, told under the pointer. */
 export function boosterShown(chosen: Booster): Shown {
-    return { cards: [], boosters: [chosen], text: concat(chosen.name, " : ", boosterPoolsText(chosen)) }
+    return { cards: [], boosters: [chosen], text: concat(chosen, " : ", boosterPoolsText(chosen)) }
 }
 
 /** The magician: a booster among some, its cards going together. */
@@ -38,6 +38,7 @@ export class MagicianHalt extends CardGiftHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Choisis un booster", this.#boosters, boosterShown, chosen => {
+            this.run.boosterOpened.notify(chosen)
             this.give(ctx, openBooster(this.run.rng, chosen))
         })
     }
@@ -51,7 +52,8 @@ export class MagicianHalt extends CardGiftHalt {
 export const MAGICIAN_HALT: HaltType = {
     id: "magician",
     name: "Magicien",
-    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],    icon: visual("halts/magician", { letter: "MG" }),
+    description: ["Un booster parmi trois : des ", CARTE.as("cartes"), " qui vont ensemble."],
+    icon: visual("halts/magician", { letter: "MG" }),
     transition: visual("portal"),
     create: run => new MagicianHalt(run),
 }

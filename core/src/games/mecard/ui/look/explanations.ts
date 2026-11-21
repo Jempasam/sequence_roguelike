@@ -9,6 +9,14 @@ import { AbstractCard } from "../../sim/card/subs/AbstractCard"
 import { AbstractHeartKind } from "../../sim/heart/subs/AbstractHeartKind"
 import { AbstractItem } from "../../sim/item/subs/AbstractItem"
 import { StatusPotion } from "../../sim/potion/subs/StatusPotion"
+import { boosterPoolsText } from "../../sim/catalog/boosters"
+import type { Booster } from "../../sim/catalog/boosters"
+import type { FightType } from "../../sim/fight/FightType"
+import type { HazardType } from "../../sim/hazard/HazardType"
+import { AbstractProcess } from "../../sim/process/AbstractProcess"
+import type { Process } from "../../sim/process/Process"
+import { StatusType } from "../../sim/status/Status"
+import type { Status } from "../../sim/status/Status"
 import { AbstractUsable } from "../../sim/usable/subs/AbstractUsable"
 
 /** What the interface says of each keyword. */
@@ -64,7 +72,7 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
         "Influence la ", DISTANCE, " des lancers, tirs et crochets : bombe, potion, harpon.",
     ]],
     [ALLONGE, ["Influence la ", DISTANCE, " des coups au corps à corps : coup d'épée, estoc, dague."]],
-    [FEBRILE, ["Se dit d'une ", UNIT, " dont plus de cœurs sont vides que pleins."]],
+    [FEBRILE, ["Se dit d'une ", UNIT, " dont la moitié des cœurs, ou plus, sont vides."]],
 ])
 
 /** What the interface says of each type of damage. */
@@ -81,9 +89,45 @@ function isDescribed(value: object): value is Described {
         || value instanceof StatusPotion
 }
 
+/** How the player is told what a status is to its unit. */
+export const POLARITY_WORDS = { negative: "négatif", positive: "positif", neutral: "neutre" } as const
+
+/** What a status kind is, for the player: `name X (polarity) : description`, X standing for its level. */
+export function statusTypeText(type: StatusType, level?: number): Text {
+    const shown = level === undefined ? [] : [" ", level]
+    return concat(type, ...shown, " (", POLARITY_WORDS[type.polarity], ") : ",
+        level === undefined ? type.description : type.describe(level))
+}
+
+/** What a process is, for the player. */
+export function processText(process: Process): Text {
+    return concat("Processus ", process, " : ", process.description, " Jusqu'à la fin du round.")
+}
+
+function isBooster(value: object): value is Booster {
+    return "pools" in value && "icon" in value && "color" in value
+}
+
+function isHazardType(value: object): value is HazardType {
+    return typeof (value as Partial<HazardType>).lay === "function" && "bodies" in value
+}
+
+function isFightType(value: object): value is FightType {
+    return typeof (value as Partial<FightType>).populate === "function" && "category" in value
+}
+
+function isStatus(value: object): value is Status {
+    return (value as Partial<Status>).type instanceof StatusType && typeof (value as Partial<Status>).level === "number"
+}
+
 /** What the interface can say of an object named in a text, none when it has nothing to add to its name. */
 export function explanationOf(value: object): Text|undefined {
     if(value instanceof Keyword) return KEYWORD_HELP.get(value)
+    if(value instanceof StatusType) return statusTypeText(value)
+    if(isStatus(value)) return statusTypeText(value.type, value.level)
+    if(value instanceof AbstractProcess) return processText(value)
+    if(isBooster(value)) return concat(value, " : ", boosterPoolsText(value))
+    if(isHazardType(value) || isFightType(value)) return concat(value, " : ", value.description)
     if(value instanceof DamageType) return DAMAGE_HELP.get(value)
     if(value instanceof AbstractHeartKind) return concat("Cœur ", value, " : ", value.description)
     return isDescribed(value) ? concat(value, " : ", value.description) : undefined

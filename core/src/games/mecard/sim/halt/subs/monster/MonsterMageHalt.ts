@@ -46,7 +46,7 @@ export class MonsterMageHalt extends MonsterCardHalt {
 export const MONSTER_MAGE_HALT: HaltType = {
     id: "monsterMage",
     name: "Mage des monstres",
-    description: ["Fait d'un monstre un ", ELEMENT.name, " pour une ", UNIT, ", avec une conjuration si elle n'en a aucune."],
+    description: ["Fait d'un monstre un ", ELEMENT, " pour une ", UNIT, ", avec une conjuration si elle n'en a aucune."],
     icon: visual("units/mage", { letter: "MG!" }),
     glow: DARK_COLOR,
     transition: visual("portal"),

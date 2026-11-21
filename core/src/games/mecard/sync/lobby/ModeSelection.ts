@@ -7,8 +7,8 @@ import type { SyncSender } from "../SyncChannel"
 import type { LobbyMode } from "./LobbyMode"
 import { writeModeState } from "./LobbyMessage"
 import type { ModeState } from "./LobbyMessage"
-import { checkValues, initialValues, InvalidSettingFault } from "./Setting"
-import type { SettingValue, SettingValues } from "./Setting"
+import { checkValues, initialValues, InvalidSettingFault } from "../../sim/mode/Setting"
+import type { SettingValue, SettingValues } from "../../sim/mode/Setting"
 
 /** The mode of the lobby was asked to change while a game is played. */
 export class LockedFault extends Fault {

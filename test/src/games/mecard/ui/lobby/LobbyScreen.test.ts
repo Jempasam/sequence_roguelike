@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { ChoiceSetting, LocalRoom, LocalSync, RangeSetting, TEST_MODE } from "@game/core/mecard/sync"
-import { LobbyController, LobbyScreen, nextValue } from "@game/core/mecard/lobby-ui"
+import { LobbyController, LobbyScreen, stepValue } from "@game/core/mecard/lobby-ui"
 import type { LobbyNetwork } from "@game/core/mecard/lobby-ui"
 import type { HostEntry } from "@game/core/mecard/sync"
 import { UnreachableFault } from "@game/core"
@@ -80,14 +80,23 @@ function screenFor(controller: LobbyController) {
     return { screen, left, reports }
 }
 
-describe("nextValue", () => {
+describe("stepValue", () => {
     test("a choice goes to its next name and round, a range by its step and round", () => {
         const choice = new ChoiceSetting("c", "C", ["a", "b"])
-        expect(nextValue(choice, "a")).toBe("b")
-        expect(nextValue(choice, "b")).toBe("a")
+        expect(stepValue(choice, "a", 1)).toBe("b")
+        expect(stepValue(choice, "b", 1)).toBe("a")
         const range = new RangeSetting("r", "R", 1, 3, 1, 2)
-        expect(nextValue(range, 2)).toBe(3)
-        expect(nextValue(range, 3)).toBe(1)
+        expect(stepValue(range, 2, 1)).toBe(3)
+        expect(stepValue(range, 3, 1)).toBe(1)
+    })
+
+    test("going back, a choice goes to its previous name and round, a range back by its step and round", () => {
+        const choice = new ChoiceSetting("c", "C", ["a", "b", "c"])
+        expect(stepValue(choice, "b", -1)).toBe("a")
+        expect(stepValue(choice, "a", -1)).toBe("c")
+        const range = new RangeSetting("r", "R", 1, 3, 1, 2)
+        expect(stepValue(range, 2, -1)).toBe(1)
+        expect(stepValue(range, 1, -1)).toBe(3)
     })
 })
 

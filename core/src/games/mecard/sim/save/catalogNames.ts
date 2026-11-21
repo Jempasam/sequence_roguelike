@@ -4,6 +4,7 @@ import { Visual } from "../base/Visual"
 import type { VisualData } from "../base/Visual"
 import type { Card } from "../card/Card"
 import { Rarity } from "../card/Rarity"
+import { beast } from "../card/CardType"
 import { BeastCard } from "../card/subs/beast/BeastCard"
 import { ElementCard } from "../card/subs/spell/ElementCard"
 import { SECRET_CARD } from "../card/subs/SecretCard"
@@ -162,14 +163,14 @@ function beastCodec(): Codec<Card> {
         },
         parse: text => {
             const saved = JSON.parse(text) as SavedBeast
-            return new BeastCard({
+            return new BeastCard(beast({
                 name: saved.name,
                 sprite: Visual.of(saved.sprite),
                 hearts: saved.hearts.map(([kind, count]) => ({ kind: HEART_NAMES.of(kind), count })),
                 run: saved.run.map(each => CARD_CODECS.load(each)),
                 bite: saved.bite.map(each => CARD_CODECS.load(each)),
                 body: saved.body.map(part => typeof part === "string" ? CARD_CODECS.load(part) : part.place),
-            })
+            }))
         },
     }
 }

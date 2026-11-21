@@ -31,7 +31,7 @@ export class Fire extends AbstractElement {
             "Feu", rgba(1, 0.55, 0.15), "brûlé",
             new Burn(FIRE_BURN),
             ["retire la brûlure, et +", FIRE_STRENGTH, " ", FORCE, " ce round"],
-            ["des flammes de ", FLAMES_RADIUS, " ", DISTANCE, " pendant ", String(FLAMES_ROUNDS), " rounds : qui y joue une étape subit le négatif"],
+            ["des flammes de ", FLAMES_RADIUS, " ", DISTANCE, " pendant ", FLAMES_ROUNDS, " rounds : qui y joue une étape subit le négatif"],
         )
     }
 

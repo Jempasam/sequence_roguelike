@@ -2,7 +2,7 @@ import { Fault } from "../../../../engine/net/Fault"
 import type { Cancel, TimerPort } from "../../../../platform"
 
 import { signal, UnreadableFault } from "../faults"
-import type { SettingValues } from "../lobby/Setting"
+import type { SettingValues } from "../../sim/mode/Setting"
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 import type { SyncLink } from "../SyncChannel"
 

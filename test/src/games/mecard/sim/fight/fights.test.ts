@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT,
+    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_FIGHT, historyEntry, ghostOfEntry,
     fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, SWORDSMAN_KIT, Vector2,
 } from "@game/core/mecard"
-import type { FightType, Visual } from "@game/core/mecard"
+import type { FightType, Ghost, Visual } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 const AT = { layer: 0, across: 0.5 }
@@ -130,6 +130,7 @@ describe("the fights of the floors", () => {
             addKit: (_kit, pose) => {
                 stood.push({ at: pose?.position ?? monsterStart(stood.length), radius: RADIUS })
             },
+            addHero: () => {},
             add: (monster, pose) => {
                 stood.push({ at: pose?.position ?? monsterStart(stood.length), radius: RADIUS * (monster.size ?? 1) })
             },
@@ -149,7 +150,7 @@ describe("the fights of the floors", () => {
         }
     })
 
-    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT).map(type => ({ id: type.id, type })))(
+    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type })))(
         "$id → monsters stand apart and in the top rows of the arena, whatever the level",
         ({ type }) => {
             for(let level = 1; level <= 4; level++){
@@ -171,7 +172,7 @@ describe("the fights of the floors", () => {
 })
 
 describe("the hazards of the fights of the floors", () => {
-    const fights = allFightTypes().filter(type => type !== EMPTY_FIGHT).map(type => ({ id: type.id, type }))
+    const fights = allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type }))
 
     test.each(fights)("$id → some hazards laid, and not too many acting", ({ type }) => {
         const hazards = type.hazards ?? []
@@ -225,7 +226,7 @@ describe("the hazards of the fights of the floors", () => {
 })
 
 describe("the picture of a fight of a floor", () => {
-    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT).map(type => ({ id: type.id, type })))(
+    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type })))(
         "$id → the sprite of one of its monsters",
         ({ type }) => {
             const sprites: Visual[] = []
@@ -233,8 +234,61 @@ describe("the picture of a fight of a floor", () => {
                 rng: new Rng(1), level: 1, layer: 0,
                 add: monster => { sprites.push(monster.sprite) },
                 addKit: kit => { sprites.push(kit.sprite) },
+                addHero: () => {},
             })
             expect(sprites).toContainEqual(type.icon)
         },
     )
+})
+
+describe("the ghost fight", () => {
+    /** A game of the past that went `depth` places far, its party the one of a started run. */
+    function ghostOf(depth: number): Ghost {
+        const past = startedRun(depth)
+        past.travel.depth = depth
+        return ghostOfEntry(historyEntry(past, depth, 0))
+    }
+
+    test("no game kept → never laid, whatever the seed", () => {
+        for(let seed = 1; seed <= 30; seed++){
+            const map = new Journey(new Rng(seed))
+            ALL_FLOORS[0].create(1).fillMap(map)
+            expect(map.places.some(place => place.fight === GHOST_FIGHT)).toBe(false)
+        }
+    })
+
+    test("available → only for a game at most three places further than the place", () => {
+        const ghosts = [ghostOf(10)]
+        expect(GHOST_FIGHT.available?.({ depth: 7, ghosts })).toBe(true)
+        expect(GHOST_FIGHT.available?.({ depth: 6, ghosts })).toBe(false)
+        expect(GHOST_FIGHT.available?.({ depth: 20, ghosts })).toBe(true)
+        expect(GHOST_FIGHT.available?.({ depth: 1, ghosts: [] })).toBe(false)
+    })
+
+    test("a game kept in reach → laid on a map drawn from the run, in the layers of the elites", () => {
+        const laid = new Set<number>()
+        for(let seed = 1; seed <= 60; seed++){
+            const map = new Journey(new Rng(seed))
+            map.fights = { depth: 5, ghosts: [ghostOf(7)] }
+            ALL_FLOORS[0].create(1).fillMap(map)
+            for(const place of map.places) if(place.fight === GHOST_FIGHT) laid.add(place.layer)
+        }
+        expect(laid.size).toBeGreaterThan(0)
+        expect([...laid].every(layer => layer >= 4 && layer <= 9)).toBe(true)
+    })
+
+    test("made → the party of the game stands against ours, and ours is untouched", () => {
+        const run = startedRun(1)
+        run.ghosts = [ghostOf(2)]
+        const fight = GHOST_FIGHT.create(run, { layer: 5, across: 0.5 })
+        const foes = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
+        expect(foes.map(unit => unit.name)).toEqual(run.ghosts[0].party().map(hero => hero.name))
+        expect(run.heroes).toHaveLength(2)
+    })
+
+    test("made with no game in reach → an empty fight rather than a broken one", () => {
+        const run = startedRun(1)
+        const fight = GHOST_FIGHT.create(run, { layer: 5, across: 0.5 })
+        expect(fight.monsters).toEqual([])
+    })
 })

@@ -4,6 +4,7 @@ import type { Observer } from "../../sim/base/Observable"
 import { ChatHost } from "../chat/ChatHost"
 import type { Chat } from "../chat/Chat"
 import { signal } from "../faults"
+import { ROOM_CLOSED_TOPIC } from "../SyncChannel"
 import type { SyncRoom, SyncSender } from "../SyncChannel"
 
 import { LobbyRoom } from "./LobbyRoom"
@@ -12,7 +13,7 @@ import { LockedFault, ModeSelection } from "./ModeSelection"
 import { ParticipantChoices } from "./ParticipantChoices"
 import { hueOfName } from "./Profile"
 import { Roster } from "./Roster"
-import { checkValues } from "./Setting"
+import { checkValues } from "../../sim/mode/Setting"
 import { HostStage } from "./Stage"
 
 /**
@@ -95,9 +96,10 @@ export class Lobby {
         this.#over(null)
     }
 
-    /** End the game, and stop following the room. It leaves the session open. */
+    /** End the game, tell the clients the room is closed, and stop following the room. It leaves the session open. */
     public dispose(): void {
         this.#over(null)
+        ROOM_CLOSED_TOPIC.sender(this.#sender).send("")
         for(const observer of this.#observers) observer.remove()
         this.chat.dispose()
         this.selection.dispose()

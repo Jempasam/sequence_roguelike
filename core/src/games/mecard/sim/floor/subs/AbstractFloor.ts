@@ -30,7 +30,8 @@ import { MAD_DOCTOR_HALT } from "../../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../../halt/subs/party/NecromancerHalt"
 import type { Place, Spot } from "../../run/Journey"
 import type { FightCategory } from "../../fight/FightCategory"
-import type { FightType } from "../../fight/FightType"
+import { NO_FIGHT_CONTEXT } from "../../fight/FightType"
+import type { FightContext, FightType } from "../../fight/FightType"
 import type { Floor, FloorContext, FloorType } from "../Floor"
 import { darkHalts, greatHalts, masterHalts } from "../../catalog/halts"
 
@@ -124,6 +125,7 @@ export abstract class AbstractFloor implements Floor {
 
 
     public fillMap(ctx: FloorContext): void {
+        this.fightContext = ctx.fights
         const plan = this.#planWithoutRows(ctx.rng)
         const places = plan.map(({ type, at }) => this.#lay(ctx, type, at))
         plan.forEach(({ next }, index) => {
@@ -131,6 +133,9 @@ export abstract class AbstractFloor implements Floor {
         })
     }
 
+
+    /** What the run is like while the map is filled, to pass on to {@link laidIn}: only set by {@link AbstractFloor.fillMap}. */
+    protected fightContext: FightContext = NO_FIGHT_CONTEXT
 
     /** The fight of a category laid in a layer of the map: one of its own. */
     protected abstract fightFor(category: FightCategory, layer: number, rng: Rng): FightType

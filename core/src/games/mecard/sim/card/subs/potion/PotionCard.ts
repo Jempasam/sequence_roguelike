@@ -79,5 +79,5 @@ const DISTILLATION_FACTOR = 2
 
 /** A potion made stronger. */
 export const DISTILLATION = new DoseCard("Distillation", [
-    "La potion est ", String(DISTILLATION_FACTOR), " fois plus forte.",
+    "La potion est ", DISTILLATION_FACTOR, " fois plus forte.",
 ], Rarity.EPIC, dose => ({ ...dose, factor: dose.factor * DISTILLATION_FACTOR }))

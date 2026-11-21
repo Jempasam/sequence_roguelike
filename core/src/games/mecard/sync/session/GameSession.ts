@@ -3,9 +3,9 @@ import type { SyncRoom } from "../../../../platform"
 
 import { signal } from "../faults"
 import { LobbyRoom } from "../lobby/LobbyRoom"
-import type { SettingValues } from "../lobby/Setting"
-import { Admissions, Participation } from "../participation/Participation"
-import type { Admission, Arrival, ParticipationPolicy } from "../participation/Participation"
+import type { SettingValues } from "../../sim/mode/Setting"
+import { Placements, Participation } from "../participation/Participation"
+import type { Placement, Arrival, ParticipationPolicy } from "../participation/Participation"
 import { FeedRoom } from "./FeedRoom"
 import { Participant } from "./Participant"
 
@@ -133,10 +133,10 @@ export class GameSession {
         return made
     }
 
-    #admit(who: Arrival): Admission {
+    #admit(who: Arrival): Placement {
         const participant = this.#make(who)
         participant.options = who.options ?? {}
-        const admission = this.#policy?.admit(who) ?? Admissions.spectate()
+        const admission = this.#policy?.admit(who) ?? Placements.spectate()
         const wasPlayer = participant.isPlayer
         participant.presence = admission.kind === "seat" ? "player" : "spectator"
         participant.seat = admission.kind === "seat" ? admission.seat : null

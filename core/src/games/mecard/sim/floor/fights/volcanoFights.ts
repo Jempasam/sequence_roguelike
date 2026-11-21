@@ -1,5 +1,5 @@
 import {
-    BERSERKER, FIRE_LIZARD, FIRE_MAGE, IMP, MAGMA_DRAGON, STONE_GOLEM,
+    BERSERKER, FIRE_LIZARD, FIRE_MAGE, IMP, MAGMA_DRAGON, PHOENIX_HYDRA, STONE_GOLEM,
 } from "../../catalog/monsters"
 import { GEYSER, HOLE, ROCK_BLOCK } from "../../catalog/hazards"
 import { AGGRESSION, BATTLE, BOSS, ELITE } from "../../fight/fights"
@@ -13,6 +13,20 @@ export const VOLCANO_FIGHTS = [
         hazards: [lay(ROCK_BLOCK, 2, 3), lay(ROCK_BLOCK, 4, 3)],
         description: "Un pyromancien et un berserker incendient tout sur leur passage.",
         kits: [PYROMANCER_KIT, BERSERKER_KIT],
+    }),
+    designed({
+        category: ELITE, layers: [5, 9], name: "L'hydre phénix et ses lézards",
+        hazards: [
+            lay(ROCK_BLOCK, 1, 3),
+            lay(GEYSER, 5, 3),
+        ],
+        description: "Une hydre qui renaît de ses cendres, des lézards de feu pour l'attiser.",
+        populate: stage => {
+            put(stage, PHOENIX_HYDRA, 3, 0)
+            put(stage, FIRE_LIZARD, 2, 1)
+            put(stage, FIRE_LIZARD, 4, 1)
+            put(stage, IMP, 1, 1)
+        },
     }),
     designed({
         category: BATTLE, layers: [0, 4], name: "Lézards des cendres",

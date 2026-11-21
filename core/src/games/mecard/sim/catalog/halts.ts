@@ -39,6 +39,10 @@ import { HOSPITAL_HALT } from "../halt/subs/party/HospitalHalt"
 import { MAD_DOCTOR_HALT } from "../halt/subs/party/MadDoctorHalt"
 import { NECROMANCER_HALT } from "../halt/subs/party/NecromancerHalt"
 import { DUEL_HALT } from "../halt/subs/duel/DuelHalt"
+import { CONDUCTOR_HALT } from "../halt/subs/necro/ConductorHalt"
+import { NECRO_RECRUIT_HALT } from "../halt/subs/necro/NecroRecruitHalt"
+import { PROMPTER_HALT } from "../halt/subs/necro/PrompterHalt"
+import { MONSTER_PARK_HALT } from "../halt/subs/gift/MonsterParkHalt"
 import { SHOP_HALT } from "../halt/subs/gift/ShopHalt"
 import { MASTER_CHEST_HALT } from "../halt/subs/master/MasterChestHalt"
 import { GREAT_CHEST_HALT } from "../halt/subs/great/GreatChestHalt"
@@ -113,7 +117,7 @@ export function rewardHalts(): readonly HaltType[] {
  * reading the place of one finds it here.
  */
 export function modeHalts(): readonly HaltType[] {
-    return [DUEL_HALT]
+    return [DUEL_HALT, MONSTER_PARK_HALT, NECRO_RECRUIT_HALT, CONDUCTOR_HALT, PROMPTER_HALT]
 }
 
 /** Every sort of halt. */

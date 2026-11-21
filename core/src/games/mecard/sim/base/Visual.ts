@@ -35,6 +35,41 @@ export function loadedVisual(saved: VisualData|string|null | undefined): Visual|
 
 const GREY: VisualColor = [0.6, 0.6, 0.6]
 
+/** The saturation and the lightness of the color of a unit with no picture of its own. */
+const DEFAULT_SATURATION = 0.55
+const DEFAULT_LIGHTNESS = 0.6
+
+/** A 32 bit hash of a text, FNV-1a: the same for the same text everywhere, which a draw from a seed is not. */
+function hashOf(text: string): number {
+    let hash = 0x811c9dc5
+    for(let index = 0; index < text.length; index++){
+        hash ^= text.charCodeAt(index)
+        hash = Math.imul(hash, 0x01000193)
+    }
+    return hash >>> 0
+}
+
+/** A color from a hue in turns, a saturation and a lightness. */
+function colorOf(hue: number, saturation: number, lightness: number): VisualColor {
+    const spread = saturation * Math.min(lightness, 1 - lightness)
+    const channel = (offset: number): number => {
+        const sector = (hue * 12 + offset) % 12
+        return lightness - spread * Math.max(-1, Math.min(sector - 3, 9 - sector, 1))
+    }
+    return [channel(0), channel(8), channel(4)]
+}
+
+/**
+ * The look of a unit given none: its picture is named by the unit, which the screen draws as it can, and its
+ * color is a hue drawn from the hash of its name, so the same name always looks the same, and two names rarely do.
+ */
+export function defaultVisual(name: string): Visual {
+    const hue = hashOf(name) % 360 / 360
+    return new Visual({
+        visual: `units/${name}`, description: name, coloration: null, color: colorOf(hue, DEFAULT_SATURATION, DEFAULT_LIGHTNESS),
+    })
+}
+
 /**
  * How something looks, as the simulation says it: which picture, and what to show in its stead when the
  * screen has none. The screen decides how to draw it, the simulation never sees a file.

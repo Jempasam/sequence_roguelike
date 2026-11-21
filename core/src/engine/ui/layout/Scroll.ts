@@ -10,6 +10,9 @@ import type { Theme } from "../Theme"
 /** How far a notch of the wheel scrolls, in virtual pixels. */
 export const WHEEL_STEP = 16
 
+/** How many notches of the wheel scroll a whole view, on a view long enough for them to be more than a step. */
+const WHEEL_NOTCHES_PER_VIEW = 8
+
 /** How a viewport is set up. */
 export interface ScrollOptions {
     /** The axis its content scrolls along, `"vertical"` by default. */
@@ -182,7 +185,10 @@ export class Scroll extends ContentContainer {
             case "wheel": {
                 if(!this.#followsWheel) break
                 const notches = this.axis === "vertical" ? event.dy : event.dy || event.dx
-                this.offset += notches * WHEEL_STEP
+                // A notch is a share of the view, and an event never goes further than the view is long.
+                const view = this.axis === "vertical" ? this.#viewport.height : this.#viewport.width
+                const step = Math.min(view, Math.max(WHEEL_STEP, Math.floor(view / WHEEL_NOTCHES_PER_VIEW)))
+                this.offset += Math.max(-view, Math.min(view, notches * step))
                 event.consume()
                 break
             }

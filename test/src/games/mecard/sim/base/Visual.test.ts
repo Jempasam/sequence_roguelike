@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest"
 import {
     allPlaceTypes, BOSS_MONSTERS, BURNING_GROUND, BURNING_GROUNDS, FIRE_ELEMENT, RITUAL_STATUS, RITUAL_STATUSES, ALL_FIGHT_CATEGORIES, ALL_FLOORS, Haste, ALL_ITEMS, ALL_KITS, loadedVisual, ALL_MONSTERS, ALL_PETS,
     PNJ_HATS, PNJ_ITEMS, PNJ_MASKS, Riding, savedVisual, ShadowLink, STATUS_FAMILIES, STATUS_TYPES, Strength,
-    ALL_USABLES, Vanishing, Visual,
+    ALL_USABLES, defaultVisual, Vanishing, Visual,
 } from "@game/core/mecard"
 
 // --- Fixture builders ---
@@ -45,6 +45,31 @@ describe("Visual", () => {
 
     test("an old save naming a sprite alone is read as the picture of that unit", () => {
         expect(loadedVisual("lancer")?.visual).toBe("units/lancer")
+    })
+})
+
+describe("defaultVisual", () => {
+
+    test("the same name → the same look, always", () => {
+        expect(defaultVisual("Gobelin 1")).toEqual(defaultVisual("Gobelin 1"))
+    })
+
+    test("its picture and its description are the name, and it is not recolored", () => {
+        const look = defaultVisual("Fantôme")
+        expect(look.visual).toBe("units/Fantôme")
+        expect(look.description).toBe("Fantôme")
+        expect(look.coloration).toBeNull()
+    })
+
+    test("many names → many colors, each a valid one", () => {
+        const looks = Array.from({ length: 40 }, (_, index) => defaultVisual(`u${index}`))
+        expect(new Set(looks.map(each => each.color.join())).size).toBeGreaterThan(20)
+        for(const { color } of looks){
+            for(const channel of color){
+                expect(channel).toBeGreaterThanOrEqual(0)
+                expect(channel).toBeLessThanOrEqual(1)
+            }
+        }
     })
 })
 

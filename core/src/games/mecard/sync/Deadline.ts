@@ -4,7 +4,7 @@ import { DEADLINE_EXPIRED_TOPIC, DEADLINE_TOPIC } from "./SyncChannel"
 import type { SyncSender, SyncSource } from "./SyncChannel"
 import { signal, UnreadableFault } from "./faults"
 import { readJson, wrongShape } from "./read"
-import type { DeadlineView } from "./modes/players/HubPort"
+import type { DeadlineView } from "../sim/mode/subs/duelRace/players/HubPort"
 
 /** What the host tells of a deadline: how long is left, none when there is none. */
 interface DeadlineMessage {

@@ -21,7 +21,8 @@ export class QuitPopup extends Panel {
     ){
         super(theme)
         const column = new Box("column", { gap: 4, align: "stretch" })
-        column.add(new Label(theme, "Retourner au menu principal ?", { color: DIM_TEXT, align: "center" }))
+        this.#question = new Label(theme, "Retourner au menu principal ?", { color: DIM_TEXT, align: "center" })
+        column.add(this.#question)
         const quit = new Button(theme, "Quitter", brownButton(theme))
         quit.onActivate = () => {
             this.close()
@@ -45,9 +46,11 @@ export class QuitPopup extends Panel {
      * Open it in the middle of the layer, the focus on the button that stays.
      *
      * @param onConfirm - What "Quitter" does, once the popup is closed.
+     * @param question - What it asks, the return to the menu by default.
      */
-    public open(onConfirm: () => void): void {
+    public open(onConfirm: () => void, question = "Retourner au menu principal ?"): void {
         this.#onConfirm = onConfirm
+        this.#question.text = question
         if(!this.isOpen) this.layer.content.add(this, { x: "center", y: "center" })
         this.#stay.focus()
     }
@@ -75,5 +78,6 @@ export class QuitPopup extends Panel {
 
 
     readonly #stay: Button
+    readonly #question: Label
     #onConfirm: (() => void)|null = null
 }

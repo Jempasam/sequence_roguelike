@@ -43,7 +43,12 @@ describe("Scroll", () => {
         setup.port.send({ type: "pointer-move", x: 5, y: 5 }, { type: "wheel", dx: 0, dy: 1 })
         setup.frame()
         expect(scroll.offset).toBe(WHEEL_STEP)
+        // Many notches at once never go further than the view is high.
+        const view = scroll.bounds.height
         setup.port.send({ type: "wheel", dx: 0, dy: 10 })
+        setup.frame()
+        expect(scroll.offset).toBe(WHEEL_STEP + view)
+        setup.port.send({ type: "wheel", dx: 0, dy: 10 }, { type: "wheel", dx: 0, dy: 10 })
         setup.frame()
         expect(scroll.offset).toBe(70)
     })

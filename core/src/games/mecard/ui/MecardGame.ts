@@ -23,25 +23,35 @@ import type { ChatAuthor } from "../sync/chat/ChatMessage"
 import { ChatScreen } from "./chat/ChatScreen"
 import { LobbyController } from "./lobby/LobbyController"
 import { LobbyScreen } from "./lobby/LobbyScreen"
-import { duelRaceTable, versusTable } from "../sync/lobby/modes/DuelRaceTableMode"
+import { duelRaceTable, versusTable } from "../sim/mode/subs/duelRace/DuelRaceTableMode"
 
-import type { RaceScreen, RaceTableBench } from "../sync/lobby/modes/DuelRaceTableMode"
-import type { DuelRacePlayer } from "../sync/modes/players/DuelRacePlayer"
-import type { DuelAccess } from "../sync/modes/players/HubPort"
+import type { RaceScreen, RaceTableBench } from "../sim/mode/subs/duelRace/DuelRaceTableMode"
+import type { DuelRacePlayer } from "../sim/mode/subs/duelRace/players/DuelRacePlayer"
+import type { DuelAccess } from "../sim/mode/subs/duelRace/players/HubPort"
 import { RaceTab } from "./duel/RaceTab"
 import type { RaceTabAlign } from "./duel/RaceTab"
-import { randomDuelMode } from "../sync/lobby/modes/RandomDuelMode"
-import type { DuelBench } from "../sync/lobby/modes/RandomDuelMode"
+import { randomDuelMode } from "../sim/mode/subs/randomDuel/RandomDuelMode"
+import { tournamentMode } from "../sim/mode/subs/tournament/TournamentMode"
+import { BracketPanel } from "./duel/BracketPanel"
+import { PromptPanel } from "./duel/PromptPanel"
+import { draftMode } from "../sim/mode/subs/draft/DraftMode"
+import { sabotageMode } from "../sim/mode/subs/sabotage/SabotageMode"
+import { dungeonMasterMode } from "../sim/mode/subs/dungeonMaster/DungeonMasterMode"
+import { monsterBuilderMode } from "../sim/mode/subs/monsterBuilder/MonsterBuilderMode"
+import type { DraftBench, DraftContext } from "../sim/mode/subs/draft/DraftMode"
 import { gameModeAsLobbyMode } from "../sync/mode/gameModeAsLobbyMode"
-import { runCoopTable, runEnemyTable, runMixedTable } from "../sync/lobby/modes/RunTableMode"
-import type { TableBench } from "../sync/lobby/modes/RunTableMode"
+import { runTableMode } from "../sim/mode/subs/runTable/RunTableMode"
+import type { ClientRuns } from "../sim/mode/subs/runTable/RunTableMode"
 import type { Seatable } from "../sync/run/Seats"
 import { TEST_MODE } from "../sync/lobby/modes/TestMode"
 
 import type { SaveSlot } from "../../../engine/save"
 import type { RunSave } from "../sim/save/runSave"
 import { RunSaver } from "../persist/RunSaver"
+import { PlayerCatalog } from "../persist/PlayerCatalog"
 import { RunHistorian } from "../persist/RunHistorian"
+import type { CatalogSave } from "../sim/save/catalogSave"
+import { ghostOfEntry } from "../sim/save/historySave"
 import type { History } from "../sim/save/historySave"
 import { HistoryScreen } from "./history/HistoryScreen"
 
@@ -73,6 +83,15 @@ const RACE_TAB_ALIGN: Readonly<Record<"map"|"battle", RaceTabAlign>> = { map: "c
 
 /** Time that never passes: what the modes that need none are given when there is no network. */
 const IDLE_TIMER: TimerPort = { after: () => ({ cancel: () => {} }), now: () => 0 }
+
+/** What a run of a lobby, shown in place of the player's own, tells the screen. */
+interface SharedRun {
+    onReady: (() => void)|null
+    onOver?: (() => void)|null
+
+    /** A battle was shown to its end. */
+    onSeen?: ((battle: Battle) => void)|null
+}
 
 /** A room opened for others to connect to. */
 export interface OpenedRoom extends SyncSender {
@@ -197,6 +216,7 @@ export class MecardGame {
         this.#seed = seed
         this.#network = network
         this.run = this.#newRun()
+        this.#catalog.attach(this.run)
         // Made before the screen, so it hears each battle before the screen starts its first round.
         this.#broadcaster = viewers ? new RunBroadcaster(this.run, viewers) : null
         this.#sound = sounds ? new RunSoundLink(this.run, sounds) : null
@@ -224,7 +244,7 @@ export class MecardGame {
             clipboard,
             leave: () => this.#leaveBench(),
         }, sprites)
-        this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites)
+        this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites, this.#catalog)
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: uiSound,
             // The party fell: its save is gone, back to the menu to start again.
@@ -236,6 +256,8 @@ export class MecardGame {
                 this.#host?.ready()
                 this.#shared?.onReady?.()
             },
+            // A duel shown to its end: the screen leaves it only then, whatever the network said meanwhile.
+            seen: battle => this.#shared?.onSeen?.(battle),
             report: text => this.report(text),
         })
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
@@ -267,7 +289,8 @@ export class MecardGame {
             showArm: () => this.#armOn(),
             showParallax: parallax => this.#parallaxOn(parallax),
             showSprites: sprite => this.#spritesOn(sprite),
-            showLibrary: () => this.#libraryOn(),
+            showLibrary: playerOnly => this.#libraryOn(playerOnly),
+            clearCatalog: () => this.#catalog.clear(),
             hostGame: (mode, policy) => this.hostGame(mode, policy),
             connect: (code, guest) => this.#connect(code, guest),
             openChat: (role, code, author) => this.openChat(role, code, author),
@@ -293,6 +316,7 @@ export class MecardGame {
             continueGame: () => this.#continueGame(),
             openGuide: () => this.#guideOn(),
             openHistory: () => void this.#historyOn(),
+            openLibrary: () => this.#libraryOn(true),
             openMultiplayer: () => this.#lobbyOn(),
             report: text => this.#console.print(text),
         }, assets)
@@ -303,13 +327,18 @@ export class MecardGame {
         this.#menu.hasNetwork = network !== null
         this.#bench = {
             race: firstFloor => this.#raceShared(firstFloor),
-            newRun: () => this.#newSharedRun(),
+            create: () => this.#newSharedRun(),
             showOwned: (run, isGuests, ready, over) => this.#showOwned(run, isGuests, ready, over),
             showSeat: (run, units, ready) => this.#showSeat(run, units, ready),
             startRound: () => this.#screen.battleScreen.startRound(),
             hideRun: () => this.#hideTable(),
             showBattle: (battle, units, ready) => this.#showDuel(battle, units, ready),
-            hideBattle: () => this.#hideDuel(),
+            showBracket: (bracket, watch) => this.#bracketPanel.show(bracket, watch),
+            hideBracket: () => this.#bracketPanel.hide(),
+            showPrompt: (prompt, context, choose) => {
+                this.#promptPanel.show(prompt, (context as DraftContext).picks, choose)
+            },
+            hidePrompt: () => this.#promptPanel.hide(),
             report: text => this.#console.print(text),
             timer: network?.timer ?? IDLE_TIMER,
         }
@@ -318,18 +347,26 @@ export class MecardGame {
         })
         const modes = [
             TEST_MODE,
-            gameModeAsLobbyMode(runCoopTable(this.#bench), this.#bench),
-            gameModeAsLobbyMode(runEnemyTable(this.#bench), this.#bench),
-            gameModeAsLobbyMode(runMixedTable(this.#bench), this.#bench),
-            gameModeAsLobbyMode(duelRaceTable(this.#bench), this.#bench),
-            gameModeAsLobbyMode(versusTable(this.#bench), this.#bench),
-            gameModeAsLobbyMode(randomDuelMode(this.#bench), this.#bench),
+            gameModeAsLobbyMode(runTableMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(duelRaceTable(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(versusTable(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(randomDuelMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(tournamentMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(draftMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(sabotageMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(dungeonMasterMode(this.#bench), this.#bench, this.#bench.timer),
+            gameModeAsLobbyMode(monsterBuilderMode(this.#bench), this.#bench, this.#bench.timer),
         ]
         this.#lobbyController = network ? new LobbyController(network, modes) : null
         this.#lobby = this.#lobbyController ? new LobbyScreen(theme, ui, this.#lobbyController, {
             leave: () => this.#leaveLobby(),
             report: text => this.#console.print(text),
         }, clipboard, sprites) : null
+        // Made after the lobby, so they lie over it: what the players of a mode read and choose while it plays.
+        this.#bracketPanel = new BracketPanel(theme, ui, () => this.#lobbyController?.members ?? [], sprites)
+        this.#promptPanel = new PromptPanel(
+            theme, ui, () => this.#lobbyController?.members ?? [], () => this.#lobbyController?.selfId ?? null, sprites,
+        )
         // Over the run of a lobby, to leave it.
         const exit = new Button(theme, "Quitter la partie")
         exit.onActivate = () => this.#leaveShared()
@@ -364,6 +401,14 @@ export class MecardGame {
         this.#raceTab.visible = this.#shared !== null && this.#screen.visible
         this.#raceTab.align = RACE_TAB_ALIGN[this.#raceTabSpot()]
         this.#raceTab.frame(dt)
+        const playing = this.#lobbyController?.playing ?? false
+        this.#bracketPanel.visible = playing
+        this.#promptPanel.visible = playing
+        // A game that is over leaves no question or bracket behind for the next one to show.
+        if(!playing){
+            this.#bracketPanel.hide()
+            this.#promptPanel.hide()
+        }
         this.#screen.frame(input, world, dt)
     }
 
@@ -387,6 +432,16 @@ export class MecardGame {
         this.#historySlot = slot
         this.#historian?.dispose()
         this.#historian = new RunHistorian(this.run, slot, () => this.#seed, text => this.#console.print(text))
+        void this.#lendGhosts()
+    }
+
+    /**
+     * Keep what the player finds in a slot from now on, and show what it holds in the catalogue of the menu.
+     * Until then, what is found is kept for this game only.
+     */
+    public keepCatalog(slot: SaveSlot<CatalogSave>): void {
+        this.#catalog.slot = slot
+        void this.#catalog.load()
     }
 
     /** Print what went wrong in the console. */
@@ -455,11 +510,13 @@ export class MecardGame {
         this.run.backToMap()
         this.#seed++
         this.run = this.#newRun()
+        this.#catalog.attach(this.run)
         if(this.#host) this.#host.engine = this.run
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
         if(this.#saver) this.#saver.engine = this.run
         if(this.#historian) this.#historian.engine = this.run
+        void this.#lendGhosts()
         if(this.#sound) this.#sound.engine = this.run
         this.#screen.engine = this.run
         this.#playing = true
@@ -474,6 +531,7 @@ export class MecardGame {
     readonly #history: HistoryScreen
     #historySlot: SaveSlot<History>|null = null
     #historian: RunHistorian|null = null
+    readonly #catalog = new PlayerCatalog(null, text => this.#console.print(text))
     readonly #screen: RunScreen
     readonly #pnj: PnjScreen
     readonly #arm: ArmScreen
@@ -501,21 +559,23 @@ export class MecardGame {
     readonly #quit: QuitPopup
 
     /** The run of a lobby the screen shows in place of the one of the player, none when there is none. */
-    #shared: { onReady: (() => void)|null, onOver?: (() => void)|null }|null = null
+    #shared: SharedRun|null = null
     #sharedCount = 0
 
     /** The duel of a lobby the screen shows, with the run it is played on, none when there is none. */
-    #duel: { onReady: (() => void)|null, readonly run: Run }|null = null
+    #duel: { onReady: (() => void)|null, onSeen: ((battle: Battle) => void)|null, readonly run: Run }|null = null
 
     /** The run of a table the screen shows, with what it tells the screen. */
     #table: {
         readonly run: Run
-        readonly shared: { onReady: (() => void)|null, onOver?: (() => void)|null }
+        readonly shared: SharedRun
     }|null = null
 
     /** What the modes of the lobby ask of the screen. */
-    readonly #bench: RaceTableBench & DuelBench & TableBench
+    readonly #bench: RaceTableBench & DraftBench & ClientRuns
     readonly #raceTab: RaceTab
+    readonly #bracketPanel: BracketPanel
+    readonly #promptPanel: PromptPanel
 
     /** The group chat open, and what closes its session, none when there is none. */
     #opened: OpenedChat|null = null
@@ -556,7 +616,8 @@ export class MecardGame {
         for(const occurrence of this.ui.actions.occurrences){
             if(occurrence.action !== "cancel" || occurrence.consumed) continue
             occurrence.consume()
-            this.#quit.open(() => this.#quitToMenu())
+            const endsForAll = this.#shared !== null && this.#lobbyController?.isHost === true
+            this.#quit.open(() => this.#quitToMenu(), endsForAll ? "Terminer la partie pour tous ?" : undefined)
             return
         }
     }
@@ -565,6 +626,10 @@ export class MecardGame {
     #quitToMenu(): void {
         if(this.#shared){
             this.#leaveShared()
+            return
+        }
+        if(this.#lobbyController?.code){
+            this.#leaveLobby()
             return
         }
         this.#stopHosting()
@@ -699,6 +764,16 @@ export class MecardGame {
         void this.#readSave()
     }
 
+    /** Give the run the games of the history, for the fights against ghosts of the maps it draws from now on. */
+    async #lendGhosts(): Promise<void> {
+        const run = this.run
+        try {
+            run.ghosts = ((await this.#historySlot?.load())?.entries ?? []).filter(each => each.heroes.length > 0).map(ghostOfEntry)
+        } catch {
+            // An unreadable history is reported where it is shown: the run meets no ghost.
+        }
+    }
+
     /** Show the history alone, the menu left where it stands, with the games kept. */
     async #historyOn(): Promise<void> {
         try {
@@ -766,7 +841,7 @@ export class MecardGame {
     /** Show a new run for a player of a race, its own: the race shows over it what happens to its duels. */
     #raceShared(firstFloor: FloorType|null): RaceScreen {
         const run = this.#newSharedRun(firstFloor ?? undefined)
-        const shared: { onReady: (() => void)|null, onOver?: (() => void)|null } = { onReady: null }
+        const shared: SharedRun = { onReady: null }
         const disposers: (() => void)[] = []
         this.#shared = shared
         this.#screen.engine = run
@@ -795,28 +870,34 @@ export class MecardGame {
      * @returns What stops showing it.
      */
     #followRace(
-        run: Run, shared: { onReady: (() => void)|null }, player: DuelRacePlayer,
+        run: Run, shared: SharedRun, player: DuelRacePlayer,
     ): () => void {
         this.#raceTab.follow(player)
         let access: { readonly units: readonly string[], submit(): void }|null = null
+        let shown: Battle|null = null
         const show = (duel: DuelAccess): void => {
             access = duel
+            shown = duel.battle
             this.#screen.locks = locksForUnits(duel.units)
             run.backToMap()
             run.playBattle(duel.battle)
         }
         shared.onReady = () => access?.submit()
+        // Back to the map once the duel was shown to its end, not when the network says it is over.
+        shared.onSeen = battle => {
+            if(battle !== shown) return
+            shown = null
+            access = null
+            this.#screen.locks = NO_RUN_LOCKS
+            this.#screen.showMap()
+        }
         const observers = [
             player.fighting.add(show),
             player.watching.add(show),
-            player.duelOver.add(() => {
-                access = null
-                this.#screen.locks = NO_RUN_LOCKS
-                this.#screen.showMap()
-            }),
         ]
         return () => {
             shared.onReady = null
+            shared.onSeen = null
             for(const observer of observers) observer.remove()
         }
     }
@@ -828,12 +909,15 @@ export class MecardGame {
     #showDuel(battle: Battle, units: readonly string[], ready: () => void): void {
         let duel = this.#duel
         if(!duel){
-            duel = { onReady: null, run: this.#newSharedRun() }
+            duel = { onReady: null, onSeen: null, run: this.#newSharedRun() }
             this.#duel = duel
             this.#shared = duel
             this.#screen.engine = duel.run
         }
         duel.onReady = ready
+        // The duel is left when it was seen to its end: the network only brings the battle there, the screen goes
+        // at its own pace. A newer duel shown meanwhile is not left.
+        duel.onSeen = seen => { if(seen === battle) this.#hideDuel() }
         this.#screen.locks = locksForUnits(units)
         this.#benchesOff()
         duel.run.backToMap()
@@ -850,6 +934,7 @@ export class MecardGame {
     /** Take the run of a lobby off the screen, the player's own back in its place, and show the lobby. */
     #closeShared(shared: object): void {
         if(this.#shared !== shared) return
+        this.#quit.close()
         this.#shared = null
         this.#screen.locks = NO_RUN_LOCKS
         this.#screen.engine = this.run
@@ -986,8 +1071,9 @@ export class MecardGame {
     }
 
     /** Show the catalogue alone, the run left where it stands. */
-    #libraryOn(): void {
+    #libraryOn(playerOnly = false): void {
         this.#openBench()
+        this.#library.playerOnly = playerOnly
         this.#library.visible = true
     }
 

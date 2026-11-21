@@ -3,7 +3,7 @@ import {
 } from "../../catalog/monsters"
 import { BUSH, PUDDLE_ZONE, TREE } from "../../catalog/hazards"
 import { AGGRESSION, BATTLE, BOSS, ELITE } from "../../fight/fights"
-import { SWAMP_SORCERER_KIT, WITCHER_KIT } from "../../catalog/kits"
+import { PLAGUE_DOCTOR_KIT, SWAMP_SORCERER_KIT, WITCHER_KIT } from "../../catalog/kits"
 import { designed, designedKits, lay, put } from "./designed"
 
 /** The fights of the swamp: mud, poison and toads, a hydra at the end. */
@@ -13,6 +13,12 @@ export const SWAMP_FIGHTS = [
         hazards: [lay(TREE, 2, 3), lay(TREE, 4, 3)],
         description: "Un sorcier des marais et un sorceleur t'attendent dans la brume.",
         kits: [SWAMP_SORCERER_KIT, WITCHER_KIT],
+    }),
+    designedKits({
+        category: AGGRESSION, layers: [4, 9], name: "Médecins de la peste",
+        hazards: [lay(PUDDLE_ZONE, 3, 3), lay(TREE, 1, 3)],
+        description: "Un médecin de la peste et un sorcier des marais te soignent à leur façon.",
+        kits: [PLAGUE_DOCTOR_KIT, SWAMP_SORCERER_KIT],
     }),
     designed({
         category: BATTLE, layers: [0, 4], name: "Crapauds du marais",

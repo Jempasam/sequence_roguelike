@@ -1,0 +1,12 @@
+{
+    "size": [288, 164],
+    "seed": 11,
+    "palette": ["#9ac8e0", "#c8e4f0", "#5a8a48", "#3e6a34", "#7a6a48"],
+    "shapes": [
+        {"box": [0, 0, 288, 90], "fill": {"pattern": "stripes", "width": 14, "axis": "y", "materials": [0, 1]}, "depth": 1},
+        {"ellipse": [-40, 70, 180, 60], "material": 3, "depth": [2, 3], "relief": "dome"},
+        {"ellipse": [120, 62, 230, 70], "material": 2, "depth": [2, 3], "relief": "dome"},
+        {"box": [0, 100, 288, 64], "fill": {"pattern": "noise", "density": 0.3, "radius": 1, "materials": [2, 3]}, "depth": 2},
+        {"box": [0, 128, 288, 36], "fill": {"pattern": "noise", "density": 0.12, "radius": 2, "materials": [null, 4]}}
+    ]
+}

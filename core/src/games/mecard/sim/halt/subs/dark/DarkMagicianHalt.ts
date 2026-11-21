@@ -1,6 +1,6 @@
 import { CARTE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
-import { openBooster } from "../../../catalog/boosters"
+import { booster, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import type { Monster } from "../../../catalog/monsters"
 import type { Run } from "../../../run/Run"
@@ -17,12 +17,12 @@ export const MONSTER_BOOSTER_SIZE = 3
 
 /** The booster of a monster: cards drawn from its deck, each kind of card once in the pool. */
 export function monsterBooster(monster: Monster): Booster {
-    return {
+    return booster({
         name: monster.name,
         color: DARK_COLOR,
         icon: monster.cards[monster.cards.length - 1],
         pools: [{ count: MONSTER_BOOSTER_SIZE, pool: [...new Set(monster.cards)] }],
-    }
+    })
 }
 
 /** The dark magician: a booster among some, each drawn from the deck of a monster. */
@@ -50,6 +50,7 @@ export class DarkMagicianHalt extends CardGiftHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Choisis un booster", this.#boosters, boosterShown, chosen => {
+            this.run.boosterOpened.notify(chosen)
             this.give(ctx, openBooster(this.run.rng, chosen))
         })
     }

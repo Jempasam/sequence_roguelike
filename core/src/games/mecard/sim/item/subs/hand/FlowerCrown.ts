@@ -24,7 +24,7 @@ export class FlowerCrown extends AbstractItem {
 
     constructor(){
         super("Couronne de fleurs", visual("items/flower_crown"), [
-            "Fin de tour, avec moins de ", String(BEASTS_WANTED), " ", CARTE, "s rien : bête en main, en ajoute une au hasard du ",
+            "Fin de tour, avec moins de ", BEASTS_WANTED, " ", CARTE, "s rien : bête en main, en ajoute une au hasard du ",
             DECK, " ou de la défausse.",
         ])
     }

@@ -79,19 +79,29 @@ export class ConnectionPanel {
         this.#scroll.resize(width, 1)
     }
 
-    /** Build the panel again, from where the player stands. */
+    /**
+     * Build the panel again, from where the player stands, but only when what it shows is not what it shows now:
+     * a change of the lobby that is none of its business keeps its buttons, their focus and its scroll.
+     */
     public refresh(): void {
         const { controller, theme } = this
-        for(const child of [...this.#column.children]) this.#column.remove(child)
-        this.#players = []
-        this.#buttons = NO_BUTTONS
-        const column = this.#column
         const shown: string[] = []
         if(this.#notice !== null) shown.push(this.#notice)
         const error = controller.error
         if(error && controller.phase === "disconnected") shown.push(error.describe())
+        const state = JSON.stringify([
+            shown, controller.phase, controller.isHost, controller.playing, controller.canRejoin,
+            controller.isReconnecting, controller.code, controller.selfId,
+            controller.members.map(member => [member.id, member.name, member.lost]),
+        ])
+        if(state === this.#state) return
+        this.#state = state
+        for(const child of [...this.#column.children]) this.#column.remove(child)
+        this.#players = []
+        this.#buttons = NO_BUTTONS
+        const column = this.#column
         for(const text of shown) column.add(new Label(theme, text, { color: WARNING_TEXT }))
-        // The panel is built again at each change: a text shown is printed to the console once, not at each build.
+        // A text shown is printed to the console once, not at each build.
         const shownText = shown.join("\n")
         if(shownText !== this.#printed && shownText !== "") console.error(shownText)
         this.#printed = shownText
@@ -108,6 +118,8 @@ export class ConnectionPanel {
     #players: string[] = []
     #notice: string|null = null
     #printed = ""
+    /** What the panel was built from, to tell whether it has to be built again. */
+    #state = ""
     #buttons: Buttons = NO_BUTTONS
 
     #disconnected(column: Box): void {

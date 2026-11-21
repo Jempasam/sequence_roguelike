@@ -9,7 +9,7 @@ import {
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Rng } from "../base/Rng"
-import { rgba } from "../base/Rgba"
+import { colored, rgba } from "../base/Rgba"
 import type { Rgba } from "../base/Rgba"
 import type { Card } from "../card/Card"
 import { DAGGER } from "../card/subs/attack/Dagger"
@@ -71,6 +71,8 @@ import {
     REFLECTION, MISDIRECTION, GLASS_KNIFE, BEAR_TRAP, HORSE, KNIGHT_MOVE, STRIDE, SHY_AWAY, MOUNT, KICK, CANNONBALL,
     BOUNCING_BALL, SLINGSHOT, MINE, KAMIKAZE, COLLISION, DRAFT, OVERHEAT_CARD, MAGIC_KNIFE, HOOK_ON, LASER_LINK,
     PAWN_ROBOT,
+    TRANSFUSION, EPIDEMIC, STUFFING, TAMING_MARK, SCARIFICATION, INOCULATION, AGGRAVATION, PLAGUE_MASK, PURGE,
+    AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, NATURALIZATION, TROPHY,
 } from "../card/subs"
 
 /** Cards drawn at random from a pool, as many as `count`. */
@@ -84,9 +86,20 @@ export interface Booster {
     readonly name: string
     readonly color: Rgba
 
+    /** Its name, for the console. */
+    toString(): string
+
+    /** Its name in its color. */
+    toSemString(): Text
+
     /** The card it is pictured by. */
     readonly icon: Card
     readonly pools: readonly BoosterPool[]
+}
+
+/** A booster, made from all of it but how it tells itself. */
+export function booster(spec: Omit<Booster, "toString"|"toSemString">): Booster {
+    return { ...spec, toString: () => spec.name, toSemString: () => colored(spec.color, spec.name) }
 }
 
 /** What a booster holds, pool after pool: how many cards it draws from which cards. */
@@ -134,7 +147,7 @@ export function boosterFit(booster: Booster, cards: readonly Card[]): number {
 }
 
 /** Every booster of the game, each written by hand. */
-export const ALL_BOOSTERS: readonly Booster[] = [
+export const ALL_BOOSTERS: readonly Booster[] = ([
     {
         name: "Lames", color: rgba(0.8, 0.8, 0.9), icon: SLASH,
         pools: [{ count: 2, pool: [SLASH, THRUST, SWEEP, DAGGER] }, { count: 1, pool: [STEP, BACK_DASH, DODGE_CARD] }],
@@ -374,7 +387,31 @@ export const ALL_BOOSTERS: readonly Booster[] = [
             { count: 1, pool: [INSPIRATION, INFLATE, WIND, LIGHTNING] },
         ],
     },
-]
+    {
+        name: "Pestilence", color: rgba(0.55, 0.75, 0.3), icon: TRANSFUSION,
+        pools: [
+            { count: 1, pool: [SCARIFICATION, INOCULATION] },
+            { count: 1, pool: [TRANSFUSION] },
+            { count: 1, pool: [EPIDEMIC, AGGRAVATION, PLAGUE_MASK, PURGE] },
+        ],
+    },
+    {
+        name: "Naturalisme", color: rgba(0.6, 0.42, 0.25), icon: AUTOPSY,
+        pools: [
+            { count: 1, pool: [AUTOPSY] },
+            { count: 1, pool: [STUFFING_PAD, NATURALIZATION] },
+            { count: 1, pool: [TROPHY, STUFFING] },
+        ],
+    },
+    {
+        name: "Dressage", color: rgba(0.4, 0.6, 0.85), icon: TAMING_MARK,
+        pools: [
+            { count: 1, pool: [LURE, MUZZLE, TREAT] },
+            { count: 1, pool: [TAMING_MARK] },
+            { count: 1, pool: [WHIP] },
+        ],
+    },
+] satisfies readonly Omit<Booster, "toString"|"toSemString">[]).map(booster)
 
 /** The boosters a magician offers: all of them for now. */
 export const LOOT_BOOSTERS: readonly Booster[] = ALL_BOOSTERS

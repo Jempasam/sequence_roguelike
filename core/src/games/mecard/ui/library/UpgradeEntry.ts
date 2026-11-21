@@ -9,7 +9,7 @@ import { FusionCard } from "../../sim/card/subs/composite/FusionCard"
 import { MergedCard } from "../../sim/card/subs/composite/MergedCard"
 import { cardsOption } from "../hud/ChoiceOptions"
 import { CHOSEN_TEXT } from "../look/theme"
-import type { Entry, LibraryLook } from "./entries"
+import type { Unkeyed, LibraryLook } from "./entries"
 
 /** How an upgrade joins its card, said as it reads. */
 const FUSIONS = { fusion: "collage", merge: "mélange", random: "collage ou mélange" }
@@ -38,7 +38,7 @@ export function pictured(upgrade: CardUpgrade): Card {
 }
 
 /** An upgrade in the catalogue: its name, its chain (`_` for a hole), and how it joins the card it improves. */
-export function upgradeEntry(look: LibraryLook, upgrade: CardUpgrade): Entry {
+export function upgradeEntry(look: LibraryLook, upgrade: CardUpgrade): Unkeyed {
     const chain = upgrade.chain.flatMap((held, index) => [index === 0 ? "" : " ", held ?? "_"])
     const text = concat(upgrade.name, " : ", ...chain, ", en ", FUSIONS[upgrade.fusion], ".")
     const view = cardsOption(look.theme, [pictured(upgrade)], text, {

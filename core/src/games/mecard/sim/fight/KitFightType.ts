@@ -1,4 +1,5 @@
 import type { Text } from "../../../../semantic"
+import { colored } from "../base/Rgba"
 import type { Visual } from "../base/Visual"
 import { BEST_AI } from "../ai/catalog"
 import type { Kit } from "../catalog/kits"
@@ -8,6 +9,7 @@ import type { Run } from "../run/Run"
 import type { Fight, FightStage } from "./Fight"
 import type { FightCategory } from "./FightCategory"
 import { AMBUSH } from "./fights"
+import { FIGHT_TEXT } from "./FightType"
 import type { FightType, Laying } from "./FightType"
 import { StandardFight } from "./StandardFight"
 
@@ -46,6 +48,10 @@ export class KitFightType implements FightType {
     public readonly icon: Visual
     public readonly category: FightCategory
     public readonly hazards?: readonly Laying[]
+
+    public toString(): string { return this.name }
+
+    public toSemString(): Text { return colored(FIGHT_TEXT, this.name) }
 
     /** The kits the party fights. */
     public readonly kits: readonly Kit[]

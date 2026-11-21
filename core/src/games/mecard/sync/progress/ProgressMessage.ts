@@ -1,6 +1,6 @@
 import { UnreadableFault } from "../faults"
 import { readJson, wrongShape } from "../read"
-import { PROGRESS_TOPIC } from "../modes/duelRace/topics"
+import { PROGRESS_TOPIC } from "../../sim/mode/subs/duelRace/raceTopics"
 
 /** Where a player stands on its journey, as the others are told of it. */
 export interface Progress {

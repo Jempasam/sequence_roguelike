@@ -50,7 +50,7 @@ export class GlassCore extends AbstractItem {
 
 
     constructor(){
-        super("Cœur de verre", visual("items/glass_heart"), ["Début du combat : gagne ", String(GLASS_HEARTS), " cœurs de verre."])
+        super("Cœur de verre", visual("items/glass_heart"), ["Début du combat : gagne ", GLASS_HEARTS, " cœurs de verre."])
     }
 
 
@@ -131,7 +131,7 @@ export class FisherGlove extends AbstractItem {
 
 
     constructor(){
-        super("Gant de pêcheur", visual("items/satchel"), ["Chaque ", UNIT, " tuée donne ", String(GLOVE_GOLD), " or."])
+        super("Gant de pêcheur", visual("items/satchel"), ["Chaque ", UNIT, " tuée donne ", GLOVE_GOLD, " or."])
     }
 
 

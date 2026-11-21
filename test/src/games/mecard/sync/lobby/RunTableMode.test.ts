@@ -2,10 +2,9 @@ import { LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
 import type { Battle } from "@game/core/mecard"
 import type { Seatable } from "@game/core/mecard/sync"
 import {
-    gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, ParticipantChoices, runCoopTable, runEnemyTable,
-    runMixedTable,
+    gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, ParticipantChoices, runTableMode,
 } from "@game/core/mecard/sync"
-import type { TableBench } from "@game/core/mecard/sync"
+import type { ClientRuns } from "@game/core/mecard/sync"
 import { ManualScheduler } from "@game/core"
 import { fight } from "../fixtures"
 import { describe, expect, test } from "vitest"
@@ -16,7 +15,7 @@ async function settle(): Promise<void> {
 }
 
 /** The screen of one client: what it was shown, and what it was told. */
-class Screen implements TableBench {
+class Screen implements ClientRuns {
 
 
     public readonly timer = new ManualScheduler()
@@ -31,7 +30,7 @@ class Screen implements TableBench {
     public readonly reports: string[] = []
 
 
-    public newRun(seed: number): Run {
+    public create(seed: number): Run {
         const run = new Run(seed)
         run.hire(LANCER_KIT)
         run.hire(SWORDSMAN_KIT)
@@ -45,7 +44,9 @@ class Screen implements TableBench {
         this.owned.push({ run, isGuests, ready, over })
     }
 
-    public showSeat(_run: Run, units: readonly string[], ready: () => void): void {
+    public showSeat(run: Run, units: readonly string[], ready: () => void): void {
+        // The replica of a run followed is made by the game, not by the screen: it is known once shown.
+        if(!this.runs.includes(run)) this.runs.push(run)
         this.seats.push(units)
         this.readies.push(ready)
     }
@@ -70,17 +71,17 @@ function table(make: (screen: Screen) => ReturnType<typeof runCoopTable>[], ...n
     const channel = new LocalSync()
     const [first, ...rest] = screens
     const lobby = new Lobby(
-        room, channel, "Hôte", make(first).map(def => gameModeAsLobbyMode(def, first)),
+        room, channel, "Hôte", make(first).map(def => gameModeAsLobbyMode(def, first, first.timer)),
     )
     const guests = names.map((name, index) => new LobbyGuest(
-        room.join(`c${index}`), channel, name, make(rest[index]).map(def => gameModeAsLobbyMode(def, rest[index])),
+        room.join(`c${index}`), channel, name, make(rest[index]).map(def => gameModeAsLobbyMode(def, rest[index], rest[index].timer)),
     ))
     return { screens, lobby, guests, room, channel, make }
 }
 
 describe("run modes of a table in a lobby", () => {
     test("coop → the host plays a new run, a client plays a hero by its side, and both are shut at the end", async() => {
-        const { screens, lobby, guests } = table(screen => [runCoopTable(screen)], "Ana")
+        const { screens, lobby, guests } = table(screen => [runTableMode(screen)], "Ana")
         expect(lobby.start()).toBeNull()
         await settle()
         const [host, ana] = screens
@@ -99,7 +100,7 @@ describe("run modes of a table in a lobby", () => {
     })
 
     test("a battle of the table → the round starts on the host's screen once the host and its client are both ready", async() => {
-        const { screens, lobby } = table(screen => [runCoopTable(screen)], "Ana")
+        const { screens, lobby } = table(screen => [runTableMode(screen)], "Ana")
         lobby.start()
         await settle()
         const [host, ana] = screens
@@ -126,7 +127,7 @@ describe("run modes of a table in a lobby", () => {
     })
 
     test("a client that quits the game → back in the lobby, its seats given back, and it may play again", async() => {
-        const { screens, lobby, guests } = table(screen => [runCoopTable(screen)], "Ana")
+        const { screens, lobby, guests } = table(screen => [runTableMode(screen)], "Ana")
         lobby.start()
         await settle()
         const [, ana] = screens
@@ -145,7 +146,7 @@ describe("run modes of a table in a lobby", () => {
     })
 
     test("the party falls on the host → the game is over, and the lobby is free again", async() => {
-        const { screens, lobby } = table(screen => [runCoopTable(screen)])
+        const { screens, lobby } = table(screen => [runTableMode(screen)])
         lobby.start()
         await settle()
         screens[0].owned.at(-1)?.over()
@@ -156,20 +157,23 @@ describe("run modes of a table in a lobby", () => {
     })
 
     test("a client that comes late → watches: shown the run, never given a unit", async() => {
-        const { screens, lobby, room, channel, make } = table(screen => [runCoopTable(screen)])
+        const { screens, lobby, room, channel, make } = table(screen => [runTableMode(screen)])
         lobby.start()
         await settle()
         const late = new Screen()
-        new LobbyGuest(room.join("late"), channel, "Tard", [gameModeAsLobbyMode(make(late)[0], late)])
+        // The mode has a setting for each client: it waits for its click before it joins.
+        const guest = new LobbyGuest(room.join("late"), channel, "Tard", [gameModeAsLobbyMode(make(late)[0], late, late.timer)])
+        await settle()
+        guest.rejoin()
         await settle()
         expect(late.seats.length).toBeGreaterThan(0)
         expect(late.seats.every(units => units.length === 0)).toBe(true)
         expect(screens[0].owned.at(-1)?.isGuests({ name: "anything" })).toBe(false)
     })
 
-    test("enemy mode → another mode of the lobby, with the places set to random", async() => {
-        const { screens, lobby } = table(screen => [runCoopTable(screen), runEnemyTable(screen)])
-        expect(lobby.selection.select("run-ennemi")).toBeNull()
+    test("enemy players → a setting of the mode, with the places set to random", async() => {
+        const { screens, lobby } = table(screen => [runTableMode(screen)])
+        expect(lobby.selection.set("joueurs", "ennemis")).toBeNull()
         expect(lobby.selection.set("places", "aléatoires")).toBeNull()
         expect(lobby.start()).toBeNull()
         await settle()
@@ -193,7 +197,7 @@ describe("run modes of a table, at their edges", () => {
     }
 
     test("a client whose connection is lost in a battle → its units planned as bots, the round not waiting for it", async() => {
-        const { screens, lobby, room } = table(screen => [runCoopTable(screen)], "Ana")
+        const { screens, lobby, room } = table(screen => [runTableMode(screen)], "Ana")
         lobby.start()
         await settle()
         const [host, ana] = screens
@@ -212,7 +216,7 @@ describe("run modes of a table, at their edges", () => {
     })
 
     test("a client that quits in a battle of the party → its heroes are the host's again, and the round goes on", async() => {
-        const { screens, lobby, guests } = table(screen => [runCoopTable(screen)], "Ana")
+        const { screens, lobby, guests } = table(screen => [runTableMode(screen)], "Ana")
         lobby.start()
         await settle()
         const [host, ana] = screens
@@ -232,7 +236,8 @@ describe("run modes of a table, at their edges", () => {
     })
 
     test("a client that quits in a battle of the enemies → its enemies are bots again, no longer possessed", async() => {
-        const { screens, lobby, guests } = table(screen => [runEnemyTable(screen)], "Ana")
+        const { screens, lobby, guests } = table(screen => [runTableMode(screen)], "Ana")
+        lobby.selection.set("joueurs", "ennemis")
         lobby.selection.set("places", "aléatoires")
         lobby.start()
         await settle()
@@ -252,7 +257,7 @@ describe("run modes of a table, at their edges", () => {
     })
 
     test("two clients → each given a hero of its own, and no more than the host leaves them", async() => {
-        const { screens, lobby } = table(screen => [runCoopTable(screen)], "Ana", "Bob")
+        const { screens, lobby } = table(screen => [runTableMode(screen)], "Ana", "Bob")
         lobby.start()
         await settle()
         const [host, ana, bob] = screens
@@ -264,7 +269,8 @@ describe("run modes of a table, at their edges", () => {
     })
 
     test("enemy mode → a client is given an enemy of the battle, and plays it", async() => {
-        const { screens, lobby } = table(screen => [runEnemyTable(screen)], "Ana")
+        const { screens, lobby } = table(screen => [runTableMode(screen)], "Ana")
+        lobby.selection.set("joueurs", "ennemis")
         lobby.selection.set("places", "aléatoires")
         lobby.start()
         await settle()
@@ -285,8 +291,9 @@ describe("run modes of a table, at their edges", () => {
         const [host, ana, bob] = screens
         const room = new LocalRoom()
         const channel = new LocalSync()
-        const modes = (screen: Screen) => [gameModeAsLobbyMode(runMixedTable(screen), screen)]
+        const modes = (screen: Screen) => [gameModeAsLobbyMode(runTableMode(screen), screen, screen.timer)]
         const lobby = new Lobby(room, channel, "Hôte", modes(host))
+        expect(lobby.selection.set("joueurs", "au choix")).toBeNull()
         const mode = modes(bob)[0]
         const camp = mode.participantSettings?.[0]
         expect(camp?.id).toBe("camp")
@@ -317,11 +324,11 @@ describe("run modes of a table, at their edges", () => {
         const room = new LocalRoom()
         const channel = new LocalSync()
         const first = new Screen()
-        const lobby = new Lobby(room, channel, "Hôte", [gameModeAsLobbyMode(runMixedTable(first), first)])
+        const lobby = new Lobby(room, channel, "Hôte", [gameModeAsLobbyMode(runTableMode(first), first, first.timer)])
         lobby.start()
         await settle()
         const late = new Screen()
-        const guest = new LobbyGuest(room.join("late"), channel, "Tard", [gameModeAsLobbyMode(runMixedTable(late), late)])
+        const guest = new LobbyGuest(room.join("late"), channel, "Tard", [gameModeAsLobbyMode(runTableMode(late), late, late.timer)])
         await settle()
         expect(guest.playing).toBe(false)
         expect(guest.gameGoing).toBe(true)
@@ -331,7 +338,7 @@ describe("run modes of a table, at their edges", () => {
     })
 
     test("the owner says it is ready alone, with nobody else to wait for → the round starts at once", async() => {
-        const { screens, lobby } = table(screen => [runCoopTable(screen)])
+        const { screens, lobby } = table(screen => [runTableMode(screen)])
         lobby.start()
         await settle()
         const [host] = screens

@@ -1,6 +1,6 @@
 import type { SyncSender, SyncSource } from "../SyncChannel"
 
-import type { GameModeContext } from "./GameMode"
+import type { GameModeContext } from "../../sim/mode/GameModeContext"
 
 /** What a text is told apart by: what comes before its first colon, the topic of the brick that wrote it. */
 function keyOf(message: string): string {
@@ -28,7 +28,7 @@ export class StatePublisher implements SyncSender {
 
 
     constructor(
-        private readonly ctx: GameModeContext,
+        private readonly ctx: Pick<GameModeContext, "publish"|"publishLazy"|"unpublish">,
     ){}
 
 

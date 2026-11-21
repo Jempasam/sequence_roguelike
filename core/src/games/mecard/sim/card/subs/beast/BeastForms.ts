@@ -3,7 +3,7 @@ import { CARTE } from "../../../base/keywords"
 import type { Element } from "../../../element/Element"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import type { Card } from "../../Card"
-import { BEAST, ELEMENT, MODULE } from "../../CardType"
+import { BEAST, beast, ELEMENT, MODULE } from "../../CardType"
 import type { Beast, BeastHearts, Module, Rewrite } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
@@ -79,14 +79,14 @@ export class FleshCurseCard extends AbstractCard<Beast, Module> {
 
 
     public get(module: Module): Beast {
-        return {
+        return beast({
             name: "Chair maudite",
             sprite: visual("units/spirit"),
             run: [STEP],
             bite: [],
             hearts: [{ kind: BLUE_HEART, count: MADE_HEARTS }],
             body: module.cards(options => options[0]),
-        }
+        })
     }
 }
 
@@ -123,14 +123,14 @@ export class ElementalCard extends AbstractCard<Beast, Element> {
 
     public get(element: Element): Beast {
         const card = cardOf(element)
-        return {
+        return beast({
             name: `Élémentaire de ${element.name}`,
             sprite: visual("units/spirit"),
             run: [STEP],
             bite: [SMALL_SPELL, card],
             hearts: [{ kind: BLUE_HEART, count: MADE_HEARTS }],
             body: [AURA, card, AIM, "bite", "run"],
-        }
+        })
     }
 }
 
@@ -158,6 +158,6 @@ export const HYBRIDIZATION = new RewriteCard("Hybridation", [
     if(beasts.length < 2) return ALONE
     const [body, run] = beasts
     const bite = beasts[beasts.length - 1]
-    const hybrid: Beast = { ...body, name: `${body.name} hybride`, run: run.run, bite: bite.bite }
+    const hybrid: Beast = beast({ ...body, name: `${body.name} hybride`, run: run.run, bite: bite.bite })
     return { cards: [new BeastCard(hybrid)], consumed: beasts.length, acting: false }
 }, undefined, "prepless")

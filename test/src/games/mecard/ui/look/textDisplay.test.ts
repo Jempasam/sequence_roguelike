@@ -4,7 +4,7 @@ import type { Text } from "@game/core"
 import {
     AGILITE, ALLONGE, FEBRILE, ALL_CARDS, CARTE, FUSION, CHARGE, DamageType, DECK, DISTANCE, FORCE, FusionCard, allHalts, HEART,
     HeartCount, ALL_ITEMS, MERGE, PORTEE, PRECISION, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES,
-    UNSTABLE_THRUST,
+    UNSTABLE_THRUST, STATUS_TYPES, ALL_BOOSTERS, ALL_HAZARDS,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
@@ -118,5 +118,22 @@ describe("the texts of the game", () => {
 
     test.each(ALL_TEXTS)("%s → no sentence cut by an array left inside another", (_name, text) => {
         expect(plainText(text)).not.toMatch(/ \n|\n[ .,]/)
+    })
+})
+
+describe("the objects of the game in a text", () => {
+    test.each(STATUS_TYPES.map(type => [type.name, type] as const))("status %s → explained, so a link", (_name, type) => {
+        expect(explanationOf(type)).toBeDefined()
+        expect(spans(["", type]).some(span => span.link === type)).toBe(true)
+    })
+
+    test.each(ALL_BOOSTERS.map(booster => [booster.name, booster] as const))("booster %s → its name in a color", (name, booster) => {
+        expect(plainText(booster)).toBe(name)
+        expect(spans(booster).every(span => span.color !== null)).toBe(true)
+    })
+
+    test.each(ALL_HAZARDS.map(hazard => [hazard.name, hazard] as const))("hazard %s → its name, explained", (name, hazard) => {
+        expect(plainText(hazard)).toBe(name)
+        expect(explanationOf(hazard)).toBeDefined()
     })
 })

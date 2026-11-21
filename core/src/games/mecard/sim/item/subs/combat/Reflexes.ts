@@ -110,7 +110,7 @@ export class StickySoles extends AbstractItem {
 
     constructor(){
         super("Semelles collantes", visual("items/sticky_soles"), [
-            "Les déplacements que d'autres lui imposent sont divisés par ", String(SOLES_DIVISOR), ".",
+            "Les déplacements que d'autres lui imposent sont divisés par ", SOLES_DIVISOR, ".",
         ])
     }
 

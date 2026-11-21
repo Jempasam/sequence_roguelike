@@ -37,11 +37,12 @@ interface MenuButtons {
     readonly no: Button|null
     readonly guide: Button|null
     readonly history: Button|null
+    readonly library: Button|null
     readonly multiplayer: Button|null
 }
 
 const NO_BUTTONS: MenuButtons = {
-    new: null, continue: null, yes: null, no: null, guide: null, history: null, multiplayer: null,
+    new: null, continue: null, yes: null, no: null, guide: null, history: null, library: null, multiplayer: null,
 }
 
 /** What the menu asks of its game. */
@@ -57,6 +58,9 @@ export interface MainMenuOptions {
 
     /** Open the history of the games that ended. */
     openHistory(): void
+
+    /** Open the catalogue of what the player found. */
+    openLibrary(): void
 
     /** Open the lobby, where the player hosts a room or joins one. */
     openMultiplayer(): void
@@ -94,7 +98,8 @@ export class MainMenuScreen {
     public set hasSave(hasSave: boolean){
         if(hasSave === this.#hasSave) return
         this.#hasSave = hasSave
-        this.refresh()
+        // Only a button changes: the menu is not built again, and in the confirmation it is not even shown.
+        if(this.#buttons.continue) this.#buttons.continue.enabled = hasSave
     }
 
     /** Can the game be played with others? Greys the button that opens the lobby when it cannot. */
@@ -103,7 +108,7 @@ export class MainMenuScreen {
     public set hasNetwork(hasNetwork: boolean){
         if(hasNetwork === this.#hasNetwork) return
         this.#hasNetwork = hasNetwork
-        this.refresh()
+        if(this.#buttons.multiplayer) this.#buttons.multiplayer.enabled = hasNetwork
     }
 
     /** The button of the lobby, none while a new game is asked to be confirmed. */
@@ -211,7 +216,10 @@ export class MainMenuScreen {
             const history = new Button(theme, "Historique", brownButton(theme))
             history.onActivate = () => options.openHistory()
             column.add(history)
-            this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, multiplayer, guide, history }
+            const library = new Button(theme, "Catalogue", brownButton(theme))
+            library.onActivate = () => options.openLibrary()
+            column.add(library)
+            this.#buttons = { ...NO_BUTTONS, new: fresh, continue: resume, multiplayer, guide, history, library }
         }
         // Right of the middle, where the cabin of the landscape is not.
         content.add(stack, { x: "center", y: "center", offsetX: Math.round(ui.width * SIDE_SHARE) })

@@ -1,6 +1,6 @@
 import { signal } from "../../faults"
 import type { LobbyMode, ModeRun } from "../LobbyMode"
-import { ChoiceSetting, RangeSetting } from "../Setting"
+import { ChoiceSetting, RangeSetting } from "../../../sim/mode/Setting"
 
 /**
  * A mode that plays nothing: it only holds the lobby locked until it is stopped, so the lobby can be tried,

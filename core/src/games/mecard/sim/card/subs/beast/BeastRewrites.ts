@@ -63,7 +63,7 @@ export function summonCardOf(body: Beast, runner: Beast, biter: Beast): ChainSum
     const same = body === runner && body === biter
     const name = same ? `${body.name} invoqué` : `${body.name} hybride`
     return new ChainSummonCard(name, [
-        INVOCATION.as("Invoque"), " devant toi un ", body.name, " qui joue chaque round : ", ...cardsText(cards), ".",
+        INVOCATION.as("Invoque"), " devant toi un ", body, " qui joue chaque round : ", ...cardsText(cards), ".",
     ], same ? Rarity.RARE : Rarity.LEGENDARY, {
         sprite: body.sprite,
         name: body.name,

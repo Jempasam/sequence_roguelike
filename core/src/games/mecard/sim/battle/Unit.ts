@@ -28,6 +28,7 @@ import type { Area } from "./Area"
 import { Disk } from "./hitbox/Disk"
 import type { Hitbox } from "./hitbox/Hitbox"
 import type { Team } from "./Team"
+import { defaultVisual } from "../base/Visual"
 import type { Visual } from "../base/Visual"
 
 /** How many cards a chain holds at most while it plays: past it, it is told overflowing and emptied. */
@@ -43,7 +44,7 @@ export type Controller = "player"|"bot"|UnitController
 export interface UnitSpec {
     readonly name: string
 
-    /** How it looks, none by default: a body, a hazard. */
+    /** How it looks: by default a picture named by the unit, in a color drawn from its name. */
     readonly sprite?: Visual|null
 
     readonly team: Team
@@ -269,6 +270,9 @@ export class Unit {
     /** Its chain holds {@link MAX_CHAIN_CARDS} cards or more. */
     public readonly onChainOverflow: Observable<ChainOverflowEvent>
 
+    /** Its chain is about to be rewritten by its preparations, still as it was committed. */
+    public readonly onPreparing: Observable<Unit>
+
     /** Its preparations were built, its chain rewritten. */
     public readonly onPrep: Observable<Unit>
 
@@ -277,8 +281,8 @@ export class Unit {
 
     public readonly name: string
 
-    /** How it looks, none for one with no picture. */
-    public readonly sprite: Visual|null
+    /** How it looks: always a picture, the one of its spec or one drawn from its name. */
+    public readonly sprite: Visual
 
     public readonly team: Team
 
@@ -371,9 +375,10 @@ export class Unit {
         this.onChainChange = new Observable(report)
         this.onChainOverflow = new Observable(report)
         this.onPlanChange = new Observable(report)
+        this.onPreparing = new Observable(report)
         this.onPrep = new Observable(report)
         this.name = spec.name
-        this.sprite = spec.sprite ?? null
+        this.sprite = spec.sprite ?? defaultVisual(spec.name)
         this.team = spec.team
         this.controller = spec.controller
         this.items = [...spec.items ?? []]
@@ -464,9 +469,9 @@ export class Unit {
         return this.hearts.maxHearts - this.hearts.hearts
     }
 
-    /** Is it feverish: more of its hearts empty than full? */
+    /** Is it feverish: half of its hearts empty, or more? */
     public get feverish(): boolean {
-        return this.missing > this.life
+        return this.missing >= this.life
     }
 
     /** Has it anything left to play this round? */
@@ -523,6 +528,7 @@ export class Unit {
     public prepare(): void {
         const { battle } = this
         const pick = <T>(options: readonly T[]): T => battle.rng.pick(options) ?? options[0]
+        this.onPreparing.notify(this)
         this.#guarded(() => this.chain.prepare({ pick }, battle.cardsOf(this), { battle, unit: this }), null)
         this.onPrep.notify(this)
     }

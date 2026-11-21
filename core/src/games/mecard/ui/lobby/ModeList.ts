@@ -1,10 +1,10 @@
 import { Color } from "../../../../engine/math"
-import { Box, Button, Label, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
-import type { Component, Theme } from "../../../../engine/ui"
+import { Box, Button, Label, NineSlice, Panel, Paragraph, Scroll, StepButton } from "../../../../engine/ui"
+import type { StepDirection, Theme } from "../../../../engine/ui"
 import type { LobbyMode } from "../../sync/lobby/LobbyMode"
 import type { ModeState } from "../../sync/lobby/LobbyMessage"
-import { ChoiceSetting, RangeSetting } from "../../sync/lobby/Setting"
-import type { Setting, SettingValue } from "../../sync/lobby/Setting"
+import { ChoiceSetting, RangeSetting } from "../../sim/mode/Setting"
+import type { Setting, SettingValue } from "../../sim/mode/Setting"
 import { brownButtonLooks, CHOSEN_TEXT, DIM_INK_TEXT, DIM_TEXT, INK_TEXT } from "../look/theme"
 import { PAPER_MARGIN, paperFrame } from "../look/paper"
 import type { UnitSprites } from "../look/UnitSprites"
@@ -21,16 +21,23 @@ const CHOSEN_PAPER = new Color(1, 1, 1)
 /** The space between two cards, and around them, in virtual pixels. */
 const MARGIN = 4
 
-/** The value after the one given, going round: a choice goes to its next name, a range to its next step. */
-export function nextValue(setting: Setting, value: SettingValue|undefined): SettingValue {
+/**
+ * The value after the one given, or before it, going round: a choice goes to its next or previous name, a
+ * range to its next or previous step.
+ */
+export function stepValue(setting: Setting, value: SettingValue|undefined, direction: StepDirection): SettingValue {
     return setting.accept<SettingValue>({
         choice(choice: ChoiceSetting){
+            const { length } = choice.values
             const index = choice.values.indexOf(String(value))
-            return choice.values[(index + 1) % choice.values.length]
+            return choice.values[((index + direction) % length + length) % length]
         },
         range(range: RangeSetting){
-            const next = typeof value === "number" ? value + range.step : range.initial
-            return next > range.max ? range.min : next
+            if(typeof value !== "number") return range.initial
+            const next = value + direction * range.step
+            if(next > range.max) return range.min
+            if(next < range.min) return range.max
+            return next
         },
     })
 }
@@ -68,36 +75,44 @@ export class ModeList {
         this.#scroll.resize(width, 1)
     }
 
-    /** Build the cards again, from what the lobby is set on. */
+    /**
+     * Bring the cards to what the lobby is set on. They are built once, for the modes the lobby offers, and
+     * changed in place after, so what the player scrolled and focused stays.
+     */
     public refresh(): void {
-        const { controller, theme } = this
-        for(const child of [...this.#column.children]) this.#column.remove(child)
-        this.#titles.clear()
-        this.#settings.clear()
+        const { controller } = this
+        const modes = controller.modes
+        if(!this.#built || this.#built.length !== modes.length || this.#built.some((mode, index) => mode !== modes[index])){
+            this.#build(modes)
+        }
         const state = this.#state()
         const canChange = controller.isHost && !controller.playing
-        for(const mode of controller.modes){
+        this.#settings.clear()
+        for(const card of this.#cards){
+            const { mode } = card
             const chosen = state?.mode === mode.id
             const values = chosen && state ? state.values : {}
             const paper = this.sprites?.paper
-            const card = new Panel(theme, paper
-                ? { background: paperFrame(paper, 1, chosen ? CHOSEN_PAPER : PAPER), padding: MARGIN + PAPER_MARGIN / 2 }
-                : { background: NineSlice.flat(theme.white, chosen ? CHOSEN_CARD : CARD), padding: MARGIN })
-            const body = new Box("column", { gap: 2, align: "stretch" })
-            const looks = this.sprites?.paper ? brownButtonLooks(theme) : undefined
-            const title = new Button(theme, mode.title, { enabled: canChange, ...looks ? { looks } : {} })
-            title.onActivate = () => this.#select(mode)
-            this.#titles.set(mode.id, title)
-            body.add(title)
-            const onPaper = this.sprites?.paper != null
-            body.add(new Paragraph(theme, mode.description, { color: onPaper ? DIM_INK_TEXT : DIM_TEXT }))
+            card.panel.background = paper
+                ? paperFrame(paper, 1, chosen ? CHOSEN_PAPER : PAPER)
+                : NineSlice.flat(this.theme.white, chosen ? CHOSEN_CARD : CARD)
+            card.title.enabled = canChange
             const buttons = new Map<string, Button>()
-            for(const setting of mode.settings){
-                body.add(this.#row(setting, chosen, canChange, values[setting.id], buttons))
+            for(const row of card.rows){
+                const { setting } = row
+                const shown = values[setting.id] === undefined ? setting.initial : values[setting.id]
+                const text = String(shown)
+                const changes = chosen && canChange
+                row.button.text = text
+                row.button.visible = changes
+                row.value.text = text
+                row.value.color = this.sprites?.paper != null
+                    ? (chosen ? INK_TEXT : DIM_INK_TEXT)
+                    : chosen ? CHOSEN_TEXT : DIM_TEXT
+                row.value.visible = !changes
+                if(changes) buttons.set(setting.id, row.button)
             }
             this.#settings.set(mode.id, buttons)
-            card.content = body
-            this.#column.add(card)
         }
     }
 
@@ -106,6 +121,38 @@ export class ModeList {
     readonly #column: Box
     readonly #titles = new Map<string, Button>()
     readonly #settings = new Map<string, Map<string, Button>>()
+
+    /** The modes the cards were built for. */
+    #built: readonly LobbyMode[]|null = null
+    #cards: Card[] = []
+
+    /** Build a card for each mode, which `refresh` then sets. */
+    #build(modes: readonly LobbyMode[]): void {
+        const { theme } = this
+        for(const child of [...this.#column.children]) this.#column.remove(child)
+        this.#titles.clear()
+        this.#cards = []
+        this.#built = [...modes]
+        const onPaper = this.sprites?.paper != null
+        const looks = onPaper ? brownButtonLooks(theme) : undefined
+        for(const mode of modes){
+            const panel = new Panel(theme, { padding: onPaper ? MARGIN + PAPER_MARGIN / 2 : MARGIN, background: null })
+            const body = new Box("column", { gap: 2, align: "stretch" })
+            const title = new Button(theme, mode.title, looks ? { looks } : {})
+            title.onActivate = () => this.#select(mode)
+            this.#titles.set(mode.id, title)
+            body.add(title)
+            body.add(new Paragraph(theme, mode.description, { color: onPaper ? DIM_INK_TEXT : DIM_TEXT }))
+            const rows = mode.settings.map(setting => {
+                const row = this.#row(setting, mode)
+                body.add(row.box)
+                return row
+            })
+            panel.content = body
+            this.#column.add(panel)
+            this.#cards.push({ mode, panel, title, rows })
+        }
+    }
 
     #state(): ModeState|null {
         const { selection, view } = this.controller
@@ -116,25 +163,39 @@ export class ModeList {
         this.controller.selection?.select(mode.id)
     }
 
-    /** A setting: its name, and what it is worth, which the host activates to change. */
-    #row(
-        setting: Setting,
-        chosen: boolean,
-        canChange: boolean,
-        value: SettingValue|undefined,
-        buttons: Map<string, Button>,
-    ): Component {
-        const row = new Box("row", { gap: MARGIN, align: "center" })
+    /**
+     * A setting: its name, and what it is worth, shown as a button the host activates to change and as a
+     * label for the others. `refresh` shows one of the two.
+     */
+    #row(setting: Setting, mode: LobbyMode): SettingRow {
+        const box = new Box("row", { gap: MARGIN, align: "center" })
         const onPaper = this.sprites?.paper != null
-        row.add(new Label(this.theme, `${setting.label} :`, { color: onPaper ? DIM_INK_TEXT : DIM_TEXT }), { grow: 1 })
-        const shown = value === undefined ? setting.initial : value
-        const text = String(shown)
-        if(chosen && canChange){
-            const button = new Button(this.theme, text, onPaper ? { looks: brownButtonLooks(this.theme) } : {})
-            button.onActivate = () => this.controller.selection?.set(setting.id, nextValue(setting, shown))
-            buttons.set(setting.id, button)
-            row.add(button)
-        } else row.add(new Label(this.theme, text, { color: onPaper ? (chosen ? INK_TEXT : DIM_INK_TEXT) : chosen ? CHOSEN_TEXT : DIM_TEXT }))
-        return row
+        box.add(new Label(this.theme, `${setting.label} :`, { color: onPaper ? DIM_INK_TEXT : DIM_TEXT }), { grow: 1 })
+        const button = new StepButton(this.theme, String(setting.initial), onPaper ? { looks: brownButtonLooks(this.theme) } : {})
+        button.onStep = direction => {
+            const state = this.#state()
+            const value = state?.mode === mode.id ? state.values[setting.id] : undefined
+            this.controller.selection?.set(setting.id, stepValue(setting, value === undefined ? setting.initial : value, direction))
+        }
+        const value = new Label(this.theme, String(setting.initial))
+        box.add(button)
+        box.add(value)
+        return { setting, box, button, value }
     }
+}
+
+/** What a card of a mode is made of. */
+interface Card {
+    readonly mode: LobbyMode
+    readonly panel: Panel
+    readonly title: Button
+    readonly rows: readonly SettingRow[]
+}
+
+/** What the row of a setting is made of. */
+interface SettingRow {
+    readonly setting: Setting
+    readonly box: Box
+    readonly button: Button
+    readonly value: Label
 }

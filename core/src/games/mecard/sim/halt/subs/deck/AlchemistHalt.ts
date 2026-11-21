@@ -52,8 +52,10 @@ export class AlchemistHalt extends DeckHalt {
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
         ctx.cards(["Deux copies de quelle ", CARTE, " ?"], deck, { min: 1, max: 1 }, ([card]) => {
-            const upgrade = upgradeOf(card, this.run.rng)
-            if(!upgrade) throw new Error(`${card.name} was offered to the alchemist, who has no upgrade for it.`)
+            const chosen = this.run.rng.pick(upgradesFor(card))
+            if(!chosen) throw new Error(`${card.name} was offered to the alchemist, who has no upgrade for it.`)
+            const upgrade = upgraded(chosen, card, this.run.rng)
+            this.run.upgradeApplied.notify(chosen)
             this.impact()
             const made = this.run.changeDeck(deck, changed => {
                 return transmute(withCopies(changed, [card, card], hero.unlimited), card, upgrade)

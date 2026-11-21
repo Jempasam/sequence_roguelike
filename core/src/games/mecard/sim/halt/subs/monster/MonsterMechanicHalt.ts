@@ -45,7 +45,7 @@ export class MonsterMechanicHalt extends MonsterCardHalt {
 export const MONSTER_MECHANIC_HALT: HaltType = {
     id: "monsterMechanic",
     name: "Mécanicien monstrueux",
-    description: ["Fait d'un monstre un ", MODULE.name, " pour une ", UNIT, ", avec un robot si elle n'en a aucun."],
+    description: ["Fait d'un monstre un ", MODULE, " pour une ", UNIT, ", avec un robot si elle n'en a aucun."],
     icon: visual("units/mechanic", { letter: "MM!" }),
     glow: DARK_COLOR,
     transition: visual("house-door"),

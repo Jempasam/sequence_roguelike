@@ -1,5 +1,5 @@
-import { Admissions, GameSession, LocalRoom, ParticipationReceiver } from "@game/core/mecard/sync"
-import type { Admission, Arrival, ParticipationPolicy } from "@game/core/mecard/sync"
+import { Placements, GameSession, LocalRoom, ParticipationReceiver } from "@game/core/mecard/sync"
+import type { Placement, Arrival, ParticipationPolicy } from "@game/core/mecard/sync"
 import { ManualScheduler } from "@game/core"
 import { describe, expect, test } from "vitest"
 
@@ -10,9 +10,9 @@ class Recorded implements ParticipationPolicy {
 
 
     public readonly events: string[] = []
-    public next: (who: Arrival) => Admission = who => Admissions.seat(`seat-${who.id}`)
+    public next: (who: Arrival) => Placement = who => Placements.seat(`seat-${who.id}`)
 
-    public admit(who: Arrival): Admission {
+    public admit(who: Arrival): Placement {
         this.events.push(`admit ${who.id}`)
         return this.next(who)
     }
@@ -59,7 +59,7 @@ describe("GameSession", () => {
 
     test("a spectator → a participant, and no player: the bricks of the mode never hear of it", () => {
         const { room, session, policy, timer, heard } = sessioned()
-        policy.next = () => Admissions.spectate()
+        policy.next = () => Placements.spectate()
         joining(room, timer, "a")
         expect(session.participant("a")?.presence).toBe("spectator")
         expect(session.players).toEqual([])
@@ -116,11 +116,11 @@ describe("GameSession", () => {
 
     test("a spectator that asks again → the mode is asked again, and it may play", () => {
         const { room, session, policy, timer, heard } = sessioned()
-        policy.next = () => Admissions.spectate()
+        policy.next = () => Placements.spectate()
         const link = room.join("a")
         new ParticipationReceiver(link, 1, timer).join()
         expect(session.players).toEqual([])
-        policy.next = who => Admissions.seat(`seat-${who.id}`)
+        policy.next = who => Placements.seat(`seat-${who.id}`)
         const again = new ParticipationReceiver(link, 1, timer)
         again.join()
         expect(session.participant("a")?.presence).toBe("player")

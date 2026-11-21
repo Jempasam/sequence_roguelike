@@ -62,11 +62,11 @@ export class AntiquarianHalt extends DeckHalt {
             ["Vends une ", CARTE, " de ", hero, " : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut"],
             deck, { min: 1, max: 1 }, ([card]) => {
                 ctx.confirm("L'estimation :", {
-                    cards: [card], from: deck, text: `${appraisal(card)} or pour ${card.name}.`,
+                    cards: [card], from: deck, text: [appraisal(card), " or pour ", card, "."],
                 }, "Vendre", () => {
                     this.impact()
                     const gold = sell(this.run, deck, card)
-                    ctx.tell(`Vendue ${gold} or.`)
+                    ctx.tell(["Vendue ", gold, " or."])
                 }, { back: pick })
             }, { back, unlimited: hero.unlimited, copies: false })
         pick()

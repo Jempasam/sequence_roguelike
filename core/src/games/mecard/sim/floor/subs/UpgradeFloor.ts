@@ -60,13 +60,16 @@ export class UpgradeFloor implements Floor {
 
         /** How many rows of places it has, at least two. */
         public readonly rows: number = UPGRADE_ROWS,
+
+        /** The sorts of halt its places may be, the upgrades of a party by default. */
+        private readonly halts: () => readonly HaltType[] = upgradeHalts,
     ){
         if(!Number.isInteger(rows) || rows < 2) throw new Error(`A floor of upgrades has two rows at least, not ${rows}.`)
     }
 
 
     public fillMap(ctx: FloorContext): void {
-        const pool = upgradeHalts()
+        const pool = this.halts()
         let previous: Place[] = []
         for(let layer = 0; layer < this.rows; layer++){
             const width = layer === 0

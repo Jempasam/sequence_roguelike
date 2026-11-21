@@ -1,9 +1,11 @@
 import type { Text } from "../../../../semantic"
+import { colored } from "../base/Rgba"
 import { Vector2 } from "../base/Vector2"
 import type { Visual } from "../base/Visual"
 import type { Area } from "../battle/Area"
 import type { Battle, PlacedBody } from "../battle/Battle"
 import type { Unit } from "../battle/Unit"
+import { HAZARD_TEXT } from "./subs/hazardText"
 import type { StatusType } from "../status/Status"
 
 /**
@@ -43,6 +45,12 @@ export interface HazardType {
     readonly name: string
     readonly description: Text
 
+    /** Its name, for the console. */
+    toString(): string
+
+    /** Its name in its color. */
+    toSemString(): Text
+
     /** Its picture, for what lists the hazards. */
     readonly icon: Visual
 
@@ -63,9 +71,11 @@ export interface HazardType {
 }
 
 /** A hazard, made from all of it but how it is laid out. */
-export function hazardType(spec: Omit<HazardType, "lay">): HazardType {
+export function hazardType(spec: Omit<HazardType, "lay"|"toString"|"toSemString">): HazardType {
     return {
         ...spec,
+        toString: () => spec.name,
+        toSemString: () => colored(HAZARD_TEXT, spec.name),
         lay: (battle, at, direction = spec.direction) => spec.bodies.map(each => {
             const position = at.plus(Vector2.relative(direction, each.forward ?? 0, each.side ?? 0))
             const facing = each.facing?.(direction) ?? direction

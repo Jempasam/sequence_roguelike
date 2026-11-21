@@ -65,6 +65,8 @@ export class MasterMagicianHalt extends CardGiftHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Choisis un pari", this.#bets, betShown, ({ booster, upgrade }) => {
+            this.run.boosterOpened.notify(booster)
+            this.run.upgradeApplied.notify(upgrade)
             this.give(ctx, upgradeAll(upgrade, openBooster(this.run.rng, booster), this.run.rng))
         })
     }

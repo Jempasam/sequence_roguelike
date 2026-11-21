@@ -4,12 +4,13 @@ import type { Text } from "../../../../../semantic"
 import type { Vector2 } from "../../base/Vector2"
 import type { Kit } from "../../catalog/kits"
 import type { Monster } from "../../catalog/monsters"
+import { GHOST_FIGHT } from "../../fight/GhostFightType"
 import { KitFightType } from "../../fight/KitFightType"
 import type { FightStage } from "../../fight/Fight"
 import type { FightCategory } from "../../fight/FightCategory"
 import { AMBUSH } from "../../fight/fights"
-import { fightType } from "../../fight/FightType"
-import type { FightType, Laying } from "../../fight/FightType"
+import { fightType, NO_FIGHT_CONTEXT } from "../../fight/FightType"
+import type { FightContext, FightType, Laying } from "../../fight/FightType"
 import type { HazardType } from "../../hazard/HazardType"
 import { hazardSpot, monsterSpot } from "../../run/formation"
 
@@ -47,7 +48,7 @@ function pictureOf(design: Design): Visual {
     const monsters: Monster[] = []
     design.populate({
         rng: new Rng(0), level: 1, layer: design.layers[0],
-        add: monster => { monsters.push(monster) }, addKit: () => {},
+        add: monster => { monsters.push(monster) }, addKit: () => {}, addHero: () => {},
     })
     const lead = monsters.reduce((best, each) => each.hearts > best.hearts ? each : best)
     return lead.sprite
@@ -103,13 +104,22 @@ export function lay(type: HazardType, column: number, row: number, direction?: V
     return { type, at: hazardSpot(column, row), direction }
 }
 
+/** The fights every floor may lay, besides its own: the ghosts, after the first elites. */
+const EVERYWHERE: readonly Laid[] = [{ type: GHOST_FIGHT, from: 4, to: 9 }]
+
 /**
  * The fight of a category a floor lays in a layer, one of those that may lie there, as likely as each other.
  *
  * @throws {@link Error} When the floor has none for the category and the layer.
  */
-export function laidIn(fights: readonly Laid[], category: FightCategory, layer: number, rng: Rng): FightType {
-    const fitting = fights.filter(each => each.from <= layer && layer <= each.to && fightsAs(each.type, category))
+export function laidIn(
+    fights: readonly Laid[], category: FightCategory, layer: number, rng: Rng, context: FightContext = NO_FIGHT_CONTEXT,
+): FightType {
+    // The depth of the place: the party stands on the first of the layers at the depth it came in with.
+    const here = { ...context, depth: context.depth + layer }
+    const fitting = [...fights, ...EVERYWHERE].filter(each => {
+        return each.from <= layer && layer <= each.to && fightsAs(each.type, category) && (each.type.available?.(here) ?? true)
+    })
     const chosen = rng.pick(fitting)
     if(!chosen) throw new Error(`The floor has no fight of category "${category.id}" for layer ${layer}.`)
     return chosen.type instanceof KitFightType && category === AMBUSH ? chosen.type.ambush : chosen.type

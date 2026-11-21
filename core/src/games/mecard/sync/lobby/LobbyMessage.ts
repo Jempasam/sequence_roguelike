@@ -2,7 +2,7 @@ import { LOBBY_MODE_TOPIC } from "../SyncChannel"
 import { UnreadableFault } from "../faults"
 import { readJson, wrongShape } from "../read"
 
-import type { SettingValues } from "./Setting"
+import type { SettingValues } from "../../sim/mode/Setting"
 
 /** Where the lobby stands: the mode it is set on, how it is set, and whether it is being played. */
 export interface ModeState {

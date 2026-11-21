@@ -1,4 +1,5 @@
 import type { Rng } from "../../../base/Rng"
+import { beast } from "../../../card/CardType"
 import type { Card } from "../../../card/Card"
 import { Rarity } from "../../../card/Rarity"
 import { BeastCard } from "../../../card/subs/beast/BeastCard"
@@ -22,14 +23,14 @@ export function moduleOfMonster(monster: Monster): ModuleCard {
  * strikes, the first round of its deck and the last as the catalog writes them.
  */
 export function beastCardOfMonster(monster: Monster): BeastCard {
-    return new BeastCard({
+    return new BeastCard(beast({
         name: monster.name,
         sprite: monster.sprite,
         run: firstRound(monster),
         bite: lastRound(monster),
         hearts: [{ kind: RED_HEART, count: monster.hearts }],
         body: ["run", "bite"],
-    })
+    }))
 }
 
 /**

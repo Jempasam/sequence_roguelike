@@ -1,0 +1,14 @@
+{
+    "size": [288, 164],
+    "seed": 12,
+    "palette": ["#2e5a2a", "#4a8a3a", "#6a4a2c", "#8a8478", "#5a564e"],
+    "shapes": [
+        {"box": [0, 96, 288, 22], "fill": {"pattern": "tiles", "cell": [10, 6], "grout": 1, "offset": 0.5, "materials": [3, 4]}, "depth": 3},
+        {"box": [30, 72, 8, 30], "material": 2, "depth": [3, 5], "relief": "round-x"},
+        {"ellipse": [14, 44, 40, 40], "material": 0, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [22, 50, 24, 24], "material": 1, "depth": [5, 7], "relief": "dome"},
+        {"box": [244, 70, 8, 32], "material": 2, "depth": [3, 5], "relief": "round-x"},
+        {"ellipse": [226, 40, 44, 44], "material": 0, "depth": [3, 6], "relief": "dome"},
+        {"ellipse": [234, 47, 26, 26], "material": 1, "depth": [5, 7], "relief": "dome"}
+    ]
+}

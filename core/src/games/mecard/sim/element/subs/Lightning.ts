@@ -33,7 +33,7 @@ export class Lightning extends AbstractElement {
         super(
             "Électricité", rgba(1, 0.95, 0.3), "étourdi",
             "étourdit, sa prochaine étape est repoussée",
-            ["+", String((LIGHTNING_HASTE - 1) * 100), " % d'agilité ce round"],
+            ["+", (LIGHTNING_HASTE - 1) * 100, " % d'agilité ce round"],
             [
                 "un arc : le négatif à ", frenchNumber(ARC_RADIUS), " ", DISTANCE, " autour, puis il saute de corps en corps, à ",
                 frenchNumber(ARC_JUMP), " ", DISTANCE, ", sans jamais retoucher le même",

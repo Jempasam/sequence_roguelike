@@ -1,7 +1,7 @@
 import { ManualScheduler } from "@game/core"
 import type { Fault } from "@game/core"
 import {
-    Admissions, AlreadyStartedFault, Attendee, Deadline, DeadlineReceiver, GatheringFullFault, Gathering, LocalRoom,
+    Placements, AlreadyStartedFault, Attendee, Deadline, DeadlineReceiver, GatheringFullFault, Gathering, LocalRoom,
     LocalSync, MANUAL, whenCount,
 } from "@game/core/mecard/sync"
 import type { GatheringOptions, Member, StartRule, SyncLink } from "@game/core/mecard/sync"
@@ -371,7 +371,7 @@ describe("Gathering, once it started", () => {
     }
 
     test("the mode gives a place to a client that comes → a member, told the game started", () => {
-        const { room, gathering } = startedWith(who => Admissions.seat(who.id))
+        const { room, gathering } = startedWith(who => Placements.seat(who.id))
         let started = 0
         const late = attending(room, "late")
         late.attendee.started.add(() => started++)
@@ -382,7 +382,7 @@ describe("Gathering, once it started", () => {
     })
 
     test("the mode makes it a spectator → no member, no fault, not turned away", () => {
-        const { room, gathering, faults } = startedWith(() => Admissions.spectate())
+        const { room, gathering, faults } = startedWith(() => Placements.spectate())
         const { attendee } = attending(room, "late")
         expect(gathering.memberOf("late")).toBeNull()
         expect(faults).toEqual([])
@@ -399,7 +399,7 @@ describe("Gathering, once it started", () => {
     })
 
     test("a member that quits the game → told it left, and a client that comes is dealt with as a newcomer", () => {
-        const { room, gathering, left } = startedWith(who => Admissions.seat(who.id))
+        const { room, gathering, left } = startedWith(who => Placements.seat(who.id))
         const { attendee } = attending(room, "b")
         attendee.quit()
         expect(left).toEqual(["b"])

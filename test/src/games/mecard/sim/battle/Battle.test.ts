@@ -688,12 +688,13 @@ describe("Battle.teleport", () => {
 })
 
 describe("Unit.feverish", () => {
-    test("as many hearts empty as full → not yet; one more → feverish", () => {
+    test("fewer hearts empty than full → not feverish; as many empty as full → feverish", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         hero.hearts.all[3].isEmpty = true
-        hero.hearts.all[2].isEmpty = true
         expect(hero.feverish).toBe(false)
+        hero.hearts.all[2].isEmpty = true
+        expect(hero.feverish).toBe(true)
         hero.hearts.all[1].isEmpty = true
         expect(hero.feverish).toBe(true)
     })

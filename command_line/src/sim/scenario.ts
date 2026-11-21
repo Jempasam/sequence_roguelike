@@ -97,6 +97,7 @@ function monstersOf(place: Place, level: number, rng: Rng): Monster[] {
         rng, level, layer: place.layer,
         add: monster => { monsters.push(monster) },
         addKit: kit => { throw new UsageError(`« ${place.fight!.name} » se bat contre le kit ${kit.name} : sim ne sait pas encore jouer un combat de kits.`) },
+        addHero: hero => { throw new UsageError(`« ${place.fight!.name} » se bat contre ${hero.name} : sim ne sait pas encore jouer un combat de fantômes.`) },
     })
     return monsters
 }

@@ -11,7 +11,7 @@ import { firstDeck, heroOf, heroSpec, monsterHearts } from "../run/Hero"
 import type { Hero } from "../run/Hero"
 import type { Run } from "../run/Run"
 
-import type { Fight, FightResult } from "./Fight"
+import type { Fight, FightResult, MonsterPose } from "./Fight"
 import type { FightType } from "./FightType"
 
 /**
@@ -51,33 +51,36 @@ export class StandardFight implements Fight {
         const level = run.travel.floor.level
         const monsters: Monster[] = []
         let placed = 0
+        const addHero = (fighter: Hero, pose: MonsterPose = {}): void => {
+            const index = placed++
+            const unit = battle.add({
+                name: fighter.name, sprite: fighter.sprite, team: monstersTeam,
+                controller: pose.controller ?? "bot",
+                position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
+                hearts: fighter.hearts, decks: fighter.decks, unlimited: fighter.unlimited, items: fighter.items,
+                usables: fighter.usables, bases: { ...fighter.bases, showChain: true, showHand: true },
+            })
+            battle.refill(unit)
+        }
         type.populate({
             rng, level, layer: place.layer,
-            addKit: (kit, pose = {}) => {
-                const index = placed++
-                const fighter = heroOf(kit)
-                const unit = battle.add({
-                    name: fighter.name, sprite: fighter.sprite, team: monstersTeam,
-                    controller: pose.controller ?? "bot",
-                    position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
-                    hearts: fighter.hearts, decks: fighter.decks, unlimited: fighter.unlimited, items: fighter.items,
-                    usables: fighter.usables, bases: { ...fighter.bases, showChain: true, showHand: true },
-                })
-                battle.refill(unit)
-            },
+            addHero,
+            addKit: (kit, pose) => addHero(heroOf(kit), pose),
             add: (monster, pose = {}) => {
                 const index = placed++
                 monsters.push(monster)
-                battle.add({
+                const unit = battle.add({
                     name: `${monster.name} ${monsters.length}`, sprite: monster.sprite, team: monstersTeam,
                     controller: pose.controller ?? "bot",
                     position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
                     hearts: monsterHearts(monster.hearts + level - 1), decks: [monster.cards],
+                    items: [...monster.items ?? []],
                     bases: {
                         draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true,
                         size: monster.size ?? 1,
                     },
                 })
+                this.#foes.set(unit, monster)
             },
         })
         this.monsters = monsters
@@ -108,12 +111,19 @@ export class StandardFight implements Fight {
             if(won && fell) hero.hearts[0] = new Heart(RED_HEART)
             if(won) for(const item of hero.items) item.afterFight?.({ hearts: hero.hearts, fell })
         }
+        if(won) for(const unit of battle.captured){
+            const monster = this.#foes.get(unit)
+            if(monster) run.tame(monster)
+        }
         return won ? "won" : "lost"
     }
 
 
     /** The unit of each character in the battle. */
     readonly #units = new Map<Hero, Unit>()
+
+    /** The kind of monster each enemy unit was made from, for the ones tamed in the battle. */
+    readonly #foes = new Map<Unit, Monster>()
 }
 
 /** The hearts a unit leaves its battle with: those left, even empty. */

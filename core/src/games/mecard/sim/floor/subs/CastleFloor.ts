@@ -24,7 +24,7 @@ export class CastleFloor extends AbstractFloor {
     }
 
     protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
-        return laidIn(CASTLE_FIGHTS, category, layer, rng)
+        return laidIn(CASTLE_FIGHTS, category, layer, rng, this.fightContext)
     }
 }
 

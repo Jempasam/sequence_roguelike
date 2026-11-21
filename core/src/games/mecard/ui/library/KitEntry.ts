@@ -3,10 +3,10 @@ import type { Kit } from "../../sim/catalog/kits"
 import { heroOf } from "../../sim/run/Hero"
 import { stuffOf } from "../../sim/halt/subs/shown"
 import { unitOption } from "../hud/ChoiceOptions"
-import type { Entry, LibraryLook } from "./entries"
+import type { Unkeyed, LibraryLook } from "./entries"
 
 /** A kit in the catalogue: the adventurer it makes, with its hearts, its deck, its items and its usables. */
-export function kitEntry(look: LibraryLook, kit: Kit): Entry {
+export function kitEntry(look: LibraryLook, kit: Kit): Unkeyed {
     const hero = heroOf(kit)
     const text = stuffOf(hero)
     const cards = [...new Set(kit.cards)]

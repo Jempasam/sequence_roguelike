@@ -1,28 +1,21 @@
 import type { Theme } from "../../../../engine/ui"
-import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Process } from "../../sim/process/Process"
 import type { BattleScene, ShownStatus } from "../battle/BattleScene"
 
+import { processText, statusTypeText } from "../look/explanations"
 import type { UnitSprites } from "../look/UnitSprites"
 import { PROCESS_ICON_SIZE, STATUS_ICON_SIZE } from "./AbsItemIcon"
 import { AbsItemList } from "./AbsItemList"
 import type { AbsItem, AbsItemListOptions } from "./AbsItemList"
 
-/** How the player is told what a status is to its unit. */
-const POLARITY_WORDS = { negative: "négatif", positive: "positif", neutral: "neutre" } as const
-
 /** What a status is, for the player: `name X (polarity) : description`, X its level as shown. */
 export function statusText(shown: ShownStatus): Text {
-    const { type, level } = shown
-    return concat(type, ` ${level} (${POLARITY_WORDS[type.polarity]}) : `, type.describe(level))
+    return statusTypeText(shown.type, shown.level)
 }
 
-/** What a process is, for the player. */
-export function processText(process: Process): Text {
-    return concat("Processus ", process, " : ", process.description, " Jusqu'à la fin du round.")
-}
+export { processText }
 
 /** What a list of the statuses and processes of a unit does when the pointer comes over them. */
 export interface StatusProcessListHooks {

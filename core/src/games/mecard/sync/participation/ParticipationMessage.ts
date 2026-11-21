@@ -1,6 +1,6 @@
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 import { UnreadableFault } from "../faults"
-import type { SettingValues } from "../lobby/Setting"
+import type { SettingValues } from "../../sim/mode/Setting"
 import { readJson, wrongShape } from "../read"
 
 /** How a client takes part in a game: it plays, or it only watches. */

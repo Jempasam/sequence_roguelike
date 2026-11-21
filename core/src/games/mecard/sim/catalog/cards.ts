@@ -39,7 +39,9 @@ import {
     ARMOR_PLATING, DELAYED_CHARGE, HOMING_HEAD, INVERTER, MIRROR, MODULE_MIXER, MODULE_CORE, RECYCLING, REPEATER,
     SPYGLASS_CARD, THRUSTERS, TURBO,
     BLEED, BLOCK, COOL_HEAD, EXPLOSIVE_SHELL, FRAGILITY_CARD, GRUDGE, HELD_FURY, HEMORRHAGE, MARK_CARD, RAMPART,
-    SOUL_LINK, SOUL_SHIELD, WEAKENING_BLOWS,
+    SOUL_LINK, SOUL_SHIELD, WEAKENING_BLOWS, EPIDEMIC, TRANSFUSION, STUFFING, TAMING_MARK,
+    SCARIFICATION, INOCULATION, AGGRAVATION, PLAGUE_MASK, PURGE, COMBAT_FEVER,
+    AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, NATURALIZATION, TROPHY,
     CHARGED_SHOT, CROSS_CUT, DEATH_SCYTHE, DEMON_SLASH, DEMONIC_STRIKE, FISHING, GREAT_THRUST, MACHINE_GUN,
     QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
     BATTERING_RAM, CATCH, PROJECTION, SHOCK_WAVE, SLING_CARD, SUCTION, TIDE,
@@ -64,9 +66,17 @@ import { upgradedWith, upgradesFor } from "./upgrades"
  * Any card of the game that fits its place, drawn at the end of the preparation, the commoner more often:
  * named here, where every card is known.
  */
-export const CHAOS: Card = new DrawnCard("Chaos", [
-    "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
-], Rarity.EPIC, () => weighted(ALL_CARDS))
+export const CHAOS: Card = chaosCard()
+
+/**
+ * A card of chaos of its own: given in a hand several times, each is spent on its own, which one shared card
+ * could not be.
+ */
+export function chaosCard(): Card {
+    return new DrawnCard("Chaos", [
+        "Fin de préparation : devient n'importe quelle ", CARTE, " du jeu qui tient à sa place, les plus rares moins souvent.",
+    ], Rarity.EPIC, () => weighted(ALL_CARDS))
+}
 
 /**
  * The card on its right improved by an upgrade drawn among those it matches. Named here, where the upgrades
@@ -156,7 +166,9 @@ export const LOOT_CARDS: readonly Card[] = [
     THRUSTERS, ARMOR_PLATING, TURBO, HOMING_HEAD, MODULE_MIXER, RECYCLING, REPEATER, INVERTER, MODULE_CORE,
     SPYGLASS_CARD, MIRROR, DELAYED_CHARGE,
     HELD_FURY, COOL_HEAD, WEAKENING_BLOWS, MARK_CARD, FRAGILITY_CARD, BLEED, HEMORRHAGE, GRUDGE, BLOCK, RAMPART,
-    EXPLOSIVE_SHELL, SOUL_LINK, SOUL_SHIELD,
+    EXPLOSIVE_SHELL, SOUL_LINK, SOUL_SHIELD, EPIDEMIC, TRANSFUSION, STUFFING,
+    SCARIFICATION, INOCULATION, AGGRAVATION, PLAGUE_MASK, PURGE, COMBAT_FEVER,
+    AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, NATURALIZATION, TROPHY,
     SUPLEX, GREAT_THRUST, THRUST_CHARGE, DEMON_SLASH, MACHINE_GUN, CHARGED_SHOT, DEMONIC_STRIKE, QUAKE,
     DEATH_SCYTHE, CROSS_CUT, FISHING, SACRIFICE,
     PROJECTION, SUCTION, CATCH, BATTERING_RAM, SLING_CARD, SHOCK_WAVE, TIDE,
@@ -193,7 +205,7 @@ export const LEGENDARY_CARDS: readonly Card[] = [
     CROSS_BOMB, JOURNEY, SURPRISE_THRUST, MEGA_THRUST, QUAKE_SEISM,
     BULLET_RAIN, SPIRIT_DASH, SHADOW_BLINK,
     DOUBLE_SLASH, TRIPLE_SLASH, BLOOD_STORM,
-    THRUST_COMBO, STORM_BLADE, TOTAL_HYBRID,
+    THRUST_COMBO, STORM_BLADE, TOTAL_HYBRID, TAMING_MARK,
 ]
 
 /**

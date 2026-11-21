@@ -15,6 +15,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 const NO_SPRITES = {
     of: () => null,
     thing: () => null,
+    eye: () => null,
     cardBack: () => null,
     whenLoaded: () => {},
 } as unknown as BattleScreenOptions["sprites"]
@@ -250,6 +251,24 @@ describe("BattleScreen", () => {
         expect(screen.launchable).toBe(false)
         expect(screen.skippable).toBe(false)
         expect(screen.drafts.size).toBe(0)
+    })
+
+    test("waiting, a round playing back → it may be skipped, and skipping starts nothing", async() => {
+        const game = shown(ALL_BATTLE_LOCKS)
+        await played(game)
+        const { battle, screen } = game
+        expect(battle.phase).toBe("draw")
+        battle.advance()
+        await settled()
+        for(const unit of battle.awaited.units) battle.commit(unit, new CardChain())
+        battle.advance()
+        for(let turn = 0; turn < 10 && screen.mode !== "playing"; turn++) await settled()
+        expect(screen.mode).toBe("playing")
+        expect(screen.skippable).toBe(true)
+        const round = battle.round
+        await played(game)
+        expect(screen.mode).not.toBe("playing")
+        expect(battle.round).toBe(round)
     })
 
     test("a load while another waits → what was left dropped, the last shown", async() => {

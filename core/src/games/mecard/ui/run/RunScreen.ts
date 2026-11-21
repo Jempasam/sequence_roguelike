@@ -65,6 +65,9 @@ export interface RunScreenOptions {
     /** The players said they are ready, their chains committed, for another to start the round. */
     ready?(): void
 
+    /** A battle was shown to its end, whatever the locks: what shows it elsewhere leaves it then. */
+    seen?(battle: Battle): void
+
     /** Tell the players something went wrong. */
     report(text: string): void
 }
@@ -316,6 +319,7 @@ export class RunScreen {
     /** The battle was shown to its end: the run takes it back, unless it is fought elsewhere. */
     #seeOut(battle: Battle): void {
         const run = this.#engine
+        this.options.seen?.(battle)
         if(!this.#locks.fights && run.battle === battle && run.canAdvance) run.advance()
     }
 

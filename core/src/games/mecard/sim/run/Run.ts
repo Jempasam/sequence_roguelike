@@ -10,7 +10,10 @@ import type { UnitController } from "../ai/UnitController"
 import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
 import type { Card } from "../card/Card"
+import type { Booster } from "../catalog/boosters"
+import type { CardUpgrade } from "../catalog/upgrades"
 import type { Fight } from "../fight/Fight"
+import type { Ghost } from "../fight/FightType"
 import { EMPTY_FIGHT } from "../fight/fights"
 import { FIRST_FLOOR } from "../catalog/floors"
 import type { FloorType } from "../floor/Floor"
@@ -128,6 +131,24 @@ export class Run {
     /** A deck of the party changed, or was made. */
     public readonly deckChanged: Observable<readonly Card[]>
 
+    /** Cards came into a deck of the party: those a change of the deck added. */
+    public readonly cardsGained: Observable<readonly Card[]>
+
+    /** A booster was opened for the party. */
+    public readonly boosterOpened: Observable<Booster>
+
+    /** An upgrade was applied to a card of the party. */
+    public readonly upgradeApplied: Observable<CardUpgrade>
+
+    /** A hero was hired from a kit. */
+    public readonly kitHired: Observable<Kit>
+
+    /** A monster was tamed, as an ally or a recruit. */
+    public readonly petTamed: Observable<Monster>
+
+    /** A character was given hearts found as loot, as a whole. */
+    public readonly heartLootGiven: Observable<HeartLoot>
+
     /** A character was given an item. */
     public readonly itemGained: Observable<Gain<Item>>
 
@@ -158,6 +179,12 @@ export class Run {
     /** The journey of the party, between the fights. */
     public readonly travel: Travel
 
+    /**
+     * The games that ended before, which the fights against ghosts bring back: none by default. Set by whoever
+     * keeps the history, from the next map drawn on. Not saved.
+     */
+    public ghosts: readonly Ghost[] = []
+
     constructor(
         seed: number,
 
@@ -175,6 +202,12 @@ export class Run {
         this.heroLeft = new Observable(report)
         this.partyHealed = new Observable(report)
         this.deckChanged = new Observable(report)
+        this.cardsGained = new Observable(report)
+        this.boosterOpened = new Observable(report)
+        this.upgradeApplied = new Observable(report)
+        this.kitHired = new Observable(report)
+        this.petTamed = new Observable(report)
+        this.heartLootGiven = new Observable(report)
         this.itemGained = new Observable(report)
         this.usableGained = new Observable(report)
         this.heartGained = new Observable(report)
@@ -351,8 +384,11 @@ export class Run {
      * @returns What the change gives.
      */
     public changeDeck<T>(deck: Card[], change: (deck: Card[]) => T): T {
+        const before = new Set(deck)
         const result = change(deck)
         this.deckChanged.notify(deck)
+        const added = deck.filter(card => !before.has(card))
+        if(added.length > 0) this.cardsGained.notify(added)
         return result
     }
 
@@ -371,6 +407,7 @@ export class Run {
     /** Give a character hearts found as loot. */
     public giveHearts(hero: Hero, { heart, count }: HeartLoot): void {
         for(let given = 0; given < count; given++) this.giveHeart(hero, heart)
+        this.heartLootGiven.notify({ heart, count })
     }
 
     /** Give a character a full heart: one of the base life before the other kinds, which stay first lost. */
@@ -384,6 +421,7 @@ export class Run {
         const hired = heroOf(kit, this.#freeName(kit.name))
         this.heroes.push(hired)
         this.heroJoined.notify(hired)
+        this.kitHired.notify(kit)
         return hired
     }
 
@@ -392,6 +430,7 @@ export class Run {
         const ally = allyOf(monster, this.#freeName(monster.name))
         this.heroes.push(ally)
         this.heroJoined.notify(ally)
+        this.petTamed.notify(monster)
         return ally
     }
 
@@ -400,6 +439,7 @@ export class Run {
         const recruit = recruitOf(monster, this.#freeName(monster.name))
         this.heroes.push(recruit)
         this.heroJoined.notify(recruit)
+        this.petTamed.notify(monster)
         return recruit
     }
 

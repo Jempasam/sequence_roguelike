@@ -72,12 +72,23 @@ describe("ArrivalWatch", () => {
         expect(log.filter(each => each.startsWith("late"))).toEqual(["late b", "late c"])
     })
 
-    test("late players that arrive after → everyone arrived then", () => {
+    test("the time limit comes → expired once with the late, the round goes on without them", () => {
+        const { watch, timer, log } = watching(["a", "b", "c"])
+        const expired: (readonly string[])[] = []
+        watch.expired.add(late => expired.push(late))
+        watch.hear("a", progress(true))
+        timer.advance(1_000)
+        expect(expired).toEqual([["b", "c"]])
+        expect(log).not.toContain("all")
+    })
+
+    test("late players that arrive after → arrived, and not everyone arrived again", () => {
         const { watch, timer, log } = watching(["a", "b"])
         watch.hear("a", progress(true))
         timer.advance(1_000)
         watch.hear("b", progress(true))
-        expect(log.at(-1)).toBe("all")
+        expect(log.at(-1)).toBe("arrived b")
+        expect(log).not.toContain("all")
     })
 
     test("a player that is out → not waited for", () => {

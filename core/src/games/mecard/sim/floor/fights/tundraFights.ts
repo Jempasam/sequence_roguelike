@@ -1,7 +1,7 @@
 import { BULL, FROST_GIANT, HUNTER, ICE_MAGE, OGRE_CRUSHER, WEREWOLF } from "../../catalog/monsters"
 import { HOLE, ROCK_BLOCK, TREE, WALL } from "../../catalog/hazards"
 import { AGGRESSION, BATTLE, BOSS, ELITE } from "../../fight/fights"
-import { BEAST_WARRIOR_KIT, SHAMAN_KIT } from "../../catalog/kits"
+import { BEAST_WARRIOR_KIT, BIG_BAD_WOLF_KIT, SHAMAN_KIT, TAMER_KIT } from "../../catalog/kits"
 import { designed, designedKits, lay, put } from "./designed"
 
 /** The fights of the tundra: cold, wolves, a frost giant at the end. */
@@ -11,6 +11,12 @@ export const TUNDRA_FIGHTS = [
         hazards: [lay(ROCK_BLOCK, 2, 3), lay(ROCK_BLOCK, 4, 3)],
         description: "Un guerrier-bête et un chaman protègent leur territoire.",
         kits: [BEAST_WARRIOR_KIT, SHAMAN_KIT],
+    }),
+    designedKits({
+        category: AGGRESSION, layers: [4, 9], name: "Dresseurs du grand nord",
+        hazards: [lay(ROCK_BLOCK, 2, 3), lay(TREE, 4, 3)],
+        description: "Un dresseur et un loup te cherchent une place dans leur meute.",
+        kits: [TAMER_KIT, BIG_BAD_WOLF_KIT],
     }),
     designed({
         category: BATTLE, layers: [0, 4], name: "Loups affamés",

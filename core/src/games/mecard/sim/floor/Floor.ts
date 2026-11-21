@@ -3,7 +3,7 @@ import type { Rng } from "../base/Rng"
 import type { SceneLook } from "../halt/SceneLook"
 import type { HaltType } from "../halt/HaltType"
 import type { Place, PlaceInfo, Spot } from "../run/Journey"
-import type { FightType } from "../fight/FightType"
+import type { FightContext, FightType } from "../fight/FightType"
 
 /** A picture lying on the map of a floor, for the look of it. */
 export interface Decoration {
@@ -33,12 +33,21 @@ export interface FloorType extends PlaceInfo {
 
     /** Make a floor of this sort, the higher the level the harder. */
     create(level: number): Floor
+
+    /**
+     * The sorts of floor its exits lead to, when it says so itself: the sorts that are not nodes of the
+     * catalog's links, as those only a game mode lays, lead where they say.
+     */
+    readonly leadsTo?: () => readonly FloorType[]
 }
 
 /** All a floor may do while it fills its map: its way in and its exits are not its own. */
 export interface FloorContext {
     /** The random numbers the map is drawn from. */
     readonly rng: Rng
+
+    /** What the run is like when the map is drawn, for the fights that depend on it. */
+    readonly fights: FightContext
 
     /** Lay a fight on the map, and the halt visited once it is won, none for none. */
     addFight(type: FightType, at: Spot, halt?: HaltType|null): Place

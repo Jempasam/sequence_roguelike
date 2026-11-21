@@ -156,6 +156,9 @@ export const PARTICIPATION_TOPIC = new SyncTopic("participation")
 /** A client telling the host it leaves the room for good, just before it closes its connection. */
 export const QUIT_ROOM_TOPIC = new SyncTopic("quit-room")
 
+/** The host telling every client the room is closed for good, just before it closes its connection. */
+export const ROOM_CLOSED_TOPIC = new SyncTopic("room-closed")
+
 /** The host telling how long is left before a deadline, none when there is none. */
 export const DEADLINE_TOPIC = new SyncTopic("deadline")
 

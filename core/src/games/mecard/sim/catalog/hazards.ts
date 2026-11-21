@@ -96,7 +96,7 @@ export const RING_ROPE = hazardType({
 })
 
 export const BUSH = hazardType({
-    id: "bush", name: "Buisson", description: ["Ralentit qui s'y trouve à son tour : ", HINDER.name, "."],
+    id: "bush", name: "Buisson", description: ["Ralentit qui s'y trouve à son tour : ", HINDER, "."],
     icon: visual("units/bush"), direction: Vector2.DOWN,
     bodies: [{
         body: { ...lying("Buisson", "units/bush"), cards: [HINDER] },
@@ -105,7 +105,7 @@ export const BUSH = hazardType({
 })
 
 export const HOLE = hazardType({
-    id: "hole", name: "Trou", description: ["Blesse qui s'y trouve à son tour : ", FALL.name, "."],
+    id: "hole", name: "Trou", description: ["Blesse qui s'y trouve à son tour : ", FALL, "."],
     icon: visual("units/hole"), direction: Vector2.DOWN,
     bodies: [{
         body: { ...lying("Trou", "units/hole"), cards: [FALL] },
@@ -114,7 +114,7 @@ export const HOLE = hazardType({
 })
 
 export const PUDDLE_ZONE = hazardType({
-    id: "puddle", name: "Flaque", description: ["Ralentit qui s'y trouve à son tour : ", HINDER.name, "."],
+    id: "puddle", name: "Flaque", description: ["Ralentit qui s'y trouve à son tour : ", HINDER, "."],
     icon: visual("units/puddle"), direction: Vector2.DOWN,
     bodies: [{
         body: { ...lying("Flaque", "units/puddle"), cards: [HINDER] },
@@ -123,7 +123,7 @@ export const PUDDLE_ZONE = hazardType({
 })
 
 export const CONVEYOR = hazardType({
-    id: "conveyor", name: "Tapis roulant", description: ["Emporte qui est dessus, le long de sa flèche : ", TIDE.name, "."],
+    id: "conveyor", name: "Tapis roulant", description: ["Emporte qui est dessus, le long de sa flèche : ", TIDE, "."],
     icon: visual("units/conveyor"), direction: Vector2.RIGHT,
     bodies: [{
         body: { ...lying("Tapis roulant", "units/conveyor"), cards: [TIDE] },
@@ -132,19 +132,19 @@ export const CONVEYOR = hazardType({
 })
 
 export const PISTON = hazardType({
-    id: "piston", name: "Piston", description: ["Attend, puis projette ce qui est devant : ", PROJECTION.name, "."],
+    id: "piston", name: "Piston", description: ["Attend, puis projette ce qui est devant : ", PROJECTION, "."],
     icon: visual("units/piston"), direction: Vector2.DOWN,
     bodies: [{ body: { ...standing("Piston", "units/piston"), size: FIXTURE_SIZE, cards: [WAIT, PROJECTION] } }],
 })
 
 export const FLAMETHROWER_TURRET = hazardType({
-    id: "flamethrower", name: "Lance-flamme mécanique", description: ["Attend, puis brûle devant lui : ", FLAMETHROWER.name, "."],
+    id: "flamethrower", name: "Lance-flamme mécanique", description: ["Attend, puis brûle devant lui : ", FLAMETHROWER, "."],
     icon: visual("units/flamethrower"), direction: Vector2.DOWN,
     bodies: [{ body: { ...standing("Lance-flamme", "units/flamethrower"), size: FIXTURE_SIZE, cards: [WAIT, FLAMETHROWER] } }],
 })
 
 export const GEYSER = hazardType({
-    id: "geyser", name: "Geyser", description: ["Attend, puis jaillit : ", SHOCK_WAVE.name, "."],
+    id: "geyser", name: "Geyser", description: ["Attend, puis jaillit : ", SHOCK_WAVE, "."],
     icon: visual("units/geyser"), direction: Vector2.DOWN,
     bodies: [{ body: { ...lying("Geyser", "units/geyser"), cards: [WAIT, SHOCK_WAVE] } }],
 })
@@ -152,7 +152,7 @@ export const GEYSER = hazardType({
 export const PATROL_ROBOT = hazardType({
     id: "patrol-robot",
     name: "Robot patrouilleur",
-    description: ["Fonce deux fois sur sa ligne, puis fait demi-tour : ", RAM.name, "."],
+    description: ["Fonce deux fois sur sa ligne, puis fait demi-tour : ", RAM, "."],
     icon: visual("units/robot"), direction: Vector2.DOWN,
     bodies: [{
         body: {
@@ -164,7 +164,7 @@ export const PATROL_ROBOT = hazardType({
 export const PIRATE_SHIP = hazardType({
     id: "pirate-ship",
     name: "Bateau pirate",
-    description: ["Traverse l'arène et en sort : ", PROJECTION.name, "."],
+    description: ["Traverse l'arène et en sort : ", PROJECTION, "."],
 
     icon: visual("units/ship"), direction: Vector2.RIGHT,
     bodies: [{
@@ -178,7 +178,7 @@ export const PIRATE_SHIP = hazardType({
 export const EXPLOSIVE_BARREL = hazardType({
     id: "explosive-barrel",
     name: "Tonneau explosif",
-    description: ["Explose quand il est détruit : ", EXPLOSIVE.name, "."],
+    description: ["Explose quand il est détruit : ", EXPLOSIVE, "."],
 
     icon: visual("units/barrel"), direction: Vector2.DOWN,
     bodies: [{
@@ -191,7 +191,7 @@ export const EXPLOSIVE_BARREL = hazardType({
 })
 
 export const PIRATE_CANNON = hazardType({
-    id: "pirate-cannon", name: "Canon de pirate", description: ["Attend, puis tire un boulet devant lui : ", CANNONBALL.name, "."],
+    id: "pirate-cannon", name: "Canon de pirate", description: ["Attend, puis tire un boulet devant lui : ", CANNONBALL, "."],
     icon: visual("units/cannon"), direction: Vector2.DOWN,
     bodies: [{ body: { ...standing("Canon de pirate", "units/cannon"), size: FIXTURE_SIZE, cards: [WAIT, CANNONBALL] } }],
 })

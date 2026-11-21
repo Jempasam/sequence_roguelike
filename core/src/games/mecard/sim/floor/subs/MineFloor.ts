@@ -30,7 +30,7 @@ export class MineFloor extends AbstractFloor {
     }
 
     protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
-        return laidIn(MINE_FIGHTS, category, layer, rng)
+        return laidIn(MINE_FIGHTS, category, layer, rng, this.fightContext)
     }
 }
 

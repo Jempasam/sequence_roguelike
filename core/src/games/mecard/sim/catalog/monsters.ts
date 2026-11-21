@@ -62,7 +62,9 @@ import { EXO_NERF } from "../card/subs/process/ExoNerf"
 import { ETHEREAL_FORM, HAUNT } from "../card/subs/spectre/SpectreCards"
 import { BLOCK, CONCENTRATION, EXPLOSIVE_SHELL, HELD_FURY, RAMPART, BLEED } from "../card/subs/status/StatusCards"
 import { DECOY, SENTINEL, TURRET } from "../card/subs/summon/ChainSummons"
-import { THORN_SHIELD } from "../card/subs/summon/summons"
+import { STONE_WALL, THORN_SHIELD, TOTEM } from "../card/subs/summon/summons"
+import { BANDAGE } from "../card/subs/combat/Bandage"
+import { PHOENIX_HEART } from "../item/subs/combat/HeartItems"
 import { SUPLEX_SURPRISE, THROWN_FRENZY, MEGA_THRUST } from "./cards"
 import { HARPOON } from "../card/subs/attack/Harpoon"
 import { POSSESSION } from "../card/subs/attack/Possession"
@@ -484,6 +486,16 @@ export const GHOST = monster({
     ],
 })
 
+/** The goblin healers: a totem to mend the pack, a wall of stones to cover it, and little else but running. */
+export const GOBLIN_HEALER = monster({
+    name: "Gobelin soigneur", sprite: visual("units/goblin", { coloration: [0.55, 1, 0.65] }), hearts: 5, draw: 3,
+    cards: [
+        TOTEM, FLEE, WAIT,
+        AIM, STONE_WALL, SIDESTEP,
+        BANDAGE, FLEE, WAIT,
+    ],
+})
+
 /** The common monsters: those of the floors, and those tamed as allies. */
 export const LOOT_MONSTERS: readonly Monster[] = [
     GOBLIN, ARCHER, BRUTE, HUNTER, BERSERKER, BULL, KAMIKAZE_ROBOT, FIRE_MAGE, ELF_ASSASSIN, GOBLIN_RIDER,
@@ -491,7 +503,7 @@ export const LOOT_MONSTERS: readonly Monster[] = [
     FIRE_LIZARD, SKELETON_REAPER, MAD_ALCHEMIST, GOBLIN_WRESTLER, GOBLIN_PILOT, ORC_BATTLE_SHAMAN,
     HAUNTING_GHOST, SHIELD_GUARD, THORN_TANK, SNIPER,
     HARPOON_PIRATE, TOXIC_TOAD, GARRISON_GOBLIN, WEREWOLF, OGRE_CRUSHER, IRON_KNIGHT, WANDERING_SAMURAI,
-    MIND_CONTROLLER, VENGEFUL_SPIRIT, GHOST,
+    MIND_CONTROLLER, VENGEFUL_SPIRIT, GHOST, GOBLIN_HEALER,
 ]
 
 /** The troll of the forest: twice the body, a sweep at every step, and a charge when it is close. */
@@ -537,6 +549,18 @@ export const HYDRA = monster({
         AIM, SPIT, THROWN_POTION, WEAKNESS,
         STURDY_AIM, SPIT, REPEAT_2, SLASH,
     ],
+})
+
+/** The phoenix hydra of the volcano: flames from all its heads, and it rises again when its heads fall in a heap. */
+export const PHOENIX_HYDRA = monster({
+    name: "Hydre phénix", sprite: visual("units/hydra", { coloration: [1, 0.55, 0.2] }), hearts: 22, draw: 4, size: 2,
+    cards: [
+        AIM, SPELL, FIRE, SHOT,
+        PATH_AIM, STEP, SWEEP, SWEEP,
+        AIM, FLAMETHROWER, FLAMETHROWER, WAIT,
+        STURDY_AIM, SPELL, FIRE, SLASH,
+    ],
+    items: [PHOENIX_HEART],
 })
 
 /** The lich king of the graveyard: he hunts from beyond, scythes what comes close, and possesses a body. */
@@ -619,7 +643,7 @@ export const GHOST_SHOGUN = monster({
 /** The bosses, one guarding each floor. */
 export const BOSS_MONSTERS: readonly Monster[] = [
     GOLEM, TROLL, MEGALASER, DEVIL,
-    HYDRA, LICH_KING, DARK_LORD, FROST_GIANT, MAGMA_DRAGON, KRAKEN_CAPTAIN, GOBLIN_MECHA, GHOST_SHOGUN,
+    HYDRA, PHOENIX_HYDRA, LICH_KING, DARK_LORD, FROST_GIANT, MAGMA_DRAGON, KRAKEN_CAPTAIN, GOBLIN_MECHA, GHOST_SHOGUN,
 ]
 
 /** Every kind of monster. */

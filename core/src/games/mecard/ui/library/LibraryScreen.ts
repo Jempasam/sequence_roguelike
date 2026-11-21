@@ -6,8 +6,10 @@ import { concat, plainText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
 
+import type { PlayerCatalog } from "../../persist/PlayerCatalog"
 import { DetailBox } from "../hud/DetailBox"
 import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
+import { FRAME_THICKNESS } from "../look/wood"
 import type { UnitSprites } from "../look/UnitSprites"
 import { sections } from "./entries"
 import type { Section } from "./entries"
@@ -60,7 +62,11 @@ export class LibraryScreen {
 
         /** The pictures of the units, which the entries of characters and monsters show. */
         sprites: UnitSprites,
+
+        /** What the player found, none for a catalogue that cannot tell. */
+        public readonly catalog: PlayerCatalog|null = null,
     ){
+        this.#sprites = sprites
         this.#layer = ui.addLayer("library")
         this.#layer.content.visible = false
         this.#sections = sections({
@@ -80,6 +86,18 @@ export class LibraryScreen {
         }
         this.#count = new Label(theme, "", { color: DIM_TEXT })
         this.#listSlot = new Box("column", { align: "stretch" })
+        catalog?.changed.add(() => { if(this.visible && this.#playerOnly) this.#refreshList() })
+    }
+
+
+    /** Does the catalogue list only what the player found? */
+    public get playerOnly(): boolean { return this.#playerOnly }
+
+    public set playerOnly(only: boolean){
+        const wanted = only && this.catalog !== null
+        if(wanted === this.#playerOnly) return
+        this.#playerOnly = wanted
+        if(this.visible) this.#build()
     }
 
 
@@ -98,7 +116,11 @@ export class LibraryScreen {
     public set selected(index: number){
         if(index < 0 || index >= this.#sections.length || index === this.#selected) return
         this.#selected = index
-        this.#build()
+        // The tabs are the same: only which one is chosen and the entries change.
+        if(this.#tabButtons.length === 0) return
+        this.#styleTabs()
+        if(this.#listScroll) this.#listScroll.offset = 0
+        this.#refreshList()
     }
 
     /** The titles of the tabs. */
@@ -143,6 +165,12 @@ export class LibraryScreen {
     /** How many entries the list shows, beside the search field. */
     readonly #count: Label
     readonly #listSlot: Box
+    readonly #sprites: UnitSprites
+    /** The buttons of the tabs, in the order of the sections, empty until the tabs are built. */
+    #tabButtons: Button[] = []
+    /** The scroll of the entries, kept so a new list does not lose how far it was scrolled. */
+    #listScroll: Scroll|null = null
+    #playerOnly = false
     #query = ""
     #selected = 0
     #size = ""
@@ -164,6 +192,8 @@ export class LibraryScreen {
         const leave = new Button(this.theme, "Retour")
         leave.onActivate = () => this.host.leave()
         const head = new Box("row", { gap: MARGIN, align: "center" })
+        const wood = this.#sprites.wood
+        const pad = wood ? FRAME_THICKNESS + 1 : this.theme.panel.padding
         this.#search.fixedSize = { width: SEARCH_WIDTH, height: this.#search.measure(Infinity).preferredHeight }
         // The title and the button sit in sides of the same width, so the field is in the middle.
         const side = Math.max(title.measure(Infinity).preferredWidth, leave.measure(Infinity).preferredWidth)
@@ -181,43 +211,65 @@ export class LibraryScreen {
         head.add(this.#count)
         head.add(new Box("row"), { grow: 1 })
         head.add(right)
-        column.add(head)
-        column.add(this.#tabs())
+        // The header sits in the wood of the frames of the journey and the battle.
+        // It holds the buttons too: the row of tabs sits under the title and the search.
+        const top = new Box("column", { gap: MARGIN, align: "stretch" })
+        top.add(head)
+        top.add(this.#tabs())
+        const header = new Panel(this.theme, wood ? { background: wood.frame, padding: pad } : {})
+        header.content = top
+        column.add(header)
         this.#refreshList()
         column.add(this.#listSlot, { grow: 1 })
         const detail = this.#detail
         detail.hint = "Survole un élément pour le lire."
-        detail.fixedSize = { width: this.ui.width - 2 * MARGIN, height: DETAIL_HEIGHT }
-        column.add(detail)
+        // As the boxes of details of the journey and the battle, it sits in wood, which keeps the height whole.
+        detail.fixedSize = { width: this.ui.width - 2 * MARGIN - 2 * pad, height: DETAIL_HEIGHT - 2 * pad }
+        const frame = new Panel(this.theme, wood ? { background: wood.frame, padding: pad } : {})
+        frame.content = detail
+        column.add(frame)
         content.add(column, { x: "stretch", y: "stretch" })
     }
 
     /** The row of tabs, in a scroll that carries it sideways when it is too long. */
     #tabs(): Scroll {
-        const button = this.theme.button
-        const pressed = button.pressed
-        const chosenLooks = { ...button, normal: pressed, hovered: pressed, focused: pressed }
         // A wrapping box, so the tabs sit in the middle when they fit, and scroll when they do not.
         const row = new WrapBox({ gap: 2 })
+        this.#tabButtons = []
         this.#sections.forEach((section, index) => {
             if(index > 0 && section.group !== this.#sections[index - 1].group){
                 // A thin bar as high as a tab marks where a category ends.
                 row.add(new Bar(2, BAR_HEIGHT))
             }
-            const tab = new Button(this.theme, section.title, index === this.#selected ? { looks: chosenLooks } : {})
+            const tab = new Button(this.theme, section.title)
             tab.onActivate = () => { this.selected = index }
+            this.#tabButtons.push(tab)
             row.add(tab)
         })
+        this.#styleTabs()
         const height = row.measure(Infinity).preferredHeight + this.theme.scrollbar.width
-        const scroll = new Scroll(this.theme, { axis: "horizontal", width: this.ui.width, height, wheel: true })
+        // As wide as what the wood of the header leaves.
+        const pad = this.#sprites.wood ? FRAME_THICKNESS + 1 : this.theme.panel.padding
+        const width = this.ui.width - 2 * MARGIN - 2 * pad
+        const scroll = new Scroll(this.theme, { axis: "horizontal", width, height, wheel: true })
         scroll.content = row
         return scroll
     }
 
-    /** Put the list of the entries that match the search in its slot, in place of the old one. */
+    /** Show the chosen tab as pressed, the others as normal buttons. */
+    #styleTabs(): void {
+        const button = this.theme.button
+        const pressed = button.pressed
+        const chosenLooks = { ...button, normal: pressed, hovered: pressed, focused: pressed }
+        this.#tabButtons.forEach((tab, index) => {
+            tab.looks = index === this.#selected ? chosenLooks : button
+        })
+    }
+
+    /** Put the entries that match the search in the scroll of the list, in place of the old ones. */
     #refreshList(): void {
-        for(const child of [...this.#listSlot.children]) this.#listSlot.remove(child)
-        this.#listSlot.add(this.#list(), { grow: 1 })
+        const scroll = this.#list()
+        if(scroll.parent !== this.#listSlot) this.#listSlot.add(scroll, { grow: 1 })
     }
 
     /** The entries of the tab chosen that match the search, in lines, in a scroll. */
@@ -226,16 +278,24 @@ export class LibraryScreen {
         this.#told.clear()
         // The cards of the old list are gone, and their pointer leaving will never be heard.
         this.#card = null
-        const entries = this.#sections[this.#selected].entries()
-            .filter(entry => this.#query === "" || simplified(plainText(entry.search ?? entry.text)).includes(this.#query))
-        this.#count.text = `${entries.length}`
+        const section = this.#sections[this.#selected]
+        const all = section.entries()
+        // The player's catalogue hides what the player did not find, and tells how much of the whole is shown.
+        const seen = this.#playerOnly && this.catalog
+            ? all.filter(entry => this.catalog!.has(section.category, entry.key))
+            : all
+        const entries = seen.filter(entry => {
+            return this.#query === "" || simplified(plainText(entry.search ?? entry.text)).includes(this.#query)
+        })
+        this.#count.text = this.#playerOnly ? `${entries.length}/${all.length}` : `${entries.length}`
         for(const entry of entries){
             const holder = new Panel(this.theme, { background: null, padding: 0, interactive: false })
             holder.content = entry.view
             this.#told.set(holder, entry.text)
             wrap.add(holder)
         }
-        const scroll = new Scroll(this.theme, { width: this.ui.width, height: 1 })
+        const scroll = this.#listScroll ??= new Scroll(this.theme, { width: this.ui.width, height: 1 })
+        scroll.resize(this.ui.width, 1)
         scroll.content = wrap
         return scroll
     }

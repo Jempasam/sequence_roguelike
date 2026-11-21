@@ -1,7 +1,7 @@
 import type { Fault } from "../../../../engine/net/Fault"
 import type { Observable } from "../../sim/base/Observable"
 
-import type { Setting, SettingValues } from "./Setting"
+import type { Setting, SettingValues } from "../../sim/mode/Setting"
 import type { GuestStage, HostStage } from "./Stage"
 
 /** How a client takes part in a game: it plays, or it only watches, as one that came late does. */

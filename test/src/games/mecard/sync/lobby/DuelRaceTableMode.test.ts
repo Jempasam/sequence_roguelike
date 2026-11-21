@@ -75,16 +75,16 @@ function race(make: (screen: Screen) => ReturnType<typeof duelRaceTable>, client
     const screens = Array.from({ length: clients + 1 }, () => new Screen(timer))
     const room = new LocalRoom()
     const channel = new LocalSync()
-    const lobby = new Lobby(room, channel, "Hôte", [gameModeAsLobbyMode(make(screens[0]), screens[0])])
+    const lobby = new Lobby(room, channel, "Hôte", [gameModeAsLobbyMode(make(screens[0]), screens[0], screens[0].timer)])
     const guests = Array.from({ length: clients }, (_, index) => new LobbyGuest(
         room.join(`c${index}`), channel, `Joueur ${index}`,
-        [gameModeAsLobbyMode(make(screens[index + 1]), screens[index + 1])],
+        [gameModeAsLobbyMode(make(screens[index + 1]), screens[index + 1], screens[index + 1].timer)],
     ))
     /** A client that comes to the lobby later, with a screen of its own. */
     const join = (id: string) => {
         const screen = new Screen(timer)
         const guest = new LobbyGuest(
-            room.join(id), channel, id, [gameModeAsLobbyMode(make(screen), screen)],
+            room.join(id), channel, id, [gameModeAsLobbyMode(make(screen), screen, screen.timer)],
         )
         return { screen, guest }
     }

@@ -45,7 +45,7 @@ export class MonsterShamanHalt extends MonsterCardHalt {
 export const MONSTER_SHAMAN_HALT: HaltType = {
     id: "monsterShaman",
     name: "Shaman des monstres",
-    description: ["Fait d'un monstre une ", BEAST.name, " pour une ", UNIT, ", avec une fureur si elle n'en a aucun usage."],
+    description: ["Fait d'un monstre une ", BEAST, " pour une ", UNIT, ", avec une fureur si elle n'en a aucun usage."],
     icon: visual("units/shaman", { letter: "SM!" }),
     glow: DARK_COLOR,
     transition: visual("cave-exit"),

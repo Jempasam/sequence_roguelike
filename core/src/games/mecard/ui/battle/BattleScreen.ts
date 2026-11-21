@@ -191,8 +191,13 @@ export class BattleScreen implements HudHost {
         return this.#locks.round !== "waiting" && !this.#ready && !this.#launched
     }
 
-    /** May the round being shown be skipped? */
+    /** May the round being shown be skipped? Showing it back is local: whoever watches may, whoever plays or not. */
     public get skippable(): boolean {
+        return this.#drives || this.mode === "playing"
+    }
+
+    /** Does this screen drive the battle itself, rather than show one another drives? */
+    get #drives(): boolean {
         return this.#locks.round === "launch" || this.#locks.round === "gather"
     }
 
@@ -484,7 +489,7 @@ export class BattleScreen implements HudHost {
     #fill(take = this.scene.capture(this.#engine), phase: Phase = this.#engine.phase): void {
         take()
         if(phase === "over") this.#finish()
-        else if(phase === "draw" && this.skippable) this.#nextRound()
+        else if(phase === "draw" && this.#drives) this.#nextRound()
         else this.#startPlanning()
     }
 

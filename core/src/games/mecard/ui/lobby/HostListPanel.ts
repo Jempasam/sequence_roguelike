@@ -36,6 +36,7 @@ export class HostListPanel {
         this.#scroll = new Scroll(theme, { width, height: 1, wheel: true })
         this.#column = new Box("column", { gap: MARGIN, padding: MARGIN, align: "stretch" })
         this.#scroll.content = this.#column
+        this.#empty = new Label(theme, EMPTY, { color: DIM_INK_TEXT })
     }
 
 
@@ -44,33 +45,63 @@ export class HostListPanel {
         this.#scroll.resize(width, Math.max(1, height))
     }
 
-    /** Build the list again, from the rooms the controller knows. */
+    /**
+     * Bring the list to the rooms the controller knows: the line of a room that is still there stays as it is,
+     * so the focus and the scroll stay too; only the rooms that left are taken out and the new ones added.
+     */
     public refresh(): void {
         const { controller, theme } = this
-        for(const child of [...this.#column.children]) this.#column.remove(child)
-        this.#rows = []
-        this.#buttons = []
         const hosts = controller.hosts
-        if(hosts.length === 0){
-            this.#column.add(new Label(theme, EMPTY, { color: DIM_INK_TEXT }))
-            return
+        const codes = new Set(hosts.map(host => host.code))
+        // The lines stay in the order of the rooms only when the rooms that stay keep their order and the new ones
+        // come last, which is how rooms appear. Anything else makes the list again.
+        const kept = [...this.#lines.keys()].filter(code => codes.has(code))
+        const wanted = hosts.map(host => host.code).filter(code => this.#lines.has(code))
+        if(kept.some((code, index) => code !== wanted[index])) this.#clear()
+
+        for(const [code, line] of [...this.#lines]){
+            if(codes.has(code)) continue
+            this.#column.remove(line.row)
+            this.#lines.delete(code)
         }
+        if(hosts.length === 0){
+            if(!this.#empty.parent) this.#column.add(this.#empty)
+        }
+        else if(this.#empty.parent) this.#column.remove(this.#empty)
+
         for(const host of hosts){
             const text = `${host.name} - ${host.code}`
+            const known = this.#lines.get(host.code)
+            if(known){
+                known.label.text = text
+                known.join.onActivate = () => controller.join(host.code, this.nameOf())
+                continue
+            }
             const row = new Box("row", { gap: MARGIN, align: "center" })
-            row.add(new Label(theme, text, { color: INK_TEXT }), { grow: 1 })
+            const label = new Label(theme, text, { color: INK_TEXT })
+            row.add(label, { grow: 1 })
             const join = new Button(theme, "Rejoindre", beigeButton(theme))
             join.onActivate = () => controller.join(host.code, this.nameOf())
             row.add(join)
             this.#column.add(row)
-            this.#rows.push(text)
-            this.#buttons.push(join)
+            this.#lines.set(host.code, { row, label, join })
         }
+        this.#rows = hosts.map(host => `${host.name} - ${host.code}`)
+        this.#buttons = hosts.map(host => this.#lines.get(host.code)!.join)
     }
 
 
     readonly #scroll: Scroll
     readonly #column: Box
+    readonly #empty: Label
+    /** The line of each room shown, by its code. */
+    readonly #lines = new Map<string, { readonly row: Box, readonly label: Label, readonly join: Button }>()
     #rows: string[] = []
     #buttons: Button[] = []
+
+    /** Take every line out. */
+    #clear(): void {
+        for(const line of this.#lines.values()) this.#column.remove(line.row)
+        this.#lines.clear()
+    }
 }

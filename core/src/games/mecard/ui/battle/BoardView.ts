@@ -368,7 +368,7 @@ export class BoardView {
             }
             const sprite = this.sprites.of(unit.sprite)
             if(!sprite){
-                const [r, g, b] = unit.sprite?.color ?? [1, 1, 1]
+                const [r, g, b] = unit.sprite.color
                 this.#drawShade(painter, shown, unit.hitbox)
                 painter.setBlend("alpha")
                 painter.setTint(this.#faded.set(r, g, b, 1))

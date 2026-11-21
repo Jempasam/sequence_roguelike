@@ -1,6 +1,6 @@
 import { Fault } from "../../../../engine/net/Fault"
 import type { Chat } from "../../sync/chat/Chat"
-import { QUIT_ROOM_TOPIC } from "../../sync/SyncChannel"
+import { QUIT_ROOM_TOPIC, ROOM_CLOSED_TOPIC } from "../../sync/SyncChannel"
 import { signal } from "../../sync/faults"
 import type { HostBoard, HostEntry } from "../../sync/hosts/HostDirectory"
 import { Lobby } from "../../sync/lobby/Lobby"
@@ -8,7 +8,7 @@ import { LobbyGuest } from "../../sync/lobby/LobbyGuest"
 import type { LobbyMode } from "../../sync/lobby/LobbyMode"
 import type { ModeSelection } from "../../sync/lobby/ModeSelection"
 import { ParticipantChoices } from "../../sync/lobby/ParticipantChoices"
-import type { Setting, SettingValue, SettingValues } from "../../sync/lobby/Setting"
+import type { Setting, SettingValue, SettingValues } from "../../sim/mode/Setting"
 import type { ModeSelectionView } from "../../sync/lobby/ModeSelectionView"
 import type { RosterEntry } from "../../sync/lobby/RosterMessage"
 import type { JoinedRoom, OpenedRoom } from "../MecardGame"
@@ -36,6 +36,17 @@ export class NoClientsFault extends Fault {
 
     public describe(): string {
         return "Cette plateforme ne distingue pas les clients : pas de lobby."
+    }
+}
+
+/** What the lobby says to a client when the host closed the room. */
+export class HostLeftFault extends Fault {
+
+
+    public readonly who = null
+
+    public describe(): string {
+        return "L'hôte a fermé la salle."
     }
 }
 
@@ -218,6 +229,8 @@ export class LobbyController {
         ].map(observable => observable.add(() => this.changed.notify())))
         this.#handles.push(ended, guest.faulted.add(fault => this.#fault(fault)))
         this.#handles.push(guest.roster.refused.add(fault => this.#lost(fault)))
+        // The host closing the room says so: nothing is waited for, as for a connection that came back.
+        this.#handles.push(ROOM_CLOSED_TOPIC.link(link).listen(() => this.#lost(new HostLeftFault())))
         const session = this.#begin()
         void joined.ready.then(opened => this.#opened(session, opened))
     }

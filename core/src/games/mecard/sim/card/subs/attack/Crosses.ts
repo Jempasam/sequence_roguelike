@@ -1,4 +1,4 @@
-import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FEBRILE, FORCE, UNIT } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
@@ -54,26 +54,20 @@ const FISHING_BAR = 2
 const FISHING_WIDTH = 0.5
 const FISHING_AHEAD = 1.5 - UNIT_RADIUS
 
-/** How much gold a kill of the fishing gives, and the share of its hearts under which a unit is hurt harder. */
+/** How much gold a kill of the fishing gives. */
 const FISHING_GOLD = 10
-const FISHING_LOW = 0.5
 
 function fishingCenter(pose: Pose, unit: Unit) {
     return unit.muzzle(pose).plus(pose.direction.times(FISHING_AHEAD * unit.stats.meleeRange.value))
 }
 
-/** Is a unit under the share of its hearts at which the fishing hurts twice as much? */
-function weakened(target: Unit): boolean {
-    return target.life < target.hearts.maxHearts * FISHING_LOW
-}
-
 /**
- * A blow in a cross ahead: harder on whoever is low. Kills pull its unit to the center of the cross, give
+ * A blow in a cross ahead: twice as hard on the feverish. Kills pull its unit to the center of the cross, give
  * gold, and bring another one in the hand.
  */
 export const FISHING: ActionCard = new ActionCard("Pêche", [
     "Frappe en croix à ", frenchNumber(FISHING_AHEAD), "×", ALLONGE, " ", DISTANCE, " devant : ", 1, "+", FORCE, " ",
-    DamageType.PHYSICAL, ", le double sous la moitié des cœurs. Si une ", UNIT, " meurt : se téléporte au centre, gagne ",
+    DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : se téléporte au centre, gagne ",
     FISHING_GOLD,
     " or par mort, et reprend une Pêche en main.",
 ], Rarity.EPIC, {
@@ -83,7 +77,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         )
         const amount = 1 + unit.stats.strength.value
         const hit = battle.strikeMany(
-            unit, areas, amount, DamageType.PHYSICAL, target => weakened(target) ? 2 : 1,
+            unit, areas, amount, DamageType.PHYSICAL, target => target.feverish ? 2 : 1,
         )
         const killed = hit.filter(target => !target.alive).length
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
@@ -98,7 +92,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         )
         const amount = 1 + unit.stats.strength.value
         const touched = [...new Set(areas.flatMap(area => battle.fetch(area, unit)))]
-        const dies = touched.some(target => target.life <= amount * (weakened(target) ? 2 : 1))
+        const dies = touched.some(target => target.life <= amount * (target.feverish ? 2 : 1))
         const extra: Indicator[] = []
         if(dies) extra.push(Previews.label(fishingCenter(pose, unit), "téléportation", NOTE_COLOR))
         return Previews.still(pose, ...Previews.strike(areas, touched), ...extra)

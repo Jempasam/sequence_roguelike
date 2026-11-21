@@ -1,7 +1,9 @@
 import type { SaveFormat } from "../../../../engine/save"
 import type { Run } from "../run/Run"
 
-import { savedHero } from "./runSave"
+import type { Ghost } from "../fight/FightType"
+
+import { loadedHeroes, savedHero } from "./runSave"
 import type { SavedHero } from "./runSave"
 
 /** The version of the shape of a game of the history, raised whenever it changes. */
@@ -43,6 +45,11 @@ export function historyEntry(run: Run, seed: number, date: number): HistoryEntry
         depth: run.travel.depth, floor: run.travel.floor.type.name, gold: run.gold,
         heroes: run.heroes.map(savedHero),
     }
+}
+
+/** The game of an entry as a ghost the fights may bring back: its party as it fell, made anew for each fight. */
+export function ghostOfEntry(entry: HistoryEntry): Ghost {
+    return { depth: entry.depth, party: () => loadedHeroes(entry.heroes) }
 }
 
 /** How the history is written to the player's storage. */

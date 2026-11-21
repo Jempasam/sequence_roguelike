@@ -3,7 +3,8 @@ import type { Rng } from "../base/Rng"
 import type { Floor, FloorContext } from "../floor/Floor"
 import type { HaltType } from "../halt/HaltType"
 
-import type { FightType } from "../fight/FightType"
+import { NO_FIGHT_CONTEXT } from "../fight/FightType"
+import type { FightContext, FightType } from "../fight/FightType"
 
 /** What the players are told of a sort of place: its name, and what it does. */
 export interface PlaceInfo {
@@ -54,6 +55,9 @@ export class Journey implements FloorContext {
 
     /** The floors its exits lead to, from left to right. */
     public exits: readonly Floor[] = []
+
+    /** What the run is like, for the floor drawing its fights: nothing special by default. */
+    public fights: FightContext = NO_FIGHT_CONTEXT
 
     constructor(
         public readonly rng: Rng,

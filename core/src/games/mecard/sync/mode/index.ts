@@ -1,6 +1,4 @@
 export * from "./Audience"
-export * from "./EventRoom"
-export * from "./GameMode"
 export * from "./GameModeGuest"
 export * from "./GameModeHost"
 export * from "./gameModeAsLobbyMode"

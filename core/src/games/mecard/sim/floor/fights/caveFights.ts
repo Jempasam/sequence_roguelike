@@ -1,4 +1,4 @@
-import { ARCHER, BRUTE, GOBLIN, GOLEM, SLIME } from "../../catalog/monsters"
+import { ARCHER, BRUTE, GOBLIN, GOBLIN_HEALER, GOLEM, SLIME } from "../../catalog/monsters"
 import { HOLE, PUDDLE_ZONE, ROCK_BLOCK } from "../../catalog/hazards"
 import { AGGRESSION, BATTLE, BOSS, ELITE } from "../../fight/fights"
 import { BRAWLER_KIT, ARCHER_KIT } from "../../catalog/kits"
@@ -11,6 +11,35 @@ export const CAVE_FIGHTS = [
         hazards: [lay(ROCK_BLOCK, 2, 3), lay(ROCK_BLOCK, 4, 3)],
         description: "Un cogneur et un archer te barrent la route.",
         kits: [BRAWLER_KIT, ARCHER_KIT],
+    }),
+    designed({
+        category: BATTLE, layers: [0, 4], name: "Infirmerie gobeline",
+        hazards: [
+            lay(ROCK_BLOCK, 1, 3),
+            lay(ROCK_BLOCK, 5, 3),
+        ],
+        description: "Un gobelin soigneur qui panse les siens, deux gobelins devant, un archer.",
+        populate: stage => {
+            put(stage, GOBLIN_HEALER, 3, 0)
+            put(stage, GOBLIN, 2, 1)
+            put(stage, GOBLIN, 4, 1)
+            put(stage, ARCHER, 1, 0)
+        },
+    }),
+    designed({
+        category: ELITE, layers: [3, 6], name: "Hôpital de campagne",
+        hazards: [
+            lay(ROCK_BLOCK, 3, 3),
+            lay(PUDDLE_ZONE, 1, 3),
+        ],
+        description: "Deux soigneurs gobelins qui remettent debout deux brutes.",
+        populate: stage => {
+            put(stage, BRUTE, 2, 1)
+            put(stage, BRUTE, 4, 1)
+            put(stage, GOBLIN_HEALER, 2, 0)
+            put(stage, GOBLIN_HEALER, 4, 0)
+            put(stage, ARCHER, 3, 0)
+        },
     }),
     designed({
         category: BATTLE, layers: [0, 4], name: "Patrouille de gobelins",

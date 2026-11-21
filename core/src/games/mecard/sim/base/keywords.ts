@@ -53,5 +53,5 @@ export const PORTEE = new Keyword("portée")
 /** What the length of the blows at hand of a unit is multiplied by. */
 export const ALLONGE = new Keyword("allonge")
 
-/** A unit with more of its hearts empty than full. */
+/** A unit with half of its hearts empty, or more. */
 export const FEBRILE = new Keyword("fébrile")

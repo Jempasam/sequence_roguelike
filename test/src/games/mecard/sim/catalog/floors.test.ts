@@ -33,6 +33,7 @@ function monstersOf(place: Place, floor: Floor): Monster[] {
         rng: new Rng(1), level: floor.level, layer: place.layer,
         add: monster => { monsters.push(monster) },
         addKit: () => {},
+        addHero: () => {},
     })
     return monsters
 }

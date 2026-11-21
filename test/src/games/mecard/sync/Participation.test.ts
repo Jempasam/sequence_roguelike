@@ -1,10 +1,10 @@
 import { ManualScheduler } from "@game/core"
 import type { Fault } from "@game/core"
 import {
-    Admissions, JOIN_RETRY_MS, JOIN_TRIES, LocalRoom, NotAdmittedFault, Participation, ParticipationReceiver,
+    Placements, JOIN_RETRY_MS, JOIN_TRIES, LocalRoom, NotAdmittedFault, Participation, ParticipationReceiver,
     PARTICIPATE_TOPIC,
 } from "@game/core/mecard/sync"
-import type { Admission, Arrival, ParticipationMessage, ParticipationPolicy } from "@game/core/mecard/sync"
+import type { Placement, Arrival, ParticipationMessage, ParticipationPolicy } from "@game/core/mecard/sync"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---
@@ -16,9 +16,9 @@ class Recorded implements ParticipationPolicy {
 
 
     public readonly events: string[] = []
-    public next: (who: Arrival) => Admission = who => Admissions.seat(`seat-${who.id}`)
+    public next: (who: Arrival) => Placement = who => Placements.seat(`seat-${who.id}`)
 
-    public admit(who: Arrival): Admission {
+    public admit(who: Arrival): Placement {
         this.events.push(`admit ${who.id}`)
         return this.next(who)
     }
@@ -69,7 +69,7 @@ describe("Participation", () => {
 
     test("the mode gives a spectator → told it only watches", () => {
         const { room, policy, timer } = hosted()
-        policy.next = () => Admissions.spectate()
+        policy.next = () => Placements.spectate()
         const { heard } = playing(room, timer, "a")
         expect(heard).toEqual([{ game: GAME, role: "spectator", seat: null }])
     })
@@ -77,7 +77,7 @@ describe("Participation", () => {
     test("the mode refuses → the fault is told, and the client watches", () => {
         const { room, policy, timer, faults } = hosted()
         const refusal = new NotAdmittedFault()
-        policy.next = () => Admissions.refuse(refusal)
+        policy.next = () => Placements.refuse(refusal)
         const { heard } = playing(room, timer, "a")
         expect(faults).toEqual([refusal])
         expect(heard).toEqual([{ game: GAME, role: "spectator", seat: null }])
@@ -137,7 +137,7 @@ describe("Participation", () => {
         receiver.quit()
         expect(policy.events).toEqual(["admit a", "quit a"])
         expect(participation.stateOf("a")).toBeNull()
-        policy.next = () => Admissions.seat("taken-over")
+        policy.next = () => Placements.seat("taken-over")
         const again = new ParticipationReceiver(room.join("a"), GAME, timer)
         again.join()
         expect(again.state).toEqual({ game: GAME, role: "player", seat: "taken-over" })

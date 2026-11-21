@@ -4,5 +4,6 @@
  * progress for the menu to go on with, and a {@link RunHistorian} writes each game that ended in the history.
  */
 
+export * from "./PlayerCatalog"
 export * from "./RunHistorian"
 export * from "./RunSaver"

@@ -105,8 +105,14 @@ export interface MecardContext extends CommandContext {
     /** Open the bench of the forearm of the halts, where it points at the pointer for a try. */
     showArm(): void
 
-    /** Open the catalogue of the cards, hearts, monsters and the rest of the game. */
-    showLibrary(): void
+    /**
+     * Open the catalogue of the cards, hearts, monsters and the rest of the game: all of it, or only what the
+     * player found.
+     */
+    showLibrary(playerOnly: boolean): void
+
+    /** Forget all that the player found. @returns How many entries were forgotten. */
+    clearCatalog(): number
 
     /** Open the bench of the parallaxes, on the one a visual names, for a try. */
     showParallax(parallax: Visual): void
@@ -180,7 +186,8 @@ export class LiveContext implements MecardContext {
     public visit(type: HaltType): void { this.host().visit(type) }
     public showPnj(): void { this.host().showPnj() }
     public showArm(): void { this.host().showArm() }
-    public showLibrary(): void { this.host().showLibrary() }
+    public showLibrary(playerOnly: boolean): void { this.host().showLibrary(playerOnly) }
+    public clearCatalog(): number { return this.host().clearCatalog() }
     public showParallax(parallax: Visual): void { this.host().showParallax(parallax) }
     public showSprites(sprite: Visual|null): void { this.host().showSprites(sprite) }
     public playTransition(transition: Visual, duration: number, reverse: boolean): void {
@@ -1337,8 +1344,16 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
         bras: command("bras : ouvre le banc d'essai du bras des haltes, qui pointe vers la souris.", [], ctx => {
             ctx.showArm()
         }),
-        catalogue: command("catalogue : ouvre le catalogue des cartes, cœurs, monstres et autres.", [], ctx => {
-            ctx.showLibrary()
+        catalogue: group("catalogue", "le catalogue des cartes, cœurs, monstres et autres.", {
+            show: command("catalogue show : ouvre le catalogue de ce que le joueur a découvert.", [], ctx => {
+                ctx.showLibrary(true)
+            }),
+            all: command("catalogue all : ouvre le catalogue complet du jeu.", [], ctx => {
+                ctx.showLibrary(false)
+            }),
+            clear: command("catalogue clear : efface tout ce que le joueur a découvert.", [], ctx => {
+                ctx.print(`${ctx.clearCatalog()} entrées oubliées.`)
+            }),
         }),
         debug: group("debug", "les bancs d'essai des visuels.", {
             parallax: command(

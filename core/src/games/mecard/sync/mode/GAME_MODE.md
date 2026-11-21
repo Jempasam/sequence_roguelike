@@ -1,110 +1,43 @@
-# GameMode : décrire un mode multi sans code réseau
+# Protocole d'un mode de jeu sur un réseau
 
-Un mode de jeu multijoueur s'écrit en implémentant `GameMode` ([GameMode.ts](GameMode.ts)) : aucune ligne de réseau. Un *runner*
-([GameModeHost.ts](GameModeHost.ts), [GameModeGuest.ts](GameModeGuest.ts)) assemble derrière cette API les briques qui existaient
-déjà (`GameSession`, `Participation`, `Run/BattleBroadcaster`, `Run/BattleReceiver`…), qui gardent leurs tests.
-`gameModeAsLobbyMode(def, bench)` ([gameModeAsLobbyMode.ts](gameModeAsLobbyMode.ts)) le branche sur le lobby, inchangé.
-
-## Principes
-
-1. **Une instance = un `Run`** (travel et battles compris) **ou un `Battle` seul**. Elle a **un propriétaire** qui fait autorité :
-   un participant, ou le gestionnaire. Les autres reçoivent une réplique (`spectate`) et, avec le contrôle (`control`), envoient
-   des intentions que le propriétaire résout (`onRunIntent`, `onBattleIntent`).
-2. **Le gestionnaire est maître de tout** : il ouvre, ferme, fait suivre, donne et retire le contrôle. Un client ne se retire
-   jamais seul : il le demande avec `tellManager`, et le mode décide.
-3. **Gestionnaire et joueur ne se connaissent pas.** Un même client est les deux, sans que le code du mode le sache : il y a
-   **un objet `GameMode` par rôle** (`GameModeDef.create`, appelé pour chacun). Le runner court-circuite en interne
-   (même engine, pas de deuxième copie : `LocalSeat`).
-4. **Événements ≠ états.** `order` est un événement sans mémoire. `publish` est un état nommé dont le runner garde la dernière
-   valeur, rejouée à qui arrive ou revient ; `publish(key, supplier)` est évalué à chaque envoi (une durée restante).
+L'API d'un mode ne connaît pas le réseau : voir [MODE.md](../../sim/mode/MODE.md). Ce dossier est l'implémentation réseau : un *gestionnaire* (`GameModeHost`) sur le client principal, un *invité* (`GameModeGuest`) sur chaque client, et le même invité sur le client principal, qui court-circuite le réseau par des appels directs (`LocalSeat`).
 
 ## Les pièces
 
 | Pièce | Rôle |
 |---|---|
-| `Audience` | `SyncSender` vers les participants qui suivent *une* instance : `add` rejoue les premiers messages (`onPeer`) à celui-là seul |
-| `GameModeHost` | gestionnaire sur `HostStage` : session, instances, états publiés, ordres, minuteries ; implémente `GameModeContext` |
-| `HostInstance` | une par `openRun/openBattle` : moteur du gestionnaire (le sien, ou réplique après `watch`), propriétaire, suiveurs, contrôleurs |
-| `GameModeGuest` | joueur : instances reçues (`GuestInstance`), états reçus, `Me` ; même code partout |
-| `Seat` | ce que le joueur demande à « l'autre côté » : `RemoteSeat` (topics du lien) ou `LocalSeat` (appels directs) |
+| [GameModeHost](GameModeHost.ts) | fournit le `GameModeContext` au gestionnaire du mode, suit qui a rejoint ou quitté, tient les instances et l'état publié |
+| [GameModeGuest](GameModeGuest.ts) | fabrique l'`owner` du mode, y fait arriver ce que dit le gestionnaire, et rend au gestionnaire ce qu'il dit |
+| [Seat](Seat.ts) | ce qu'un client demande au gestionnaire (`act`, `ask`, `reply`, `up`) : `RemoteSeat` par le lien, `LocalSeat` par des appels |
+| [kinds](kinds.ts) | ce que le runner sait d'une instance qui est un run ou un combat : l'ouvrir, la montrer, la diffuser |
+| [messages](messages.ts) | les sujets et le codec JSON (les `GameModeShareable` y passent par `encodeShareable` / `decodeShareable`) |
+| [Audience](Audience.ts) | ceux qui suivent une instance |
+| [gameModeAsLobbyMode](gameModeAsLobbyMode.ts) | met un `GameMode` dans un lobby : le gestionnaire sur le client principal, l'invité partout |
+| [stateBridge](stateBridge.ts) | `StatePublisher` : une brique qui dit à ses spectateurs (`SyncSender`) publie ses messages comme états du jeu |
 
-## Protocole (un topic = un type d'événement)
+## Sujets (topics)
 
-| Topic | Sens | Contenu | Rejoué |
-|---|---|---|---|
-| `participate` / `participation` | existant | rejoindre/quitter ; rôle et siège | oui |
-| `open-run`, `open-battle` | gestionnaire → p | `{id, spec, own, info}` ; rappelé avec une autre `info` | oui, pour chaque instance suivie ou possédée |
-| `close` | gestionnaire → p | `{id}` | non |
-| `follow` / `unfollow` | gestionnaire → propriétaire client | `{id}` : diffuser / arrêter | oui |
-| `i<N>` | instance → audience | messages des `Broadcaster` (`run:`, `travel:`, `battle:`) | oui (`onPeer`) |
-| `u<N>` | propriétaire client → gestionnaire | idem, reçu par un `Receiver` | greeté sur `follow` |
-| `intent` | contrôleur → gestionnaire | `{id, intent}` | non |
-| `route` | gestionnaire → propriétaire client | `{id, from, name, info, intent}` | non |
-| `order` | gestionnaire → p | `{order}` | non |
-| `state` | gestionnaire → p | `{key, value}`, `value: null` = retiré | oui, dernière valeur par clé |
-| `tell` | p → gestionnaire | `{message}` | non |
+Du gestionnaire vers un client : `open-run`, `open-battle` (une instance est montrée, ou possédée), `close`, `follow`/`unfollow` (quelqu'un suit l'instance dont ce client est propriétaire), `order` (`{order}`), `state` (`{key, value}`), `route`/`route-ask` (ce qu'un contrôleur dit au propriétaire ; `id` 0 = le gestionnaire demande quelque chose au client), `answer`. D'un client vers le gestionnaire : `act`/`ask` (`id` 0 = au gestionnaire lui-même, sinon sur l'instance), `reply`, `u<id>` (le flux du propriétaire vers ceux qui suivent).
 
-### Flux
+## Ce que l'hôte tient
 
-- **`openRun(owner, spec)`** : le propriétaire est le gestionnaire → il crée par `createRun(spec)`, un `RunBroadcaster` écrit
-  sur l'`Audience`. Le propriétaire est un client → `open{own:true}` lui est envoyé, il crée de son côté et ne diffuse rien
-  tant que personne ne suit.
-- **`spectate(who)`** : `open{own:false}` à `who` (réplique = `createRun(spec)` + `RunReceiver` sur `i<N>`), puis
-  `audience.add(who)` rejoue l'état courant. Si le propriétaire est un client, le gestionnaire crée sa propre réplique,
-  reçoit `u<N>` (`follow` envoyé) et la rediffuse : `Receiver → Broadcaster`.
-- **`control(who, info)`** : `spectate` + `info` mémorisée. Une intention arrive sur `intent` ; propriétaire gestionnaire →
-  `onXxxIntent(who, info, moteur, intention)` ; propriétaire client → routée sur `route` avec `info`. Un refus rejoue la
-  réplique du contrôleur (resynchro), jamais d'exception.
-- **`close()`** : `close` à tous, `valid()` passe à `false`, `invalidated` est émis une fois.
-- **Un participant s'en va** : perdu ou parti (`gone = false`), il garde ses instances ; parti pour de bon (`gone = true`),
-  celles qu'il possède sont invalidées. Un participant qui revient reçoit ses `open`, ses flux et ses `state`.
-- **Au rejoint** : un participant est « prêt » quand la session l'a admis (son client écoute alors) : les suivis demandés avant
-  (`onJoin`) lui sont envoyés à ce moment.
+- **Un seul `onJoin` par join** : il est appelé dans l'admission (`#admit`), y compris pour ceux qui arrivent avant `run` ; `joined` est émis juste après, une fois que `run` écoute. Un membre accepté entre dans `members()` ; un refusé non.
+- **Un seul `onQuit`**, seulement si le membre a été accepté. Un membre qui part ou qui s'en va pour de bon fait la même chose côté mode.
+- **`onLost`/`onBack`** : une déconnexion. L'hôte renvoie à ce client l'état publié et ses instances quand il revient ; le mode peut ignorer les deux.
+- **Notices aux propriétaires** : pour un membre à qui le gestionnaire a donné la main (`control`/`play`) sur une instance, son propriétaire reçoit `{lost: id}`, `{back: id}` ou `{left: id}` (voir `#tellOwners`). C'est ce qui fait jouer les unités d'un absent par des bots : aucun mode ne le relaie lui-même.
+- **Accueil d'un client** (`#greet`) : d'abord les états publiés (rejoués), ensuite ses instances ; le client dédoublonne les états identiques.
+- **`ask` vers un client** : une réponse, ou un `NoAnswerFault` de cause `quit` (le client est parti), `timeout` (délai dépassé) ou `unreachable`. Une réponse tardive est jetée.
+- **Valeurs** : ce qui part est converti en JSON (`encodeShareable`) et ce qui arrive est revivifié (`decodeShareable`) ; les membres passent par leur id.
 
-## Ce qui est fait, et ce qui diffère du plan
+## Un moteur, plusieurs copies
 
-- **Modes portés** : « duel aléatoire » ([RandomDuelMode.ts](../lobby/modes/RandomDuelMode.ts)), run coop et ennemi
-  ([RunTableMode.ts](../lobby/modes/RunTableMode.ts)), course de duels et versus
-  ([DuelRaceTableMode.ts](../lobby/modes/DuelRaceTableMode.ts)). Les anciens assembleurs (`RunMode`, `DuelRaceMode`,
-  `DuelRaceHost`, `DuelRaceGuest`, `LocalLink`, `RemoteHub`, `RemotePlayer`, `Players`, `Versus*`) sont supprimés.
-  `RunHost` et `RunGuest` restent : la commande `host` de la console et `MecardViewer` s'en servent encore.
-- **Noms** : `GameMember` (le `Member` de `Gathering` existe déjà), `InstanceHandle` (`Handle` existe dans `faults`),
-  `openManagedRun` et `openManagedBattle` pour une instance dont le gestionnaire est propriétaire.
-- **Réutiliser une brique qui parle à un `SyncSender`** : [stateBridge.ts](stateBridge.ts). `StatePublisher` publie ses
-  messages comme des états (`LifeBook` et `Deadline` servent tels quels) ; `StateSource` rend les états reçus à une
-  brique qui écoute (`LivesReceiver`, `DeadlineReceiver`).
-- **Les briques qui suivent une salle** (`DuelRound`) reçoivent une `EventRoom` que le mode renseigne à la main, et
-  `DuelRound` ouvre ses batailles par un `DuelBattles` : le mode les ouvre avec `openManagedBattle`.
-- **Le joueur d'une course** reste un `DuelRacePlayer` : son `HubPort` est un [ModeHub](../modes/players/ModeHub.ts)
-  alimenté par `onOrder`, `onState` et `onShowBattle`.
-- **Le propriétaire d'une table** (run coop et ennemi) est le premier membre admis, c'est-à-dire le client du
-  gestionnaire : il joue ce que les autres ne jouent pas et lance les rondes (`order`), les autres clients disent leurs
-  plans par l'intention de leur run.
-- **Un client qui arrive en retard** n'a plus de rôle fixé par le lobby : il demande à rejoindre comme les autres et le
-  mode décide (`onJoin`). `LobbyGuest` donne donc toujours le lien.
-- Un refus d'intention est rejoué (resynchro) quand le propriétaire est le gestionnaire ; pour un propriétaire client,
-  il n'y a pas de retour.
+Une instance est faite chez son propriétaire seul (`createRun`/`createBattle` de l'`owner`), qui en est l'autorité. Ceux qui la suivent en tiennent une réplique que le jeu fabrique (`replica` de [kinds](kinds.ts) : un combat chargé depuis sa sauvegarde, une run nue depuis `spec.seed`), qu'ils reçoivent par le flux de l'instance (le propriétaire le dit au gestionnaire, qui le redistribue). Chaque client montre l'instance avec `spectateRun`/`spectateBattle`, y compris le propriétaire (l'écran est écrit une fois) ; `info` et `units` peuvent changer sous un même spectateur : l'appel est répété, et `dispose` n'est appelé qu'une fois, à la fin.
 
-- **Réglages par participant** : `GameModeDef.participantSettings` (des `ChoiceSetting`) déclare ce que chaque client règle pour
-  lui-même, dans la barre sous la zone de connexion du lobby ([ParticipantSettingsBar](../../ui/lobby/ParticipantSettingsBar.ts)).
-  Les valeurs partent avec le `join` du message `participate` (`options`), sont vérifiées par le gestionnaire (initiales si
-  invalides) et lues par le mode dans `onJoin(ctx, who)` via `who.options`. Verrouillés une fois dans la partie ; un client qui
-  arrive en retard à un mode qui en a attend son clic sur « Rejoindre la partie ». Premier usage : « Run mixte »
-  ([RunTableMode.ts](../lobby/modes/RunTableMode.ts)), réglage `camp` (allié / ennemi), sièges par `mixedSeats`.
+## Sans réentrance, rattrapage, livraison
 
-## Écrire un mode
-
-```ts
-class DuelAleatoire implements GameMode {
-    async run(ctx: GameModeContext) { /* séquençage principal */ }
-    createRun(spec: unknown) { ... }
-    createBattle(spec: unknown) { ... }
-    onShowBattle(me: Me, battle: Battle, info: unknown) { /* l'écran */ }
-}
-```
-
-Un `GameModeDef` (`id`, `title`, `description`, `settings`, `create`) déclare le mode au lobby : `description` est la phrase
-ou deux que la carte du mode y affiche.
-
-Tout sauf `run`, `createRun` et `createBattle` a un défaut vide. Specs, ordres, états, intentions : JSON opaque, lu et
-validé par le mode (jamais d'exception : une `Fault`). Pour les erreurs du réseau, voir [faults.ts](../faults.ts).
+- **Une entrée à la fois** : tout ce qui entre dans le gestionnaire (`run`, `onQuit`, `onLost`, `onBack`, `onMessage`, `onAsk`, `joined`) passe par `#enter` : ce qu'un handler fait déclencher (un join annoncé, un quit) arrive **après** son retour, dans l'ordre. `onJoin` seul est synchrone, il doit rendre l'admission.
+- **Observables à état** : `said` et `invalidated` d'une instance rejouent leur dernière valeur à qui s'abonne après coup (`Replayed`). Pas `joined` : un `until(joined)` rejoué tournerait en boucle.
+- **Livraison au retour** : ce qui est dit à un membre dont la connexion est perdue (`notify`, `broadcast`, `ask`, ce que le gestionnaire dit au propriétaire d'une instance, les réponses) est mis en file (`#missed`) et livré dans l'ordre à son retour, après les états et les instances rejoués. Un membre qui quitte n'en reçoit rien : ses `ask` rendent un `NoAnswerFault` de cause `quit`. Un `ask` à délai rend `timeout` sans attendre son retour.
+- **Combats (R9, R15)** : déjà tenus par `BattleHost` : un plan porte son tour (`round`), un plan d'un autre tour ou d'un client qu'on n'attend pas est laissé de côté, le premier arrivé gagne ; un joueur perdu est joué par des bots sans rien rendre au milieu d'un tour, et n'est attendu de nouveau qu'au tour suivant (`#openRound`).
+- **Joueur parti** : il reste dans les frises, grisé et sans nom. La sim ne passe que l'état (`gone` dans `BracketView` et dans le message des vies, `isGone` côté `LifeBook`/`LivesReceiver`) ; l'UI écrit « ??? ».
+- **Pas encore** : un identifiant de question dans chaque `ask` (aujourd'hui `Picker` ferme un prompt dépassé avec l'ordre `{unprompt}`). Une course ne se joue pas sur un seul client (`LocalGame`) : le côté client d'une course tient la run d'un seul joueur.

@@ -44,5 +44,6 @@ export const ALL_FLOORS: readonly FloorType[] = [...FLOOR_LINKS.keys()]
 
 /** The floors the exits of a floor lead to, a level harder. */
 export function exitsOf(floor: Floor): Floor[] {
-    return (FLOOR_LINKS.get(floor.type) ?? []).map(type => type.create(floor.level + 1))
+    const leads = floor.type.leadsTo?.() ?? FLOOR_LINKS.get(floor.type) ?? []
+    return leads.map(type => type.create(floor.level + 1))
 }

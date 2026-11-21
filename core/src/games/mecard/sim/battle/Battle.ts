@@ -1,3 +1,4 @@
+import { joinText } from "../../../../semantic"
 import { Observable } from "../base/Observable"
 import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
@@ -178,6 +179,12 @@ export class Battle {
 
     /** One of the steps of a unit was played, whichever it is: the end of a turn. */
     public readonly unitStepped: Observable<Unit>
+
+    /**
+     * The enemies killed to join the team of whoever killed them for good: the battle knows no party, the game
+     * tames them once the battle is won.
+     */
+    public readonly captured: Unit[] = []
 
     /** A unit won gold: the battle knows no purse, the game adds it to the one of the run. */
     public readonly onGetGold: Observable<GoldEvent>
@@ -775,6 +782,24 @@ export class Battle {
         return this.phase === "execution"
     }
 
+    /**
+     * Make a unit play its next step now, out of its turn: what it has left is one step shorter.
+     *
+     * @returns Did it have a step to play?
+     */
+    public playNow(unit: Unit): boolean {
+        if(this.phase !== "execution" || !unit.alive) return false
+        const action = unit.playTurn()
+        if(!action) return false
+        try {
+            action.use({ battle: this, unit })
+        } catch(error){
+            this.report(error)
+        }
+        this.#finish(unit)
+        return true
+    }
+
     /** Play the round out at once, step after step: what the screen then plays back. */
     public playRound(): void {
         for(let step = 0; step < MAX_ROUND_STEPS && this.playStep(); step++){ /* Plays every step. */ }
@@ -1115,14 +1140,14 @@ export class Battle {
     public giveCards(unit: Unit, cards: readonly Card[]): void {
         if(cards.length === 0) return
         this.onGetCards.notify({ unit, cards })
-        this.events.push({ type: "status", unit, text: ["+ ", cards.map(card => card.name).join(", "), " pour de bon"] })
+        this.events.push({ type: "status", unit, text: ["+ ", joinText(cards, ", "), " pour de bon"] })
     }
 
     /** Give gold to a unit: told to whoever holds the purse. */
     public giveGold(unit: Unit, amount: number): void {
         if(amount <= 0) return
         this.onGetGold.notify({ unit, amount })
-        this.events.push({ type: "status", unit, text: `+ ${amount} or` })
+        this.events.push({ type: "status", unit, text: ["+ ", amount, " or"] })
     }
 
     /**
@@ -1605,10 +1630,11 @@ export class Battle {
      * Put a card in the place of cards of the chain of a unit, a merge or a fusion of them: the cards taken out go
      * to the discard with the others at the end of the round.
      */
-    public replaceInChain(unit: Unit, from: number, count: number, card: Card): void {
+    public replaceInChain(unit: Unit, from: number, count: number, card: Card|readonly Card[]): void {
         const { chain } = unit
-        chain.cards.splice(from, count, card)
-        if(chain.cursor > from) chain.cursor = Math.max(from, chain.cursor - count + 1)
+        const cards: readonly Card[] = Array.isArray(card) ? card : [card as Card]
+        chain.cards.splice(from, count, ...cards)
+        if(chain.cursor > from) chain.cursor = Math.max(from, chain.cursor - count + cards.length)
         chain.watcher?.changed()
     }
 
@@ -2044,11 +2070,24 @@ export class Battle {
             return unit.team
         }))
         if(standing.size > 1 || (this.endless && standing.size === 1)) return
+        this.#end([...standing][0] ?? null)
+    }
+
+    /**
+     * End the battle without a winner, for it cannot go on: its owner left. Whatever shows it sees it over, as
+     * after any other end. Nothing happens to a battle over already.
+     */
+    public abort(): void {
+        if(this.phase === "over") return
+        this.#end(null)
+    }
+
+    #end(winner: Team|null): void {
         this.phase = "over"
         for(const unit of this.units) this.endProcesses(unit)
         for(const unit of this.units) unit.hearts.unplug()
         this.#unplugItems()
-        this.winner = [...standing][0] ?? null
+        this.winner = winner
         this.events.push({ type: "over", winner: this.winner })
         this.signals.phase.notify(this.phase)
         this.phaseChanged.notify(this.phase)

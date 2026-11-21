@@ -7,8 +7,8 @@ import {
 import { AlreadyStartedFault, GatheringFullFault, release, signal, UnreadableFault } from "./faults"
 import type { Handle } from "./faults"
 import type { GameSession } from "./session/GameSession"
-import { Admissions, Participation } from "./participation/Participation"
-import type { Admission, Arrival } from "./participation/Participation"
+import { Placements, Participation } from "./participation/Participation"
+import type { Placement, Arrival } from "./participation/Participation"
 import { ParticipationReceiver } from "./participation/ParticipationReceiver"
 import type { ParticipationMessage } from "./participation/ParticipationMessage"
 import { readJson, wrongShape } from "./read"
@@ -51,7 +51,7 @@ export interface GatheringOptions {
      * What becomes of a client that comes once it started: the mode decides, as it alone knows what is left to
      * take. A client is turned away with {@link AlreadyStartedFault} when the mode says nothing.
      */
-    readonly late?: (who: Arrival) => Admission
+    readonly late?: (who: Arrival) => Placement
 
     /** The session of the game, which keeps who takes part: the gathering is then a part of its mode. */
     readonly session?: GameSession
@@ -223,20 +223,20 @@ export class Gathering {
     }
 
     /** What a client that says it comes is given: a place, or the reason it has none. */
-    #admit(who: Arrival): Admission {
+    #admit(who: Arrival): Placement {
         const admission = this.#decide(who)
         if(admission.kind === "refuse") this.#turnAway(who, admission.fault)
         return admission
     }
 
     /** A place, once the game started what the mode makes of the newcomer, or the reason it has none. */
-    #decide(who: Arrival): Admission {
-        if(this.#isStarted) return this.options.late?.(who) ?? Admissions.refuse(new AlreadyStartedFault(who.id))
+    #decide(who: Arrival): Placement {
+        if(this.#isStarted) return this.options.late?.(who) ?? Placements.refuse(new AlreadyStartedFault(who.id))
         const { capacity } = this.options
         if(capacity !== undefined && this.#members.size >= capacity){
-            return Admissions.refuse(new GatheringFullFault(who.id))
+            return Placements.refuse(new GatheringFullFault(who.id))
         }
-        return Admissions.seat(who.id)
+        return Placements.seat(who.id)
     }
 
     /** Tell a client that is turned away why, in the words of the topic that says it. */

@@ -104,11 +104,11 @@ export abstract class RewardHalt extends CardGiftHalt {
     #goldPrize(): Prize {
         const bonus = Math.ceil(this.gold * GOLD_ONLY_BONUS)
         return {
-            shown: { cards: [], text: concat("Seulement de l'or : ", String(bonus), " de plus.") },
+            shown: { cards: [], text: concat("Seulement de l'or : ", bonus, " de plus.") },
             give: ctx => {
                 this.#extra = bonus
                 this.impact()
-                ctx.tell(concat("Rien que de l'or : ", String(bonus), " de plus."))
+                ctx.tell(concat("Rien que de l'or : ", bonus, " de plus."))
             },
         }
     }

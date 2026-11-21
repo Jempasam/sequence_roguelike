@@ -23,7 +23,7 @@ export class FactoryFloor extends AbstractFloor {
     }
 
     protected fightFor(category: FightCategory, layer: number, rng: Rng): FightType {
-        return laidIn(FACTORY_FIGHTS, category, layer, rng)
+        return laidIn(FACTORY_FIGHTS, category, layer, rng, this.fightContext)
     }
 }
 

@@ -95,7 +95,7 @@ export const IMPROVISED_ROBOT = new RobotCard("Robot improvisé", [
 
 export const TANK_ROBOT = new RobotCard("Robot tank", [
     "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
-    " bouclier, ×", String(TANK_FACTOR), " invocation comprise. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module, ",
+    " bouclier, ×", TANK_FACTOR, " invocation comprise. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module, ",
     "en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)
 

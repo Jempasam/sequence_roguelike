@@ -2,7 +2,7 @@ import { Fault } from "../../../../engine/net/Fault"
 
 import type { Relay } from "../Relay"
 import { signal } from "../faults"
-import type { ProgressView } from "../modes/players/HubPort"
+import type { ProgressView } from "../../sim/mode/subs/duelRace/players/HubPort"
 import { readProgressMessage } from "./ProgressMessage"
 import type { Progress } from "./ProgressMessage"
 

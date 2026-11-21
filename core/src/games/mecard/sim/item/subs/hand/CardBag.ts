@@ -22,7 +22,7 @@ export class CardBag extends DrawnItem {
         public readonly type: CardType<unknown>,
     ){
         super(name, icon, [
-            "Après la pioche, sans ", CARTE, " de type ", type.name, " en main, en tire une au hasard du ", DECK, ".",
+            "Après la pioche, sans ", CARTE, " de type ", type, " en main, en tire une au hasard du ", DECK, ".",
         ])
     }
 

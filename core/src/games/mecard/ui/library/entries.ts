@@ -1,5 +1,6 @@
 import { Box, Label } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
+import { statusTypeText } from "../look/explanations"
 import { CHOSEN_TEXT } from "../look/theme"
 import { AbsItemIcon, STATUS_ICON_SIZE, THING_ICON_SIZE, usesText } from "../hud/AbsItemIcon"
 import { concat, joinText } from "../../../../semantic"
@@ -31,6 +32,8 @@ import { usableText, described } from "../../sim/halt/subs/shown"
 import { cardsOption, unitOption } from "../hud/ChoiceOptions"
 import { heartsRow } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
+import { lootHeartKey } from "../../persist/PlayerCatalog"
+import type { CatalogCategory } from "../../sim/save/catalogSave"
 
 /** Something the catalogue shows: how it looks in the list, and what the box of details says of it. */
 export interface Entry {
@@ -39,6 +42,9 @@ export interface Entry {
 
     /** What the search reads, the text when none. */
     readonly search?: Text
+
+    /** The name that tells it among the entries of its category, as the catalogue of the player counts it. */
+    readonly key: string
 }
 
 /** A tab of the catalogue: its title, and the entries it lists, made when it is shown. */
@@ -47,6 +53,9 @@ export interface Section {
 
     /** The category of the tab: a bar is drawn between two neighbour tabs of different ones. */
     readonly group: string
+
+    /** What the catalogue of the player counts its entries as. */
+    readonly category: CatalogCategory
     entries(): Entry[]
 }
 
@@ -62,8 +71,16 @@ export interface LibraryLook {
     readonly perRow: () => number
 }
 
+/** An entry before it is given its key. */
+export type Unkeyed = Omit<Entry, "key">
+
+/** An entry, given the name that tells it among the others of its category. */
+function keyed(key: string, entry: Unkeyed): Entry {
+    return { ...entry, key }
+}
+
 /** The option of hearts: their row above their description. */
-function heartsEntry(look: LibraryLook, kind: HeartKind, count: number, text: Text): Entry {
+function heartsEntry(look: LibraryLook, kind: HeartKind, count: number, text: Text): Unkeyed {
     const hearts = heartsRow(look.theme, Heart.many(kind, count), () => {})
     return { view: cardsOption(look.theme, [], text, { head: hearts }), text }
 }
@@ -84,7 +101,7 @@ function monsterEntry(look: LibraryLook, monster: Monster): Entry {
         onCardHover: look.onCard,
         perRow: look.perRow(),
     })
-    return { view, text }
+    return { view, text, key: monster.name }
 }
 
 /** The sections of the catalogue, in the order of its tabs. */
@@ -95,123 +112,139 @@ export function sections(look: LibraryLook): Section[] {
             // What every hero plays as often as it wishes comes first: a step, and a turn, whose dial is only shown here.
             title: "Cartes",
             group: "Cartes",
+            category: "cards",
             entries: () => [...new Set([STEP, TURNS[0], ...ALL_CARDS])].map(card => {
                 const text = concat(card, " : ", card.description)
-                return { view: cardsOption(theme, [card], card.description, { onCardHover: onCard, perRow: perRow() }), text }
+                const view = cardsOption(theme, [card], card.description, { onCardHover: onCard, perRow: perRow() })
+                return keyed(card.name, { view, text })
             }),
         },
         {
             title: "Boosters",
             group: "Cartes",
-            entries: () => ALL_BOOSTERS.map(booster => boosterEntry(look, booster)),
+            category: "boosters",
+            entries: () => ALL_BOOSTERS.map(booster => keyed(booster.name, boosterEntry(look, booster))),
         },
         {
             title: "Améliorations",
             group: "Cartes",
-            entries: () => ALL_UPGRADES.map(upgrade => upgradeEntry(look, upgrade)),
+            category: "upgrades",
+            entries: () => ALL_UPGRADES.map(upgrade => keyed(upgrade.name, upgradeEntry(look, upgrade))),
         },
         {
             title: "Aventuriers",
             group: "Unités",
-            entries: () => ALL_KITS.map(kit => kitEntry(look, kit)),
+            category: "kits",
+            entries: () => ALL_KITS.map(kit => keyed(kit.name, kitEntry(look, kit))),
         },
         {
             title: "Monstres",
             group: "Unités",
+            category: "monsters",
             entries: () => ALL_MONSTERS.map(monster => monsterEntry(look, monster)),
         },
         {
             title: "Familiers",
             group: "Unités",
+            category: "pets",
             entries: () => ALL_PETS.map(pet => monsterEntry(look, pet)),
         },
         {
             // Each fight of the floors, the picture of one of its monsters beside its category and what it holds.
             title: "Combats",
             group: "Monde",
+            category: "fights",
             entries: () => allFightTypes().filter(type => type !== EMPTY_FIGHT).map(type => {
-                const text = concat(type.name, " (", type.category.name, ") : ", type.description)
-                return { view: cardsOption(theme, [], text, { sprites, sprite: type.icon }), text }
+                const text = concat(type, " (", type.category.name, ") : ", type.description)
+                return keyed(type.id, { view: cardsOption(theme, [], text, { sprites, sprite: type.icon }), text })
             }),
         },
         {
             // Each hazard a fight lays out, its picture beside what it does, with the cards its bodies play.
             title: "Hazards",
             group: "Monde",
+            category: "hazards",
             entries: () => ALL_HAZARDS.map(hazard => {
-                const text = concat(hazard.name, " : ", hazard.description)
+                const text = concat(hazard, " : ", hazard.description)
                 const cards = [...new Set(hazard.bodies.flatMap(each => each.body.cards ?? []))]
                 const view = cardsOption(theme, cards, text, {
                     sprites, sprite: hazard.icon, onCardHover: onCard, perRow: perRow(),
                 })
-                return { view, text }
+                return keyed(hazard.id, { view, text })
             }),
         },
         {
             // Each halt of a map, its token beside what it offers.
             title: "Haltes",
             group: "Monde",
+            category: "halts",
             entries: () => allHalts().map(halt => {
                 const text = concat(halt.name, " : ", halt.description)
-                return { view: cardsOption(theme, [], text, { sprites, sprite: halt.icon }), text }
+                return keyed(halt.id, { view: cardsOption(theme, [], text, { sprites, sprite: halt.icon }), text })
             }),
         },
         {
             // Each sort of floor, its picture beside what it is.
             title: "Étages",
             group: "Monde",
+            category: "floors",
             entries: () => ALL_FLOORS.map(floor => {
                 const text = concat(floor.name, " : ", floor.description)
-                return { view: cardsOption(theme, [], text, { sprites, sprite: floor.icon }), text }
+                return keyed(floor.name, { view: cardsOption(theme, [], text, { sprites, sprite: floor.icon }), text })
             }),
         },
         {
             title: "Effets",
             group: "Règles",
+            category: "effects",
             entries: () => [...STATUS_TYPES, ...STATUS_FAMILIES].map(type => {
-                const polarity = { negative: "négatif", positive: "positif", neutral: "neutre" }[type.polarity]
-                const text = concat(type, " (", polarity, ") : ", type.description)
+                const text = statusTypeText(type)
                 const head = new Box("row", { gap: 4, align: "center" })
                 head.add(new AbsItemIcon(theme, sprites, type.visual, "", 2, STATUS_ICON_SIZE))
                 head.add(new Label(theme, type.name, { color: CHOSEN_TEXT }))
-                return { view: cardsOption(theme, [], null, { head }), text }
+                return keyed(type.name, { view: cardsOption(theme, [], null, { head }), text })
             }),
         },
         {
             title: "Cœurs",
             group: "Règles",
-            entries: () => HEART_KINDS.map(kind => heartsEntry(look, kind, 1, heartText(kind, null))),
+            category: "hearts",
+            entries: () => HEART_KINDS.map(kind => keyed(kind.name, heartsEntry(look, kind, 1, heartText(kind, null)))),
         },
         {
             title: "Cœurs temporaires",
             group: "Règles",
-            entries: () => SPENT_LOOT_HEARTS.map(({ heart, count }) => {
-                return heartsEntry(look, heart, count, heartText(heart, count))
+            category: "tempHearts",
+            entries: () => SPENT_LOOT_HEARTS.map(loot => {
+                return keyed(lootHeartKey(loot), heartsEntry(look, loot.heart, loot.count, heartText(loot.heart, loot.count)))
             }),
         },
         {
             title: "Cœurs gardés",
             group: "Règles",
-            entries: () => KEPT_LOOT_HEARTS.map(({ heart, count }) => {
-                return heartsEntry(look, heart, count, heartText(heart, count))
+            category: "keptHearts",
+            entries: () => KEPT_LOOT_HEARTS.map(loot => {
+                return keyed(lootHeartKey(loot), heartsEntry(look, loot.heart, loot.count, heartText(loot.heart, loot.count)))
             }),
         },
         {
             title: "Objets",
             group: "Butin",
+            category: "items",
             entries: () => ALL_ITEMS.map(item => {
                 const text = described(item, item)
                 const thing = new AbsItemIcon(theme, sprites, item.icon, "", 1, THING_ICON_SIZE)
-                return { view: cardsOption(theme, [], concat("Objet ", text), { thing }), text }
+                return keyed(item.name, { view: cardsOption(theme, [], concat("Objet ", text), { thing }), text })
             }),
         },
         {
             title: "Utilisables",
             group: "Butin",
+            category: "usables",
             entries: () => ALL_USABLES.map(usable => {
                 const text = usableText(usable)
                 const thing = new AbsItemIcon(theme, sprites, usable.icon, usesText(usable) ?? "", 1, THING_ICON_SIZE)
-                return { view: cardsOption(theme, [], text, { thing }), text }
+                return keyed(usable.name, { view: cardsOption(theme, [], text, { thing }), text })
             }),
         },
     ]

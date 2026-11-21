@@ -1,10 +1,6 @@
 import type { SyncPeer, SyncRoom } from "../../../platform"
+import { Scope } from "./Scope"
 import type { SyncSender } from "./SyncChannel"
-
-/** A handle that stops several at once. */
-function together(handles: readonly { dispose(): void }[]): { dispose(): void } {
-    return { dispose: () => handles.forEach(handle => handle.dispose()) }
-}
 
 /**
  * Several rooms heard as one: the clients that connect to any of them, are lost, come back, or leave, are the
@@ -18,19 +14,19 @@ export class MergedRoom implements SyncRoom {
 
 
     public onJoin(handler: (peer: SyncPeer) => void): { dispose(): void } {
-        return together(this.rooms.map(room => room.onJoin(handler)))
+        return new Scope(...this.rooms.map(room => room.onJoin(handler)))
     }
 
     public onLost(handler: (peer: SyncPeer) => void): { dispose(): void } {
-        return together(this.rooms.map(room => room.onLost(handler)))
+        return new Scope(...this.rooms.map(room => room.onLost(handler)))
     }
 
     public onBack(handler: (peer: SyncPeer) => void): { dispose(): void } {
-        return together(this.rooms.map(room => room.onBack(handler)))
+        return new Scope(...this.rooms.map(room => room.onBack(handler)))
     }
 
     public onLeave(handler: (peer: SyncPeer) => void): { dispose(): void } {
-        return together(this.rooms.map(room => room.onLeave(handler)))
+        return new Scope(...this.rooms.map(room => room.onLeave(handler)))
     }
 }
 
@@ -49,6 +45,6 @@ export class MergedSender implements SyncSender {
     }
 
     public onPeer(initial: () => string|null): { dispose(): void } {
-        return together(this.senders.map(sender => sender.onPeer(initial)))
+        return new Scope(...this.senders.map(sender => sender.onPeer(initial)))
     }
 }

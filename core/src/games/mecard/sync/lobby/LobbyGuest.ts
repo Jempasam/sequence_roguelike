@@ -12,7 +12,7 @@ import { ModeSelectionView } from "./ModeSelectionView"
 import { ParticipantChoices } from "./ParticipantChoices"
 import { hueOfName } from "./Profile"
 import { RosterView } from "./RosterView"
-import { checkValues } from "./Setting"
+import { checkValues } from "../../sim/mode/Setting"
 import { GuestStage } from "./Stage"
 
 /**

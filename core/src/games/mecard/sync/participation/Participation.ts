@@ -2,7 +2,7 @@ import type { Fault } from "../../../../engine/net/Fault"
 import type { SyncPeer, SyncRoom } from "../../../../platform"
 
 import { signal, UnreadableFault } from "../faults"
-import type { SettingValues } from "../lobby/Setting"
+import type { SettingValues } from "../../sim/mode/Setting"
 import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 
 import { readParticipateMessage, writeParticipationMessage } from "./ParticipationMessage"
@@ -21,21 +21,21 @@ export interface Arrival {
 }
 
 /** What a mode makes of someone who comes, or comes back, while its game is played. */
-export type Admission =
+export type Placement =
     | { readonly kind: "seat", readonly seat: string }
     | { readonly kind: "spectate" }
     | { readonly kind: "refuse", readonly fault: Fault }
 
 /** The admissions a mode gives. */
-export const Admissions = {
+export const Placements = {
     /** It plays, holding this seat as the mode names it. */
-    seat: (seat: string): Admission => ({ kind: "seat", seat }),
+    seat: (seat: string): Placement => ({ kind: "seat", seat }),
 
     /** It only watches. */
-    spectate: (): Admission => ({ kind: "spectate" }),
+    spectate: (): Placement => ({ kind: "spectate" }),
 
     /** It is told why it does not play, and watches. */
-    refuse: (fault: Fault): Admission => ({ kind: "refuse", fault }),
+    refuse: (fault: Fault): Placement => ({ kind: "refuse", fault }),
 } as const
 
 /**
@@ -47,7 +47,7 @@ export const Admissions = {
  */
 export interface ParticipationPolicy {
     /** Someone says it takes part, at any moment of the game: what does it hold? */
-    admit(who: Arrival): Admission
+    admit(who: Arrival): Placement
 
     /** A player lost its connection, which may come back. */
     onLost(who: Arrival): void

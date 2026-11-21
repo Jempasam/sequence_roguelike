@@ -55,7 +55,7 @@ describe("SyncTopic", () => {
         const heard: string[] = []
         const topic = new SyncTopic("a")
         const handle = topic.source(channel).listen(message => heard.push(message))
-        handle.dispose()
+        handle.remove()
         topic.sender(channel).send("x")
         expect(heard).toEqual([])
     })
@@ -134,7 +134,7 @@ describe("LocalSync", () => {
     test("disposed first message → not told to the next viewer", () => {
         const channel = new LocalSync()
         const handle = channel.onPeer(() => "first")
-        handle.dispose()
+        handle.remove()
         const heard: string[] = []
         channel.listen(message => heard.push(message))
         expect(heard).toEqual([])
@@ -243,7 +243,7 @@ describe("LocalRoom", () => {
     test("disposed handlers → hear no more", () => {
         const r = new LocalRoom()
         const events: string[] = []
-        r.onJoin(peer => events.push(peer.id)).dispose()
+        r.onJoin(peer => events.push(peer.id)).remove()
         r.join("a")
         expect(events).toEqual([])
     })

@@ -4,6 +4,7 @@ import type { PlaceMove, Travel } from "../../sim/travel/Travel"
 
 import type { SyncSender } from "../SyncChannel"
 import { writeTravelMessage } from "./TravelMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The main client of a journey, telling its viewers: it sends each move of the party, and the journey as it
@@ -38,7 +39,7 @@ export class TravelBroadcaster {
     /** Stop telling the journey. */
     public dispose(): void {
         this.#unregisterObservers()
-        this.#peers.dispose()
+        this.#peers.remove()
     }
 
 
@@ -53,7 +54,7 @@ export class TravelBroadcaster {
     /** The journey as it last stood, none before the first. */
     #lastSave: string|null = null
 
-    readonly #peers: { dispose(): void }
+    readonly #peers: Removable
 
     #observers: Observer[] = []
 

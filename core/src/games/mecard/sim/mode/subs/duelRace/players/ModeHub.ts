@@ -16,6 +16,7 @@ import { duelResult } from "../DuelView"
 import { LivesReceiver } from "../LifeBook"
 import { readRaceEndMessage } from "../RaceEndMessage"
 import type { DuelFighting, DuelWatching, HubPort, ProgressView } from "./HubPort"
+import type { Removable } from "../../../../../../../lifetime"
 
 /** The key a player's progress is published under, as a prefix. */
 export const PROGRESS_KEY = "progress:"
@@ -133,9 +134,9 @@ export class ModeHub implements HubPort {
 
     public setReady(): void {}
 
-    public answerTeam(units: () => readonly SavedUnit[]): { dispose(): void } {
+    public answerTeam(units: () => readonly SavedUnit[]): Removable {
         this.#team = units
-        return { dispose: () => { if(this.#team === units) this.#team = null } }
+        return { remove: () => { if(this.#team === units) this.#team = null } }
     }
 
     public sendProgress(progress: Progress): void {
@@ -192,14 +193,14 @@ export class ModeHub implements HubPort {
 
     public dispose(): void {
         this.#leaveDuel()
-        for(const handle of this.#forwarding) handle.dispose()
+        for(const handle of this.#forwarding) handle.remove()
         this.lives.dispose()
         this.deadline.dispose()
     }
 
 
     readonly #source = new StateSource()
-    readonly #forwarding: readonly { dispose(): void }[]
+    readonly #forwarding: readonly Removable[]
     #observers: Observer[] = []
     #team: (() => readonly SavedUnit[])|null = null
     #number: number|null = null

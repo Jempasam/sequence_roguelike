@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest"
 /** A client that keeps what it is told. */
 function peer(id: string): SyncPeer & { readonly heard: string[] } {
     const heard: string[] = []
-    return { id, heard, send: message => { heard.push(message) }, listen: () => ({ dispose: () => {} }) }
+    return { id, heard, send: message => { heard.push(message) }, listen: () => ({ remove: () => {} }) }
 }
 
 describe("Audience", () => {
@@ -90,7 +90,7 @@ describe("Audience", () => {
     test("a first message disposed → no longer given", () => {
         const audience = new Audience()
         const handle = audience.onPeer(() => "first")
-        handle.dispose()
+        handle.remove()
         const a = peer("a")
         audience.add(a)
         expect(a.heard).toEqual([])
@@ -116,9 +116,9 @@ describe("Audience", () => {
         audience.add({
             id: "a",
             send: () => audience.remove("b"),
-            listen: () => ({ dispose: () => {} }),
+            listen: () => ({ remove: () => {} }),
         })
-        audience.add({ id: "b", send: message => { heard.push(message) }, listen: () => ({ dispose: () => {} }) })
+        audience.add({ id: "b", send: message => { heard.push(message) }, listen: () => ({ remove: () => {} }) })
         audience.send("x")
         expect(heard).toEqual(["x"])
     })

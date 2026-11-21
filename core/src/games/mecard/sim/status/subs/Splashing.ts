@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import { fading, polygonOf } from "../../battle/effects"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
@@ -43,22 +42,19 @@ export class Splashing extends BaseStatus {
     public override toSemString(): Text { return [SPLASHING, " (", this.dose.potion, ")"] }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = unit.onDeath.add(() => {
+        this.keep(unit.onDeath.add(() => {
             const area = Areas.circle(unit.position, SPLASH_RADIUS)
             battle.signals.notifyStatus.notify({ unit, target: this })
             battle.post(fading(SPLASH_TIME, [polygonOf(area, { ...this.dose.potion.color, a: 0.5 })]))
             battle.events.push({ type: "status", unit, text: ["éclabousse ", this.dose.potion] })
             const level = this.dose.sign * this.level
             for(const target of battle.fetch(area)) pour(battle, this.dose, target, level)
-        })
+        }))
     }
 
     public remove(): void {
-        this.#observer?.remove()
+        this.letGo()
     }
-
-
-    #observer?: Observer
 }
 
 /** The kind of a barrel of a dose. */

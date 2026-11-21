@@ -1,4 +1,5 @@
 import type { SyncPeer, SyncRoom } from "../../../../platform"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * A room that tells only what it is told to: whoever builds it says who joins, is lost, comes back and leaves,
@@ -7,19 +8,19 @@ import type { SyncPeer, SyncRoom } from "../../../../platform"
 export class FeedRoom implements SyncRoom {
 
 
-    public onJoin(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onJoin(handler: (peer: SyncPeer) => void): Removable {
         return this.#add(this.#joins, handler)
     }
 
-    public onLost(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLost(handler: (peer: SyncPeer) => void): Removable {
         return this.#add(this.#losses, handler)
     }
 
-    public onBack(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onBack(handler: (peer: SyncPeer) => void): Removable {
         return this.#add(this.#backs, handler)
     }
 
-    public onLeave(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLeave(handler: (peer: SyncPeer) => void): Removable {
         return this.#add(this.#leaves, handler)
     }
 
@@ -39,9 +40,9 @@ export class FeedRoom implements SyncRoom {
     readonly #backs = new Set<(peer: SyncPeer) => void>()
     readonly #leaves = new Set<(peer: SyncPeer) => void>()
 
-    #add(handlers: Set<(peer: SyncPeer) => void>, handler: (peer: SyncPeer) => void): { dispose(): void } {
+    #add(handlers: Set<(peer: SyncPeer) => void>, handler: (peer: SyncPeer) => void): Removable {
         handlers.add(handler)
-        return { dispose: () => handlers.delete(handler) }
+        return { remove: () => handlers.delete(handler) }
     }
 
     #tell(handlers: Set<(peer: SyncPeer) => void>, peer: SyncPeer): void {

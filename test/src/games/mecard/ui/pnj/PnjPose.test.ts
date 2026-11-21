@@ -88,7 +88,7 @@ describe("PnjPose.hat", () => {
         pose.squash = 0.5
         expect(heard).toHaveLength(1)
         expect(heard[0].y).toBeGreaterThan(-195)
-        handle.dispose()
+        handle.remove()
         pose.squash = 0
         expect(heard).toHaveLength(1)
     })

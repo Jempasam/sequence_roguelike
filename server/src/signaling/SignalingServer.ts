@@ -57,6 +57,8 @@ export class SignalingServer {
                 reject(new Error(`Signaling server failed on port ${options.port}: ${error.message}`))
             })
         })
+        // Once listening, an error of the server is logged rather than thrown as an unhandled event.
+        this.#server.on("error", error => console.error(`Signaling server error: ${error.message}`))
         this.#heartbeat = setInterval(() => this.#ping(), HEARTBEAT)
     }
 

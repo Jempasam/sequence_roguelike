@@ -82,8 +82,8 @@ export class MecardViewer {
         this.run.battleStarted.add(started)
         this.#receiver = new RunReceiver(this.run, source)
         this.#receiver.faulted.add(fault => this.#warn(fault.describe()))
-        this.#receiver.battle.onDesync = ({ round }) => this.#warn(`Désynchronisé au round ${round} : rattrapé.`)
-        this.#receiver.travel.onDesync = () => this.#warn("Désynchronisé sur la carte : rattrapé.")
+        this.#receiver.battle.desynced.add(({ round }) => this.#warn(`Désynchronisé au round ${round} : rattrapé.`))
+        this.#receiver.travel.desynced.add(() => this.#warn("Désynchronisé sur la carte : rattrapé."))
         if(link){
             this.#guest = new RunGuest(this.run, link, units => { this.#screen.locks = locksForUnits(units) })
             this.#guest.faulted.add(fault => this.#warn(fault.describe()))

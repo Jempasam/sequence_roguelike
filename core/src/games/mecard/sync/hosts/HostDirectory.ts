@@ -2,6 +2,7 @@ import type { Cancel, NetPort, TimerPort } from "../../../../platform"
 import { faultOf, PTPSharedSocket } from "../../../../engine/net"
 import type { Fault, SignalingConnector } from "../../../../engine/net"
 import { signal } from "../faults"
+import type { Removable } from "../../../../lifetime"
 
 /** A player that hosts a room others may join. */
 export interface HostEntry {
@@ -118,15 +119,15 @@ export class HostDirectory implements HostBoard {
         this.retire()
         this.#isDisposed = true
         this.#stopSweep()
-        this.#roleWatch.dispose()
-        this.#watch.dispose()
+        this.#roleWatch.remove()
+        this.#watch.remove()
         this.changed.clear()
         this.socket.close()
     }
 
 
-    readonly #watch: { dispose(): void }
-    readonly #roleWatch: { dispose(): void }
+    readonly #watch: Removable
+    readonly #roleWatch: Removable
     #room: { readonly code: string, readonly name: string }|null = null
     #next: Cancel|null = null
     #sweep: Cancel|null = null

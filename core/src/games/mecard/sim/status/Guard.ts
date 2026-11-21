@@ -1,5 +1,4 @@
 import type { Text } from "../../../../semantic"
-import type { Observer } from "../base/Observable"
 import type { UnitContext } from "../battle/Action"
 import type { IncomingDamage } from "../battle/events"
 import type { Unit } from "../battle/Unit"
@@ -32,7 +31,7 @@ export abstract class Guard extends BaseStatus {
 
     public init(ctx: UnitContext): void {
         const { battle, unit } = ctx
-        this.#observers.push(
+        this.keep(
             unit.stepStarted.add(() => battle.applyStatus(unit, this.type, -1)),
             unit.hearts.onIncoming.add(incoming => {
                 if(incoming.nature !== DamageType.PHYSICAL || incoming.derived || incoming.amount <= 0) return
@@ -48,14 +47,10 @@ export abstract class Guard extends BaseStatus {
     }
 
     public remove(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers.length = 0
+        this.letGo()
     }
 
 
     /** What it does more to an attack it stopped, coming from an attacker. */
     protected abstract react(ctx: UnitContext, parried: Parried): void
-
-
-    readonly #observers: Observer[] = []
 }

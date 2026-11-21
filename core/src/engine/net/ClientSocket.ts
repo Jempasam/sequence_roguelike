@@ -2,6 +2,7 @@ import type { NetPort } from "../../platform"
 import type { ChannelKind, Connection, ConnectionState } from "./Connection"
 import { ConnectionLife } from "./ConnectionLife"
 import { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /** The WebSocket close code of a close on purpose. */
 const NORMAL_CLOSURE = 1000
@@ -29,7 +30,7 @@ export class ClientSocket implements Connection {
         this.#socket = socket
         socket.onopen = () => this.#life.open()
         socket.onmessage = event => {
-            if(typeof event.data === "string") this.#life.messages.emit({ message: event.data, channel: "reliable" })
+            if(typeof event.data === "string") this.#life.messages.notify({ message: event.data, channel: "reliable" })
             else this.closeFor(new NetError("protocol", "The server sent binary data, where only text is heard."))
         }
         socket.onclose = event => this.#life.end(reasonOf(event.code, event.reason, url, this.#life.state === "open"))
@@ -47,11 +48,11 @@ export class ClientSocket implements Connection {
         this.#socket.send(message)
     }
 
-    public listen(handler: (message: string, channel: ChannelKind) => void): { dispose(): void } {
+    public listen(handler: (message: string, channel: ChannelKind) => void): Removable {
         return this.#life.messages.add(({ message, channel }) => handler(message, channel))
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#life.onClose(handler)
     }
 

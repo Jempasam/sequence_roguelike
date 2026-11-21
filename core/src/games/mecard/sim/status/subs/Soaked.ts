@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
@@ -45,18 +44,14 @@ export class Soaked extends BaseStatus {
     public override toSemString(): Text { return [SOAKED, " (", this.dose.potion, ")"] }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = unit.hitting.add(({ target }) => {
+        this.keep(unit.hitting.add(({ target }) => {
             pour(battle, this.dose, target, this.dose.sign * this.level)
-        })
+        }))
     }
 
     public remove(): void {
-        this.#observer?.remove()
-        this.#observer = null
+        this.letGo()
     }
-
-
-    #observer: Observer|null = null
 }
 
 /** The kind of soaking of a dose. */

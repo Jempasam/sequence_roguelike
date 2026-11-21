@@ -9,6 +9,7 @@ import { DuelBuildFault, NotEnoughPlayersFault, PeerGoneFault, signal, Unloadabl
 import { detailOf } from "../../../../sync/read"
 import type { Matched, Matching } from "./Matching"
 import type { DuelFought, DuelPlayer } from "./players/DuelPlayer"
+import type { Removable } from "../../../../../../lifetime"
 
 /** A duel as it is fought: the players of each of its two camps, those left out for their team apart. */
 export interface DuelFight {
@@ -71,7 +72,7 @@ export interface DuelBattles {
 interface Fighting {
     readonly fight: DuelFight
     readonly battle: DuelBattle
-    readonly handles: { dispose(): void }[]
+    readonly handles: Removable[]
     readonly observers: Observer[]
 
     /** Was the duel settled: decided, drawn, or called off? */
@@ -355,7 +356,7 @@ export class DuelRound {
 
     /** Stop hearing the players of a duel. Its battle is still told to a client coming back. */
     #release(fighting: Fighting): void {
-        for(const handle of fighting.handles) handle.dispose()
+        for(const handle of fighting.handles) handle.remove()
         fighting.handles.length = 0
         for(const observer of fighting.observers) observer.remove()
         fighting.observers.length = 0

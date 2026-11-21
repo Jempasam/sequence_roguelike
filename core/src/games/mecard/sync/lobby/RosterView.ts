@@ -10,6 +10,7 @@ import {
     readRefusedMessage, readRosterMessage, readSelfMessage, writeProfileMessage,
 } from "./RosterMessage"
 import type { RosterEntry, SelfMessage } from "./RosterMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * Who is in the lobby, as a client sees it: it says who it is, and hears the list the host keeps, and who the
@@ -58,11 +59,11 @@ export class RosterView {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
     }
 
 
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
     #members: readonly RosterEntry[] = []
     #self_: SelfMessage|null = null
 

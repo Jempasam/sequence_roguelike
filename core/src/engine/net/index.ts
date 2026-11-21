@@ -15,7 +15,6 @@
 export * from "./ClientSocket"
 export * from "./Connection"
 export * from "./Fault"
-export * from "./Listeners"
 export * from "./MemoryConnection"
 export * from "./NetError"
 export * from "./NetFaults"

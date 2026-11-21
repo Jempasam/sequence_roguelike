@@ -6,6 +6,7 @@ import type { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { Peer, RoomOptions } from "./Room"
 import type { SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /**
  * The host of a game, which players connect to: a star room it owns, with one WebRTC connection to each
@@ -42,17 +43,17 @@ export class PTPHostSocket {
     public get clients(): readonly Peer[] { return this.room.peers }
 
     /** Be told of each client whose connection opens, until the returned handle is disposed. */
-    public onClient(handler: (client: Peer) => void): { dispose(): void } {
+    public onClient(handler: (client: Peer) => void): Removable {
         return this.room.onPeer(handler)
     }
 
     /** Be told of each client that leaves, or whose connection is lost. */
-    public onLeave(handler: (client: Member) => void): { dispose(): void } {
+    public onLeave(handler: (client: Member) => void): Removable {
         return this.room.onLeave(handler)
     }
 
     /** Be told once the room closes, with why. */
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.room.onClose(handler)
     }
 

@@ -17,14 +17,14 @@ function session(options: { held?: boolean, seed?: number } = {}) {
     const run = startedRun(options.seed ?? 11)
     const viewer = new TravelReceiver(startedRun(0).travel, channel)
     const drifts: TravelDesync[] = []
-    viewer.onDesync = desync => drifts.push(desync)
+    viewer.desynced.add(desync => drifts.push(desync))
     const broadcaster = new TravelBroadcaster(run.travel, channel)
     return { channel, run, viewer, drifts, broadcaster }
 }
 
 /** A channel writing what is sent down, no viewer ever connecting. */
 function writingTo(sent: string[]): SyncSender {
-    return { send: message => sent.push(message), onPeer: () => ({ dispose() {} }) }
+    return { send: message => sent.push(message), onPeer: () => ({ remove() {} }) }
 }
 
 /** The rank of the place the party stands on. */

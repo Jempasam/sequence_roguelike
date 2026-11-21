@@ -286,11 +286,13 @@ export class MainMenuScreen {
         if(this.#disposed) return
         for(const warning of backdrop.warnings) this.options.report(warning)
         const layers = backdrop.layers
-        this.#textures = layers.map(layer => Texture.fromPixels(this.ui.gpu, layer.pixels))
+        // Kept with the title's: replacing the list would lose the texture of the title.
+        const textures = layers.map(layer => Texture.fromPixels(this.ui.gpu, layer.pixels))
+        this.#textures.push(...textures)
         const depths = backdrop.ranges.depth ?? MENU_DEPTHS
         const warps = backdrop.ranges.warp ?? SCENE_WARPS
         this.#backdrop = new Parallax(layers.map((layer, index) => ({
-            sprite: Sprite.whole(this.#textures[index]),
+            sprite: Sprite.whole(textures[index]),
             depth: layer.depth ?? rangedOf(index, layers.length, depths),
             warp: layer.warp ?? rangedOf(index, layers.length, warps),
             ...layer.place && { place: layer.place },

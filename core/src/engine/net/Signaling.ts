@@ -1,6 +1,7 @@
 import type { IceServer, JsonValue, PeerSignal, RoomShape, ServerMessage } from "@game/server/protocol"
 
 import type { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /** The room a client entered, as the signaling described it. */
 export type RoomEntry = Omit<Extract<ServerMessage, { type: "entered" }>, "type">
@@ -72,10 +73,10 @@ export interface Signaling {
     signal(to: string, signal: PeerSignal): void
 
     /** Hear what is told of the room, until the returned handle is disposed. */
-    onEvent(handler: (event: RoomEvent) => void): { dispose(): void }
+    onEvent(handler: (event: RoomEvent) => void): Removable
 
     /** Be told once the client is disconnected, which takes it out of its room. */
-    onClose(handler: (reason: NetError) => void): { dispose(): void }
+    onClose(handler: (reason: NetError) => void): Removable
 
     /** Leave the room and disconnect. Doing it twice changes nothing. */
     close(): void

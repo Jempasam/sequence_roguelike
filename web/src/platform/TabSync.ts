@@ -1,4 +1,5 @@
 import type { SyncPort, SyncRole } from "@game/core"
+import type { Removable } from "@game/core"
 
 /** The name of the channel the tabs of the game talk on. */
 const CHANNEL_NAME = "dungeon-of-the-mecard"
@@ -38,17 +39,17 @@ export class TabSync implements SyncPort {
         this.#channel.postMessage(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial }
         this.#peers.add(entry)
-        return { dispose: () => this.#peers.delete(entry) }
+        return { remove: () => this.#peers.delete(entry) }
     }
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         // The answer comes later: every listener added now hears it.
         if(this.role === "viewer" && this.#handlers.size === 0) this.#channel.postMessage(HELLO)
         this.#handlers.add(handler)
-        return { dispose: () => this.#handlers.delete(handler) }
+        return { remove: () => this.#handlers.delete(handler) }
     }
 
     /** Close the channel: nothing is sent nor heard any more. */

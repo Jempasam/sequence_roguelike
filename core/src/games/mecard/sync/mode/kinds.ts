@@ -14,6 +14,7 @@ import type { GameModeOwner, InstanceView } from "../../sim/mode/GameMode"
 import type { GameModeShareable } from "../../sim/mode/GameModeShareable"
 import type { HandleChannel, HeardChannel } from "../../sim/mode/HandleChannel"
 import { OPEN_BATTLE_TOPIC, OPEN_RUN_TOPIC } from "./messages"
+import type { Removable } from "../../../../lifetime"
 
 /** What the runner needs to know of an instance that is a run or a battle, and nothing else. */
 export interface InstanceKind<E extends Run|Battle> {
@@ -30,7 +31,7 @@ export interface InstanceKind<E extends Run|Battle> {
     replica(spec: GameModeShareable, report: (error: unknown) => void): E
 
     /** Show it to the player, which the mode does by its screen: `null` when the mode shows no such thing. */
-    spectate(owner: GameModeOwner, view: InstanceView<E>): { dispose(): void }|null
+    spectate(owner: GameModeOwner, view: InstanceView<E>): Removable|null
 
     /** The battle a player of it plans, none when there is none now. */
     battleOf(engine: E): Battle|null
@@ -61,8 +62,8 @@ export const RUN_KIND: InstanceKind<Run> = {
     receive: (engine, source, faulted, desync) => {
         const receiver = new RunReceiver(engine, source)
         receiver.faulted.add(faulted)
-        receiver.battle.onDesync = ({ round }) => desync(`Désynchronisé au round ${round} : rattrapé.`)
-        receiver.travel.onDesync = () => desync("Désynchronisé sur la carte : rattrapé.")
+        receiver.battle.desynced.add(({ round }) => desync(`Désynchronisé au round ${round} : rattrapé.`))
+        receiver.travel.desynced.add(() => desync("Désynchronisé sur la carte : rattrapé."))
         return receiver
     },
 }
@@ -79,7 +80,7 @@ export const BATTLE_KIND: InstanceKind<Battle> = {
     receive: (engine, source, faulted, desync) => {
         const receiver = new BattleReceiver(engine, source)
         receiver.faulted.add(faulted)
-        receiver.onDesync = ({ round }) => desync(`Désynchronisé au round ${round} : rattrapé.`)
+        receiver.desynced.add(({ round }) => desync(`Désynchronisé au round ${round} : rattrapé.`))
         return receiver
     },
 }

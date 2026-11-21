@@ -4,6 +4,7 @@ import type { Cancel, NetPort, TimerPort } from "../../platform"
 import type { ChannelKind, Connection, ConnectionState } from "./Connection"
 import { ConnectionLife } from "./ConnectionLife"
 import { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /** The settings of each channel, by its label. */
 const CHANNELS: Record<ChannelKind, RTCDataChannelInit> = {
@@ -30,7 +31,7 @@ export interface SignalPath {
     send(signal: PeerSignal): void
 
     /** Hear each signal from the other peer, until the returned handle is disposed. */
-    listen(handler: (signal: PeerSignal) => void): { dispose(): void }
+    listen(handler: (signal: PeerSignal) => void): Removable
 }
 
 /**
@@ -108,11 +109,11 @@ export class PeerConnection implements Connection {
         dataChannel.send(message)
     }
 
-    public listen(handler: (message: string, channel: ChannelKind) => void): { dispose(): void } {
+    public listen(handler: (message: string, channel: ChannelKind) => void): Removable {
         return this.#life.messages.add(({ message, channel }) => handler(message, channel))
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#life.onClose(handler)
     }
 
@@ -123,7 +124,7 @@ export class PeerConnection implements Connection {
 
     readonly #peer: RTCPeerConnection
     readonly #signals: SignalPath
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
     readonly #life = new ConnectionLife()
     readonly #channels = new Map<ChannelKind, RTCDataChannel>()
 
@@ -139,7 +140,7 @@ export class PeerConnection implements Connection {
     #end(reason: "unreachable"|"protocol"|"closed", message: string, cause?: unknown): void {
         if(!this.#life.end(new NetError(reason, message, { cause }))) return
         this.#waiting?.cancel()
-        this.#listening.dispose()
+        this.#listening.remove()
         this.#peer.close()
     }
 
@@ -196,7 +197,7 @@ export class PeerConnection implements Connection {
             this.#life.open()
         }
         channel.onmessage = event => {
-            if(typeof event.data === "string") this.#life.messages.emit({ message: event.data, channel: kind })
+            if(typeof event.data === "string") this.#life.messages.notify({ message: event.data, channel: kind })
             else this.#end("protocol", `${this.peer} sent binary data, where only text is heard.`)
         }
         channel.onclose = () => this.#end("closed", `${this.peer} closed the connection.`)

@@ -1,6 +1,5 @@
 import type { Text } from "../../../../../semantic"
 import { ModifierKey, Multiply } from "../../base/Attribute"
-import type { Observer } from "../../base/Observable"
 import { counted } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
@@ -21,18 +20,17 @@ export class Rooted extends BaseStatus {
 
     public init({ battle, unit }: UnitContext): void {
         unit.stats.mobility.add(this.#key, new Multiply(0))
-        this.#observer = unit.stepEnded.add(() => {
+        this.keep(unit.stepEnded.add(() => {
             this.setLevel(this.level - 1)
             if(this.level <= 0) battle.removeStatus(unit, ROOTED)
-        })
+        }))
     }
 
     public remove({ unit }: UnitContext): void {
         unit.stats.mobility.remove(this.#key)
-        this.#observer?.remove()
+        this.letGo()
     }
 
 
     readonly #key = new ModifierKey("racines")
-    #observer?: Observer
 }

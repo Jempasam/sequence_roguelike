@@ -9,7 +9,13 @@ export interface RoomOptions {
 
     /** The most members the room holds, its owner included. */
     readonly capacity: number
+
+    /** How long a newcomer waits for the word of the owner, in milliseconds. */
+    readonly knockMs?: number
 }
+
+/** How long a newcomer waits at the door when the room does not say, in milliseconds. */
+const KNOCK_MS = 30_000
 
 /**
  * The members of one room, and the session that admits newcomers: its owner. The server only passes
@@ -54,6 +60,10 @@ export class Room {
         }
         this.#knocking.add(session)
         session.room = this
+        // An owner that never answers does not keep the place for ever.
+        const timer = setTimeout(() => this.#turnAway(session), this.options.knockMs ?? KNOCK_MS)
+        timer.unref()
+        this.#knockTimers.set(session, timer)
         this.#owner.send({ type: "knocking", member: memberOf(session) })
     }
 
@@ -68,6 +78,7 @@ export class Room {
         const session = [...this.#knocking].find(knocking => knocking.id === id)
         if(!session) return
         this.#knocking.delete(session)
+        this.#stopKnock(session)
         if(!accepted){
             session.room = null
             session.send({ type: "refused", reason: "refused" })
@@ -101,6 +112,7 @@ export class Room {
     public leave(session: Session): void {
         session.room = null
         if(this.#knocking.delete(session)){
+            this.#stopKnock(session)
             this.#owner.send({ type: "left", member: session.id })
             return
         }
@@ -124,6 +136,24 @@ export class Room {
 
     /** The sessions waiting for the owner's word. */
     readonly #knocking = new Set<Session>()
+
+    /** What turns a knocking session away if the owner says nothing in time. */
+    readonly #knockTimers = new Map<Session, ReturnType<typeof setTimeout>>()
+
+    #stopKnock(session: Session): void {
+        const timer = this.#knockTimers.get(session)
+        if(timer) clearTimeout(timer)
+        this.#knockTimers.delete(session)
+    }
+
+    /** Turn away a session whose knock was not answered: it is refused, and its owner told it is gone. */
+    #turnAway(session: Session): void {
+        this.#knockTimers.delete(session)
+        if(!this.#knocking.delete(session)) return
+        session.room = null
+        session.send({ type: "refused", reason: "refused" })
+        this.#owner.send({ type: "left", member: session.id })
+    }
 
     /** Tell a session it is in, and who it is to link to. */
     #enter(session: Session): void {
@@ -151,6 +181,8 @@ export class Room {
         }
         this.#members.clear()
         this.#knocking.clear()
+        for(const timer of this.#knockTimers.values()) clearTimeout(timer)
+        this.#knockTimers.clear()
         this.#onOver(this)
     }
 

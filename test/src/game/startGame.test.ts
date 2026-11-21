@@ -58,7 +58,7 @@ describe("startGame", () => {
     test("dispose → loop stopped", () => {
         const fake = fakeGl()
         const loop = new ManualLoop()
-        startGame(platform(fakeGfx(fake.gl), loop)).dispose()
+        startGame(platform(fakeGfx(fake.gl), loop)).remove()
         expect(loop.frame).toBeNull()
     })
 })

@@ -16,6 +16,7 @@ import { Layer } from "./Layer"
 import type { LayerOptions } from "./Layer"
 import { Rect } from "./Rect"
 import { Repaint } from "./Repaint"
+import type { Removable } from "../../lifetime"
 
 /**
  * The lowest the interface texture gets by default, in virtual pixels: the scale is the largest whole
@@ -288,9 +289,9 @@ export class UiRoot {
      * Call a function at every update, until the returned handle is disposed: what a helper outside the
      * tree, such as a tooltip, animates through.
      */
-    public onUpdate(listener: (dt: number) => void): { dispose(): void } {
+    public onUpdate(listener: (dt: number) => void): Removable {
         this.#listeners.add(listener)
-        return { dispose: () => this.#listeners.delete(listener) }
+        return { remove: () => this.#listeners.delete(listener) }
     }
 
     /**
@@ -298,9 +299,9 @@ export class UiRoot {
      * releases it, until the returned handle is disposed: what the sounds of the buttons listen to. The
      * component is the interactive one hit, a {@link Button} for instance, and the listener filters.
      */
-    public onInteraction(listener: PointerInteractionListener): { dispose(): void } {
+    public onInteraction(listener: PointerInteractionListener): Removable {
         this.#interactionListeners.add(listener)
-        return { dispose: () => this.#interactionListeners.delete(listener) }
+        return { remove: () => this.#interactionListeners.delete(listener) }
     }
 
     /**

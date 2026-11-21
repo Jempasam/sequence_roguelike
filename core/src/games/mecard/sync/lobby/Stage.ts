@@ -4,7 +4,7 @@ import type { SyncSender, SyncSource } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
 import { GameSession } from "../session/GameSession"
-import { Scope } from "../Scope"
+import { Scope } from "../../../../lifetime"
 import { LobbySender } from "./LobbySender"
 
 /**
@@ -69,7 +69,7 @@ export class HostStage {
     public dispose(): void {
         this.#session?.dispose()
         this.sender.dispose()
-        this.#handles.dispose()
+        this.#handles.remove()
     }
 
 
@@ -111,7 +111,7 @@ export class GuestStage {
 
     /** Stop listening to everything the game still does. */
     public dispose(): void {
-        this.#handles.dispose()
+        this.#handles.remove()
     }
 
 

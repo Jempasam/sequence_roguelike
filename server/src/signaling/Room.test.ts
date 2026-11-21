@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import type { RoomShape } from "../protocol"
 import { Room } from "./Room"
@@ -47,6 +47,40 @@ describe("Room, knocking and admitting", () => {
         expect(heardOf(owner, "knocking")).toEqual([{ type: "knocking", member: { id: guest.session.id, data: { name: "Bo" } } }])
         expect(heardOf(guest, "entered")).toEqual([])
         expect(guest.session.room).toBe(room)
+    })
+
+    test("knock never answered → refused after the delay, the place freed, the owner told it left", () => {
+        vi.useFakeTimers()
+        try {
+            const owner = fakeSession()
+            const room = new Room({ code: "ABCDEF", shape: "star", name: "game", capacity: 2, knockMs: 1000 }, owner.session, () => {})
+            const guest = fakeSession()
+            room.knock(guest.session)
+            expect(room.size).toBe(2)
+            vi.advanceTimersByTime(1001)
+            expect(heardOf(guest, "refused")).toEqual([{ type: "refused", reason: "refused" }])
+            expect(heardOf(owner, "left")).toEqual([{ type: "left", member: guest.session.id }])
+            expect(guest.session.room).toBeNull()
+            expect(room.size).toBe(1)
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    test("knock answered in time → no refusal comes after", () => {
+        vi.useFakeTimers()
+        try {
+            const owner = fakeSession()
+            const room = new Room({ code: "ABCDEF", shape: "star", name: "game", capacity: 2, knockMs: 1000 }, owner.session, () => {})
+            const guest = fakeSession()
+            room.knock(guest.session)
+            room.admit(owner.session, guest.session.id, true)
+            vi.advanceTimersByTime(5000)
+            expect(heardOf(guest, "refused")).toEqual([])
+            expect(room.size).toBe(2)
+        } finally {
+            vi.useRealTimers()
+        }
     })
 
     test("the newcomer waiting counts toward the size", () => {

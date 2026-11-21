@@ -7,6 +7,7 @@ import type { GameModeContext } from "./GameModeContext"
 import type { GameModeShareable } from "./GameModeShareable"
 import type { HandleChannel, HeardChannel } from "./HandleChannel"
 import type { Setting, SettingValues } from "./Setting"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The manager of a game, which decides and never holds an engine.
@@ -88,10 +89,10 @@ export interface GameModeOwner {
     // ===== The screen, on every client that follows an instance, its owner included =====
 
     /** A run is shown to this client: `dispose` when it is gone for it. */
-    spectateRun?(view: InstanceView<Run>): { dispose(): void }
+    spectateRun?(view: InstanceView<Run>): Removable
 
     /** A battle is shown to this client: `dispose` when it is gone for it. */
-    spectateBattle?(view: InstanceView<Battle>): { dispose(): void }
+    spectateBattle?(view: InstanceView<Battle>): Removable
 
     // ===== The state and the messages, on every client =====
 

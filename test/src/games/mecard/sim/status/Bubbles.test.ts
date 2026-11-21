@@ -109,8 +109,11 @@ describe("the bubbles", () => {
         play(on, [[blower, chain(VIOLET_BUBBLE)]])
         const [bubble] = bubblesOf(on, blower)
         const before = bubble.statuses.get(BUBBLE)!.level
+        // The bubble may burst in the round: a dead unit holds no status, so the level is read as it is told.
+        const levels: number[] = []
+        on.signals.statusLeveled.add(({ type, level }) => { if(type === BUBBLE) levels.push(level) })
         play(on, [[blower, chain(INFLATE)]])
-        expect(bubble.statuses.get(BUBBLE)!.level).toBeGreaterThanOrEqual(before + 4)
+        expect(Math.max(...levels)).toBeGreaterThanOrEqual(before + 4)
         play(on, [[blower, chain(INSPIRATION)]])
         expect(blower.statuses.get(SOAPY)!.level).toBeGreaterThanOrEqual(2)
     })

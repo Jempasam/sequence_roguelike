@@ -1,6 +1,7 @@
-import { Listeners, MemoryConnection, writeSession } from "@game/core"
+import { MemoryConnection, signal, writeSession } from "@game/core"
 import type { Connection, NetError, SessionInfo, SessionLink, SessionSocket } from "@game/core"
 import type { JsonValue, Member } from "@game/server/protocol"
+import type { Removable } from "@game/core"
 
 /** Let what waits in microtasks and soon-after callbacks run, as a network would deliver it. */
 export function settle(): Promise<void> {
@@ -23,23 +24,23 @@ export class FakeHostSocket implements SessionSocket {
     public isClosed = false
 
     /** Admit a member as a room would, when its owner gave an admission. */
-    public readonly arrived = new Listeners<SessionLink>()
-    public readonly left = new Listeners<Member>()
-    public readonly closed = new Listeners<NetError>()
+    public readonly arrived = signal<SessionLink>()
+    public readonly left = signal<Member>()
+    public readonly closed = signal<NetError>()
 
     /** The host-side ends, by member id. */
     public readonly ends = new Map<string, Connection>()
 
 
-    public onClient(handler: (client: SessionLink) => void): { dispose(): void } {
+    public onClient(handler: (client: SessionLink) => void): Removable {
         return this.arrived.add(handler)
     }
 
-    public onLeave(handler: (client: Member) => void): { dispose(): void } {
+    public onLeave(handler: (client: Member) => void): Removable {
         return this.left.add(handler)
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.closed.add(handler)
     }
 
@@ -53,14 +54,14 @@ export class FakeHostSocket implements SessionSocket {
         const [client, host] = MemoryConnection.pair()
         this.ends.set(member.id, host)
         // The host hears of it once the connection opens, as the room tells it.
-        void host.opened.then(() => this.arrived.emit({ member, connection: host }))
+        void host.opened.then(() => this.arrived.notify({ member, connection: host }))
         return { member, connection: client }
     }
 
     /** A member leaving, or whose connection was lost. */
     public lose(member: Member): void {
         this.ends.get(member.id)?.close()
-        this.left.emit(member)
+        this.left.notify(member)
     }
 }
 

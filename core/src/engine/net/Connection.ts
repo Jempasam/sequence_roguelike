@@ -1,4 +1,5 @@
 import type { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /**
  * The channel a message goes by:
@@ -35,10 +36,10 @@ export interface Connection {
     send(message: string, channel?: ChannelKind): void
 
     /** Hear each message from the other end, until the returned handle is disposed. */
-    listen(handler: (message: string, channel: ChannelKind) => void): { dispose(): void }
+    listen(handler: (message: string, channel: ChannelKind) => void): Removable
 
     /** Be told once the connection closes, until the returned handle is disposed. */
-    onClose(handler: (reason: NetError) => void): { dispose(): void }
+    onClose(handler: (reason: NetError) => void): Removable
 
     /** Close the connection. Closing twice does nothing. */
     close(): void

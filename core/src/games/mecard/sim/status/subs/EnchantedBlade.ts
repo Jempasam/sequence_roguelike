@@ -1,6 +1,5 @@
 import { concat } from "../../../../../semantic"
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import type { Element } from "../../element/Element"
 import { BaseStatus } from "../BaseStatus"
@@ -43,7 +42,7 @@ export class EnchantedBlade extends BaseStatus {
 
     public init(ctx: UnitContext): void {
         const { battle, unit } = ctx
-        this.#observers.push(
+        this.keep(
             unit.hitting.add(({ target }) => {
                 if(target.alive) this.element.applyNegative(ctx, target)
             }),
@@ -52,12 +51,8 @@ export class EnchantedBlade extends BaseStatus {
     }
 
     public remove(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers.length = 0
+        this.letGo()
     }
-
-
-    readonly #observers: Observer[] = []
 }
 
 /** The kind of an enchanted blade of an element. */

@@ -14,6 +14,7 @@ import { HostDirectory } from "../games/mecard/sync/hosts/HostDirectory"
 import { MecardGame, MecardViewer, mecardTheme } from "../games/mecard/ui"
 import type { MecardNetwork } from "../games/mecard/ui"
 import type { Platform, PlayerStorage } from "../platform"
+import type { Removable } from "../lifetime"
 
 /** The size of the world as drawn, in pixels, before its integer upscale to the screen. */
 const LOW_RES_WIDTH = 320
@@ -34,7 +35,7 @@ const ROOM_NAME = "Dungeon of the Mecard"
  * room its console opens; or watched, its units played when the host gives some, when the platform is a
  * viewer of another client.
  */
-export function startGame(platform: Platform): { dispose(): void } {
+export function startGame(platform: Platform): Removable {
     const { gfx, loop } = platform
     const input = new InputSystem(platform.input)
     const gpu = new Gpu(gfx)
@@ -112,11 +113,12 @@ export function startGame(platform: Platform): { dispose(): void } {
     })
 
     return {
-        dispose: () => {
+        remove: () => {
             loop.stop()
             closed = true
             if(storage) void storage.close()
             if(game instanceof MecardViewer || game instanceof MecardGame) game.dispose()
+            sounds?.dispose()
             ui.dispose()
             lowRes.dispose()
             gpu.dispose()

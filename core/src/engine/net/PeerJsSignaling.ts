@@ -1,12 +1,13 @@
+import { signal } from "../../lifetime"
 import { MAX_DATA_LENGTH } from "@game/server/protocol"
 import type { IceServer, JsonValue, Member, PeerSignal } from "@game/server/protocol"
 
 import type { Cancel, NetPort, TimerPort } from "../../platform"
-import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
 import { PeerJsConnection } from "./PeerJsConnection"
 import type { PeerJsRelayed } from "./PeerJsConnection"
 import type { RoomCreation, RoomEntry, RoomEvent, Signaling } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /**
  * How long a knock waits for the word of the host, in milliseconds. The server of PeerJS holds a message for
@@ -137,7 +138,7 @@ export class PeerJsSignaling implements Signaling {
         }
         this.#members.set(member, knocking)
         this.#send(member, "ANSWER", { k: "admit", result: "yes", name: this.#name, host: this.#self })
-        this.#events.emit({ type: "joined", member: knocking })
+        this.#events.notify({ type: "joined", member: knocking })
     }
 
     public setData(data: JsonValue): void {
@@ -150,18 +151,18 @@ export class PeerJsSignaling implements Signaling {
         this.#send(to, type, { k: "signal", signal })
     }
 
-    public onEvent(handler: (event: RoomEvent) => void): { dispose(): void } {
+    public onEvent(handler: (event: RoomEvent) => void): Removable {
         return this.#events.add(handler)
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         const reason = this.#ended
         if(!reason) return this.#closed.add(handler)
         let isDisposed = false
         queueMicrotask(() => {
             if(!isDisposed) handler(reason)
         })
-        return { dispose: () => { isDisposed = true } }
+        return { remove: () => { isDisposed = true } }
     }
 
     public close(): void {
@@ -176,8 +177,8 @@ export class PeerJsSignaling implements Signaling {
     readonly #key: string
     readonly #prefix: string
     readonly #iceServers: readonly IceServer[]
-    readonly #events = new Listeners<RoomEvent>()
-    readonly #closed = new Listeners<NetError>()
+    readonly #events = signal<RoomEvent>()
+    readonly #closed = signal<NetError>()
 
     /** The members of the room this client owns, or the owner of the room it entered. */
     readonly #members = new Map<string, Member>()
@@ -274,18 +275,18 @@ export class PeerJsSignaling implements Signaling {
                 }
                 const member = { id: from, data: say.data ?? null }
                 this.#knocking.set(from, member)
-                this.#events.emit({ type: "knocking", member })
+                this.#events.notify({ type: "knocking", member })
                 return
             }
             case "signal":
-                if(this.#members.has(from)) this.#events.emit({ type: "signal", from, signal: say.signal })
+                if(this.#members.has(from)) this.#events.notify({ type: "signal", from, signal: say.signal })
                 return
             case "data": {
                 const member = this.#members.get(from)
                 if(!member) return
                 const changed = { id: from, data: say.data ?? null }
                 this.#members.set(from, changed)
-                this.#events.emit({ type: "changed", member: changed })
+                this.#events.notify({ type: "changed", member: changed })
                 return
             }
             default:
@@ -314,12 +315,12 @@ export class PeerJsSignaling implements Signaling {
                 return
             }
             case "signal":
-                if(this.#entry === null) this.#events.emit({ type: "signal", from: this.#hostId, signal: say.signal })
+                if(this.#entry === null) this.#events.notify({ type: "signal", from: this.#hostId, signal: say.signal })
                 return
             case "data": {
                 const changed = { id: this.#hostId, data: say.data ?? null }
                 this.#members.set(this.#hostId, changed)
-                if(this.#entry === null) this.#events.emit({ type: "changed", member: changed })
+                if(this.#entry === null) this.#events.notify({ type: "changed", member: changed })
                 return
             }
             default:
@@ -336,10 +337,10 @@ export class PeerJsSignaling implements Signaling {
             return
         }
         if(this.#knocking.delete(from)){
-            this.#events.emit({ type: "left", member: from })
+            this.#events.notify({ type: "left", member: from })
             return
         }
-        if(this.#members.delete(from)) this.#events.emit({ type: "left", member: from })
+        if(this.#members.delete(from)) this.#events.notify({ type: "left", member: from })
     }
 
     #settleEntry(): void {
@@ -360,7 +361,7 @@ export class PeerJsSignaling implements Signaling {
         this.#ended = reason
         this.#failEntry(reason)
         this.#events.clear()
-        this.#closed.emit(reason)
+        this.#closed.notify(reason)
         this.#closed.clear()
     }
 }

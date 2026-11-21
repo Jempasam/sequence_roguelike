@@ -31,7 +31,7 @@ function session(
     const main = started(options.run ?? startedRun(options.seed ?? 11))
     const viewers = Array.from({ length: options.viewers ?? 1 }, () => new BattleReceiver(empty(), channel))
     const drifts: BattleDesync[] = []
-    for(const viewer of viewers) viewer.onDesync = desync => drifts.push(desync)
+    for(const viewer of viewers) viewer.desynced.add(desync => drifts.push(desync))
     const broadcaster = new BattleBroadcaster(main, channel, { secret: options.secret })
     return { channel, main, viewers, drifts, broadcaster }
 }

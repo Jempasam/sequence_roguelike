@@ -44,7 +44,7 @@ describe("MergedRoom", () => {
         const joined: string[] = []
         const handle = new MergedRoom([first, second]).onJoin(peer => joined.push(peer.id))
         first.join("a")
-        handle.dispose()
+        handle.remove()
         first.join("b")
         second.join("c")
         expect(joined).toEqual(["a"])
@@ -52,7 +52,7 @@ describe("MergedRoom", () => {
 
     test("no room → nothing is ever told", () => {
         const joined: string[] = []
-        new MergedRoom([]).onJoin(peer => joined.push(peer.id)).dispose()
+        new MergedRoom([]).onJoin(peer => joined.push(peer.id)).remove()
         expect(joined).toEqual([])
     })
 })
@@ -82,7 +82,7 @@ describe("MergedSender", () => {
         const first = new LocalSync()
         const second = new LocalSync()
         const handle = new MergedSender([first, second]).onPeer(() => "state")
-        handle.dispose()
+        handle.remove()
         const heard: string[] = []
         first.listen(message => heard.push(message))
         second.listen(message => heard.push(message))

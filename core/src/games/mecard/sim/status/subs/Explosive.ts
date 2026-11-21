@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import { DISTANCE, UNIT } from "../../base/keywords"
 import type { UnitContext } from "../../battle/Action"
 import * as Areas from "../../battle/area/Areas"
@@ -39,17 +38,14 @@ export class Explosive extends BaseStatus {
     public override toSemString(): Text { return [EXPLOSIVE, ` ${this.level}`] }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = unit.onDeath.add(() => {
+        this.keep(unit.onDeath.add(() => {
             const area = Areas.circle(unit.position, explosiveRadius(this.level))
             battle.signals.notifyStatus.notify({ unit, target: this })
             battle.explode(area, this.level, unit.owner ?? unit, unit)
-        })
+        }))
     }
 
     public remove(): void {
-        this.#observer?.remove()
+        this.letGo()
     }
-
-
-    #observer?: Observer
 }

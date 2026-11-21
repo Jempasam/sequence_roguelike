@@ -40,6 +40,33 @@ describe("RunHistorian", () => {
         historian.dispose()
     })
 
+    test("two games ending at once → both kept, none lost to the other's write", async() => {
+        const slot = await slotOf()
+        const first = startedRun(1)
+        const second = startedRun(2)
+        const historian = new RunHistorian(first, slot, () => 1, () => {})
+        first.gold = 1
+        second.gold = 2
+        first.defeated.notify(first)
+        // Called before the first write is done: a load then a save in turn would both start from nothing.
+        historian.engine = second
+        second.defeated.notify(second)
+        await settle()
+        expect((await slot.load())!.entries.map(entry => entry.gold)).toEqual([1, 2])
+        historian.dispose()
+    })
+
+    test("disposed → a run given after is not written", async() => {
+        const slot = await slotOf()
+        const historian = new RunHistorian(startedRun(1), slot, () => 1, () => {})
+        historian.dispose()
+        const run = startedRun(2)
+        historian.engine = run
+        run.defeated.notify(run)
+        await settle()
+        expect(await slot.load()).toBeNull()
+    })
+
     test("two games → both kept, in order of play", async() => {
         const slot = await slotOf()
         const first = startedRun(1)

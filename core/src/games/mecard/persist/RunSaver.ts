@@ -21,7 +21,7 @@ export class RunSaver {
     public set engine(run: Run){
         this.#unregisterObservers()
         this.#engine = run
-        this.#registerObservers()
+        if(!this.#isDisposed) this.#registerObservers()
     }
 
     constructor(
@@ -40,10 +40,12 @@ export class RunSaver {
 
     /** Stop keeping the run. */
     public dispose(): void {
+        this.#isDisposed = true
         this.#unregisterObservers()
     }
 
 
+    #isDisposed = false
     #engine: Run
     #observers: Observer[] = []
 

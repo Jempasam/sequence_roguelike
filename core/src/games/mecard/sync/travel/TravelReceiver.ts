@@ -8,6 +8,7 @@ import { signal, UnloadableFault } from "../faults"
 import { detailOf } from "../read"
 import { readTravelMessage } from "./TravelMessage"
 import type { TravelMessage, TravelMove, TravelRest } from "./TravelMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** A viewer the party was told to stand elsewhere than where its moves had it: one of them was lost. */
 export interface TravelDesync {
@@ -30,7 +31,7 @@ export class TravelReceiver {
     public engine: Travel
 
     /** What hears that a move was lost, nothing when none. */
-    public onDesync: ((desync: TravelDesync) => void)|null = null
+    public readonly desynced = signal<TravelDesync>()
 
     /** Told of a message that could not be read or taken in: it is left out. */
     public readonly faulted = signal<Fault>()
@@ -60,11 +61,11 @@ export class TravelReceiver {
 
     /** Stop listening, and leave the journey watched as it is. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     /** The journey and the message last heard, none before the first. */
     #heard: { readonly number: number, readonly sequence: number }|null = null
@@ -100,6 +101,6 @@ export class TravelReceiver {
         const isSameMap = this.#standing === number && travel.journey.scenery === save.journey.scenery
         if(!isSameMap) return
         const own = travel.place && travel.journey.places.indexOf(travel.place)
-        if(own !== save.place) this.onDesync?.({ number, sequence })
+        if(own !== save.place) this.desynced.notify({ number, sequence })
     }
 }

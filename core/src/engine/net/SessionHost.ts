@@ -1,9 +1,9 @@
+import { signal } from "../../lifetime"
 import type { Member } from "@game/server/protocol"
 
 import type { Cancel, NetPort, SyncRoom, TimerPort } from "../../platform"
 import type { Connection } from "./Connection"
 import type { Fault } from "./Fault"
-import { Listeners } from "./Listeners"
 import {
     BadSecretFault, HostLostServerFault, SessionExpiredFault, VersionMismatchFault, faultOf,
 } from "./NetFaults"
@@ -13,6 +13,7 @@ import { readSession, SESSION_VERSION } from "./Session"
 import type { SignalingConnector } from "./Signaling"
 import { SessionPeer } from "./SessionPeer"
 import type { Admission, RoomOptions } from "./Room"
+import type { Removable } from "../../lifetime"
 
 /** A client let in: who it says it is, and the connection to it. */
 export interface SessionLink {
@@ -26,13 +27,13 @@ export interface SessionSocket {
     readonly code: string
 
     /** Be told of each client whose connection opens. */
-    onClient(handler: (client: SessionLink) => void): { dispose(): void }
+    onClient(handler: (client: SessionLink) => void): Removable
 
     /** Be told of each client that leaves, or whose connection is lost. */
-    onLeave(handler: (client: Member) => void): { dispose(): void }
+    onLeave(handler: (client: Member) => void): Removable
 
     /** Be told once the room closes. */
-    onClose(handler: (reason: NetError) => void): { dispose(): void }
+    onClose(handler: (reason: NetError) => void): Removable
 
     close(): void
 }
@@ -92,22 +93,22 @@ export class SessionHost {
 
 
     /** Told of each client that comes for the first time. */
-    public readonly peerJoined = new Listeners<SessionPeer>()
+    public readonly peerJoined = signal<SessionPeer>()
 
     /** Told of each client whose connection is lost: it may come back. */
-    public readonly peerLost = new Listeners<SessionPeer>()
+    public readonly peerLost = signal<SessionPeer>()
 
     /** Told of each client that came back on a new connection. */
-    public readonly peerBack = new Listeners<SessionPeer>()
+    public readonly peerBack = signal<SessionPeer>()
 
     /** Told of each client that did not come back in time, or never will. */
-    public readonly peerGone = new Listeners<SessionPeer>()
+    public readonly peerGone = signal<SessionPeer>()
 
     /** Told of what was dealt with: a client refused, a session claimed with a wrong secret. */
-    public readonly faulted = new Listeners<Fault>()
+    public readonly faulted = signal<Fault>()
 
     /** Told once, when the host cannot go on. */
-    public readonly ended = new Listeners<Fault>()
+    public readonly ended = signal<Fault>()
 
     constructor(
         private readonly socket: SessionSocket,
@@ -147,20 +148,20 @@ export class SessionHost {
         const ours = this.options.version ?? SESSION_VERSION
         const session = readSession(member.data)
         if(!session){
-            this.faulted.emit(new VersionMismatchFault(member.id, null, ours))
+            this.faulted.notify(new VersionMismatchFault(member.id, null, ours))
             return false
         }
         if(session.version !== ours){
-            this.faulted.emit(new VersionMismatchFault(session.id, session.version, ours))
+            this.faulted.notify(new VersionMismatchFault(session.id, session.version, ours))
             return false
         }
         if(this.#gone.has(session.id)){
-            this.faulted.emit(new SessionExpiredFault(session.id))
+            this.faulted.notify(new SessionExpiredFault(session.id))
             return false
         }
         const known = this.#secrets.get(session.id)
         if(known !== undefined && known !== session.secret){
-            this.faulted.emit(new BadSecretFault(session.id))
+            this.faulted.notify(new BadSecretFault(session.id))
             return false
         }
         this.#secrets.set(session.id, session.secret)
@@ -174,7 +175,7 @@ export class SessionHost {
     }
 
 
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
 
     /** The clients, by the id of their session. */
     readonly #peers = new Map<string, SessionPeer>()
@@ -200,20 +201,20 @@ export class SessionHost {
         if(!peer){
             const created = new SessionPeer(session.id, member.id, connection)
             this.#peers.set(session.id, created)
-            this.peerJoined.emit(created)
+            this.peerJoined.notify(created)
             return
         }
         this.#waits.get(session.id)?.cancel()
         this.#waits.delete(session.id)
         peer.markBack(member.id, connection)
-        this.peerBack.emit(peer)
+        this.peerBack.notify(peer)
     }
 
     #left(member: Member): void {
         const peer = [...this.#peers.values()].find(each => each.member === member.id)
         if(!peer || peer.isLost) return
         peer.markLost()
-        this.peerLost.emit(peer)
+        this.peerLost.notify(peer)
         this.#waits.set(peer.id, this.options.timer.after(this.options.graceMs, () => this.#goneFor(peer)))
     }
 
@@ -224,20 +225,27 @@ export class SessionHost {
         this.#secrets.delete(peer.id)
         this.#gone.add(peer.id)
         peer.close()
-        this.peerGone.emit(peer)
+        this.peerGone.notify(peer)
     }
 
     #closed(): void {
         if(this.#isStopped) return
         this.#stop()
-        this.ended.emit(new HostLostServerFault())
+        this.ended.notify(new HostLostServerFault())
     }
 
-    /** Wait for no one, and hear no more. */
+    /**
+     * Wait for no one, and hear no more: the clients are let go, their connections closed. What listens is
+     * told by `close` or `ended`, not peer by peer.
+     */
     #stop(): void {
         this.#isStopped = true
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
         for(const wait of this.#waits.values()) wait.cancel()
         this.#waits.clear()
+        const peers = [...this.#peers.values()]
+        this.#peers.clear()
+        this.#secrets.clear()
+        for(const peer of peers) peer.close()
     }
 }

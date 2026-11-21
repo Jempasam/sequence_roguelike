@@ -5,7 +5,7 @@ import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Pan
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import type { Observer } from "../../sim/base/Observable"
+import { Scope } from "../../../../lifetime"
 import { eventText } from "../../sim/battle/events"
 import { NOTE_COLOR } from "../../sim/battle/previewColors"
 import type { Indicator } from "../../sim/battle/preview/Preview"
@@ -442,10 +442,10 @@ export class BattleScreen implements HudHost {
     #locks: BattleLocks
 
     /** What it listens to on the battle shown. */
-    #observers: Observer[] = []
+    #observers = new Scope()
 
     /** The observers of the plans of the units: they change with the units of the battle. */
-    #planObservers: Observer[] = []
+    #planObservers = new Scope()
 
     /** Did the players say they are ready, for another to launch the round? */
     #ready = false
@@ -496,7 +496,8 @@ export class BattleScreen implements HudHost {
     /** Add what the battle tells to what the screen plays, as it comes. */
     #registerObservers(): void {
         const battle = this.#engine
-        this.#observers = [
+        this.#observers.remove()
+        this.#observers = new Scope(
             ...this.#battleAnimations.register(battle),
             battle.phaseChanged.add(phase => {
                 if(phase === "execution"){
@@ -519,23 +520,24 @@ export class BattleScreen implements HudHost {
                 this.drafts.clear()
                 this.refresh()
             }),
-        ]
+        )
         this.#watchPlans()
     }
 
     /** Show the panels again when the plan of a unit changes while the players put their chains together. */
     #watchPlans(): void {
-        for(const observer of this.#planObservers) observer.remove()
+        this.#planObservers.remove()
         const battle = this.#engine
-        this.#planObservers = battle.units.map(unit => unit.onPlanChange.add(() => {
+        this.#planObservers = new Scope(...battle.units.map(unit => unit.onPlanChange.add(() => {
             if(this.mode === "planning" && battle.phase === "preparation") this.refresh()
-        }))
+        })))
     }
 
     #unregisterObservers(): void {
-        for(const observer of [...this.#observers, ...this.#planObservers]) observer.remove()
-        this.#observers = []
-        this.#planObservers = []
+        this.#observers.remove()
+        this.#planObservers.remove()
+        this.#observers = new Scope()
+        this.#planObservers = new Scope()
     }
 
     /** Drop what waits to be played, and end what is going on. */

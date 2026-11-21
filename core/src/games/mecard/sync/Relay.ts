@@ -2,6 +2,7 @@ import type { SyncPeer, SyncRoom } from "../../../platform"
 import type { Fault } from "../../../engine/net/Fault"
 import type { SyncSender, SyncSource, SyncTopic } from "./SyncChannel"
 import { signal, UnreadableFault } from "./faults"
+import type { Removable } from "../../../lifetime"
 
 /** What a relay tells a client that connects of what the others said before. */
 export interface RelayMemory {
@@ -22,7 +23,7 @@ export const NOTHING: RelayMemory = { initial: () => null }
 
 /** What listens to a peer, and what it said last, as the relay sent it. */
 interface Listened {
-    readonly handles: { dispose(): void }[]
+    readonly handles: Removable[]
     last: string|null
 }
 
@@ -91,16 +92,16 @@ export class Relay {
 
     /** Stop relaying. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
         for(const peer of [...this.#peers.keys()]) this.#drop(peer)
-        for(const entry of this.#stoodFor.values()) for(const handle of entry.handles) handle.dispose()
+        for(const entry of this.#stoodFor.values()) for(const handle of entry.handles) handle.remove()
         this.#stoodFor.clear()
     }
 
 
     readonly #sender: SyncSender
     readonly #topic: SyncTopic
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
 
     /** What the host said last, to tell a client connecting. */
     #hostLast: string|null = null
@@ -150,7 +151,7 @@ export class Relay {
     #drop(id: string): void {
         const entry = this.#peers.get(id)
         if(!entry) return
-        for(const handle of entry.handles) handle.dispose()
+        for(const handle of entry.handles) handle.remove()
         this.#peers.delete(id)
     }
 }
@@ -191,9 +192,9 @@ export class RelayedSource {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 }

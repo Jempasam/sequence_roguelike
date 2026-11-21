@@ -63,7 +63,7 @@ export type {
     SessionHostOptions, SessionInfo, SessionLink, SessionSocket, SharedOptions, SharedRole, Signaling, SignalingConnector,
     SignalPath,
 } from "./engine/net"
-export { Listeners } from "./engine/net"
+export * from "./lifetime"
 export { MemoryStorage, SaveError, SaveSlot } from "./engine/save"
 export type { Migration, SaveErrorReason, SaveFormat } from "./engine/save"
 export { BitmapFont, TextLayout } from "./engine/text"

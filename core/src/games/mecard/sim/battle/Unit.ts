@@ -575,7 +575,10 @@ export class Unit {
         return this.alive ? action : null
     }
 
-    /** Die, once nothing keeps it alive: its rules and processes go, and what it had left to play. */
+    /**
+     * Die, once nothing keeps it alive: its rules and processes go, and what it had left to play. Its statuses
+     * go last, once those that act on its death (a blast, a splash) have been told: no status outlives it.
+     */
     public die(source: Unit|null): void {
         const { battle } = this
         this.hearts.unplug()
@@ -584,6 +587,7 @@ export class Unit {
         battle.events.push({ type: "died", unit: this })
         this.onDeath.notify({ unit: this, source })
         source?.killed.notify({ unit: this, source })
+        for(const type of [...this.statuses.keys()]) battle.removeStatus(this, type)
     }
 
     /** The status of a kind it holds, none when it holds none. */

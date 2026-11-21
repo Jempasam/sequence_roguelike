@@ -46,7 +46,7 @@ export class BubbleStatus extends BaseStatus {
 
     public init({ battle, unit }: UnitContext): void {
         unit.stats.targetable.add(this.#key, new Forced(false))
-        this.#observers.push(
+        this.keep(
             unit.stepStarted.add(() => { this.#playing = true }),
             unit.stepEnded.add(() => {
                 this.#playing = false
@@ -63,13 +63,11 @@ export class BubbleStatus extends BaseStatus {
 
     public remove(ctx?: UnitContext): void {
         ctx?.unit.stats.targetable.remove(this.#key)
-        for(const observer of this.#observers) observer.remove()
-        this.#observers.length = 0
+        this.letGo()
     }
 
 
     readonly #key = new ModifierKey("bulle")
-    readonly #observers: Observer[] = []
     #playing = false
     #doomed = false
 

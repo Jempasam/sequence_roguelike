@@ -52,14 +52,22 @@ export class SoundPlayer {
      * goes through the filters of its channel, then its own.
      */
     public play(channel: string, path: SoundPath, options: SoundOptions = {}): void {
+        if(this.#isDisposed) return
         void this.#sound(path).then(sound => {
-            if(sound) this.#start(sound, channel, options)
+            if(sound && !this.#isDisposed) this.#start(sound, channel, options)
         })
+    }
+
+    /** Let the sounds go, and play none more: a sound still loading is dropped when it arrives. */
+    public dispose(): void {
+        this.#isDisposed = true
+        this.#sounds.clear()
     }
 
 
     /** The sounds asked for, each loaded once, none when it could not be. */
     readonly #sounds = new Map<SoundPath, Promise<Sound|null>>()
+    #isDisposed = false
 
     #sound(path: SoundPath): Promise<Sound|null> {
         const known = this.#sounds.get(path)

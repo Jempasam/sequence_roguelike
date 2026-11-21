@@ -12,6 +12,7 @@ import type { GameModeShareable } from "../GameModeShareable"
 import { Heard, NoAnswerFault } from "../HandleChannel"
 import type { HandleChannel, HeardChannel } from "../HandleChannel"
 import type { SettingValues } from "../Setting"
+import type { Removable } from "../../../../../lifetime"
 
 /** What a local game reads the time from, and waits with: nothing of the network, nothing of a platform. */
 export interface LocalClock {
@@ -56,7 +57,7 @@ class Member implements GameMember {
 interface Following {
     info: GameModeShareable
     controlled: boolean
-    view: { dispose(): void }|null
+    view: Removable|null
 }
 
 /** An instance as the local game holds it: one engine, shared by every member that follows it. */
@@ -203,6 +204,8 @@ export class LocalManager implements GameModeContext {
         this.#cancels.clear()
         for(const instance of [...this.#instances.values()]) this.#drop(instance)
         this.#queue.length = 0
+        // What the mode listened to a member joining with goes with the game.
+        this.joined.clear()
     }
 
     // ============ The context ============
@@ -528,7 +531,7 @@ export class LocalManager implements GameModeContext {
         const following = instance.follows.get(member.id)
         if(!following) return
         instance.follows.delete(member.id)
-        following.view?.dispose()
+        following.view?.remove()
     }
 
     #invalidate(instance: Instance): void {
@@ -539,7 +542,7 @@ export class LocalManager implements GameModeContext {
 
     #drop(instance: Instance): void {
         instance.isValid = false
-        for(const following of instance.follows.values()) following.view?.dispose()
+        for(const following of instance.follows.values()) following.view?.remove()
         instance.follows.clear()
         this.#instances.delete(instance.id)
     }

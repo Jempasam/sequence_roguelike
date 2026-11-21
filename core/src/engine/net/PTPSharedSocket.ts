@@ -1,10 +1,11 @@
+import { Scope, signal } from "../../lifetime"
 import type { Cancel, NetPort, TimerPort } from "../../platform"
-import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
 import { PTPClientSocket } from "./PTPClientSocket"
 import { PTPHostSocket } from "./PTPHostSocket"
 import type { Peer } from "./Room"
 import type { SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /** Where a member stands in the sharing of the value. */
 export type SharedRole = "electing"|"host"|"client"
@@ -163,12 +164,12 @@ export class PTPSharedSocket<T, M> {
     }
 
     /** Be told of each value, once the host changed it, until the returned handle is disposed. */
-    public onChange(handler: (value: T) => void): { dispose(): void } {
+    public onChange(handler: (value: T) => void): Removable {
         return this.#changes.add(handler)
     }
 
     /** Be told when this member becomes the host, or a client, or is looking for a room again. */
-    public onRole(handler: (role: SharedRole) => void): { dispose(): void } {
+    public onRole(handler: (role: SharedRole) => void): Removable {
         return this.#roles.add(handler)
     }
 
@@ -183,7 +184,7 @@ export class PTPSharedSocket<T, M> {
         if(this.#role === "host"){
             this.#take(id, change)
             this.#tell()
-            this.#changes.emit(this.#value as T)
+            this.#changes.notify(this.#value as T)
             return
         }
         this.#pending.set(id, change)
@@ -206,8 +207,8 @@ export class PTPSharedSocket<T, M> {
 
     readonly #ready: Promise<void>
     #settleReady!: { resolve(): void, reject(error: Error): void }
-    readonly #changes = new Listeners<T>()
-    readonly #roles = new Listeners<SharedRole>()
+    readonly #changes = signal<T>()
+    readonly #roles = signal<SharedRole>()
 
     #role: SharedRole = "electing"
     #value: T|undefined
@@ -218,6 +219,9 @@ export class PTPSharedSocket<T, M> {
 
     /** The room this member hosts, or the link to the host of the room it joined. */
     #host: PTPHostSocket|null = null
+
+    /** What listens to the room hosted or the link held, taken back with it. */
+    #links = new Scope()
     #client: PTPClientSocket|null = null
     #index = -1
 
@@ -241,7 +245,7 @@ export class PTPSharedSocket<T, M> {
     #setRole(role: SharedRole): void {
         if(this.#role === role) return
         this.#role = role
-        this.#roles.emit(role)
+        this.#roles.notify(role)
     }
 
     #jitter(base: number): number {
@@ -268,6 +272,9 @@ export class PTPSharedSocket<T, M> {
 
     /** Let go of the room or the link this member holds, without it being taken as lost. */
     #detach(): void {
+        // What listened to the room or the link goes first, so closing them is not heard as a loss.
+        this.#links.remove()
+        this.#links = new Scope()
         const host = this.#host
         const client = this.#client
         this.#host = null
@@ -390,14 +397,16 @@ export class PTPSharedSocket<T, M> {
             this.#pending.delete(id)
             this.#tryTake(id, change)
         }
-        host.onClient(peer => this.#watch(host, peer))
-        host.onLeave(member => this.#welcomed.delete(member.id))
-        host.onClose(() => {
-            if(this.#host === host) this.#lost()
-        })
+        this.#links.track(
+            host.onClient(peer => this.#watch(host, peer)),
+            host.onLeave(member => this.#welcomed.delete(member.id)),
+            host.onClose(() => {
+                if(this.#host === host) this.#lost()
+            }),
+        )
         this.#setRole("host")
         this.#markReady()
-        this.#changes.emit(this.#value as T)
+        this.#changes.notify(this.#value as T)
         this.#scheduleProbe()
     }
 
@@ -414,8 +423,8 @@ export class PTPSharedSocket<T, M> {
                 if(isDone) return
                 isDone = true
                 timeout.cancel()
-                listening.dispose()
-                closing.dispose()
+                listening.remove()
+                closing.remove()
                 resolve(outcome)
             }
             const listening = client.listen(text => {
@@ -436,10 +445,12 @@ export class PTPSharedSocket<T, M> {
     #join(client: PTPClientSocket, index: number, state: ToClient): void {
         this.#client = client
         this.#index = index
-        client.listen(text => this.#hearHost(client, text))
-        client.onClose(() => {
-            if(this.#client === client) this.#lost()
-        })
+        this.#links.track(
+            client.listen(text => this.#hearHost(client, text)),
+            client.onClose(() => {
+                if(this.#client === client) this.#lost()
+            }),
+        )
         this.#hear(state)
         this.#setRole("client")
         this.#markReady()
@@ -505,7 +516,7 @@ export class PTPSharedSocket<T, M> {
 
     /** Hear a client of the room this member hosts. */
     #watch(host: PTPHostSocket, peer: Peer): void {
-        peer.connection.listen(text => {
+        this.#links.track(peer.connection.listen(text => {
             if(this.#host !== host) return
             const message = readMessage<ToHost>(text)
             if(message?.t === "hello"){
@@ -516,12 +527,12 @@ export class PTPSharedSocket<T, M> {
                 if(!this.#applied.includes(message.id)){
                     this.#tryTake(message.id, message.change as M)
                     this.#tell()
-                    this.#changes.emit(this.#value as T)
+                    this.#changes.notify(this.#value as T)
                 }
                 // A change heard again is one the client did not hear taken in: it is told so.
                 else this.#tellTo(peer)
             }
-        })
+        }))
     }
 
     /** Take a change in, or drop it when the accumulator refuses it: its sender hears it is over. */
@@ -577,7 +588,7 @@ export class PTPSharedSocket<T, M> {
         const message = readMessage<ToClient>(text)
         if(message?.t !== "state" || !Array.isArray(message.applied)) return
         this.#hear(message)
-        this.#changes.emit(this.#value as T)
+        this.#changes.notify(this.#value as T)
     }
 
     /** Take the state the host told: its value, and which changes it took in. */

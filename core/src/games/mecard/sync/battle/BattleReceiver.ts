@@ -8,6 +8,7 @@ import { signal, UnloadableFault } from "../faults"
 import { detailOf } from "../read"
 import { readBattleMessage } from "./BattleMessage"
 import type { BattleMessage } from "./BattleMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** A viewer whose own simulation of a round ended elsewhere than where the main client's did. */
 export interface BattleDesync {
@@ -32,7 +33,7 @@ export class BattleReceiver {
     public engine: Battle|null
 
     /** What hears of a drift of the simulation from the main client's, nothing when none. */
-    public onDesync: ((desync: BattleDesync) => void)|null = null
+    public readonly desynced = signal<BattleDesync>()
 
     /** Told of a message that could not be read or loaded: it is left out. */
     public readonly faulted = signal<Fault>()
@@ -62,11 +63,11 @@ export class BattleReceiver {
 
     /** Stop listening, and leave the battle watched as it is. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     /** The battle and the message last taken in, none before the first. */
     #loaded: { readonly number: number, readonly sequence: number }|null = null
@@ -98,7 +99,7 @@ export class BattleReceiver {
         if(battle.phase !== "preparation" || battle.round !== message.save.round) return
         const own = comparable(battle.save({ secret: message.secret }), message.secret)
         if(own !== comparable(message.save, message.secret)){
-            this.onDesync?.({ number: message.number, round: message.save.round })
+            this.desynced.notify({ number: message.number, round: message.save.round })
         }
     }
 }

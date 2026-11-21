@@ -19,15 +19,14 @@ export abstract class RoundStatus extends BaseStatus {
     // What it plugs in acts at the end of a round before the count down, plugged in first.
     public init(ctx: UnitContext): void {
         const { battle, unit } = ctx
-        this.#plugged.push(...this.plug(ctx), battle.roundEnded.add(() => {
+        this.keep(...this.plug(ctx), battle.roundEnded.add(() => {
             this.setLevel(this.level - 1)
             if(this.level <= 0) battle.removeStatus(unit, this.type)
         }))
     }
 
     public remove(): void {
-        for(const each of this.#plugged) each.remove()
-        this.#plugged.length = 0
+        this.letGo()
     }
 
 
@@ -36,7 +35,4 @@ export abstract class RoundStatus extends BaseStatus {
      * out: an observer, or for a modifier, what removes it.
      */
     protected abstract plug(ctx: UnitContext): Observer[]
-
-
-    readonly #plugged: Observer[] = []
 }

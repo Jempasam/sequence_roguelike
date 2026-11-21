@@ -1,8 +1,9 @@
+import { signal } from "../../lifetime"
 import type { Cancel, NetPort, TimerPort } from "../../platform"
 import { ClientSocket } from "./ClientSocket"
 import type { ConnectionState } from "./Connection"
-import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /**
  * How often the server of PeerJS is told this client is alive, in milliseconds: it forgets a client that is
@@ -101,19 +102,19 @@ export class PeerJsConnection {
     }
 
     /** Hear what the other clients say, from the registration on. */
-    public onMessage(handler: (message: PeerJsRelayed) => void): { dispose(): void } {
+    public onMessage(handler: (message: PeerJsRelayed) => void): Removable {
         return this.#messages.add(handler)
     }
 
     /** Hear the end of the connection, even if it ended already. */
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         const reason = this.#ended
         if(!reason) return this.#closed.add(handler)
         let isDisposed = false
         queueMicrotask(() => {
             if(!isDisposed) handler(reason)
         })
-        return { dispose: () => { isDisposed = true } }
+        return { remove: () => { isDisposed = true } }
     }
 
     public close(): void {
@@ -127,8 +128,8 @@ export class PeerJsConnection {
 
 
     readonly #socket: ClientSocket
-    readonly #messages = new Listeners<PeerJsRelayed>()
-    readonly #closed = new Listeners<NetError>()
+    readonly #messages = signal<PeerJsRelayed>()
+    readonly #closed = signal<NetError>()
 
     /** Settles the registration of the id, while the server has not said whether it is free. */
     #registration: Registration|null
@@ -186,7 +187,7 @@ export class PeerJsConnection {
         // The server tells who sent a message, which a client cannot forge: the payload is not asked.
         const from = message.src
         if(typeof from !== "string" || !this.#isRegistered) return
-        this.#messages.emit({ type: message.type, from, payload: message.payload })
+        this.#messages.notify({ type: message.type, from, payload: message.payload })
     }
 
     /** The connection ended: the heartbeat stops and everything that listens is told. */
@@ -196,7 +197,7 @@ export class PeerJsConnection {
         this.#beat?.cancel()
         this.#beat = null
         this.#messages.clear()
-        this.#closed.emit(reason)
+        this.#closed.notify(reason)
         this.#closed.clear()
     }
 }

@@ -1,15 +1,8 @@
 import { Fault } from "../../../engine/net/Fault"
-import { Observable } from "../sim/base/Observable"
-import type { Observer } from "../sim/base/Observable"
+import { Scope } from "../../../lifetime"
+import type { Removable } from "../../../lifetime"
 
-/**
- * An observable of the sync of a game. What listens to it may fail without breaking the code that tells it:
- * the failure of a listener is a bug, which is written to the console rather than thrown, as nothing in the
- * sync throws.
- */
-export function signal<T>(): Observable<T> {
-    return new Observable<T>(error => console.error("A listener of the sync failed:", error))
-}
+export { signal } from "../../../lifetime"
 
 /** What was received and could not be read: no message of the topic, or in another version. */
 export class UnreadableFault extends Fault {
@@ -323,13 +316,10 @@ export class DuelLayerFault extends Fault {
     }
 }
 
-/** What an observable or a source of a child tells, as a handle of either kind. */
-export type Handle = Observer|{ dispose(): void }
-
 /** What tells of a fault dealt with, and of one that ended it: a brick that never ends has no `ended`. */
 export interface FaultSource {
-    readonly faulted: { add(listener: (fault: Fault) => void): Handle }
-    readonly ended?: { add(listener: (fault: Fault) => void): Handle }
+    readonly faulted: { add(listener: (fault: Fault) => void): Removable }
+    readonly ended?: { add(listener: (fault: Fault) => void): Removable }
 }
 
 /** Where the faults of a brick go: a parent. */
@@ -338,11 +328,6 @@ export interface FaultSink {
     readonly ended?: { notify(fault: Fault): void }
 }
 
-/** Stop a handle of either kind. */
-export function release(handle: Handle): void {
-    if("remove" in handle) handle.remove()
-    else handle.dispose()
-}
 
 /**
  * Have a parent tell of what its child tells. The `faulted` of the child is always the parent's `faulted`.
@@ -356,11 +341,11 @@ export function forward(
     child: FaultSource,
     parent: FaultSink,
     isIndispensable: boolean,
-): { dispose(): void } {
-    const handles = [child.faulted.add(fault => parent.faulted.notify(fault))]
+): Removable {
+    const scope = new Scope(child.faulted.add(fault => parent.faulted.notify(fault)))
     if(child.ended){
         const target = isIndispensable && parent.ended ? parent.ended : parent.faulted
-        handles.push(child.ended.add(fault => target.notify(fault)))
+        scope.track(child.ended.add(fault => target.notify(fault)))
     }
-    return { dispose: () => handles.forEach(release) }
+    return scope
 }

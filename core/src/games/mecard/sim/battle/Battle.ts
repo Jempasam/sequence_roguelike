@@ -1218,9 +1218,8 @@ export class Battle {
     public vanish(unit: Unit): void {
         const at = this.units.indexOf(unit)
         if(at < 0) return
-        this.endProcesses(unit)
-        unit.hearts.unplug()
-        for(const status of unit.statuses.values()) status.remove({ battle: this, unit })
+        this.#detach(unit)
+        this.#unplugItemsOf(unit)
         this.units.splice(at, 1)
         this.signals.vanished.notify({ unit })
     }
@@ -1900,11 +1899,7 @@ export class Battle {
 
     /** Take everything out, each thing plugged taken back, so only what listens from outside stays. */
     #empty(): void {
-        for(const unit of this.units){
-            this.endProcesses(unit)
-            unit.hearts.unplug()
-            for(const status of unit.statuses.values()) status.remove({ battle: this, unit })
-        }
+        for(const unit of this.units) this.#detach(unit)
         this.#unplugItems()
         this.units.length = 0
         this.events.length = 0
@@ -1976,6 +1971,21 @@ export class Battle {
                 this.report(error)
             }
         }
+    }
+
+    /** Take what a unit listens with back: its processes ended, its hearts unplugged, its statuses removed. */
+    #detach(unit: Unit): void {
+        this.endProcesses(unit)
+        unit.hearts.unplug()
+        for(const status of unit.statuses.values()) status.remove({ battle: this, unit })
+    }
+
+    /** Unplug the items of one unit, which leaves the battle: they listen to it no more. */
+    #unplugItemsOf(unit: Unit): void {
+        const plugs = this.#plugs.get(unit)
+        if(!plugs) return
+        this.#plugs.delete(unit)
+        for(const plug of plugs) this.#unplug(plug)
     }
 
     /** Unplug every item of every unit: the battle is over. */

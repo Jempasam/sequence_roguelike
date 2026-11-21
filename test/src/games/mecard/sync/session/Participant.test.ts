@@ -54,7 +54,7 @@ describe("Participant", () => {
         const { peer, link } = joined()
         const heard: string[] = []
         const handle = new Participant("p1", peer).listen(TOPIC, text => heard.push(text))
-        handle.dispose()
+        handle.remove()
         link.send("t:one")
         expect(heard).toEqual([])
     })
@@ -63,6 +63,6 @@ describe("Participant", () => {
         const host = new Participant("host", null)
         expect(() => host.tell(TOPIC, "x")).not.toThrow()
         const handle = host.listen(TOPIC, () => { throw new Error("nothing to hear") })
-        expect(() => handle.dispose()).not.toThrow()
+        expect(() => handle.remove()).not.toThrow()
     })
 })

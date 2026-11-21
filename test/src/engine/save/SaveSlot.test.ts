@@ -248,6 +248,35 @@ describe("SaveSlot.load", () => {
     })
 })
 
+describe("SaveSlot.update", () => {
+    test("nothing saved → the change is given none, and what it returns is saved", async() => {
+        const slot = new SaveSlot(await storage(), "settings", SETTINGS_FORMAT)
+        let given: Settings|null|undefined
+        await slot.update(state => {
+            given = state
+            return { volume: 0.5 }
+        })
+        expect(given).toBeNull()
+        expect(await slot.load()).toEqual({ volume: 0.5 })
+    })
+
+    test("two changes not awaited → both hold, each starting from what the other wrote", async() => {
+        const slot = new SaveSlot(racingStorage(await storage()), "settings", SETTINGS_FORMAT)
+        await slot.save({ volume: 0 })
+        const first = slot.update(state => ({ volume: (state?.volume ?? 0) + 1 }))
+        const second = slot.update(state => ({ volume: (state?.volume ?? 0) + 1 }))
+        await Promise.all([first, second])
+        expect(await slot.load()).toEqual({ volume: 2 })
+    })
+
+    test("a change that throws → nothing written, and the next operation still runs", async() => {
+        const slot = new SaveSlot(await storage(), "settings", SETTINGS_FORMAT)
+        await slot.save({ volume: 1 })
+        await expect(slot.update(() => { throw new Error("no") })).rejects.toThrow("no")
+        expect(await slot.load()).toEqual({ volume: 1 })
+    })
+})
+
 describe("SaveSlot.remove", () => {
     test("saved then removed → null", async() => {
         const slot = new SaveSlot(await storage(), "run", SETTINGS_FORMAT)

@@ -1,6 +1,7 @@
+import { signal } from "../../lifetime"
 import type { ChannelKind, ConnectionState } from "./Connection"
-import { Listeners } from "./Listeners"
 import type { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /** A message heard on a connection. */
 export interface Heard {
@@ -17,8 +18,8 @@ export class ConnectionLife {
 
     public state: ConnectionState = "connecting"
     public readonly opened: Promise<void>
-    public readonly messages = new Listeners<Heard>()
-    public readonly closes = new Listeners<NetError>()
+    public readonly messages = signal<Heard>()
+    public readonly closes = signal<NetError>()
 
 
     constructor(){
@@ -53,7 +54,7 @@ export class ConnectionLife {
         this.state = "closed"
         this.#reason = reason
         this.#reject(reason)
-        this.closes.emit(reason)
+        this.closes.notify(reason)
         // Cleared once told, so nothing holds on to the handlers of a connection that is over.
         this.closes.clear()
         this.messages.clear()
@@ -69,14 +70,14 @@ export class ConnectionLife {
      * Tell a handler once the connection closes. One added to a connection closed already is told soon
      * after, never during the call, so it never waits forever and is never called before it is kept.
      */
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         const reason = this.#reason
         if(!reason) return this.closes.add(handler)
         let isDisposed = false
         queueMicrotask(() => {
             if(!isDisposed) handler(reason)
         })
-        return { dispose: () => { isDisposed = true } }
+        return { remove: () => { isDisposed = true } }
     }
 
 

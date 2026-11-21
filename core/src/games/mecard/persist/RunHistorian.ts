@@ -22,7 +22,7 @@ export class RunHistorian {
     public set engine(run: Run){
         this.#observer?.remove()
         this.#engine = run
-        this.#register()
+        if(!this.#isDisposed) this.#register()
     }
 
     constructor(
@@ -47,6 +47,7 @@ export class RunHistorian {
 
     /** Stop writing the history. */
     public dispose(): void {
+        this.#isDisposed = true
         this.#observer?.remove()
         this.#observer = null
     }
@@ -54,6 +55,7 @@ export class RunHistorian {
 
     #engine: Run
     #observer: Observer|null = null
+    #isDisposed = false
 
     #register(): void {
         this.#observer = this.#engine.defeated.add(run => this.#write(run))
@@ -61,9 +63,8 @@ export class RunHistorian {
 
     #write(run: Run): void {
         const entry = historyEntry(run, this.seed(), this.now())
-        this.slot.load().then(history => {
-            return this.slot.save({ entries: [...history?.entries ?? [], entry] })
-        }).catch((error: unknown) => {
+        // Read and written as one operation: two games ending close together both stay in the history.
+        this.slot.update(history => ({ entries: [...history?.entries ?? [], entry] })).catch((error: unknown) => {
             this.report(`La partie n'a pas pu être ajoutée à l'historique : ${String(error)}`)
         })
     }

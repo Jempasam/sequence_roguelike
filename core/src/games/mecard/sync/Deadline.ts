@@ -5,6 +5,7 @@ import type { SyncSender, SyncSource } from "./SyncChannel"
 import { signal, UnreadableFault } from "./faults"
 import { readJson, wrongShape } from "./read"
 import type { DeadlineView } from "../sim/mode/subs/duelRace/players/HubPort"
+import type { Removable } from "../../../lifetime"
 
 /** What the host tells of a deadline: how long is left, none when there is none. */
 interface DeadlineMessage {
@@ -68,13 +69,13 @@ export class Deadline implements DeadlineView {
     /** Stop for good. */
     public dispose(): void {
         this.#wait?.cancel()
-        this.#handle.dispose()
+        this.#handle.remove()
     }
 
 
     readonly #remaining: SyncSender
     readonly #over: SyncSender
-    readonly #handle: { dispose(): void }
+    readonly #handle: Removable
     #end: number|null = null
     #wait: Cancel|null = null
 
@@ -127,11 +128,11 @@ export class DeadlineReceiver implements DeadlineView {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#listening) handle.dispose()
+        for(const handle of this.#listening) handle.remove()
     }
 
 
-    readonly #listening: readonly { dispose(): void }[]
+    readonly #listening: readonly Removable[]
     #end: number|null = null
 
     #told(text: string): void {

@@ -1,3 +1,4 @@
+import type { Removable } from "../lifetime"
 /** Is this client the one a game is played on, or one that only hears it? */
 export type SyncRole = "main"|"viewer"
 
@@ -7,7 +8,7 @@ export interface SyncLink {
     send(message: string): void
 
     /** Hear each message of the other client, until the returned handle is disposed. */
-    listen(handler: (message: string) => void): { dispose(): void }
+    listen(handler: (message: string) => void): Removable
 }
 
 /**
@@ -24,19 +25,19 @@ export interface SyncPeer extends SyncLink {
 /** The clients connected to the main client, each on its own link. */
 export interface SyncRoom {
     /** Hear each client that connects, until the returned handle is disposed. */
-    onJoin(handler: (peer: SyncPeer) => void): { dispose(): void }
+    onJoin(handler: (peer: SyncPeer) => void): Removable
 
     /** Hear each client whose connection is lost and may come back, until the returned handle is disposed. */
-    onLost(handler: (peer: SyncPeer) => void): { dispose(): void }
+    onLost(handler: (peer: SyncPeer) => void): Removable
 
     /**
      * Hear each client whose connection came back, until the returned handle is disposed. What was told to
      * every client connecting is to be told again to this one, which lost it.
      */
-    onBack(handler: (peer: SyncPeer) => void): { dispose(): void }
+    onBack(handler: (peer: SyncPeer) => void): Removable
 
     /** Hear each client that left for good, until the returned handle is disposed. */
-    onLeave(handler: (peer: SyncPeer) => void): { dispose(): void }
+    onLeave(handler: (peer: SyncPeer) => void): Removable
 }
 
 /**
@@ -66,8 +67,8 @@ export interface SyncPort {
      * Give each viewer connecting a first message, read when it connects, none when there is nothing to tell
      * yet, until the returned handle is disposed. A viewer hears them in the order they were asked for.
      */
-    onPeer(initial: () => string|null): { dispose(): void }
+    onPeer(initial: () => string|null): Removable
 
     /** Hear each message, until the returned handle is disposed. */
-    listen(handler: (message: string) => void): { dispose(): void }
+    listen(handler: (message: string) => void): Removable
 }

@@ -1,4 +1,5 @@
 import type { SyncLink, SyncPeer, SyncRoom } from "../../../platform"
+import type { Removable } from "../../../lifetime"
 
 /** Where the messages of a game go: a channel to the viewers, whatever carries them. */
 export interface SyncSender {
@@ -9,13 +10,13 @@ export interface SyncSender {
      * Give each viewer connecting a first message, read when it connects, none when there is nothing to tell
      * yet, until the returned handle is disposed. A viewer hears them in the order they were asked for.
      */
-    onPeer(initial: () => string|null): { dispose(): void }
+    onPeer(initial: () => string|null): Removable
 }
 
 /** Where the messages of a game come from, for a viewer. */
 export interface SyncSource {
     /** Hear each message, until the returned handle is disposed. */
-    listen(handler: (message: string) => void): { dispose(): void }
+    listen(handler: (message: string) => void): Removable
 }
 
 /** The way between this client and one other, in both directions. */
@@ -190,19 +191,19 @@ export class LocalSync implements SyncSender, SyncSource {
         else this.#deliver(message)
     }
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         this.#handlers.add(handler)
         for(const { initial } of [...this.#peers]){
             const message = initial()
             if(message !== null) handler(message)
         }
-        return { dispose: () => this.#handlers.delete(handler) }
+        return { remove: () => this.#handlers.delete(handler) }
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial }
         this.#peers.add(entry)
-        return { dispose: () => this.#peers.delete(entry) }
+        return { remove: () => this.#peers.delete(entry) }
     }
 
     /** Deliver the messages held, in the order they were sent. */
@@ -237,24 +238,24 @@ interface LocalClient {
 export class LocalRoom implements SyncRoom {
 
 
-    public onJoin(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onJoin(handler: (peer: SyncPeer) => void): Removable {
         this.#joins.add(handler)
-        return { dispose: () => this.#joins.delete(handler) }
+        return { remove: () => this.#joins.delete(handler) }
     }
 
-    public onLost(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLost(handler: (peer: SyncPeer) => void): Removable {
         this.#losses.add(handler)
-        return { dispose: () => this.#losses.delete(handler) }
+        return { remove: () => this.#losses.delete(handler) }
     }
 
-    public onBack(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onBack(handler: (peer: SyncPeer) => void): Removable {
         this.#backs.add(handler)
-        return { dispose: () => this.#backs.delete(handler) }
+        return { remove: () => this.#backs.delete(handler) }
     }
 
-    public onLeave(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLeave(handler: (peer: SyncPeer) => void): Removable {
         this.#leaves.add(handler)
-        return { dispose: () => this.#leaves.delete(handler) }
+        return { remove: () => this.#leaves.delete(handler) }
     }
 
     /** Connect a client, and give the link it talks through. */
@@ -263,7 +264,7 @@ export class LocalRoom implements SyncRoom {
         const client = new Set<(message: string) => void>()
         const hear = (handlers: Set<(message: string) => void>) => (handler: (message: string) => void) => {
             handlers.add(handler)
-            return { dispose: () => handlers.delete(handler) }
+            return { remove: () => void handlers.delete(handler) }
         }
         const local: LocalClient = {
             host,

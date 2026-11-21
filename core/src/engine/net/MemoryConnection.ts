@@ -1,6 +1,7 @@
 import type { ChannelKind, Connection, ConnectionState } from "./Connection"
 import { ConnectionLife } from "./ConnectionLife"
 import { NetError } from "./NetError"
+import type { Removable } from "../../lifetime"
 
 /**
  * One end of a connection within the program: what the player who hosts uses to reach its own host, and
@@ -30,14 +31,14 @@ export class MemoryConnection implements Connection {
     public send(message: string, channel: ChannelKind = "reliable"): void {
         this.#life.ensureOpen()
         const other = this.#other
-        if(other) queueMicrotask(() => other.#life.messages.emit({ message, channel }))
+        if(other) queueMicrotask(() => other.#life.messages.notify({ message, channel }))
     }
 
-    public listen(handler: (message: string, channel: ChannelKind) => void): { dispose(): void } {
+    public listen(handler: (message: string, channel: ChannelKind) => void): Removable {
         return this.#life.messages.add(({ message, channel }) => handler(message, channel))
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#life.onClose(handler)
     }
 

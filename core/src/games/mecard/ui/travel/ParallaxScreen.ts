@@ -119,6 +119,13 @@ export class ParallaxScreen {
         this.#build()
     }
 
+    /** Let the textures go. A parallax still loading is dropped when it arrives: none is shown any more. */
+    public dispose(): void {
+        this.#visual = null
+        for(const layer of this.#layers) layer.texture.dispose()
+        this.#layers = []
+    }
+
 
     readonly #layer: Layer
 

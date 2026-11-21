@@ -2,6 +2,7 @@ import type { SyncLink } from "../../../../../../platform"
 
 import { signal } from "../../../../sync/faults"
 import { KICK_TOPIC, RESEND_TOPIC, RESUME_TOPIC } from "./raceTopics"
+import type { Removable } from "../../../../../../lifetime"
 
 /** What hears the hub send the party to the duels: the order is an event, and tells nothing else. */
 export class KickReceiver {
@@ -17,11 +18,11 @@ export class KickReceiver {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 }
 
 /** What hears the hub let the party go on: the duels are over. */
@@ -38,11 +39,11 @@ export class ResumeReceiver {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 }
 
 /** What hears the hub ask where the player stands, after its connection came back. */
@@ -59,9 +60,9 @@ export class ResendReceiver {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 }

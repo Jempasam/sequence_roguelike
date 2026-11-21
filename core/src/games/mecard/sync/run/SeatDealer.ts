@@ -5,6 +5,7 @@ import { SEAT_TOPIC } from "../SyncChannel"
 import { signal } from "../faults"
 import { writeSeatMessage } from "./SeatMessage"
 import type { Seats } from "./Seats"
+import type { Removable } from "../../../../lifetime"
 
 /** A client that came to play. */
 interface Guest {
@@ -77,11 +78,11 @@ export class SeatDealer<C = Run> {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#handle.dispose()
+        this.#handle.remove()
     }
 
 
-    readonly #handle: { dispose(): void }
+    readonly #handle: Removable
 
     /** The clients that came to play, in the order they came, by their ids. */
     readonly #guests = new Map<string, Guest>()

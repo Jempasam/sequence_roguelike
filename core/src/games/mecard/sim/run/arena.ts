@@ -1,3 +1,4 @@
+import type { Removable } from "../../../../lifetime"
 import { Vector2 } from "../base/Vector2"
 import { Arena } from "../battle/Arena"
 import { Battle } from "../battle/Battle"
@@ -78,11 +79,13 @@ export function enterDummy(battle: Battle, run: Run, position: Vector2 = CENTER)
 /**
  * Have a dummy come back at the end of each round when none stands: the one put in the middle, and the ones
  * that fell. The battle never ends of the fall of the last dummy: see {@link Battle.endless}.
+ *
+ * @returns What stops the dummies coming back.
  */
-export function trainOn(battle: Battle, run: Run): void {
+export function trainOn(battle: Battle, run: Run): Removable {
     battle.endless = true
     let standing = enterDummy(battle, run)
-    battle.roundEnded.add(() => {
+    return battle.roundEnded.add(() => {
         if(standing.alive) return
         battle.vanish(standing)
         standing = enterDummy(battle, run)

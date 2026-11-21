@@ -9,6 +9,7 @@ import { writeModeState } from "./LobbyMessage"
 import type { ModeState } from "./LobbyMessage"
 import { checkValues, initialValues, InvalidSettingFault } from "../../sim/mode/Setting"
 import type { SettingValue, SettingValues } from "../../sim/mode/Setting"
+import type { Removable } from "../../../../lifetime"
 
 /** The mode of the lobby was asked to change while a game is played. */
 export class LockedFault extends Fault {
@@ -122,12 +123,12 @@ export class ModeSelection {
 
     /** Stop telling the mode to those that connect. */
     public dispose(): void {
-        this.#handle.dispose()
+        this.#handle.remove()
     }
 
 
     readonly #sender: SyncSender
-    readonly #handle: { dispose(): void }
+    readonly #handle: Removable
     #mode: LobbyMode
     #values: SettingValues
     #playing = false

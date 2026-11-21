@@ -4,6 +4,7 @@ import { signal } from "../../../../sync/faults"
 import type { LivesView } from "./players/HubPort"
 import { LIVES_TOPIC } from "./raceTopics"
 import { readLifeMessage, writeLifeMessage } from "./LifeMessage"
+import type { Removable } from "../../../../../../lifetime"
 
 /** What a duel or a penalty takes lives with: a player, by its id. */
 export interface LifeLedger {
@@ -124,7 +125,7 @@ export class LifeBook implements LivesView, LifeLedger {
 
     /** Stop telling. */
     public dispose(): void {
-        this.#handle.dispose()
+        this.#handle.remove()
     }
 
 
@@ -132,7 +133,7 @@ export class LifeBook implements LivesView, LifeLedger {
     readonly #gone = new Set<string>()
     #count: number
     readonly #sender: SyncSender
-    readonly #handle: { dispose(): void }
+    readonly #handle: Removable
 
     #message(): string {
         return writeLifeMessage({ lives: Object.fromEntries(this.#lives), gone: [...this.#gone] })
@@ -177,11 +178,11 @@ export class LivesReceiver implements LivesView {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
     readonly #lives = new Map<string, number>()
     #gone = new Set<string>()
 

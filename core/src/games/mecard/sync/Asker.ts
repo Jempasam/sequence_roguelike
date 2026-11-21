@@ -2,6 +2,7 @@ import type { Cancel, SyncPeer, SyncRoom, TimerPort } from "../../../platform"
 import { Fault } from "../../../engine/net/Fault"
 import { SyncTopic } from "./SyncChannel"
 import { PeerGoneFault, signal, TimeoutFault, UnreadableFault } from "./faults"
+import type { Removable } from "../../../lifetime"
 
 /** A question or an answer is its number, a line break, then its text, which may hold line breaks itself. */
 function write(number: number, text: string): string {
@@ -92,16 +93,16 @@ export class Asker {
 
     /** Stop listening: what is asked still waits for its timeout. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
-        for(const handle of this.#hearing.values()) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
+        for(const handle of this.#hearing.values()) handle.remove()
         this.#hearing.clear()
     }
 
 
     readonly #topics: { readonly ask: SyncTopic, readonly answer: SyncTopic }
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
     readonly #pending = new Map<number, Pending>()
-    readonly #hearing = new Map<string, { dispose(): void }>()
+    readonly #hearing = new Map<string, Removable>()
     #next = 1
 
     /** Listen to the answers of a client, once. */
@@ -127,7 +128,7 @@ export class Asker {
     }
 
     #left(peer: SyncPeer): void {
-        this.#hearing.get(peer.id)?.dispose()
+        this.#hearing.get(peer.id)?.remove()
         this.#hearing.delete(peer.id)
         for(const pending of [...this.#pending.values()]){
             if(pending.peer === peer.id) pending.resolve(new PeerGoneFault(peer.id))
@@ -161,12 +162,12 @@ export class Answerer {
 
     /** Stop answering. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
     readonly #answers: SyncPeerLink
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     #asked(topic: string, text: string): void {
         const question = read(topic, text)

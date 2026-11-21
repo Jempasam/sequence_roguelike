@@ -185,8 +185,8 @@ describe("SessionHost", () => {
         const hub = hosting()
         const ended: Fault[] = []
         hub.host.ended.add(fault => ended.push(fault))
-        hub.socket.closed.emit(new NetError("closed", "The server was lost."))
-        hub.socket.closed.emit(new NetError("closed", "The server was lost."))
+        hub.socket.closed.notify(new NetError("closed", "The server was lost."))
+        hub.socket.closed.notify(new NetError("closed", "The server was lost."))
         expect(ended).toHaveLength(1)
         expect(ended[0]).toBeInstanceOf(HostLostServerFault)
     })

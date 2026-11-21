@@ -1,4 +1,5 @@
 import type { SyncPeer, SyncSender } from "../SyncChannel"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The public of one instance: the clients that follow it or control it. A {@link SyncSender} over a set of
@@ -47,10 +48,10 @@ export class Audience implements SyncSender {
         for(const peer of [...this.#peers.values()]) peer.send(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial }
         this.#entries.add(entry)
-        return { dispose: () => this.#entries.delete(entry) }
+        return { remove: () => this.#entries.delete(entry) }
     }
 
     /** Stop telling everyone. */

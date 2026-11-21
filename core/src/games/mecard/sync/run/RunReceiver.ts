@@ -9,6 +9,7 @@ import { detailOf } from "../read"
 import { TravelReceiver } from "../travel/TravelReceiver"
 import { readRunMessage } from "./RunMessage"
 import type { RunMessage, RunRest } from "./RunMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * A viewer of a run played elsewhere: it loads each save of the run into its own, joins each battle that
@@ -73,8 +74,8 @@ export class RunReceiver {
 
     /** Stop listening, and leave the run watched as it is. */
     public dispose(): void {
-        this.#listening.dispose()
-        for(const handle of this.#forwarding) handle.dispose()
+        this.#listening.remove()
+        for(const handle of this.#forwarding) handle.remove()
         this.travel.dispose()
         this.battle.dispose()
     }
@@ -82,12 +83,12 @@ export class RunReceiver {
 
     #engine: Run
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     /** What takes the rounds in, none until it listens. */
     #battle: BattleReceiver|null = null
 
-    #forwarding: { dispose(): void }[] = []
+    #forwarding: Removable[] = []
 
     /** The run and the message last heard, none before the first. */
     #heard: { readonly number: number, readonly sequence: number }|null = null

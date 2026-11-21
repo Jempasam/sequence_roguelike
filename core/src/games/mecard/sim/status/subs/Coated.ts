@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { pour } from "../../potion/Potion"
 import type { Dose } from "../../potion/Potion"
@@ -38,19 +37,15 @@ export class Coated extends BaseStatus {
     public override toSemString(): Text { return [COATED, " (", this.dose.potion, ")"] }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observers.push(
+        this.keep(
             unit.hitting.add(({ target }) => pour(battle, this.dose, target, this.dose.sign * this.level)),
             battle.roundEnded.add(() => battle.removeStatus(unit, this.type)),
         )
     }
 
     public remove(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers.length = 0
+        this.letGo()
     }
-
-
-    readonly #observers: Observer[] = []
 }
 
 /** The kind of a coat of a dose. */

@@ -9,6 +9,7 @@ import type { GameBench } from "../../GameBench"
 
 import { DuelOwner } from "./DuelOwner"
 import type { DuelOrder } from "./DuelOwner"
+import type { Removable } from "../../../../../../lifetime"
 
 /** What a mode that fights duels asks of the screen, which it knows nothing of. */
 export interface DuelBench extends GameBench {
@@ -48,12 +49,12 @@ export class DuelClient {
     }
 
     /** The duel is shown to this client: its owner starts it, the others watch or play it. */
-    public spectateBattle(view: InstanceView<Battle>): { dispose(): void } {
+    public spectateBattle(view: InstanceView<Battle>): Removable {
         const owner = this.#owners.get(view.engine)
         if(view.own && owner) owner.show(view.me)
         else this.bench.showBattle(view.engine, view.units, view.ready ?? (() => {}))
         return {
-            dispose: () => {
+            remove: () => {
                 if(view.own) owner?.dispose()
                 // The screen leaves the battle when it was shown to its end: it is brought there, never told.
                 view.engine.abort()

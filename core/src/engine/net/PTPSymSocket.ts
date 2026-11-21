@@ -6,6 +6,7 @@ import type { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { JoinOptions, Peer, RoomOptions } from "./Room"
 import type { SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /**
  * A member of a room where everyone is equal: a mesh room, with one WebRTC connection to every other
@@ -65,21 +66,21 @@ export class PTPSymSocket {
     public get peers(): readonly Peer[] { return this.room.peers }
 
     /** Be told of each member whose connection opens, until the returned handle is disposed. */
-    public onPeer(handler: (peer: Peer) => void): { dispose(): void } {
+    public onPeer(handler: (peer: Peer) => void): Removable {
         return this.room.onPeer(handler)
     }
 
     /** Be told of each member that leaves, or whose connection is lost. */
-    public onLeave(handler: (member: Member) => void): { dispose(): void } {
+    public onLeave(handler: (member: Member) => void): Removable {
         return this.room.onLeave(handler)
     }
 
     /** Be told of each member that changes what it says about itself. */
-    public onChange(handler: (member: Member) => void): { dispose(): void } {
+    public onChange(handler: (member: Member) => void): Removable {
         return this.room.onChange(handler)
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.room.onClose(handler)
     }
 

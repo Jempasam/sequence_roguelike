@@ -6,6 +6,7 @@ import { NetError } from "./NetError"
 import { Room } from "./Room"
 import type { JoinOptions, Peer } from "./Room"
 import type { SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /**
  * A client of a game hosted by another player: a member of the host's star room, with a single WebRTC
@@ -74,11 +75,11 @@ export class PTPClientSocket implements Connection {
         this.#peer.connection.send(message, channel)
     }
 
-    public listen(handler: (message: string, channel: ChannelKind) => void): { dispose(): void } {
+    public listen(handler: (message: string, channel: ChannelKind) => void): Removable {
         return this.#peer.connection.listen(handler)
     }
 
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#peer.connection.onClose(handler)
     }
 

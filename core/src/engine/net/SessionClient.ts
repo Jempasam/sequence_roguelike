@@ -1,12 +1,13 @@
+import { signal } from "../../lifetime"
 import type { JsonValue } from "@game/server/protocol"
 
 import type { Cancel, SyncLink, TimerPort } from "../../platform"
 import type { Connection } from "./Connection"
 import { Fault } from "./Fault"
-import { Listeners } from "./Listeners"
 import { ConnectionLostFault, RefusedFault, RoomNotFoundFault, SessionExpiredFault, faultOf } from "./NetFaults"
 import { RANDOM_TEXT, SESSION_VERSION, writeSession } from "./Session"
 import type { RandomText, SessionInfo } from "./Session"
+import type { Removable } from "../../lifetime"
 
 /** What a {@link SessionClient} is made with. */
 export interface SessionClientOptions {
@@ -43,16 +44,16 @@ export class SessionClient {
 
 
     /** Told each time the connection is lost and it starts trying to come back. */
-    public readonly reconnecting = new Listeners<void>()
+    public readonly reconnecting = signal<void>()
 
     /** Told each time it came back. */
-    public readonly reconnected = new Listeners<void>()
+    public readonly reconnected = signal<void>()
 
     /** Told of what was dealt with: a connection lost. */
-    public readonly faulted = new Listeners<Fault>()
+    public readonly faulted = signal<Fault>()
 
     /** Told once, when it cannot go on: the room is not found, refuses, or the session is over. */
-    public readonly ended = new Listeners<Fault>()
+    public readonly ended = signal<Fault>()
 
     /** The session it joins with. */
     public readonly session: SessionInfo
@@ -104,8 +105,8 @@ export class SessionClient {
 
 
     #connection: Connection|null = null
-    #listening: { dispose(): void }|null = null
-    #closing: { dispose(): void }|null = null
+    #listening: Removable|null = null
+    #closing: Removable|null = null
     #retry: Cancel|null = null
     #deadline = 0
     #isStopped = false
@@ -130,12 +131,12 @@ export class SessionClient {
 
     #dropped(connection: Connection): void {
         if(this.#isStopped || this.#connection !== connection) return
-        this.#listening?.dispose()
-        this.#closing?.dispose()
+        this.#listening?.remove()
+        this.#closing?.remove()
         this.#connection = null
         this.#deadline = this.options.timer.now() + this.options.graceMs
-        this.faulted.emit(new ConnectionLostFault(null))
-        this.reconnecting.emit()
+        this.faulted.notify(new ConnectionLostFault(null))
+        this.reconnecting.notify()
         void this.#comeBack()
     }
 
@@ -148,7 +149,7 @@ export class SessionClient {
                 return
             }
             this.#attach(connection)
-            this.reconnected.emit()
+            this.reconnected.notify()
             return
         }
         if(this.#isStopped) return
@@ -166,15 +167,15 @@ export class SessionClient {
     #end(fault: Fault): void {
         if(this.#isStopped) return
         this.#stop()
-        this.ended.emit(fault)
+        this.ended.notify(fault)
     }
 
     #stop(): void {
         this.#isStopped = true
         this.#retry?.cancel()
         this.#retry = null
-        this.#listening?.dispose()
-        this.#closing?.dispose()
+        this.#listening?.remove()
+        this.#closing?.remove()
     }
 
     #send(message: string): void {
@@ -186,9 +187,9 @@ export class SessionClient {
         }
     }
 
-    #listen(handler: (message: string) => void): { dispose(): void } {
+    #listen(handler: (message: string) => void): Removable {
         const entry = { handler }
         this.#handlers.add(entry)
-        return { dispose: () => this.#handlers.delete(entry) }
+        return { remove: () => this.#handlers.delete(entry) }
     }
 }

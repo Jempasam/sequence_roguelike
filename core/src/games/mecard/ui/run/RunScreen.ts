@@ -3,7 +3,7 @@ import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { AnimationChain, Box, Button, instant, Label, Panel } from "../../../../engine/ui"
 import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
-import type { Observer } from "../../sim/base/Observable"
+import { Scope } from "../../../../lifetime"
 import type { Visual } from "../../sim/base/Visual"
 import type { Battle } from "../../sim/battle/Battle"
 import { BATTLE } from "../../sim/fight/fights"
@@ -221,7 +221,7 @@ export class RunScreen {
     #visible = true
 
     /** What it listens to on the run shown. */
-    #observers: Observer[] = []
+    #observers = new Scope()
 
     /** What builds what comes after a battle, none when nothing does. */
     #end: (() => Component)|null = null
@@ -247,7 +247,8 @@ export class RunScreen {
     /** Add what the run tells to what the screen plays, as it comes. */
     #registerObservers(): void {
         const run = this.#engine
-        this.#observers = [
+        this.#observers.remove()
+        this.#observers = new Scope(
             run.travel.fightReached.add(() => this.#startFight()),
             // Played where the journey is shown, so a fight comes once the party walked to it.
             run.battleStarted.add(battle => {
@@ -258,12 +259,12 @@ export class RunScreen {
                 if(phase === "travel") this.animations.add(() => this.#backToTravel())
             }),
             run.loaded.add(() => this.animations.add(instant(() => this.#fill()))),
-        ]
+        )
     }
 
     #unregisterObservers(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers = []
+        this.#observers.remove()
+        this.#observers = new Scope()
     }
 
     /** Tie the buttons of what comes after a battle to what the players do. */

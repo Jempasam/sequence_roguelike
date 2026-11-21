@@ -97,11 +97,20 @@ export class ArmScreen {
     readonly #told: Label
 
     #loading: Promise<void>|null = null
+    #isDisposed = false
     #size = ""
+
+    /** Free the picture of the arm. One still loading is freed when it arrives. */
+    public dispose(): void {
+        this.#isDisposed = true
+        this.#arm.dispose()
+    }
 
     async #load(): Promise<void> {
         try {
-            this.#arm.sprite = await PointingArm.loadSprite(this.ui.gpu, this.assets)
+            const sprite = await PointingArm.loadSprite(this.ui.gpu, this.assets)
+            if(this.#isDisposed) sprite.texture.dispose()
+            else this.#arm.sprite = sprite
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             this.host.report(`Le banc du bras n'a pas pu être chargé : ${error.message}`)

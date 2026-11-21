@@ -348,7 +348,7 @@ export class MonsterBuilderManager implements GameModeManager {
                 }
                 const shared = info as unknown as { [key: string]: GameModeShareable }
                 if(member) this.#duels.get(duel.number)?.play(member, units, shared)
-                return { dispose: () => {} }
+                return { remove: () => {} }
             },
             watch: (duel: DuelWatched) => {
                 const member = this.#member(id)

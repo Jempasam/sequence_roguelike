@@ -213,7 +213,7 @@ describe("forward", () => {
         const parent = brick()
         const faults: Fault[] = []
         parent.faulted.add(fault => faults.push(fault))
-        forward(child, parent, true).dispose()
+        forward(child, parent, true).remove()
         child.faulted.notify(new Sample())
         expect(faults).toEqual([])
     })

@@ -7,6 +7,7 @@ import { PARTICIPATE_TOPIC, PARTICIPATION_TOPIC } from "../SyncChannel"
 
 import { readParticipateMessage, writeParticipationMessage } from "./ParticipationMessage"
 import type { ParticipationMessage } from "./ParticipationMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** Someone who takes part in a game: a client far away, or the host itself, which has no peer. */
 export interface Arrival {
@@ -156,19 +157,19 @@ export class Participation {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
-        for(const handle of this.#listening.values()) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
+        for(const handle of this.#listening.values()) handle.remove()
         this.#listening.clear()
         this.#taking.clear()
     }
 
 
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
     readonly #taking = new Map<string, Taking>()
-    readonly #listening = new Map<string, { dispose(): void }>()
+    readonly #listening = new Map<string, Removable>()
 
     #listen(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.dispose()
+        this.#listening.get(peer.id)?.remove()
         this.#listening.set(peer.id, PARTICIPATE_TOPIC.link(peer).listen(text => this.#heard(peer, text)))
     }
 
@@ -232,7 +233,7 @@ export class Participation {
     }
 
     #leave(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.dispose()
+        this.#listening.get(peer.id)?.remove()
         this.#listening.delete(peer.id)
         const taking = this.#taking.get(peer.id)
         if(!taking) return

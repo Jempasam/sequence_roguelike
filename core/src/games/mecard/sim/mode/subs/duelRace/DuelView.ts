@@ -11,6 +11,7 @@ import type { SyncSource } from "../../../../sync/SyncChannel"
 import { forward, signal } from "../../../../sync/faults"
 import { readDuelFightMessage, readDuelWatchMessage } from "./DuelMessage"
 import { DUEL_FIGHT_TOPIC, DUEL_WATCH_TOPIC, duelBattleTopic, duelPlanTopic } from "./modeTopics"
+import type { Removable } from "../../../../../../lifetime"
 
 /**
  * How a duel ended for a player that plays these units, by their names there: whether it won, none for a
@@ -79,18 +80,18 @@ export class DuelView {
     /** Stop following the duel, and listening to the hub. */
     public dispose(): void {
         this.#leave()
-        for(const handle of this.#listening) handle.dispose()
+        for(const handle of this.#listening) handle.remove()
     }
 
 
-    readonly #listening: readonly { dispose(): void }[]
+    readonly #listening: readonly Removable[]
     #battle: Battle|null = null
     #guest: BattleGuest|null = null
     #number: number|null = null
     #units: readonly string[] = []
-    #forwarding: { dispose(): void }[] = []
+    #forwarding: Removable[] = []
     #observers: Observer[] = []
-    #handles: { dispose(): void }[] = []
+    #handles: Removable[] = []
 
     #fight(text: string): void {
         const message = readDuelFightMessage(text)
@@ -121,7 +122,7 @@ export class DuelView {
         this.#leave()
         const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), 0)
         const receiver = new BattleReceiver(battle, duelBattleTopic(number).source(this.source))
-        this.#handles.push({ dispose: () => receiver.dispose() })
+        this.#handles.push({ remove: () => receiver.dispose() })
         this.#forwarding.push(forward(receiver, this, false))
         if(units.length > 0){
             const guest = new BattleGuest(battle, duelPlanTopic(number).link(this.link), () => this.#units)
@@ -143,8 +144,8 @@ export class DuelView {
     }
 
     #leave(): void {
-        for(const handle of this.#handles) handle.dispose()
-        for(const handle of this.#forwarding) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
+        for(const handle of this.#forwarding) handle.remove()
         for(const observer of this.#observers) observer.remove()
         this.#handles = []
         this.#forwarding = []

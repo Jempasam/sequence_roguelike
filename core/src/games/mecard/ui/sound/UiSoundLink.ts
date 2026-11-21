@@ -4,6 +4,7 @@ import type { Component, UiRoot } from "../../../../engine/ui"
 import { AbsItemIcon } from "../hud/AbsItemIcon"
 import { CardView } from "../hud/CardView"
 import { HoverPanel } from "../hud/HoverPanel"
+import type { Removable } from "../../../../lifetime"
 
 /** The channel the sounds of the interface are played on. */
 export const UI_CHANNEL = "ui"
@@ -96,11 +97,11 @@ export class UiSoundLink {
 
     /** Stop playing the sounds of the interface. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     #play({ path, volume }: Cue): void {
         this.player.play(UI_CHANNEL, path, { volume })

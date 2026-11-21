@@ -1,4 +1,5 @@
 import type { PnjLayout } from "./PnjLayout"
+import type { Removable } from "../../../../lifetime"
 
 /** How far the body leans at a lean of 1, and the head turns at a direction of 1, in radians. */
 const QUARTER_TURN = Math.PI / 2
@@ -222,10 +223,10 @@ export class PnjPose {
      *
      * @returns The handle that stops hearing it.
      */
-    public onHatMove(listener: (hat: Readonly<HatPlace>) => void): { dispose(): void } {
+    public onHatMove(listener: (hat: Readonly<HatPlace>) => void): Removable {
         const own = { listener }
         this.#hatListeners.add(own)
-        return { dispose: () => this.#hatListeners.delete(own) }
+        return { remove: () => this.#hatListeners.delete(own) }
     }
 
 
@@ -235,10 +236,10 @@ export class PnjPose {
     public get mask(): Readonly<PartPlace> { return this.#mask }
 
     /** Hear each move of the place of the mask, as {@link onHatMove} does the hat's. */
-    public onMaskMove(listener: (mask: Readonly<PartPlace>) => void): { dispose(): void } {
+    public onMaskMove(listener: (mask: Readonly<PartPlace>) => void): Removable {
         const own = { listener }
         this.#maskListeners.add(own)
-        return { dispose: () => this.#maskListeners.delete(own) }
+        return { remove: () => this.#maskListeners.delete(own) }
     }
 
 
@@ -248,10 +249,10 @@ export class PnjPose {
     public get item(): Readonly<PartPlace> { return this.#item }
 
     /** Hear each move of the place of the object, as {@link onHatMove} does the hat's. */
-    public onItemMove(listener: (item: Readonly<PartPlace>) => void): { dispose(): void } {
+    public onItemMove(listener: (item: Readonly<PartPlace>) => void): Removable {
         const own = { listener }
         this.#itemListeners.add(own)
-        return { dispose: () => this.#itemListeners.delete(own) }
+        return { remove: () => this.#itemListeners.delete(own) }
     }
 
 

@@ -8,6 +8,7 @@ import type { DuelBench } from "../duel/DuelClient"
 import type { BracketView } from "./Bracket"
 import { BRACKET_KEY } from "./TournamentManager"
 import type { TournamentAct } from "./TournamentManager"
+import type { Removable } from "../../../../../../lifetime"
 
 /** What a tournament asks of the screen, which it knows nothing of. */
 export interface TournamentBench extends DuelBench {
@@ -70,7 +71,7 @@ export class TournamentOwner implements GameModeOwner {
         return this.#duels.createBattle(spec, manager)
     }
 
-    public spectateBattle(view: InstanceView<Battle>): { dispose(): void } {
+    public spectateBattle(view: InstanceView<Battle>): Removable {
         return this.#duels.spectateBattle(view)
     }
 

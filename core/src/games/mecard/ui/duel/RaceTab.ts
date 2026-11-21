@@ -3,7 +3,7 @@ import { Color } from "../../../../engine/math"
 import { Component, NineSlice, sizeHint } from "../../../../engine/ui"
 import type { Rope, SizeHint, Theme, UiEvent, UiRoot, Layer } from "../../../../engine/ui"
 import { TextLayout } from "../../../../engine/text"
-import type { Observer } from "../../sim/base/Observable"
+import { Scope } from "../../../../lifetime"
 import type { DuelFighting, DuelWatching } from "../../sim/mode/subs/duelRace/players/HubPort"
 import type { DuelRacePlayer } from "../../sim/mode/subs/duelRace/players/DuelRacePlayer"
 import type { RosterEntry } from "../../sync/lobby/RosterMessage"
@@ -506,7 +506,8 @@ export class RaceTab {
         this.detach()
         this.#player = player
         const { fighting, watching, duelOver } = player
-        this.#observers = [
+        this.#observers.remove()
+        this.#observers = new Scope(
             fighting.add(duel => this.#fight(duel)),
             watching.add(duel => this.#watch(duel)),
             duelOver.add(won => this.#over(won)),
@@ -516,15 +517,15 @@ export class RaceTab {
                 this.#banner = "Tu es éliminé : tu regardes la suite."
                 this.#lost = true
             }),
-        ]
+        )
         this.#banner = ""
         this.#lost = false
     }
 
     /** Stop showing the race. */
     public detach(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers = []
+        this.#observers.remove()
+        this.#observers = new Scope()
         this.#player = null
         this.#banner = ""
         this.#lost = false
@@ -594,7 +595,7 @@ export class RaceTab {
     readonly #onLeave: (() => void)|null
     #sure = 0
     #player: DuelRacePlayer|null = null
-    #observers: Observer[] = []
+    #observers = new Scope()
     #state: TabState = EMPTY
     #banner = ""
     #lost = false

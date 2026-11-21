@@ -62,7 +62,7 @@ function shutdown(): void {
     if(shuttingDown) return
     shuttingDown = true
     try {
-        game.dispose()
+        game.remove()
     }
     catch(error){
         console.error("The game did not dispose cleanly:", error)

@@ -5,6 +5,7 @@ import type { SyncLink, SyncSource } from "../SyncChannel"
 import { signal } from "../faults"
 import { readSeatOfferMessage, writeSeatWishMessage } from "./SeatOfferMessage"
 import type { SeatOffer } from "./SeatOfferMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * A client choosing what it plays: it asks the host for a seat, or gives one back, and hears which seats can
@@ -49,11 +50,11 @@ export class SeatPicker {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
     #offer: SeatOffer|null = null
 
     #told(text: string): void {

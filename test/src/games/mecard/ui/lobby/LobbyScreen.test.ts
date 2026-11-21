@@ -31,12 +31,12 @@ function network(opening: Promise<string|Fault>|null = null) {
                 listen: (handler: (message: string) => void) => {
                     const first = own.listen(handler)
                     const second = channel.listen(handler)
-                    return { dispose: () => { first.dispose(); second.dispose() } }
+                    return { remove: () => { first.remove(); second.remove() } }
                 },
             }
             return {
                 link, ready: Promise.resolve("ROOM1"), close: () => closed.push("join"),
-                ended: { add: () => ({ dispose: () => {} }) },
+                ended: { add: () => ({ remove: () => {} }) },
             }
         },
     }

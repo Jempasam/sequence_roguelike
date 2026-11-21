@@ -6,6 +6,7 @@ import { RelayPolicy, TurnCredentials, TurnServer } from "@game/server/turn"
 import { RTCPeerConnection as DataChannelPeer } from "node-datachannel/polyfill"
 
 import { REAL_TIMER } from "./peerServer"
+import type { Removable } from "@game/core"
 
 /** The servers of the network, on free ports of this host: signaling, STUN and TURN. */
 export interface NetServer {
@@ -66,10 +67,10 @@ export function signalingOf(url: string, net: NetPort = nodeNet()): SignalingCon
 }
 
 /** The first event a register function tells of, as a promise. */
-export function once<T>(register: (handler: (event: T) => void) => { dispose(): void }): Promise<T> {
+export function once<T>(register: (handler: (event: T) => void) => Removable): Promise<T> {
     return new Promise(resolve => {
         const handle = register(event => {
-            handle.dispose()
+            handle.remove()
             resolve(event)
         })
     })
@@ -77,7 +78,7 @@ export function once<T>(register: (handler: (event: T) => void) => { dispose(): 
 
 /** Something that hears messages, a connection or a sync port. */
 interface Listening {
-    listen(handler: (message: string) => void): { dispose(): void }
+    listen(handler: (message: string) => void): Removable
 }
 
 /** The first message a connection hears. */

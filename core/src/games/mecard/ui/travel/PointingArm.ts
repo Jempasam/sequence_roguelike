@@ -184,6 +184,12 @@ export class PointingArm extends Component {
         this.invalidate()
     }
 
+    /** Free the texture of its picture, which the arm owns once it was given it. */
+    public dispose(): void {
+        this.#sprite?.texture.dispose()
+        this.#sprite = null
+    }
+
     /** Where it stands now, none before it first followed the pointer. */
     public get pose(): ArmPose|null { return this.#pose }
 

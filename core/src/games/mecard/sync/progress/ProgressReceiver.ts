@@ -7,6 +7,7 @@ import { PROGRESS_TOPIC } from "../../sim/mode/subs/duelRace/raceTopics"
 import type { ProgressView } from "../../sim/mode/subs/duelRace/players/HubPort"
 import { readProgressMessage } from "./ProgressMessage"
 import type { Progress } from "./ProgressMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * What hears where the other players stand, from what a {@link Relay} copies: a state for each, the last
@@ -43,13 +44,13 @@ export class ProgressReceiver implements ProgressView {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#forwarding.dispose()
+        this.#forwarding.remove()
         this.#source.dispose()
     }
 
 
     readonly #source: RelayedSource
-    readonly #forwarding: { dispose(): void }
+    readonly #forwarding: Removable
     readonly #progresses = new Map<string, Progress>()
 
     #told(id: string, text: string): void {

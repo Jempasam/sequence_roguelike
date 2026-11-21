@@ -4,14 +4,15 @@ import type { Deadline } from "./Deadline"
 import {
     GATHER_FULL_TOPIC, GATHER_LATE_TOPIC, GATHER_MEMBERS_TOPIC, GATHER_START_TOPIC, JOIN_TOPIC, READY_TOPIC,
 } from "./SyncChannel"
-import { AlreadyStartedFault, GatheringFullFault, release, signal, UnreadableFault } from "./faults"
-import type { Handle } from "./faults"
+import { AlreadyStartedFault, GatheringFullFault, signal, UnreadableFault } from "./faults"
 import type { GameSession } from "./session/GameSession"
 import { Placements, Participation } from "./participation/Participation"
 import type { Placement, Arrival } from "./participation/Participation"
 import { ParticipationReceiver } from "./participation/ParticipationReceiver"
 import type { ParticipationMessage } from "./participation/ParticipationMessage"
 import { readJson, wrongShape } from "./read"
+import { Scope } from "../../../lifetime"
+import type { Removable } from "../../../lifetime"
 
 /** A client that came to play. */
 export interface Member {
@@ -113,16 +114,16 @@ export class Gathering {
         const { session } = options
         this.#participation = session ? session.participation : new Participation(room, options.game ?? 0, policy)
         this.#isOwner = !session
-        this.#handles = [
+        this.#handles = new Scope(
             ...(session ? [session.bind(policy)] : []),
             room.onJoin(peer => this.#listen(peer)),
             room.onLeave(peer => this.#forget(peer)),
             this.#participation.joined.add(who => this.#joined(who)),
             // What the host asked of itself is answered by the return of the call, not told.
             this.#participation.faulted.add(fault => { if(!this.#isLocalCall) this.faulted.notify(fault) }),
-        ]
+        )
         const deadline = options.deadline?.expired.add(() => this.expired.notify(this.members))
-        if(deadline) this.#handles.push({ dispose: () => deadline.remove() })
+        if(deadline) this.#handles.track(deadline)
     }
 
 
@@ -183,8 +184,8 @@ export class Gathering {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) release(handle)
-        for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
+        this.#handles.remove()
+        for(const handles of this.#listening.values()) for(const handle of handles) handle.remove()
         this.#listening.clear()
         if(this.#isOwner) this.#participation.dispose()
     }
@@ -192,9 +193,9 @@ export class Gathering {
 
     readonly #participation: Participation
     readonly #isOwner: boolean
-    readonly #handles: Handle[]
+    readonly #handles: Scope
     readonly #members = new Map<string, Member>()
-    readonly #listening = new Map<string, { dispose(): void }[]>()
+    readonly #listening = new Map<string, Removable[]>()
     readonly #ready = new Set<string>()
     #isStarted = false
 
@@ -204,7 +205,7 @@ export class Gathering {
 
     /** Listen to a client that connects: it may say it is ready, or that it came to play the old way. */
     #listen(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.forEach(handle => handle.dispose())
+        this.#listening.get(peer.id)?.forEach(handle => handle.remove())
         this.#listening.set(peer.id, [
             JOIN_TOPIC.link(peer).listen(() => { this.#participation.join(peer) }),
             READY_TOPIC.link(peer).listen(text => this.#readied(peer.id, text)),
@@ -212,7 +213,7 @@ export class Gathering {
     }
 
     #forget(peer: SyncPeer): void {
-        for(const handle of this.#listening.get(peer.id) ?? []) handle.dispose()
+        for(const handle of this.#listening.get(peer.id) ?? []) handle.remove()
         this.#listening.delete(peer.id)
     }
 
@@ -321,7 +322,7 @@ export class Attendee {
         options: { readonly game?: number, readonly timer?: TimerPort } = {},
     ){
         this.#participation = new ParticipationReceiver(link, options.game ?? 0, options.timer ?? null)
-        this.#handles = [
+        this.#handles = new Scope(
             GATHER_MEMBERS_TOPIC.source(link).listen(text => this.#members(text)),
             GATHER_START_TOPIC.source(link).listen(() => this.started.notify()),
             GATHER_FULL_TOPIC.source(link).listen(() => this.#end(new GatheringFullFault(null))),
@@ -329,7 +330,7 @@ export class Attendee {
             this.#participation.changed.add(state => this.participationChanged.notify(state)),
             this.#participation.faulted.add(fault => this.faulted.notify(fault)),
             this.#participation.ended.add(fault => this.#end(fault)),
-        ]
+        )
     }
 
 
@@ -356,13 +357,13 @@ export class Attendee {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) release(handle)
+        this.#handles.remove()
         this.#participation.dispose()
     }
 
 
     readonly #participation: ParticipationReceiver
-    readonly #handles: readonly Handle[]
+    readonly #handles: Scope
 
     #members(text: string): void {
         const ids = readJson(GATHER_MEMBERS_TOPIC.name, text)

@@ -1,5 +1,6 @@
 import type { SoundPath, SoundPlayer } from "../../../../engine/audio"
 import type { Observer } from "../../sim/base/Observable"
+import { Scope } from "../../../../lifetime"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
 
@@ -89,7 +90,7 @@ export class RunSoundLink {
 
 
     #engine: Run
-    #observers: Observer[] = []
+    #observers = new Scope()
     #battleObservers: Observer[] = []
 
     #follow(run: Run): void {
@@ -100,14 +101,15 @@ export class RunSoundLink {
     #registerObservers(): void {
         const run = this.#engine
         const { travel } = run
-        this.#observers = [
+        this.#observers.remove()
+        this.#observers = new Scope(
             travel.visitStarted.add(() => this.#play(BEGIN)),
             travel.visitEnded.add(() => this.#play(END)),
             travel.fightEntered.add(() => this.#play(FIGHT)),
             travel.fightLeft.add(() => this.#play(END)),
             travel.moved.add(() => this.#play(STEP)),
             run.battleStarted.add(battle => this.#followBattle(battle)),
-        ]
+        )
         if(run.battle) this.#followBattle(run.battle)
     }
 
@@ -135,8 +137,8 @@ export class RunSoundLink {
 
     #unregisterObservers(): void {
         this.#unregisterBattle()
-        for(const observer of this.#observers) observer.remove()
-        this.#observers = []
+        this.#observers.remove()
+        this.#observers = new Scope()
     }
 
     #unregisterBattle(): void {

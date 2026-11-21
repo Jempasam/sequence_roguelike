@@ -1,6 +1,6 @@
+import { signal } from "../../lifetime"
 import type { NetPort, SyncLink, SyncPeer, SyncPort, SyncRole, SyncRoom, TimerPort } from "../../platform"
 import { Fault } from "./Fault"
-import { Listeners } from "./Listeners"
 import { NotHostFault, OutboxFullFault } from "./NetFaults"
 import { Outbox } from "./Outbox"
 import { PTPClientSocket } from "./PTPClientSocket"
@@ -9,6 +9,7 @@ import { SessionClient } from "./SessionClient"
 import { SessionHost } from "./SessionHost"
 import type { SessionPeer } from "./SessionPeer"
 import type { SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /** How many viewers a game takes when nothing else is asked. */
 const DEFAULT_VIEWERS = 16
@@ -76,16 +77,16 @@ export class NetSync implements SyncPort {
     public readonly link: SyncLink|null
 
     /** Told of what was dealt with: a viewer that tried to send, a client lost. */
-    public readonly faulted = new Listeners<Fault>()
+    public readonly faulted = signal<Fault>()
 
     /** Told once, when the room cannot go on: it was lost, or the client cannot come back. */
-    public readonly ended = new Listeners<Fault>()
+    public readonly ended = signal<Fault>()
 
     /** Told each time a viewer lost its connection and tries to come back, none on the main client. */
-    public readonly reconnecting = new Listeners<void>()
+    public readonly reconnecting = signal<void>()
 
     /** Told each time a viewer came back, none on the main client. */
-    public readonly reconnected = new Listeners<void>()
+    public readonly reconnected = signal<void>()
 
     private constructor(
         public readonly role: SyncRole,
@@ -121,22 +122,22 @@ export class NetSync implements SyncPort {
      */
     public send(message: string): void {
         if(this.role !== "main"){
-            this.faulted.emit(new NotHostFault())
+            this.faulted.notify(new NotHostFault())
             return
         }
         for(const peer of this.#host?.peers ?? []) this.#queued(peer).send(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial }
         this.#peers.add(entry)
-        return { dispose: () => this.#peers.delete(entry) }
+        return { remove: () => this.#peers.delete(entry) }
     }
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         const entry = { handler }
         this.#handlers.add(entry)
-        return { dispose: () => this.#handlers.delete(entry) }
+        return { remove: () => this.#handlers.delete(entry) }
     }
 
     /** Close the room, or leave it. */
@@ -177,13 +178,13 @@ export class NetSync implements SyncPort {
 
     #serve(host: SessionHost|Fault): string|Fault {
         if(host instanceof Fault){
-            this.ended.emit(host)
+            this.ended.notify(host)
             return host
         }
         this.#host = host
         if(this.#isClosed) host.close()
-        host.faulted.add(fault => this.faulted.emit(fault))
-        host.ended.add(fault => this.ended.emit(fault))
+        host.faulted.add(fault => this.faulted.notify(fault))
+        host.ended.add(fault => this.ended.notify(fault))
         host.peerJoined.add(peer => {
             const client = this.#queued(peer)
             // Told before the first messages: a client answering them finds the main client listening.
@@ -211,7 +212,7 @@ export class NetSync implements SyncPort {
     #queued(peer: SessionPeer): QueuedPeer {
         const known = this.#clients.get(peer.id)
         if(known) return known
-        const made = new QueuedPeer(peer, fault => this.faulted.emit(fault))
+        const made = new QueuedPeer(peer, fault => this.faulted.notify(fault))
         this.#clients.set(peer.id, made)
         return made
     }
@@ -226,12 +227,12 @@ export class NetSync implements SyncPort {
 
     async #watch(client: SessionClient, code: string): Promise<string|Fault> {
         this.#client = client
-        client.faulted.add(fault => this.faulted.emit(fault))
-        client.reconnecting.add(() => this.reconnecting.emit())
+        client.faulted.add(fault => this.faulted.notify(fault))
+        client.reconnecting.add(() => this.reconnecting.notify())
         client.reconnected.add(() => {
             // The main client already listens to this session: what was said while away goes at once.
             this.#flush()
-            this.reconnected.emit()
+            this.reconnected.notify()
         })
         client.link.listen(message => {
             this.#heard = true
@@ -240,7 +241,7 @@ export class NetSync implements SyncPort {
         })
         const ended = new Promise<Fault>(resolve => {
             client.ended.add(fault => {
-                this.ended.emit(fault)
+                this.ended.notify(fault)
                 resolve(fault)
             })
         })
@@ -256,7 +257,7 @@ export class NetSync implements SyncPort {
     #tell(message: string): void {
         const client = this.#client
         if(this.#heard && client?.isConnected) client.link.send(message)
-        else if(this.#unsent.hold(message)) this.faulted.emit(new OutboxFullFault(null))
+        else if(this.#unsent.hold(message)) this.faulted.notify(new OutboxFullFault(null))
     }
 
     /** Send what was kept, in order, now that it can be heard. */
@@ -271,10 +272,10 @@ export class NetSync implements SyncPort {
 class Handlers<T> {
 
 
-    public add(handler: (value: T) => void): { dispose(): void } {
+    public add(handler: (value: T) => void): Removable {
         const entry = { handler }
         this.#entries.add(entry)
-        return { dispose: () => this.#entries.delete(entry) }
+        return { remove: () => this.#entries.delete(entry) }
     }
 
     public tell(value: T): void {

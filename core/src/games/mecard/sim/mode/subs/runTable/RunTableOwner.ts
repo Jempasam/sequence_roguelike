@@ -6,6 +6,7 @@ import type { HandleChannel, HeardChannel } from "../../HandleChannel"
 
 import { TableOwner } from "./TableOwner"
 import type { ClientRuns, OwnerOrder, TableRules } from "./TableOwner"
+import type { Removable } from "../../../../../../lifetime"
 
 /** The client side of a table: the owner holds the run and plays what no client does, the others are seated. */
 export class RunTableOwner implements GameModeOwner {
@@ -31,12 +32,12 @@ export class RunTableOwner implements GameModeOwner {
         })]
     }
 
-    public spectateRun(view: InstanceView<Run>): { dispose(): void } {
+    public spectateRun(view: InstanceView<Run>): Removable {
         const table = this.#tables.get(view.engine)
         if(view.own && table) table.show()
         else this.bench.showSeat(view.engine, view.units, view.ready ?? (() => {}))
         return {
-            dispose: () => {
+            remove: () => {
                 if(view.own) table?.hide()
                 this.bench.hideRun()
             },

@@ -27,6 +27,7 @@ import {
 import type { AnswerMessage, OpenMessage, RouteAskMessage, RouteMessage } from "./messages"
 import type { Seat } from "./Seat"
 import { RemoteSeat } from "./Seat"
+import type { Removable } from "../../../../lifetime"
 
 /** What a client needs of its surroundings, which the mode knows nothing of. */
 export interface GuestOptions {
@@ -58,7 +59,7 @@ interface GuestInstance {
     info: GameModeShareable
 
     /** What shows it to the player, none when the mode shows nothing of it. */
-    spectator: { dispose(): void }|null
+    spectator: Removable|null
 
     /** What takes in what the manager tells of it, for a replica. */
     down: { dispose(): void }|null
@@ -83,10 +84,10 @@ class UpSender implements SyncSender {
         this.send_(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial }
         this.#entries.add(entry)
-        return { dispose: () => this.#entries.delete(entry) }
+        return { remove: () => this.#entries.delete(entry) }
     }
 
     /** Say again what was asked to be said first. */
@@ -217,7 +218,7 @@ export class GameModeGuest implements ModeRun {
         this.#instances.delete(id)
         instance.down?.dispose()
         instance.up?.dispose()
-        instance.spectator?.dispose()
+        instance.spectator?.remove()
     }
 
     /**
@@ -313,7 +314,7 @@ export class GameModeGuest implements ModeRun {
 
     public dispose(): void {
         this.#isDisposed = true
-        for(const handle of this.#handles) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
         this.#participation?.dispose()
         const instances = [...this.#instances.values()]
         this.#instances.clear()
@@ -323,12 +324,12 @@ export class GameModeGuest implements ModeRun {
         for(const instance of instances){
             instance.down?.dispose()
             instance.up?.dispose()
-            instance.spectator?.dispose()
+            instance.spectator?.remove()
         }
     }
 
 
-    #handles: readonly { dispose(): void }[] = []
+    #handles: readonly Removable[] = []
     #link: SyncLink|null = null
 
     /** Who hears what the manager tells of an instance, when it is on this client: by the instance. */
@@ -343,7 +344,7 @@ export class GameModeGuest implements ModeRun {
                 let handlers = this.#streams.get(id)
                 if(!handlers) this.#streams.set(id, handlers = new Set())
                 handlers.add(handler)
-                return { dispose: () => handlers.delete(handler) }
+                return { remove: () => void handlers.delete(handler) }
             },
         }
     }
@@ -366,13 +367,15 @@ export class GameModeGuest implements ModeRun {
             notify: message => this.seat.act(write({ id, message: encodeShareable(message) })),
             ask: (message, timeoutMs) => new Promise(resolve => {
                 const req = this.#nextReq++
-                this.#asks.set(req, resolve)
+                // The timer goes with the ask, whether it is answered or the game ends first.
+                const timer = timeoutMs !== undefined ? this.options.timer?.after(timeoutMs, () => {
+                    if(this.#asks.delete(req)) resolve(new NoAnswerFault("too slow", "timeout"))
+                }) : undefined
+                this.#asks.set(req, answer => {
+                    timer?.cancel()
+                    resolve(answer)
+                })
                 this.seat.ask(write({ id, req, message: encodeShareable(message) }))
-                if(timeoutMs !== undefined && this.options.timer){
-                    this.options.timer.after(timeoutMs, () => {
-                        if(this.#asks.delete(req)) resolve(new NoAnswerFault("too slow", "timeout"))
-                    })
-                }
             }),
         }
     }
@@ -424,7 +427,7 @@ export class GameModeGuest implements ModeRun {
         if(!battle) return
         const link = {
             send: (text: string) => this.#toManager(instance.id).notify(JSON.parse(text)),
-            listen: () => ({ dispose: () => {} }),
+            listen: () => ({ remove: () => {} }),
         }
         const guest = new BattleGuest(battle, link, () => units)
         guest.faulted.add(fault => this.faulted.notify(fault))

@@ -2,7 +2,7 @@ import { FeedRoom } from "@game/core/mecard/sync"
 import type { SyncPeer } from "@game/core/mecard/sync"
 import { describe, expect, test } from "vitest"
 
-const PEER: SyncPeer = { id: "p", send: () => {}, listen: () => ({ dispose: () => {} }) }
+const PEER: SyncPeer = { id: "p", send: () => {}, listen: () => ({ remove: () => {} }) }
 
 /** A room that records its four events. */
 function room() {
@@ -43,7 +43,7 @@ describe("FeedRoom", () => {
         const feed = new FeedRoom()
         const heard: string[] = []
         const handle = feed.onLeave(peer => heard.push(peer.id))
-        handle.dispose()
+        handle.remove()
         feed.leave(PEER)
         expect(heard).toEqual([])
     })
@@ -53,7 +53,7 @@ describe("FeedRoom", () => {
         const heard: string[] = []
         const own = feed.onJoin(() => {
             heard.push("own")
-            own.dispose()
+            own.remove()
         })
         feed.onJoin(() => heard.push("other"))
         feed.join(PEER)

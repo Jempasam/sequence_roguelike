@@ -1,6 +1,7 @@
 import type { SyncPeer, SyncRoom } from "../../../platform"
-import { Scope } from "./Scope"
+import { Scope } from "../../../lifetime"
 import type { SyncSender } from "./SyncChannel"
+import type { Removable } from "../../../lifetime"
 
 /**
  * Several rooms heard as one: the clients that connect to any of them, are lost, come back, or leave, are the
@@ -13,19 +14,19 @@ export class MergedRoom implements SyncRoom {
     constructor(private readonly rooms: readonly SyncRoom[]){}
 
 
-    public onJoin(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onJoin(handler: (peer: SyncPeer) => void): Removable {
         return new Scope(...this.rooms.map(room => room.onJoin(handler)))
     }
 
-    public onLost(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLost(handler: (peer: SyncPeer) => void): Removable {
         return new Scope(...this.rooms.map(room => room.onLost(handler)))
     }
 
-    public onBack(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onBack(handler: (peer: SyncPeer) => void): Removable {
         return new Scope(...this.rooms.map(room => room.onBack(handler)))
     }
 
-    public onLeave(handler: (peer: SyncPeer) => void): { dispose(): void } {
+    public onLeave(handler: (peer: SyncPeer) => void): Removable {
         return new Scope(...this.rooms.map(room => room.onLeave(handler)))
     }
 }
@@ -44,7 +45,7 @@ export class MergedSender implements SyncSender {
         for(const sender of this.senders) sender.send(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         return new Scope(...this.senders.map(sender => sender.onPeer(initial)))
     }
 }

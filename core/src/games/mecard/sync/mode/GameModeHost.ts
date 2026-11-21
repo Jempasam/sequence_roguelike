@@ -33,6 +33,7 @@ import {
 } from "./messages"
 import type { AnswerMessage, OpenMessage, RouteAskMessage, RouteMessage } from "./messages"
 import type { Seat } from "./Seat"
+import type { Removable } from "../../../../lifetime"
 
 /** The hue the chat shows what the game says in. */
 export const ANNOUNCE_HUE = 200
@@ -122,7 +123,7 @@ interface HostInstance {
     readonly invalidated: Observable<void>
 
     /** What hears the owner's stream, to pass it on to the audience: none with no follower. */
-    relay: { dispose(): void }|null
+    relay: Removable|null
 
     isValid: boolean
 }
@@ -393,18 +394,23 @@ export class GameModeHost implements ModeRun, GameModeContext {
         this.#cancels.clear()
         for(const instance of [...this.#instances.values()]) this.#drop(instance)
         this.#states.clear()
-        for(const pending of this.#asks.values()) pending.timeout?.cancel()
+        // An ask still waiting is answered by a fault, as when its owner leaves: the mode awaiting it goes on.
+        const asks = [...this.#asks.values()]
         this.#asks.clear()
-        for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
+        for(const pending of asks){
+            pending.timeout?.cancel()
+            pending.resolve?.(new NoAnswerFault("the game is over", "quit"))
+        }
+        for(const handles of this.#listening.values()) for(const handle of handles) handle.remove()
         this.#listening.clear()
         for(const observer of this.#observers) observer.remove()
-        this.#policy.dispose()
+        this.#policy.remove()
         this.#local = null
     }
 
 
     readonly #session: HostStage["session"]
-    readonly #policy: { dispose(): void }
+    readonly #policy: Removable
     readonly #observers: readonly Observer[]
     readonly #expected: number
     readonly #instances = new Map<number, HostInstance>()
@@ -422,7 +428,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
 
     /** The ids of the participants whose client listens: what they are given is told to them. */
     readonly #ready = new Set<string>()
-    readonly #listening = new Map<string, { dispose(): void }[]>()
+    readonly #listening = new Map<string, Removable[]>()
     #local: GameModeGuest|null = null
     #isStarted = false
     readonly #early: Participant[] = []
@@ -525,7 +531,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
         // Nothing is kept for one that quits: its asks are answered as not heard, below.
         this.#missed.delete(participant.id)
         if(gone){
-            for(const handle of this.#listening.get(participant.id) ?? []) handle.dispose()
+            for(const handle of this.#listening.get(participant.id) ?? []) handle.remove()
             this.#listening.delete(participant.id)
         }
         for(const [req, pending] of [...this.#asks]){
@@ -741,7 +747,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
         if(!instance.relay){
             instance.relay = owner.peer
                 ? owner.listen(upTopic(instance.id), text => this.#forward(instance, text))
-                : { dispose: () => {} }
+                : { remove: () => {} }
         }
         if(owner.peer === null) this.#local?.receiveFollow(instance.id)
         else owner.tell(FOLLOW_TOPIC, write({ id: instance.id }))
@@ -753,7 +759,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
         if(!owner || instance.relay === null || instance.follows.size > 0) return
         if(owner.peer === null) this.#local?.receiveUnfollow(instance.id)
         else owner.tell(UNFOLLOW_TOPIC, write({ id: instance.id }))
-        instance.relay.dispose()
+        instance.relay.remove()
         instance.relay = null
     }
 
@@ -762,7 +768,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
         return {
             id: participant.id,
             send: text => this.#local?.receiveStream(instance.id, text),
-            listen: () => ({ dispose: () => {} }),
+            listen: () => ({ remove: () => {} }),
         }
     }
 
@@ -848,7 +854,7 @@ export class GameModeHost implements ModeRun, GameModeContext {
     /** Stop everything the instance holds. */
     #drop(instance: HostInstance): void {
         instance.isValid = false
-        instance.relay?.dispose()
+        instance.relay?.remove()
         instance.audience.dispose()
         instance.follows.clear()
         instance.relay = null

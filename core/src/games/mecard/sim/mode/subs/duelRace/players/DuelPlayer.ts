@@ -2,6 +2,7 @@ import type { Fault } from "../../../../../../../engine/net/Fault"
 import type { SavedUnit } from "../../../../save/battleSave"
 
 import type { DuelWatchMessage } from "../DuelMessage"
+import type { Removable } from "../../../../../../../lifetime"
 
 /** What a player is told of the duel it fights: which it is, and who is in each camp. */
 export interface DuelFought {
@@ -39,7 +40,7 @@ export interface DuelPlayer {
      *
      * @returns What stops the hub from hearing the player.
      */
-    fight(duel: DuelFought, units: readonly string[]): { dispose(): void }
+    fight(duel: DuelFought, units: readonly string[]): Removable
 
     /** The player watches a duel, as a spectator. */
     watch(duel: DuelWatched): void

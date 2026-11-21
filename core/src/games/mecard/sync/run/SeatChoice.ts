@@ -9,6 +9,7 @@ import { DeniedFault, NotCandidateFault, signal } from "../faults"
 import { readSeatWishMessage, writeSeatOfferMessage } from "./SeatOfferMessage"
 import type { SeatOffer } from "./SeatOfferMessage"
 import type { SeatDealer } from "./SeatDealer"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * What the seats of a mode are drawn from, and what tells when they may have changed: the run of the host for
@@ -156,9 +157,9 @@ export class SeatChoice<C = Run> {
             room.onBack(() => this.#offer()),
             this.#offers.onPeer(() => this.#message()),
             // The seats given by the dealer change what is offered.
-            { dispose: () => dealt.remove() },
+            { remove: () => dealt.remove() },
             // What the seats are drawn from changes what is offered.
-            { dispose: () => watching.remove() },
+            { remove: () => watching.remove() },
         ]
     }
 
@@ -216,17 +217,17 @@ export class SeatChoice<C = Run> {
 
     /** Stop listening. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
-        for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
+        for(const handle of this.#handles) handle.remove()
+        for(const handles of this.#listening.values()) for(const handle of handles) handle.remove()
         this.#listening.clear()
     }
 
 
     readonly #offers: SyncSender
-    readonly #handles: readonly { dispose(): void }[]
-    readonly #listening = new Map<string, { dispose(): void }[]>()
+    readonly #handles: readonly Removable[]
+    readonly #listening = new Map<string, Removable[]>()
     #listen(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.forEach(handle => handle.dispose())
+        this.#listening.get(peer.id)?.forEach(handle => handle.remove())
         this.#listening.set(peer.id, [
             SEAT_TAKE_TOPIC.source(peer).listen(text => this.#wished(peer.id, text)),
             SEAT_RELEASE_TOPIC.source(peer).listen(text => this.#giveBack(peer.id, text)),
@@ -234,7 +235,7 @@ export class SeatChoice<C = Run> {
     }
 
     #left(peer: SyncPeer): void {
-        for(const handle of this.#listening.get(peer.id) ?? []) handle.dispose()
+        for(const handle of this.#listening.get(peer.id) ?? []) handle.remove()
         this.#listening.delete(peer.id)
         this.#offer()
     }

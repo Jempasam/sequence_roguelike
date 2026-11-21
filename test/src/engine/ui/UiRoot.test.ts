@@ -365,7 +365,7 @@ describe("UiRoot pointer", () => {
         setup.port.send({ type: "pointer-move", x: 100, y: 100 })
         setup.frame()
         expect(heard).toEqual(["hover-enter true", "press true", "release true", "hover-leave true"])
-        handle.dispose()
+        handle.remove()
         click(setup, 15, 12)
         expect(heard).toHaveLength(4)
     })

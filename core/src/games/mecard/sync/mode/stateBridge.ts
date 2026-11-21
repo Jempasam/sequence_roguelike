@@ -1,6 +1,7 @@
 import type { SyncSender, SyncSource } from "../SyncChannel"
 
 import type { GameModeContext } from "../../sim/mode/GameModeContext"
+import type { Removable } from "../../../../lifetime"
 
 /** What a text is told apart by: what comes before its first colon, the topic of the brick that wrote it. */
 function keyOf(message: string): string {
@@ -39,14 +40,14 @@ export class StatePublisher implements SyncSender {
         else this.ctx.publish(key, `${message}${++this.#events}`)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const first = initial()
-        if(first === null) return { dispose: () => {} }
+        if(first === null) return { remove: () => {} }
         const key = keyOf(first)
         this.#initials.set(key, initial)
         this.ctx.publishLazy(key, initial)
         return {
-            dispose: () => {
+            remove: () => {
                 if(this.#initials.get(key) !== initial) return
                 this.#initials.delete(key)
                 this.ctx.unpublish(key)
@@ -67,9 +68,9 @@ export class StatePublisher implements SyncSender {
 export class StateSource implements SyncSource {
 
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         this.#handlers.add(handler)
-        return { dispose: () => this.#handlers.delete(handler) }
+        return { remove: () => this.#handlers.delete(handler) }
     }
 
     /** Pass on a state the player was told. */

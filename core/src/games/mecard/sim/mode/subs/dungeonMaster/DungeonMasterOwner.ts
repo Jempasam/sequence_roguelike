@@ -7,6 +7,7 @@ import type { PromptBench } from "../choose/Picker"
 import type { DraftContext } from "../draft/DraftMode"
 import { DuelClient } from "../duel/DuelClient"
 import type { DuelBench } from "../duel/DuelClient"
+import type { Removable } from "../../../../../../lifetime"
 
 /** What a game with a master asks of the screen. */
 export type MasterBench = DuelBench & PromptBench
@@ -25,7 +26,7 @@ export class DungeonMasterOwner implements GameModeOwner {
         return this.#duels.createBattle(spec, manager)
     }
 
-    public spectateBattle(view: InstanceView<Battle>): { dispose(): void } {
+    public spectateBattle(view: InstanceView<Battle>): Removable {
         return this.#duels.spectateBattle(view)
     }
 

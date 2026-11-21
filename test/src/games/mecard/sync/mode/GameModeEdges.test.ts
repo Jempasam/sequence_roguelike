@@ -253,6 +253,36 @@ describe("the runner, at its edges", () => {
         toys.dispose()
     })
 
+    test("the game disposed while a mode sleeps → it does not go on, and nothing is thrown", async() => {
+        const ran: string[] = []
+        const toys = game(ctx => {
+            void ctx.sleep(1000).then(() => ran.push("after the sleep"))
+        })
+        const links = await toys.start("far")
+        toys.play("far", links)
+        await settle()
+        toys.dispose()
+        toys.timer.advance(2000)
+        await settle()
+        expect(ran).toEqual([])
+    })
+
+    test("the game disposed while an ask waits → the ask is answered by a fault, not left waiting", async() => {
+        const toys = game(() => {})
+        const links = await toys.start("far")
+        toys.play("far", links)
+        await settle()
+        const ctx = toys.manager().ctx as GameModeContext
+        const member = ctx.members().find(each => each.id === "far") as GameMember
+        toys.room.drop("far")
+        await settle()
+        const asked = ctx.channel(member).ask("ping")
+        toys.dispose()
+        const answer = await asked
+        expect(answer).toBeInstanceOf(NoAnswerFault)
+        expect((answer as NoAnswerFault).cause).toBe("quit")
+    })
+
     test("a member that quits while its connection is lost → what it missed is dropped, its asks are not heard", async() => {
         const toys = game(() => {})
         const links = await toys.start("far")
@@ -352,7 +382,7 @@ describe("StatePublisher and StateSource", () => {
     test("a brick that says nothing first yet → nothing is published, and nothing breaks when it stops", () => {
         const { ctx, published } = context()
         const publisher = new StatePublisher(ctx)
-        publisher.onPeer(() => null).dispose()
+        publisher.onPeer(() => null).remove()
         expect(published.size).toBe(0)
     })
 
@@ -361,9 +391,9 @@ describe("StatePublisher and StateSource", () => {
         const publisher = new StatePublisher(ctx)
         const first = publisher.onPeer(() => "lives:a")
         const second = publisher.onPeer(() => "lives:b")
-        first.dispose()
+        first.remove()
         expect(published.get("lives")?.()).toBe("lives:b")
-        second.dispose()
+        second.remove()
         expect(published.has("lives")).toBe(false)
     })
 
@@ -374,7 +404,7 @@ describe("StatePublisher and StateSource", () => {
         source.receive("lives:x")
         source.receive(12)
         source.receive(null)
-        handle.dispose()
+        handle.remove()
         source.receive("lives:y")
         expect(heard).toEqual(["lives:x"])
     })

@@ -3,6 +3,7 @@ import { Fault } from "./Fault"
 import { OutboxFullFault } from "./NetFaults"
 import { Outbox } from "./Outbox"
 import type { SessionPeer } from "./SessionPeer"
+import type { Removable } from "../../lifetime"
 
 /**
  * A client of the main client as the game sees it: the {@link SessionPeer} it is, with what is said to it
@@ -37,7 +38,7 @@ export class QueuedPeer implements SyncPeer {
         if(this.#outbox.hold(message)) this.overflowed(new OutboxFullFault(this.id))
     }
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         return this.peer.listen(handler)
     }
 

@@ -144,6 +144,15 @@ export class PnjScreen {
         if(visible && !this.#loading) this.#loading = this.#load()
     }
 
+    /** Free what the screen holds on the GPU. What is still loading is freed when it arrives. */
+    public dispose(): void {
+        this.#isDisposed = true
+        this.#owned?.dispose()
+        this.#owned = null
+        for(const texture of this.#textures) texture.dispose()
+        this.#textures = []
+    }
+
     /** Lay the panels out again when the interface changed size. */
     public frame(): void {
         const size = `${this.ui.width}×${this.ui.height}`
@@ -165,6 +174,10 @@ export class PnjScreen {
     /** What the character shown owns on the GPU, freed when another replaces it. */
     #owned: { dispose(): void }|null = null
 
+    /** The textures of the hats, masks and objects, freed with the screen. */
+    #textures: Texture[] = []
+    #isDisposed = false
+
     /** The unit drawn from its sprite, by its place among {@link UNITS}, none for the painted merchant. */
     #unit: number|null = null
     #hats: PnjHat[] = []
@@ -180,20 +193,29 @@ export class PnjScreen {
         let items: PnjAccessory[]
         const loadAll = async (looks: readonly PnjHatLook[]): Promise<PnjAccessory[]> => {
             const pictures = await Promise.all(looks.map(look => this.assets.image(pathOf(look.path))))
-            return pictures.map((picture, index) => ({
-                sprite: Sprite.whole(Texture.fromPixels(this.ui.gpu, picture)),
-                size: looks[index].size,
-                anchor: looks[index].anchor,
-            }))
+            return pictures.map((picture, index) => {
+                const texture = Texture.fromPixels(this.ui.gpu, picture)
+                this.#textures.push(texture)
+                return { sprite: Sprite.whole(texture), size: looks[index].size, anchor: looks[index].anchor }
+            })
         }
         try {
             rig = await PnjRig.load(this.ui.gpu, this.assets, PNJ_PATH, PNJ_SHRINK)
+            if(this.#isDisposed){
+                rig.dispose()
+                return
+            }
             hats = await loadAll(HATS)
             masks = await loadAll(MASKS)
             items = await loadAll(ITEMS)
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             this.host.report(`Le banc des PNJ n'a pas pu être chargé : ${error.message}`)
+            return
+        }
+        if(this.#isDisposed){
+            rig.dispose()
+            this.dispose()
             return
         }
         this.#hats = hats

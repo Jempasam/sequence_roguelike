@@ -1,6 +1,7 @@
+import { signal } from "../../lifetime"
 import type { SyncPeer } from "../../platform"
 import type { Connection } from "./Connection"
-import { Listeners } from "./Listeners"
+import type { Removable } from "../../lifetime"
 
 /**
  * A client of a {@link SessionHost}, as it stays the same through the connections it comes with: its id is
@@ -15,10 +16,10 @@ export class SessionPeer implements SyncPeer {
 
 
     /** Told once its connection is lost: it may come back. */
-    public readonly lost = new Listeners<void>()
+    public readonly lost = signal<void>()
 
     /** Told once it came back on a new connection. */
-    public readonly back = new Listeners<void>()
+    public readonly back = signal<void>()
 
     constructor(
         /** The id of its session. */
@@ -49,20 +50,20 @@ export class SessionPeer implements SyncPeer {
         }
     }
 
-    public listen(handler: (message: string) => void): { dispose(): void } {
+    public listen(handler: (message: string) => void): Removable {
         const entry = { handler }
         this.#handlers.add(entry)
-        return { dispose: () => this.#handlers.delete(entry) }
+        return { remove: () => this.#handlers.delete(entry) }
     }
 
     /** Its connection is lost: nothing reaches it until it comes back. */
     public markLost(): void {
         if(this.#isLost) return
         this.#isLost = true
-        this.#listening?.dispose()
+        this.#listening?.remove()
         this.#listening = null
         this.#connection = null
-        this.lost.emit()
+        this.lost.notify()
     }
 
     /**
@@ -75,12 +76,12 @@ export class SessionPeer implements SyncPeer {
         this.#attach(connection)
         if(old && old !== connection) old.close()
         this.#isLost = false
-        this.back.emit()
+        this.back.notify()
     }
 
     /** It left for good: its connection closes, and nothing is heard of it any more. */
     public close(): void {
-        this.#listening?.dispose()
+        this.#listening?.remove()
         this.#listening = null
         this.#connection?.close()
         this.#connection = null
@@ -91,11 +92,11 @@ export class SessionPeer implements SyncPeer {
     #member: string
     #isLost = false
     #connection: Connection|null = null
-    #listening: { dispose(): void }|null = null
+    #listening: Removable|null = null
     readonly #handlers = new Set<{ handler: (message: string) => void }>()
 
     #attach(connection: Connection): void {
-        this.#listening?.dispose()
+        this.#listening?.remove()
         this.#connection = connection
         this.#listening = connection.listen(message => {
             for(const { handler } of [...this.#handlers]) handler(message)

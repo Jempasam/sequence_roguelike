@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
@@ -22,15 +21,12 @@ export class Fleeting extends BaseStatus {
     public override toSemString(): Text { return FLEETING }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = battle.roundEnded.add(() => {
+        this.keep(battle.roundEnded.add(() => {
             unit.hearts.damage(FLEETING_DAMAGE, DamageType.ELEMENTAL, null)
-        })
+        }))
     }
 
     public remove(): void {
-        this.#observer?.remove()
+        this.letGo()
     }
-
-
-    #observer?: Observer
 }

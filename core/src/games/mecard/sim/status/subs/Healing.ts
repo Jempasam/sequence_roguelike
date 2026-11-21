@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../semantic"
-import type { Observer } from "../../base/Observable"
 import { HeartCount } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
@@ -26,18 +25,15 @@ export class Healing extends BaseStatus {
     public override toSemString(): Text { return [HEALING, " ", new HeartCount(this.level)] }
 
     public init({ battle, unit }: UnitContext): void {
-        this.#observer = battle.roundEnded.add(() => {
+        this.keep(battle.roundEnded.add(() => {
             const area = Areas.circle(unit.position, TOTEM_RADIUS)
             const allies = battle.fetch(area, unit).filter(ally => ally.team === unit.team)
             if(allies.length > 0) battle.signals.notifyStatus.notify({ unit, target: this })
             for(const ally of allies) ally.hearts.heal(this.level)
-        })
+        }))
     }
 
     public remove(): void {
-        this.#observer?.remove()
+        this.letGo()
     }
-
-
-    #observer?: Observer
 }

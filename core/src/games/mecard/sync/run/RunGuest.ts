@@ -8,6 +8,7 @@ import { writeParticipateMessage } from "../participation/ParticipationMessage"
 import type { SyncLink } from "../SyncChannel"
 import { forward, signal } from "../faults"
 import { readSeatMessage } from "./SeatMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * A client that came to play a run hosted elsewhere: it says so, hears what it plays, and has a
@@ -83,15 +84,15 @@ export class RunGuest {
     /** Stop playing, and leave the run as it is. */
     public dispose(): void {
         this.#unregisterObservers()
-        this.#forwarding.dispose()
-        this.#listening.dispose()
+        this.#forwarding.remove()
+        this.#listening.remove()
     }
 
 
     readonly #link: SyncLink
-    readonly #forwarding: { dispose(): void }
+    readonly #forwarding: Removable
     readonly #battle: BattleGuest
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
 
     #engine: Run
 

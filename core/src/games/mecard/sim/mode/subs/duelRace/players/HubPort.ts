@@ -4,6 +4,7 @@ import type { Battle } from "../../../../battle/Battle"
 import type { SavedUnit } from "../../../../save/battleSave"
 
 import type { Progress } from "../../../../../sync/progress/ProgressMessage"
+import type { Removable } from "../../../../../../../lifetime"
 
 /** The lives of the players as a player reads them: from the hub's book, or from what the hub told. */
 export interface LivesView {
@@ -85,7 +86,7 @@ export interface HubPort {
      *
      * @returns What stops answering.
      */
-    answerTeam(units: () => readonly SavedUnit[]): { dispose(): void }
+    answerTeam(units: () => readonly SavedUnit[]): Removable
 
     /** Tell the hub where the journey of the player stands. */
     sendProgress(progress: Progress): void

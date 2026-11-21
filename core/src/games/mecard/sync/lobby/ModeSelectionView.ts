@@ -6,6 +6,7 @@ import type { SyncSource } from "../SyncChannel"
 
 import { readModeState } from "./LobbyMessage"
 import type { ModeState } from "./LobbyMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** The mode of the lobby as a client sees it: what the host says, changed by nothing here. */
 export class ModeSelectionView {
@@ -30,11 +31,11 @@ export class ModeSelectionView {
 
     /** Stop listening. */
     public dispose(): void {
-        this.#handle.dispose()
+        this.#handle.remove()
     }
 
 
-    readonly #handle: { dispose(): void }
+    readonly #handle: Removable
     #state: ModeState|null = null
     #previous: ModeState|null = null
 

@@ -1,5 +1,6 @@
 import type { SyncPeer } from "../../../../platform"
 import type { SyncTopic } from "../SyncChannel"
+import type { Removable } from "../../../../lifetime"
 
 /** How the connection of a participant stands: lost, it may come back. */
 export type Connection = "connected"|"lost"
@@ -50,7 +51,7 @@ export class Participant {
     }
 
     /** Hear what it says on a topic. The host says nothing this way. */
-    public listen(topic: SyncTopic, handler: (text: string) => void): { dispose(): void } {
-        return this.peer ? topic.link(this.peer).listen(handler) : { dispose: () => {} }
+    public listen(topic: SyncTopic, handler: (text: string) => void): Removable {
+        return this.peer ? topic.link(this.peer).listen(handler) : { remove: () => {} }
     }
 }

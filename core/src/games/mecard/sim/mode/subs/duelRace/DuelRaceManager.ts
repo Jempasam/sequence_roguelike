@@ -255,7 +255,7 @@ export class DuelRaceManager implements GameModeManager {
                     fight: { number: duel.number, allies: duel.allies, opponents: duel.opponents },
                 }
                 if(member) this.#duels.get(duel.number)?.play(member, units, info as unknown as { [key: string]: GameModeShareable })
-                return { dispose: () => {} }
+                return { remove: () => {} }
             },
             watch: (duel: DuelWatched) => {
                 const member = this.#member(id)

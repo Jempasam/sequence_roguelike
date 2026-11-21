@@ -11,6 +11,7 @@ import {
     readProfileMessage, writeRefusedMessage, writeRosterMessage, writeSelfMessage,
 } from "./RosterMessage"
 import type { RosterEntry } from "./RosterMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** A client of the lobby that told who it is. */
 interface Present {
@@ -76,20 +77,20 @@ export class Roster {
 
     /** Stop following the lobby. */
     public dispose(): void {
-        for(const handle of this.#handles) handle.dispose()
-        for(const handles of this.#listening.values()) handles.dispose()
+        for(const handle of this.#handles) handle.remove()
+        for(const handles of this.#listening.values()) handles.remove()
         this.#listening.clear()
     }
 
 
     readonly #sender: SyncSender
-    readonly #handles: readonly { dispose(): void }[]
+    readonly #handles: readonly Removable[]
     readonly #present = new Map<string, Present>()
-    readonly #listening = new Map<string, { dispose(): void }>()
+    readonly #listening = new Map<string, Removable>()
     #hostName: string
 
     #listen(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.dispose()
+        this.#listening.get(peer.id)?.remove()
         this.#listening.set(peer.id, PROFILE_TOPIC.link(peer).listen(text => this.#profile(peer, text)))
     }
 
@@ -129,7 +130,7 @@ export class Roster {
     }
 
     #leave(peer: SyncPeer): void {
-        this.#listening.get(peer.id)?.dispose()
+        this.#listening.get(peer.id)?.remove()
         this.#listening.delete(peer.id)
         if(this.#present.delete(peer.id)) this.#tellAll()
     }

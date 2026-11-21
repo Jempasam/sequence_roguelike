@@ -8,6 +8,7 @@ import { BATTLE_TOPIC, RUN_TOPIC, TRAVEL_TOPIC } from "../SyncChannel"
 import type { SyncSender } from "../SyncChannel"
 import { TravelBroadcaster } from "../travel/TravelBroadcaster"
 import { writeRunMessage } from "./RunMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The main client of a run, telling its viewers: it sends the run as it stands whenever a halt or a fight is
@@ -55,14 +56,14 @@ export class RunBroadcaster {
     /** Stop telling the run. */
     public dispose(): void {
         this.#unregisterObservers()
-        for(const peers of this.#peers) peers.dispose()
+        for(const peers of this.#peers) peers.remove()
         this.#travel.dispose()
         this.#battle.dispose()
     }
 
 
     readonly #sender: SyncSender
-    readonly #peers: readonly { dispose(): void }[]
+    readonly #peers: readonly Removable[]
     readonly #travel: TravelBroadcaster
     readonly #battle: BattleBroadcaster
 

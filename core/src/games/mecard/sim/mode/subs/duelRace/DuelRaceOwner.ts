@@ -16,6 +16,7 @@ import type { DuelOrder } from "../duel/DuelOwner"
 import type { DuelRules } from "./DuelRules"
 import { DuelRacePlayer } from "./players/DuelRacePlayer"
 import { ModeHub } from "./players/ModeHub"
+import type { Removable } from "../../../../../../lifetime"
 
 /** A run played on the screen of a player of a race, by itself: nobody plays it for it. */
 export interface RaceScreen {
@@ -105,7 +106,7 @@ export class DuelRaceOwner implements GameModeOwner {
     }
 
     /** The run is shown to this player: it plays it, which its screen shows. */
-    public spectateRun(view: InstanceView<Run>): { dispose(): void } {
+    public spectateRun(view: InstanceView<Run>): Removable {
         const { engine: run, me } = view
         const screen = this.#screens.get(run)
         if(screen && this.#mine?.run !== run){
@@ -119,7 +120,7 @@ export class DuelRaceOwner implements GameModeOwner {
             this.#mine = { run, hub, player, screen }
         }
         return {
-            dispose: () => {
+            remove: () => {
                 const mine = this.#mine
                 if(!mine || run !== mine.run) return
                 this.#mine = null
@@ -143,14 +144,14 @@ export class DuelRaceOwner implements GameModeOwner {
     }
 
     /** The duel is shown to this player, who fights or watches it. Its owner plays on its own engine. */
-    public spectateBattle(view: InstanceView<Battle>): { dispose(): void } {
+    public spectateBattle(view: InstanceView<Battle>): Removable {
         const owner = this.#owners.get(view.engine)
         if(view.own) owner?.show(view.me)
         // The owner plays on its own engine, which holds its plans already: it only says it is ready.
         const submit = view.own ? (): void => void owner?.heard(view.me, null) : view.ready ?? (() => {})
         this.#mine?.hub.duel(view.engine, view.info, view.units, submit)
         return {
-            dispose: () => {
+            remove: () => {
                 owner?.dispose()
                 this.#mine?.hub.endDuel()
                 // Brought to its end for the screen to leave it once shown: a battle over already stays so.

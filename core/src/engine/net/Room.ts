@@ -1,11 +1,13 @@
+import type { Observable } from "../../lifetime"
+import { signal } from "../../lifetime"
 import type { JsonValue, Member, PeerSignal, RoomShape } from "@game/server/protocol"
 
 import type { NetPort, TimerPort } from "../../platform"
-import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
 import { PeerConnection } from "./PeerConnection"
 import type { OpenDeadline, PeerRole } from "./PeerConnection"
 import type { RoomEntry, RoomEvent, Signaling, SignalingConnector } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /** The most members a room holds when nothing else is asked: a mesh of 8 opens 28 connections. */
 export const DEFAULT_CAPACITY = 8
@@ -170,23 +172,28 @@ export class Room {
     }
 
     /** Be told of each member whose connection opens, until the returned handle is disposed. */
-    public onPeer(handler: (peer: Peer) => void): { dispose(): void } {
+    public onPeer(handler: (peer: Peer) => void): Removable {
         return this.#opened.add(handler)
     }
 
     /** Be told of each linked member that leaves the room, or whose connection is lost. */
-    public onLeave(handler: (member: Member) => void): { dispose(): void } {
+    public onLeave(handler: (member: Member) => void): Removable {
         return this.#left.add(handler)
     }
 
     /** Be told of each linked member that changes what it says about itself. */
-    public onChange(handler: (member: Member) => void): { dispose(): void } {
+    public onChange(handler: (member: Member) => void): Removable {
         return this.#changed.add(handler)
     }
 
     /** Be told once the room closes for this member, with why. */
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#closed.add(handler)
+    }
+
+    /** Be told of what failed without ending the room, such as the admission of a newcomer that threw. */
+    public onFault(handler: (error: unknown) => void): Removable {
+        return this.#faulted.add(handler)
     }
 
     /** Change what this member says about itself, which every linked member is told. */
@@ -205,7 +212,7 @@ export class Room {
     readonly #client: Signaling
     readonly #admit: Admission
     readonly #deadline: OpenDeadline|undefined
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
     #self: Member
     #owner: string
 
@@ -215,12 +222,13 @@ export class Room {
     readonly #peers = new Map<string, Peer>()
 
     /** The signals of each linked member, which its connection listens to. */
-    readonly #signals = new Map<string, Listeners<PeerSignal>>()
+    readonly #signals = new Map<string, Observable<PeerSignal>>()
 
-    readonly #opened = new Listeners<Peer>()
-    readonly #left = new Listeners<Member>()
-    readonly #changed = new Listeners<Member>()
-    readonly #closed = new Listeners<NetError>()
+    readonly #opened = signal<Peer>()
+    readonly #left = signal<Member>()
+    readonly #changed = signal<Member>()
+    readonly #closed = signal<NetError>()
+    readonly #faulted = signal<unknown>()
 
     #hear(event: RoomEvent): void {
         switch(event.type){
@@ -237,7 +245,7 @@ export class Room {
                 const peer = this.#peers.get(event.member.id)
                 if(!peer) break
                 this.#peers.set(event.member.id, { member: event.member, connection: peer.connection })
-                this.#changed.emit(event.member)
+                this.#changed.notify(event.member)
                 break
             }
             case "owner":
@@ -246,7 +254,7 @@ export class Room {
             case "signal": {
                 const signals = this.#signals.get(event.from)
                 // A link that failed and was dropped may still hear late candidates: no one takes them.
-                if(signals) signals.emit(event.signal)
+                if(signals) signals.notify(event.signal)
                 break
             }
             default:
@@ -256,21 +264,23 @@ export class Room {
 
     /**
      * Let a newcomer in or not, by the word of the admission. One that throws turns the newcomer away, and
-     * its error is thrown again, out of the event, so it is seen rather than lost.
+     * its error goes to those who listen to faults, else to the console: seen rather than lost, and never
+     * an unhandled rejection, which would stop a Node process.
      */
     #answer(member: Member): void {
         void Promise.resolve()
             .then(() => this.#admit(member))
             .then(accepted => {
                 if(this.isOpen) this.#client.admit(member.id, accepted)
-            }, error => {
+            }, (error: unknown) => {
                 if(this.isOpen) this.#client.admit(member.id, false)
-                throw error
+                if(this.#faulted.size > 0) this.#faulted.notify(error)
+                else console.error("The admission of a newcomer failed:", error)
             })
     }
 
     #link(member: Member, role: PeerRole): void {
-        const signals = new Listeners<PeerSignal>()
+        const signals = signal<PeerSignal>()
         this.#signals.set(member.id, signals)
         const connection = new PeerConnection(this.#net, this.#client.iceServers, member.id, role, {
             send: signal => {
@@ -281,7 +291,7 @@ export class Room {
         this.#peers.set(member.id, { member, connection })
         void connection.opened.then(() => {
             const peer = this.#peers.get(member.id)
-            if(peer?.connection === connection) this.#opened.emit(peer)
+            if(peer?.connection === connection) this.#opened.notify(peer)
         }, () => {})
         connection.onClose(() => {
             if(this.#peers.get(member.id)?.connection === connection) this.#unlink(member.id)
@@ -294,20 +304,20 @@ export class Room {
         this.#peers.delete(id)
         this.#signals.delete(id)
         peer.connection.close()
-        this.#left.emit(peer.member)
+        this.#left.notify(peer.member)
     }
 
     #end(reason: NetError): void {
         if(this.#reason) return
         this.#reason = reason
-        this.#listening.dispose()
+        this.#listening.remove()
         // Emptied first, so closing the connections does not report every member as leaving.
         const peers = [...this.#peers.values()]
         this.#peers.clear()
         this.#signals.clear()
         for(const peer of peers) peer.connection.close()
-        this.#closed.emit(reason)
-        for(const listeners of [this.#opened, this.#left, this.#changed, this.#closed]) listeners.clear()
+        this.#closed.notify(reason)
+        for(const listeners of [this.#opened, this.#left, this.#changed, this.#closed, this.#faulted]) listeners.clear()
     }
 }
 

@@ -9,6 +9,7 @@ import type {
 import { describe, expect, test } from "vitest"
 
 import { startedRun } from "../../../../fixtures/startedRun"
+import type { Removable } from "@game/core"
 
 async function settle(): Promise<void> {
     for(let turn = 0; turn < 40; turn++) await Promise.resolve()
@@ -37,10 +38,10 @@ class Owner implements GameModeOwner {
         })] as const as never
     }
 
-    public spectateRun(view: InstanceView<Run>): { dispose(): void } {
+    public spectateRun(view: InstanceView<Run>): Removable {
         this.shown.push({ run: view.engine, me: view.me, own: view.own, info: view.info, units: view.units })
         this.says.set(view.me, view.say)
-        return { dispose: () => void this.disposed.push(view.me) }
+        return { remove: () => void this.disposed.push(view.me) }
     }
 }
 

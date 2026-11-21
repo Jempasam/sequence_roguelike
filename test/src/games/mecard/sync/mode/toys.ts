@@ -10,6 +10,7 @@ import type {
 } from "@game/core/mecard/sync"
 
 import { startedRun } from "../../../../fixtures/startedRun"
+import type { Removable } from "@game/core"
 
 /** Let what was deferred to the end of the current task happen. */
 export async function settle(): Promise<void> {
@@ -105,11 +106,11 @@ export class Toy implements GameModeManager, GameModeOwner {
         throw new Error("No battle here.")
     }
 
-    public spectateRun({ engine, info, units, say }: InstanceView<Run>): { dispose(): void } {
+    public spectateRun({ engine, info, units, say }: InstanceView<Run>): Removable {
         this.units.push(units)
         this.#says.set(engine, say)
         this.shown.push({ run: engine, info })
-        return { dispose: () => void this.hidden.push(engine) }
+        return { remove: () => void this.hidden.push(engine) }
     }
 
     /** The client answers "ping" with "pong" and anything else with nothing: for the manager's asks. */

@@ -1,6 +1,7 @@
 import type { SyncPeer, SyncSender } from "../SyncChannel"
 
 import type { LobbyRoom } from "./LobbyRoom"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * Where a game played in a lobby sends what it tells its clients: the sender of the network, that also
@@ -27,13 +28,13 @@ export class LobbySender implements SyncSender {
         this.sender.send(message)
     }
 
-    public onPeer(initial: () => string|null): { dispose(): void } {
+    public onPeer(initial: () => string|null): Removable {
         const entry = { initial, handle: this.sender.onPeer(initial) }
         this.#peers.add(entry)
         return {
-            dispose: () => {
+            remove: () => {
                 this.#peers.delete(entry)
-                entry.handle.dispose()
+                entry.handle.remove()
             },
         }
     }
@@ -56,10 +57,10 @@ export class LobbySender implements SyncSender {
 
     /** Stop asking the network to give the first messages. */
     public dispose(): void {
-        for(const { handle } of [...this.#peers]) handle.dispose()
+        for(const { handle } of [...this.#peers]) handle.remove()
         this.#peers.clear()
     }
 
 
-    readonly #peers = new Set<{ initial: () => string|null, handle: { dispose(): void } }>()
+    readonly #peers = new Set<{ initial: () => string|null, handle: Removable }>()
 }

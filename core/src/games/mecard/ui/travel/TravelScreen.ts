@@ -15,7 +15,7 @@ import type { Text } from "../../../../semantic"
 import { infoOf } from "../../sim/catalog/places"
 import { allCards, statsOf } from "../../sim/run/Hero"
 import type { Card } from "../../sim/card/Card"
-import type { Observer } from "../../sim/base/Observable"
+import { Scope } from "../../../../lifetime"
 import type { Halt } from "../../sim/halt/Halt"
 import type { Shown } from "../../sim/halt/HaltContext"
 import type { HaltMoment } from "../../sim/halt/SceneLook"
@@ -322,13 +322,16 @@ export class TravelScreen {
         // Let the host finish building: its sign of loading does not exist yet while this screen is constructed.
         await Promise.resolve()
         await this.#loadFloorScene()
-        this.#fill()
+        if(!this.#isDisposed) this.#fill()
     }
 
     /** Stop showing the travel. */
     public dispose(): void {
+        this.#isDisposed = true
         this.#unregisterObservers()
         this.#stopAnimations()
+        this.#arm.dispose()
+        this.#scenes.dispose()
     }
 
     /**
@@ -424,7 +427,7 @@ export class TravelScreen {
     readonly #clock = new FrameClock()
 
     /** What it listens to on the travel it follows. */
-    #observers: Observer[] = []
+    #observers = new Scope()
 
     /** The scenes of the places, loaded when first shown. */
     readonly #scenes: TravelScenes
@@ -449,6 +452,7 @@ export class TravelScreen {
     readonly #told: DetailBox
 
     /** What the map is drawn with, none before it is loaded: the panels and the codes show meanwhile. */
+    #isDisposed = false
     #mapArt: MapArt|null = null
 
     /** The place of the map the pointer is over, as the sounds heard it. */
@@ -543,7 +547,8 @@ export class TravelScreen {
     /** Add what the travel asks and tells to what the screen plays, as it comes. */
     #registerObservers(): void {
         const travel = this.engine
-        this.#observers = [
+        this.#observers.remove()
+        this.#observers = new Scope(
             travel.moved.add(({ to }) => this.animations.add(() => this.#walk(travel, to))),
             travel.phaseChanged.add(phase => {
                 if(phase === "entering") this.animations.add(instant(() => this.#enter(travel)))
@@ -568,12 +573,12 @@ export class TravelScreen {
                 this.#leaving = halt
                 this.animations.add(() => this.#leave(halt))
             }),
-        ]
+        )
     }
 
     #unregisterObservers(): void {
-        for(const observer of this.#observers) observer.remove()
-        this.#observers = []
+        this.#observers.remove()
+        this.#observers = new Scope()
     }
 
     /** Drop what waits to be played, and end what is going on. */
@@ -768,7 +773,9 @@ export class TravelScreen {
     /** Give the forearm its picture once loaded, telling when it could not be. */
     async #loadArm(assets: Assets): Promise<void> {
         try {
-            this.#arm.sprite = await PointingArm.loadSprite(this.ui.gpu, assets)
+            const sprite = await PointingArm.loadSprite(this.ui.gpu, assets)
+            if(this.#isDisposed) sprite.texture.dispose()
+            else this.#arm.sprite = sprite
         } catch(error){
             if(!(error instanceof AssetError)) throw error
             this.options.report(`Le bras n'a pas pu être chargé : ${error.message}`)

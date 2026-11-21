@@ -13,6 +13,7 @@ import { PLAN_TOPIC } from "../SyncChannel"
 import { SeatDealer } from "./SeatDealer"
 import { Seats } from "./Seats"
 import type { Seatable, SeatMode, SeatPolicy } from "./Seats"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The host of a run played by several clients: it tells each client that came to play what it plays, and has
@@ -115,9 +116,9 @@ export class RunHost {
         this.#unregisterObservers()
         this.#leaveBattle()
         for(const observer of this.#room) observer.remove()
-        for(const handle of this.#lifelines) handle.dispose()
-        for(const handle of this.#forwarding) handle.dispose()
-        for(const handles of this.#listening.values()) for(const handle of handles) handle.dispose()
+        for(const handle of this.#lifelines) handle.remove()
+        for(const handle of this.#forwarding) handle.remove()
+        for(const handles of this.#listening.values()) for(const handle of handles) handle.remove()
         this.#gathering.dispose()
         this.#dealer.dispose()
         this.#battle.dispose()
@@ -128,12 +129,12 @@ export class RunHost {
     readonly #battle: BattleHost
     readonly #dealer: SeatDealer
     readonly #gathering: Gathering
-    readonly #forwarding: readonly { dispose(): void }[]
+    readonly #forwarding: readonly Removable[]
     readonly #room: readonly Observer[]
-    readonly #lifelines: readonly { dispose(): void }[]
+    readonly #lifelines: readonly Removable[]
 
     /** What it hears from each client that came to play. */
-    readonly #listening = new Map<string, { dispose(): void }[]>()
+    readonly #listening = new Map<string, Removable[]>()
 
     /** The units of the battle that are bots but for the client playing them, by their names. */
     readonly #handed = new Set<string>()
@@ -183,7 +184,7 @@ export class RunHost {
 
     /** Let a client go, what it played given back: the round goes on without it. */
     #part({ id }: Member): void {
-        for(const handle of this.#listening.get(id) ?? []) handle.dispose()
+        for(const handle of this.#listening.get(id) ?? []) handle.remove()
         this.#listening.delete(id)
         if(!this.#dealer.has(id)) return
         this.#battle.fillIn(id)

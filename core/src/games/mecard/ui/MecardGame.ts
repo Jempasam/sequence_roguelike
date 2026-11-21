@@ -71,6 +71,8 @@ import { ArmScreen } from "./travel/ArmScreen"
 import { ParallaxScreen } from "./travel/ParallaxScreen"
 import { SpriteBenchScreen } from "./look/SpriteBenchScreen"
 import type { Visual } from "../sim/base/Visual"
+import { Scope } from "../../../lifetime"
+import type { Removable } from "../../../lifetime"
 
 /** The share of the height of the screen the console takes, from the top. */
 const CONSOLE_SHARE = 0.45
@@ -102,7 +104,7 @@ export interface OpenedRoom extends SyncSender {
     readonly ready: Promise<string|Fault>
 
     /** Told once, when the room cannot be kept: its connection to the server is lost for good. */
-    readonly ended?: { add(handler: (fault: Fault) => void): { dispose(): void } }
+    readonly ended?: { add(handler: (fault: Fault) => void): Removable }
 
     /** Close the room. */
     close(): void
@@ -139,13 +141,13 @@ export interface JoinedRoom {
     readonly ready: Promise<string|Fault>
 
     /** Told once, when the room cannot be kept. */
-    readonly ended: { add(handler: (fault: Fault) => void): { dispose(): void } }
+    readonly ended: { add(handler: (fault: Fault) => void): Removable }
 
     /** Told each time the connection is lost and the client tries to come back to the room. */
-    readonly reconnecting?: { add(handler: () => void): { dispose(): void } }
+    readonly reconnecting?: { add(handler: () => void): Removable }
 
     /** Told each time the client is back in the room. */
-    readonly reconnected?: { add(handler: () => void): { dispose(): void } }
+    readonly reconnected?: { add(handler: () => void): Removable }
 
     /** Leave the room. */
     close(): void
@@ -304,7 +306,13 @@ export class MecardGame {
                 })
             },
         }
-        const host = (): MecardHost => ({ ...actions, playing: this.#playing, run: this.run, battle: this.battle })
+        // The run shown, not the one played alone: a hosted table or a duel shows a run of its own.
+        const host = (): MecardHost => ({
+            ...actions,
+            playing: this.#playing,
+            run: this.#screen.engine,
+            battle: this.battle,
+        })
         this.#console = new Console<MecardContext>(new LiveContext(host))
         registerCommands(this.#console)
         this.#console.print("Console : tape help pour la liste des commandes.")
@@ -569,6 +577,8 @@ export class MecardGame {
     #table: {
         readonly run: Run
         readonly shared: SharedRun
+        /** What listens to the run for the screen, taken back with the table. */
+        readonly watching?: Scope
     }|null = null
 
     /** What the modes of the lobby ask of the screen. */
@@ -588,7 +598,10 @@ export class MecardGame {
 
     #seed: number
 
-    /** Whether a run is started: not while the main menu waits for a new game or the one kept. */
+    /**
+     * Whether the commands may act on the run shown: a run played alone, or a table run by its owner. Not at the
+     * main menu, nor over the run of a host, which a command would only change until the host tells it again.
+     */
     #playing = false
 
     /** Whether the bench shown was opened from the menu, rather than from the run. */
@@ -646,12 +659,25 @@ export class MecardGame {
         }
     }
 
-    /** Close everything this game holds open on the network: the chat, the hosted room, the lobby and its list. */
+    /**
+     * Close everything this game holds open: the chat, the hosted room, the lobby and its list, then what
+     * listens to the run and the screens holding textures.
+     */
     public dispose(): void {
         this.leaveChat()
         this.#stopHosting()
         this.#lobbyController?.leave()
         this.#lobbyController?.watch(false)
+        this.#hideTable()
+        this.#saver?.dispose()
+        this.#historian?.dispose()
+        this.#broadcaster?.dispose()
+        this.#sound?.dispose()
+        this.#screen.dispose()
+        this.#menu.dispose()
+        this.#parallax.dispose()
+        this.#pnj.dispose()
+        this.#arm.dispose()
     }
 
     /** Close the room, the game played alone again. */
@@ -699,7 +725,7 @@ export class MecardGame {
             this.#printFault(`Le chat s'est arrêté : ${fault.describe()}`)
         })
         this.#showChat(chat, () => {
-            ended.dispose()
+            ended.remove()
             joined.close()
         }, "Chat · connexion...")
         void joined.ready.then(opened => {
@@ -805,6 +831,8 @@ export class MecardGame {
         this.#screen.locks = { ...NO_RUN_LOCKS, battle: { isLocked: unit => isGuests(unit), round: "gather" } }
         if(!first) return
         this.#screen.engine = run
+        // The owner of a table runs it: its commands act on the run the clients are told.
+        this.#playing = true
         this.#travelOn()
     }
 
@@ -812,22 +840,25 @@ export class MecardGame {
     #showSeat(run: Run, units: readonly string[], ready: () => void): void {
         const first = this.#table?.run !== run
         const shared = { onReady: ready }
-        this.#table = { run, shared }
+        const watching = first ? new Scope() : this.#table?.watching
+        this.#table = { run, shared, ...watching && { watching } }
         this.#shared = shared
         this.#screen.locks = locksForUnits(units)
-        if(!first) return
+        if(!first || !watching) return
         this.#screen.engine = run
+        // A client only shows the run its host tells, which would overwrite what a command changed.
+        this.#playing = false
         const show = (): void => {
             if(this.#table?.run === run && !this.#screen.visible) this.#benchesOff()
         }
-        run.loaded.add(show)
-        run.battleStarted.add(show)
+        watching.track(run.loaded.add(show), run.battleStarted.add(show))
     }
 
     /** Take the run of a table off the screen. */
     #hideTable(): void {
         const table = this.#table
         this.#table = null
+        table?.watching?.remove()
         if(table) this.#closeShared(table.shared)
     }
 
@@ -846,6 +877,8 @@ export class MecardGame {
         this.#shared = shared
         this.#screen.engine = run
         this.#screen.locks = NO_RUN_LOCKS
+        // A race is a game with others: a command would be a way to cheat.
+        this.#playing = false
         this.#travelOn()
         return {
             run,
@@ -913,6 +946,7 @@ export class MecardGame {
             this.#duel = duel
             this.#shared = duel
             this.#screen.engine = duel.run
+            this.#playing = false
         }
         duel.onReady = ready
         // The duel is left when it was seen to its end: the network only brings the battle there, the screen goes
@@ -938,6 +972,7 @@ export class MecardGame {
         this.#shared = null
         this.#screen.locks = NO_RUN_LOCKS
         this.#screen.engine = this.run
+        this.#playing = false
         this.#screen.visible = false
         if(this.#lobby) this.#lobby.visible = true
     }

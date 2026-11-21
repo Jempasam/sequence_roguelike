@@ -51,11 +51,22 @@ export class SaveSlot<T> {
     public save(state: T): Promise<void> {
         // Encoded right away, so the state is the one of this call even if it changes while the previous
         // operations run.
-        const json = this.format.encode(state)
-        checkJson(json, this.key)
-        const payload = new TextEncoder().encode(JSON.stringify(json))
-        const bytes = sealEnvelope(this.format.version, payload)
+        const bytes = this.#bytesOf(state)
         return this.#enqueue(() => this.storage.write(this.key, bytes))
+    }
+
+    /**
+     * Change what is saved, read and written back as one operation: no other one runs in between, so two
+     * changes called one after the other both hold.
+     *
+     * @param change - Given the state saved, none when nothing was, gives the state to write.
+     * @throws {@link SaveError} When the save is damaged, too new for this version of the game, or refused.
+     */
+    public update(change: (state: T|null) => T): Promise<void> {
+        return this.#enqueue(async() => {
+            const bytes = await this.storage.read(this.key)
+            await this.storage.write(this.key, this.#bytesOf(change(bytes ? this.#stateOf(bytes) : null)))
+        })
     }
 
     /**
@@ -86,6 +97,13 @@ export class SaveSlot<T> {
         // next one runs after a failed one as well.
         this.#queue = result.catch(() => undefined)
         return result
+    }
+
+    #bytesOf(state: T): Uint8Array {
+        const json = this.format.encode(state)
+        checkJson(json, this.key)
+        const payload = new TextEncoder().encode(JSON.stringify(json))
+        return sealEnvelope(this.format.version, payload)
     }
 
     #stateOf(bytes: Uint8Array): T {

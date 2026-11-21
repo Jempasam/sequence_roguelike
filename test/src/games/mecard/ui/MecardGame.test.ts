@@ -39,7 +39,7 @@ function playing(ready: Promise<string|Fault> = Promise.resolve("K7QX2M")) {
         directory: () => new Promise(() => {}),
         join: () => {
             joined++
-            return { link: null, ready, ended: { add: () => ({ dispose: () => {} }) }, close: () => {} }
+            return { link: null, ready, ended: { add: () => ({ remove: () => {} }) }, close: () => {} }
         },
     }
     const toWorld = (x: number, y: number) => [x, y] as const

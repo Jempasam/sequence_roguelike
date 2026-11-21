@@ -1,11 +1,12 @@
+import { signal } from "../../lifetime"
 import { PROTOCOL_VERSION, ProtocolError, readServerMessage, writeMessage } from "@game/server/protocol"
 import type { ClientMessage, IceServer, JsonValue, PeerSignal, ServerMessage } from "@game/server/protocol"
 
 import type { NetPort, TimerPort } from "../../platform"
 import { ClientSocket } from "./ClientSocket"
-import { Listeners } from "./Listeners"
 import { NetError } from "./NetError"
 import type { RoomCreation, RoomEntry, RoomEvent, Signaling } from "./Signaling"
+import type { Removable } from "../../lifetime"
 
 /** What a refusal to enter a room is told as. */
 const REFUSAL_TEXT = {
@@ -107,12 +108,12 @@ export class SignalingClient implements Signaling {
     }
 
     /** Hear what the server tells of the room, until the returned handle is disposed. */
-    public onEvent(handler: (event: RoomEvent) => void): { dispose(): void } {
+    public onEvent(handler: (event: RoomEvent) => void): Removable {
         return this.#events.add(handler)
     }
 
     /** Be told once the client is disconnected, which takes it out of its room. */
-    public onClose(handler: (reason: NetError) => void): { dispose(): void } {
+    public onClose(handler: (reason: NetError) => void): Removable {
         return this.#socket.onClose(handler)
     }
 
@@ -123,7 +124,7 @@ export class SignalingClient implements Signaling {
 
 
     readonly #socket: ClientSocket
-    readonly #events = new Listeners<RoomEvent>()
+    readonly #events = signal<RoomEvent>()
     #iceServers: readonly IceServer[] = []
     #onWelcome: () => void = () => {}
 
@@ -175,7 +176,7 @@ export class SignalingClient implements Signaling {
                 this.#socket.closeFor(new NetError("protocol", `The server refused what this client sent: ${message.message}`))
                 break
             default:
-                this.#events.emit(message)
+                this.#events.notify(message)
                 break
         }
     }

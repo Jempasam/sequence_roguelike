@@ -177,6 +177,13 @@ export class TravelScenes {
         this.#halt = null
     }
 
+    /** Let every scene go: one still loading is freed when it arrives, as it is no longer held. */
+    public dispose(): void {
+        this.releaseHalt()
+        this.#release(this.#map)
+        this.#map = null
+    }
+
 
     #map: Kept|null = null
     #halt: Kept|null = null

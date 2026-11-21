@@ -69,21 +69,17 @@ abstract class SummonedPiece extends BaseStatus {
 
 
     public init(ctx: UnitContext): void {
-        this.#plugged.push(...this.plug(ctx))
+        this.keep(...this.plug(ctx))
     }
 
     public remove(): void {
-        for(const each of this.#plugged) each.remove()
-        this.#plugged.length = 0
+        this.letGo()
     }
 
     /** Plug in the reaction of the piece, none by default: a pawn, a queen. */
     protected plug(_ctx: UnitContext): Observer[] {
         return []
     }
-
-
-    readonly #plugged: Observer[] = []
 }
 
 /** After each move of its own, a piece goes on by a way worked out from the one it took. */

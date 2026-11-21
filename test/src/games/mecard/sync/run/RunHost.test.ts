@@ -115,7 +115,7 @@ describe("RunHost in enemy mode", () => {
         const { guest, viewer, receiver } = connected(session, "a")
         const battle = fight(session.run)
         const drifts: unknown[] = []
-        receiver.battle.onDesync = drift => drifts.push(drift)
+        receiver.battle.desynced.add(drift => drifts.push(drift))
         battle.advance()
         let rounds = 0
         for(; rounds < 2 && battle.phase === "preparation"; rounds++){

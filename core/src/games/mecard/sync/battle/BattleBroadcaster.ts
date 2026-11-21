@@ -5,6 +5,7 @@ import type { SaveOptions } from "../../sim/save/battleSave"
 import type { SyncSender } from "../SyncChannel"
 import { writeBattleMessage } from "./BattleMessage"
 import type { BattleMessageKind } from "./BattleMessage"
+import type { Removable } from "../../../../lifetime"
 
 /**
  * The main client of a battle, telling its viewers: it sends the battle at the start of each preparation and
@@ -44,7 +45,7 @@ export class BattleBroadcaster {
     /** Stop telling the battle. */
     public dispose(): void {
         this.#unregisterObservers()
-        this.#peers.dispose()
+        this.#peers.remove()
     }
 
 
@@ -59,7 +60,7 @@ export class BattleBroadcaster {
     /** The last message of the battle, none before the first. */
     #lastSent: string|null = null
 
-    readonly #peers: { dispose(): void }
+    readonly #peers: Removable
 
     #observers: Observer[] = []
 

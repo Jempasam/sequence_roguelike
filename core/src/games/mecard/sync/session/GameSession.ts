@@ -8,6 +8,7 @@ import { Placements, Participation } from "../participation/Participation"
 import type { Placement, Arrival, ParticipationPolicy } from "../participation/Participation"
 import { FeedRoom } from "./FeedRoom"
 import { Participant } from "./Participant"
+import type { Removable } from "../../../../lifetime"
 
 /** How a participant left the game: by itself, or for good with its session. */
 export type Departure = "quit"|"gone"
@@ -94,9 +95,9 @@ export class GameSession {
      *
      * @returns What takes it back.
      */
-    public bind(policy: ParticipationPolicy): { dispose(): void } {
+    public bind(policy: ParticipationPolicy): Removable {
         this.#policy = policy
-        return { dispose: () => { if(this.#policy === policy) this.#policy = null } }
+        return { remove: () => { if(this.#policy === policy) this.#policy = null } }
     }
 
     /**

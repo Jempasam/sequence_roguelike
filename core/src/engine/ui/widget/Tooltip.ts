@@ -4,6 +4,7 @@ import type { Theme } from "../Theme"
 import type { UiRoot } from "../UiRoot"
 import { placePopup } from "./ContextMenu"
 import { Panel } from "./Panel"
+import type { Removable } from "../../../lifetime"
 
 /** How long the pointer stays over a component before its tooltip opens, in seconds. */
 export const TOOLTIP_DELAY = 0.5
@@ -43,10 +44,10 @@ export class Tooltip {
      *
      * @param content - What the bubble shows, built each time it opens.
      */
-    public attach(component: Component, content: () => Component): { dispose(): void } {
+    public attach(component: Component, content: () => Component): Removable {
         this.#contents.set(component, content)
         return {
-            dispose: () => {
+            remove: () => {
                 this.#contents.delete(component)
                 if(this.#target === component) this.#close()
             },
@@ -56,12 +57,12 @@ export class Tooltip {
     /** Close the bubble and stop following the interface. */
     public dispose(): void {
         this.#close()
-        this.#ticks.dispose()
+        this.#ticks.remove()
         this.#contents.clear()
     }
 
 
-    readonly #ticks: { dispose(): void }
+    readonly #ticks: Removable
     readonly #contents = new Map<Component, () => Component>()
 
     /** The component the bubble is for, none when nothing is hovered or focused that has one. */

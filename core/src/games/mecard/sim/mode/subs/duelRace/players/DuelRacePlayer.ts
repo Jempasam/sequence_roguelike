@@ -9,6 +9,7 @@ import { Contestant } from "../Contestant"
 import { DuelLayers } from "../DuelLayers"
 import type { DuelRules } from "../DuelRules"
 import type { DuelFighting, DuelWatching, DeadlineView, HubPort, LivesView, ProgressView } from "./HubPort"
+import type { Removable } from "../../../../../../../lifetime"
 
 /**
  * A player of a race of duels: it plays its own run, and the hub sends it where to go and what the others do.
@@ -118,16 +119,16 @@ export class DuelRacePlayer {
     public dispose(): void {
         this.contestant.resume()
         for(const observer of this.#observers) observer.remove()
-        for(const handle of this.#forwarding) handle.dispose()
+        for(const handle of this.#forwarding) handle.remove()
         this.#broadcaster.dispose()
-        this.#answering.dispose()
+        this.#answering.remove()
         this.layers.dispose()
         this.hub.dispose()
     }
 
 
     readonly #broadcaster: ProgressBroadcaster
-    readonly #answering: { dispose(): void }
-    readonly #forwarding: readonly { dispose(): void }[]
+    readonly #answering: Removable
+    readonly #forwarding: readonly Removable[]
     readonly #observers: readonly Observer[]
 }

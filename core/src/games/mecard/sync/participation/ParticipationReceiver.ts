@@ -8,6 +8,7 @@ import type { SyncLink } from "../SyncChannel"
 
 import { readParticipationMessage, writeParticipateMessage } from "./ParticipationMessage"
 import type { ParticipationMessage } from "./ParticipationMessage"
+import type { Removable } from "../../../../lifetime"
 
 /** How long a client waits for the host to tell it its part before it says it joins again, in ms. */
 export const JOIN_RETRY_MS = 2_000
@@ -87,11 +88,11 @@ export class ParticipationReceiver {
     public dispose(): void {
         this.#retry?.cancel()
         this.#retry = null
-        this.#listening.dispose()
+        this.#listening.remove()
     }
 
 
-    readonly #listening: { dispose(): void }
+    readonly #listening: Removable
     #state: ParticipationMessage|null = null
     #retry: Cancel|null = null
     #tries = 0

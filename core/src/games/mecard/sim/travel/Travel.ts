@@ -101,6 +101,9 @@ export class Travel {
     /** A visit opens, before its first dialog. */
     public readonly visitStarted: Observable<Halt>
 
+    /** A halt changed the run: told at each change it makes, as many times as it makes some. */
+    public readonly haltImpacted: Observable<Halt>
+
     /** A visit closed, however it ended. */
     public readonly visitEnded: Observable<Halt>
 
@@ -173,6 +176,7 @@ export class Travel {
         this.floorEntered = new Observable(report)
         this.mapDrawn = new Observable(report)
         this.visitStarted = new Observable(report)
+        this.haltImpacted = new Observable(report)
         this.visitEnded = new Observable(report)
         this.fightReached = new Observable(report)
         this.fightEntered = new Observable(report)

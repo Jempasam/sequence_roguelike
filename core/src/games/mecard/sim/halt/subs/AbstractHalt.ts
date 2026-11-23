@@ -76,6 +76,7 @@ export abstract class AbstractHalt implements Halt {
     /** Remember that the halt changes the run: each change a halt makes calls it. */
     protected impact(): void {
         this.#hasImpact = true
+        this.run.travel.haltImpacted.notify(this)
     }
 
 

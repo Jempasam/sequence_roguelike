@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import type { Container } from "@game/core"
 import { ALL_KITS, heroOf } from "@game/core/mecard"
 import { AbsItemIcon } from "@game/core/mecard/abs-item-icon"
 import { stuffRow } from "@game/core/mecard/stuff-row"
@@ -18,8 +19,9 @@ function rowOf(hero: Hero, count = true): NonNullable<ReturnType<typeof stuffRow
 
 /** How many icons and bars a row holds. */
 function partsOf(row: ReturnType<typeof rowOf>): { icons: AbsItemIcon[], bars: number } {
-    const icons = row.children.filter((child): child is AbsItemIcon => child instanceof AbsItemIcon)
-    return { icons, bars: row.children.filter(child => child.constructor.name === "Bar").length }
+    const children = (row as Container<unknown>).children
+    const icons = children.filter((child): child is AbsItemIcon => child instanceof AbsItemIcon)
+    return { icons, bars: children.filter(child => child.constructor.name === "Bar").length }
 }
 
 // --- Tests ---

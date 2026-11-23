@@ -96,7 +96,6 @@ describe("the owner of a duel that quits", () => {
         const bench = {
             report: () => {},
             showBattle: (battle: Battle, units: readonly string[]) => void shown.push({ battle, units }),
-            hideBattle: () => {},
         }
         const { game, announced, clock } = local(randomDuelMode(bench))
         void game.join("a", "Ana")
@@ -209,7 +208,6 @@ describe("a tournament, played with no network, loses a player", () => {
         const bench: TournamentBench = {
             report: () => {},
             showBattle: battle => void shown.push(battle),
-            hideBattle: () => {},
             showBracket: () => {},
             hideBracket: () => {},
         }

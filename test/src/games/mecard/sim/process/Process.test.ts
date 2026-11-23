@@ -42,7 +42,7 @@ describe("Process", () => {
         unit(on, 6, 3, { team: MONSTERS })
         const ended: string[] = []
         const process: Process = {
-            name: "témoin", icon: visual("processes/strength"), color: new Strength(1).color,
+            name: "témoin", icon: visual("processes/strength"), description: "témoin",
             toString: () => "témoin", toSemString: () => "témoin",
             init: ({ hold }) => hold(() => ended.push("repris")),
             dispose: () => ended.push("fini"),

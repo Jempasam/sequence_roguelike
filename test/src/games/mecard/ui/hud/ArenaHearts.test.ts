@@ -18,7 +18,7 @@ function rowsOver(prepare: (on: ReturnType<typeof battle>) => void): number {
     for(const each of on.units) scene.add(each)
     const layer = setup.ui.addLayer("hearts")
     const sprites = { icon: () => null } as unknown as ConstructorParameters<typeof ArenaHearts>[2]
-    new ArenaHearts(setup.theme, layer, sprites, () => {}, () => {}).rebuild(scene)
+    new ArenaHearts(setup.theme, layer, sprites, () => {}, () => {}, () => {}).rebuild(scene)
     return layer.content.children.length
 }
 

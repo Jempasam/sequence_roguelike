@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets, SoundPlayer, SoundSettings } from "@game/core"
@@ -13,8 +13,14 @@ import { startedRun } from "../../../../fixtures/startedRun"
 // --- Fixture builders ---
 
 /** The sounds shipped with the game, in a fixed order: a sound is identified by its place in it. */
-const SOUNDS_DIRECTORY = join(__dirname, "../../../../../../assets/mecard/sounds")
-const FILES = readdirSync(SOUNDS_DIRECTORY).sort()
+const ROOT_DIRECTORY = join(__dirname, "../../../../../..")
+const SOUNDS_DIRECTORIES = ["assets", "generated_assets"].map(root => join(ROOT_DIRECTORY, root, "mecard/sounds"))
+const FULL_PATHS = new Map(SOUNDS_DIRECTORIES.flatMap(directory => (
+    readdirSync(directory, { recursive: true, encoding: "utf8" })
+        .map(file => [file.replaceAll("\\", "/"), join(directory, file)] as const)
+        .filter(([, full]) => statSync(full).isFile())
+)))
+const FILES = [...FULL_PATHS.keys()].sort()
 
 /** The id a sound is played with on the fake audio. */
 const idOf = (file: string): number => {
@@ -27,7 +33,7 @@ const idOf = (file: string): number => {
 function shippedSounds(): MemoryAssets {
     const files: Record<string, Uint8Array> = {}
     for(const file of FILES){
-        const bytes = new Uint8Array(readFileSync(join(SOUNDS_DIRECTORY, file)))
+        const bytes = new Uint8Array(readFileSync(FULL_PATHS.get(file)!))
         bytes[0] = idOf(file)
         files[`mecard/sounds/${file}`] = bytes
     }
@@ -37,12 +43,15 @@ function shippedSounds(): MemoryAssets {
 /** A screen that plays at once: what the journey tells is forwarded as it is told. */
 function playAtOnce(run: Run, forwarded: Forwarded): void {
     const { travel } = run
-    const told: Observable<unknown>[] = [
-        travel.visitStarted, travel.visitEnded, travel.fightEntered, travel.fightLeft, travel.moved,
-    ]
-    for(const observable of told){
+    const forwardAll = <Event>(observable: Observable<Event>): void => {
         observable.add(value => forwarded.forward(observable, value, "start"))
     }
+    forwardAll(travel.visitStarted)
+    forwardAll(travel.haltImpacted)
+    forwardAll(travel.visitEnded)
+    forwardAll(travel.fightEntered)
+    forwardAll(travel.fightLeft)
+    forwardAll(travel.moved)
 }
 
 /** A link on a run, and what it plays. */
@@ -86,17 +95,27 @@ function heard(audio: FakeAudio): string[] {
 // --- Tests ---
 
 describe("RunSoundLink, the journey", () => {
-    test("a visit opened, then left → a note, then a deep one", async() => {
+    test("a visit opened, then left → the sound of its halt, then a deep note", async() => {
         const run = startedRun(1)
         const { audio } = linkOf(run)
         run.travel.visit(CHEST_HALT)
         await settle()
         run.travel.leave()
         await settle()
-        expect(heard(audio)).toEqual(["guitare.ogg", "guitare_grave.ogg"])
+        expect(heard(audio)).toEqual(["halt/chest.wav", "guitare_grave.ogg"])
     })
 
-    test("a fight fought, then left → the blows of a sword, then a deep note", async() => {
+    test("a halt changing the run, twice → its entrance sound once, then its impact sound twice", async() => {
+        const run = startedRun(1)
+        const { audio } = linkOf(run)
+        run.travel.visit(CHEST_HALT)
+        run.travel.haltImpacted.notify(run.travel.halt!)
+        run.travel.haltImpacted.notify(run.travel.halt!)
+        await settle()
+        expect(heard(audio)).toEqual(["halt/chest.wav", "halt_impacts/chest.wav", "halt_impacts/chest.wav"])
+    })
+
+    test("a fight fought, then left → the sound of its category, then a deep note", async() => {
         const run = startedRun(1)
         reachFight(run)
         const { audio } = linkOf(run)
@@ -104,7 +123,7 @@ describe("RunSoundLink, the journey", () => {
         await settle()
         run.backToMap()
         await settle()
-        expect(heard(audio)).toEqual(["sword.wav", "guitare_grave.ogg"])
+        expect(heard(audio)).toEqual(["fights/battle.wav", "guitare_grave.ogg"])
     })
 
     test("a step of the party → its sound", async() => {
@@ -140,7 +159,8 @@ describe("RunSoundLink, letting go", () => {
         await settle()
         expect(audio.played).toEqual([])
         second.travel.visit(CHEST_HALT)
+        second.travel.haltImpacted.notify(second.travel.halt!)
         await settle()
-        expect(heard(audio)).toEqual(["guitare.ogg"])
+        expect(heard(audio)).toEqual(["halt/chest.wav", "halt_impacts/chest.wav"])
     })
 })

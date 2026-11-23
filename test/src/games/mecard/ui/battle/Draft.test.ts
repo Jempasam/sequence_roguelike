@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Heart, RED_HEART, STEP, TURNS, Vector2, WAIT, WALKS } from "@game/core/mecard"
+import { type Card, Heart, RED_HEART, STEP, TURNS, Vector2, WAIT, WALKS } from "@game/core/mecard"
 import { Draft } from "@game/core/mecard/draft"
 
 import { battle, HEROES, MONSTERS, unit } from "../../sim/fixtures"
@@ -16,6 +16,12 @@ function draftOf(direction = Vector2.UP): Draft {
     hero.hand.push(WAIT)
     unit(on, 1, 1, { team: MONSTERS })
     return new Draft(hero)
+}
+
+/** Replace the cards the unit of a draft plays unlimited. */
+function setUnlimited(draft: Draft, ...cards: Card[]): void {
+    const unlimited = draft.unit.unlimited as Card[]
+    unlimited.splice(0, unlimited.length, ...cards)
 }
 
 // --- Tests ---
@@ -41,9 +47,9 @@ describe("Draft, the cards played unlimited", () => {
 
     test("a family of which the unit plays one only → that one shown, chosen or not", () => {
         const draft = draftOf()
-        draft.unit.unlimited.splice(0, draft.unit.unlimited.length, STEP, WALKS[3], WALKS[1])
+        setUnlimited(draft, STEP, WALKS[3], WALKS[1])
         expect(draft.unlimited).toEqual([STEP, WALKS[1]])
-        draft.unit.unlimited.splice(0, draft.unit.unlimited.length, STEP, WALKS[3])
+        setUnlimited(draft, STEP, WALKS[3])
         expect(draft.unlimited).toEqual([STEP, WALKS[3]])
     })
 
@@ -89,7 +95,7 @@ describe("Draft, the cards played unlimited", () => {
         expect(draft.variant(5, TURNS[3])).toBe(false)
         draft.place(TURNS[0])
         expect(draft.variant(1, WALKS[1])).toBe(false)
-        draft.unit.unlimited.splice(0, draft.unit.unlimited.length, STEP, TURNS[0])
+        setUnlimited(draft, STEP, TURNS[0])
         expect(draft.variant(1, TURNS[3])).toBe(false)
         expect(draft.chain.cards).toEqual([STEP, TURNS[0]])
     })

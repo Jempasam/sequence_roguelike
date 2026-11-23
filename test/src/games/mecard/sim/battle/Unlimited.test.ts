@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import {
-    AIM, CARD_CODECS, cardsInHand, Heart, RED_HEART, STEP, TURN_STEPS, TURNS, Vector2, WAIT,
+    AIM, CARD_CODECS, type Card, cardsInHand, Heart, RED_HEART, STEP, TURN_STEPS, TURNS, Vector2, WAIT,
 } from "@game/core/mecard"
 
 import { battle, chain, HEROES, MONSTERS, unit } from "../fixtures"
@@ -8,7 +8,7 @@ import { battle, chain, HEROES, MONSTERS, unit } from "../fixtures"
 // --- Fixtures ---
 
 /** A battle and a unit of it that plays a step and the turns unlimited, with the given cards in hand. */
-function unlimitedUnit(...hand: typeof STEP[]) {
+function unlimitedUnit(...hand: Card[]) {
     const on = battle()
     const hero = on.add({
         name: "hero", team: HEROES, controller: "player", position: new Vector2(3, 3), direction: Vector2.UP,

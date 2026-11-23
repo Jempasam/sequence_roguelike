@@ -65,7 +65,7 @@ class Screen implements ClientRuns {
 }
 
 /** A lobby of a host and clients, each with a screen of its own. */
-function table(make: (screen: Screen) => ReturnType<typeof runCoopTable>[], ...names: string[]) {
+function table(make: (screen: Screen) => ReturnType<typeof runTableMode>[], ...names: string[]) {
     const screens = [new Screen(), ...names.map(() => new Screen())]
     const room = new LocalRoom()
     const channel = new LocalSync()

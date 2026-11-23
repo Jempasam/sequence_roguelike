@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest"
+import type { Container } from "@game/core"
 import { QuitPopup } from "@game/core/mecard/quit-popup"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
@@ -47,7 +48,7 @@ describe("QuitPopup", () => {
     test("Quitter → closed, then told", () => {
         const setup = uiSetup()
         const { popup, told } = opened(setup)
-        const quit = popup.content?.children[1]
+        const quit = (popup.content as Container<unknown> | null)?.children[1]
         expect(quit).toBeDefined()
         ;(quit as unknown as { activate(): void }).activate()
         expect(popup.isOpen).toBe(false)

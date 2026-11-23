@@ -3,7 +3,7 @@ import {
     BATTLE, BOSS, BOSS_MONSTERS, CaveFloor, CHEST_HALT, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS,
     Journey, LAYERS, Rng,
 } from "@game/core/mecard"
-import type { Floor, FloorType, Monster, Place, PlaceType, PlaceWeights } from "@game/core/mecard"
+import type { Floor, FloorType, Monster, Place, PlaceSort, PlaceType, PlaceWeights } from "@game/core/mecard"
 
 /** The sort of fight or of halt a place holds: floors only lay a fight or a halt, not both. */
 function typeOf(place: Place): PlaceType {
@@ -41,14 +41,14 @@ function monstersOf(place: Place, floor: Floor): Monster[] {
 /** A cave of only battles and forges. */
 class ForgeCave extends CaveFloor {
     protected override weights(): PlaceWeights {
-        return new Map<PlaceType, number>([[BATTLE, 1], [FORGE_HALT, 1]])
+        return new Map<PlaceSort, number>([[BATTLE, 1], [FORGE_HALT, 1]])
     }
 }
 
 /** A cave with nothing but halts to draw. */
 class HaltCave extends CaveFloor {
     protected override weights(): PlaceWeights {
-        return new Map<PlaceType, number>([[FORGE_HALT, 1], [CHEST_HALT, 1], [TAVERN_HALT, 1]])
+        return new Map<PlaceSort, number>([[FORGE_HALT, 1], [CHEST_HALT, 1], [TAVERN_HALT, 1]])
     }
 }
 

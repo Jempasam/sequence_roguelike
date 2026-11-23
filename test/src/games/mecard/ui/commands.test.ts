@@ -5,7 +5,7 @@ import type { Battle, HaltType, Unit } from "@game/core/mecard"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
 import { shippedTransitions } from "@game/core/mecard/visual-path"
-import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core/mecard/sync"
+import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, hueOfName } from "@game/core/mecard/sync"
 import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
 import { startedRun } from "../../../fixtures/startedRun"
 
@@ -30,8 +30,11 @@ interface Game {
     /** The games connected to, in order: their code, and whether to play. */
     readonly connections: (readonly [string, boolean])[]
 
-    /** The chats opened or left, in order: the role, the code, the name and the color of the author. */
-    readonly chats: (readonly [string, string|null, string, string])[]
+    /** The chats opened or left, in order: the role, the code, the name and the hue of the author. */
+    readonly chats: (readonly [string, string|null, string, number])[]
+
+    /** The text the clipboard holds. */
+    readonly board: { text: string }
 
     /** Whether a run is started, the main menu waiting when not. */
     readonly state: { playing: boolean }
@@ -46,7 +49,7 @@ function game(): Game {
     const transitions: (readonly [string, number, boolean])[] = []
     const hostings: (readonly [SeatMode|null, SeatPolicy])[] = []
     const connections: (readonly [string, boolean])[] = []
-    const chats: (readonly [string, string|null, string, string])[] = []
+    const chats: (readonly [string, string|null, string, number])[] = []
     const board = { text: "" }
     const state = { playing: true }
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
@@ -77,8 +80,8 @@ function game(): Game {
         playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),
-        openChat: (role, code, author) => chats.push([role, code, author.name, author.color]),
-        leaveChat: () => chats.push(["leave", null, "", "red"]),
+        openChat: (role, code, author) => chats.push([role, code, author.name, author.hue]),
+        leaveChat: () => chats.push(["leave", null, "", 0]),
     })))
     registerCommands(made)
     return {
@@ -409,20 +412,20 @@ describe("Mecard commands", () => {
         expect(errors(console)).toHaveLength(1)
     })
 
-    test("chat host → opens a chat as the name and color given, red Joueur by default", () => {
+    test("chat host → opens a chat as the name and hue given, the hue of the name by default", () => {
         const { console, chats } = game()
-        console.submit("chat host Alice blue")
+        console.submit("chat host Alice 200")
         console.submit("chat host")
-        expect(chats).toEqual([["host", null, "Alice", "blue"], ["host", null, "Joueur", "red"]])
+        expect(chats).toEqual([["host", null, "Alice", 200], ["host", null, "Joueur", hueOfName("Joueur")]])
     })
 
-    test("chat join → the code, then the name and color", () => {
+    test("chat join → the code, then the name and hue", () => {
         const { console, chats } = game()
-        console.submit("chat join K7QX2M Bob green")
-        expect(chats).toEqual([["join", "K7QX2M", "Bob", "green"]])
+        console.submit("chat join K7QX2M Bob 120")
+        expect(chats).toEqual([["join", "K7QX2M", "Bob", 120]])
     })
 
-    test("chat join with an unknown color → an error, nothing opened", () => {
+    test("chat join with a hue that is no number → an error, nothing opened", () => {
         const { console, chats } = game()
         console.submit("chat join K7QX2M Bob chartreuse")
         expect(chats).toEqual([])
@@ -432,7 +435,7 @@ describe("Mecard commands", () => {
     test("chat leave → leaves the chat", () => {
         const { console, chats } = game()
         console.submit("chat leave")
-        expect(chats).toEqual([["leave", null, "", "red"]])
+        expect(chats).toEqual([["leave", null, "", 0]])
     })
 })
 

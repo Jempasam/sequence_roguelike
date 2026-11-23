@@ -320,6 +320,19 @@ describe("Travel, visits", () => {
         expect(() => travel.takeCards(cards, [deck.length])).toThrow()
     })
 
+    test("a halt changing the run → told, once per change, and not before", () => {
+        const run = startedRun(3)
+        const { travel } = run
+        const [hero] = run.heroes
+        const impacted: string[] = []
+        travel.haltImpacted.add(halt => impacted.push(halt.type.id))
+        travel.visit(REMOVAL_HALT)
+        travel.takeHero(open<HeroDialog>(travel), hero)
+        expect(impacted).toEqual([])
+        travel.takeCards(open<CardsDialog>(travel), [1])
+        expect(impacted).toEqual([REMOVAL_HALT.id])
+    })
+
     test("cards taken → by their places in the pool", () => {
         const run = startedRun(3)
         const { travel } = run

@@ -68,9 +68,9 @@ describe("the variants of a card", () => {
     test("the variant a unit would choose → the turn facing where it faces, the walk of a step, the first element", () => {
         expect(TURNS[0].variantFor(facing(Vector2.RIGHT))).toBe(TURNS[8])
         expect(TURNS[8].variantFor(facing(Vector2.DOWN))).toBe(TURNS[16])
-        expect(WALKS[4].variantFor(facing(Vector2.UP)).name).toBe("Marche")
-        expect((WALKS[4].variantFor(facing(Vector2.UP)) as typeof WALKS[0]).length).toBe(2)
-        expect(UNIVERSAL_ELEMENTS[3].variantFor(facing(Vector2.UP))).toBe(UNIVERSAL_ELEMENTS[0])
+        expect(WALKS[4].variantFor().name).toBe("Marche")
+        expect((WALKS[4].variantFor() as typeof WALKS[0]).length).toBe(2)
+        expect(UNIVERSAL_ELEMENTS[3].variantFor()).toBe(UNIVERSAL_ELEMENTS[0])
         expect(STEP.variantFor(facing(Vector2.UP))).toBe(STEP)
     })
 

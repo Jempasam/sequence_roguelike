@@ -5,19 +5,15 @@ import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
 import type { Forwarded } from "../forward/Forwarded"
 import type { Cue } from "./Cue"
+import { FIGHT_CUES, soundOfFight } from "./fightSounds"
+import { HALT_CUES, soundOfHalt, soundOfImpact } from "./haltSounds"
 import { soundOfStatus, STATUS_CUES } from "./statusSounds"
 
 /** The channel the sounds of the journey and of the battles are played on. */
 export const EFFECTS_CHANNEL = "effects"
 
-/** The beginning of a visit: a note. */
-const BEGIN: Cue = { path: "mecard/sounds/guitare.ogg", volume: 1 }
-
 /** The end of a visit or of a fight: a deep note. */
 const END: Cue = { path: "mecard/sounds/guitare_grave.ogg", volume: 1 }
-
-/** A fight begins: two blows of a sword, the loudest file, brought down. */
-const FIGHT: Cue = { path: "mecard/sounds/sword.wav", volume: 0.6 }
 
 /** A step on the map. */
 const STEP: Cue = { path: "mecard/sounds/tchi.wav", volume: 1.5 }
@@ -72,8 +68,8 @@ const HEAVY_DAMAGE = 3
 
 /** Every sound the link plays, loaded as it starts. */
 const CUES: readonly Cue[] = [
-    BEGIN, END, FIGHT, STEP, DRAW, PLAY, BOARD_STEP, TURN, HURT, HURT_HEAVY, HEART_LOST, HEAL,
-    STATUS_END, APPEAR, DEATH, BUMP, REFUSED, ROUND, GOLD, ...STATUS_CUES,
+    END, STEP, DRAW, PLAY, BOARD_STEP, TURN, HURT, HURT_HEAVY, HEART_LOST, HEAL,
+    STATUS_END, APPEAR, DEATH, BUMP, REFUSED, ROUND, GOLD, ...STATUS_CUES, ...HALT_CUES, ...FIGHT_CUES,
 ]
 
 /**
@@ -132,9 +128,10 @@ export class RunSoundLink {
         const { travel } = run
         this.#observers.remove()
         this.#observers = new Scope(
-            this.#on(travel.visitStarted, BEGIN),
+            this.#on(travel.visitStarted, halt => soundOfHalt(halt.type)),
+            this.#on(travel.haltImpacted, halt => soundOfImpact(halt.type)),
             this.#on(travel.visitEnded, END),
-            this.#on(travel.fightEntered, FIGHT),
+            this.#on(travel.fightEntered, place => soundOfFight(place.fight?.category)),
             this.#on(travel.fightLeft, END),
             this.#on(travel.moved, STEP),
             // Heard as it is told, not as it plays: the battle is followed before its first sound.

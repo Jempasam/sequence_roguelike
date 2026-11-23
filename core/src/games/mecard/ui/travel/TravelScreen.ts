@@ -12,8 +12,6 @@ import type { ChoiceStep, Component, Layer, ParagraphOptions, Theme, UiRoot } fr
 import type { Painter } from "../../../../engine/gpu"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import { REWARD } from "../../sim/base/keywords"
-import { infoOf } from "../../sim/catalog/places"
 import { allCards, statsOf } from "../../sim/run/Hero"
 import type { Card } from "../../sim/card/Card"
 import { Scope } from "../../../../lifetime"
@@ -592,6 +590,8 @@ export class TravelScreen {
                 this.#arriving = true
                 return () => this.#arrive(halt)
             }),
+            // Without an animation of their own, so the sound of a change comes in its place in the chain.
+            animate(this.animations, forwarded, travel.haltImpacted),
             animate(this.animations, forwarded, travel.visitEnded, halt => {
                 this.#leaving = halt
                 return () => this.#leave(halt)

@@ -11,6 +11,7 @@ import { describe, expect, test } from "vitest"
 class Recorded implements LobbyMode {
 
 
+    public readonly description = "A game that records how it was played."
     public readonly settings = [new ChoiceSetting("size", "Taille", ["small", "big"]), new RangeSetting("lives", "Vies", 1, 5, 1, 3)]
     public readonly hosted: SettingValues[] = []
     public readonly guested: { values: SettingValues, role: LobbyRole }[] = []

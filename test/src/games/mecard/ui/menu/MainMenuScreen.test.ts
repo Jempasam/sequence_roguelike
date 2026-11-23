@@ -22,6 +22,7 @@ function menu() {
         openGuide: () => told.push("guide"),
         openHistory: () => told.push("history"),
         openMultiplayer: () => told.push("multiplayer"),
+        openLibrary: () => told.push("library"),
         report: text => told.push(`report: ${text}`),
     }, NO_ASSETS)
     screen.visible = true

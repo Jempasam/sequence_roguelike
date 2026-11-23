@@ -83,7 +83,10 @@ describe("Detail.under", () => {
     test("pointer away from the component → nothing is asked", () => {
         const { setup, whole } = holder()
         let asked = 0
-        Detail.under(whole, () => ++asked && { text: "x" })
+        Detail.under(whole, () => {
+            asked++
+            return { text: "x" }
+        })
         moveTo(setup, 200, 200)
         expect(asked).toBe(0)
     })

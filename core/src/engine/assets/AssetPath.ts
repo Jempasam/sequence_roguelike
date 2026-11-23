@@ -420,10 +420,122 @@ export type AssetPath =
     | "mecard/sounds/death.wav"
     | "mecard/sounds/declick.wav"
     | "mecard/sounds/dragon.wav"
+    | "mecard/sounds/fights/aggression.wav"
+    | "mecard/sounds/fights/ambush.wav"
+    | "mecard/sounds/fights/battle.wav"
+    | "mecard/sounds/fights/boss.wav"
+    | "mecard/sounds/fights/elite.wav"
+    | "mecard/sounds/fights/fallback.wav"
     | "mecard/sounds/frinch.wav"
     | "mecard/sounds/gold.wav"
     | "mecard/sounds/guitare.ogg"
     | "mecard/sounds/guitare_grave.ogg"
+    | "mecard/sounds/halt/alchemist.wav"
+    | "mecard/sounds/halt/altar.wav"
+    | "mecard/sounds/halt/antiquarian.wav"
+    | "mecard/sounds/halt/battle_reward.wav"
+    | "mecard/sounds/halt/boss_reward.wav"
+    | "mecard/sounds/halt/butcher.wav"
+    | "mecard/sounds/halt/chest.wav"
+    | "mecard/sounds/halt/conductor.wav"
+    | "mecard/sounds/halt/dark_demon.wav"
+    | "mecard/sounds/halt/dark_mad_doctor.wav"
+    | "mecard/sounds/halt/dark_magician.wav"
+    | "mecard/sounds/halt/dark_strategist.wav"
+    | "mecard/sounds/halt/dark_tavern.wav"
+    | "mecard/sounds/halt/dark_trainer.wav"
+    | "mecard/sounds/halt/demon.wav"
+    | "mecard/sounds/halt/duel.wav"
+    | "mecard/sounds/halt/elite_reward.wav"
+    | "mecard/sounds/halt/enchanter.wav"
+    | "mecard/sounds/halt/exit.wav"
+    | "mecard/sounds/halt/fallback.wav"
+    | "mecard/sounds/halt/forge.wav"
+    | "mecard/sounds/halt/great_chest.wav"
+    | "mecard/sounds/halt/great_forge.wav"
+    | "mecard/sounds/halt/great_hospital.wav"
+    | "mecard/sounds/halt/great_magician.wav"
+    | "mecard/sounds/halt/great_merchant.wav"
+    | "mecard/sounds/halt/great_shop.wav"
+    | "mecard/sounds/halt/great_witch.wav"
+    | "mecard/sounds/halt/hospital.wav"
+    | "mecard/sounds/halt/inventor.wav"
+    | "mecard/sounds/halt/mad_doctor.wav"
+    | "mecard/sounds/halt/magician.wav"
+    | "mecard/sounds/halt/master_chest.wav"
+    | "mecard/sounds/halt/master_inventor.wav"
+    | "mecard/sounds/halt/master_magician.wav"
+    | "mecard/sounds/halt/master_trainer.wav"
+    | "mecard/sounds/halt/merchant.wav"
+    | "mecard/sounds/halt/monster_looting_reward.wav"
+    | "mecard/sounds/halt/monster_mage.wav"
+    | "mecard/sounds/halt/monster_mechanic.wav"
+    | "mecard/sounds/halt/monster_park.wav"
+    | "mecard/sounds/halt/monster_shaman.wav"
+    | "mecard/sounds/halt/necro_chest.wav"
+    | "mecard/sounds/halt/necro_recruit.wav"
+    | "mecard/sounds/halt/necromancer.wav"
+    | "mecard/sounds/halt/prompter.wav"
+    | "mecard/sounds/halt/removal.wav"
+    | "mecard/sounds/halt/shop.wav"
+    | "mecard/sounds/halt/strategist.wav"
+    | "mecard/sounds/halt/tavern.wav"
+    | "mecard/sounds/halt/trainer.wav"
+    | "mecard/sounds/halt/weaver.wav"
+    | "mecard/sounds/halt/witch.wav"
+    | "mecard/sounds/halt_impacts/alchemist.wav"
+    | "mecard/sounds/halt_impacts/altar.wav"
+    | "mecard/sounds/halt_impacts/antiquarian.wav"
+    | "mecard/sounds/halt_impacts/battle_reward.wav"
+    | "mecard/sounds/halt_impacts/boss_reward.wav"
+    | "mecard/sounds/halt_impacts/butcher.wav"
+    | "mecard/sounds/halt_impacts/chest.wav"
+    | "mecard/sounds/halt_impacts/conductor.wav"
+    | "mecard/sounds/halt_impacts/dark_demon.wav"
+    | "mecard/sounds/halt_impacts/dark_mad_doctor.wav"
+    | "mecard/sounds/halt_impacts/dark_magician.wav"
+    | "mecard/sounds/halt_impacts/dark_strategist.wav"
+    | "mecard/sounds/halt_impacts/dark_tavern.wav"
+    | "mecard/sounds/halt_impacts/dark_trainer.wav"
+    | "mecard/sounds/halt_impacts/demon.wav"
+    | "mecard/sounds/halt_impacts/duel.wav"
+    | "mecard/sounds/halt_impacts/elite_reward.wav"
+    | "mecard/sounds/halt_impacts/enchanter.wav"
+    | "mecard/sounds/halt_impacts/exit.wav"
+    | "mecard/sounds/halt_impacts/fallback.wav"
+    | "mecard/sounds/halt_impacts/forge.wav"
+    | "mecard/sounds/halt_impacts/great_chest.wav"
+    | "mecard/sounds/halt_impacts/great_forge.wav"
+    | "mecard/sounds/halt_impacts/great_hospital.wav"
+    | "mecard/sounds/halt_impacts/great_magician.wav"
+    | "mecard/sounds/halt_impacts/great_merchant.wav"
+    | "mecard/sounds/halt_impacts/great_shop.wav"
+    | "mecard/sounds/halt_impacts/great_witch.wav"
+    | "mecard/sounds/halt_impacts/hospital.wav"
+    | "mecard/sounds/halt_impacts/inventor.wav"
+    | "mecard/sounds/halt_impacts/mad_doctor.wav"
+    | "mecard/sounds/halt_impacts/magician.wav"
+    | "mecard/sounds/halt_impacts/master_chest.wav"
+    | "mecard/sounds/halt_impacts/master_inventor.wav"
+    | "mecard/sounds/halt_impacts/master_magician.wav"
+    | "mecard/sounds/halt_impacts/master_trainer.wav"
+    | "mecard/sounds/halt_impacts/merchant.wav"
+    | "mecard/sounds/halt_impacts/monster_looting_reward.wav"
+    | "mecard/sounds/halt_impacts/monster_mage.wav"
+    | "mecard/sounds/halt_impacts/monster_mechanic.wav"
+    | "mecard/sounds/halt_impacts/monster_park.wav"
+    | "mecard/sounds/halt_impacts/monster_shaman.wav"
+    | "mecard/sounds/halt_impacts/necro_chest.wav"
+    | "mecard/sounds/halt_impacts/necro_recruit.wav"
+    | "mecard/sounds/halt_impacts/necromancer.wav"
+    | "mecard/sounds/halt_impacts/prompter.wav"
+    | "mecard/sounds/halt_impacts/removal.wav"
+    | "mecard/sounds/halt_impacts/shop.wav"
+    | "mecard/sounds/halt_impacts/strategist.wav"
+    | "mecard/sounds/halt_impacts/tavern.wav"
+    | "mecard/sounds/halt_impacts/trainer.wav"
+    | "mecard/sounds/halt_impacts/weaver.wav"
+    | "mecard/sounds/halt_impacts/witch.wav"
     | "mecard/sounds/heal.wav"
     | "mecard/sounds/heart_lost.wav"
     | "mecard/sounds/hit.wav"
@@ -1215,10 +1327,122 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/sounds/death.wav",
     "mecard/sounds/declick.wav",
     "mecard/sounds/dragon.wav",
+    "mecard/sounds/fights/aggression.wav",
+    "mecard/sounds/fights/ambush.wav",
+    "mecard/sounds/fights/battle.wav",
+    "mecard/sounds/fights/boss.wav",
+    "mecard/sounds/fights/elite.wav",
+    "mecard/sounds/fights/fallback.wav",
     "mecard/sounds/frinch.wav",
     "mecard/sounds/gold.wav",
     "mecard/sounds/guitare.ogg",
     "mecard/sounds/guitare_grave.ogg",
+    "mecard/sounds/halt/alchemist.wav",
+    "mecard/sounds/halt/altar.wav",
+    "mecard/sounds/halt/antiquarian.wav",
+    "mecard/sounds/halt/battle_reward.wav",
+    "mecard/sounds/halt/boss_reward.wav",
+    "mecard/sounds/halt/butcher.wav",
+    "mecard/sounds/halt/chest.wav",
+    "mecard/sounds/halt/conductor.wav",
+    "mecard/sounds/halt/dark_demon.wav",
+    "mecard/sounds/halt/dark_mad_doctor.wav",
+    "mecard/sounds/halt/dark_magician.wav",
+    "mecard/sounds/halt/dark_strategist.wav",
+    "mecard/sounds/halt/dark_tavern.wav",
+    "mecard/sounds/halt/dark_trainer.wav",
+    "mecard/sounds/halt/demon.wav",
+    "mecard/sounds/halt/duel.wav",
+    "mecard/sounds/halt/elite_reward.wav",
+    "mecard/sounds/halt/enchanter.wav",
+    "mecard/sounds/halt/exit.wav",
+    "mecard/sounds/halt/fallback.wav",
+    "mecard/sounds/halt/forge.wav",
+    "mecard/sounds/halt/great_chest.wav",
+    "mecard/sounds/halt/great_forge.wav",
+    "mecard/sounds/halt/great_hospital.wav",
+    "mecard/sounds/halt/great_magician.wav",
+    "mecard/sounds/halt/great_merchant.wav",
+    "mecard/sounds/halt/great_shop.wav",
+    "mecard/sounds/halt/great_witch.wav",
+    "mecard/sounds/halt/hospital.wav",
+    "mecard/sounds/halt/inventor.wav",
+    "mecard/sounds/halt/mad_doctor.wav",
+    "mecard/sounds/halt/magician.wav",
+    "mecard/sounds/halt/master_chest.wav",
+    "mecard/sounds/halt/master_inventor.wav",
+    "mecard/sounds/halt/master_magician.wav",
+    "mecard/sounds/halt/master_trainer.wav",
+    "mecard/sounds/halt/merchant.wav",
+    "mecard/sounds/halt/monster_looting_reward.wav",
+    "mecard/sounds/halt/monster_mage.wav",
+    "mecard/sounds/halt/monster_mechanic.wav",
+    "mecard/sounds/halt/monster_park.wav",
+    "mecard/sounds/halt/monster_shaman.wav",
+    "mecard/sounds/halt/necro_chest.wav",
+    "mecard/sounds/halt/necro_recruit.wav",
+    "mecard/sounds/halt/necromancer.wav",
+    "mecard/sounds/halt/prompter.wav",
+    "mecard/sounds/halt/removal.wav",
+    "mecard/sounds/halt/shop.wav",
+    "mecard/sounds/halt/strategist.wav",
+    "mecard/sounds/halt/tavern.wav",
+    "mecard/sounds/halt/trainer.wav",
+    "mecard/sounds/halt/weaver.wav",
+    "mecard/sounds/halt/witch.wav",
+    "mecard/sounds/halt_impacts/alchemist.wav",
+    "mecard/sounds/halt_impacts/altar.wav",
+    "mecard/sounds/halt_impacts/antiquarian.wav",
+    "mecard/sounds/halt_impacts/battle_reward.wav",
+    "mecard/sounds/halt_impacts/boss_reward.wav",
+    "mecard/sounds/halt_impacts/butcher.wav",
+    "mecard/sounds/halt_impacts/chest.wav",
+    "mecard/sounds/halt_impacts/conductor.wav",
+    "mecard/sounds/halt_impacts/dark_demon.wav",
+    "mecard/sounds/halt_impacts/dark_mad_doctor.wav",
+    "mecard/sounds/halt_impacts/dark_magician.wav",
+    "mecard/sounds/halt_impacts/dark_strategist.wav",
+    "mecard/sounds/halt_impacts/dark_tavern.wav",
+    "mecard/sounds/halt_impacts/dark_trainer.wav",
+    "mecard/sounds/halt_impacts/demon.wav",
+    "mecard/sounds/halt_impacts/duel.wav",
+    "mecard/sounds/halt_impacts/elite_reward.wav",
+    "mecard/sounds/halt_impacts/enchanter.wav",
+    "mecard/sounds/halt_impacts/exit.wav",
+    "mecard/sounds/halt_impacts/fallback.wav",
+    "mecard/sounds/halt_impacts/forge.wav",
+    "mecard/sounds/halt_impacts/great_chest.wav",
+    "mecard/sounds/halt_impacts/great_forge.wav",
+    "mecard/sounds/halt_impacts/great_hospital.wav",
+    "mecard/sounds/halt_impacts/great_magician.wav",
+    "mecard/sounds/halt_impacts/great_merchant.wav",
+    "mecard/sounds/halt_impacts/great_shop.wav",
+    "mecard/sounds/halt_impacts/great_witch.wav",
+    "mecard/sounds/halt_impacts/hospital.wav",
+    "mecard/sounds/halt_impacts/inventor.wav",
+    "mecard/sounds/halt_impacts/mad_doctor.wav",
+    "mecard/sounds/halt_impacts/magician.wav",
+    "mecard/sounds/halt_impacts/master_chest.wav",
+    "mecard/sounds/halt_impacts/master_inventor.wav",
+    "mecard/sounds/halt_impacts/master_magician.wav",
+    "mecard/sounds/halt_impacts/master_trainer.wav",
+    "mecard/sounds/halt_impacts/merchant.wav",
+    "mecard/sounds/halt_impacts/monster_looting_reward.wav",
+    "mecard/sounds/halt_impacts/monster_mage.wav",
+    "mecard/sounds/halt_impacts/monster_mechanic.wav",
+    "mecard/sounds/halt_impacts/monster_park.wav",
+    "mecard/sounds/halt_impacts/monster_shaman.wav",
+    "mecard/sounds/halt_impacts/necro_chest.wav",
+    "mecard/sounds/halt_impacts/necro_recruit.wav",
+    "mecard/sounds/halt_impacts/necromancer.wav",
+    "mecard/sounds/halt_impacts/prompter.wav",
+    "mecard/sounds/halt_impacts/removal.wav",
+    "mecard/sounds/halt_impacts/shop.wav",
+    "mecard/sounds/halt_impacts/strategist.wav",
+    "mecard/sounds/halt_impacts/tavern.wav",
+    "mecard/sounds/halt_impacts/trainer.wav",
+    "mecard/sounds/halt_impacts/weaver.wav",
+    "mecard/sounds/halt_impacts/witch.wav",
     "mecard/sounds/heal.wav",
     "mecard/sounds/heart_lost.wav",
     "mecard/sounds/hit.wav",

@@ -47,8 +47,8 @@ describe("mapScale", () => {
 
 describe("frieze", () => {
     const entry = (id: string, ratio: number): FriezeEntry =>
-        ({ id, color: new Color(0, 0, 0), ratio, top: "", bottom: "" })
-    const box = { width: 132, height: 40, top: 0, bottom: 0 }
+        ({ id, color: new Color(0, 0, 0), ratio, top: "", bottom: "", lives: 0, maxLives: 0 })
+    const box = { width: 132, height: 40, top: 0, bottom: 0, lives: 0 }
 
     test("columns → a frame each, no wider than the maximum, the group centered", () => {
         const cards = friezeCards("columns", 3, 132)

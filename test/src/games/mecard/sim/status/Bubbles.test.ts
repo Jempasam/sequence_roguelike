@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
     allyOf, BEAST_BUBBLE, BLUE_BUBBLE, BUBBLE, BUBBLE_BODY, BUBBLE_PET, BUBBLE_CARDS, BUBBLE_MAGE_KIT, BUBBLER_KIT,
-    ALL_BOOSTERS, ALL_CARDS, ALL_KITS, EXPLOSIVE, EXPLOSIVE_BUBBLE, FIRE_ELEMENT, GIANT, GIANT_BUBBLE, Heart,
+    ALL_BOOSTERS, ALL_CARDS, ALL_KITS, EXPLOSIVE_BUBBLE, FIRE_ELEMENT, GIANT, GIANT_BUBBLE, Heart,
     ELEMENT_COATINGS, KAMIKAZE, MOMENTUM, RED_BUBBLE, RED_HEART, SOAPY, STATUS_CODECS, VIOLET_BUBBLE, Vector2, WAIT,
-    STEP, AIM, BURSTING, INFLATE, INSPIRATION, BATH, SURPRISE_BUBBLE, PROGRAMMED_BUBBLE, ORANGE_BUBBLE, saveBattle, loadBattle,
+    STEP, AIM, INFLATE, INSPIRATION, BATH, SURPRISE_BUBBLE, PROGRAMMED_BUBBLE, ORANGE_BUBBLE, saveBattle, loadBattle,
 } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 
@@ -47,7 +47,7 @@ describe("the bubbles", () => {
         play(on, [[blower, chain(VIOLET_BUBBLE)]])
         const [bubble] = bubblesOf(on, blower)
         const other = unit(on, bubble.position.x + 1.5, bubble.position.y, { hearts: Heart.many(RED_HEART, 4) })
-        on.move(other, bubble.position.minus(other.position).normalized, 3, true)
+        on.move(other, bubble.position.minus(other.position).normalized!, 3, true)
         expect(bubble.alive).toBe(false)
         expect(other.alive).toBe(true)
     })

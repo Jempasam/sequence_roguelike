@@ -9,7 +9,7 @@ import type { Rewrite } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
-import { InputRewriteCard, RECOVERY, REPETITION, RewriteCard } from "../composite/RewriteCards"
+import { InputRewriteCard, RECOVERY, RewriteCard } from "../composite/RewriteCards"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import { compoundCard, ElementCard } from "./ElementCard"

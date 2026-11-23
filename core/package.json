@@ -10,6 +10,8 @@
         "./mecard/animate": "./src/games/mecard/ui/forward/animate.ts",
         "./mecard/run-sound-link":"./src/games/mecard/ui/sound/RunSoundLink.ts",
         "./mecard/status-sounds": "./src/games/mecard/ui/sound/statusSounds.ts",
+        "./mecard/halt-sounds": "./src/games/mecard/ui/sound/haltSounds.ts",
+        "./mecard/fight-sounds": "./src/games/mecard/ui/sound/fightSounds.ts",
         "./mecard/ui-sound-link": "./src/games/mecard/ui/sound/UiSoundLink.ts",
         "./mecard/commands": "./src/games/mecard/ui/commands.ts",
         "./mecard/travel-screen": "./src/games/mecard/ui/travel/TravelScreen.ts",

@@ -73,7 +73,6 @@ describe("a tournament that loses a player", () => {
         const bench: TournamentBench = {
             report: () => {},
             showBattle: battle => void shown.push(battle),
-            hideBattle: () => {},
             showBracket: bracket => void bracketsSeen.push(bracket),
             hideBracket: () => {},
         }

@@ -46,6 +46,12 @@ const NEUTRAL = new Color(1, 1, 1)
 
 /** How opaque the inside and the edge of a hitbox are, and how thick the edge is in pixels. */
 const HITBOX_FILL = 0.12
+
+/** How far the arrow of the front stands clear of the hitbox, in pixels. */
+const ARROW_GAP = 2
+
+/** How much thicker the lines of the arrow of the front are than the edge of the hitbox, in pixels. */
+const ARROW_THICKER = 0.75
 const HITBOX_EDGE = 0.6
 
 /** The same for a hitbox that is lit: the one planned, acting or hovered. */
@@ -55,10 +61,6 @@ const LIT_THICKNESS = 2
 
 /** How opaque the inside of a hitbox is where nothing else shows the body: no picture, or the tactical view. */
 const BARE_FILL = 0.5
-
-/** How far the arrow of the front stands out of the hitbox, and how wide its base is, in pixels. */
-const FRONT_ARROW = 4
-const FRONT_ARROW_BASE = 3
 
 /** Added to the size of a unit that is only found by the ground it covers: it ranks after any body. */
 const ZONE_RANK = 100
@@ -272,17 +274,39 @@ export class BoardView {
         painter.setTint(this.#faded.set(r, g, b, (lit ? LIT_EDGE : HITBOX_EDGE) * shown.opacity))
         painter.multiLine(corners, lit ? LIT_THICKNESS : 1, true)
         if(!unit.targetable) return
-        // The arrow stands on the front of the shape, in the same color as the edge.
+        // ARROW //
         const [cx, cy] = this.#pixels(shown.position)
         const ahead = shown.direction
         const side = ahead.right
-        const front = hitbox.extent[0] / 2 * this.#meter
-        const tip = front + FRONT_ARROW
-        painter.triangle(
-            cx + ahead.x * tip, cy + ahead.y * tip,
-            cx + ahead.x * front + side.x * FRONT_ARROW_BASE, cy + ahead.y * front + side.y * FRONT_ARROW_BASE,
-            cx + ahead.x * front - side.x * FRONT_ARROW_BASE, cy + ahead.y * front - side.y * FRONT_ARROW_BASE,
-        )
+        const half = Math.SQRT1_2
+        const right = this.#supportOf(corners, cx, cy, (ahead.x + side.x) * half, (ahead.y + side.y) * half)
+        const left = this.#supportOf(corners, cx, cy, (ahead.x - side.x) * half, (ahead.y - side.y) * half)
+        const along = (right.reach + left.reach + 2 * ARROW_GAP) * half
+        const across = (right.reach - left.reach) * half
+        const nx = (ahead.x + side.x) * half
+        const ny = (ahead.y + side.y) * half
+        const mx = (ahead.x - side.x) * half
+        const my = (ahead.y - side.y) * half
+        painter.multiLine([
+            { x: right.x + nx * ARROW_GAP, y: right.y + ny * ARROW_GAP },
+            { x: cx + ahead.x * along + side.x * across, y: cy + ahead.y * along + side.y * across },
+            { x: left.x + mx * ARROW_GAP, y: left.y + my * ARROW_GAP },
+        ], (lit ? LIT_THICKNESS : 1) + ARROW_THICKER)
+    }
+
+    /**
+     * The corner of an outline that stands farthest along a direction, a unit long, from a point, with how
+     * far along it lies: where a line across that direction touches the shape.
+     */
+    #supportOf(
+        corners: readonly { x: number, y: number }[], cx: number, cy: number, dx: number, dy: number,
+    ): { x: number, y: number, reach: number } {
+        let best = { x: cx, y: cy, reach: -Infinity }
+        for(const corner of corners){
+            const reach = (corner.x - cx) * dx + (corner.y - cy) * dy
+            if(reach > best.reach) best = { x: corner.x, y: corner.y, reach }
+        }
+        return best
     }
 
     /** The hitbox of a unit as the board shows it: a clone is drawn smaller than it is. */

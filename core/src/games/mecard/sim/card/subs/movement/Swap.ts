@@ -46,7 +46,7 @@ function swapping(): Action {
             if(!other) return Previews.still(pose, Previews.label(pose.position, "personne en vue", NOTE_COLOR))
             const there = Previews.arrow([pose.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
             const back = Previews.arrow([other.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR)
-            return Previews.still({ ...pose, position: other.position }, there, back)
+            return Previews.still({ ...pose, position: other.position }, there, back, Previews.body(unit, other.position, pose.direction))
         },
     }
 }

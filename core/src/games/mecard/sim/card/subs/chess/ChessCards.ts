@@ -202,7 +202,11 @@ export const CASTLING = new ActionCard("Roque", [
     preview: ({ battle, unit, pose }) => {
         const piece = nearestPiece(battle, unit, pose.position)
         if(!piece) return Previews.still(pose, Previews.label(pose.position, "aucune pièce", NOTE_COLOR))
-        return Previews.still({ ...pose, position: piece.position }, Previews.arrow([pose.position, piece.position], MOVE_WIDTH / 2, MOVE_COLOR))
+        return Previews.still(
+            { ...pose, position: piece.position },
+            Previews.arrow([pose.position, piece.position], MOVE_WIDTH / 2, MOVE_COLOR),
+            Previews.body(unit, piece.position, pose.direction),
+        )
     },
 })
 

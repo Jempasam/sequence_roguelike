@@ -66,6 +66,7 @@ export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
         return Previews.still(
             { position: trip.to, direction: pose.direction },
             Previews.arrow([pose.position, trip.to], MOVE_WIDTH, MOVE_COLOR),
+            Previews.body(unit, trip.to, pose.direction),
             ...Previews.strike([area], battle.fetch(area, unit)),
         )
     },
@@ -125,6 +126,7 @@ export const DEMON_SLASH = new ActionCard("Demon Slash", [
         return Previews.still(
             { position: trip.to, direction: pose.direction },
             Previews.arrow([pose.position, trip.to], MOVE_WIDTH, MOVE_COLOR),
+            Previews.body(unit, trip.to, pose.direction),
             ...Previews.strike([area], battle.fetch(area, unit)),
         )
     },

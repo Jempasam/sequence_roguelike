@@ -40,6 +40,11 @@ export function polygon(area: Area, color: Rgba): Indicator {
     return { kind: "polygon", points: area, color }
 }
 
+/** A blue disc the size of the body of a unit, where it ends up. */
+export function body(unit: Unit, at: Vector2, direction: Vector2 = unit.direction): Indicator {
+    return polygon(unit.hitbox.outline({ position: at, direction }), BODY_COLOR)
+}
+
 /**
  * The preview of a move: a grey arrow to where it would go with nothing in the way, the blue arrow of where it
  * goes over it, and a blue disc the size of the body where the unit ends up.
@@ -48,7 +53,7 @@ export function moving(unit: Unit, from: Vector2, potential: Vector2, landing: V
     return [
         arrow([from, potential], width, POTENTIAL_COLOR),
         arrow([from, landing], width, MOVE_COLOR),
-        polygon(unit.hitbox.outline({ position: landing, direction: unit.direction }), BODY_COLOR),
+        body(unit, landing),
     ]
 }
 

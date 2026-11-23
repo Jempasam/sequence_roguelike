@@ -1,21 +1,14 @@
-import type { SoundPath, SoundPlayer } from "../../../../engine/audio"
+import type { SoundPlayer } from "../../../../engine/audio"
 import type { Observable, Observer } from "../../sim/base/Observable"
 import { Scope } from "../../../../lifetime"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
 import type { Forwarded } from "../forward/Forwarded"
+import type { Cue } from "./Cue"
+import { soundOfStatus, STATUS_CUES } from "./statusSounds"
 
 /** The channel the sounds of the journey and of the battles are played on. */
 export const EFFECTS_CHANNEL = "effects"
-
-/** One sound of the game: the file, and how loud it is played to sit with the others. */
-interface Cue {
-    /** The file of the sound. */
-    readonly path: SoundPath
-
-    /** The factor its volume is multiplied by, since the files are not recorded at the same level. */
-    readonly volume: number
-}
 
 /** The beginning of a visit: a note. */
 const BEGIN: Cue = { path: "mecard/sounds/guitare.ogg", volume: 1 }
@@ -26,32 +19,62 @@ const END: Cue = { path: "mecard/sounds/guitare_grave.ogg", volume: 1 }
 /** A fight begins: two blows of a sword, the loudest file, brought down. */
 const FIGHT: Cue = { path: "mecard/sounds/sword.wav", volume: 0.6 }
 
-/** A step, on the map or on the board. */
+/** A step on the map. */
 const STEP: Cue = { path: "mecard/sounds/tchi.wav", volume: 1.5 }
 
 /** A card is drawn. */
 const DRAW: Cue = { path: "mecard/sounds/card.wav", volume: 1.5 }
 
-/** A card is played. */
-const PLAY: Cue = { path: "mecard/sounds/click.wav", volume: 1 }
+/** A card is played: a slap. */
+const PLAY: Cue = { path: "mecard/sounds/card_play.wav", volume: 1 }
 
-/** A unit is hurt: a dull clonk. */
-const HURT: Cue = { path: "mecard/sounds/declick.wav", volume: 0.6 }
+/** A unit steps on the board. */
+const BOARD_STEP: Cue = { path: "mecard/sounds/step.wav", volume: 1 }
 
-/** A soft sound, for a heal or a status: a pop, the quietest file but one, brought up. */
-const SOFT: Cue = { path: "mecard/sounds/pop.wav", volume: 2.5 }
+/** A unit turns on the spot, its place unchanged. */
+const TURN: Cue = { path: "mecard/sounds/turn.wav", volume: 1 }
+
+/** A unit is hurt. */
+const HURT: Cue = { path: "mecard/sounds/hit.wav", volume: 1 }
+
+/** A unit is hurt badly. */
+const HURT_HEAVY: Cue = { path: "mecard/sounds/hit_heavy.wav", volume: 1 }
+
+/** A unit loses hearts. */
+const HEART_LOST: Cue = { path: "mecard/sounds/heart_lost.wav", volume: 0.8 }
+
+/** A unit is healed. */
+const HEAL: Cue = { path: "mecard/sounds/heal.wav", volume: 1 }
+
+/** A unit loses a status. */
+const STATUS_END: Cue = { path: "mecard/sounds/status_end.wav", volume: 1 }
 
 /** A unit appears. */
-const APPEAR: Cue = { path: "mecard/sounds/frinch.wav", volume: 1.5 }
+const APPEAR: Cue = { path: "mecard/sounds/spawn.wav", volume: 1 }
 
 /** A unit dies. */
-const DEATH: Cue = { path: "mecard/sounds/dragon.wav", volume: 1 }
+const DEATH: Cue = { path: "mecard/sounds/death.wav", volume: 1 }
 
-/** A mark of the round or of the gold: a beep, the quietest file, brought up a lot. */
-const MARK: Cue = { path: "mecard/sounds/top.wav", volume: 3 }
+/** Two units run into each other. */
+const BUMP: Cue = { path: "mecard/sounds/bump.wav", volume: 1 }
+
+/** The chain of a unit cannot go on: too long, or a card cannot be built. */
+const REFUSED: Cue = { path: "mecard/sounds/chain_overflow.wav", volume: 1 }
+
+/** A round starts: a light gong. */
+const ROUND: Cue = { path: "mecard/sounds/round_start.wav", volume: 1 }
+
+/** Gold is gained: a coin. */
+const GOLD: Cue = { path: "mecard/sounds/gold.wav", volume: 1 }
+
+/** The damage, in hearts, from which a blow is heavy. */
+const HEAVY_DAMAGE = 3
 
 /** Every sound the link plays, loaded as it starts. */
-const CUES: readonly Cue[] = [BEGIN, END, FIGHT, STEP, DRAW, PLAY, HURT, SOFT, APPEAR, DEATH, MARK]
+const CUES: readonly Cue[] = [
+    BEGIN, END, FIGHT, STEP, DRAW, PLAY, BOARD_STEP, TURN, HURT, HURT_HEAVY, HEART_LOST, HEAL,
+    STATUS_END, APPEAR, DEATH, BUMP, REFUSED, ROUND, GOLD, ...STATUS_CUES,
+]
 
 /**
  * Tells the speakers what a run does: the sounds of its journey and of the battles it fights, played by a
@@ -124,23 +147,29 @@ export class RunSoundLink {
         this.#unregisterBattle()
         const { signals } = battle
         this.#battleObservers = [
-            this.#on(battle.roundStarted, MARK),
-            this.#on(battle.onGetGold, MARK),
+            this.#on(battle.roundStarted, ROUND),
+            this.#on(battle.onGetGold, GOLD),
             this.#on(signals.drawn, DRAW),
             this.#on(signals.cardActivated, PLAY),
-            this.#on(signals.moved, STEP),
-            this.#on(signals.damaged, HURT),
-            this.#on(signals.healed, SOFT),
-            this.#on(signals.statusAdded, SOFT),
+            this.#on(signals.cardInvalid, REFUSED),
+            this.#on(signals.chainOverflowed, REFUSED),
+            this.#on(signals.moved, ({ from, to }) => from.position.equals(to.position) ? TURN : BOARD_STEP),
+            this.#on(signals.bumped, BUMP),
+            this.#on(signals.damaged, ({ amount }) => amount >= HEAVY_DAMAGE ? HURT_HEAVY : HURT),
+            this.#on(signals.heartWounded, HEART_LOST),
+            this.#on(signals.healed, HEAL),
+            this.#on(signals.statusAdded, ({ type }) => soundOfStatus(type)),
+            this.#on(signals.notifyStatus, ({ target }) => soundOfStatus(target.type)),
+            this.#on(signals.statusRemoved, STATUS_END),
             this.#on(signals.spawned, APPEAR),
             this.#on(signals.died, DEATH),
         ]
     }
 
-    /** Play a sound when the animation of an event of an observable starts. */
-    #on<T>(observable: Observable<T>, cue: Cue): Observer {
-        return this.forwarded.on(observable, (_, phase) => {
-            if(phase === "start") this.#play(cue)
+    /** Play a sound when the animation of an event starts: the given one, or one chosen from the event. */
+    #on<T>(observable: Observable<T>, cue: Cue|((event: T) => Cue)): Observer {
+        return this.forwarded.on(observable, (event, phase) => {
+            if(phase === "start") this.#play(typeof cue === "function" ? cue(event) : cue)
         })
     }
 

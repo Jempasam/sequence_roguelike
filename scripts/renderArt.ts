@@ -6,6 +6,8 @@
 //                                  a .pic.json against its .png, any file of a parallax folder against its .ora;
 //   npm run art:preview -- <folder> also writes a preview.png in each parallax folder built, to help create it;
 //                                  no other command writes one
+// A .faust.dsp is a sound effect: rendered to a .wav at the same path, in one call, through the CLI of the soundeffect
+// project, looked for next to this repository, or where SFX points to. --changed applies to it as to a picture.
 // A .json beside a .pic.json (units/wolf.json for units/wolf.pic.json) is copied beside the .png: the data of the picture.
 // A folder holding a parallax.json is assembled into one painting, <folder>.ora (see buildParallax.ts).
 // The picture project is looked for next to this repository, or where PICTURE points to.
@@ -23,7 +25,9 @@ const GENERATED = join(REPO, "generated_assets")
 /** Seen as one: what is generated first, then what is written by hand. */
 const SOURCES = [GENERATED, join(REPO, "assets")]
 const PICTURE = process.env.PICTURE ?? join(REPO, "..", "picture", "bin", "picture.js")
+const SFX = process.env.SFX ?? join(REPO, "..", "soundeffect", "bin", "sfx.js")
 const EXTENSION = ".pic.json"
+const SOUND_EXTENSION = ".faust.dsp"
 /** Written in a parallax folder after its .ora, so it is no source: it would always make the painting look stale. */
 const PREVIEW = "preview.png"
 
@@ -57,6 +61,25 @@ for(const document of documents){
     mkdirSync(dirname(out), { recursive: true })
     execFileSync(process.execPath, [PICTURE, "generate", document, "-o", out, "-s", "1"], { stdio: "ignore" })
     console.log(`Rendered ${path}`)
+}
+const sounds = files.filter(file => file.endsWith(SOUND_EXTENSION)).map(source => ({
+    path: relative(ART, source).split(sep).join("/"),
+    source,
+    out: join(GENERATED, relative(ART, source).slice(0, -SOUND_EXTENSION.length) + ".wav"),
+})).filter(sound => !changedOnly || isStale(sound.out, [sound.source]))
+if(sounds.length > 0){
+    if(!existsSync(SFX)) fail(`The soundeffect project is not at ${SFX}. Set SFX to its bin/sfx.js.`)
+    for(const sound of sounds) mkdirSync(dirname(sound.out), { recursive: true })
+    const outputs = sounds.flatMap(sound => ["-o", sound.out])
+    try {
+        const sources = sounds.map(sound => sound.source)
+        execFileSync(process.execPath, [SFX, "render", ...sources, ...outputs, "-f", "wav"], {
+            stdio: ["ignore", "ignore", "inherit"],
+        })
+    } catch {
+        fail("A sound failed to render.")
+    }
+    for(const sound of sounds) console.log(`Rendered ${sound.path}`)
 }
 // A .json beside a document, of the name of its picture, is its data: copied to the same path, so the game finds it
 // next to the .png. A parallax.json is no data of a picture, and a folder holding one is a painting.

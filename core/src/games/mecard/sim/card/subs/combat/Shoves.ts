@@ -179,12 +179,13 @@ export const BATTERING_RAM = new ActionCard("Bélier", [
         const trip = battle.moveSpot(unit, pose.position, pose.direction, length)
         const run = Previews.arrow([pose.position, trip.to], MOVE_WIDTH, CONTROL_COLOR)
         const landing = { position: trip.to, direction: pose.direction }
-        if(!trip.struck) return Previews.still(landing, run)
+        const disc = Previews.body(unit, trip.to, pose.direction)
+        if(!trip.struck) return Previews.still(landing, run, disc)
         const one: Shove = {
             battle, by: unit, target: trip.struck, direction: pose.direction,
             distance: PROJECTION_DISTANCE * unit.stats.throwRange.value, impact: impactOf(unit), hurtsStruck: true,
         }
-        return Previews.still(landing, run, ...shoveShown(battle, one))
+        return Previews.still(landing, run, disc, ...shoveShown(battle, one))
     },
 })
 

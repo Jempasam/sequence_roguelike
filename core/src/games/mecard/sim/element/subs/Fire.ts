@@ -11,7 +11,7 @@ import type { Element } from "../Element"
 import * as Areas from "../../battle/area/Areas"
 
 /** How many rounds the fire burns a unit for. */
-const FIRE_BURN = 2
+const FIRE_BURN = 3
 
 /** How much strength the fire gives for the round. */
 const FIRE_STRENGTH = 1

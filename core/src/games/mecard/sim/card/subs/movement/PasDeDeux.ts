@@ -49,6 +49,7 @@ function dancing(range: number, cosHalf: number): Action {
                 { position: partner.position, direction: partner.direction }, ...shown,
                 Previews.arrow([pose.position, partner.position], MOVE_WIDTH / 2, MOVE_COLOR),
                 Previews.arrow([partner.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR),
+                Previews.body(unit, partner.position, partner.direction),
                 Previews.label(pose.position, "échange", NOTE_COLOR),
             )
         },

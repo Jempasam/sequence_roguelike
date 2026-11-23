@@ -49,7 +49,7 @@ export class KnightMoveCard extends ActionCard {
                 const first = battle.moveSpot(unit, pose.position, pose.direction.right, side * move.value)
                 const second = battle.moveSpot(unit, first.to, pose.direction, ahead * move.value)
                 const path = Previews.arrow([pose.position, first.to, second.to], MOVE_WIDTH, MOVE_COLOR)
-                return Previews.still({ ...pose, position: second.to }, path)
+                return Previews.still({ ...pose, position: second.to }, path, Previews.body(unit, second.to, pose.direction))
             },
         }
     }

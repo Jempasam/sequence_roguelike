@@ -51,7 +51,7 @@ export class SubstitutionCard extends ActionCard {
                 const travelled = battle.moveSpot(unit, pose.position, pose.direction.opposite, distance)
                 const dash = Previews.arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)
                 if(travelled.distance === 0) return Previews.still(pose, dash)
-                return Previews.still({ ...pose, position: travelled.to }, dash, summonShown(pose.position))
+                return Previews.still({ ...pose, position: travelled.to }, dash, Previews.body(unit, travelled.to, pose.direction), summonShown(pose.position))
             },
         }
     }

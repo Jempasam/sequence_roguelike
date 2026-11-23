@@ -411,19 +411,95 @@ export type AssetPath =
     | "mecard/processes/taming.png"
     | "mecard/processes/taxidermy.png"
     | "mecard/processes/vanishing.png"
+    | "mecard/sounds/bump.wav"
     | "mecard/sounds/card.wav"
     | "mecard/sounds/card_hover.wav"
+    | "mecard/sounds/card_play.wav"
+    | "mecard/sounds/chain_overflow.wav"
     | "mecard/sounds/click.wav"
+    | "mecard/sounds/death.wav"
     | "mecard/sounds/declick.wav"
     | "mecard/sounds/dragon.wav"
     | "mecard/sounds/frinch.wav"
+    | "mecard/sounds/gold.wav"
     | "mecard/sounds/guitare.ogg"
     | "mecard/sounds/guitare_grave.ogg"
+    | "mecard/sounds/heal.wav"
+    | "mecard/sounds/heart_lost.wav"
+    | "mecard/sounds/hit.wav"
+    | "mecard/sounds/hit_heavy.wav"
     | "mecard/sounds/liquide.wav"
     | "mecard/sounds/pop.wav"
+    | "mecard/sounds/round_start.wav"
+    | "mecard/sounds/shove.wav"
+    | "mecard/sounds/spawn.wav"
+    | "mecard/sounds/status_end.wav"
+    | "mecard/sounds/statuses/bear_trap.wav"
+    | "mecard/sounds/statuses/bishop.wav"
+    | "mecard/sounds/statuses/bleeding.wav"
+    | "mecard/sounds/statuses/bloodlust.wav"
+    | "mecard/sounds/statuses/bubble.wav"
+    | "mecard/sounds/statuses/burn.wav"
+    | "mecard/sounds/statuses/burning_ground.wav"
+    | "mecard/sounds/statuses/chess_piece.wav"
+    | "mecard/sounds/statuses/coated.wav"
+    | "mecard/sounds/statuses/concentrated.wav"
+    | "mecard/sounds/statuses/confused.wav"
+    | "mecard/sounds/statuses/counter.wav"
+    | "mecard/sounds/statuses/demonic.wav"
+    | "mecard/sounds/statuses/disarm.wav"
+    | "mecard/sounds/statuses/dodge.wav"
+    | "mecard/sounds/statuses/element_coating.wav"
+    | "mecard/sounds/statuses/enchanted.wav"
+    | "mecard/sounds/statuses/enraged.wav"
+    | "mecard/sounds/statuses/explosive.wav"
+    | "mecard/sounds/statuses/fallback_negative.wav"
+    | "mecard/sounds/statuses/fallback_neutral.wav"
+    | "mecard/sounds/statuses/fallback_positive.wav"
+    | "mecard/sounds/statuses/fleeting.wav"
+    | "mecard/sounds/statuses/fragile.wav"
+    | "mecard/sounds/statuses/frenzied.wav"
+    | "mecard/sounds/statuses/furious.wav"
+    | "mecard/sounds/statuses/giant.wav"
+    | "mecard/sounds/statuses/healing.wav"
+    | "mecard/sounds/statuses/knight.wav"
+    | "mecard/sounds/statuses/lucidity.wav"
+    | "mecard/sounds/statuses/marked.wav"
+    | "mecard/sounds/statuses/mine.wav"
+    | "mecard/sounds/statuses/momentum.wav"
+    | "mecard/sounds/statuses/overheated.wav"
+    | "mecard/sounds/statuses/pawn.wav"
+    | "mecard/sounds/statuses/poisoned.wav"
+    | "mecard/sounds/statuses/possessed.wav"
+    | "mecard/sounds/statuses/potion_coating.wav"
+    | "mecard/sounds/statuses/puddle.wav"
+    | "mecard/sounds/statuses/queen.wav"
+    | "mecard/sounds/statuses/resurrected.wav"
+    | "mecard/sounds/statuses/ritual.wav"
+    | "mecard/sounds/statuses/rocky.wav"
+    | "mecard/sounds/statuses/rook.wav"
+    | "mecard/sounds/statuses/rooted.wav"
+    | "mecard/sounds/statuses/sliding_parry.wav"
+    | "mecard/sounds/statuses/slowed.wav"
+    | "mecard/sounds/statuses/soaked.wav"
+    | "mecard/sounds/statuses/soapy.wav"
+    | "mecard/sounds/statuses/soul_linked.wav"
+    | "mecard/sounds/statuses/soul_shielded.wav"
+    | "mecard/sounds/statuses/splashing.wav"
+    | "mecard/sounds/statuses/stinking.wav"
+    | "mecard/sounds/statuses/surging.wav"
+    | "mecard/sounds/statuses/swallowed.wav"
+    | "mecard/sounds/statuses/swift.wav"
+    | "mecard/sounds/statuses/vigorous.wav"
+    | "mecard/sounds/statuses/vulnerable.wav"
+    | "mecard/sounds/statuses/weakened.wav"
+    | "mecard/sounds/statuses/whirling.wav"
+    | "mecard/sounds/statuses/wooden_shield.wav"
+    | "mecard/sounds/step.wav"
     | "mecard/sounds/sword.wav"
     | "mecard/sounds/tchi.wav"
     | "mecard/sounds/top.wav"
+    | "mecard/sounds/turn.wav"
     | "mecard/sounds/vent.wav"
     | "mecard/statuses/barrel.png"
     | "mecard/statuses/bleeding.png"
@@ -1130,19 +1206,95 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/processes/taming.png",
     "mecard/processes/taxidermy.png",
     "mecard/processes/vanishing.png",
+    "mecard/sounds/bump.wav",
     "mecard/sounds/card.wav",
     "mecard/sounds/card_hover.wav",
+    "mecard/sounds/card_play.wav",
+    "mecard/sounds/chain_overflow.wav",
     "mecard/sounds/click.wav",
+    "mecard/sounds/death.wav",
     "mecard/sounds/declick.wav",
     "mecard/sounds/dragon.wav",
     "mecard/sounds/frinch.wav",
+    "mecard/sounds/gold.wav",
     "mecard/sounds/guitare.ogg",
     "mecard/sounds/guitare_grave.ogg",
+    "mecard/sounds/heal.wav",
+    "mecard/sounds/heart_lost.wav",
+    "mecard/sounds/hit.wav",
+    "mecard/sounds/hit_heavy.wav",
     "mecard/sounds/liquide.wav",
     "mecard/sounds/pop.wav",
+    "mecard/sounds/round_start.wav",
+    "mecard/sounds/shove.wav",
+    "mecard/sounds/spawn.wav",
+    "mecard/sounds/status_end.wav",
+    "mecard/sounds/statuses/bear_trap.wav",
+    "mecard/sounds/statuses/bishop.wav",
+    "mecard/sounds/statuses/bleeding.wav",
+    "mecard/sounds/statuses/bloodlust.wav",
+    "mecard/sounds/statuses/bubble.wav",
+    "mecard/sounds/statuses/burn.wav",
+    "mecard/sounds/statuses/burning_ground.wav",
+    "mecard/sounds/statuses/chess_piece.wav",
+    "mecard/sounds/statuses/coated.wav",
+    "mecard/sounds/statuses/concentrated.wav",
+    "mecard/sounds/statuses/confused.wav",
+    "mecard/sounds/statuses/counter.wav",
+    "mecard/sounds/statuses/demonic.wav",
+    "mecard/sounds/statuses/disarm.wav",
+    "mecard/sounds/statuses/dodge.wav",
+    "mecard/sounds/statuses/element_coating.wav",
+    "mecard/sounds/statuses/enchanted.wav",
+    "mecard/sounds/statuses/enraged.wav",
+    "mecard/sounds/statuses/explosive.wav",
+    "mecard/sounds/statuses/fallback_negative.wav",
+    "mecard/sounds/statuses/fallback_neutral.wav",
+    "mecard/sounds/statuses/fallback_positive.wav",
+    "mecard/sounds/statuses/fleeting.wav",
+    "mecard/sounds/statuses/fragile.wav",
+    "mecard/sounds/statuses/frenzied.wav",
+    "mecard/sounds/statuses/furious.wav",
+    "mecard/sounds/statuses/giant.wav",
+    "mecard/sounds/statuses/healing.wav",
+    "mecard/sounds/statuses/knight.wav",
+    "mecard/sounds/statuses/lucidity.wav",
+    "mecard/sounds/statuses/marked.wav",
+    "mecard/sounds/statuses/mine.wav",
+    "mecard/sounds/statuses/momentum.wav",
+    "mecard/sounds/statuses/overheated.wav",
+    "mecard/sounds/statuses/pawn.wav",
+    "mecard/sounds/statuses/poisoned.wav",
+    "mecard/sounds/statuses/possessed.wav",
+    "mecard/sounds/statuses/potion_coating.wav",
+    "mecard/sounds/statuses/puddle.wav",
+    "mecard/sounds/statuses/queen.wav",
+    "mecard/sounds/statuses/resurrected.wav",
+    "mecard/sounds/statuses/ritual.wav",
+    "mecard/sounds/statuses/rocky.wav",
+    "mecard/sounds/statuses/rook.wav",
+    "mecard/sounds/statuses/rooted.wav",
+    "mecard/sounds/statuses/sliding_parry.wav",
+    "mecard/sounds/statuses/slowed.wav",
+    "mecard/sounds/statuses/soaked.wav",
+    "mecard/sounds/statuses/soapy.wav",
+    "mecard/sounds/statuses/soul_linked.wav",
+    "mecard/sounds/statuses/soul_shielded.wav",
+    "mecard/sounds/statuses/splashing.wav",
+    "mecard/sounds/statuses/stinking.wav",
+    "mecard/sounds/statuses/surging.wav",
+    "mecard/sounds/statuses/swallowed.wav",
+    "mecard/sounds/statuses/swift.wav",
+    "mecard/sounds/statuses/vigorous.wav",
+    "mecard/sounds/statuses/vulnerable.wav",
+    "mecard/sounds/statuses/weakened.wav",
+    "mecard/sounds/statuses/whirling.wav",
+    "mecard/sounds/statuses/wooden_shield.wav",
+    "mecard/sounds/step.wav",
     "mecard/sounds/sword.wav",
     "mecard/sounds/tchi.wav",
     "mecard/sounds/top.wav",
+    "mecard/sounds/turn.wav",
     "mecard/sounds/vent.wav",
     "mecard/statuses/barrel.png",
     "mecard/statuses/bleeding.png",

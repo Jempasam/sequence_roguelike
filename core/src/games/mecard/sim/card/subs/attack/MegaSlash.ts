@@ -65,7 +65,7 @@ export class MegaSlashCard extends ActionCard {
                 const to = reach(unit, pose)
                 const area = Areas.line(pose.position, to, MEGA_SLASH_WIDTH)
                 const way = Previews.arrow([pose.position, to], MOVE_WIDTH / 2, MOVE_COLOR)
-                return Previews.still({ ...pose, position: to }, ...Previews.strike([area], battle.fetch(area, unit)), way)
+                return Previews.still({ ...pose, position: to }, ...Previews.strike([area], battle.fetch(area, unit)), way, Previews.body(unit, to, pose.direction))
             },
         }
     }

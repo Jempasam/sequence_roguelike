@@ -69,7 +69,7 @@ export class HarpoonCard extends ActionCard {
                 if(!target) return Previews.still(pose, rope, Previews.label(end, "raté", NOTE_COLOR))
                 const gone = battle.moveSpot(unit, pose.position, pose.direction, pulled(unit))
                 const pull = Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)
-                return Previews.still({ ...pose, position: gone.to }, rope, pull, ...Previews.strike([], [target]))
+                return Previews.still({ ...pose, position: gone.to }, rope, pull, Previews.body(unit, gone.to, pose.direction), ...Previews.strike([], [target]))
             },
         }
     }

@@ -125,7 +125,7 @@ export class HookCard extends ActionCard {
                     return Previews.still(pose, ...reached, rope, Previews.arrow([from, pull.to], MOVE_WIDTH, CONTROL_COLOR))
                 }
                 const gone = Previews.arrow([from, pull.to], MOVE_WIDTH, MOVE_COLOR)
-                return Previews.still({ ...pose, position: pull.to }, ...reached, rope, gone)
+                return Previews.still({ ...pose, position: pull.to }, ...reached, rope, gone, Previews.body(unit, pull.to, pose.direction))
             },
         }
     }

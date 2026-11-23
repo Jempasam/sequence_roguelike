@@ -1,8 +1,9 @@
 import type { SoundPath, SoundPlayer } from "../../../../engine/audio"
-import type { Observer } from "../../sim/base/Observable"
+import type { Observable, Observer } from "../../sim/base/Observable"
 import { Scope } from "../../../../lifetime"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Run } from "../../sim/run/Run"
+import type { Forwarded } from "../forward/Forwarded"
 
 /** The channel the sounds of the journey and of the battles are played on. */
 export const EFFECTS_CHANNEL = "effects"
@@ -58,7 +59,9 @@ const CUES: readonly Cue[] = [BEGIN, END, FIGHT, STEP, DRAW, PLAY, HURT, SOFT, A
  *
  * @remarks
  * Made like a broadcaster, it reads the run and changes nothing of it: the run knows no sound. It follows
- * the battle being fought, and lets go of it when the next one comes.
+ * the battle being fought, and lets go of it when the next one comes. It plays each sound when the screen
+ * plays what the event shows, told by a {@link Forwarded}, not when the run tells it: the run plays a round
+ * out at once, the screen shows it after.
  */
 export class RunSoundLink {
 
@@ -76,6 +79,9 @@ export class RunSoundLink {
 
         /** What plays the sounds. */
         public readonly player: SoundPlayer,
+
+        /** What tells it the animations play, which the sounds follow. */
+        public readonly forwarded: Forwarded,
     ){
         this.#engine = engine
         player.preload(CUES.map(cue => cue.path))
@@ -103,32 +109,39 @@ export class RunSoundLink {
         const { travel } = run
         this.#observers.remove()
         this.#observers = new Scope(
-            travel.visitStarted.add(() => this.#play(BEGIN)),
-            travel.visitEnded.add(() => this.#play(END)),
-            travel.fightEntered.add(() => this.#play(FIGHT)),
-            travel.fightLeft.add(() => this.#play(END)),
-            travel.moved.add(() => this.#play(STEP)),
+            this.#on(travel.visitStarted, BEGIN),
+            this.#on(travel.visitEnded, END),
+            this.#on(travel.fightEntered, FIGHT),
+            this.#on(travel.fightLeft, END),
+            this.#on(travel.moved, STEP),
+            // Heard as it is told, not as it plays: the battle is followed before its first sound.
             run.battleStarted.add(battle => this.#followBattle(battle)),
         )
         if(run.battle) this.#followBattle(run.battle)
     }
 
-    #followBattle(_battle: Battle): void {
+    #followBattle(battle: Battle): void {
         this.#unregisterBattle()
-        // TEMPORARY: the sounds of the battle are off, they all play at once.
-        // const { signals } = battle
-        // this.#battleObservers = [
-        //     battle.roundStarted.add(() => this.#play(MARK)),
-        //     battle.onGetGold.add(() => this.#play(MARK)),
-        //     signals.drawn.add(() => this.#play(DRAW)),
-        //     signals.cardActivated.add(() => this.#play(PLAY)),
-        //     signals.moved.add(() => this.#play(STEP)),
-        //     signals.damaged.add(() => this.#play(HURT)),
-        //     signals.healed.add(() => this.#play(SOFT)),
-        //     signals.statusAdded.add(() => this.#play(SOFT)),
-        //     signals.spawned.add(() => this.#play(APPEAR)),
-        //     signals.died.add(() => this.#play(DEATH)),
-        // ]
+        const { signals } = battle
+        this.#battleObservers = [
+            this.#on(battle.roundStarted, MARK),
+            this.#on(battle.onGetGold, MARK),
+            this.#on(signals.drawn, DRAW),
+            this.#on(signals.cardActivated, PLAY),
+            this.#on(signals.moved, STEP),
+            this.#on(signals.damaged, HURT),
+            this.#on(signals.healed, SOFT),
+            this.#on(signals.statusAdded, SOFT),
+            this.#on(signals.spawned, APPEAR),
+            this.#on(signals.died, DEATH),
+        ]
+    }
+
+    /** Play a sound when the animation of an event of an observable starts. */
+    #on<T>(observable: Observable<T>, cue: Cue): Observer {
+        return this.forwarded.on(observable, (_, phase) => {
+            if(phase === "start") this.#play(cue)
+        })
     }
 
     #play({ path, volume }: Cue): void {

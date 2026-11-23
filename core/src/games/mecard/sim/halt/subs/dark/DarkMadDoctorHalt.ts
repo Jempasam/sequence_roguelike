@@ -1,5 +1,5 @@
 import { concat } from "../../../../../../semantic"
-import { UNIT } from "../../../base/keywords"
+import { MONSTER, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Monster } from "../../../catalog/monsters"
 import type { Run } from "../../../run/Run"
@@ -16,7 +16,7 @@ export class DarkMadDoctorHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(DARK_MAD_DOCTOR_HALT, run,
-            ["Une ", UNIT, " et un monstre ? Sur ma table, ils n'en feront plus qu'un !"],
+            ["Une ", UNIT, " et un ", MONSTER, " ? Sur ma table, ils n'en feront plus qu'un !"],
             sceneLook(13, 31, 23, "mad-doctor", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "doctorHat",
@@ -34,7 +34,7 @@ export class DarkMadDoctorHalt extends AbstractHalt {
     public start(ctx: HaltContext): void {
         const { run } = this
         const first = (): void => ctx.hero(["Quelle ", UNIT, " ?"], one => {
-            ctx.offer(concat(one, " avec quel monstre ?"), this.#monsters, monster => monsterShown(monster), monster => {
+            ctx.offer(concat(one, " avec quel ", MONSTER, " ?"), this.#monsters, monster => monsterShown(monster), monster => {
                 this.impact()
                 ctx.tell(concat(run.graft(one, monster), " est né."))
             }, { back: first })
@@ -51,7 +51,7 @@ export class DarkMadDoctorHalt extends AbstractHalt {
 export const DARK_MAD_DOCTOR_HALT: HaltType = {
     id: "darkMadDoctor",
     name: "Chirurgien des monstres",
-    description: ["Greffe une ", UNIT, " avec un monstre parmi trois."],
+    description: ["Greffe une ", UNIT, " avec un ", MONSTER, " parmi trois."],
     icon: visual("halts/mad-doctor", { letter: "DF!" }),
     glow: DARK_COLOR,
     transition: visual("dungeon-door", { coloration: DARK_COLORATION }),

@@ -1,4 +1,4 @@
-import { CARTE, FUSION } from "../../../base/keywords"
+import { CARTE, FUSION, ITEM } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import { lootUpgraded } from "../../../catalog/upgrades"
 import { inventedFusion, lootCard } from "../../../run/offers"
@@ -16,7 +16,7 @@ export class BossRewardHalt extends RewardHalt {
 
     constructor(type: HaltType, run: Run, gold: number){
         super(type, run, gold,
-            ["Victoire ! Beaucoup d'or, et au choix une ", CARTE, ", un objet, une ", FUSION, " ou une ", CARTE, " améliorée."],
+            ["Victoire ! Beaucoup d'or, et au choix une ", CARTE, ", un ", ITEM, ", une ", FUSION, " ou une ", CARTE, " améliorée."],
             rewardLook([52, 20, 22], { coloration: BOSS_COLORATION }),
         )
     }
@@ -38,7 +38,7 @@ export class BossRewardHalt extends RewardHalt {
 export const BOSS_REWARD_HALT: HaltType = {
     id: "bossReward",
     name: "Récompense de boss",
-    description: ["Une ", CARTE, ", un objet, une ", FUSION, " ou une ", CARTE, " améliorée au choix, et beaucoup d'or."],
+    description: ["Une ", CARTE, ", un ", ITEM, ", une ", FUSION, " ou une ", CARTE, " améliorée au choix, et beaucoup d'or."],
     icon: visual("halts/chest", { letter: "R" }),
     transition: visual("great-door", { coloration: BOSS_COLORATION }),
     onMap: false,

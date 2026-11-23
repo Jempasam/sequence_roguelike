@@ -1,6 +1,6 @@
 import { concat } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, MONSTER } from "../../../base/keywords"
 import type { Rng } from "../../../base/Rng"
 import type { Card } from "../../../card/Card"
 import type { Monster } from "../../../catalog/monsters"
@@ -59,7 +59,7 @@ export abstract class MonsterCardHalt extends AbstractHalt {
 
     /** Ask for one of the cards for a deck of a character, then give it. */
     #offer(ctx: HaltContext, hero: Hero, deck: Card[], back: () => void): void {
-        ctx.offer(concat("Quel monstre pour ", hero, " ?"), this.#offers, offer => this.#shown(offer), ({ card }) => {
+        ctx.offer(concat("Quel ", MONSTER, " pour ", hero, " ?"), this.#offers, offer => this.#shown(offer), ({ card }) => {
             this.impact()
             const key = this.run.changeDeck(deck, cards => this.receive(cards, card))
             ctx.tell(key ? concat(hero, " reçoit ", card, " et ", key, ".") : concat(hero, " reçoit ", card, "."))

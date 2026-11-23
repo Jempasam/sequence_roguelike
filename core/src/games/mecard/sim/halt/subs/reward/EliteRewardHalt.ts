@@ -1,4 +1,4 @@
-import { CARTE, FUSION } from "../../../base/keywords"
+import { CARTE, FUSION, ITEM } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import { inventedFusion, lootCards } from "../../../run/offers"
 import type { Run } from "../../../run/Run"
@@ -15,7 +15,7 @@ export class EliteRewardHalt extends RewardHalt {
 
     constructor(type: HaltType, run: Run, gold: number){
         super(type, run, gold,
-            ["Victoire ! De l'or, et au choix une ", CARTE, ", un objet ou un ", FUSION, "."],
+            ["Victoire ! De l'or, et au choix une ", CARTE, ", un ", ITEM, " ou un ", FUSION, "."],
             rewardLook([52, 46, 18], { coloration: ELITE_COLORATION }),
         )
     }
@@ -35,7 +35,7 @@ export class EliteRewardHalt extends RewardHalt {
 export const ELITE_REWARD_HALT: HaltType = {
     id: "eliteReward",
     name: "Récompense d'élite",
-    description: ["Deux ", CARTE.as("cartes"), ", un objet ou une ", FUSION, " au choix, et de l'or."],
+    description: ["Deux ", CARTE.as("cartes"), ", un ", ITEM, " ou une ", FUSION, " au choix, et de l'or."],
     icon: visual("halts/chest", { letter: "R" }),
     transition: visual("gilded-door", { coloration: ELITE_COLORATION }),
     onMap: false,

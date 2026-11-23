@@ -1,5 +1,6 @@
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
+import { HEART } from "../base/keywords"
 import { Observable } from "../base/Observable"
 import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
@@ -63,7 +64,7 @@ export type RunPhase = "travel"|"battle"|"over"
 
 /** What hearts found as loot are, for the player: their kind, how many, and what they do. */
 export function heartLootText({ heart, count }: HeartLoot): Text {
-    return concat("Cœur ", heart, " ×", String(count), " : ", heart.description)
+    return concat(HEART, " ", heart, " ×", String(count), " : ", heart.description)
 }
 
 /** The color the name of the team of the monsters is written in. */

@@ -1,5 +1,5 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
-import { FORCE } from "../../../base/keywords"
+import { FORCE, BATTLE_ROUND } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
@@ -31,7 +31,7 @@ export class PredatorEye extends AbstractItem {
     constructor(){
         super("Œil du prédateur", visual("items/scope"), [
             "Après une action qui ne te déplace pas mais te tourne de plus de 90°, gagne +", EYE_STRENGTH, " ", FORCE,
-            " jusqu'à la fin du round.",
+            " jusqu'à la fin du ", BATTLE_ROUND, ".",
         ])
     }
 

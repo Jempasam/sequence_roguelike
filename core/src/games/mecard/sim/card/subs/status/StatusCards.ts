@@ -1,4 +1,4 @@
-import { ALLONGE, DISTANCE, FORCE, PORTEE, UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { EXPLOSIVE_HEART } from "../../../heart/subs/ExplosiveHeartKind"
 import { Heart } from "../../../heart/Heart"
@@ -6,7 +6,7 @@ import { Grievance, WeakeningBlows } from "../../../process/subs/Grievance"
 import { BLEEDING, FRAGILE, MARKED } from "../../../status/subs/Wounds"
 import { CONCENTRATED, CONCENTRATION_RANGE, FURIOUS } from "../../../status/subs/Calm"
 import { PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { StatusType } from "../../../status/Status"
@@ -39,16 +39,16 @@ function giving(type: StatusType, level: number, what: string): Action {
 }
 
 export const CONCENTRATION = new ActionCard("Concentration", [
-    "Gagne un round de concentration : chaque Attendre en ajoute un, et chaque round restant donne +",
+    "Gagne un ", BATTLE_ROUND, " de concentration : chaque Attendre en ajoute un, et chaque ", BATTLE_ROUND, " restant donne +",
     frenchNumber(CONCENTRATION_RANGE), " ", PORTEE, " et ", ALLONGE, ".",
 ], Rarity.RARE, giving(CONCENTRATED, 1, "+1 concentration"))
 
 export const HELD_FURY = new ActionCard("Fureur contenue", [
-    "Gagne un round de fureur : chaque Attendre en ajoute un, et chaque round restant donne un point de force.",
+    "Gagne un ", BATTLE_ROUND, " de fureur : chaque Attendre en ajoute un, et chaque ", BATTLE_ROUND, " restant donne un point de force.",
 ], Rarity.RARE, giving(FURIOUS, 1, "+1 fureur"))
 
 export const COOL_HEAD = new ActionCard("Sang froid", [
-    "Retire tous ses status négatifs, et gagne un round de concentration pour chacun.",
+    "Retire tous ses status négatifs, et gagne un ", BATTLE_ROUND, " de concentration pour chacun.",
 ], Rarity.RARE, onSelf((battle, unit) => {
     const bad = [...unit.statuses.keys()].filter(type => type.polarity === "negative")
     for(const type of bad) battle.removeStatus(unit, type)
@@ -56,7 +56,7 @@ export const COOL_HEAD = new ActionCard("Sang froid", [
 }, "sang froid"))
 
 export const WEAKENING_BLOWS = new ActionCard("Coups affaiblissant", [
-    "Les ", UNIT.as("unités"), " touchées sur ", frenchNumber(WEAKENING_LENGTH), " ", DISTANCE, " devant, jusqu'à la fin du round, ",
+    "Les ", UNIT.as("unités"), " touchées sur ", frenchNumber(WEAKENING_LENGTH), " ", DISTANCE, " devant, jusqu'à la fin du ", BATTLE_ROUND, ", ",
     "prennent un écho de ", 1, "+", FORCE, " à chaque blessure.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
@@ -80,41 +80,41 @@ export const MARK_CARD = new ActionCard("Marque", [
 }, "marquée"))
 
 export const FRAGILITY_CARD = new ActionCard("Fragilité", [
-    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " prend un cœur de plus à chaque blessure, ",
-    "autant de rounds que de ", FORCE, ".",
+    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " prend ", new HeartCount(1), " de plus à chaque blessure, ",
+    "autant de ", BATTLE_ROUND.as("rounds"), " que de ", FORCE, ".",
 ], Rarity.RARE, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, unit, target) => {
     battle.applyStatus(target, FRAGILE, Math.max(1, unit.stats.strength.value))
 }, "fragile"))
 
 export const BLEED = new ActionCard("Saignement", [
-    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " gagne un round de saignement : chaque ",
-    "déplacement lui coûte un cœur.",
+    "La première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, " gagne un ", BATTLE_ROUND, " de saignement : chaque ",
+    "déplacement lui coûte ", new HeartCount(1), ".",
 ], Rarity.COMMON, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, _unit, target) => {
     battle.applyStatus(target, BLEEDING, 1)
 }, "saigne"))
 
 export const HEMORRHAGE = new ActionCard("Hémorragie", [
-    "Double les rounds de saignement de la première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, ".",
+    "Double les ", BATTLE_ROUND.as("rounds"), " de saignement de la première ", UNIT, " touchée sur ", frenchNumber(DAGGER_LENGTH), " ", DISTANCE, ".",
 ], Rarity.RARE, onFirstAhead(DAGGER_LENGTH, DAGGER_WIDTH, (battle, _unit, target) => {
     const bleeding = target.statuses.get(BLEEDING)
     if(bleeding) battle.applyStatus(target, BLEEDING, bleeding.level)
 }, "saignement ×2"))
 
 export const GRUDGE = new ActionCard("Rancune", [
-    "Jusqu'à la fin du round, chaque blessure subie donne un round d'énergie démoniaque.",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", chaque blessure subie donne un ", BATTLE_ROUND, " d'énergie démoniaque.",
 ], Rarity.RARE, onSelf((battle, unit) => battle.startProcess(unit, new Grievance()), "rancune"))
 
 export const BLOCK = new ActionCard("Blocage", [
-    "Gagne un cœur bleu.",
+    "Gagne ", new HeartCount(1), " ", BLUE_HEART, ".",
 ], Rarity.COMMON, onSelf((_battle, unit) => unit.hearts.give(new Heart(BLUE_HEART)), "+1 cœur bleu"))
 
 export const RAMPART = new ActionCard("Rempart", [
-    "Donne un cœur bleu à chaque allié à ", frenchNumber(RAMPART_RADIUS), " ", DISTANCE, " autour, soi compris.",
+    "Donne ", new HeartCount(1), " ", BLUE_HEART, " à chaque allié à ", frenchNumber(RAMPART_RADIUS), " ", DISTANCE, " autour, soi compris.",
 ], Rarity.RARE, onCircle(
     RAMPART_RADIUS, (unit, other) => other.team === unit.team,
     (_battle, _unit, other) => other.hearts.give(new Heart(BLUE_HEART)), "+1 cœur bleu",
 ))
 
 export const EXPLOSIVE_SHELL = new ActionCard("Carapace explosive", [
-    "Gagne un cœur explosif.",
+    "Gagne ", new HeartCount(1), " ", EXPLOSIVE_HEART, ".",
 ], Rarity.RARE, onSelf((_battle, unit) => unit.hearts.give(new Heart(EXPLOSIVE_HEART)), "+1 cœur explosif"))

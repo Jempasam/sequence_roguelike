@@ -1,3 +1,4 @@
+import { USABLE } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Run } from "../../../run/Run"
@@ -17,7 +18,7 @@ export class GreatWitchHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(GREAT_WITCH_HALT, run,
-            "Trois utilisables mijotent ici. Prends-en un : tu en auras trois.",
+            ["Trois ", USABLE.as("utilisables"), " mijotent ici. Prends-en un : tu en auras trois."],
             sceneLook(20, 31, 15, "witch", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
@@ -34,7 +35,7 @@ export class GreatWitchHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         const show = (usable: Usable) => ({ cards: [], usables: [usable], text: concat("×3 · ", usableText(usable)) })
-        ctx.offer("Choisis un utilisable", this.#usables, show, usable => {
+        ctx.offer(["Choisis un ", USABLE], this.#usables, show, usable => {
             ctx.hero(concat(usable, " ×3 : pour qui ?"), hero => {
                 this.impact()
                 for(let i = 0; i < 3; i++) this.run.giveUsable(hero, usable)
@@ -52,7 +53,7 @@ export class GreatWitchHalt extends AbstractHalt {
 export const GREAT_WITCH_HALT: HaltType = {
     id: "greatWitch",
     name: "Grande sorcière",
-    description: "Un utilisable parmi trois, en triple.",
+    description: ["Un ", USABLE, " parmi trois, en triple."],
     icon: visual("halts/witch", { letter: "SO*" }),
     glow: GREAT_COLOR,
     transition: visual("dungeon-door", { coloration: GREAT_COLORATION }),

@@ -1,7 +1,7 @@
 import { UNIT_RADIUS } from "../../battle/Unit"
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
-import { HeartCount } from "../../battle/words"
+import { SummonedHearts } from "../../battle/words"
 import { summonedHearts } from "../../card/subs/summon/SummonCard"
 import { THORN_HEART } from "../../heart/subs/ThornHeartKind"
 
@@ -23,7 +23,7 @@ export class FoldingCactus extends AbstractUsable {
     ){
         super(
             "Cactus pliable", visual("usables/cactus"),
-            ["Pose un cactus à ", CACTUS_AHEAD, " m devant toi : ", new HeartCount(hearts), " + invocation, en cœurs épineux. 2 utilisations."],
+            ["Pose un cactus à ", CACTUS_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 2 utilisations."],
             { charges: 2 },
         )
     }

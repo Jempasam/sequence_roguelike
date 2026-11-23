@@ -1,6 +1,7 @@
 import type { PlugContext } from "../../battle/Action"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A ride for the round: the unit goes some way ahead before each of its steps, and once at the start. */
 export class Riding extends AbstractProcess {
@@ -11,7 +12,7 @@ export class Riding extends AbstractProcess {
         public readonly length: number,
     ){
         super("cheval", visual("processes/horse", { color: [0.75, 0.55, 0.35] }),
-            "Avance tout droit au début du round, puis avant chacun de ses pas.",
+            ["Avance tout droit au début du ", BATTLE_ROUND, ", puis avant chacun de ses pas."],
         )
     }
 

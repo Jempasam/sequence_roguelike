@@ -11,7 +11,7 @@ import { STEP } from "../movement/Step"
 import { inOrder } from "../tools/sequence"
 import { CompositeCard, requireComposable } from "./CompositeCard"
 import type { CompositeLook } from "./CompositeCard"
-import { MERGE } from "../../../base/keywords"
+import { MERGE, BATTLE_TURN } from "../../../base/keywords"
 
 /** What a merged card is named by, between the names of its cards. */
 const MERGED_JOIN = " & "
@@ -48,7 +48,7 @@ export class MergedCard extends CompositeCard<Action, unknown> {
             const last = contents[contents.length - 1]
             return [
                 MERGE.as("Mélange"), " : joue ", ...joinText(contents.slice(0, -1), ", "), " et ", last,
-                " à la suite, en une seule étape.",
+                " à la suite, en une seule ", BATTLE_TURN.as("étape"), ".",
                 ...taking.length > 0 ? [" Prend ce que prennent ", ...joinText(taking, ", "), "."] : [],
             ]
         }, look)

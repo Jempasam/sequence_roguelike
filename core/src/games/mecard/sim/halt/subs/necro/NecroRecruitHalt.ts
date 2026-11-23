@@ -1,7 +1,8 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, BATTLE_ROUND, MONSTER } from "../../../base/keywords"
+import { HeartCount } from "../../../battle/words"
 import { visual } from "../../../base/Visual"
 import { LOOT_MONSTERS } from "../../../catalog/monsters"
 import type { Monster } from "../../../catalog/monsters"
@@ -31,7 +32,7 @@ export class NecroRecruitHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(NECRO_RECRUIT_HALT, run,
-            "Choisis le monstre qui rejoindra ton armée.",
+            ["Choisis le ", MONSTER, " qui rejoindra ton armée."],
             sceneLook(34, 40, 20, "monster-park"),
             {
                 hat: "huntingHat",
@@ -45,9 +46,12 @@ export class NecroRecruitHalt extends AbstractHalt {
 
 
     public start(ctx: HaltContext): void {
-        ctx.offer("Quel monstre ?", this.#monsters, monster => ({
+        ctx.offer(["Quel ", MONSTER, " ?"], this.#monsters, monster => ({
             cards: [...new Set(monster.cards)], sprite: monster.sprite,
-            text: [monster, " : ", monster.hearts, " cœurs, ", monster.draw, " ", CARTE.as("cartes"), " par round, son ", DECK, " joué dans l'ordre."],
+            text: [
+                monster, " : ", new HeartCount(monster.hearts), ", ", monster.draw, " ", CARTE.as("cartes"), " par ",
+                BATTLE_ROUND, ", son ", DECK, " joué dans l'ordre.",
+            ],
         }), monster => {
             this.impact()
             ctx.tell(concat(this.run.recruit(monster), " rejoint l'armée."))
@@ -63,7 +67,7 @@ export class NecroRecruitHalt extends AbstractHalt {
 export const NECRO_RECRUIT_HALT: HaltType = {
     id: "necro-recruit",
     name: "Antre des monstres",
-    description: ["Un monstre parmi quelques-uns rejoint l'armée, ses ", CARTE.as("cartes"), " jouées dans l'ordre de son ", DECK, "."],
+    description: ["Un ", MONSTER, " parmi quelques-uns rejoint l'armée, ses ", CARTE.as("cartes"), " jouées dans l'ordre de son ", DECK, "."],
     icon: visual("halts/monster-park", { letter: "AM" }),
     transition: visual("warm-door"),
     create: run => new NecroRecruitHalt(run),

@@ -1,6 +1,7 @@
 import { concat } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, BATTLE_ROUND } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
+import { HeartCount } from "../../../battle/words"
 import { BOSS_MONSTERS, monster } from "../../../catalog/monsters"
 import type { Monster } from "../../../catalog/monsters"
 import type { Run } from "../../../run/Run"
@@ -44,7 +45,7 @@ export class DarkTrainerHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Quel allié ?", this.#bosses, boss => monsterShown(boss, [
-            boss, " : ", boss.hearts, " cœurs, ", boss.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu.",
+            boss, " : ", new HeartCount(boss.hearts), ", ", boss.draw, " ", CARTE.as("cartes"), " par ", BATTLE_ROUND, ", joué par un bot, son ", DECK, " rebattu.",
         ]), boss => {
             this.impact()
             ctx.tell(concat(this.run.tame(boss), " rejoint l'équipe."))

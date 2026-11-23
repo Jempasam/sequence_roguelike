@@ -37,6 +37,9 @@ export interface Shown {
 
     /** What it says under the rest, nothing when the rest is enough. */
     readonly text?: Text
+
+    /** What it costs, in gold, nothing when it is not for sale. */
+    readonly price?: number
 }
 
 /** How many cards a dialog asks to pick, at least and at most. */

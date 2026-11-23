@@ -1,6 +1,7 @@
 import type { PlugContext } from "../../battle/Action"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /**
  * A unit that does not stay: as the round ends, it vanishes from the battle, whatever is left of its life.
@@ -15,7 +16,7 @@ export class Vanishing extends AbstractProcess {
 
     constructor(){
         super("dissipation", visual("processes/vanishing", { color: [0.7, 0.8, 0.95] }),
-            "Disparaît du combat à la fin du round, quelle que soit sa vie.",
+            ["Disparaît du combat à la fin du ", BATTLE_ROUND, ", quelle que soit sa vie."],
         )
     }
 

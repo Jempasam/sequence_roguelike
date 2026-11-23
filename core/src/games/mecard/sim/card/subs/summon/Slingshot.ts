@@ -1,5 +1,5 @@
 import { visual } from "../../../base/Visual"
-import { DISTANCE } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -17,7 +17,7 @@ import * as Previews from "../../../battle/preview/Previews"
 const AHEAD = 1 - UNIT_RADIUS
 
 export const SLINGSHOT = new ActionCard("Lance-pierre", [
-    "Pose un lance-pierre à ", AHEAD, " ", DISTANCE, " devant, auquel tu es attaché. À la fin du round, tu es ",
+    "Pose un lance-pierre à ", AHEAD, " ", DISTANCE, " devant, auquel tu es attaché. À la fin du ", BATTLE_ROUND, ", tu es ",
     "propulsé vers lui sur ", SLINGSHOT_FACTOR, " fois la distance qui vous sépare ; l'unité touchée est repoussée ",
     "d'autant. Collision : 1 ", DamageType.PHYSICAL, " par ", SLINGSHOT_METERS_PER_HEART, " ", DISTANCE, ".",
 ], Rarity.EPIC, {

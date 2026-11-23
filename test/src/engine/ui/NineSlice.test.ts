@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { NineSlice, RAW_VERTEX_SIZE, Rect, Sprite } from "@game/core"
-import type { NineSliceOptions } from "@game/core"
+import { Color, NineSlice, RAW_VERTEX_SIZE, Rect, Sprite } from "@game/core"
+import type { ColorMode, NineSliceOptions, Painter } from "@game/core"
 
 import { uiSetup } from "../../fixtures/uiFixtures"
 import { recordingPainter } from "./fixtures"
@@ -139,5 +139,41 @@ describe("new NineSlice", () => {
         const sprite = new Sprite(theme.white.texture, 100, 16, 4, 4)
         const margins = { left: 2, top: 2, right: 2, bottom: 2 }
         expect(() => new NineSlice(sprite, margins, { tiling: {} })).toThrow("nothing to repeat")
+    })
+})
+
+describe("NineSlice.masked", () => {
+    /** A painter telling in which color mode each draw was made, and the pushes left open at the end. */
+    function modes(): { painter: Painter, drawn: ColorMode[], open: () => number } {
+        const drawn: ColorMode[] = []
+        let mode: ColorMode = "modulate"
+        const saved: ColorMode[] = []
+        const painter = {
+            push: () => { saved.push(mode) },
+            pop: () => { mode = saved.pop() ?? "modulate" },
+            setColorMode: (next: ColorMode) => { mode = next },
+            draw: () => { drawn.push(mode) },
+        } as unknown as Painter
+        return { painter, drawn, open: () => saved.length }
+    }
+
+    test("a frame masked in a color → the same grid, drawn in mask mode in that color, the mode given back", () => {
+        const nine = slice({ opaqueCenter: true })
+        const masked = nine.masked(new Color(1, 0, 0, 0.5))
+        const { painter, drawn, open } = modes()
+        masked.draw(painter, 0, 0, 40, 30)
+        expect(masked.colorMode).toBe("mask")
+        expect(masked.color).toEqual(new Color(1, 0, 0, 0.5))
+        expect(masked.border).toEqual(nine.border)
+        expect(masked.opaqueCenter).toBe(false)
+        expect(drawn).toEqual(["mask"])
+        expect(open()).toBe(0)
+    })
+
+    test("a frame not masked → drawn in the mode of its painter, with no push", () => {
+        const { painter, drawn, open } = modes()
+        slice().draw(painter, 0, 0, 40, 30)
+        expect(drawn).toEqual(["modulate"])
+        expect(open()).toBe(0)
     })
 })

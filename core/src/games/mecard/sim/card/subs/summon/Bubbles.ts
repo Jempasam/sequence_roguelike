@@ -104,7 +104,7 @@ export function bubbleSummon(spec: BubbleSpec): ChainSummon {
 
 /** The words every bubble of a card starts its description with. */
 function opening(lives: number): Text[] {
-    return [INVOCATION.as("Invoque"), " devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(lives), " de temps"]
+    return [INVOCATION.as("Invoque"), " devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(lives), " de ", TIME_HEART]
 }
 
 /** A card setting down a bubble. */

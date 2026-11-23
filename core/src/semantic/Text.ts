@@ -1,3 +1,6 @@
+import { isPicture } from "./Shown"
+import type { Picture, Shown, ShownColor, ShownLink } from "./Shown"
+
 /**
  * A color as a text names it, `[r, g, b]` or `[r, g, b, a]`, its channels from 0 to 1, opaque without an
  * alpha.
@@ -60,8 +63,11 @@ export interface Stringable {
  */
 export type Text = string|number|ColoredText|LinkedText|SvgPath|Semantic|Stringable|readonly Text[]
 
-/** How a reader shows some objects its own way: a text for an object, none to let it tell itself. */
-export type TextDisplay = (value: object) => Text|undefined
+/**
+ * How a reader shows some objects its own way: what it shows for an object, a text with pictures maybe, none
+ * to let it tell itself.
+ */
+export type TextDisplay = (value: object) => Shown|undefined
 
 /**
  * One piece of a text once read: a string or a picture, in a color, none for the color of the reader, and
@@ -70,6 +76,10 @@ export type TextDisplay = (value: object) => Text|undefined
 export type TextSpan =
     | { readonly kind: "string", readonly text: string, readonly color: TextColor|null, readonly link: object|null }
     | { readonly kind: "svg", readonly path: SvgPath, readonly color: TextColor|null, readonly link: object|null }
+    | {
+        readonly kind: "picture", readonly picture: Picture, readonly color: TextColor|null,
+        readonly link: object|null,
+    }
 
 /** How deep a text may hold itself before it is taken for a loop, an object whose text holds the object. */
 const MAX_DEPTH = 64
@@ -83,7 +93,10 @@ export function spansOf(text: Text, display?: TextDisplay): TextSpan[] {
 
 /** A text as a plain string: its colors dropped, its pictures as their `alt`, its groups one per line. */
 export function plainText(text: Text, display?: TextDisplay): string {
-    return spansOf(text, display).map(span => span.kind === "string" ? span.text : span.path.alt ?? "").join("")
+    return spansOf(text, display).map(span => {
+        if(span.kind === "string") return span.text
+        return (span.kind === "svg" ? span.path.alt : span.picture.alt) ?? ""
+    }).join("")
 }
 
 /** Is an array a group, its items each on a line, rather than parts end to end? */
@@ -146,7 +159,7 @@ interface TextContext {
 
 /** Add the pieces of a text to a list, with what the parts around it hand down. */
 function read(
-    text: Text, context: TextContext, display: TextDisplay|undefined, spans: TextSpan[], depth: number,
+    text: Shown, context: TextContext, display: TextDisplay|undefined, spans: TextSpan[], depth: number,
 ): void {
     if(depth > MAX_DEPTH){
         throw new Error(`A text holds itself more than ${MAX_DEPTH} deep: an object tells itself in its own text.`)
@@ -167,12 +180,16 @@ function read(
         spans.push({ kind: "svg", path: text, ...context })
         return
     }
+    if(isPicture(text)){
+        spans.push({ kind: "picture", picture: text, ...context })
+        return
+    }
     if(isColored(text)){
-        read(text.text, { ...context, color: text.color }, display, spans, depth + 1)
+        read((text as ShownColor).text, { ...context, color: text.color }, display, spans, depth + 1)
         return
     }
     if(isLinked(text)){
-        read(text.text, { ...context, link: text.link }, display, spans, depth + 1)
+        read((text as ShownLink).text, { ...context, link: text.link }, display, spans, depth + 1)
         return
     }
     const shown = display?.(text)
@@ -182,7 +199,7 @@ function read(
 }
 
 // `Array.isArray` narrows to a mutable array, which a readonly one is not.
-function isArray(text: Text): text is readonly Text[] {
+function isArray<T>(text: T|readonly T[]): text is readonly T[] {
     return Array.isArray(text)
 }
 

@@ -1,3 +1,4 @@
+import { HALT } from "../../base/keywords"
 import type { HaltType } from "../../halt/HaltType"
 import { greatHalts, masterHalts } from "../../catalog/halts"
 import { ALCHEMIST_HALT } from "../../halt/subs/deck/AlchemistHalt"
@@ -99,7 +100,10 @@ export function upgradeFloorType(rows: number = UPGRADE_ROWS): FloorType {
     const type: FloorType = {
         ...CAVE_FLOOR,
         name: "Atelier",
-        description: "Rien que des haltes pour s'améliorer : on y choisit son chemin, et de quoi devenir plus fort.",
+        description: [
+            "Rien que des ", HALT.as("haltes"), " pour s'améliorer : on y choisit son chemin, et de quoi devenir",
+            " plus fort.",
+        ],
         create: level => new UpgradeFloor(level, type, rows),
     }
     return type

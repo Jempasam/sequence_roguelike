@@ -1,4 +1,4 @@
-import { UNIT } from "../../../base/keywords"
+import { MONSTER, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import { ELEMENT } from "../../../card/CardType"
@@ -20,7 +20,7 @@ export class MonsterMageHalt extends MonsterCardHalt {
 
     constructor(run: Run){
         super(MONSTER_MAGE_HALT, run,
-            "Un poison, un remède, et un monstre pour porter le tout : voilà un élément.",
+            ["Un poison, un remède, et un ", MONSTER, " pour porter le tout : voilà un élément."],
             sceneLook(28, 18, 31, "trainer_monster", { visual: "space", coloration: [0.72, 0.56, 0.78] }),
             {
                 unit: visual("units/mage"),
@@ -46,7 +46,7 @@ export class MonsterMageHalt extends MonsterCardHalt {
 export const MONSTER_MAGE_HALT: HaltType = {
     id: "monsterMage",
     name: "Mage des monstres",
-    description: ["Fait d'un monstre un ", ELEMENT, " pour une ", UNIT, ", avec une conjuration si elle n'en a aucune."],
+    description: ["Fait d'un ", MONSTER, " un ", ELEMENT, " pour une ", UNIT, ", avec une conjuration si elle n'en a aucune."],
     icon: visual("units/mage", { letter: "MG!" }),
     glow: DARK_COLOR,
     transition: visual("portal"),

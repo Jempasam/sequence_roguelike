@@ -9,6 +9,7 @@ import { POTION } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** A potion, for a card pouring it: a level for a number of rounds, mostly. */
 export class PotionCard extends AbstractCard<Dose> {
@@ -71,7 +72,7 @@ export const SWALLOW = new PotionCard("Hirondelle", Rarity.RARE, SWALLOW_POTION)
 
 /** A potion turned around: it takes off what it would put on. */
 export const ANTIDOTE = new DoseCard("Antidote", [
-    "La potion est inversée : elle retire autant de rounds qu'elle en aurait donné.",
+    "La potion est inversée : elle retire autant de ", BATTLE_ROUND.as("rounds"), " qu'elle en aurait donné.",
 ], Rarity.COMMON, dose => ({ ...dose, sign: dose.sign === 1 ? -1 : 1 }))
 
 /** How many times stronger the distillation of the catalog makes a potion. */

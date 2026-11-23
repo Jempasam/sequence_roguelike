@@ -36,7 +36,7 @@ function nearest(battle: Battle, owner: Unit, at: Vector2): Unit[] {
 /** A cannonball: it rams four times in a row, then is gone. */
 export const CANNONBALL = new ChainSummonCard("Boulet de canon", [
     "Pose à ", AHEAD, " ", DISTANCE, " devant un boulet de canon d'", new HeartCount(CANNONBALL_ROUNDS),
-    " de temps : Dash dégât, ", CANNONBALL_RAMS, " fois.",
+    " de ", TIME_HEART, " : Dash dégât, ", CANNONBALL_RAMS, " fois.",
 ], Rarity.RARE, {
     sprite: visual("units/mine"), name: "Boulet de canon", hearts: () => Heart.many(TIME_HEART, CANNONBALL_ROUNDS),
     cards: Array.from({ length: CANNONBALL_RAMS }, () => RAM),
@@ -46,7 +46,7 @@ export const CANNONBALL = new ChainSummonCard("Boulet de canon", [
 /** A bouncing ball: it bounces twice, then blows up. */
 export const BOUNCING_BALL = new ChainSummonCard("Boulet rebondissant", [
     "Pose à ", AHEAD, " ", DISTANCE, " devant un boulet d'", new HeartCount(CANNONBALL_ROUNDS),
-    " de temps : Bounce Dash, ", BOUNCING_BALL_BOUNCES, " fois, puis Kamikaze.",
+    " de ", TIME_HEART, " : Bounce Dash, ", BOUNCING_BALL_BOUNCES, " fois, puis Kamikaze.",
 ], Rarity.RARE, {
     sprite: visual("units/mine"), name: "Boulet rebondissant", hearts: () => Heart.many(TIME_HEART, CANNONBALL_ROUNDS),
     cards: [...Array.from({ length: BOUNCING_BALL_BOUNCES }, () => BOUNCE_DASH), KAMIKAZE],

@@ -2,7 +2,8 @@ import { describe, expect, test } from "vitest"
 import { Choice, Color, NineSlice } from "@game/core"
 import { heroOf, ALL_KITS, LOOT_MONSTERS, monsterBooster } from "@game/core/mecard"
 import { boosterView } from "@game/core/mecard/booster-view"
-import { CARD_OVERLAP, cardsOption, unitHead } from "@game/core/mecard/choice-options"
+import { CARD_OVERLAP, cardsOption } from "@game/core/mecard/choice-options"
+import { unitHead } from "@game/core/mecard/unit-view"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 

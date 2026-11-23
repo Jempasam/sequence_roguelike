@@ -5,6 +5,7 @@ import type { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
 import { KeptHeartRule } from "./KeptHeartRule"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** The color its name is written in: its own would vanish on the dark panels. */
 const NAME_COLOR = rgba(0.65, 0.45, 0.75)
@@ -14,7 +15,10 @@ export class BlackHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("noir", "Se soigne et se recharge à chaque combat ; le dernier se perd à chaque fin de round.", rgba(0.22, 0.12, 0.25))
+        super(
+            "noir", ["Se soigne et se recharge à chaque combat ; le dernier se perd à chaque fin de ", BATTLE_ROUND, "."],
+            rgba(0.22, 0.12, 0.25),
+        )
     }
 
 

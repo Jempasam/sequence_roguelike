@@ -2,6 +2,7 @@ import type { UnitContext } from "../../battle/Action"
 import { Guard } from "../Guard"
 import type { Parried } from "../Guard"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import {  } from "../../base/keywords"
 
 /** What each guard tells, before what it does more. */
 const GUARDING = ["Annule les ", STATUS_LEVEL, " prochaines attaques physiques. −1 à chaque début de tour."]

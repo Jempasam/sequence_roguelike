@@ -46,6 +46,17 @@ describe("plainText", () => {
             .toBe("a♥")
     })
 
+    test("a picture shown by a display → its alt, in the color and link around it", () => {
+        const link = {}
+        const display = (value: object) => value instanceof Potion
+            ? { link, text: { color: RED, text: ["a", { picture: "potion", alt: "fiole" }] } }
+            : undefined
+        expect(plainText(new Potion(), display)).toBe("afiole")
+        expect(spansOf(new Potion(), display)[1]).toMatchObject({
+            kind: "picture", picture: { picture: "potion" }, color: RED, link,
+        })
+    })
+
     test("display → in place of the text of the object", () => {
         expect(plainText([new Potion()], value => value instanceof Potion ? "fiole" : undefined)).toBe("fiole")
     })

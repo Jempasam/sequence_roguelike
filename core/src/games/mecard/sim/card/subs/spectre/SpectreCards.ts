@@ -3,7 +3,7 @@ import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { Ethereal } from "../../../process/subs/Ethereal"
 import { Haunting } from "../../../process/subs/Haunting"
 import type { Card } from "../../Card"
@@ -27,7 +27,7 @@ const PLAGIARISM_MAX = 2
 const NOBODY = "personne en face"
 
 export const ETHEREAL_FORM = new ProcessCard("Forme éthérée", [
-    "Jusqu'à la fin du round, ton corps ne prend pas de place : tu traverses les ", UNIT, "s, et nul ne peut te viser, ",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", ton corps ne prend pas de place : tu traverses les ", UNIT, "s, et nul ne peut te viser, ",
     "te toucher ni te déplacer. Dès que tu blesses quelqu'un, tu reprends corps.",
 ], Rarity.RARE, () => new Ethereal(), "éthéré")
 
@@ -59,7 +59,7 @@ function haunting(range: number): Action {
 
 export const HAUNT = new ActionCard("Hantise", [
     "Te connecte derrière la première ", UNIT, " en face, jusqu'à ", HAUNT_RANGE, " ", DISTANCE, " : sans corps jusqu'à ",
-    "la fin du round, tu la suis quand elle bouge ou se tourne, et tu joues tes cartes depuis sa place, comme elle est tournée.",
+    "la fin du ", BATTLE_ROUND, ", tu la suis quand elle bouge ou se tourne, et tu joues tes cartes depuis sa place, comme elle est tournée.",
 ], Rarity.EPIC, haunting(HAUNT_RANGE))
 
 /** The units of a circle around a pose that played a card, the closest first, the caster apart. */
@@ -92,5 +92,5 @@ function plagiarizing(range: number, most: number): Action {
 
 export const PLAGIARISM = new ActionCard("Plagiat", [
     "Les ", UNIT, "s jusqu'à ", PLAGIARISM_RANGE, " ", DISTANCE, " autour de toi, alliées ou ennemies, qui ont déjà joué : ",
-    "les ", PLAGIARISM_MAX, " plus proches voient leurs dernières cartes jouées copiées au bout de ta chaîne, que tu joues ce round.",
+    "les ", PLAGIARISM_MAX, " plus proches voient leurs dernières cartes jouées copiées au bout de ta chaîne, que tu joues ce ", BATTLE_ROUND, ".",
 ], Rarity.EPIC, plagiarizing(PLAGIARISM_RANGE, PLAGIARISM_MAX))

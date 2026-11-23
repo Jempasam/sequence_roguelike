@@ -24,6 +24,7 @@ import { hazardType } from "../hazard/HazardType"
 import type { HazardType } from "../hazard/HazardType"
 import { EXPLOSIVE } from "../status/subs/Explosive"
 import { EXPLOSIVE_DASH, SHADOW_STEP } from "../card/subs"
+import {  } from "../base/keywords"
 
 /** How far the belt of a conveyor carries, and how wide it is, in meters: what the card it plays covers. */
 const CONVEYOR_LENGTH = 4

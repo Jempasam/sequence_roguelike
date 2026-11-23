@@ -1,4 +1,4 @@
-import { ALLONGE, PORTEE } from "../../base/keywords"
+import { ALLONGE, PORTEE, BATTLE_ROUND } from "../../base/keywords"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { WAIT } from "../../card/subs/movement/Wait"
@@ -10,7 +10,7 @@ import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 export const CONCENTRATION_RANGE = 0.25
 
 /** A concentration: the range grows with the rounds left. */
-export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de ", PORTEE, " et d'", ALLONGE, " pour chaque round restant (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
+export const CONCENTRATED = new StatusType("concentration", statusVisual("concentration", 0.55, 0.85, 1), "positive", level => new Concentration(level), { description: ["Plus de ", PORTEE, " et d'", ALLONGE, " pour chaque ", BATTLE_ROUND, " restant (", STATUS_LEVEL, "), et un ", BATTLE_ROUND, " de plus à chaque attente."] })
 
 /** Does the step a unit just played wait? */
 function waited({ unit }: UnitContext): boolean {
@@ -43,7 +43,7 @@ export class Concentration extends ScalingStatus {
 }
 
 /** A fury held back: the strength grows with the rounds left. */
-export const FURIOUS = new StatusType("fureur contenue", statusVisual("furious", 1, 0.5, 0.2), "positive", level => new HeldFury(level), { description: ["Autant de force que de rounds restants (", STATUS_LEVEL, "), et un round de plus à chaque attente."] })
+export const FURIOUS = new StatusType("fureur contenue", statusVisual("furious", 1, 0.5, 0.2), "positive", level => new HeldFury(level), { description: ["Autant de force que de ", BATTLE_ROUND.as("rounds"), " restants (", STATUS_LEVEL, "), et un ", BATTLE_ROUND, " de plus à chaque attente."] })
 
 /** Furious: as much strength as rounds left, and a round more at each wait. */
 export class HeldFury extends ScalingStatus {

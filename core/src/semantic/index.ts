@@ -8,5 +8,6 @@
  */
 
 export * from "./Keyword"
+export * from "./Shown"
 export * from "./svgContours"
 export * from "./Text"

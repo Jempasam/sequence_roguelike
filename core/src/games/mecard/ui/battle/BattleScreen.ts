@@ -3,7 +3,6 @@ import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
-import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { Scope } from "../../../../lifetime"
 import { eventText } from "../../sim/battle/events"
@@ -19,6 +18,8 @@ import { CardChain } from "../../sim/card/CardChain"
 import type { RootPreview } from "../../sim/card/CardChain"
 
 import { BattleAnimations } from "./BattleAnimations"
+import { animate } from "../forward/animate"
+import type { Forwarded } from "../forward/Forwarded"
 import { PlayControl } from "../hud/PlayControl"
 import { CONTROLS_FRAME, PlayControlView } from "../hud/PlayControlView"
 import { BattleScene } from "./BattleScene"
@@ -30,11 +31,11 @@ import { Hud } from "./Hud"
 import { NO_PREVIEW } from "./Hud"
 import type { HudHost, Mode } from "./Hud"
 import type { UiRect } from "../hud/BattleGrid"
-import { processText, statusText } from "../hud/StatusProcessList"
 import { StatusList } from "../hud/StatusList"
 import type { ShownStatus } from "./BattleScene"
 import { ArenaHearts } from "../hud/ArenaHearts"
-import { heartText } from "../hud/HeartView"
+import { DetailTooltip } from "../hud/DetailTooltip"
+import { DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import { CARTE } from "../../sim/base/keywords"
@@ -93,6 +94,9 @@ export interface BattleScreenOptions {
 
     /** What tells the speakers a unit of the arena is hovered or clicked, none when there is no sound. */
     readonly sounds?: UiSoundLink|null
+
+    /** What is told as the animations of the battle play, none when nothing listens. */
+    readonly forwarded?: Forwarded|null
 
     /** How deep the run went. */
     depth(): number
@@ -226,7 +230,9 @@ export class BattleScreen implements HudHost {
         this.#locks = options.locks ?? NO_BATTLE_LOCKS
         this.animations = new AnimationChain(error => options.report(String(error)))
         this.#playControl = new PlayControl(this.#clock)
-        this.#battleAnimations = new BattleAnimations(this.scene, this.animations, this.#clock, this.#playControl)
+        this.#battleAnimations = new BattleAnimations(
+            this.scene, this.animations, this.#clock, this.#playControl, options.forwarded ?? null,
+        )
         // Not told by being ready: the players still are when the next round draws.
         this.#battleAnimations.animates = unit => {
             return !this.#locks.isLocked(unit) && unit.team === this.viewpoint && unit.controller === "player"
@@ -248,15 +254,19 @@ export class BattleScreen implements HudHost {
         // Under the arena, over the whole screen: very dark brown where nothing else lies.
         floor.content.add(new BrownBackdrop(theme), { x: "stretch", y: "stretch" })
         const arena = ui.addLayer("battle-arena")
-        this.#arenaHearts = new ArenaHearts(theme, arena, sprites, (unit, heart, over) => {
+        this.#arenaHearts = new ArenaHearts(theme, arena, sprites, (unit, _heart, over) => {
             this.hoverUnit(unit, over)
-            this.#hud.showInfo(over ? heartText(heart) : null)
         }, (unit, process, over) => this.#hoverProcess(unit, process, over),
         (unit, status, over) => this.#hoverStatus(unit, status, over))
         const main = ui.addLayer("battle")
-        this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }))
         // Over the panels, kept from one build of them to the next, and laid over the arena by each frame.
         const controls = ui.addLayer("battle-controls")
+        // Over everything, so the bubbles of the details lie over the panels and the controls.
+        this.#tooltip = new DetailTooltip(ui, ui.addLayer("battle-tooltip"), theme, {
+            color: DIM_TEXT, paper: () => sprites.paper,
+        })
+        this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }), this.#tooltip)
+        this.#arenaHearts.tooltip = this.#tooltip
         this.#controlsView = new PlayControlView(theme, this.#playControl)
         this.#controlsRow.add(this.#controlsView)
         controls.content.add(this.#controlsRow, { x: "start", y: "start" })
@@ -315,7 +325,7 @@ export class BattleScreen implements HudHost {
             this.refresh()
         }
         this.#clickArena(input)
-        this.#hud.readInfo(input, this.ui.pointerX, this.ui.pointerY)
+        this.#tooltip.frame(input)
         this.#clock.advance(dt)
         if(this.mode === "playing") this.#board.acting = this.scene.actor
         if(this.scene.version !== this.#shownVersion) this.refresh()
@@ -413,6 +423,9 @@ export class BattleScreen implements HudHost {
     readonly #board: BoardView
     readonly #hud: Hud
     readonly #arenaHearts: ArenaHearts
+
+    /** The bubbles that tell what is hovered. */
+    readonly #tooltip: DetailTooltip
     readonly #statusList: StatusList
 
     /** The unit whose statuses the list shows, undefined before it is built. */
@@ -499,6 +512,9 @@ export class BattleScreen implements HudHost {
         this.#observers.remove()
         this.#observers = new Scope(
             ...this.#battleAnimations.register(battle),
+            // Without an animation of their own, they take their place in the chain to be forwarded in time.
+            animate(this.animations, this.options.forwarded ?? null, battle.roundStarted),
+            animate(this.animations, this.options.forwarded ?? null, battle.onGetGold),
             battle.phaseChanged.add(phase => {
                 if(phase === "execution"){
                     this.animations.add(instant(() => this.#startPlaying()))
@@ -752,14 +768,12 @@ export class BattleScreen implements HudHost {
     #hoverStatus(unit: Unit, status: ShownStatus, over: boolean): void {
         this.hoverUnit(unit, over)
         this.hoverThing(unit, unit.statusOf(status.type) ?? NO_PREVIEW, over)
-        this.#hud.showInfo(over ? statusText(status) : null)
     }
 
     /** Highlight the unit of a process while the pointer is over its icon, and say what the process is. */
     #hoverProcess(unit: Unit, process: Process, over: boolean): void {
         this.hoverUnit(unit, over)
         this.hoverThing(unit, process, over)
-        this.#hud.showInfo(over ? processText(process) : null)
     }
 
     /** Light up the highlighted unit everywhere it shows. */
@@ -792,11 +806,9 @@ export class BattleScreen implements HudHost {
         const planning = this.mode === "planning"
         if(!hovered){
             this.#board.indicators = []
-            this.#hud.showInfo(null)
             return
         }
         if("thing" in hovered){
-            // What it says is told by whoever hovers it: only what it shows over the arena is told here.
             const { unit, thing } = hovered
             this.#board.indicators = planning ? thing.preview?.({ battle, unit, pose: unit })?.indicators ?? [] : []
             return
@@ -805,10 +817,9 @@ export class BattleScreen implements HudHost {
             const { card } = hovered
             const preview = planning ? this.#draft()?.previewWith(battle, card) ?? null : null
             this.#board.indicators = indicatorsOf(preview)
-            this.#hud.showInfo(concat(card, " : ", card.description))
             return
         }
-        const { unit, index, shown: told } = hovered
+        const { unit, index } = hovered
         const draft = planning ? this.drafts.get(unit) : undefined
         const shown = planning ? undefined : this.scene.of(unit)?.chain
         const plan = draft ? draft.chain : shown ? new CardChain(shown.cards) : battle.planOf(unit)
@@ -816,9 +827,6 @@ export class BattleScreen implements HudHost {
             ? draft.previewRoot(battle, index)
             : plan?.preview(battle, unit)[index] ?? null
         this.#board.indicators = indicatorsOf(preview)
-        const view = plan?.view()[index]
-        const card = told ?? view?.card
-        if(card) this.#hud.showInfo(concat(card, " : ", card.description))
     }
 
     /** Open the preparation on the screen: a draft for each unit the players may plan. */

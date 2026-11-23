@@ -2,10 +2,11 @@ import { Box, Label } from "../../../../engine/ui"
 import type { Component, Theme } from "../../../../engine/ui"
 import { statusTypeText } from "../look/explanations"
 import { CHOSEN_TEXT } from "../look/theme"
-import { AbsItemIcon, STATUS_ICON_SIZE, THING_ICON_SIZE, usesText } from "../hud/AbsItemIcon"
+import { AbsItemIcon, STATUS_ICON_SIZE } from "../hud/AbsItemIcon"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import type { Card } from "../../sim/card/Card"
+import { HEART } from "../../sim/base/keywords"
+import { HeartCount } from "../../sim/battle/words"
 import { TURNS } from "../../sim/card/subs/movement/TurnCard"
 import { STEP } from "../../sim/card/subs/movement/Step"
 import { ALL_BOOSTERS } from "../../sim/catalog/boosters"
@@ -21,7 +22,8 @@ import { EMPTY_FIGHT } from "../../sim/fight/fights"
 import { Heart } from "../../sim/heart/Heart"
 import type { HeartKind } from "../../sim/heart/HeartKind"
 import { ALL_UPGRADES } from "../../sim/catalog/upgrades"
-import { allyOf } from "../../sim/run/Hero"
+import { allyOf, foeOf } from "../../sim/run/Hero"
+import type { Hero } from "../../sim/run/Hero"
 import { boosterEntry } from "./BoosterEntry"
 import { kitEntry } from "./KitEntry"
 import { upgradeEntry } from "./UpgradeEntry"
@@ -29,13 +31,15 @@ import { KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "../../sim/run/Run"
 import { HEART_KINDS } from "../../sim/save/catalogNames"
 import { STATUS_FAMILIES, STATUS_TYPES } from "../../sim/status/statusTypes"
 import { usableText, described } from "../../sim/halt/subs/shown"
-import { cardsOption, unitOption } from "../hud/ChoiceOptions"
+import { cardsOption } from "../hud/ChoiceOptions"
+import { thingBag } from "../hud/thingBag"
+import { unitView } from "../hud/unitView"
 import { heartsRow } from "../hud/HeartView"
 import type { UnitSprites } from "../look/UnitSprites"
 import { lootHeartKey } from "../../persist/PlayerCatalog"
 import type { CatalogCategory } from "../../sim/save/catalogSave"
 
-/** Something the catalogue shows: how it looks in the list, and what the box of details says of it. */
+/** Something the catalogue shows: how it looks in the list, and what its bubble says of it. */
 export interface Entry {
     readonly view: Component
     readonly text: Text
@@ -64,9 +68,6 @@ export interface LibraryLook {
     readonly theme: Theme
     readonly sprites: UnitSprites
 
-    /** Hear that the pointer came over a card of an entry or left it. */
-    readonly onCard: (card: Card, over: boolean) => void
-
     /** How many cards fit in a row of an entry at the width of the interface now. */
     readonly perRow: () => number
 }
@@ -87,26 +88,22 @@ function heartsEntry(look: LibraryLook, kind: HeartKind, count: number, text: Te
 
 /** The text of hearts: their kind, how many when told, and what they do. */
 function heartText(kind: HeartKind, count: number|null): Text {
-    return concat("Cœur ", kind, count === null ? "" : ` ×${count}`, " : ", kind.description)
+    return concat(HEART, " ", kind, count === null ? "" : ` ×${count}`, " : ", kind.description)
 }
 
 /** The option of a monster or a pet: its picture and cards, and what it has. */
-function monsterEntry(look: LibraryLook, monster: Monster): Entry {
-    const hero = allyOf(monster, monster.name)
+function monsterEntry(look: LibraryLook, monster: Monster, hero: Hero): Entry {
     const text = concat(
-        monster, " : ", String(monster.hearts), " cœurs, pioche ", String(monster.draw), " : ",
+        monster, " : ", new HeartCount(monster.hearts), ", pioche ", String(monster.draw), " : ",
         joinText([...new Set(monster.cards)], ", "), ".",
     )
-    const view = unitOption(look.theme, hero, look.sprites, [...new Set(monster.cards)], null, {
-        onCardHover: look.onCard,
-        perRow: look.perRow(),
-    })
+    const view = unitView(look.theme, look.sprites, hero, { perRow: look.perRow() })
     return { view, text, key: monster.name }
 }
 
 /** The sections of the catalogue, in the order of its tabs. */
 export function sections(look: LibraryLook): Section[] {
-    const { theme, sprites, onCard, perRow } = look
+    const { theme, sprites, perRow } = look
     return [
         {
             // What every hero plays as often as it wishes comes first: a step, and a turn, whose dial is only shown here.
@@ -115,7 +112,7 @@ export function sections(look: LibraryLook): Section[] {
             category: "cards",
             entries: () => [...new Set([STEP, TURNS[0], ...ALL_CARDS])].map(card => {
                 const text = concat(card, " : ", card.description)
-                const view = cardsOption(theme, [card], card.description, { onCardHover: onCard, perRow: perRow() })
+                const view = cardsOption(theme, [card], card.description, { perRow: perRow() })
                 return keyed(card.name, { view, text })
             }),
         },
@@ -141,13 +138,13 @@ export function sections(look: LibraryLook): Section[] {
             title: "Monstres",
             group: "Unités",
             category: "monsters",
-            entries: () => ALL_MONSTERS.map(monster => monsterEntry(look, monster)),
+            entries: () => ALL_MONSTERS.map(monster => monsterEntry(look, monster, foeOf(monster, monster.name))),
         },
         {
             title: "Familiers",
             group: "Unités",
             category: "pets",
-            entries: () => ALL_PETS.map(pet => monsterEntry(look, pet)),
+            entries: () => ALL_PETS.map(pet => monsterEntry(look, pet, allyOf(pet, pet.name))),
         },
         {
             // Each fight of the floors, the picture of one of its monsters beside its category and what it holds.
@@ -168,7 +165,7 @@ export function sections(look: LibraryLook): Section[] {
                 const text = concat(hazard, " : ", hazard.description)
                 const cards = [...new Set(hazard.bodies.flatMap(each => each.body.cards ?? []))]
                 const view = cardsOption(theme, cards, text, {
-                    sprites, sprite: hazard.icon, onCardHover: onCard, perRow: perRow(),
+                    sprites, sprite: hazard.icon, perRow: perRow(),
                 })
                 return keyed(hazard.id, { view, text })
             }),
@@ -233,8 +230,8 @@ export function sections(look: LibraryLook): Section[] {
             category: "items",
             entries: () => ALL_ITEMS.map(item => {
                 const text = described(item, item)
-                const thing = new AbsItemIcon(theme, sprites, item.icon, "", 1, THING_ICON_SIZE)
-                return keyed(item.name, { view: cardsOption(theme, [], concat("Objet ", text), { thing }), text })
+                const under = thingBag(theme, sprites, [item], [])
+                return keyed(item.name, { view: cardsOption(theme, [], concat("Objet ", text), { under }), text })
             }),
         },
         {
@@ -243,8 +240,8 @@ export function sections(look: LibraryLook): Section[] {
             category: "usables",
             entries: () => ALL_USABLES.map(usable => {
                 const text = usableText(usable)
-                const thing = new AbsItemIcon(theme, sprites, usable.icon, usesText(usable) ?? "", 1, THING_ICON_SIZE)
-                return keyed(usable.name, { view: cardsOption(theme, [], text, { thing }), text })
+                const under = thingBag(theme, sprites, [], [usable])
+                return keyed(usable.name, { view: cardsOption(theme, [], text, { under }), text })
             }),
         },
     ]

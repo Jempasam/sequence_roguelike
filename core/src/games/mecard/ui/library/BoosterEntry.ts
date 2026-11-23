@@ -16,7 +16,6 @@ export function boosterEntry(look: LibraryLook, booster: Booster): Unkeyed {
     const hand = new OverflowContainer({ gap: 2 })
     for(const card of new Set([booster.icon, ...booster.pools.flatMap(({ pool }) => pool)])){
         const view = new CardView(look.theme, card, "hand")
-        view.onHover = over => look.onCard(card, over)
         hand.add(view)
     }
     const view = cardsOption(look.theme, [], poolsText(booster), {

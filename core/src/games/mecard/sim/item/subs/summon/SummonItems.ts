@@ -1,7 +1,8 @@
-import { UNIT } from "../../../base/keywords"
+import { INVOCATION, UNIT } from "../../../base/keywords"
 import type { Observer } from "../../../base/Observable"
 import type { PlugContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -30,7 +31,7 @@ export class Gear extends AbstractItem {
 
 
     constructor(){
-        super("Engrenage", visual("items/gear"), ["Chaque robot qu'elle construit gagne un cœur de bouclier."])
+        super("Engrenage", visual("items/gear"), ["Chaque robot qu'elle construit gagne ", new HeartCount(1), " ", SHIELD_HEART, "."])
     }
 
 
@@ -48,7 +49,10 @@ export class Cell extends AbstractItem {
 
 
     constructor(){
-        super("Pile", visual("items/battery"), ["Chaque invocation de temps gagne un cœur de temps de plus."])
+        super("Pile", visual("items/battery"), [
+            "Chaque ", INVOCATION.as("invocation"), " de ", TIME_HEART, " gagne ", new HeartCount(1), " de ", TIME_HEART,
+            " de plus.",
+        ])
     }
 
 
@@ -67,7 +71,8 @@ export class Leash extends AbstractItem {
 
     constructor(){
         super("Laisse", visual("items/sling"), [
-            "Chaque invocation avance d'un mètre, puis se tourne vers l'", UNIT, " la plus proche, hors son invocatrice.",
+            "Chaque ", INVOCATION.as("invocation"), " avance d'un mètre, puis se tourne vers l'", UNIT,
+            " la plus proche, hors son invocatrice.",
         ])
     }
 
@@ -94,7 +99,9 @@ export class SummonHeart extends AbstractItem {
 
 
     constructor(){
-        super("Cœur d'invocation", visual("items/summon_heart"), ["Quand une de ses invocations disparaît : gagne un cœur bleu."])
+        super("Cœur d'invocation", visual("items/summon_heart"), [
+            "Quand une de ses ", INVOCATION.as("invocations"), " disparaît : gagne ", new HeartCount(1), " ", BLUE_HEART, ".",
+        ])
     }
 
 

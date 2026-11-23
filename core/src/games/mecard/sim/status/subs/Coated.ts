@@ -7,9 +7,10 @@ import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A coated blade: the blows pour a potion. */
-export const COATED = familyType("lame enduite", statusVisual("coated", 0.6, 0.85, 0.75), "positive", { description: ["Jusqu'à la fin du round, chaque attaque qui touche verse sa potion sur sa cible, au niveau ", STATUS_LEVEL, " (inversée pour un antidote)."] })
+export const COATED = familyType("lame enduite", statusVisual("coated", 0.6, 0.85, 0.75), "positive", { description: ["Jusqu'à la fin du ", BATTLE_ROUND, ", chaque attaque qui touche verse sa potion sur sa cible, au niveau ", STATUS_LEVEL, " (inversée pour un antidote)."] })
 
 /** The kinds of coat, one for each dose. */
 export const COATS = doseVariants(COATED, dose => `${COATED} (${dose.potion})`, (type, level) => new Coated(type, level))

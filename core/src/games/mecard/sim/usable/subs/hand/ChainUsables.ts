@@ -10,14 +10,14 @@ import { collageOf } from "../../../card/subs/composite/ChainRewrites"
 import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
 import { turnUnitsIn } from "../../../card/subs/tools/turning"
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import { mergeable, MergedCard } from "../../../card/subs/composite/MergedCard"
 
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
-import { frenchNumber } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far around its unit the whistle reaches, in meters. */
@@ -33,7 +33,7 @@ export class EngineOil extends AbstractUsable {
 
 
     constructor(){
-        super("Huile de moteur", visual("usables/energizer"), ["Ce round, chaque robot joue sa chaîne deux fois de suite."])
+        super("Huile de moteur", visual("usables/energizer"), ["Ce ", BATTLE_ROUND, ", chaque robot joue sa chaîne deux fois de suite."])
     }
 
 
@@ -74,7 +74,7 @@ export class MagicWatch extends AbstractUsable {
     constructor(){
         super(
             "Montre magique", visual("usables/energizer"),
-            ["La dernière étape de la chaîne est jouée une fois de plus. 2 utilisations, rechargées à chaque combat."],
+            ["La dernière ", BATTLE_TURN.as("étape"), " de la chaîne est jouée une fois de plus. 2 utilisations, rechargées à chaque combat."],
             { charges: 2, refill: "battle" },
         )
     }
@@ -170,7 +170,10 @@ export class Battery extends AbstractUsable {
     constructor(){
         super(
             "Batterie", visual("usables/energizer"),
-            ["Donne un cœur de temps de plus à chaque invocation et robot qui en a. 2 utilisations, rechargées à chaque combat."],
+            [
+                "Donne ", new HeartCount(1), " de ", TIME_HEART, " de plus à chaque ", INVOCATION, " et robot qui en a. ",
+                "2 utilisations, rechargées à chaque combat.",
+            ],
             { charges: 2, refill: "battle" },
         )
     }

@@ -1,5 +1,6 @@
 import { Add, ModifierKey } from "../../base/Attribute"
 import type { PlugContext } from "../../battle/Action"
+import { HeartCount } from "../../battle/words"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 
@@ -12,7 +13,7 @@ export class Strength extends AbstractProcess {
         public readonly bonus: number,
     ){
         super(`force +${bonus}`, visual("processes/strength", { color: [1, 0.45, 0.3] }),
-            `Chaque coup porté retire ${bonus} cœur${bonus > 1 ? "s" : ""} de plus.`,
+            ["Chaque coup porté retire ", new HeartCount(bonus), " de plus."],
         )
     }
 

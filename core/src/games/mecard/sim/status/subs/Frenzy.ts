@@ -2,9 +2,10 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A frenzy: the unit turns on whoever is closest, before each of its steps. */
-export const FRENZIED = new StatusType("frénésie", statusVisual("frenzy", 1, 0.45, 0.1), "neutral", level => new Frenzy(level), { description: ["Avant chacun de ses pas, se tourne droit vers l'unité la plus proche, alliée ou ennemie, pendant ", STATUS_LEVEL, " rounds."] })
+export const FRENZIED = new StatusType("frénésie", statusVisual("frenzy", 1, 0.45, 0.1), "neutral", level => new Frenzy(level), { description: ["Avant chacun de ses pas, se tourne droit vers l'unité la plus proche, alliée ou ennemie, pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."] })
 
 /** Frenzied: before each of its steps, it turns straight at the closest other unit, ally or enemy. */
 export class Frenzy extends RoundStatus {

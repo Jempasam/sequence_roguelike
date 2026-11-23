@@ -3,8 +3,9 @@ import { join } from "node:path"
 import { describe, expect, test } from "vitest"
 import { Assets, MemoryAssets, SoundPlayer, SoundSettings } from "@game/core"
 import { BATTLE, BOSS, CHEST_HALT, ELITE, GOBLIN } from "@game/core/mecard"
-import type { FightCategory, HaltType, Place, PlaceType, Run } from "@game/core/mecard"
+import type { FightCategory, HaltType, Observable, Place, PlaceType, Run } from "@game/core/mecard"
 import { RunSoundLink } from "@game/core/mecard/run-sound-link"
+import { Forwarded } from "@game/core/mecard/forwarded"
 import { FakeAudio } from "../../../../fixtures/fakeAudio"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -33,13 +34,26 @@ function shippedSounds(): MemoryAssets {
     return new MemoryAssets(files)
 }
 
+/** A screen that plays at once: what the journey tells is forwarded as it is told. */
+function playAtOnce(run: Run, forwarded: Forwarded): void {
+    const { travel } = run
+    const told: Observable<unknown>[] = [
+        travel.visitStarted, travel.visitEnded, travel.fightEntered, travel.fightLeft, travel.moved,
+    ]
+    for(const observable of told){
+        observable.add(value => forwarded.forward(observable, value, "start"))
+    }
+}
+
 /** A link on a run, and what it plays. */
-function linkOf(run: Run): { link: RunSoundLink, audio: FakeAudio, reports: string[] } {
+function linkOf(run: Run): { link: RunSoundLink, audio: FakeAudio, reports: string[], forwarded: Forwarded } {
     const audio = new FakeAudio()
     const reports: string[] = []
     const assets = new Assets(shippedSounds())
     const player = new SoundPlayer(new SoundSettings(), audio, assets, text => reports.push(text))
-    return { link: new RunSoundLink(run, player), audio, reports }
+    const forwarded = new Forwarded(error => reports.push(String(error)))
+    playAtOnce(run, forwarded)
+    return { link: new RunSoundLink(run, player, forwarded), audio, reports, forwarded }
 }
 
 /** Let the loads and decodes the player started settle. */
@@ -119,7 +133,8 @@ describe("RunSoundLink, letting go", () => {
     test("another run → heard from then on, the first one no more", async() => {
         const first = startedRun(1)
         const second = startedRun(2)
-        const { link, audio } = linkOf(first)
+        const { link, audio, forwarded } = linkOf(first)
+        playAtOnce(second, forwarded)
         link.engine = second
         first.travel.visit(CHEST_HALT)
         await settle()

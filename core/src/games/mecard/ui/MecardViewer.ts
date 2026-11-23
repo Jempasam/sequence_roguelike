@@ -10,9 +10,11 @@ import { RunGuest } from "../sync/run/RunGuest"
 import { RunReceiver } from "../sync/run/RunReceiver"
 import type { SyncLink, SyncSource } from "../sync/SyncChannel"
 
+import { lendPictures } from "./look/pictureShelf"
 import { UnitSprites } from "./look/UnitSprites"
 import { DIM_TEXT, WARNING_TEXT } from "./look/theme"
 import { ALL_RUN_LOCKS, RunScreen } from "./run/RunScreen"
+import { Forwarded } from "./forward/Forwarded"
 import { RunSoundLink } from "./sound/RunSoundLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import type { RunLocks } from "./run/RunScreen"
@@ -59,15 +61,17 @@ export class MecardViewer {
         /** What plays the sounds of the run watched, none when it is watched silent. */
         sounds: SoundPlayer|null = null,
     ){
-        this.#sound = sounds ? new RunSoundLink(this.run, sounds) : null
+        const forwarded = new Forwarded(error => this.#warn(String(error)))
+        this.#sound = sounds ? new RunSoundLink(this.run, sounds, forwarded) : null
         this.#uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
+        lendPictures(theme, sprites.picture)
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
             if(!(error instanceof AssetError)) throw error
             this.#warn(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
         this.#screen = new RunScreen(ui, this.run, {
-            theme, assets, sprites, toWorld, toUi, sounds: this.#uiSound,
+            theme, assets, sprites, toWorld, toUi, sounds: this.#uiSound, forwarded,
             locks: ALL_RUN_LOCKS,
             restart: () => {},
             ready: () => this.#guest?.ready(),

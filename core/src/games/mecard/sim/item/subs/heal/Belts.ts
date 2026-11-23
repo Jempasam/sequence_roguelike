@@ -1,3 +1,4 @@
+import { HEART } from "../../../base/keywords"
 import type { Visual } from "../../../base/Visual"
 import { HeartCount } from "../../../battle/words"
 import type { PlugContext } from "../../../battle/Action"
@@ -29,7 +30,7 @@ export class Belt extends AbstractItem {
         public readonly count: number,
     ){
         super(name, icon, [
-            "Quand ses derniers cœurs sont perdus et que l'un n'était pas ", kind, " : gagne ", new HeartCount(count),
+            "Quand ses derniers ", HEART.as("cœurs"), " sont perdus et que l'un n'était pas ", kind, " : gagne ", new HeartCount(count),
             " ", kind, ".",
         ])
     }

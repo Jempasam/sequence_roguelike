@@ -1,5 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { AGILITE, DISTANCE, FORCE } from "../../../base/keywords"
+import { AGILITE, DISTANCE, FORCE, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import type { Preview } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Unit } from "../../../battle/Unit"
@@ -60,9 +60,9 @@ function ridden({ battle, unit, pose }: PreviewContext): Preview {
 }
 
 export const STRENGTH_CARD = new ProcessCard("Force", [
-    "+", STRENGTH_BONUS, " ", FORCE, " jusqu'à la fin du round.",
+    "+", STRENGTH_BONUS, " ", FORCE, " jusqu'à la fin du ", BATTLE_ROUND, ".",
 ], Rarity.COMMON, () => new Strength(STRENGTH_BONUS), "force")
 
 export const HORSE = new ProcessCard("Cheval", [
-    "Jusqu'à la fin du round, avance de ", RIDE_LENGTH, "×", AGILITE, " ", DISTANCE, " tout de suite, puis avant chacune de tes étapes.",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", avance de ", RIDE_LENGTH, "×", AGILITE, " ", DISTANCE, " tout de suite, puis avant chacune de tes ", BATTLE_TURN.as("étapes"), ".",
 ], Rarity.RARE, () => new Riding(RIDE_LENGTH), "au galop", ctx => ({ ...ridden(ctx), beforeStep: ridden }))

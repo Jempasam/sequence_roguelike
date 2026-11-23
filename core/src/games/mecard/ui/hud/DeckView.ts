@@ -2,7 +2,6 @@ import { Box, Paragraph } from "../../../../engine/ui"
 import type { Component, ParagraphOptions, Theme } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
-import { cardText } from "../../sim/halt/subs/shown"
 
 import { CardView } from "./CardView"
 import type { CardPlace } from "./CardView"
@@ -36,9 +35,6 @@ export interface DeckViewOptions {
     /** Its place among the decks of its character, which colors its cards, none for cards of no deck. */
     readonly deck?: number|null
 
-    /** Tell what a card hovered is, and that the pointer left it. */
-    readonly tell?: (text: Text|null) => void
-
     /**
      * What can be done with a card, when its cards are offered: a card it gives nothing for is shown dim,
      * and does nothing. Its cards are only shown when none.
@@ -48,7 +44,7 @@ export interface DeckViewOptions {
 
 /**
  * A deck with what it holds: its name, then its cards in rows as wide as a room lets them, in the color of
- * the deck, each told on hover. Its cards can be offered to pick some.
+ * the deck, which {@link viewDetails} tells on hover. Its cards can be offered to pick some.
  */
 export class DeckView extends Box {
 
@@ -69,12 +65,11 @@ export class DeckView extends Box {
 
     /** A card of the deck, as its options want it. */
     #view(card: Card, index: number, options: DeckViewOptions): CardView {
-        const { pickable, tell } = options
+        const { pickable } = options
         const choice = pickable?.(card, index) ?? null
         const view = new CardView(this.theme, card, options.size)
         view.activation = choice?.activation ?? null
         view.deck = options.deck ?? null
-        if(tell) view.onHover = over => tell(over ? cardText(card) : null)
         if(choice) view.onPick = choice.pick
         if(pickable) view.dimmed = !choice
         return view

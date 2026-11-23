@@ -3,7 +3,7 @@ import { Atlas } from "../../../../engine/atlas"
 import type { Gpu, Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
-import { Component, NineSlice, Rope, sizeHint } from "../../../../engine/ui"
+import { Component, NineSlice, Rect, Rope, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import type { Rgba } from "../../sim/base/Rgba"
 import type { Visual } from "../../sim/base/Visual"
@@ -232,11 +232,11 @@ export class JourneyView extends Component {
 
     protected override handle(event: UiEvent): void {
         if(event.type === "pointer-move"){
-            this.#hover(this.#placeAt(event.x, event.y))
+            this.#hover(this.placeAt(event.x, event.y))
             return
         }
         if(event.type !== "pointer-down" || event.button !== 0) return
-        const place = this.#placeAt(event.x, event.y)
+        const place = this.placeAt(event.x, event.y)
         if(!place || !this.open.includes(place)) return
         event.consume()
         this.onPick?.(place)
@@ -375,8 +375,13 @@ export class JourneyView extends Component {
         }
     }
 
-    /** The place whose token a point of the map lies on, none when none. */
-    #placeAt(x: number, y: number): Place|null {
+    /**
+     * The place whose token a point of the map lies on, none when none.
+     *
+     * @param x - Where the point is across the map, in its own coordinates.
+     * @param y - Where the point is down the map, in its own coordinates.
+     */
+    placeAt(x: number, y: number): Place|null {
         for(const layer of this.journey.layers){
             for(const place of layer){
                 const center = this.#center(place)
@@ -386,6 +391,12 @@ export class JourneyView extends Component {
             }
         }
         return null
+    }
+
+    /** Where the token of a place lies on the map, in its own coordinates. */
+    tokenRect(place: Place, out: Rect): Rect {
+        const { x, y } = this.#center(place)
+        return out.set(x - TOKEN_WIDTH / 2, y - TOKEN_HEIGHT / 2, TOKEN_WIDTH, TOKEN_HEIGHT)
     }
 
     #paintToken(painter: Painter, place: Place): void {

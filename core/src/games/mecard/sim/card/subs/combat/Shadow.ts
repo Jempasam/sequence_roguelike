@@ -14,10 +14,11 @@ import { visual } from "../../../base/Visual"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** A shadow left where the unit stands, which it jumps back to as the round ends. */
 export const SHADOW = new ActionCard("Ombre", [
-    "Laisse une ombre là où tu es. En fin de round, tu te téléportes à l'ombre la plus proche : ",
+    "Laisse une ombre là où tu es. En fin de ", BATTLE_ROUND, ", tu te téléportes à l'ombre la plus proche : ",
     SHADOW_LINK_DAMAGE, " ", DamageType.PHYSICAL, " à chaque corps sur le chemin, quelles que soient tes stats.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){

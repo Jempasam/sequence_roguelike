@@ -10,7 +10,7 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { DeckHalt } from "./DeckHalt"
 import { cardShown } from "../shown"
-import { CARTE, DECK, MERGE } from "../../../base/keywords"
+import { CARTE, DECK, MERGE, BATTLE_TURN } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** The ways the weaver ties two cards. */
@@ -19,7 +19,7 @@ const MODES: readonly WeaveMode[] = ["merged", "random"]
 /** What each way of the weaver ties, as the players are told. */
 const WEAVE_TEXTS: Readonly<Record<WeaveMode, Text>> = {
     merged: [
-        MERGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions, jouées en même temps, en une seule étape. Si les deux prennent quelque chose, elles prennent la même chose.",
+        MERGE.as("Mélange"), " : deux ", CARTE.as("cartes"), " d'actions, jouées en même temps, en une seule ", BATTLE_TURN.as("étape"), ". Si les deux prennent quelque chose, elles prennent la même chose.",
     ],
     random: ["Au hasard : deux ", CARTE.as("cartes"), " qui prennent et donnent la même chose ; l'une des deux est tirée à chaque combat."],
 }

@@ -1,7 +1,7 @@
 import type { TextDisplay } from "../../semantic"
 import type { Sprite } from "../gpu"
 import type { Color } from "../math"
-import type { BitmapFont } from "../text"
+import type { BitmapFont, TextPictures } from "../text"
 
 import type { NineSlice } from "./NineSlice"
 
@@ -39,6 +39,9 @@ export interface Theme {
 
     /** How the paragraphs show the objects of their texts, each telling itself by default. */
     readonly textDisplay?: TextDisplay
+
+    /** The pictures the paragraphs lay in their texts as their display names them, none for a theme with none. */
+    readonly textPictures?: TextPictures
 
     /** The frame drawn over a focused widget that has no focused look of its own. */
     readonly focusRing: NineSlice

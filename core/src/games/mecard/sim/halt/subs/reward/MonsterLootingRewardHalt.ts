@@ -1,4 +1,4 @@
-import { CARTE } from "../../../base/keywords"
+import { CARTE, GOLD, MONSTER } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import type { Run } from "../../../run/Run"
@@ -25,7 +25,7 @@ export class MonsterLootingRewardHalt extends RewardHalt {
 
     constructor(type: HaltType, run: Run, gold: number){
         super(type, run, gold,
-            ["Les monstres vaincus laissent des ", CARTE.as("cartes"), " : prends-en une."],
+            ["Les ", MONSTER.as("monstres"), " vaincus laissent des ", CARTE.as("cartes"), " : prends-en une."],
             rewardLook([38, 24, 56], { coloration: LOOTING_COLORATION }),
         )
     }
@@ -46,7 +46,9 @@ export class MonsterLootingRewardHalt extends RewardHalt {
 export const MONSTER_LOOTING_REWARD_HALT: HaltType = {
     id: "monsterLootingReward",
     name: "Butin des monstres",
-    description: ["Une ", CARTE, " parmi quatre des plus fortes des monstres vaincus, et de l'or."],
+    description: [
+        "Une ", CARTE, " parmi quatre des plus fortes des ", MONSTER.as("monstres"), " vaincus, et de l'", GOLD, ".",
+    ],
     icon: visual("halts/chest", { letter: "R" }),
     transition: visual("gilded-door", { coloration: LOOTING_COLORATION }),
     onMap: false,

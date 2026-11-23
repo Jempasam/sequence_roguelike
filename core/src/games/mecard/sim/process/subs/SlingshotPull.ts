@@ -5,6 +5,7 @@ import { DamageType } from "../../battle/DamageType"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How far a unit is flown, as a multiple of the distance that parts it from the slingshot. */
 export const SLINGSHOT_FACTOR = 2
@@ -25,8 +26,10 @@ export class SlingshotPull extends AbstractProcess {
         public readonly slingshot: Unit,
     ){
         super("lance-pierre", visual("processes/hook", { color: [0.85, 0.7, 0.45] }),
-            "À la fin du round, est propulsé vers le lance-pierre sur le double de la distance qui le sépare de lui : "
-            + "l'unité touchée est repoussée de même, 1 dégât par 2 m de collision.",
+            [
+                "À la fin du ", BATTLE_ROUND, ", est propulsé vers le lance-pierre sur le double de la distance qui le",
+                " sépare de lui : l'unité touchée est repoussée de même, 1 dégât par 2 m de collision.",
+            ],
         )
     }
 

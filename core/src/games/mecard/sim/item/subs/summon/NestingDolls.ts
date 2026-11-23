@@ -1,3 +1,4 @@
+import { HEART, INVOCATION } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
@@ -21,7 +22,8 @@ export class NestingDolls extends AbstractItem {
 
     constructor(){
         super("Poupées russes", visual("items/nesting_dolls"), [
-            "Quand une de tes invocations meurt, elle laisse une copie d'elle-même avec la moitié de ses cœurs.",
+            "Quand une de tes ", INVOCATION.as("invocations"), " meurt, elle laisse une copie d'elle-même avec la moitié de ses ",
+            HEART.as("cœurs"), ".",
         ])
     }
 

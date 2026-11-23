@@ -8,13 +8,14 @@ import { allCards } from "../../run/Hero"
 import type { Hero } from "../../run/Hero"
 import type { Usable } from "../../usable/Usable"
 import type { Shown } from "../HaltContext"
-import { CARTE } from "../../base/keywords"
+import { CARTE, ITEM, USABLE } from "../../base/keywords"
 
 /** What a character comes with: how many cards, its items and what it carries, told even when none. */
 export function stuffOf(unit: Hero): Text {
     const listed = (things: readonly Text[]): Text => things.length > 0 ? joinText(things, ", ") : "aucun"
     return concat(
-        allCards(unit).length, " ", CARTE.as("cartes"), " · Objets : ", listed(unit.items), " · Utilisables : ", listed(unit.usables), ".",
+        allCards(unit).length, " ", CARTE.as("cartes"), " · ", ITEM.as("Objets"), " : ", listed(unit.items), " · ",
+        USABLE.as("Utilisables"), " : ", listed(unit.usables), ".",
     )
 }
 

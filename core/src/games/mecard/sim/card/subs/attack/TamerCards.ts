@@ -1,10 +1,10 @@
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, HEAL, HEART, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import { NOTE_COLOR, PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import * as Previews from "../../../battle/preview/Previews"
 import { Heart } from "../../../heart/Heart"
@@ -67,7 +67,7 @@ function stuffedBodies(battle: Battle, owner: Unit): Unit[] {
 
 export const AUTOPSY = new ActionCard("Autopsie", [
     "Poignarde la première ", UNIT, " sur ", frenchNumber(AUTOPSY_LENGTH), " ", DISTANCE, " devant : 2+force dégâts physiques. ",
-    "Si elle meurt, elle est empaillée : elle combat pour toi avec la moitié de ses cœurs.",
+    "Si elle meurt, elle est empaillée : elle combat pour toi avec la moitié de ses ", HEART.as("cœurs"), ".",
 ], Rarity.RARE, blowing(AUTOPSY_LENGTH, (battle, unit, target) => {
     if(!target.alive) stuffed(battle, unit, target)
 }, "autopsie"))
@@ -100,7 +100,7 @@ export const MUZZLE = new ActionCard("Muselière", [
 }, "muselière"))
 
 export const TREAT = new ActionCard("Friandise", [
-    "Soigne de deux cœurs + soin l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
+    "Soigne de ", new HeartCount(2), " + ", HEAL, " l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
     " au plus, et lui donne esquive 1.",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     const friend = battle.nearestAlly(unit, TENDING_RANGE)
@@ -110,8 +110,8 @@ export const TREAT = new ActionCard("Friandise", [
 }, "friandise"))
 
 export const STUFFING_PAD = new ActionCard("Rembourrage", [
-    "Soigne de trois cœurs + soin l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
-    " au plus, et lui donne un cœur bouclier.",
+    "Soigne de ", new HeartCount(3), " + ", HEAL, " l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
+    " au plus, et lui donne ", new HeartCount(1), " ", SHIELD_HEART, ".",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     const friend = battle.nearestAlly(unit, TENDING_RANGE)
     if(!friend) return
@@ -120,7 +120,8 @@ export const STUFFING_PAD = new ActionCard("Rembourrage", [
 }, "rembourrage"))
 
 export const NATURALIZATION = new ActionCard("Naturalisation", [
-    "Chaque corps empaillé qui combat pour toi gagne un cœur bouclier et soigne un cœur.",
+    "Chaque corps empaillé qui combat pour toi gagne ", new HeartCount(1), " ", SHIELD_HEART, " et soigne ",
+    new HeartCount(1), ".",
 ], Rarity.RARE, onSelf((battle, unit) => {
     for(const body of stuffedBodies(battle, unit)){
         body.hearts.give(new Heart(SHIELD_HEART))
@@ -129,7 +130,7 @@ export const NATURALIZATION = new ActionCard("Naturalisation", [
 }, "naturalisation"))
 
 export const TROPHY = new ActionCard("Trophée", [
-    "+1 force par corps empaillé qui combat pour toi, jusqu'à la fin du round.",
+    "+1 force par corps empaillé qui combat pour toi, jusqu'à la fin du ", BATTLE_ROUND, ".",
 ], Rarity.EPIC, onSelf((battle, unit) => {
     const count = stuffedBodies(battle, unit).length
     if(count > 0) battle.startProcess(unit, new Strength(count))

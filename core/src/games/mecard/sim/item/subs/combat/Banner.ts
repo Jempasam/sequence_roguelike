@@ -1,3 +1,4 @@
+import { INVOCATION } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 
@@ -15,7 +16,7 @@ export class Banner extends AbstractItem {
         public readonly deaths: number,
     ){
         super("Fanion", visual("items/banner"), [
-            "Après la mort de ", deaths, " alliés ou invocations, ajoute une copie de toute ta chaîne à la fin de ta chaîne. Une fois par combat.",
+            "Après la mort de ", deaths, " alliés ou ", INVOCATION.as("invocations"), ", ajoute une copie de toute ta chaîne à la fin de ta chaîne. Une fois par combat.",
         ])
     }
 

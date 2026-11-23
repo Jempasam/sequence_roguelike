@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import { rgba } from "../../base/Rgba"
 import { HeartRule } from "../HeartRule"
 
@@ -9,7 +10,7 @@ export class ShieldHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("bouclier", ["Perdu avant tout cœur ", RED_HEART, ", jamais soigné."], rgba(0.55, 0.8, 1))
+        super("bouclier", ["Perdu avant tout ", HEART, " ", RED_HEART, ", jamais soigné."], rgba(0.55, 0.8, 1))
     }
 
 

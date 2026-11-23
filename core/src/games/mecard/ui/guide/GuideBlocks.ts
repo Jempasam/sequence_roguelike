@@ -1,6 +1,6 @@
 import { Color } from "../../../../engine/math"
 import { Box, Label, NineSlice, Panel, Paragraph } from "../../../../engine/ui"
-import type { Component, Theme } from "../../../../engine/ui"
+import type { Component, LinkListener, Theme } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import type { Card } from "../../sim/card/Card"
 import { Heart } from "../../sim/heart/Heart"
@@ -19,8 +19,8 @@ import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
 export interface GuideLook {
     readonly theme: Theme
 
-    /** Hear that the pointer came over an object named in a text, or left it: the box explains it. */
-    hearLink(link: object|null): void
+    /** Hear that the pointer came over an object named in a text, or left it: a bubble explains it. */
+    hearLink: LinkListener
 }
 
 /**

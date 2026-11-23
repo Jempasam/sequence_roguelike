@@ -1,3 +1,4 @@
+import { ADVENTURER, DECK, FIGHT, MONSTER } from "../../base/keywords"
 import type { HaltType } from "../../halt/HaltType"
 import { CONDUCTOR_HALT } from "../../halt/subs/necro/ConductorHalt"
 import { NECRO_RECRUIT_HALT } from "../../halt/subs/necro/NecroRecruitHalt"
@@ -30,7 +31,10 @@ export function necroFloorType(rows: number = NECRO_ROWS): FloorType {
     const type: FloorType = {
         ...CAVE_FLOOR,
         name: "Antre du nécromancien",
-        description: "Pas un combat : des monstres à recruter, des decks à ordonner, et des héros à attendre.",
+        description: [
+            "Pas un ", FIGHT, " : des ", MONSTER.as("monstres"), " à recruter, des ", DECK.as("decks"),
+            " à ordonner, et des ", ADVENTURER.as("aventuriers"), " à attendre.",
+        ],
         create: level => new UpgradeFloor(level, type, rows, necroHalts),
         leadsTo: () => [type],
     }

@@ -237,6 +237,14 @@ Kits custom, ceux d'un fichier `mes-kits.def` (une liste `[kit(…),kit(…)]`, 
 sim --match "{@mes-kits.def}/random:[fight:cave,fight:forest,fight:mine,fight:hell]" --match "{@mes-kits.def}+random:kits/random:[fight:cave,fight:forest,fight:mine,fight:hell]" --match "{@mes-kits.def}+random:kits/random:kits+random:kits" --games 100 --soft-win --out winrate,n,ci,rounds,timeouts,total --sort name
 ```
 
+Un **test solo** à lire (le kit seul, un seul combat, avec son journal) : on ne regarde pas le tableau mais le fichier de `--log`. `--games 1` joue un seul combat, `--jobs 1` évite de relancer des threads, `--seed` rejoue le même combat, et `--max-rounds` borne la longueur du journal. Le dossier du journal doit exister.
+
+```
+sim --match "kit:Mage/random:fight:cave" --games 1 --jobs 1 --seed 1 --max-rounds 15 --log combat.log --quiet
+```
+
+Pour tester sur plusieurs adversaires, on lit peu de combats : `--games 3` ou une ligne par adversaire (`kit:Mage/{[monster:Gobelin,monster:Archer]}`).
+
 Pour les **monstres**, trois variantes par monstre : **Solo** (le monstre seul), **Double** (avec une copie de lui-même) et **avec un Gobelin**, chacune contre un kit au hasard.
 
 Tous les monstres :

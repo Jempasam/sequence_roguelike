@@ -4,31 +4,48 @@ import type { Text } from "@game/core"
 import {
     AGILITE, ALLONGE, FEBRILE, ALL_CARDS, CARTE, FUSION, CHARGE, DamageType, DECK, DISTANCE, FORCE, FusionCard, allHalts, HEART,
     HeartCount, ALL_ITEMS, MERGE, PORTEE, PRECISION, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES,
-    UNSTABLE_THRUST, STATUS_TYPES, ALL_BOOSTERS, ALL_HAZARDS,
+    UNSTABLE_THRUST, STATUS_TYPES, ALL_BOOSTERS, ALL_HAZARDS, GOLD, GoldCount, BATTLE_ROUND, BATTLE_TURN,
+    TRAVEL_STEP, BURN, BASE_ELEMENTS, ACTION, PREPARATION, ELEMENT, POTION, CARD, SECRET, MODULE, BEAST,
+    ALL_FLOORS, ALL_KITS, ALL_UPGRADES, ALL_MONSTERS, ALL_FIGHT_CATEGORIES, HALT, MONSTER, PET, ADVENTURER,
+    UPGRADE, ITEM, USABLE, BOOSTER, FIGHT, FLOOR, REWARD, HEAL, SUMMON_STAT, ALCHEMY, ELEMENT_CARDS,
 } from "@game/core/mecard"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
 
 // --- Fixture builders ---
 
+const CARD_TYPES = [ACTION, PREPARATION, ELEMENT, POTION, CARD, SECRET, MODULE, BEAST]
+
+const NOTIONS = [HALT, MONSTER, PET, ADVENTURER, UPGRADE, ITEM, USABLE, BOOSTER, FIGHT, FLOOR, REWARD]
+
+const STATS = [HEAL, SUMMON_STAT, ALCHEMY]
+
+/** The words a text writes through a keyword, never as a plain word. */
+const KEYWORD_WORDS = /\b(objets?|monstres?|aventuriers?|c(œ|oe)urs?|invocations?|alchimie|familiers?|pets?|haltes?|récompenses?)\b/i
+
 const spans = (text: Text) => spansOf(text, mecardDisplay)
 
 /** What a text means, read without the interface: no picture comes from the simulation. */
-const hasPicture = (text: Text): boolean => spansOf(text).some(span => span.kind === "svg")
+const hasPicture = (text: Text): boolean => spansOf(text).some(span => span.kind !== "string")
 
 const ALL_TEXTS: readonly (readonly [string, Text])[] = [
     ...ALL_CARDS.map(card => [card.name, card.description] as const),
     ...ALL_ITEMS.map(item => [item.name, item.description] as const),
     ...ALL_USABLES.map(usable => [usable.name, usable.description] as const),
     ...allHalts().map(type => [type.name, type.description] as const),
+    ...ALL_FIGHT_CATEGORIES.map(category => [category.name, category.description] as const),
+    ...STATUS_TYPES.map(type => [type.name, type.description] as const),
 ]
 
 // --- Tests ---
 
 describe("mecardDisplay", () => {
-    test("a type of damage → a half heart in its color, the name kept as its plain string", () => {
+    test("a type of damage → its icon in its color, the name kept as its plain string", () => {
         const text = [2, " ", DamageType.PHYSICAL]
-        expect(spans(text).at(-1)).toMatchObject({ kind: "svg", path: { alt: "dégâts physiques" }, link: DamageType.PHYSICAL })
+        expect(spans(text).at(-1)).toMatchObject({
+            kind: "picture", picture: { picture: "tiny_icon/damage", alt: "dégâts physiques" },
+            link: DamageType.PHYSICAL,
+        })
         expect(plainText(text, mecardDisplay)).toBe("2 dégâts physiques")
         expect(spans(DamageType.ELEMENTAL)[0].color).not.toEqual(spans(DamageType.PHYSICAL)[0].color)
     })
@@ -46,9 +63,18 @@ describe("mecardDisplay", () => {
         expect(plainText([2, "+", FORCE, " ", DamageType.PHYSICAL], mecardDisplay)).toBe("2+force dégâts physiques")
     })
 
-    test("a heart → drawn in the color of the text around it", () => {
+    test("a heart → its icon, in the color of the text around it", () => {
         const pieces = spans(new HeartCount(1))
+        expect(pieces.at(-1)).toMatchObject({ kind: "picture", picture: { picture: "tiny_icon/heart" } })
         expect(pieces.at(-1)?.color).toEqual(pieces[0].color)
+    })
+
+    test("gold → its coin, linking to the keyword, the word kept as its plain string", () => {
+        const text = new GoldCount(12)
+        expect(spans(text).at(-1)).toMatchObject({
+            kind: "picture", picture: { picture: "tiny_icon/gold", alt: "or" }, link: GOLD,
+        })
+        expect(plainText(text, mecardDisplay)).toBe("12 or")
     })
 
     test("a keyword → its form, standing out, linking to the keyword whatever the form", () => {
@@ -95,7 +121,7 @@ describe("mecardDisplay", () => {
 })
 
 describe("explanationOf", () => {
-    test.each([FUSION, MERGE, CARTE, UNIT, SUPPRESSION, DECK])("%s → an explanation", keyword => {
+    test.each([FUSION, MERGE, CARTE, UNIT, SUPPRESSION, DECK, GOLD, BATTLE_ROUND, BATTLE_TURN, TRAVEL_STEP])("%s → an explanation", keyword => {
         expect(plainText(explanationOf(keyword) ?? "")).not.toBe("")
     })
 
@@ -119,12 +145,103 @@ describe("the texts of the game", () => {
     test.each(ALL_TEXTS)("%s → no sentence cut by an array left inside another", (_name, text) => {
         expect(plainText(text)).not.toMatch(/ \n|\n[ .,]/)
     })
+
+    test.each(ALL_TEXTS)("%s → no notion with a keyword written as a plain word", (_name, text) => {
+        const written = spans(text).filter(span => span.kind === "string" && span.link === null)
+        const plain = written.map(span => span.kind === "string" ? span.text : "").join("")
+        expect(plain).not.toMatch(KEYWORD_WORDS)
+    })
 })
 
 describe("the objects of the game in a text", () => {
     test.each(STATUS_TYPES.map(type => [type.name, type] as const))("status %s → explained, so a link", (_name, type) => {
         expect(explanationOf(type)).toBeDefined()
         expect(spans(["", type]).some(span => span.link === type)).toBe(true)
+    })
+
+    test("a status kind → its icon first, then its name, all linking to it", () => {
+        const [icon, name] = spans(BURN)
+        expect(icon).toMatchObject({ kind: "picture", picture: { picture: BURN.visual.visual }, link: BURN })
+        expect(name).toMatchObject({ kind: "string", text: BURN.name, link: BURN })
+        expect(plainText(BURN, mecardDisplay)).toBe(BURN.name)
+    })
+
+    test("a status with a level → its icon, its name and its level", () => {
+        expect(plainText(BURN.make(2, BURN), mecardDisplay)).toContain("2")
+        expect(spans(BURN.make(2, BURN))[0]).toMatchObject({ kind: "picture" })
+    })
+
+    test.each(CARD_TYPES)("card type %s → its name, explained by its description", type => {
+        expect(plainText(explanationOf(type) ?? "")).toBe(`${type.name} : ${plainText(type.description)}`)
+        expect(spans(type)[0]).toMatchObject({ text: type.name, link: type })
+    })
+
+    test.each(BASE_ELEMENTS.map(element => [element.name, element] as const))("element %s → its name, explained", (_name, element) => {
+        expect(spans(element)[0]).toMatchObject({ text: element.name, link: element })
+        const lines = plainText(explanationOf(element) ?? "").split("\n")
+        expect(lines).toHaveLength(4)
+        expect(lines[0]).toBe(element.name)
+    })
+
+    test.each(allHalts().map(halt => [halt.name, halt] as const))("halt %s → its name in a color, explained", (name, halt) => {
+        expect(plainText(halt, mecardDisplay)).toBe(name)
+        expect(spans(halt)[0]).toMatchObject({ link: halt })
+        expect(spans(halt)[0].color).not.toBeNull()
+        expect(plainText(explanationOf(halt) ?? "", mecardDisplay)).toContain(plainText(halt.description))
+    })
+
+    test.each(ALL_FLOORS.map(floor => [floor.name, floor] as const))("floor %s → its name in a color, explained", (name, floor) => {
+        expect(plainText(floor, mecardDisplay)).toBe(name)
+        expect(spans(floor)[0]).toMatchObject({ link: floor })
+        expect(explanationOf(floor)).toBeDefined()
+    })
+
+    test.each(ALL_FIGHT_CATEGORIES.map(category => [category.name, category] as const))("fight category %s → its name, explained", (name, category) => {
+        expect(plainText(category, mecardDisplay)).toBe(name)
+        expect(explanationOf(category)).toBeDefined()
+    })
+
+    test.each(ALL_FIGHT_CATEGORIES.map(category => [category.name, category] as const))("fight category %s → its name in a text, read by any reader", (name, category) => {
+        expect(plainText(["Un ", category, "."])).toBe(`Un ${name}.`)
+        expect(spans(category)[0]).toMatchObject({ link: category })
+        expect(spans(category)[0].color).not.toBeNull()
+    })
+
+    test("a kit → its name, and what it starts with", () => {
+        for(const kit of ALL_KITS){
+            expect(plainText(kit, mecardDisplay)).toBe(kit.name)
+            expect(plainText(explanationOf(kit) ?? "", mecardDisplay)).toContain(kit.cards[0].name)
+        }
+    })
+
+    test("an upgrade → its name, and its chain with the improved card in the holes", () => {
+        for(const upgrade of ALL_UPGRADES){
+            expect(plainText(upgrade, mecardDisplay)).toBe(upgrade.name)
+            expect(plainText(explanationOf(upgrade) ?? "", mecardDisplay)).toContain(upgrade.name)
+        }
+    })
+
+    test("a monster → its name, its hearts and its deck", () => {
+        for(const monster of ALL_MONSTERS){
+            expect(explanationOf(monster)).toBeDefined()
+            expect(spans(monster)[0]).toMatchObject({ link: monster })
+        }
+    })
+
+    test.each(STATS)("stat %s → explained, and a link when written", keyword => {
+        expect(explanationOf(keyword)).toBeDefined()
+        expect(spans(keyword)[0]).toMatchObject({ text: keyword.name, link: keyword })
+    })
+
+    test("an element card → its name in the color of its element", () => {
+        for(const card of ELEMENT_CARDS){
+            expect(spans(card)[0].color).toEqual(spans(card.element)[0].color)
+        }
+    })
+
+    test.each(NOTIONS)("notion %s → explained, and a link when written", keyword => {
+        expect(explanationOf(keyword)).toBeDefined()
+        expect(spans(keyword)[0]).toMatchObject({ text: keyword.name, link: keyword })
     })
 
     test.each(ALL_BOOSTERS.map(booster => [booster.name, booster] as const))("booster %s → its name in a color", (name, booster) => {

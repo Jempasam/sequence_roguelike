@@ -1,4 +1,6 @@
+import { HEART } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
+import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
@@ -22,7 +24,10 @@ export class GreatHospitalHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(GREAT_HOSPITAL_HALT, run,
-            "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec trois fois le cœur qu'il choisit.",
+            [
+                "Allongez-vous : je soigne vos ", HEART.as("cœurs"), " ", RED_HEART, ", et chacun repart avec trois fois le ",
+                HEART, " qu'il choisit.",
+            ],
             sceneLook(18, 33, 41, "hospital", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
@@ -46,12 +51,12 @@ export class GreatHospitalHalt extends AbstractHalt {
     #giveHearts(ctx: HaltContext, heroes: readonly Hero[]): void {
         const [hero, ...others] = heroes
         if(!hero){
-            ctx.tell("L'équipe est soignée, et chacun a des cœurs de plus.")
+            ctx.tell(["L'équipe est soignée, et chacun a des ", HEART.as("cœurs"), " de plus."])
             return
         }
         const show = (loot: HeartLoot) => ({ cards: [], text: heartLootText(loot) })
         const offers = distinct(this.run.rng, SPENT_LOOT_HEARTS, INVENTED_COUNTS).map(doubled)
-        ctx.offer(concat("Quel cœur pour ", hero, " ?"), offers, show, loot => {
+        ctx.offer(concat("Quel ", HEART, " pour ", hero, " ?"), offers, show, loot => {
             this.run.giveHearts(hero, loot)
             this.#giveHearts(ctx, others)
         })
@@ -62,7 +67,10 @@ export class GreatHospitalHalt extends AbstractHalt {
 export const GREAT_HOSPITAL_HALT: HaltType = {
     id: "greatHospital",
     name: "Grand hôpital",
-    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun le cœur à usage unique choisi, en triple.",
+    description: [
+        "Soigne tous les ", HEART.as("cœurs"), " ", RED_HEART, " de l'équipe, et donne à chacun le ", HEART,
+        " à usage unique choisi, en triple.",
+    ],
     icon: visual("halts/hospital", { letter: "H*" }),
     glow: GREAT_COLOR,
     transition: visual("warm-door", { coloration: GREAT_COLORATION }),

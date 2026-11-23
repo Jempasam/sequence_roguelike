@@ -8,10 +8,11 @@ import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A potion coating: the body pours a potion on what it touches. */
 export const POTION_COATING = familyType("enrobage de potion", statusVisual("coated", 0.6, 0.85, 0.75), "positive", {
-    description: ["Au contact d'une unité, verse sa potion sur celle-ci (inversée pour un antidote). Dure encore ", STATUS_LEVEL, " rounds."],
+    description: ["Au contact d'une unité, verse sa potion sur celle-ci (inversée pour un antidote). Dure encore ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."],
 })
 
 /** The kinds of potion coating, one for each dose. */

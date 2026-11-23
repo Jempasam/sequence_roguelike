@@ -5,6 +5,7 @@ import type { Unit } from "../../battle/Unit"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
 import { AbstractProcess } from "../AbstractProcess"
+import { BATTLE_ROUND, HEART, UNIT } from "../../base/keywords"
 
 /** The bodies made by {@link stuffed}. */
 const STUFFED_BODIES = new WeakSet<Unit>()
@@ -49,7 +50,10 @@ export class Stuffing extends AbstractProcess {
 
     constructor(){
         super("empaillage", visual("processes/taxidermy", { color: [0.75, 0.6, 0.4] }),
-            "La prochaine unité ennemie que tu tues ce round est empaillée : elle combat pour toi avec la moitié de ses cœurs.",
+            [
+                "La prochaine ", UNIT, " ennemie que tu tues ce ", BATTLE_ROUND,
+                " est empaillée : elle combat pour toi avec la moitié de ses ", HEART.as("cœurs"), ".",
+            ],
         )
     }
 
@@ -65,7 +69,10 @@ export class Taming extends AbstractProcess {
 
     constructor(){
         super("dressage", visual("processes/taming"),
-            "La prochaine unité ennemie que tu tues ce round rejoint ton équipe pour de bon, si le combat est gagné.",
+            [
+                "La prochaine unité ennemie que tu tues ce ", BATTLE_ROUND,
+                " rejoint ton équipe pour de bon, si le combat est gagné.",
+            ],
         )
     }
 

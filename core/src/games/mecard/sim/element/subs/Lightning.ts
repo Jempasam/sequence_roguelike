@@ -3,7 +3,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { lineEffect, polygonEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
-import { DISTANCE } from "../../base/keywords"
+import { DISTANCE, BATTLE_ROUND, BATTLE_TURN } from "../../base/keywords"
 import { Haste } from "../../process/subs/Haste"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
@@ -32,8 +32,8 @@ export class Lightning extends AbstractElement {
     constructor(){
         super(
             "Électricité", rgba(1, 0.95, 0.3), "étourdi",
-            "étourdit, sa prochaine étape est repoussée",
-            ["+", (LIGHTNING_HASTE - 1) * 100, " % d'agilité ce round"],
+            ["étourdit, sa prochaine ", BATTLE_TURN.as("étape"), " est repoussée"],
+            ["+", (LIGHTNING_HASTE - 1) * 100, " % d'agilité ce ", BATTLE_ROUND],
             [
                 "un arc : le négatif à ", frenchNumber(ARC_RADIUS), " ", DISTANCE, " autour, puis il saute de corps en corps, à ",
                 frenchNumber(ARC_JUMP), " ", DISTANCE, ", sans jamais retoucher le même",

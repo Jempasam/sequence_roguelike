@@ -1,10 +1,11 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SOLID_HEART } from "../../../heart/subs/SolidHeartKind"
 import { SpiritAnchor } from "../../../process/subs/SpiritAnchor"
-import { DISTANCE } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
@@ -18,7 +19,7 @@ import * as Previews from "../../../battle/preview/Previews"
 const PROJECTION_AHEAD = 1 - UNIT_RADIUS
 
 export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
-    "Laisse un esprit intouchable là où tu es. En fin de round, tu te téléportes sur lui, tourné comme lui, ",
+    "Laisse un esprit intouchable là où tu es. En fin de ", BATTLE_ROUND, ", tu te téléportes sur lui, tourné comme lui, ",
     "et il disparaît.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
@@ -33,7 +34,7 @@ export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
 })
 
 export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
-    "Invoque à ", PROJECTION_AHEAD, " ", DISTANCE, " devant toi un esprit d'un cœur bleu, qui joue les cartes qui ",
+    "Invoque à ", PROJECTION_AHEAD, " ", DISTANCE, " devant toi un esprit d'", new HeartCount(1), " ", BLUE_HEART, ", qui joue les cartes qui ",
     "suivent dans ta chaîne. Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

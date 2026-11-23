@@ -3,6 +3,7 @@ import { visual } from "../../../base/Visual"
 import { BUBBLE, BULLE, SOAPY } from "../../../status/subs/BubbleStatuses"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** The level of bubble the bearer starts a battle at, and gains at the start of each round. */
 export const BUBBLE_BODY_START = 3
@@ -22,8 +23,8 @@ export class BubbleBody extends AbstractItem {
     constructor(){
         super("Corps de bulle", visual("items/bubble_body"), [
             "Celui qui le porte devient une ", BULLE.as("bulle"), " : de niveau ", BUBBLE_BODY_START, " au début du combat, et +",
-            BUBBLE_BODY_ROUND, " à chaque début de round. Après chacune de ses actions, chaque unité à moins de ",
-            BUBBLE_BODY_REACH, " m devient ", SOAPY, " au moins 1 round.",
+            BUBBLE_BODY_ROUND, " à chaque début de ", BATTLE_ROUND, ". Après chacune de ses actions, chaque unité à moins de ",
+            BUBBLE_BODY_REACH, " m devient ", SOAPY, " au moins 1 ", BATTLE_ROUND, ".",
         ])
     }
 

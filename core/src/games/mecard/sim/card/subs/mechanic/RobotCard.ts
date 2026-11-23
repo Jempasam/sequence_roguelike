@@ -3,7 +3,7 @@ import type { Vector2 } from "../../../base/Vector2"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { HeartCount } from "../../../battle/words"
+import { HeartCount, SummonedHearts } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -17,7 +17,7 @@ import { InputRewriteCard } from "../composite/RewriteCards"
 import { WAIT } from "../movement/Wait"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { summonShown } from "../summon/SummonCard"
-import { CARTE, DISTANCE } from "../../../base/keywords"
+import { CARTE, DISTANCE, BATTLE_ROUND, SUMMON_STAT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -89,14 +89,15 @@ function slowed(cards: readonly Card[]): Card[] {
 }
 
 export const IMPROVISED_ROBOT = new RobotCard("Robot improvisé", [
-    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS), " bouclier + invocation, tourné ",
-    "comme toi. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module.",
+    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART),
+    ", tourné ",
+    "comme toi. Juste après toi, à chaque ", BATTLE_ROUND, ", il joue les ", CARTE.as("cartes"), " du module.",
 ], Rarity.RARE, 1, cards => cards)
 
 export const TANK_ROBOT = new RobotCard("Robot tank", [
     "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
-    " bouclier, ×", TANK_FACTOR, " invocation comprise. Juste après toi, à chaque round, il joue les ", CARTE.as("cartes"), " du module, ",
-    "en attendant entre chacune.",
+    " ", SHIELD_HEART, ", ×", TANK_FACTOR, " ", SUMMON_STAT, " comprise. Juste après toi, à chaque ", BATTLE_ROUND,
+    ", il joue les ", CARTE.as("cartes"), " du module, en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)
 
 /** The cards of the module it takes, in its place. */

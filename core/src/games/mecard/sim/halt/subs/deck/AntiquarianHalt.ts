@@ -1,4 +1,5 @@
 import { rgba } from "../../../base/Rgba"
+import { GoldCount } from "../../../battle/words"
 import type { Card } from "../../../card/Card"
 import { heldCards } from "../../../card/subs/composite/CompositeCard"
 import type { Hero } from "../../../run/Hero"
@@ -62,11 +63,11 @@ export class AntiquarianHalt extends DeckHalt {
             ["Vends une ", CARTE, " de ", hero, " : plus elle tient de ", CARTE.as("cartes"), ", plus chacune vaut"],
             deck, { min: 1, max: 1 }, ([card]) => {
                 ctx.confirm("L'estimation :", {
-                    cards: [card], from: deck, text: [appraisal(card), " or pour ", card, "."],
+                    cards: [card], from: deck, text: [new GoldCount(appraisal(card)), " pour ", card, "."],
                 }, "Vendre", () => {
                     this.impact()
                     const gold = sell(this.run, deck, card)
-                    ctx.tell(["Vendue ", gold, " or."])
+                    ctx.tell(["Vendue pour ", new GoldCount(gold), "."])
                 }, { back: pick })
             }, { back, unlimited: hero.unlimited, copies: false })
         pick()

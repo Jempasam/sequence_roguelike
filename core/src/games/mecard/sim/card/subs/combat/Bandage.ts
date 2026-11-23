@@ -1,3 +1,4 @@
+import { HEAL } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
 import { HeartCount } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
@@ -21,7 +22,7 @@ export class BandageCard extends ActionCard {
         /** How many hearts it heals, before the healing of the unit. */
         public readonly halves: number,
     ){
-        super("Bandage", ["Soigne ", new HeartCount(halves), " + soin."], Rarity.COMMON, BandageCard.#healing(halves))
+        super("Bandage", ["Soigne ", new HeartCount(halves), " + ", HEAL, "."], Rarity.COMMON, BandageCard.#healing(halves))
     }
 
 

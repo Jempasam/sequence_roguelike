@@ -1,7 +1,7 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { Mimicking } from "../../../process/subs/Mimicking"
 
 import { ActionCard } from "../ActionCard"
@@ -41,5 +41,5 @@ function shooting(range: number): Action {
 
 export const EXO_NERF = new ActionCard("Exo-nerf", [
     "Lance un nerf droit devant, jusqu'à ", NERF_RANGE, " ", DISTANCE, " : il s'accroche à la première ", UNIT,
-    " touchée. Jusqu'à la fin du round, chaque action que tu joues, elle la joue aussi, à son prochain pas.",
+    " touchée. Jusqu'à la fin du ", BATTLE_ROUND, ", chaque action que tu joues, elle la joue aussi, à son prochain pas.",
 ], Rarity.RARE, shooting(NERF_RANGE))

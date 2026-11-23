@@ -4,13 +4,14 @@ import { Dodge, DODGE } from "../../status/subs/Dodge"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A heart that makes its unit dodge once lost. */
 export class QuickHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("vif", ["Perdu, tu prends ", new Dodge(1), " jusqu'à la fin du round."], rgba(0.95, 0.9, 0.35))
+        super("vif", ["Perdu, tu prends ", new Dodge(1), " jusqu'à la fin du ", BATTLE_ROUND, "."], rgba(0.95, 0.9, 0.35))
     }
 
 

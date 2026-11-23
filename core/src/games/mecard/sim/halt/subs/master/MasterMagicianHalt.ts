@@ -1,4 +1,4 @@
-import { CARTE } from "../../../base/keywords"
+import { BOOSTER, CARTE } from "../../../base/keywords"
 import { MASTER_COLOR, MASTER_MASK, MASTER_TRANSITION } from "../halt_common"
 import { LOOT_BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
@@ -40,7 +40,7 @@ export class MasterMagicianHalt extends CardGiftHalt {
 
     constructor(run: Run){
         super(MASTER_MAGICIAN_HALT, run,
-            ["Trois boosters, chacun avec son charme. Ses ", CARTE.as("cartes"), " en profiteront."],
+            ["Trois ", BOOSTER.as("boosters"), ", chacun avec son charme. Ses ",CARTE.as("cartes"), " en profiteront."],
             sceneLook(26, 13, 41, "magician", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "topHat",
@@ -80,7 +80,7 @@ export class MasterMagicianHalt extends CardGiftHalt {
 export const MASTER_MAGICIAN_HALT: HaltType = {
     id: "masterMagician",
     name: "Maître magicien",
-    description: ["Un booster parmi trois, ouvert et ses ", CARTE.as("cartes"), " améliorées."],
+    description: ["Un ", BOOSTER, " parmi trois, ouvert et ses ",CARTE.as("cartes"), " améliorées."],
     icon: visual("halts/magician", { letter: "MG*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,

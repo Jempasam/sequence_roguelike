@@ -4,6 +4,7 @@ import { ModifierCard } from "../ModifierCard"
 import { turn } from "../tools/playing"
 import { inOrder } from "../tools/sequence"
 import { Rarity } from "../../Rarity"
+import { BATTLE_TURN } from "../../../base/keywords"
 
 /** How many times a tornado plays its action, a quarter turn to the right after each time. */
 const TORNADO_TURNS = 4
@@ -28,7 +29,7 @@ function thenTurned(inner: Action): Action {
  */
 export const TORNADO = new ModifierCard(
     "Tornade",
-    "L'action est jouée 4 fois, un quart de tour à droite après chacune, en une seule étape.",
+    ["L'action est jouée 4 fois, un quart de tour à droite après chacune, en une seule ", BATTLE_TURN.as("étape"), "."],
     Rarity.EPIC,
     action => inOrder(Array.from({ length: TORNADO_TURNS }, () => thenTurned(action))),
 )

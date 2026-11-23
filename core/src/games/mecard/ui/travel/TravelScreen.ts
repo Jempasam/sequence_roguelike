@@ -5,13 +5,14 @@ import type { Visual } from "../../sim/base/Visual"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import {
-    AnimationChain, Box, Bubble, Button, Choice, FrameClock, instant, Label, NineSlice, OverflowContainer, Panel, Paragraph,
-    Scroll, Stack, Tabs,
+    AnimationChain, Box, Bubble, Button, Choice, ChoiceOption, FrameClock, instant, Label, NineSlice, OverflowContainer,
+    Panel, Paragraph, Rect, Scroll, Stack, Tabs,
 } from "../../../../engine/ui"
 import type { ChoiceStep, Component, Layer, ParagraphOptions, Theme, UiRoot } from "../../../../engine/ui"
 import type { Painter } from "../../../../engine/gpu"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
+import { REWARD } from "../../sim/base/keywords"
 import { infoOf } from "../../sim/catalog/places"
 import { allCards, statsOf } from "../../sim/run/Hero"
 import type { Card } from "../../sim/card/Card"
@@ -19,7 +20,7 @@ import { Scope } from "../../../../lifetime"
 import type { Halt } from "../../sim/halt/Halt"
 import type { Shown } from "../../sim/halt/HaltContext"
 import type { HaltMoment } from "../../sim/halt/SceneLook"
-import { cardText, deckLine, described, usableText } from "../../sim/halt/subs/shown"
+import { deckLine } from "../../sim/halt/subs/shown"
 import type { Hero } from "../../sim/run/Hero"
 import type { Place } from "../../sim/run/Journey"
 import { BACK_VISUAL } from "../../sim/run/PlaceType"
@@ -33,22 +34,30 @@ import { attributeLines } from "../describe"
 import { CardView } from "../hud/CardView"
 import type { CardPlace } from "../hud/CardView"
 import { DeckView } from "../hud/DeckView"
-import { DetailBox } from "../hud/DetailBox"
-import { cardsOption, heroOption, unitOption } from "../hud/ChoiceOptions"
+import { DetailTooltip } from "../hud/DetailTooltip"
+import { cardsOption } from "../hud/ChoiceOptions"
 import { BagView } from "../hud/BagView"
 import { boosterView } from "../hud/BoosterView"
-import { countText, countTold, stacked, stackUsesText } from "../hud/stacks"
-import { AbsItemIcon, THING_ICON_SIZE } from "../hud/AbsItemIcon"
+import { stacked } from "../hud/stacks"
+import { forSale, saleDetail, saleText } from "../hud/forSale"
+import { goldAmount } from "../hud/goldAmount"
+import { itemIcons, usableIcon, usableIcons } from "../hud/thingIcons"
+import { unitView } from "../hud/unitView"
+import { upgradeView, pictured } from "../hud/upgradeView"
+import type { AbsItemIcon } from "../hud/AbsItemIcon"
 import type { Item } from "../../sim/item/Item"
 import { withPicture } from "../hud/UnitPicture"
 import { HAND_VISUAL } from "../look/UnitSprites"
 import type { UnitSprites } from "../look/UnitSprites"
-import { heartsRow, heartText } from "../hud/HeartView"
+import { Detail } from "../hud/Detail"
+import { cardDetail } from "../hud/cardDetail"
+import { detailsOfParts } from "../hud/detailParts"
+import { viewDetailOf, viewDetails } from "../hud/viewDetails"
+import { heartsRow } from "../hud/HeartView"
 import { HoverPanel } from "../hud/HoverPanel"
 import {
     BUBBLE_TEXT, CHOSEN_TEXT, DIM_TEXT, STAT_DOWN, STAT_UP, TEXT_OUTLINE, WARNING_TEXT,
 } from "../look/theme"
-import { pictured } from "../library/UpgradeEntry"
 import { JourneyView } from "./JourneyView"
 import type { MapArt } from "./JourneyView"
 import { PointingArm } from "./PointingArm"
@@ -57,12 +66,11 @@ import { CUE_ANIMATIONS } from "./travelLooks"
 import { TravelScenes } from "./TravelScenes"
 import type { TravelScene } from "./TravelScenes"
 import type { UiSoundLink } from "../sound/UiSoundLink"
+import { animate } from "../forward/animate"
+import type { Forwarded } from "../forward/Forwarded"
 
 /** The share of the width the column of the party takes, on the left. */
 const SIDE_SHARE = 0.3
-
-/** How many lines the panel telling what is hovered holds. */
-const TOLD_LINES = 3
 
 /** The space around the panels and between them, in virtual pixels. */
 const MARGIN = 4
@@ -92,18 +100,6 @@ const SELECTED_TILE = new Color(0.3, 0.26, 0.42, 0.9)
 
 /** How the texts of a dialog are written, to read on the scene. */
 const ON_SCENE: ParagraphOptions = { outline: TEXT_OUTLINE }
-
-/** What the panel telling what is hovered says on the map while nothing is. */
-const MAP_HINT = "Survole un lieu pour savoir ce qu'il cache, suis un chemin rouge et clique son lieu pour y aller."
-
-/** What it says on the map while nothing is, when the party may go back into the halt it stands on. */
-const RETURN_HINT = `${MAP_HINT} Clique le lieu où se tient l'équipe pour y retourner.`
-
-/** What it says under the cards of a dialog while none is hovered. */
-const CARD_HINT = "Survole une carte pour lire ce qu'elle fait."
-
-/** What it says on the map while the players may not choose where the party goes. */
-const WAITING_HINT = "En attente..."
 
 /** How long the party takes to slide from a place to another, in seconds, however far it is. */
 export const WALK_TIME = 0.5
@@ -136,6 +132,9 @@ export interface TravelScreenOptions {
     /** What tells the speakers a place of the map is hovered or clicked, none when there is no sound. */
     readonly sounds?: UiSoundLink|null
 
+    /** What is told as the animations of the journey play, none when nothing listens. */
+    readonly forwarded?: Forwarded|null
+
     /** Play a transition into a place over the screen, done at its middle, at once when it cannot be. */
     enter(transition: Visual): Promise<void>
 
@@ -161,6 +160,9 @@ interface StepOfChoice {
     pick(index: number): void
     tell(index: number): Text|null
     show?(index: number): void
+
+    /** What an option tells about itself and its parts, when its parts are told apart. */
+    detail?(option: ChoiceOption, index: number): Detail
 }
 
 /** The button going on from a dialog: what it says, what it does, and whether it may yet. */
@@ -179,11 +181,19 @@ function cardsOf(shown: Shown): Card[] {
     return [...upgrades, ...shown.cards]
 }
 
+/** The option of a choice a component is the content of, none when it is in none. */
+function optionOf(content: Component): ChoiceOption|null {
+    for(let each: Component|null = content; each; each = each.parent){
+        if(each instanceof ChoiceOption) return each
+    }
+    return null
+}
+
 /**
  * The journey of a {@link Travel}, between the fights, over the scene of where the party stands, framed by
  * its border. On the left, where it stands, its characters, and the one selected in full: its hearts, then in
  * tabs its deck and its items, or its stats. On the right, the map of the floor, or the dialog of the halt
- * visited, and under it what the pointer hovers. A click on a place the party may go to goes there, the
+ * visited. Bubbles tell what the pointer hovers. A click on a place the party may go to goes there, the
  * party sliding along the path before the transition plays: a fight goes to its battle, a halt opens its
  * visit, over its own scene, its character standing before it, behind the panels. A halt left with the run
  * as it was may be clicked again, to go back into it.
@@ -193,8 +203,7 @@ function cardsOf(shown: Shown): Card[] {
  * the way on on the right. Offers and characters are asked as the steps of one {@link Choice}: a
  * character asked while a pick is being taken in becomes the next step of the choice open, so a card and
  * who takes it are chosen on one screen. Any other dialog replaces the screen. Each dialog builds the
- * screen again whole: what the pointer hovers only changes the text of a paragraph, set in place, and the
- * character shown only rebuilds its own panels.
+ * screen again whole, and the character shown only rebuilds its own panels.
  *
  * It decides nothing: what it shows comes from the observables of the travel it follows, and what the
  * players do goes to the methods of that travel. Only what they have not answered yet is its own: the cards
@@ -221,6 +230,9 @@ export class TravelScreen {
 
     /** The travel shown. */
     public get engine(): Travel { return this.#engine }
+
+    /** The bubbles that tell what is hovered. */
+    public get tooltip(): DetailTooltip { return this.#tooltip }
 
     /** Show another travel in place of this one, what was going on dropped. */
     public set engine(travel: Travel){
@@ -265,16 +277,19 @@ export class TravelScreen {
         this.#mapScroll = new Scroll(theme, { width: MARGIN, height: MARGIN, bar: false, wheel: false })
         this.#stuffScroll = new Scroll(theme, { width: MARGIN, height: MARGIN })
         this.#statsScroll = new Scroll(theme, { width: MARGIN, height: MARGIN })
-        this.#told = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
+        // Over everything, the hand included, so the bubbles of the details lie over the panels.
+        this.#tooltip = new DetailTooltip(ui, ui.addLayer("travel-tooltip"), theme, {
+            color: DIM_TEXT, paper: () => sprites.paper,
+        })
         this.#veil = NineSlice.flat(theme.white, new Color())
         this.#arm = new PointingArm(ui)
         void this.#loadArm(assets)
         void this.#loadMapArt(assets)
-        void this.#loadBag(assets)
         this.#detailTabs = new Tabs(theme, [
             { title: "Stuff", build: () => this.#detailed(this.#stuffScroll, this.#stuff()) },
             { title: "Stats", build: () => this.#detailed(this.#statsScroll, this.#heroStats()) },
         ])
+        this.#detailTabs.onSelect = () => this.#hearSide()
         sprites.whenLoaded(() => this.refresh())
         this.#registerObservers()
         this.animations.add(() => this.#fillLoaded())
@@ -336,8 +351,8 @@ export class TravelScreen {
 
     /**
      * Play the journey on, lay the panels out again when the interface changed size, and have the bubble
-     * of the halt point at the head of its character, as it moves, and the box of what is hovered read the
-     * input.
+     * of the halt point at the head of its character, as it moves, and the bubbles of what is hovered read
+     * the input.
      *
      * @param _world - Where a screen draws in the world: this one draws only in the interface.
      * @param dt - The time since the frame before, in seconds.
@@ -353,7 +368,7 @@ export class TravelScreen {
         }
         this.#focusMap()
         this.#pointBubble()
-        this.#told.frame(input, this.ui.pointerX, this.ui.pointerY)
+        this.#tooltip.frame(input)
     }
 
     /** Build the panels again, from the run as it stands. */
@@ -364,6 +379,11 @@ export class TravelScreen {
         for(const child of [...backdropContent.children]) backdropContent.remove(child)
         const foregroundContent = this.#foregroundLayer.content
         for(const child of [...foregroundContent.children]) foregroundContent.remove(child)
+        // What the panels told is built again with them, and the words hovered may be gone with their texts.
+        for(const detail of this.#built.splice(0)) detail.remove()
+        this.#sideDetails?.remove()
+        this.#sideDetails = null
+        this.#tooltip.reset()
         const visiting = this.#visiting
         const look = visiting?.look ?? this.engine.floor.type.look
         const { r, g, b } = look.color
@@ -379,13 +399,11 @@ export class TravelScreen {
         }
         this.#scene = scene
         this.#bubble = null
-        this.#hint = this.#mapHint
         this.#mapView = null
         const dialog = this.#shownDialog
         const middle = dialog ? dialog() : this.#map()
         const right = new Box("column", { gap: MARGIN, align: "stretch" })
         right.add(middle, { grow: 1 })
-        right.add(this.#toldPanel())
         const row = new Box("row", { gap: MARGIN, padding: MARGIN, align: "stretch" })
         row.fixedSize = { width: this.ui.width, height: this.ui.height }
         row.add(this.#side())
@@ -429,6 +447,21 @@ export class TravelScreen {
     /** What it listens to on the travel it follows. */
     #observers = new Scope()
 
+    /** What the options of each step of the choice open tell, by depth. */
+    readonly #stepDetails: Detail[] = []
+
+    /** What the panels built tell, until they are built again. */
+    readonly #built: Detail[] = []
+
+    /** What the cards, hearts, icons and piles of the side tell, until the side or its tab changes. */
+    #sideDetails: Detail|null = null
+
+    /** The column of the party and of the character shown, none before it is built. */
+    #sideRoot: Component|null = null
+
+    /** The bubbles that tell what is hovered. */
+    readonly #tooltip: DetailTooltip
+
     /** The scenes of the places, loaded when first shown. */
     readonly #scenes: TravelScenes
 
@@ -448,16 +481,12 @@ export class TravelScreen {
     /** The tabs of the character shown, kept so the one open stays open. */
     readonly #detailTabs: Tabs
 
-    /** What the pointer hovers, under the map or the dialog. */
-    readonly #told: DetailBox
-
     /** What the map is drawn with, none before it is loaded: the panels and the codes show meanwhile. */
     #isDisposed = false
     #mapArt: MapArt|null = null
 
     /** The place of the map the pointer is over, as the sounds heard it. */
     #soundPlace: Place|null = null
-    #bagFrame: NineSlice|null = null
 
     /** The map shown, none while a dialog is. */
     #mapView: JourneyView|null = null
@@ -473,9 +502,6 @@ export class TravelScreen {
 
     /** The forearm over a halt, pointing at the pointer: it rises when a halt is visited, and sinks after. */
     readonly #arm: PointingArm
-
-    /** What it says while nothing is hovered. */
-    #hint: Text = ""
 
     /** The bubble telling what the halt visited does, none while the map is shown. */
     #bubble: Bubble|null = null
@@ -528,13 +554,6 @@ export class TravelScreen {
         return Math.floor(this.ui.width * SIDE_SHARE)
     }
 
-    /** What it says while nothing is hovered, before a dialog says otherwise. */
-    get #mapHint(): Text {
-        if(this.#shownDialog) return ""
-        if(this.#locks.map) return WAITING_HINT
-        return this.engine.returnable ? RETURN_HINT : MAP_HINT
-    }
-
 
     //// The travel, shown ////
 
@@ -547,9 +566,13 @@ export class TravelScreen {
     /** Add what the travel asks and tells to what the screen plays, as it comes. */
     #registerObservers(): void {
         const travel = this.engine
+        const forwarded = this.options.forwarded ?? null
         this.#observers.remove()
         this.#observers = new Scope(
-            travel.moved.add(({ to }) => this.animations.add(() => this.#walk(travel, to))),
+            animate(this.animations, forwarded, travel.moved, ({ to }) => () => this.#walk(travel, to)),
+            // Without an animation of their own, they take their place in the chain to be forwarded in time.
+            animate(this.animations, forwarded, travel.fightEntered),
+            animate(this.animations, forwarded, travel.fightLeft),
             travel.phaseChanged.add(phase => {
                 if(phase === "entering") this.animations.add(instant(() => this.#enter(travel)))
             }),
@@ -565,13 +588,13 @@ export class TravelScreen {
             travel.confirmAsked.add(dialog => this.#showConfirm(dialog)),
             travel.told.add(dialog => this.#showTold(dialog)),
             travel.reacted.add(moment => this.#react(moment)),
-            travel.visitStarted.add(halt => {
+            animate(this.animations, forwarded, travel.visitStarted, halt => {
                 this.#arriving = true
-                this.animations.add(() => this.#arrive(halt))
+                return () => this.#arrive(halt)
             }),
-            travel.visitEnded.add(halt => {
+            animate(this.animations, forwarded, travel.visitEnded, halt => {
                 this.#leaving = halt
-                this.animations.add(() => this.#leave(halt))
+                return () => this.#leave(halt)
             }),
         )
     }
@@ -646,26 +669,49 @@ export class TravelScreen {
     //// The dialogs of a halt ////
 
     #showOffer(dialog: OfferDialog): void {
+        const boosters = new Set<Component>()
+        // What each offer shows, without its price.
+        const sold: Component[] = []
         const options = dialog.offers.map(shown => {
-            const under = this.#stuffShown(shown, "mini", OFFERED_DECK_ROOM, {})
-            const extras = {
-                under, before: this.#boostersShown(shown), deck: this.#placeOf(shown.from),
-                sprite: shown.sprite, sprites: this.sprites,
-            }
-            // The cards of an ally, a character or a monster, overlap.
-            if(shown.unit) return unitOption(this.theme, shown.unit, this.sprites, cardsOf(shown), shown.text ?? null, extras)
-            return cardsOption(this.theme, cardsOf(shown), shown.text ?? null, { ...extras, overlapped: Boolean(shown.sprite) })
+            const before = this.#boostersShown(shown)
+            for(const piece of before) if(!(piece instanceof CardView)) boosters.add(piece)
+            const deck = this.#placeOf(shown.from)
+            const content = shown.unit
+                ? unitView(this.theme, this.sprites, shown.unit, { deck })
+                : cardsOption(this.theme, cardsOf(shown), shown.text ?? null, {
+                    under: this.#stuffShown(shown, "mini", OFFERED_DECK_ROOM, {}),
+                    before,
+                    deck,
+                    sprite: shown.sprite,
+                    sprites: this.sprites,
+                    overlapped: Boolean(shown.sprite),
+                })
+            sold.push(content)
+            return shown.price === undefined ? content : forSale(this.theme, this.sprites, shown.price, content)
         })
         this.#choose({
             step: { title: this.#title(dialog.title), options },
             pick: index => this.engine.takeOffer(dialog, index),
-            tell: index => dialog.offers[index].text ?? null,
+            tell: index => {
+                const { text = null, price } = dialog.offers[index]
+                return price === undefined ? text : saleText(price, text)
+            },
+            detail: (option, index) => {
+                const { text = null, price } = dialog.offers[index]
+                const parts = detailsOfParts(sold[index], viewDetailOf, boosters)
+                return price === undefined
+                    ? Detail.on(option, text, parts)
+                    : saleDetail(option, sold[index], price, text, parts)
+            },
         }, dialog, false)
     }
 
+
     #showHero(dialog: HeroDialog): void {
         const { heroes } = dialog
-        const options = heroes.map(each => heroOption(this.theme, each, this.sprites))
+        const options = heroes.map(each => unitView(this.theme, this.sprites, each, {
+            cards: false, description: each.controller !== "player" ? "Bot" : null,
+        }))
         this.#choose({
             step: { title: this.#title(dialog.title), options },
             pick: index => this.engine.takeHero(dialog, heroes[index]),
@@ -679,14 +725,12 @@ export class TravelScreen {
         // The places of the cards picked, in the order picked, so two copies are two picks.
         const picked: number[] = []
         const build = (): Component => {
-            this.#hint = CARD_HINT
             const column = new Box("column", { gap: MARGIN })
             const deck = this.#placeOf(dialog.from)
-            column.add(new DeckView(this.theme, pool, {
+            const view = new DeckView(this.theme, pool, {
                 room: this.#middleRoom(),
                 size: "chain",
                 deck,
-                tell: text => this.#tell(text),
                 pickable: (_, index) => {
                     if(!selectable[index]) return null
                     const times = picked.filter(each => each === index).length
@@ -706,7 +750,9 @@ export class TravelScreen {
                         },
                     }
                 },
-            }))
+            })
+            this.#hearParts(view)
+            column.add(view)
             column.add(this.#pickedRow(pool, picked, deck, at => {
                 picked.splice(at, 1)
                 this.#open(build)
@@ -738,7 +784,7 @@ export class TravelScreen {
             const card = pool[index]
             const view = new CardView(this.theme, card, "chain")
             view.deck = deck
-            view.onHover = over => this.#tell(over ? cardText(card) : null)
+            this.#hear(cardDetail(view))
             view.onPick = () => leave(at)
             row.add(view)
         })
@@ -822,9 +868,15 @@ export class TravelScreen {
         this.refresh()
     }
 
-    /** Tell what is hovered, or the hint when nothing is. */
-    #tell(text: Text|null): void {
-        this.#told.tell(text)
+    /** Tell what a detail shows in the bubbles beside the pointer, until the panels are built again. */
+    #hear(detail: Detail): void {
+        this.#built.push(detail)
+        this.#tooltip.attach(detail)
+    }
+
+    /** Tell what the cards, hearts, icons and piles found in a component show. */
+    #hearParts(root: Component): void {
+        this.#hear(Detail.all(...viewDetails(root)))
     }
 
     /**
@@ -842,7 +894,30 @@ export class TravelScreen {
             gap: OPTION_GAP, spacing: STEP_SPACING,
             picked: { frame: NineSlice.flat(this.theme.white, CHOSEN_TEXT), width: PICKED_WIDTH },
         })
+        this.#detailOptions(step, 0)
         this.#open(() => this.#choiceFrame(choice, steps, dialog))
+    }
+
+    /**
+     * Tell of the options of a step, which take the pointer from their parts: what the step says of each, and
+     * of its parts when it tells them apart. The steps deeper than it are forgotten.
+     *
+     * @param depth - How many steps come before it in the choice.
+     */
+    #detailOptions(step: StepOfChoice, depth: number): void {
+        for(const old of this.#stepDetails.splice(depth)) old.remove()
+        if(depth === 0) this.#tooltip.reset()
+        const { detail } = step
+        const details = step.step.options.flatMap((content, index) => {
+            const option = optionOf(content)
+            if(!option) return []
+            if(detail) return [detail(option, index)]
+            const text = step.tell(index)
+            return text === null ? [] : [Detail.on(option, text)]
+        })
+        const all = Detail.all(...details)
+        this.#tooltip.attach(all)
+        this.#stepDetails[depth] = all
     }
 
     /**
@@ -858,6 +933,7 @@ export class TravelScreen {
         const pending = this.#takePending()
         if(!pending || this.#steps !== steps) return null
         steps.push(pending)
+        this.#detailOptions(pending, depth + 1)
         return pending.step
     }
 
@@ -874,6 +950,8 @@ export class TravelScreen {
         this.#selected = hero
         this.#fillParty()
         this.#fillDetail()
+        this.#tooltip.reset()
+        this.#hearSide()
     }
 
     /** The character shown in full: the one selected while it is in the party, else the first. */
@@ -895,7 +973,20 @@ export class TravelScreen {
         this.#fillParty()
         column.add(this.#panel(this.#detail, true, true), { grow: 1 })
         this.#fillDetail()
+        this.#sideRoot = column
+        this.#hearSide()
         return column
+    }
+
+    /** Tell what the cards, hearts, icons and piles of the side show, in place of what it told before. */
+    #hearSide(): void {
+        this.#sideDetails?.remove()
+        this.#sideDetails = null
+        const root = this.#sideRoot
+        if(!root) return
+        const details = Detail.all(...viewDetails(root))
+        this.#tooltip.attach(details)
+        this.#sideDetails = details
     }
 
     /** Where the party stands: the halt visited or the floor, its level, the depth and the gold. */
@@ -904,7 +995,10 @@ export class TravelScreen {
         const column = new Box("column", { gap: 1 })
         const place = this.#visiting?.title ?? floor.type.name
         column.add(this.#label(place, CHOSEN_TEXT))
-        column.add(this.#label(`Niveau ${floor.level} · Profondeur ${depth} · ${this.run.gold} or`, DIM_TEXT))
+        const line = new Box("row", { gap: 3, align: "center" })
+        line.add(this.#label(`Niveau ${floor.level} · Profondeur ${depth} ·`, DIM_TEXT))
+        line.add(goldAmount(this.theme, this.sprites, this.run.gold, DIM_TEXT))
+        column.add(line)
         return this.#panel(column, true)
     }
 
@@ -935,9 +1029,9 @@ export class TravelScreen {
         }
     }
 
-    /** The hearts of a character, each told on hover. */
+    /** The hearts of a character, told by the details of the side. */
     #hearts(hero: Hero): Component {
-        return heartsRow(this.theme, hero.hearts, (heart, over) => this.#tell(over ? heartText(heart) : null))
+        return heartsRow(this.theme, hero.hearts, () => {})
     }
 
     /** The character shown in full: its name and hearts, then its tabs. */
@@ -970,10 +1064,8 @@ export class TravelScreen {
         const lists: [string, readonly Component[]][] = [
             ["Objets", this.#itemViews(hero.items)],
             ["Utilisables", stacked(hero.usables, carried => carried.usable).map(({ first, members }) => {
-                const { usable } = first
                 const left = members.reduce((sum, carried) => sum + carried.charges, 0)
-                const full = members.length * (usable.charges ?? 1)
-                return this.#thingView(usable.icon, stackUsesText(usable, left, full), countTold(usableText(usable), members.length))
+                return usableIcon(this.theme, this.sprites, first.usable, members.length, left)
             })],
         ]
         for(const [name, things] of lists){
@@ -1029,9 +1121,44 @@ export class TravelScreen {
             if(this.#soundPlace) this.options.sounds?.hover(false)
             if(place) this.options.sounds?.hover(true)
             this.#soundPlace = place
-            const info = place && infoOf(place)
-            this.#tell(info ? concat(info.name, " : ", info.description) : null)
         }
+        const texts = new Map<Place, Text>()
+        const textOf = (place: Place): Text|null => {
+            let text = texts.get(place)
+            if(text === undefined){
+                if(place.halt){
+                    if(place.fight){
+                        text = [
+                            concat(place.fight.category, " : ", place.fight.category.description),
+                            concat(place.halt, " : ", place.halt.description),
+                        ]
+                    }
+                    else{
+                        text = concat(place.halt, " : ", place.halt.description)
+                    }
+                }
+                else{
+                    if(place.fight){
+                        text = concat(place.fight.category, " : ", place.fight.category.description)
+                    }
+                    else{
+                        text = "Rien à faire ici."
+                    }
+                }
+                texts.set(place, text)
+            }
+            return text
+        }
+        const point = { x: 0, y: 0 }
+        const token = new Rect()
+        this.#hear(Detail.under(view, (x, y) => {
+            if(!view.localPoint(x, y, point)) return null
+            const place = view.placeAt(point.x, point.y)
+            const text = place ? textOf(place) : null
+            if(!place || !text) return null
+            const area = new Rect()
+            return view.layerRectOf(view.tokenRect(place, token), area) ? { text, area } : { text }
+        }))
         this.#mapScroll.content = view
         this.#mapFocus = true
         const paper = this.#mapArt?.paper
@@ -1058,18 +1185,6 @@ export class TravelScreen {
         void this.#clock.tween(MAP_SCROLL_TIME, share => {
             scroll.offset = from + (to - from) * (share * share * (3 - 2 * share))
         })
-    }
-
-    /** What the pointer hovers, as tall as a few lines whatever it says. */
-    #toldPanel(): Component {
-        this.#told.parent?.remove(this.#told)
-        this.#told.tell(null)
-        this.#told.hint = this.#hint
-        const panel = this.#panel(this.#told)
-        const lineHeight = this.theme.font.lineHeight * this.theme.textScale
-        const room = this.theme.panel.padding + this.#told.padding
-        panel.fixedSize = { width: 0, height: TOLD_LINES * lineHeight + 2 * room }
-        return panel
     }
 
     /**
@@ -1126,7 +1241,6 @@ export class TravelScreen {
         middle.add(choice, { x: "stretch", y: "end" })
         choice.onHover = (depth, index, over) => {
             if(over) steps[depth]?.show?.(index)
-            this.#tell(over ? steps[depth]?.tell(index) ?? null : null)
         }
         // In the scroll like the other dialogs: the options ask for their whole height, so without it they
         // would push the way out of the screen.
@@ -1158,11 +1272,13 @@ export class TravelScreen {
             for(const card of cards) row.add(this.#cardView(card, deck))
             column.add(row)
         }
-        if(shown.decks?.length) this.#hint = CARD_HINT
         const stuff = this.#stuffShown(shown, "chain", this.#middleRoom(), ON_SCENE)
-        if(stuff) column.add(stuff)
+        if(stuff){
+            this.#hearParts(stuff)
+            column.add(stuff)
+        }
         if(shown.text !== undefined){
-            column.add(new Paragraph(this.theme, shown.text, { ...ON_SCENE, onLink: this.#told.hearLink }))
+            column.add(new Paragraph(this.theme, shown.text, { ...ON_SCENE, onLink: this.#tooltip.hearLink }))
         }
         return column
     }
@@ -1175,10 +1291,7 @@ export class TravelScreen {
         for(const deck of decks) column.add(this.#deckView(deck, size, room, look))
         const things = [
             ...this.#itemViews(items),
-            ...stacked(usables, usable => usable).map(({ first, members }) => {
-                const full = members.length * (first.charges ?? 1)
-                return this.#thingView(first.icon, stackUsesText(first, full, full), countTold(usableText(first), members.length))
-            }),
+            ...usableIcons(this.theme, this.sprites, usables),
         ]
         if(things.length > 0) column.add(this.#bag(things), { align: "start" })
         return column
@@ -1186,19 +1299,7 @@ export class TravelScreen {
 
     /** Things in a bag, to add to a column aligned at its start so the bag wraps at the width of the column. */
     #bag(things: readonly Component[]): BagView {
-        return new BagView(this.theme, things, this.#bagFrame)
-    }
-
-    /** Give the bags their frame once loaded, telling when it could not be. */
-    async #loadBag(assets: Assets): Promise<void> {
-        try {
-            this.#bagFrame = await BagView.loadFrame(this.ui.gpu, assets)
-        } catch(error){
-            if(!(error instanceof AssetError)) throw error
-            this.options.report(`Le sac n'a pas pu être chargé : ${error.message}`)
-            return
-        }
-        this.refresh()
+        return new BagView(this.theme, things, this.sprites.bag)
     }
 
     /** A deck of the party with its cards, named and colored by its place among those of its character. */
@@ -1207,24 +1308,14 @@ export class TravelScreen {
         return new DeckView(this.theme, deck, {
             room, size,
             name: owner && deckLine(owner, deck),
-            nameLook: { ...look, onLink: this.#told.hearLink },
+            nameLook: { ...look, onLink: this.#tooltip.hearLink },
             deck: this.#placeOf(deck),
-            tell: text => this.#tell(text),
         })
     }
 
     /** Items as pictures, the same ones in one with their count. */
     #itemViews(items: readonly Item[]): AbsItemIcon[] {
-        return stacked(items, item => item).map(({ first, members }) => {
-            return this.#thingView(first.icon, countText(members.length), countTold(described(first, first), members.length))
-        })
-    }
-
-    /** An item or a usable, as its picture with its uses left, lit and told on hover. */
-    #thingView(icon: Visual, uses: string|null, told: Text): AbsItemIcon {
-        const view = new AbsItemIcon(this.theme, this.sprites, icon, uses ?? "", 1, THING_ICON_SIZE)
-        view.onHover = over => this.#tell(over ? told : null)
-        return view
+        return itemIcons(this.theme, this.sprites, items)
     }
 
     /** The character of the party holding a deck, none when none does. */
@@ -1243,15 +1334,14 @@ export class TravelScreen {
     #boostersShown(shown: Shown): Component[] {
         const boosters = shown.boosters ?? []
         if(boosters.length === 0) return []
-        const upgrades = (shown.upgrades ?? []).map(upgrade => new CardView(this.theme, pictured(upgrade), "hand"))
+        const upgrades = (shown.upgrades ?? []).map(upgrade => upgradeView(this.theme, upgrade))
         return [...boosters.map(booster => boosterView(this.theme, booster, this.sprites.booster)), ...upgrades]
     }
 
     #cardView(card: Card, deck: number|null): CardView {
-        this.#hint = CARD_HINT
         const view = new CardView(this.theme, card, "chain")
         view.deck = deck
-        view.onHover = over => this.#tell(over ? cardText(card) : null)
+        this.#hear(cardDetail(view))
         return view
     }
 
@@ -1271,12 +1361,12 @@ export class TravelScreen {
     }
 
     #paragraph(text: Text, color?: Color): Paragraph {
-        return new Paragraph(this.theme, text, { onLink: this.#told.hearLink, ...color ? { color } : {} })
+        return new Paragraph(this.theme, text, { onLink: this.#tooltip.hearLink, ...color ? { color } : {} })
     }
 
     /** The title of a dialog, outlined to read on the scene, in the color of what is chosen by default. */
     #title(text: Text, color: Color = CHOSEN_TEXT): Paragraph {
-        return new Paragraph(this.theme, text, { color, outline: TEXT_OUTLINE, onLink: this.#told.hearLink })
+        return new Paragraph(this.theme, text, { color, outline: TEXT_OUTLINE, onLink: this.#tooltip.hearLink })
     }
 
     #label(text: string, color?: Color): Label {

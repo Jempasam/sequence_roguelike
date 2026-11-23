@@ -1,13 +1,13 @@
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { Bar, Box, Button, Label, NineSlice, Panel, Scroll, TextInput, WrapBox } from "../../../../engine/ui"
-import type { Component, Layer, Theme, UiRoot } from "../../../../engine/ui"
-import { concat, plainText } from "../../../../semantic"
-import type { Text } from "../../../../semantic"
-import type { Card } from "../../sim/card/Card"
+import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
+import { plainText } from "../../../../semantic"
 
 import type { PlayerCatalog } from "../../persist/PlayerCatalog"
-import { DetailBox } from "../hud/DetailBox"
+import { Detail } from "../hud/Detail"
+import { DetailTooltip } from "../hud/DetailTooltip"
+import { viewDetails } from "../hud/viewDetails"
 import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
 import { FRAME_THICKNESS } from "../look/wood"
 import type { UnitSprites } from "../look/UnitSprites"
@@ -31,9 +31,6 @@ const ENTRY_FRAME = 16
 /** How wide the search field is, in virtual pixels. */
 const SEARCH_WIDTH = 80
 
-/** How tall the box of details is, in virtual pixels. */
-const DETAIL_HEIGHT = 44
-
 /** A text in lower case without accents, to compare what is typed with what is written. */
 function simplified(text: string): string {
     return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
@@ -46,8 +43,8 @@ export interface LibraryHost {
 }
 
 /**
- * The catalogue: a title, tabs, the entries of the tab chosen in lines, centered, that scroll, and under
- * them a box that says what the pointer hovers.
+ * The catalogue: a title, tabs, and the entries of the tab chosen in lines, centered, that scroll. A bubble
+ * says what the pointer hovers.
  */
 export class LibraryScreen {
 
@@ -69,15 +66,15 @@ export class LibraryScreen {
         this.#sprites = sprites
         this.#layer = ui.addLayer("library")
         this.#layer.content.visible = false
+        this.#tipLayer = ui.addLayer("library-tooltip")
+        this.#tipLayer.content.visible = false
+        this.#tooltip = new DetailTooltip(ui, this.#tipLayer, theme, {
+            color: DIM_TEXT, paper: () => sprites.paper,
+        })
         this.#sections = sections({
             theme, sprites,
             perRow: () => Math.max(1, Math.floor((ui.width - 2 * MARGIN - ENTRY_FRAME + CARD_GAP) / (CARD_WIDTH + CARD_GAP))),
-            onCard: (card, over) => {
-                if(over) this.#card = card
-                else if(this.#card === card) this.#card = null
-            },
         })
-        this.#detail = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
         // The field lives as long as the catalogue, so it keeps the focus while the list is made again.
         this.#search = new TextInput(theme, { maxLength: 40 })
         this.#search.onChange = text => {
@@ -107,6 +104,7 @@ export class LibraryScreen {
     public set visible(visible: boolean){
         if(visible === this.visible) return
         this.#layer.content.visible = visible
+        this.#tipLayer.content.visible = visible
         if(visible) this.#size = ""
     }
 
@@ -126,41 +124,31 @@ export class LibraryScreen {
     /** The titles of the tabs. */
     public get titles(): string[] { return this.#sections.map(section => section.title) }
 
-    /** The box that says what is hovered. */
-    public get detail(): DetailBox { return this.#detail }
+    /** The bubbles that say what is hovered. */
+    public get tooltip(): DetailTooltip { return this.#tooltip }
 
-    /** Lay the panels out again when the interface changed size, and let the box of details read the input. */
+    /** Lay the panels out again when the interface changed size, and let the bubbles read the input. */
     public frame(input: InputFrame): void {
         const size = `${this.ui.width}×${this.ui.height}`
         if(size !== this.#size){
             this.#size = size
             this.#build()
         }
-        this.#detail.tell(this.#textUnderPointer())
-        this.#detail.frame(input, this.ui.pointerX, this.ui.pointerY)
+        this.#tooltip.frame(input)
     }
 
 
-    /** The card of an entry the pointer is over, none when it is over none. */
-    #card: Card|null = null
-
-    /** What each entry says, by the component that holds it in the list. */
-    readonly #told = new Map<Component, Text>()
-
-    /** What the entry under the pointer says, none when the pointer is over no entry. */
-    #textUnderPointer(): Text|null {
-        // A card of an entry, when the pointer is over one, says more than the entry.
-        if(this.#card) return concat(this.#card, " : ", this.#card.description)
-        for(let each: Component|null = this.ui.hovered; each; each = each.parent){
-            const text = this.#told.get(each)
-            if(text !== undefined) return text
-        }
-        return null
-    }
+    /** What the entries of the list tell, and the cards and icons they hold. */
+    #hovers: Detail|null = null
 
     readonly #layer: Layer
+
+    /** The layer over the catalogue that the bubbles open in. */
+    readonly #tipLayer: Layer
+
+    /** The bubbles that say what is hovered. */
+    readonly #tooltip: DetailTooltip
     readonly #sections: readonly Section[]
-    readonly #detail: DetailBox
     readonly #search: TextInput
     /** How many entries the list shows, beside the search field. */
     readonly #count: Label
@@ -179,7 +167,6 @@ export class LibraryScreen {
     #build(): void {
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
-        this.#detail.parent?.remove(this.#detail)
         this.#search.parent?.remove(this.#search)
         this.#count.parent?.remove(this.#count)
         this.#listSlot.parent?.remove(this.#listSlot)
@@ -221,13 +208,6 @@ export class LibraryScreen {
         column.add(header)
         this.#refreshList()
         column.add(this.#listSlot, { grow: 1 })
-        const detail = this.#detail
-        detail.hint = "Survole un élément pour le lire."
-        // As the boxes of details of the journey and the battle, it sits in wood, which keeps the height whole.
-        detail.fixedSize = { width: this.ui.width - 2 * MARGIN - 2 * pad, height: DETAIL_HEIGHT - 2 * pad }
-        const frame = new Panel(this.theme, wood ? { background: wood.frame, padding: pad } : {})
-        frame.content = detail
-        column.add(frame)
         content.add(column, { x: "stretch", y: "stretch" })
     }
 
@@ -275,9 +255,8 @@ export class LibraryScreen {
     /** The entries of the tab chosen that match the search, in lines, in a scroll. */
     #list(): Scroll {
         const wrap = new WrapBox({ gap: MARGIN })
-        this.#told.clear()
-        // The cards of the old list are gone, and their pointer leaving will never be heard.
-        this.#card = null
+        this.#hovers?.remove()
+        this.#hovers = null
         const section = this.#sections[this.#selected]
         const all = section.entries()
         // The player's catalogue hides what the player did not find, and tells how much of the whole is shown.
@@ -288,12 +267,17 @@ export class LibraryScreen {
             return this.#query === "" || simplified(plainText(entry.search ?? entry.text)).includes(this.#query)
         })
         this.#count.text = this.#playerOnly ? `${entries.length}/${all.length}` : `${entries.length}`
+        const details: Detail[] = []
         for(const entry of entries){
             const holder = new Panel(this.theme, { background: null, padding: 0, interactive: false })
             holder.content = entry.view
-            this.#told.set(holder, entry.text)
+            details.push(Detail.on(holder, entry.text, viewDetails(entry.view)))
             wrap.add(holder)
         }
+        const hovers = Detail.all(...details)
+        this.#tooltip.reset()
+        this.#tooltip.attach(hovers)
+        this.#hovers = hovers
         const scroll = this.#listScroll ??= new Scroll(this.theme, { width: this.ui.width, height: 1 })
         scroll.resize(this.ui.width, 1)
         scroll.content = wrap

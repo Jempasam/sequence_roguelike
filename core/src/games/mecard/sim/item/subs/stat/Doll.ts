@@ -1,3 +1,4 @@
+import { SUMMON_STAT } from "../../../base/keywords"
 import { HeartCount } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
@@ -12,6 +13,6 @@ export const DOLL = new StatItem("Poupée de chiffon", visual("items/doll"), [
         stat: stats => stats.summon,
         amount: DOLL_BONUS,
         shown: new HeartCount(DOLL_BONUS),
-        text: "de vie à chacune de tes invocations",
+        text: [SUMMON_STAT],
     },
 ])

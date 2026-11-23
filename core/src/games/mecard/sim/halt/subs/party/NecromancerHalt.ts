@@ -1,3 +1,4 @@
+import { HEART, UNIT } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
@@ -24,7 +25,7 @@ export class NecromancerHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(NECROMANCER_HALT, run,
-            "Les cœurs des morts battent encore. Un qui revient, un qui s'use : à toi de choisir.",
+            ["Les ", HEART.as("cœurs"), " des morts battent encore. Un qui revient, un qui s'use : à toi de choisir."],
             // Waiting for its own art: the scene of the altar.
             sceneLook(13, 28, 26, "necromancer"),
             {
@@ -53,7 +54,7 @@ export class NecromancerHalt extends AbstractHalt {
 
     /** Ask a character for the hearts it keeps, then for those it uses once. */
     #askKept(ctx: HaltContext, hero: Hero, back: () => void): void {
-        const ask = (): void => ctx.offer(concat("Quel cœur durable pour ", hero, " ?"), this.#kept, lootShown, kept => {
+        const ask = (): void => ctx.offer(concat("Quel ", HEART, " durable pour ", hero, " ?"), this.#kept, lootShown, kept => {
             this.#askSpent(ctx, hero, kept, ask)
         }, { back })
         ask()
@@ -61,11 +62,11 @@ export class NecromancerHalt extends AbstractHalt {
 
     /** Ask a character for the hearts it uses once, then give it both: nothing is given before. */
     #askSpent(ctx: HaltContext, hero: Hero, kept: HeartLoot, back: () => void): void {
-        ctx.offer(concat("Quel cœur à usage unique pour ", hero, " ?"), this.#spent, lootShown, spent => {
+        ctx.offer(concat("Quel ", HEART, " à usage unique pour ", hero, " ?"), this.#spent, lootShown, spent => {
             this.impact()
             this.run.giveHearts(hero, kept)
             this.run.giveHearts(hero, spent)
-            ctx.tell(concat(hero, " repart avec des cœurs de plus."))
+            ctx.tell(concat(hero, " repart avec des ", HEART.as("cœurs"), " de plus."))
         }, { back })
     }
 }
@@ -74,7 +75,10 @@ export class NecromancerHalt extends AbstractHalt {
 export const NECROMANCER_HALT: HaltType = {
     id: "necromancer",
     name: "Nécromancien",
-    description: "Donne à une unité un cœur durable au choix parmi deux, puis un cœur à usage unique au choix parmi deux.",
+    description: [
+        "Donne à une ", UNIT, " un ", HEART, " durable au choix parmi deux, puis un ", HEART,
+        " à usage unique au choix parmi deux.",
+    ],
     icon: visual("halts/necromancer", { letter: "NE" }),
     transition: visual("dungeon-door"),
     create: run => new NecromancerHalt(run),

@@ -47,6 +47,13 @@ export type {
 } from "./engine/console"
 export { Color, Mat4, Quat, Vec3 } from "./engine/math"
 export {
+    burst, emitAlong, emitInside, emitOutline, MAX_BURST_PARTICLES, motionAt, ParticleBurst, ParticleSpec,
+    ParticleSystem, Rate, reachOf, seededRandom,
+} from "./engine/particles"
+export type {
+    BurstOptions, Fill, Motion, ParticleBounds, ParticleDrawOptions, Random,
+} from "./engine/particles"
+export {
     BadSecretFault, ClientSocket, ConnectionLostFault, DEFAULT_CAPACITY, DEFAULT_OPEN_TIMEOUT,
     Fault, faultOf, HostLostServerFault,
     ManualScheduler, MemoryConnection, NetError, NetSync, NotHostFault, Outbox, OUTBOX_LIMIT, OutboxFullFault,
@@ -66,17 +73,20 @@ export type {
 export * from "./lifetime"
 export { MemoryStorage, SaveError, SaveSlot } from "./engine/save"
 export type { Migration, SaveErrorReason, SaveFormat } from "./engine/save"
-export { BitmapFont, TextLayout } from "./engine/text"
-export type { BitmapFontOptions, Glyph, GridFontOptions } from "./engine/text"
+export { BitmapFont, contrastRatio, luminance, MIN_CONTRAST, outlineAgainst, TextLayout } from "./engine/text"
+export type { BitmapFontOptions, Glyph, GridFontOptions, Tint } from "./engine/text"
 export {
     AnimationChain, Box, Bubble, Button, Choice, Component, Container, ContentContainer, ContextMenu,
     CURSOR_BLINK, Dial, DirtyRegion, EMPTY_HINT, FitBox, FrameClock, Image, instant, Label, Layer,
     MAX_DIRTY_RECTS, MIN_VIRTUAL_HEIGHT, OverflowContainer,
     Fade, NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
     RangeSlider, Slider, Stack, Tabs, warpedSpans, WARP_FLOOR, TextInput, TileRun, Tilt, Tooltip, TOOLTIP_DELAY, Transition, UI_BINDINGS, uiActions,
+    DEFAULT_SIDES, placeBubble, PopupBubble,
     UiRoot, WHEEL_STEP, WrapBox,
 } from "./engine/ui"
 export type {
+    BubbleOutline, BubbleSide, BubbleSize, BubblePlacement, PopupBubbleFrame, PopupBubbleOptions,
+    PopupBubbleTarget,
     Align, Animation, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
     ChoiceOptions, DialLook,
     ChoiceStep, FitMode, ImageOptions, LabelOptions, MenuEntry, NavigationAxis, NineSliceMargins,

@@ -2,7 +2,7 @@ import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import { Component, Dial, sizeHint } from "../../../../engine/ui"
-import type { SizeHint, Theme, UiEvent } from "../../../../engine/ui"
+import type { Rect as PartRect, SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import { plainText } from "../../../../semantic"
 import { typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
@@ -261,6 +261,34 @@ export class CardView extends Component {
         this.#current = this.#entries.findIndex(entry => entry.card === card)
     }
 
+
+    /**
+     * Where a card it holds is drawn, in its own coordinates.
+     *
+     * @param path - The place of the card among those held, then of the card in that one, and so on down.
+     * @param out - The rectangle written.
+     * @returns Does the card hold one at that place?
+     */
+    public partRect(path: readonly number[], out: PartRect): boolean {
+        let card: Card|null = this.card
+        let x = 0
+        let y = 0
+        let { width, height } = this.bounds
+        for(const index of path){
+            const contents = card?.contents
+            if(!card || !contents || index < 0 || index >= contents.length) return false
+            const top = this.#headerBottom(card, y, width, height)
+            const bottom = y + height - 1
+            x += 1
+            for(let before = 0; before < index; before++) x += this.#widthOf(contents[before])
+            card = contents[index]
+            width = this.#widthOf(card)
+            y = top
+            height = bottom - top
+        }
+        out.set(x, y, width, height)
+        return true
+    }
 
     protected override get interactive(): boolean { return true }
 
@@ -521,6 +549,23 @@ export class CardView extends Component {
     #widthOf(card: Card|null): number {
         if(!card?.contents) return this.#plainWidth
         return card.contents.reduce((width, each) => width + this.#widthOf(each), 2 + (card.input ? INPUT_STRIP : 0))
+    }
+
+    /**
+     * Where the cards a composite holds start: under its band and its name, when it shows them. The same
+     * height {@link CardView.#paintCard} finds as it draws, without drawing.
+     */
+    #headerBottom(card: Card, y: number, width: number, height: number): number {
+        const look = CARD_LOOKS[this.place]
+        if(card instanceof CompositeCard && !card.named) return y + 1
+        const text = this.#text
+        const free = height - 2 - look.band - 2 * look.padding
+        const named = free - text.lineHeight >= 2 + look.band + 2 * look.padding + text.lineHeight
+        const below = y + 1 + look.band
+        if(!named) return below
+        const textWidth = width - (card.input ? INPUT_STRIP : 0)
+        const shown = Math.min(1, text.lines(card.name, textWidth - 2 * look.padding).length)
+        return below + 2 * look.padding + shown * text.lineHeight
     }
 
     /**

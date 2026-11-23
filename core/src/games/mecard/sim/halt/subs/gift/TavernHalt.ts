@@ -1,3 +1,4 @@
+import { ADVENTURER } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
@@ -26,7 +27,7 @@ export class TavernHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(TAVERN_HALT, run,
-            "Ces héros boivent ici. L'un d'eux peut te suivre.",
+            ["Ces ", ADVENTURER.as("aventuriers"), " boivent ici. L'un d'eux peut te suivre."],
             sceneLook(36, 23, 13, "tavern"),
             {
                 hat: "beret",
@@ -46,7 +47,7 @@ export class TavernHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         if(this.#kits.length === 0){
-            ctx.tell("La taverne est vide : tous les héros sont déjà avec toi.")
+            ctx.tell(["La taverne est vide : tous les ", ADVENTURER.as("aventuriers"), " sont déjà avec toi."])
             return
         }
         ctx.offer("Qui rejoint l'équipe ?", this.#kits, kit => {
@@ -67,7 +68,7 @@ export class TavernHalt extends AbstractHalt {
 export const TAVERN_HALT: HaltType = {
     id: "tavern",
     name: "Taverne",
-    description: "Un héros parmi trois rejoint l'équipe.",
+    description: ["Un ", ADVENTURER, " parmi trois rejoint l'équipe."],
     icon: visual("halts/tavern", { letter: "TA" }),
     transition: visual("warm-door"),
     create: run => new TavernHalt(run),

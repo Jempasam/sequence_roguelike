@@ -1,4 +1,4 @@
-import { CARTE } from "../../../base/keywords"
+import { BOOSTER, CARTE, MONSTER } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import { booster, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
@@ -31,7 +31,10 @@ export class DarkMagicianHalt extends CardGiftHalt {
 
     constructor(run: Run){
         super(DARK_MAGICIAN_HALT, run,
-            ["Trois boosters, arrachés aux monstres : leurs ", CARTE.as("cartes"), " sont à toi."],
+            [
+                "Trois ", BOOSTER.as("boosters"), ", arrachés aux ", MONSTER.as("monstres"), " : leurs ",
+                CARTE.as("cartes"), " sont à toi.",
+            ],
             sceneLook(26, 13, 41, "magician", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "topHat",
@@ -64,7 +67,7 @@ export class DarkMagicianHalt extends CardGiftHalt {
 export const DARK_MAGICIAN_HALT: HaltType = {
     id: "darkMagician",
     name: "Magicien noir",
-    description: ["Un booster parmi trois, tirés dans les ", CARTE.as("cartes"), " des monstres."],
+    description: ["Un ", BOOSTER, " parmi trois, tirés dans les ", CARTE.as("cartes"), " des ", MONSTER.as("monstres"), "."],
     icon: visual("halts/magician", { letter: "MG!" }),
     glow: DARK_COLOR,
     transition: visual("portal", { coloration: DARK_COLORATION }),

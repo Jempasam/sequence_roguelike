@@ -3,7 +3,7 @@ import type { Text } from "../../../../../../semantic"
 import { Add, ModifierKey } from "../../../base/Attribute"
 import type { UnitContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
-import { FORCE } from "../../../base/keywords"
+import { FORCE, BATTLE_ROUND } from "../../../base/keywords"
 import { Concentration } from "../../../status/subs/Calm"
 import { HeldFury } from "../../../status/subs/Calm"
 import { DemonEnergy } from "../../../status/subs/DemonEnergy"
@@ -36,12 +36,12 @@ export class StatusElixir extends AbstractUsable {
 }
 
 export const DEMON_ELIXIR = new StatusElixir(
-    "Élixir démoniaque", visual("usables/strength_elixir", { coloration: [0.6, 0.1, 0.7] }), ["Donne 3 rounds d'énergie démoniaque."], {},
+    "Élixir démoniaque", visual("usables/strength_elixir", { coloration: [0.6, 0.1, 0.7] }), ["Donne 3 ", BATTLE_ROUND.as("rounds"), " d'énergie démoniaque."], {},
     () => new DemonEnergy(3),
 )
 
 export const CALM_INFUSION = new StatusElixir(
-    "Infusion de calme", visual("usables/haste_elixir", { coloration: [0.4, 0.8, 0.9] }), ["Donne 3 rounds de concentration."], {},
+    "Infusion de calme", visual("usables/haste_elixir", { coloration: [0.4, 0.8, 0.9] }), ["Donne 3 ", BATTLE_ROUND.as("rounds"), " de concentration."], {},
     () => new Concentration(3),
 )
 
@@ -53,7 +53,7 @@ export const REACTION_BOOTS = new StatusElixir(
 )
 
 export const FURY_ELIXIR = new StatusElixir(
-    "Élixir de fureur", visual("usables/strength_elixir", { coloration: [0.95, 0.45, 0.1] }), ["Donne 2 rounds de fureur contenue."], {},
+    "Élixir de fureur", visual("usables/strength_elixir", { coloration: [0.95, 0.45, 0.1] }), ["Donne 2 ", BATTLE_ROUND.as("rounds"), " de fureur contenue."], {},
     () => new HeldFury(2),
 )
 
@@ -88,7 +88,7 @@ export class SharpeningStone extends RoundElixir {
     constructor(){
         super(
             "Pierre à aiguiser", visual("usables/strength_elixir", { coloration: [0.6, 0.6, 0.65] }),
-            ["+", WHETSTONE_BONUS, " ", FORCE, " ce round. 3 utilisations, rechargées à chaque combat."],
+            ["+", WHETSTONE_BONUS, " ", FORCE, " ce ", BATTLE_ROUND, ". 3 utilisations, rechargées à chaque combat."],
             { charges: 3, refill: "battle" },
         )
     }

@@ -3,6 +3,7 @@ import type { UnitContext } from "../../battle/Action"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** Hearts that count rounds: no wound takes them, and the last one burns out at the end of each round. */
 export class TimeHeartKind extends AbstractHeartKind {
@@ -10,7 +11,8 @@ export class TimeHeartKind extends AbstractHeartKind {
 
     constructor(){
         super(
-            "temps", "Ne prend aucun dégât et bloque ceux qui l'atteignent ; le dernier se consume à chaque fin de round.",
+            "temps",
+            ["Ne prend aucun dégât et bloque ceux qui l'atteignent ; le dernier se consume à chaque fin de ", BATTLE_ROUND, "."],
             rgba(0.97, 0.97, 0.97),
         )
     }

@@ -25,8 +25,8 @@ function said(share: number): string {
 
 /** A perfect clone of the unit, living on shields as many as half of its hearts left. */
 export const DIVISION = new ActionCard("Division", [
-    INVOCATION.as("Invoque"), " un ", PERFECT_CLONE, " de toi, dont les seuls ", HEART.as("cœurs"), " sont des ",
-    "boucliers : la moitié de tes ", HEART.as("cœurs"), " restants, arrondie à l'inférieur, que tu perds. Zéro : raté.",
+    INVOCATION.as("Invoque"), " un ", PERFECT_CLONE, " de toi, dont les seuls ", HEART.as("cœurs"), " sont de type ",
+    SHIELD_HEART, " : la moitié de tes ", HEART.as("cœurs"), " restants, arrondie à l'inférieur, que tu perds. Zéro : raté.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
         const share = shareOf(unit)

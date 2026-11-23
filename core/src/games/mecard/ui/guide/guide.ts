@@ -1,6 +1,16 @@
 import { Label } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
-import { CARTE, COMPOSITE, DECK, FUSION, INVOCATION, SUPPRESSION, UNIT } from "../../sim/base/keywords"
+import type { Text } from "../../../../semantic"
+import {
+    AGILITE, ALCHEMY, ALLONGE, CARTE, COMPOSITE, DECK, FIGHT, FORCE, FUSION, GOLD, HALT, HEAL, HEART, INVOCATION, ITEM,
+    FLOOR, MONSTER, PORTEE, PRECISION, REWARD, SUMMON_STAT, SUPPRESSION, UNIT,
+} from "../../sim/base/keywords"
+import { HeartCount } from "../../sim/battle/words"
+import { LIGHTNING_ELEMENT } from "../../sim/element/subs/Lightning"
+import { FIRE_ELEMENT } from "../../sim/element/subs/Fire"
+import { PLANT_ELEMENT } from "../../sim/element/subs/Plant"
+import { STONE_ELEMENT } from "../../sim/element/subs/Stone"
+import { WATER_ELEMENT } from "../../sim/element/subs/Water"
 import { ALL_MONSTERS } from "../../sim/catalog/monsters"
 import { TURN_STEPS, TURNS } from "../../sim/card/subs/movement/TurnCard"
 import { RED_HEART } from "../../sim/heart/subs/RedHeartKind"
@@ -41,8 +51,8 @@ const EFFRAYER = cardNamed("Effrayer")
 const UP = -Math.PI / 2
 
 /** What a stat reads, and what raises it: one line of the list of stats. */
-function stat(name: string, reads: string, item: string): Term {
-    return { head: name, text: `${reads} L'objet « ${item} » l'augmente.` }
+function stat(name: string, reads: Text, item: string): Term {
+    return { head: name, text: concat(reads, " L'", ITEM, " « ", item, " » l'augmente.") }
 }
 
 /** The status a term tells, its name in its color. */
@@ -89,18 +99,25 @@ export const GUIDE: readonly GuideBlock[] = [
         "Trois gestes à connaître. Ils marchent partout dans le jeu : en combat, sur la carte, dans les haltes, "
         + "et dans ce guide.",
     ),
-    paragraph("Survole une carte, un cœur, un objet ou un statut : sa description s'affiche dans la boîte, en bas de l'écran."),
-    cards([ESTOC], "Passe ta souris sur cette carte. Sa description s'affiche tout en bas."),
-    paragraph("Clic droit : verrouille la boîte telle qu'elle est, un cadre blanc l'entoure. Un deuxième clic droit la libère."),
+    paragraph(concat(
+        "Survole une ", CARTE, ", un ", HEART, ", un ", ITEM, " ou un statut : sa description s'affiche dans une petite bulle ",
+        "près de la souris, et dans la boîte en bas de l'écran.",
+    )),
+    cards([ESTOC], "Passe ta souris sur cette carte. Sa description s'affiche."),
+    paragraph(
+        "Clic droit : la bulle reste ouverte, même si tu bouges la souris. Un clic droit dans le vide ferme "
+        + "celles que tu as gardées.",
+    ),
     paragraph(concat(
         "Les mots en couleur sont des mots-clés : ", CARTE, ", ", DECK, ", ", UNIT, ", ", FUSION, ", ",
         INVOCATION.as("invoquer"), ", ", SUPPRESSION, "… Passe la souris sur l'un d'eux, dans ce guide comme dans une ",
-        "description : son explication s'affiche dans la boîte. Clic droit pour la verrouiller, et continue : un mot-clé ",
-        "dans l'explication a la sienne.",
+        "description : son explication s'affiche. Dans une bulle gardée, un mot-clé ouvre sa propre bulle à ",
+        "côté : clic droit pour la garder aussi, et ainsi de suite.",
     )),
     paragraph(concat("Essaie sur ces mots : ", CARTE, ", ", DECK, ", ", UNIT, ".")),
     cards([ESTOC_INSTABLE], concat(
-        "Survole cette carte : sa description contient le mot-clé ", FUSION, ". Survole-le à son tour, puis clic droit.",
+        "Survole cette carte : sa description contient le mot-clé ", FUSION, ". Clic droit pour garder la ",
+        "bulle, puis survole le mot-clé.",
     )),
     quote("En cas de doute sur n'importe quoi : survole-le."),
     subheading("Cartes infinies"),
@@ -119,17 +136,18 @@ export const GUIDE: readonly GuideBlock[] = [
 
     //// 3. A game from afar ////
     heading("Une partie, vue de loin"),
-    paragraph(
-        "Une run descend un voyage : une carte de lieux reliés par des chemins. À chaque lieu, un combat ou une halte. "
-        + "Les combats rapportent de l'or et une récompense. Les haltes (taverne, forge, hôpital, magasin…) servent à "
-        + "soigner, recruter, améliorer ou acheter.",
-    ),
+    paragraph(concat(
+        "Une run descend un voyage : une carte de lieux reliés par des chemins. À chaque lieu, un ", FIGHT, " ou une ",
+        HALT, ". Les ", FIGHT.as("combats"), " rapportent de l'", GOLD, " et une ", REWARD, ". Les ",
+        HALT.as("haltes"), " (taverne, forge, hôpital, magasin…) servent à soigner, recruter, améliorer ou acheter.",
+    )),
     component(({ theme }) => mapSketch(theme)),
     note("Les chemins ne se croisent jamais. Jamais trois combats ni trois haltes de suite."),
-    paragraph(
-        "Chaque étage a sa couleur, ses monstres et son boss : la Grotte (Golem runique), la Forêt (Troll), la Mine "
-        + "(Robot Megalaser), l'Enfer (Diable). En fin de carte, une sortie mène à l'étage suivant.",
-    ),
+    paragraph(concat(
+        "Chaque ", FLOOR, " a sa couleur, ses ", MONSTER.as("monstres"), " et son boss : la Grotte (Golem runique), ",
+        "la Forêt (Troll), la Mine (Robot Megalaser), l'Enfer (Diable). En fin de carte, une sortie mène à l'",
+        FLOOR, " suivant.",
+    )),
     paragraph(
         "Ta partie est sauvegardée à chaque sortie de combat et de halte. « Continuer » dans le menu reprend là où tu "
         + "t'étais arrêté. Une défaite efface la sauvegarde.",
@@ -144,7 +162,7 @@ export const GUIDE: readonly GuideBlock[] = [
     )),
     paragraph(concat(
         "2. Préparation : tu poses une chaîne de 4 ", CARTE.as("cartes"), " au plus. Les bots annoncent la leur : tu vois ce ",
-        "que les monstres vont faire avant de poser la tienne.",
+        "que les ", MONSTER.as("monstres"), " vont faire avant de poser la tienne.",
     )),
     paragraph("3. Fin de préparation : les chaînes sont verrouillées et mises en place."),
     paragraph("4. Révélation : toutes les chaînes sont montrées."),
@@ -241,11 +259,14 @@ export const GUIDE: readonly GuideBlock[] = [
     note(concat("Le même ", COUP_EPEE, " : la zone tourne avec l'unité.")),
     paragraph("Les attaques de base, d'un coup d'œil :"),
     terms([
-        { head: "Coup d'épée", text: concat(COUP_EPEE, " : un arc de 120° devant, à 1,3 m. 1 cœur.") },
-        { head: "Estoc", text: concat(ESTOC, " : une bande de 2 m droit devant, qui transperce. 1 cœur.") },
-        { head: "Tir", text: concat(TIR, " : un rayon jusqu'à 5 m, qui s'arrête sur la première unité. ½ cœur.") },
-        { head: "Coup circulaire", text: concat(COUP_CIRCULAIRE, " : tout autour, à 1,2 m. 1 cœur.") },
-        { head: "Dague", text: concat(DAGUE, " : une bande de 1,1 m devant. 1 cœur, ×2 dans le dos.") },
+        { head: "Coup d'épée", text: concat(COUP_EPEE, " : un arc de 120° devant, à 1,3 m. ", new HeartCount(1), ".") },
+        { head: "Estoc", text: concat(ESTOC, " : une bande de 2 m droit devant, qui transperce. ", new HeartCount(1), ".") },
+        {
+            head: "Tir",
+            text: concat(TIR, " : un rayon jusqu'à 5 m, qui s'arrête sur la première ", UNIT, ". ", new HeartCount(0.5), "."),
+        },
+        { head: "Coup circulaire", text: concat(COUP_CIRCULAIRE, " : tout autour, à 1,2 m. ", new HeartCount(1), ".") },
+        { head: "Dague", text: concat(DAGUE, " : une bande de 1,1 m devant. ", new HeartCount(1), ", ×2 dans le dos.") },
     ]),
     component(({ theme }) => arenaSketch(theme, [
         { facing: 0, zone: band(2, 0.35), caption: "Estoc" },
@@ -259,27 +280,32 @@ export const GUIDE: readonly GuideBlock[] = [
 
     //// 7. Hearts ////
     heading("Les cœurs"),
-    paragraph(
-        "Ta vie est une rangée de cœurs d'une vie chacun : un dégât en retire un. Les cœurs rouges sont la vie de "
-        + "base ; un cœur rouge perdu laisse une place vide que le soin peut remplir. Les autres sortes ont chacune "
-        + "leur règle.",
-    ),
+    paragraph(concat(
+        "Ta vie est une rangée de ", HEART.as("cœurs"), " d'une vie chacun : un dégât en retire un. Les ",
+        HEART.as("cœurs"), " de type ", RED_HEART, " sont la vie de base ; un ", HEART, " de ce type perdu laisse une ",
+        "place vide que le ", HEAL, " peut remplir. Les autres sortes ont chacune leur règle.",
+    )),
     hearts(RED_HEART, 3, "La vie de base."),
-    paragraph("Un dégât touche d'abord le dernier cœur de la rangée : les cœurs spéciaux, à droite, protègent les rouges."),
-    quote("L'unité tombe quand plus aucun cœur ne l'empêche de mourir."),
+    paragraph(concat(
+        "Un dégât touche d'abord le dernier ", HEART, " de la rangée : les ", HEART.as("cœurs"),
+        " spéciaux, à droite, protègent les rouges.",
+    )),
+    quote(concat("L'", UNIT, " tombe quand plus aucun ", HEART, " ne l'empêche de mourir.")),
 
     //// 8. Stats, statuses, processes ////
     heading("Statistiques, statuts, processus"),
     paragraph("Les stats modifient ce que font les cartes ; la description d'une carte dit laquelle elle lit."),
     terms([
-        stat("Force", "Ajoutée aux coups au corps à corps.", "Pierre à aiguiser"),
-        stat("Précision", "Ajoutée aux tirs.", "Viseur"),
-        stat("Agilité", "Règle la longueur des déplacements.", "Bottes de sept lieues"),
-        stat("Portée", "Règle ce qui est lancé ou tiré.", "Fronde ou Longue-vue"),
-        { head: "Allonge", text: "Règle la longueur des coups au corps à corps." },
-        stat("Soin", "Ajoutée à chaque soin.", "Trousse de soin"),
-        stat("Invocation", "Ajoutée à la vie de chaque invocation.", "Poupée de chiffon"),
-        stat("Alchimie", "Ajoutée au niveau de chaque potion.", "Alambic"),
+        stat("Force", ["La ", FORCE, " s'ajoute aux coups au corps à corps."], "Pierre à aiguiser"),
+        stat("Précision", ["La ", PRECISION, " s'ajoute aux tirs."], "Viseur"),
+        stat("Agilité", ["L'", AGILITE, " règle la longueur des déplacements."], "Bottes de sept lieues"),
+        stat("Portée", ["La ", PORTEE, " règle ce qui est lancé ou tiré."], "Fronde ou Longue-vue"),
+        { head: "Allonge", text: ["L'", ALLONGE, " règle la longueur des coups au corps à corps."] },
+        stat("Soin", ["Le ", HEAL, " s'ajoute à chaque soin."], "Trousse de soin"),
+        stat("Invocation", [
+            "L'", SUMMON_STAT, " s'ajoute à la vie de chaque ", INVOCATION.as("invocation"), ".",
+        ], "Poupée de chiffon"),
+        stat("Alchimie", ["L'", ALCHEMY, " s'ajoute au niveau de chaque potion."], "Alambic"),
     ]),
     paragraph(
         "Un statut est un état qui s'installe sur une unité et s'y maintient : certains s'effacent tout de suite, "
@@ -292,12 +318,15 @@ export const GUIDE: readonly GuideBlock[] = [
         + "temps d'un round, un cheval qui porte l'unité, une hâte. Ils s'affichent comme les statuts, sur l'unité "
         + "concernée.",
     ),
-    note("Les éléments (feu, eau, plante, pierre…) ne sont pas expliqués ici : une carte te dit ce qu'elle fait quand tu la survoles."),
+    note(concat(
+        "Les éléments (", FIRE_ELEMENT, ", ", WATER_ELEMENT, ", ", PLANT_ELEMENT, ", ", STONE_ELEMENT, ", ",
+        LIGHTNING_ELEMENT, "…) ne sont pas expliqués ici : une ", CARTE, " te dit ce qu'elle fait quand tu la survoles.",
+    )),
 
     //// 9. Monsters ////
     heading("Les monstres"),
     paragraph(concat(
-        "Un monstre ne réfléchit pas : son ", DECK, " est son comportement. Il joue ses ", CARTE.as("cartes"),
+        "Un ", MONSTER, " ne réfléchit pas : son ", DECK, " est son comportement. Il joue ses ", CARTE.as("cartes"),
         " de gauche à droite, et son ", DECK, " repasse dans le même ordre : ses actions reviennent en boucle, round après ",
         "round. Apprends à la lire, c'est la clé pour survivre aux boss.",
     )),
@@ -307,8 +336,11 @@ export const GUIDE: readonly GuideBlock[] = [
 
     //// 10. Halts ////
     heading("Les haltes"),
-    paragraph("Entre deux combats, chaque halte a son offre, tirée à ta première visite. À toi de les découvrir."),
-    paragraph("Une halte quittée sans rien changer peut être rouverte d'un clic, avec les mêmes offres."),
+    paragraph(concat(
+        "Entre deux ", FIGHT.as("combats"), ", chaque ", HALT, " a son offre, tirée à ta première visite. À toi de ",
+        "les découvrir.",
+    )),
+    paragraph(concat("Une ", HALT, " quittée sans rien changer peut être rouverte d'un clic, avec les mêmes offres.")),
     subheading("Les collages"),
     paragraph(concat(
         "Un ", FUSION, " est une ", CARTE, " qui en contient plusieurs. Il ne prend qu'une place dans la chaîne mais se ",
@@ -318,7 +350,7 @@ export const GUIDE: readonly GuideBlock[] = [
 
     //// 11. Advice ////
     heading("Conseils pour commencer"),
-    paragraph("Lis la chaîne des monstres avant de poser la tienne."),
+    paragraph(concat("Lis la chaîne des ", MONSTER.as("monstres"), " avant de poser la tienne.")),
     paragraph(concat("Un ", DECK, " court et cohérent vaut mieux qu'un gros ", DECK, ".")),
     paragraph("En cas de doute, survole."),
 ]

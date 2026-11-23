@@ -1,5 +1,7 @@
-import { DISTANCE } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
 import type { Unit } from "../../../battle/Unit"
+import { HeartCount } from "../../../battle/words"
+import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 import * as Previews from "../../../battle/preview/Previews"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import type { Battle } from "../../../battle/Battle"
@@ -35,7 +37,7 @@ function bubblesOf(battle: Battle, unit: Unit): Unit[] {
 
 /** Soapiness to at least three rounds, at the end of the preparation. */
 export const INSPIRATION = new RewriteCard("Inspiration", [
-    "Fin de préparation : ton ", SOAPY, " monte à ", INSPIRED_ROUNDS, " rounds au moins. Les ", BULLE.as("bulles"),
+    "Fin de préparation : ton ", SOAPY, " monte à ", INSPIRED_ROUNDS, " ", BATTLE_ROUND.as("rounds"), " au moins. Les ", BULLE.as("bulles"),
     " déjà posées copient dès le premier pas.",
 ], Rarity.RARE, () => ({ cards: [], consumed: 0, acting: true }), ({ battle, unit }) => {
     raiseSoapy(battle, unit, INSPIRED_ROUNDS)
@@ -94,7 +96,7 @@ export const BURSTING = new ActionCard("Éclatement", [
 
 /** A bubble that plays the cards that follow in the chain of its blower, which plays none of them. */
 export const PROGRAMMED_BUBBLE = new ActionCard("Bulle programmée", [
-    "Invoque devant toi une ", BULLE.as("bulle"), " de deux cœurs de temps, qui joue les cartes qui suivent dans ta chaîne. ",
+    "Invoque devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(2), " de ", TIME_HEART, ", qui joue les cartes qui suivent dans ta chaîne. ",
     "Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

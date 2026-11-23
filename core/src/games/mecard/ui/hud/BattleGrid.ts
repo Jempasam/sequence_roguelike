@@ -24,7 +24,6 @@ export interface UiRect {
 export interface BattleRows {
     readonly chain: number
     readonly hand: number
-    readonly info: number
 
     /** How tall the usables above the journal are, none when the unit selected carries none. */
     readonly usables: number
@@ -55,9 +54,6 @@ export interface BattleGrid {
 
     /** The decks of the unit selected. */
     readonly decks: UiRect
-
-    /** What tells about what the pointer hovers. */
-    readonly info: UiRect
 }
 
 /**
@@ -68,7 +64,6 @@ export interface BattleGrid {
  * usables  map    units
  * journal  chain  units
  * journal  hand   decks
- * journal  info   info
  * ```
  *
  * The rows under the map keep the height they ask for, and the first one takes what they leave.
@@ -82,8 +77,7 @@ export function battleGrid(width: number, height: number, rows: BattleRows): Bat
     const middleLeft = firstRight + GAP
     const middleRight = lastLeft - GAP
     const bottom = height - MARGIN
-    const infoTop = bottom - rows.info
-    const handBottom = infoTop - GAP
+    const handBottom = bottom
     const handTop = handBottom - rows.hand
     const chainBottom = handTop - GAP
     const chainTop = chainBottom - rows.chain
@@ -99,6 +93,5 @@ export function battleGrid(width: number, height: number, rows: BattleRows): Bat
         chain: { left: middleLeft, top: chainTop, right: middleRight, bottom: chainBottom },
         hand: { left: middleLeft, top: handTop, right: middleRight, bottom: handBottom },
         decks: { left: lastLeft, top: handTop, right: width - MARGIN, bottom: handBottom },
-        info: { left: middleLeft, top: infoTop, right: width - MARGIN, bottom },
     }
 }

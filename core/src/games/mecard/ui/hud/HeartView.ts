@@ -4,6 +4,7 @@ import { Box, Component, sizeHint } from "../../../../engine/ui"
 import type { SizeHint, Theme } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
+import { HEART } from "../../sim/base/keywords"
 import type { Heart } from "../../sim/heart/Heart"
 
 import { heartColorOf, LIT_EDGE } from "../look/colors"
@@ -73,7 +74,7 @@ export class HeartView extends Component {
 
 /** What a heart is, for the player: its kind in its color, whether it is empty, and what it does. */
 export function heartText(heart: Heart): Text {
-    return concat("Cœur ", heart, " : ", heart.kind.description)
+    return concat(HEART, " ", heart, " : ", heart.kind.description)
 }
 
 /**

@@ -14,7 +14,7 @@ import { BLAST_RADIUS, BOMB_DAMAGE, FLASH_RADIUS } from "../body/BodyCards"
 import { ActionCard } from "../ActionCard"
 import { flight } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT, BATTLE_TURN } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import { frenchNumber } from "../../../battle/words"
 import * as Areas from "../../../battle/area/Areas"
@@ -97,6 +97,6 @@ export const MINE = new BombCard("Mine", [
 
 export const BEAR_TRAP = new BombCard("Piège à ours", [
     "Pose un piège à ours à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(BEAR_TRAP_ROUNDS, "round"),
-    ". Au premier contact : ", BEAR_TRAP_DAMAGE, " ", DamageType.PHYSICAL, " et la prochaine étape de l'", UNIT,
+    ". Au premier contact : ", BEAR_TRAP_DAMAGE, " ", DamageType.PHYSICAL, " et la prochaine ", BATTLE_TURN.as("étape"), " de l'", UNIT,
     " est perdue.",
 ], Rarity.RARE, MINE_THROW, BEAR_TRAP_RADIUS, placeBearTrap)

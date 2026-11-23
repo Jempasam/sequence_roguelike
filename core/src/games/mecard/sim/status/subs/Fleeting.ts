@@ -3,12 +3,14 @@ import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 import { DamageType } from "../../battle/DamageType"
+import { BATTLE_ROUND } from "../../base/keywords"
+import { HeartCount } from "../../battle/words"
 
 /** How many hearts a summoned body loses at the end of each round. */
 export const FLEETING_DAMAGE = 1
 
 /** What a summoned body is: it wears away. */
-export const FLEETING = new StatusType("éphémère", statusVisual("fleeting", 0.8, 0.8, 0.7), "neutral", level => new Fleeting(level), { description: ["Perd un cœur à la fin de chaque round, pendant ", STATUS_LEVEL, " rounds."] })
+export const FLEETING = new StatusType("éphémère", statusVisual("fleeting", 0.8, 0.8, 0.7), "neutral", level => new Fleeting(level), { description: ["Perd ", new HeartCount(1), " à la fin de chaque ", BATTLE_ROUND, ", pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."] })
 
 /** Fleeting: a heart lost at the end of each round, for as long as it lasts. Summoned bodies are. */
 export class Fleeting extends BaseStatus {

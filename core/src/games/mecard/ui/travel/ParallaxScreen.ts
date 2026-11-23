@@ -3,7 +3,7 @@ import type { Assets } from "../../../../engine/assets"
 import { Sprite, Texture } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, NineSlice, Panel, Parallax, RangeSlider, Slider, Stack, Tabs } from "../../../../engine/ui"
-import type { Component, Layer, ParallaxAxes, ParallaxPlace, Theme, UiRoot } from "../../../../engine/ui"
+import type { Component, Layer, ParallaxAxes, ParallaxPlace, ParallaxViewport, Theme, UiRoot } from "../../../../engine/ui"
 import type { ClipboardPort } from "../../../../platform"
 import type { Visual } from "../../sim/base/Visual"
 
@@ -135,6 +135,7 @@ export class ParallaxScreen {
     #visual: Visual|null = null
     #source = ""
     #layers: Loaded[] = []
+    #viewport: ParallaxViewport|null = null
     #depths: SceneRanges = SCENE_DEPTHS
     #warps: SceneRanges = SCENE_WARPS
 
@@ -172,6 +173,7 @@ export class ParallaxScreen {
         this.#depths = pictures.ranges.depth ?? SCENE_DEPTHS
         this.#warps = pictures.ranges.warp ?? SCENE_WARPS
         this.#rangesOrigin = pictures.ranges.depth || pictures.ranges.warp ? "plages de l'ora" : "plages du jeu"
+        this.#viewport = pictures.viewport
         this.#layers = pictures.layers.map(layer => ({
             name: layer.name,
             texture: Texture.fromPixels(this.ui.gpu, layer.pixels),
@@ -246,7 +248,7 @@ export class ParallaxScreen {
             depth: this.#depthOf(index).value,
             warp: this.#warpOf(index).value,
             ...layer.place && { place: layer.place },
-        })), { tint: this.#tint })
+        })), { tint: this.#tint, ...this.#viewport && { viewport: this.#viewport } })
         holder.add(parallax, { x: "stretch", y: "stretch" })
         this.#tell()
     }

@@ -1,4 +1,6 @@
+import { HEART } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
+import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
@@ -16,7 +18,10 @@ export class HospitalHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(HOSPITAL_HALT, run,
-            "Allongez-vous : je soigne vos cœurs rouges, et chacun repart avec des cœurs de plus.",
+            [
+                "Allongez-vous : je soigne vos ", HEART.as("cœurs"), " ", RED_HEART, ", et chacun repart avec des ",
+                HEART.as("cœurs"), " de plus.",
+            ],
             sceneLook(18, 33, 41, "hospital"),
             {
                 hat: "coif",
@@ -39,12 +44,12 @@ export class HospitalHalt extends AbstractHalt {
     #giveHearts(ctx: HaltContext, heroes: readonly Hero[]): void {
         const [hero, ...others] = heroes
         if(!hero){
-            ctx.tell("L'équipe est soignée, et chacun a des cœurs de plus.")
+            ctx.tell(["L'équipe est soignée, et chacun a des ", HEART.as("cœurs"), " de plus."])
             return
         }
         const show = (loot: HeartLoot) => ({ cards: [], text: heartLootText(loot) })
         const offers = distinct(this.run.rng, SPENT_LOOT_HEARTS, INVENTED_COUNTS)
-        ctx.offer(concat("Quel cœur pour ", hero, " ?"), offers, show, loot => {
+        ctx.offer(concat("Quel ", HEART, " pour ", hero, " ?"), offers, show, loot => {
             this.run.giveHearts(hero, loot)
             this.#giveHearts(ctx, others)
         })
@@ -55,7 +60,10 @@ export class HospitalHalt extends AbstractHalt {
 export const HOSPITAL_HALT: HaltType = {
     id: "hospital",
     name: "Hôpital",
-    description: "Soigne tous les cœurs rouges de l'équipe, et donne à chacun des cœurs à usage unique, au choix parmi trois.",
+    description: [
+        "Soigne tous les ", HEART.as("cœurs"), " ", RED_HEART, " de l'équipe, et donne à chacun des ", HEART.as("cœurs"),
+        " à usage unique, au choix parmi trois.",
+    ],
     icon: visual("halts/hospital", { letter: "H" }),
     transition: visual("warm-door"),
     create: run => new HospitalHalt(run),

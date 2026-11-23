@@ -1,5 +1,5 @@
 import type { Unit } from "../../../battle/Unit"
-import { FUSION, INVOCATION } from "../../../base/keywords"
+import { FUSION, INVOCATION, BATTLE_ROUND } from "../../../base/keywords"
 import { Heart } from "../../../heart/Heart"
 import type { Card, RewriteSpot } from "../../Card"
 import { ACTION, BEAST } from "../../CardType"
@@ -63,7 +63,7 @@ export function summonCardOf(body: Beast, runner: Beast, biter: Beast): ChainSum
     const same = body === runner && body === biter
     const name = same ? `${body.name} invoqué` : `${body.name} hybride`
     return new ChainSummonCard(name, [
-        INVOCATION.as("Invoque"), " devant toi un ", body, " qui joue chaque round : ", ...cardsText(cards), ".",
+        INVOCATION.as("Invoque"), " devant toi un ", body, " qui joue chaque ", BATTLE_ROUND, " : ", ...cardsText(cards), ".",
     ], same ? Rarity.RARE : Rarity.LEGENDARY, {
         sprite: body.sprite,
         name: body.name,
@@ -106,7 +106,7 @@ export class SummoningCard extends AbstractCard<Action, Beast> {
 
     constructor(){
         super("Invocation", [
-            INVOCATION.as("Invoque"), " devant toi le corps de sa bête, qui joue chaque round sa course et sa morsure.",
+            INVOCATION.as("Invoque"), " devant toi le corps de sa bête, qui joue chaque ", BATTLE_ROUND, " sa course et sa morsure.",
         ], Rarity.RARE)
     }
 
@@ -132,8 +132,8 @@ export const TOTAL_TRANSFORMATION = new InputRewriteCard("Transformation totale"
 
 /** The body of the first of three beasts on its right, the run of the second, the bite of the third. */
 export const TOTAL_HYBRID = new RewriteCard("Hybride totale", [
-    "Fin de préparation : prend les trois bêtes à sa droite. Devient l'invocation du corps de la première, qui joue ",
-    "la course de la deuxième et la morsure de la troisième.",
+    "Fin de préparation : prend les trois bêtes à sa droite. Devient l'", INVOCATION.as("invocation"),
+    " du corps de la première, qui joue la course de la deuxième et la morsure de la troisième.",
 ], Rarity.LEGENDARY, (_ctx, spot) => {
     const beasts = nextBeasts(spot, 3)
     if(!beasts) return NOTHING

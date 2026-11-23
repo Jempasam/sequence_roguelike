@@ -2,6 +2,7 @@ import type { PlugContext, UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /**
  * A unit anchored to a spirit: as the round ends, it blinks to where the spirit stands and faces it, and the
@@ -15,7 +16,7 @@ export class SpiritAnchor extends AbstractProcess {
         public readonly spirit: Unit,
     ){
         super("ancre spirituelle", visual("processes/spirit_anchor", { color: [0.6, 0.85, 1] }),
-            "À la fin du round, se téléporte à l'esprit et se tourne comme lui, puis l'esprit disparaît.",
+            ["À la fin du ", BATTLE_ROUND, ", se téléporte à l'esprit et se tourne comme lui, puis l'esprit disparaît."],
         )
     }
 

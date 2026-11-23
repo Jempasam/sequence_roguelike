@@ -1,4 +1,5 @@
 import type { Text } from "../../../../semantic"
+import { BATTLE_ROUND, BATTLE_TURN, CARTE, UNIT } from "../base/keywords"
 import { colored, rgba } from "../base/Rgba"
 import type { Action, UnitContext } from "../battle/Action"
 import type { Unit } from "../battle/Unit"
@@ -22,6 +23,9 @@ export class CardType<T> {
     constructor(
         /** What the slot of this type is called on a card. */
         public readonly name: string,
+
+        /** What a card of this type is, for the player: none for a type no card tells of. */
+        public readonly description: Text = [],
     ){}
 
 
@@ -87,25 +91,36 @@ export interface Preparation {
 }
 
 /** Actions: the step they put in the queue, one for each. */
-export const ACTION = new CardType<Action>("action")
+export const ACTION = new CardType<Action>("action", [
+    "Ce qu'une ", UNIT, " joue pendant un ", BATTLE_ROUND, " : un coup, un pas, un sort. Chaque ", CARTE,
+    " d'action fait un ", BATTLE_TURN, " de sa chaîne.",
+])
 
 /** What rewrites the chain at the end of the preparation, and maybe acts then. */
-export const PREPARATION = new CardType<Preparation>("préparation")
+export const PREPARATION = new CardType<Preparation>("préparation", [
+    "Une ", CARTE, " qui réécrit la chaîne à la fin de la préparation, avant que le ", BATTLE_ROUND, " se joue.",
+])
 
 /** An element, for a spell. */
-export const ELEMENT = new CardType<Element>("élément")
+export const ELEMENT = new CardType<Element>("élément", [
+    "Un élément magique que prend une ", CARTE, " de sort ou d'aura.",
+])
 
 /** A dose of a potion, for a card pouring it. */
-export const POTION = new CardType<Dose>("potion")
+export const POTION = new CardType<Dose>("potion", ["Une dose de potion, que verse une ", CARTE, "."])
 
 /**
  * A card as it is, with the tree it heads: nothing gives it, so a card taking it takes whatever card stands
  * on its right, built or not, and is given the cards themselves rather than what they give.
  */
-export const CARD = new CardType<readonly Card[]>("carte")
+export const CARD = new CardType<readonly Card[]>("carte", [
+    "Une ", CARTE, " prise telle quelle, avec toutes celles qui la suivent à sa droite.",
+])
 
 /** What is not known: the type of a card standing for any card, pictured only. */
-export const SECRET = new CardType<unknown>("secret")
+export const SECRET = new CardType<unknown>("secret", [
+    "Une ", CARTE, " qu'on ne connaît pas : seule son image est montrée.",
+])
 
 /**
  * A piece of a machine: the cards it plays, and what it does to the body built from it. Whatever must be
@@ -120,7 +135,9 @@ export interface Module {
 }
 
 /** The cards of a machine, for a card building it or putting them in the chain. */
-export const MODULE = new CardType<Module>("module")
+export const MODULE = new CardType<Module>("module", [
+    "Une pièce de machine : les ", CARTE.as("cartes"), " qu'elle joue, et ce qu'elle change au corps construit.",
+])
 
 /** A group of hearts of a kind, as a body has them. */
 export interface BeastHearts {
@@ -169,4 +186,6 @@ export function beast(spec: Omit<Beast, "toString"|"toSemString">): Beast {
 const BEAST_COLOR = rgba(0.55, 0.8, 0.4)
 
 /** A spirit of nature, for a card using its run, its bite or its body. */
-export const BEAST = new CardType<Beast>("bête")
+export const BEAST = new CardType<Beast>("bête", [
+    "Un esprit de la nature : sa course, sa morsure et le corps où il est invoqué.",
+])

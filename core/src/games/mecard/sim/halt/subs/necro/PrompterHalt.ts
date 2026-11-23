@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, MONSTER } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import { deckNameOf } from "../../../run/deckName"
@@ -26,7 +26,7 @@ export class PrompterHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(PROMPTER_HALT, run,
-            ["Chuchoter ", CARTE.as("cartes"), " à l'oreille d'un monstre : je change l'ordre, rien d'autre."],
+            ["Chuchoter ", CARTE.as("cartes"), " à l'oreille d'un ", MONSTER, " : je change l'ordre, rien d'autre."],
             sceneLook(28, 30, 16, "strategist"),
             {
                 hat: "bicorne",

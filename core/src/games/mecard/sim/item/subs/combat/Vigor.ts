@@ -1,6 +1,7 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
-import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, FORCE, HEART, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLACK_HEART } from "../../../heart/subs/BlackHeartKind"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
@@ -25,7 +26,7 @@ export class Hourglass extends AbstractItem {
 
     constructor(){
         super("Sablier", visual("items/hourglass"), [
-            "Ses status positifs ne perdent un round qu'un round sur deux.",
+            "Ses status positifs ne perdent un ", BATTLE_ROUND, " qu'un ", BATTLE_ROUND, " sur deux.",
         ])
     }
 
@@ -50,7 +51,7 @@ export class GlassCore extends AbstractItem {
 
 
     constructor(){
-        super("Cœur de verre", visual("items/glass_heart"), ["Début du combat : gagne ", GLASS_HEARTS, " cœurs de verre."])
+        super("Cœur de verre", visual("items/glass_heart"), ["Début du combat : gagne ", new HeartCount(GLASS_HEARTS), " ", GLASS_HEART, "."])
     }
 
 
@@ -67,7 +68,7 @@ export class UnstableReactor extends AbstractItem {
 
     constructor(){
         super("Réacteur instable", visual("items/reactor"), [
-            "Quand il perd un cœur bleu ou noir : ", 1, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", REACTOR_RADIUS, " ", DISTANCE, " autour.",
+            "Quand il perd ", new HeartCount(1), " ", BLUE_HEART, " ou ", BLACK_HEART, " : ", 1, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", REACTOR_RADIUS, " ", DISTANCE, " autour.",
         ])
     }
 
@@ -90,7 +91,7 @@ export class BloodPact extends AbstractItem {
 
 
     constructor(){
-        super("Pacte de sang", visual("items/blood_pact"), ["+", 1, " ", FORCE, " par cœur manquant."])
+        super("Pacte de sang", visual("items/blood_pact"), ["+", 1, " ", FORCE, " par ", HEART, " manquant."])
     }
 
 
@@ -113,7 +114,7 @@ export class EchoItem extends AbstractItem {
 
 
     constructor(){
-        super("Écho", visual("items/echo"), ["À la fin de la préparation, la dernière étape de la chaîne est jouée deux fois."])
+        super("Écho", visual("items/echo"), ["À la fin de la préparation, la dernière ", BATTLE_TURN.as("étape"), " de la chaîne est jouée deux fois."])
     }
 
 

@@ -1,3 +1,4 @@
+import { HEAL } from "../../base/keywords"
 import { HeartCount } from "../../battle/words"
 import type { UnitContext } from "../../battle/Action"
 
@@ -15,7 +16,7 @@ export class HealingPotion extends AbstractUsable {
         /** How many hearts it gives back. */
         public readonly heal: number,
     ){
-        super("Potion de soin", visual("usables/healing_potion"), ["Soigne ", new HeartCount(heal), " + soin."])
+        super("Potion de soin", visual("usables/healing_potion"), ["Soigne ", new HeartCount(heal), " + ", HEAL, "."])
     }
 
 

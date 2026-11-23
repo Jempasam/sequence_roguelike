@@ -12,7 +12,7 @@ import { Bleeding, Fragility } from "../../../status/subs/Wounds"
 
 import { AbstractUsable } from "../AbstractUsable"
 import type { UsableOptions } from "../AbstractUsable"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import * as Areas from "../../../battle/area/Areas"
 
@@ -58,7 +58,7 @@ export const BLOOD_FLASK = new SplashFlask(
     "Fiole de sang", visual("usables/fire_flask"),
     [
         "Lancée à ", FLASK_FLIGHT, "×", PORTEE, " ", DISTANCE, " devant : chaque ", UNIT, " à ", FLASK_SPLASH, " ", DISTANCE,
-        " de l'impact gagne un round de saignement. 2 utilisations, rechargées à chaque combat.",
+        " de l'impact gagne un ", BATTLE_ROUND, " de saignement. 2 utilisations, rechargées à chaque combat.",
     ],
     { charges: 2, refill: "battle" }, () => new Bleeding(1),
 )
@@ -67,7 +67,7 @@ export const FRAGILITY_FLASK = new SplashFlask(
     "Fiole de fragilité", visual("usables/glue_flask"),
     [
         "Lancée à ", FLASK_FLIGHT, "×", PORTEE, " ", DISTANCE, " devant : chaque ", UNIT, " à ", FLASK_SPLASH, " ", DISTANCE,
-        " de l'impact devient fragile pendant 2 rounds.",
+        " de l'impact devient fragile pendant 2 ", BATTLE_ROUND.as("rounds"), ".",
     ],
     {}, () => new Fragility(2),
 )

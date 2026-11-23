@@ -1,3 +1,4 @@
+import { HEART, UNIT } from "../../base/keywords"
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
 import { stuffed } from "../../process/subs/Taxidermy"
@@ -11,7 +12,10 @@ export class TaxidermyKit extends AbstractUsable {
     constructor(){
         super(
             "Kit de taxidermie", visual("usables/taxidermy_kit"),
-            ["La prochaine unité ennemie que tu tues dans ce combat est empaillée : elle combat pour toi avec la moitié de ses cœurs. Une fois par combat."],
+            [
+                "La prochaine ", UNIT, " ennemie que tu tues dans ce combat est empaillée : elle combat pour toi avec la moitié de ses ",
+                HEART.as("cœurs"), ". Une fois par combat.",
+            ],
             { charges: 1, refill: "battle" },
         )
     }

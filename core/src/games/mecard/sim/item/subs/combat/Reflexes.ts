@@ -1,4 +1,4 @@
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
 import * as Areas from "../../../battle/area/Areas"
 import type { Unit } from "../../../battle/Unit"
@@ -86,7 +86,7 @@ export class ScaryMask extends AbstractItem {
 
     constructor(){
         super("Masque effrayant", visual("items/scary_mask"), [
-            "Au début de chaque round, les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
+            "Au début de chaque ", BATTLE_ROUND, ", les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
             " autour lui tournent le dos.",
         ])
     }
@@ -130,7 +130,7 @@ export class Magnet extends AbstractItem {
 
     constructor(){
         super("Aimant", visual("items/magnet"), [
-            "Au début de chaque round, tire de ", frenchNumber(MAGNET_PULL), " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
+            "Au début de chaque ", BATTLE_ROUND, ", tire de ", frenchNumber(MAGNET_PULL), " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
             MAGNET_RADIUS, " ", DISTANCE, ". Aucun dégât.",
         ])
     }
@@ -154,7 +154,7 @@ export class ChippedBlade extends AbstractItem {
 
     constructor(){
         super("Lame ébréchée", visual("items/whetstone"), [
-            "La première ", UNIT, " touchée par un coup au corps à corps gagne un round de saignement.",
+            "La première ", UNIT, " touchée par un coup au corps à corps gagne un ", BATTLE_ROUND, " de saignement.",
         ])
     }
 
@@ -182,7 +182,7 @@ export class DemonFang extends AbstractItem {
 
     constructor(){
         super("Croc démoniaque", visual("items/demon_fang"), [
-            "Chaque ", UNIT, " tuée donne un round d'énergie démoniaque.",
+            "Chaque ", UNIT, " tuée donne un ", BATTLE_ROUND, " d'énergie démoniaque.",
         ])
     }
 
@@ -199,7 +199,7 @@ export class Rosary extends AbstractItem {
 
 
     constructor(){
-        super("Chapelet", visual("items/rosary"), ["Chaque Attendre donne un round de concentration."])
+        super("Chapelet", visual("items/rosary"), ["Chaque Attendre donne un ", BATTLE_ROUND, " de concentration."])
     }
 
 

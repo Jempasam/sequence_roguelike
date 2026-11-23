@@ -2,6 +2,7 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND, BATTLE_TURN } from "../../base/keywords"
 
 /** How far a stench reaches around its unit whatever its level, in meters. */
 export const STENCH_BASE_RADIUS = 0.5
@@ -20,8 +21,8 @@ export function stenchRadius(level: number): number {
 /** A stench: after each step the unit plays, the units close to it are pushed away, for some rounds. */
 export const STINKING = new StatusType("puanteur", statusVisual("stench", 0.55, 0.65, 0.2), "negative", level => new Stench(level), {
     description: [
-        "Après chaque étape qu'elle joue, repousse de ", STENCH_PUSH, " m les unités à moins de ", STENCH_BASE_RADIUS,
-        " m plus ", STENCH_RADIUS_PER_LEVEL, " m par round restant, pendant ", STATUS_LEVEL, " rounds.",
+        "Après chaque ", BATTLE_TURN.as("étape"), " qu'elle joue, repousse de ", STENCH_PUSH, " m les unités à moins de ", STENCH_BASE_RADIUS,
+        " m plus ", STENCH_RADIUS_PER_LEVEL, " m par ", BATTLE_ROUND, " restant, pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ".",
     ],
 })
 

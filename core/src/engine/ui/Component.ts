@@ -1,4 +1,5 @@
 import type { Painter } from "../gpu"
+import type { Removable } from "../../lifetime/Removable"
 import type { ClipboardPort } from "../../platform"
 
 import type { Container } from "./Container"
@@ -163,6 +164,68 @@ export abstract class Component {
     /** Is it the component under the pointer? */
     public get hovered(): boolean { return this.#hostIfShown()?.hovered === this }
 
+    /** Is the component under the pointer this one, or one of the components it holds, at any depth? */
+    public get hoveredWithin(): boolean {
+        let component: Component|null = this.#hostIfShown()?.hovered ?? null
+        for(; component; component = component.#parent){
+            if(component === this) return true
+        }
+        return false
+    }
+
+    /** Where the pointer is, in virtual pixels of the layers, zero while it is not in an interface. */
+    public get pointerX(): number { return this.#host()?.pointerX ?? 0 }
+    public get pointerY(): number { return this.#host()?.pointerY ?? 0 }
+
+    /** Does a point of the layers, in virtual pixels, lie over it, whether the pointer is there or not? */
+    public containsAbsolute(x: number, y: number): boolean {
+        const point = Component.#point
+        if(!this.localPoint(x, y, point)) return false
+        return point.x >= 0 && point.y >= 0 && point.x < this.#bounds.width && point.y < this.#bounds.height
+    }
+
+    /**
+     * Where a point of the layers, in virtual pixels, lies in the component, in its own coordinates, the
+     * scroll and the pose of its containers undone as for the pointer.
+     *
+     * @param out - Where the point is written.
+     * @returns Is the component shown, so the point is known?
+     */
+    public localPoint(x: number, y: number, out: { x: number, y: number }): boolean {
+        return this.#hostIfShown() !== null && internals.localPoint(this, x, y, out)
+    }
+
+    /**
+     * Hear every time the pointer comes over it or leaves, as read in {@link Component.hovered}. Unlike
+     * `hoverChanged`, any number of listeners may hear it.
+     *
+     * @returns What takes the listener back.
+     */
+    public listenHover(listener: (over: boolean) => void): Removable {
+        return Component.#add(this.#hoverListeners ??= [], listener)
+    }
+
+    /**
+     * Hear every time the pointer comes over it or one of the components it holds, or leaves all of them, as
+     * read in {@link Component.hoveredWithin}. Moving from a child to another may notify twice with the same
+     * value, since the pointer leaves one then comes over the other.
+     *
+     * @returns What takes the listener back.
+     */
+    public listenHoverWithin(listener: (over: boolean) => void): Removable {
+        return Component.#add(this.#withinListeners ??= [], listener)
+    }
+
+    /**
+     * Hear every time the pointer moves over it, or over a component it holds that does not consume the move.
+     * A container holding the pointer hears the moves over what it holds, which are never hovered themselves.
+     *
+     * @returns What takes the listener back.
+     */
+    public listenPointerMove(listener: () => void): Removable {
+        return Component.#add(this.#moveListeners ??= [], listener)
+    }
+
     /**
      * The sizes it asks for when given at most a width, cached until its layout is invalidated.
      *
@@ -190,6 +253,19 @@ export abstract class Component {
      */
     public areaOnLayer(out: Rect): boolean {
         return internals.absoluteArea(this, out)
+    }
+
+    /**
+     * Where a zone of it lies on its layer, in virtual pixels, cut by the viewports and squeezed containers
+     * around it.
+     *
+     * @param local - The zone, in its own coordinates.
+     * @param out - The rectangle written, which may be the one given as `local`.
+     * @returns Is it shown, so the area was set?
+     */
+    public layerRectOf(local: Readonly<Rect>, out: Rect): boolean {
+        out.copyFrom(local)
+        return internals.toAbsolute(this, out)
     }
 
     /** Ask for its area to be drawn again at the next frame. Asking twice changes nothing. */
@@ -373,12 +449,21 @@ export abstract class Component {
         internals.opaqueArea = component => component.opaqueRect()
         internals.paintedArea = component => component.paintedRect()
         internals.paint = (component, painter, clip) => component.paint(painter, clip)
-        internals.handle = (component, event) => component.handle(event)
+        internals.handle = (component, event) => {
+            component.handle(event)
+            if(event.type === "pointer-move") component.#moveListeners?.slice().forEach(listener => listener())
+        }
         internals.isInteractive = component => component.interactive
         internals.isFocusable = component => component.focusable
         internals.isModal = component => component.modal
         internals.focusChanged = component => component.focusChanged()
-        internals.hoverChanged = component => component.hoverChanged()
+        internals.hoverChanged = component => {
+            component.hoverChanged()
+            component.#hoverListeners?.slice().forEach(listener => listener(component.hovered))
+            for(let held: Component|null = component; held; held = held.#parent){
+                held.#withinListeners?.slice().forEach(listener => listener(held.hoveredWithin))
+            }
+        }
         internals.pressedOutside = component => component.pressedOutside()
         internals.tick = (component, dt) => component.tick(dt)
         internals.stopTicking = component => {
@@ -388,6 +473,9 @@ export abstract class Component {
 
     /** A rectangle to compute in, so the passes allocate nothing. */
     static readonly #scratch = new Rect()
+
+    /** A point to compute in, so asking where a point lies allocates nothing. */
+    static readonly #point = { x: 0, y: 0 }
 
     /** The rectangle of a component in its own coordinates, written in a shared rectangle. */
     static #ownRect(component: Component): Rect {
@@ -401,6 +489,19 @@ export abstract class Component {
         let top = component
         while(top.#parent) top = top.#parent
         return top
+    }
+
+    /** Add a listener to a list, and give what takes it back. */
+    static #add<A extends unknown[]>(
+        listeners: ((...args: A) => void)[], listener: (...args: A) => void,
+    ): Removable {
+        listeners.push(listener)
+        return {
+            remove: () => {
+                const index = listeners.indexOf(listener)
+                if(index >= 0) listeners.splice(index, 1)
+            },
+        }
     }
 
 
@@ -423,6 +524,16 @@ export abstract class Component {
     #squeezed = false
 
     #ticking = false
+
+    /** Who hears the pointer come over it or leave, made at the first listener. */
+    #hoverListeners: ((over: boolean) => void)[]|null = null
+
+    /** Who hears the pointer move over it or what it holds, made at the first listener. */
+    #moveListeners: (() => void)[]|null = null
+
+    /** Who hears the pointer come over it or what it holds, or leave all, made at the first listener. */
+    #withinListeners: ((over: boolean) => void)[]|null = null
+
     readonly #cachedWidths: number[] = []
     readonly #cachedHints: SizeHint[] = []
 

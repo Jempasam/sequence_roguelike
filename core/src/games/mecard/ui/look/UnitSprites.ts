@@ -2,6 +2,7 @@ import { Atlas } from "../../../../engine/atlas"
 import { AssetError } from "../../../../engine/assets"
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import type { Gpu, Sprite } from "../../../../engine/gpu"
+import type { TextPicture } from "../../../../engine/text"
 import { ALL_ITEMS, ALL_USABLES } from "../../sim/catalog"
 import { allHalts } from "../../sim/catalog/halts"
 import { ALL_FLOORS } from "../../sim/catalog/floors"
@@ -32,9 +33,18 @@ const iconKeys = (): string[] => shippedPictures("processes")
 /** The pictures stretched between two units tied together, by the visual of their tie: every file under `tethers/`. */
 const tetherKeys = (): string[] => shippedPictures("tethers")
 
+/** The icons laid in the texts, as small as a letter: every file under `tiny_icon/`. */
+const tinyKeys = (): string[] => shippedPictures("tiny_icon")
+
+/** The white icons of the texts, which take the color of the text around them. */
+const TINTED_ICONS: ReadonlySet<string> = new Set(["tiny_icon/heart", "tiny_icon/damage"])
+
 /** The keys of the eyes of the button of the tactical view: the normal view, then the tactical one. */
 const EYE_OPEN = "hud/eye_open"
 const EYE_CLOSED = "hud/eye_closed"
+
+/** The key of the gold coin written beside an amount of gold. */
+const GOLD = "hud/icon/gold"
 
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
 const CARD_BACK_PATHS: readonly ImagePath[] = [
@@ -80,9 +90,23 @@ export class UnitSprites {
         return this.#pictures.get(icon.visual) ?? null
     }
 
+    /**
+     * The picture a text lays in a line by the key it names it with: a tiny icon, a status or a process,
+     * none before the sprites are loaded or for a key with none.
+     */
+    public readonly picture = (key: string): TextPicture|null => {
+        const sprite = this.#pictures.get(key)
+        return sprite ? { sprite, tinted: TINTED_ICONS.has(key) } : null
+    }
+
     /** The eye of the button of the tactical view, open or closed, none before it is loaded. */
     public eye(open: boolean): Sprite|null {
         return this.#pictures.get(open ? EYE_OPEN : EYE_CLOSED) ?? null
+    }
+
+    /** The gold coin written beside an amount of gold, none before it is loaded. */
+    public get gold(): Sprite|null {
+        return this.#pictures.get(GOLD) ?? null
     }
 
     /** The back of the cards of a deck, by its place among the decks, none before it is loaded. */
@@ -153,8 +177,8 @@ export class UnitSprites {
         const halts = allHalts().map(halt => halt.icon.visual)
         const floors = ALL_FLOORS.map(floor => floor.icon.visual)
         const keys = [...new Set([
-            ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...statuses, ...things, ...halts, ...floors,
-            EYE_OPEN, EYE_CLOSED,
+            ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...tinyKeys(), ...statuses, ...things, ...halts, ...floors,
+            EYE_OPEN, EYE_CLOSED, GOLD,
         ])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
         const [named, fixedPictures, bag, booster, wood] = await Promise.all([

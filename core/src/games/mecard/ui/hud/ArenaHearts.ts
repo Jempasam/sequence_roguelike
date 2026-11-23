@@ -7,8 +7,11 @@ import type { Process } from "../../sim/process/Process"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { BattleScene, ShownStatus } from "../battle/BattleScene"
 
+import { Detail } from "./Detail"
+import type { DetailTooltip } from "./DetailTooltip"
 import { heartsRow } from "./HeartView"
 import { StatusProcessList } from "./StatusProcessList"
+import { viewDetails } from "./viewDetails"
 
 /** Does a unit hold nothing but solid hearts, which no wound takes? */
 function onlySolid(unit: Unit): boolean {
@@ -46,10 +49,16 @@ export class ArenaHearts {
     ){}
 
 
+    /** The bubbles that tell what the hearts, statuses and processes tell while the pointer is over them. */
+    public tooltip: DetailTooltip|null = null
+
     /** Build the rows again, one for each unit, from its hearts as shown: after a heart or a unit changed. */
     public rebuild(scene: BattleScene): void {
         const content = this.layer.content
         for(const child of [...content.children]) content.remove(child)
+        this.#details?.remove()
+        this.#details = null
+        this.tooltip?.reset()
         this.#rows.clear()
         this.#statusRows.clear()
         const { litHeart } = scene
@@ -70,6 +79,11 @@ export class ArenaHearts {
             this.#rows.set(unit, row)
             content.add(row)
         }
+        // DETAILS //
+        if(!this.tooltip) return
+        const details = Detail.all(...viewDetails(content))
+        this.tooltip.attach(details)
+        this.#details = details
     }
 
     /**
@@ -103,4 +117,7 @@ export class ArenaHearts {
 
     /** The statuses and processes of each unit that has any. */
     readonly #statusRows = new Map<Unit, StatusProcessList>()
+
+    /** What the rows built tell, until they are built again. */
+    #details: Detail|null = null
 }

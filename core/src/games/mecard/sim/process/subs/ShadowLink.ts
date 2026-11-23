@@ -7,6 +7,7 @@ import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
 import * as Areas from "../../battle/area/Areas"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How many hearts a unit going back to its shadow takes from each body on the way, whatever its stats. */
 export const SHADOW_LINK_DAMAGE = 1
@@ -37,7 +38,10 @@ export class ShadowLink extends AbstractProcess {
         public readonly shadow: Unit|null = null,
     ){
         super("lien d'ombre", visual("processes/shadow_link", { color: [0.5, 0.4, 0.7] }),
-            "À la fin du round, saute jusqu'à l'ombre la plus proche, qui disparaît, et blesse les unités sur le chemin.",
+            [
+                "À la fin du ", BATTLE_ROUND,
+                ", saute jusqu'à l'ombre la plus proche, qui disparaît, et blesse les unités sur le chemin.",
+            ],
         )
     }
 

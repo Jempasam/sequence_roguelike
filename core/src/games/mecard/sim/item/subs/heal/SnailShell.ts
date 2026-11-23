@@ -1,9 +1,11 @@
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** How many shields the shell of the catalog holds at most. */
 const SHELL_MAX = 3
@@ -17,7 +19,7 @@ export class SnailShell extends AbstractItem {
         public readonly capacity: number,
     ){
         super("Coquille d'escargot", visual("items/snail_shell"), [
-            "Un round sans te déplacer te donne un cœur bouclier (", capacity, " au plus). Un déplacement les perd.",
+            "Un ", BATTLE_ROUND, " sans te déplacer te donne ", new HeartCount(1), " ", SHIELD_HEART, " (", capacity, " au plus). Un déplacement les perd.",
         ])
     }
 

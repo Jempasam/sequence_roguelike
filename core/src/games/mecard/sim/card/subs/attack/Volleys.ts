@@ -3,7 +3,7 @@ import type { Indicator } from "../../../battle/preview/Preview"
 import type { Unit } from "../../../battle/Unit"
 import type { Battle } from "../../../battle/Battle"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
+import { DISTANCE, PORTEE, PRECISION, BATTLE_ROUND } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 
 import { ActionCard } from "../ActionCard"
@@ -60,7 +60,7 @@ function charge(unit: Unit): number {
 /** A shot repeated for the actions its unit played before it. */
 export const CHARGED_SHOT = new ActionCard("Tir chargé", [
     "Tire comme Tir (", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, ", ", SHOT_DAMAGE, "+", PRECISION, " ",
-    DamageType.PHYSICAL, ") une fois, plus une par ", CHARGE_EVERY, " actions jouées avant elle ce round.",
+    DamageType.PHYSICAL, ") une fois, plus une par ", CHARGE_EVERY, " actions jouées avant elle ce ", BATTLE_ROUND, ".",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const times = charge(unit)

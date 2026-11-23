@@ -1,7 +1,7 @@
 import { visual } from "../../../base/Visual"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE } from "../../../base/keywords"
-import { HeartCount } from "../../../battle/words"
+import { SummonedHearts } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
@@ -30,8 +30,8 @@ export class SubstitutionCard extends ActionCard {
     ){
         super("Substitution", [
             "Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner, et laisse à ta place un tronc de ",
-            new HeartCount(halves),
-            " + invocation, qui prend les coups qui t'étaient destinés.",
+            new SummonedHearts(halves),
+            ", qui prend les coups qui t'étaient destinés.",
         ], Rarity.RARE, SubstitutionCard.#substituting(length, halves))
     }
 

@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { ALLONGE, DISTANCE, FORCE } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, BATTLE_ROUND } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
@@ -45,6 +45,6 @@ function throwing(range: number, amount: number): Action {
 
 export const PIERCING_SPEAR = new ActionCard("Lance perforante", [
     "Lance une lance droit devant, jusqu'à ", SPEAR_RANGE, "×", ALLONGE, " ", DISTANCE, " : ", SPEAR_DAMAGE, "+", FORCE, " ",
-    DamageType.PHYSICAL, " à la première cible. Elle reste plantée jusqu'à la fin du round : tu suis cette cible quand ",
+    DamageType.PHYSICAL, " à la première cible. Elle reste plantée jusqu'à la fin du ", BATTLE_ROUND, " : tu suis cette cible quand ",
     "elle bouge ou se tourne. Tout autre déplacement de ta part retire la lance.",
 ], Rarity.RARE, throwing(SPEAR_RANGE, SPEAR_DAMAGE))

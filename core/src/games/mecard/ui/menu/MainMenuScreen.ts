@@ -296,7 +296,7 @@ export class MainMenuScreen {
             depth: layer.depth ?? rangedOf(index, layers.length, depths),
             warp: layer.warp ?? rangedOf(index, layers.length, warps),
             ...layer.place && { place: layer.place },
-        })), { opaque: true })
+        })), { opaque: true, ...backdrop.viewport && { viewport: backdrop.viewport } })
         this.refresh()
     }
 }

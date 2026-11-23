@@ -8,6 +8,7 @@ import type { Usable } from "../../sim/usable/Usable"
 
 import { LIT_EDGE } from "../look/colors"
 import { CHOSEN_TEXT } from "../look/theme"
+import type { DetailText } from "./Detail"
 import type { UnitSprites } from "../look/UnitSprites"
 
 /** The size of the picture of an item or a usable, in virtual pixels. */
@@ -64,6 +65,9 @@ export class AbsItemIcon extends Component {
 
     /** What the pointer coming over it or leaving does, nothing when none. */
     public onHover: ((over: boolean) => void)|null = null
+
+    /** What it says while the pointer is over it, read by {@link viewDetails}, nothing when none. */
+    public detail: DetailText|null = null
 
     /** What a click does, nothing when none. */
     public onPick: (() => void)|null = null

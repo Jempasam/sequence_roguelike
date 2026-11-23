@@ -12,7 +12,7 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { AbstractHalt } from "../AbstractHalt"
 import { decksShown } from "../shown"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, ITEM } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** What the strategist may do with the decks of a character. */
@@ -170,7 +170,7 @@ export class StrategistHalt extends AbstractHalt {
 export const STRATEGIST_HALT: HaltType = {
     id: "strategist",
     name: "Stratège",
-    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un objet qui fait piocher plus."],
+    description: ["Divise un ", DECK, " en deux, échange des ", CARTE.as("cartes"), " entre deux ", DECK.as("decks"), ", les fusionne, ou offre un ", ITEM, " qui fait piocher plus."],
     icon: visual("halts/strategist", { letter: "ST" }),
     transition: visual("house-door"),
     create: run => new StrategistHalt(run),

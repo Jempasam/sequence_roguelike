@@ -5,7 +5,7 @@ import type { BattleRows, UiRect } from "@game/core/mecard/battle-grid"
 // --- Fixture builders ---
 
 /** Rows as tall as what the battle screen shows in them. */
-const ROWS: BattleRows = { chain: 60, hand: 62, info: 32, usables: 30 }
+const ROWS: BattleRows = { chain: 60, hand: 62, usables: 30 }
 
 /** The sizes of the interface a screen may give. */
 const SIZES = [[480, 270], [512, 288], [360, 270], [640, 360]] as const
@@ -50,10 +50,10 @@ describe.each(SIZES)("battleGrid at %d by %d", (width, height) => {
         expect(grid.journal.bottom).toBe(height - MARGIN)
     })
 
-    test("the info lies under the hand and the decks", () => {
-        expect(grid.info.left).toBe(grid.hand.left)
-        expect(grid.info.right).toBe(grid.decks.right)
-        expect(grid.info.top).toBe(grid.hand.bottom + GAP)
+    test("the hand and the decks go down to the bottom", () => {
+        expect(grid.hand.bottom).toBe(height - MARGIN)
+        expect(grid.decks.bottom).toBe(height - MARGIN)
+        expect(grid.hand.top).toBe(grid.chain.bottom + GAP)
     })
 
     test("the usables lie between the stats and the journal, as tall as they asked", () => {
@@ -65,7 +65,6 @@ describe.each(SIZES)("battleGrid at %d by %d", (width, height) => {
     test("the rows under the map are as tall as they asked", () => {
         expect(grid.chain.bottom - grid.chain.top).toBe(ROWS.chain)
         expect(grid.hand.bottom - grid.hand.top).toBe(ROWS.hand)
-        expect(grid.info.bottom - grid.info.top).toBe(ROWS.info)
     })
 })
 

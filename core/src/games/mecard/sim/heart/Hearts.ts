@@ -1,3 +1,4 @@
+import { HEART } from "../base/keywords"
 import { Observable } from "../base/Observable"
 import type { HealEvent, HeartEvent, HeartLossEvent, HeartReplaceEvent, HurtEvent, IncomingDamage } from "../battle/events"
 import type { DamageType } from "../battle/DamageType"
@@ -202,7 +203,7 @@ export class Hearts {
         insertHeart(this.all, heart)
         this.onAdd.notify({ unit, heart, index: this.all.indexOf(heart) })
         this.#follow()
-        unit.battle.events.push({ type: "status", unit, text: ["+ cœur ", heart.kind] })
+        unit.battle.events.push({ type: "status", unit, text: ["+ ", HEART, " ", heart.kind] })
     }
 
     /** Tell the rules of the kinds the bar holds that a battle starts, an error reported rather than thrown. */

@@ -18,6 +18,8 @@ import type { TravelLocks } from "../travel/TravelScreen"
 import { LoadingOverlay } from "./LoadingOverlay"
 import { PlaceTransitions } from "./PlaceTransitions"
 import type { UiSoundLink } from "../sound/UiSoundLink"
+import { animate } from "../forward/animate"
+import type { Forwarded } from "../forward/Forwarded"
 
 /** The share of the screen the panel of the end of a battle takes. */
 const MODAL_SHARE = 0.85
@@ -52,6 +54,9 @@ export interface RunScreenOptions {
 
     /** What tells the speakers what the pointer does to what is no component, none when there is no sound. */
     readonly sounds?: UiSoundLink|null
+
+    /** What is told as the animations of the run, of its journey and of its battles play, none by default. */
+    readonly forwarded?: Forwarded|null
 
     /** Where a point of the interface, in virtual pixels, lies in the world, in its pixels. */
     toWorld(x: number, y: number): readonly [number, number]
@@ -151,6 +156,7 @@ export class RunScreen {
         this.battleScreen = new BattleScreen(ui, engine.newBattle(), {
             theme, sprites, toWorld, toUi, report,
             sounds: options.sounds,
+            forwarded: options.forwarded,
             locks: this.#locks.battle,
             depth: () => this.#engine.travel.depth,
             over: battle => this.#seeOut(battle),
@@ -159,6 +165,7 @@ export class RunScreen {
         this.travelScreen = new TravelScreen(ui, engine.travel, {
             theme, assets, sprites, report,
             sounds: options.sounds,
+            forwarded: options.forwarded,
             locks: this.#locks.travel,
             enter: visual => this.#enterVisit(visual),
             leave: () => this.transitions.leave(),
@@ -247,14 +254,17 @@ export class RunScreen {
     /** Add what the run tells to what the screen plays, as it comes. */
     #registerObservers(): void {
         const run = this.#engine
+        const forwarded = this.options.forwarded ?? null
         this.#observers.remove()
         this.#observers = new Scope(
             run.travel.fightReached.add(() => this.#startFight()),
             // Played where the journey is shown, so a fight comes once the party walked to it.
-            run.battleStarted.add(battle => {
-                this.travelScreen.animations.add(() => this.#enterBattle(battle))
+            animate(this.travelScreen.animations, forwarded, run.battleStarted, battle => () => {
+                return this.#enterBattle(battle)
             }),
-            run.defeated.add(() => this.animations.add(instant(() => this.#showEnd(() => this.#defeat())))),
+            animate(this.animations, forwarded, run.defeated, () => {
+                return instant(() => this.#showEnd(() => this.#defeat()))
+            }),
             run.phaseChanged.add(phase => {
                 if(phase === "travel") this.animations.add(() => this.#backToTravel())
             }),

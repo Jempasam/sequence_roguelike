@@ -9,6 +9,7 @@ import { RoundStatus } from "../RoundStatus"
 import { ScalingStatus } from "../ScalingStatus"
 import type { StatGain } from "../ScalingStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** The keyword of a bubble: a body of time that copies the actions of its blower. */
 export const BULLE = new Keyword("bulle")
@@ -87,7 +88,7 @@ export function isBubble(unit: Unit): boolean {
 export const SOAPY = new StatusType("savonneux", statusVisual("soapy", 0.75, 0.9, 1), "positive", level => new Soapy(level), {
     description: [
         "Chaque action jouée est copiée au bout de la chaîne de tes ", BULLE, " de niveau ", BUBBLE_COPY_LEVEL, " ou plus, ",
-        "et par les autres à moins de ", SOAPY_REACH, " m : elles perdent ", BUBBLE_COPY_COST, " niveaux. Encore ", STATUS_LEVEL, " rounds.",
+        "et par les autres à moins de ", SOAPY_REACH, " m : elles perdent ", BUBBLE_COPY_COST, " niveaux. Encore ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ".",
     ],
 })
 
@@ -166,7 +167,7 @@ export class Soapy extends RoundStatus {
 
 /** A giant: more strength and reach, less speed, for as long as its level lasts. */
 export const GIANT = new StatusType("géant", statusVisual("giant", 1, 0.75, 0.4), "positive", level => new Giant(level), {
-    description: ["+1 force, +1 portée, +1 allonge, −0,5 mouvement. Encore ", STATUS_LEVEL, " rounds."],
+    description: ["+1 force, +1 portée, +1 allonge, −0,5 mouvement. Encore ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."],
 })
 
 /** Giant: fixed gains, for as many rounds as its level. */

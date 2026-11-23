@@ -6,7 +6,8 @@ import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { AbstractHalt } from "../AbstractHalt"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, BATTLE_ROUND, MONSTER, PET } from "../../../base/keywords"
+import { HeartCount } from "../../../battle/words"
 import { visual } from "../../../base/Visual"
 import { trainerMonsters } from "./TrainerHalt"
 
@@ -32,7 +33,10 @@ export class MonsterParkHalt extends AbstractHalt {
     public start(ctx: HaltContext): void {
         ctx.offer("Quel allié ?", this.#monsters, monster => ({
             cards: [...new Set(monster.cards)], sprite: monster.sprite,
-            text: [monster, " : ", monster.hearts, " cœurs, ", monster.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu."],
+            text: [
+                monster, " : ", new HeartCount(monster.hearts), ", ", monster.draw, " ", CARTE.as("cartes"), " par ",
+                BATTLE_ROUND, ", joué par un bot, son ", DECK, " rebattu.",
+            ],
         }), monster => {
             this.impact()
             ctx.tell(concat(this.run.tame(monster), " rejoint l'équipe."))
@@ -48,7 +52,7 @@ export class MonsterParkHalt extends AbstractHalt {
 export const MONSTER_PARK_HALT: HaltType = {
     id: "monster-park",
     name: "Parc à monstres",
-    description: "Un allié parmi deux pets et un monstre, joué par un bot.",
+    description: ["Un allié parmi deux ", PET.as("familiers"), " et un ", MONSTER, ", joué par un bot."],
     icon: visual("halts/monster-park", { letter: "PM" }),
     transition: visual("warm-door"),
     create: run => new MonsterParkHalt(run),

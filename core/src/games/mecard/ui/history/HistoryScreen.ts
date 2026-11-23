@@ -2,16 +2,13 @@ import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, NineSlice, Panel, Scroll, WrapBox } from "../../../../engine/ui"
 import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
-import { concat } from "../../../../semantic"
-import type { Text } from "../../../../semantic"
-import type { Card } from "../../sim/card/Card"
-import { allCards } from "../../sim/run/Hero"
-import { stuffOf } from "../../sim/halt/subs/shown"
 import { loadedHeroes } from "../../sim/save/runSave"
 import type { HistoryEntry } from "../../sim/save/historySave"
 
-import { DetailBox } from "../hud/DetailBox"
-import { unitOption } from "../hud/ChoiceOptions"
+import { Detail } from "../hud/Detail"
+import { DetailTooltip } from "../hud/DetailTooltip"
+import { viewDetails } from "../hud/viewDetails"
+import { unitView } from "../hud/unitView"
 import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
 
@@ -20,9 +17,6 @@ const BACKDROP = new Color(0.1, 0.06, 0.03)
 
 /** The space around and between things, in virtual pixels. */
 const MARGIN = 4
-
-/** How tall the box of details is, in virtual pixels. */
-const DETAIL_HEIGHT = 44
 
 /** How wide a card of a character is, and the space between two, to know how many fit in a row. */
 const CARD_WIDTH = 44
@@ -43,7 +37,7 @@ export function entryTitle(entry: HistoryEntry): string {
 
 /**
  * The history: the games that ended, the last first, each with its party as it stood: every character with
- * its hearts, its cards, its items and its usables. A box at the foot says what a hovered card is.
+ * its hearts, its cards, its items and its usables. A bubble says what a hovered card is.
  */
 export class HistoryScreen {
 
@@ -54,6 +48,7 @@ export class HistoryScreen {
     public set visible(visible: boolean){
         if(visible === this.visible) return
         this.#layer.content.visible = visible
+        this.#tipLayer.content.visible = visible
         if(visible) this.#size = ""
     }
 
@@ -68,8 +63,8 @@ export class HistoryScreen {
     /** The button back to the menu. */
     public get backButton(): Button { return this.#back }
 
-    /** The box that says what is hovered. */
-    public get detail(): DetailBox { return this.#detail }
+    /** The bubbles that say what is hovered. */
+    public get tooltip(): DetailTooltip { return this.#tooltip }
 
     constructor(
         public readonly theme: Theme,
@@ -84,21 +79,24 @@ export class HistoryScreen {
     ){
         this.#layer = ui.addLayer("history")
         this.#layer.content.visible = false
+        this.#tipLayer = ui.addLayer("history-tooltip")
+        this.#tipLayer.content.visible = false
+        this.#tooltip = new DetailTooltip(ui, this.#tipLayer, theme, {
+            color: DIM_TEXT, paper: () => sprites.paper,
+        })
         this.#back = new Button(theme, "Retour")
         this.#back.onActivate = () => host.leave()
-        this.#detail = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
     }
 
 
-    /** Lay the history out again when the interface changed size, and let the box of details read the input. */
+    /** Lay the history out again when the interface changed size, and let the bubbles read the input. */
     public frame(input: InputFrame): void {
         const size = `${this.ui.width}×${this.ui.height}`
         if(size !== this.#size){
             this.#size = size
             this.refresh()
         }
-        this.#detail.tell(this.#card ? concat(this.#card, " : ", this.#card.description) : null)
-        this.#detail.frame(input, this.ui.pointerX, this.ui.pointerY)
+        this.#tooltip.frame(input)
     }
 
     /** Build the history again. */
@@ -106,9 +104,10 @@ export class HistoryScreen {
         const { theme, ui } = this
         const content = this.#layer.content
         for(const child of [...content.children]) content.remove(child)
-        this.#detail.parent?.remove(this.#detail)
         this.#back.parent?.remove(this.#back)
-        this.#card = null
+        this.#hovers?.remove()
+        this.#hovers = null
+        this.#tooltip.reset()
         const backdrop = new Panel(theme, {
             background: NineSlice.flat(theme.white, BACKDROP), padding: 0, interactive: false,
         })
@@ -124,21 +123,27 @@ export class HistoryScreen {
         scroll.content = list
         column.add(scroll, { grow: 1 })
         column.add(this.#back, { align: "center" })
-        this.#detail.hint = "Survole une carte pour la lire."
-        this.#detail.fixedSize = { width: ui.width - 2 * MARGIN, height: DETAIL_HEIGHT }
-        column.add(this.#detail)
         content.add(column, { x: "stretch", y: "stretch" })
+        // DETAILS //
+        const hovers = Detail.all(...viewDetails(list))
+        this.#tooltip.attach(hovers)
+        this.#hovers = hovers
     }
 
 
     readonly #layer: Layer
+
+    /** The layer over the history that the bubbles open in. */
+    readonly #tipLayer: Layer
+
+    /** The bubbles that say what is hovered. */
+    readonly #tooltip: DetailTooltip
     readonly #back: Button
-    readonly #detail: DetailBox
     #entries: readonly HistoryEntry[] = []
     #size = ""
 
-    /** The card the pointer is over, none when it is over none. */
-    #card: Card|null = null
+    /** What the cards and hearts of the games tell, until the history is built again. */
+    #hovers: Detail|null = null
 
     /** How many cards fit in a row of a character at the width of the interface now. */
     #perRow(): number {
@@ -152,15 +157,7 @@ export class HistoryScreen {
         view.add(new Label(theme, entryTitle(entry), { color: CHOSEN_TEXT }))
         const wrap = new WrapBox({ gap: MARGIN })
         for(const hero of loadedHeroes(entry.heroes)){
-            const text: Text = stuffOf(hero)
-            const cards = [...new Set(allCards(hero))]
-            wrap.add(unitOption(theme, hero, this.sprites, cards, text, {
-                perRow: this.#perRow(),
-                onCardHover: (card, over) => {
-                    if(over) this.#card = card
-                    else if(this.#card === card) this.#card = null
-                },
-            }))
+            wrap.add(unitView(theme, this.sprites, hero, { perRow: this.#perRow() }))
         }
         view.add(wrap)
         return view

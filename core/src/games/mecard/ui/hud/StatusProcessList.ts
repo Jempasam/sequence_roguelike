@@ -70,6 +70,7 @@ export class StatusProcessList extends AbsItemList {
                 edge: litStatus?.type === status.type ? litStatus.edge : null,
                 iconSize: STATUS_ICON_SIZE,
                 onHover: over => this.hooks.onStatusHover(unit, status, over),
+                detail: () => statusText(status),
             })
         }
         for(const process of shown.processes){
@@ -79,6 +80,7 @@ export class StatusProcessList extends AbsItemList {
                 activation: process === lit ? "" : null,
                 iconSize: PROCESS_ICON_SIZE,
                 onHover: over => this.hooks.onProcessHover(unit, process, over),
+                detail: () => processText(process),
             })
         }
         this.set(items)

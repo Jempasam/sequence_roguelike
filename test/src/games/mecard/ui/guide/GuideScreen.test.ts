@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Label, concat, plainText } from "@game/core"
-import type { Box } from "@game/core"
+import { Container, Label, plainText } from "@game/core"
+import type { Box, Component } from "@game/core"
 import { DECK, TURNS } from "@game/core/mecard"
 import { CardView } from "@game/core/mecard/card-view"
 import { GuideScreen } from "@game/core/mecard/guide"
 import { GUIDE } from "@game/core/mecard/guide-content"
-import { cardNamed, variantCard } from "@game/core/mecard/guide-blocks"
+import { cardNamed, cards, variantCard } from "@game/core/mecard/guide-blocks"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 
@@ -100,24 +100,48 @@ describe("GuideScreen, what is hovered", () => {
         expect((screen.scroll.content as Box).children).toHaveLength(GUIDE.length)
     })
 
-    test("a word named in the text, hovered → the box explains it", () => {
+    test("a word named in the text, hovered → a bubble explains it", () => {
         const { screen } = guide()
-        screen.detail.hearLink(DECK)
-        expect(plainText(screen.detail.text)).toContain("réserve")
+        screen.tooltip.hearLink(DECK, { x: 10, y: 10, width: 5, height: 5 } as never)
+        expect(plainText(screen.tooltip.text!)).toContain("réserve")
+        screen.tooltip.hearLink(null, null)
+        expect(screen.tooltip.open).toBe(false)
     })
 
-    test("a card hovered by name → the box says what it does", () => {
-        const { screen } = guide()
-        const card = cardNamed("Estoc")
-        screen.detail.tell(concat(card, " : ", card.description))
-        expect(plainText(screen.detail.text)).toContain("Estoc")
+    test("a card hovered → a bubble opens with what it does, and closes when the pointer leaves", () => {
+        const { screen, setup } = guide([cards([cardNamed("Estoc")], "Une carte.")])
+        setup.ui.render()
+        const find = (root: Component): Component|null => {
+            if(root instanceof CardView) return root
+            if(!(root instanceof Container)) return null
+            for(const child of root.children){
+                const found = find(child)
+                if(found) return found
+            }
+            return null
+        }
+        const view = find(screen.scroll.content!)!
+        let x = view.bounds.width / 2
+        let y = view.bounds.height / 2
+        for(let each: Component|null = view; each; each = each.parent){
+            x += each.bounds.x
+            y += each.bounds.y
+        }
+        const bubbles = () => setup.ui.layers.find(layer => layer.name === "guide-tooltip")!.content.children
+        setup.port.send({ type: "pointer-move", x: Math.floor(x), y: Math.floor(y) })
+        screen.frame(setup.frame())
+        expect(bubbles().length).toBeGreaterThan(0)
+        setup.port.send({ type: "pointer-move", x: 0, y: 0 })
+        screen.frame(setup.frame())
+        expect(bubbles()).toHaveLength(0)
     })
 
-    test("the box lies at the foot of the screen, over the whole width", () => {
+    test("no box of details → the guide takes the whole height, down to its button back", () => {
         const { screen, setup } = guide()
         setup.ui.render()
-        const { bounds } = screen.detail
-        expect(bounds.y + bounds.height).toBeGreaterThan(setup.ui.height - 10)
-        expect(bounds.width).toBeGreaterThan(setup.ui.width - 12)
+        const { bounds } = screen.backButton
+        let bottom = bounds.y + bounds.height
+        for(let each = screen.backButton.parent; each; each = each.parent) bottom += each.bounds.y
+        expect(bottom).toBeGreaterThan(setup.ui.height - 20)
     })
 })

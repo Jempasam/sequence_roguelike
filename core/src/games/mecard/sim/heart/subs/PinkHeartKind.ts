@@ -4,13 +4,18 @@ import { HeartRule } from "../HeartRule"
 import { Heart } from "../Heart"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** Hearts that come back: lost, each leaves an empty place, the last of which fills at each end of round. */
 export class PinkHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("rose", "Perdu, il laisse une place vide ; à chaque fin de round, le dernier rose perdu revient.", rgba(1, 0.55, 0.75))
+        super(
+            "rose",
+            ["Perdu, il laisse une place vide ; à chaque fin de ", BATTLE_ROUND, ", le dernier rose perdu revient."],
+            rgba(1, 0.55, 0.75),
+        )
     }
 
 

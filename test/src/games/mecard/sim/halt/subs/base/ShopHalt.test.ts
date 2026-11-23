@@ -20,11 +20,17 @@ describe("ShopHalt", () => {
         const { travel } = startedRun(3)
         travel.visit(SHOP_HALT)
         const offer = travel.dialogs.at(-1) as OfferDialog
-        const texts = offer.offers.map(shown => plainText(shown.text ?? ""))
-        expect(texts).toHaveLength(7)
-        const prices = texts.map(text => Number(/^(\d+) or/.exec(text)?.[1]))
+        expect(offer.offers).toHaveLength(7)
+        const prices = offer.offers.map(shown => shown.price ?? 0)
         // The removal is the last: 30 gold, whatever its index.
         expect(prices[6]).toBe(30)
         for(const price of prices) expect(price).toBeGreaterThan(5)
+    })
+
+    test("the shop visited → the price is told apart, never written in the text of a good", () => {
+        const { travel } = startedRun(3)
+        travel.visit(SHOP_HALT)
+        const offer = travel.dialogs.at(-1) as OfferDialog
+        for(const shown of offer.offers) expect(plainText(shown.text ?? "")).not.toMatch(/^\d+ or/)
     })
 })

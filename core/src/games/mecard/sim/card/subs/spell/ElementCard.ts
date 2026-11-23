@@ -1,4 +1,6 @@
 import { concat } from "../../../../../../semantic"
+import type { Text } from "../../../../../../semantic"
+import { colored } from "../../../base/Rgba"
 import { ELEMENT } from "../../CardType"
 import type { Element } from "../../../element/Element"
 import {
@@ -40,6 +42,11 @@ export class ElementCard extends AbstractCard<Element> {
 
     public get(): Element {
         return this.element
+    }
+
+    /** Its name in the color of its element, not of its rarity. */
+    public override toSemString(): Text {
+        return colored(this.element.color, this.name)
     }
 }
 

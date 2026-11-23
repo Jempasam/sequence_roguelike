@@ -4,7 +4,7 @@ import type { UnitContext } from "../../battle/Action"
 import { lineEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
 import { HeartCount } from "../../battle/words"
-import { DISTANCE } from "../../base/keywords"
+import { DISTANCE, HEAL } from "../../base/keywords"
 import { Poison, POISONED } from "../../status/subs/Poison"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
@@ -36,7 +36,7 @@ export class Plant extends AbstractElement {
         super(
             "Plante", rgba(0.4, 0.85, 0.35), "empoisonné",
             new Poison(PLANT_POISON),
-            ["soigne ", new HeartCount(PLANT_HEAL), " + soin"],
+            ["soigne ", new HeartCount(PLANT_HEAL), " + ", HEAL],
             ["une épine sur ", THORN_RANGE, " ", DISTANCE, " : ", THORN_DAMAGE, " ", DamageType.PHYSICAL, " au premier corps, et le négatif"],
         )
     }

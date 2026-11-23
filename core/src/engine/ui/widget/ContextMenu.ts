@@ -5,6 +5,7 @@ import type { Layer } from "../Layer"
 import { Box } from "../layout/Box"
 import { Rect } from "../Rect"
 import type { Theme } from "../Theme"
+import { placeBubble } from "./bubblePlacement"
 import { Button } from "./Button"
 import { Label } from "./Label"
 import { Panel } from "./Panel"
@@ -125,18 +126,13 @@ const ANCHOR = new Rect()
  * component, flipped to the left or above when it would overflow, and kept on the texture.
  */
 export function placePopup(popup: Component, layer: Layer, at: PopupAnchor): [number, number] {
-    const hint = popup.measure(Infinity)
-    const width = hint.preferredWidth
-    const height = hint.preferredHeight
-    const room = layer.content.bounds
-    const isPoint = !("bounds" in at)
-    if(isPoint) ANCHOR.set(at.x, at.y, 0, 0)
-    else if(!internals.absoluteArea(at, ANCHOR)) ANCHOR.set(0, 0, 0, 0)
-    let x = ANCHOR.x
-    let y = ANCHOR.bottom
-    if(x + width > room.width) x = (isPoint ? ANCHOR.x : ANCHOR.right) - width
-    if(y + height > room.height) y = ANCHOR.y - height
-    x = Math.max(0, Math.min(x, room.width - width))
-    y = Math.max(0, Math.min(y, room.height - height))
+    const { preferredWidth, preferredHeight } = popup.measure(Infinity)
+    if("bounds" in at){
+        if(!internals.absoluteArea(at, ANCHOR)) ANCHOR.set(0, 0, 0, 0)
+    } else {
+        ANCHOR.set(at.x, at.y, 0, 0)
+    }
+    const size = { width: preferredWidth, height: preferredHeight }
+    const { x, y } = placeBubble(size, ANCHOR, layer.content.bounds)
     return [x, y]
 }

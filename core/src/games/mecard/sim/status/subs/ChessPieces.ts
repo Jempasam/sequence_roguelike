@@ -6,6 +6,7 @@ import type { Unit } from "../../battle/Unit"
 import { BaseStatus } from "../BaseStatus"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How far a rook goes on after each of its moves, in meters: ahead, the way it went. */
 export const ROOK_EXTRA = 1
@@ -43,7 +44,7 @@ export const QUEEN_PIECE = new StatusType("reine", statusVisual("chess_piece", .
 
 /** Promoted: for a few rounds a unit is a piece for its allies, who can have it play their actions. */
 export const CHESS_PIECE = new StatusType("pièce d'échecs", statusVisual("chess_piece", ...IVORY), "positive", level => new PromotedPiece(level), {
-    description: ["Considéré comme une pièce d'échecs par ses alliés : ils peuvent lui faire jouer leurs actions, pendant ", STATUS_LEVEL, " rounds."],
+    description: ["Considéré comme une pièce d'échecs par ses alliés : ils peuvent lui faire jouer leurs actions, pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."],
 })
 
 /** The statuses that make a unit a piece. */

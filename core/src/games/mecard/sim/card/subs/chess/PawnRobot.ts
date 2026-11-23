@@ -1,11 +1,11 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { CARTE, DISTANCE } from "../../../base/keywords"
+import { CARTE, DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Action, Pose } from "../../../battle/Action"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { HeartCount } from "../../../battle/words"
+import { SummonedHearts } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 import { CHESS_PIECE, PAWN_PIECE } from "../../../status/subs/ChessPieces"
@@ -45,9 +45,10 @@ export class PawnRobotCard extends AbstractCard<Action, Module> {
 
     constructor(){
         super("Robot pion", [
-            "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un petit robot d'", new HeartCount(ROBOT_HEARTS),
-            " bouclier + invocation, qui joue les ", CARTE.as("cartes"), " du module à chaque round. Il est une pièce ",
-            "d'échecs pour ", ROBOT_PIECE_ROUNDS, " rounds. Ajoute à ta main Par la dernière pièce.",
+            "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un petit robot d'",
+            new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART), ", qui joue les ", CARTE.as("cartes"),
+            " du module à chaque ", BATTLE_ROUND, ". Il est une pièce d'échecs pour ", ROBOT_PIECE_ROUNDS, " ",
+            BATTLE_ROUND.as("rounds"), ". Ajoute à ta main Par la dernière pièce.",
         ], Rarity.EPIC)
     }
 

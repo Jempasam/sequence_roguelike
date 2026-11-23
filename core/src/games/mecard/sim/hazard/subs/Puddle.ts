@@ -17,6 +17,7 @@ import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How many rounds the puddles of the catalog last. */
 export const PUDDLE_ROUNDS = 3
@@ -25,7 +26,7 @@ export const PUDDLE_ROUNDS = 3
 export const PUDDLE_RADIUS = 1
 
 /** A puddle of a potion. */
-export const PUDDLE_HAZARD = familyType("flaque", statusVisual("puddle", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: ["Verse sa potion sur chaque unité qui y entre, puis à la fin de chaque round sur chaque unité qui s'y trouve, au niveau ", STATUS_LEVEL, "."] })
+export const PUDDLE_HAZARD = familyType("flaque", statusVisual("puddle", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: ["Verse sa potion sur chaque unité qui y entre, puis à la fin de chaque ", BATTLE_ROUND, " sur chaque unité qui s'y trouve, au niveau ", STATUS_LEVEL, "."] })
 
 /** The kinds of puddle, one for each dose. */
 export const PUDDLES = doseVariants(

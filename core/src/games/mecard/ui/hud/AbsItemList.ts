@@ -5,6 +5,7 @@ import type { Visual } from "../../sim/base/Visual"
 
 import type { UnitSprites } from "../look/UnitSprites"
 import { AbsItemIcon, STATUS_ICON_SIZE } from "./AbsItemIcon"
+import type { DetailText } from "./Detail"
 
 /** What an item of the list shows: abstract, a look and a text, not what they stand for. */
 export interface AbsItem {
@@ -21,6 +22,9 @@ export interface AbsItem {
 
     /** What the pointer coming over it or leaving it does, nothing when none. */
     readonly onHover?: (over: boolean) => void
+
+    /** What it says while the pointer is over it, none to say nothing. */
+    readonly detail?: DetailText
 
     /** The size of its picture at scale 1, the one of the list when none. */
     readonly iconSize?: number
@@ -133,6 +137,7 @@ export class AbsItemList extends Box {
         icon.activation = item.activation ?? null
         icon.edge = item.edge ?? null
         icon.onHover = item.onHover ?? null
+        icon.detail = item.detail ?? null
     }
 
     #iconAt(index: number): AbsItemIcon {

@@ -8,7 +8,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_TURN } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
@@ -38,7 +38,7 @@ export class TaserCard extends ActionCard {
     ){
         super("Taser", [
             "Électrocute l'", UNIT, " juste devant, à ", TOUCH_RANGE, " ", DISTANCE, " : ", damage, " ", DamageType.PHYSICAL,
-            ", et sa prochaine étape est perdue.",
+            ", et sa prochaine ", BATTLE_TURN.as("étape"), " est perdue.",
         ], Rarity.RARE, TaserCard.#shocking(damage))
     }
 

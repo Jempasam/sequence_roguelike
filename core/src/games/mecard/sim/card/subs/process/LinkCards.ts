@@ -1,5 +1,5 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { DISTANCE } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -62,7 +62,7 @@ function linkAction(
 
 
 export const LASER_LINK = new ActionCard("Lien laser", [
-    "Jusqu'à la fin du round, un laser te relie à l'allié le plus proche : à chaque fin de tour, ",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", un laser te relie à l'allié le plus proche : à chaque fin de tour, ",
     LASER_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ennemi sur le laser.",
 ], Rarity.RARE, linkAction(
     (battle, unit, pose) => battle.nearestAlly(unit, Infinity, pose.position),
@@ -70,7 +70,7 @@ export const LASER_LINK = new ActionCard("Lien laser", [
 ))
 
 export const HOOK_ON = new ActionCard("Accroche", [
-    "S'accroche à l'allié le plus proche, à ", HOOK_REACH, " ", DISTANCE, " au plus, jusqu'à la fin du round : quand tu ",
+    "S'accroche à l'allié le plus proche, à ", HOOK_REACH, " ", DISTANCE, " au plus, jusqu'à la fin du ", BATTLE_ROUND, " : quand tu ",
     "bouges ou tournes, il te suit en gardant sa place. L'accroche casse s'il se retrouve trop loin.",
 ], Rarity.COMMON, linkAction(
     (battle, unit, pose) => battle.nearestAlly(unit, HOOK_REACH, pose.position),
@@ -78,7 +78,7 @@ export const HOOK_ON = new ActionCard("Accroche", [
 ))
 
 export const IRON_CHAIN = new ActionCard("Chaîne de fer", [
-    "Enchaîne le premier ennemi devant toi, à ", CHAIN_RANGE, " ", DISTANCE, " au plus, jusqu'à la fin du round : à chaque ",
+    "Enchaîne le premier ennemi devant toi, à ", CHAIN_RANGE, " ", DISTANCE, " au plus, jusqu'à la fin du ", BATTLE_ROUND, " : à chaque ",
     "fin de tour, s'il est à plus de ", CHAIN_SLACK, " ", DISTANCE, ", vous êtes tirés l'un vers l'autre de ",
     CHAIN_PULL, " ", DISTANCE, " chacun.",
 ], Rarity.RARE, linkAction(

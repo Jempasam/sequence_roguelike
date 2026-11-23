@@ -6,6 +6,7 @@ import { DODGE } from "../../../status/subs/Dodge"
 import type { Unit } from "../../../battle/Unit"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND, FORCE, INVOCATION } from "../../../base/keywords"
 
 /** How far apart two bodies may stand and still touch, in meters: a body stops a stride short of another. */
 const CONTACT_SLACK = 0.08
@@ -46,7 +47,7 @@ export class KingCrown extends AbstractItem {
 
 
     constructor(){
-        super("Couronne de roi", visual("items/king_crown"), ["Tes invocations ont +", CROWN_STRENGTH, " force."])
+        super("Couronne de roi", visual("items/king_crown"), ["Tes ", INVOCATION.as("invocations"), " ont +", CROWN_STRENGTH, " ", FORCE, "."])
     }
 
 
@@ -66,7 +67,7 @@ export class Ashtray extends AbstractItem {
 
 
     constructor(){
-        super("Cendrier", visual("items/ashtray"), ["Tes statuts positifs durent un round de plus."])
+        super("Cendrier", visual("items/ashtray"), ["Tes statuts positifs durent un ", BATTLE_ROUND, " de plus."])
     }
 
 

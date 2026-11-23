@@ -1,5 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
-import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -154,7 +154,7 @@ export class DemonicStrikeCard extends BlowCard {
     constructor(){
         super("Frappe démoniaque", [
             "Frappe en cercle de ", DEMONIC_RADIUS, "×", ALLONGE, " ", DISTANCE, " à ", DEMONIC_AHEAD, "×", ALLONGE, " ", DISTANCE, " devant : ",
-            DEMONIC_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ". Chaque ", UNIT, " touchée donne un round d'énergie démoniaque.",
+            DEMONIC_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ". Chaque ", UNIT, " touchée donne un ", BATTLE_ROUND, " d'énergie démoniaque.",
         ], Rarity.RARE, DEMONIC_DAMAGE)
     }
 

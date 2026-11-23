@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import { rgba } from "../../base/Rgba"
 import type { HeartLostEvent } from "../../battle/events"
 import { HeartRule } from "../HeartRule"
@@ -19,7 +20,7 @@ export class ThornHeartKind extends AbstractHeartKind {
     ){
         super(
             "épineux",
-            ["Perdu avant tout cœur ", RED_HEART, " : qui le brise prend ", damage, " ", DamageType.PHYSICAL, "."],
+            ["Perdu avant tout ", HEART, " ", RED_HEART, " : qui le brise prend ", damage, " ", DamageType.PHYSICAL, "."],
             rgba(0.45, 0.8, 0.3),
         )
     }

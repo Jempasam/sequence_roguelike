@@ -1,5 +1,5 @@
 import { Primitive, RAW_VERTEX_SIZE } from "../gpu"
-import type { Painter, Sprite } from "../gpu"
+import type { ColorMode, Painter, Sprite } from "../gpu"
 import { Color } from "../math"
 
 import type { Rect } from "./Rect"
@@ -47,6 +47,12 @@ export interface NineSliceOptions {
     readonly color?: Color
 
     /**
+     * How its color mixes with its sprite, as the painter takes it: "modulate" by default. In "mask" only the
+     * opacity of its sprite is kept, drawn in its color: the frame as a silhouette of one color.
+     */
+    readonly colorMode?: ColorMode
+
+    /**
      * How wide its margins are drawn, in whole pixels, as wide as they are in its sprite by default: a
      * thicker or a thinner frame from the same picture.
      */
@@ -80,6 +86,9 @@ export class NineSlice {
     /** The color it is multiplied by. */
     public readonly color: Color
 
+    /** How its color mixes with its sprite. */
+    public readonly colorMode: ColorMode
+
     /** How wide its margins are drawn, in pixels. */
     public readonly border: NineSliceMargins
 
@@ -110,6 +119,7 @@ export class NineSlice {
         this.bottom = bottom
         this.opaqueCenter = options.opaqueCenter ?? false
         this.color = options.color ?? new Color(1, 1, 1)
+        this.colorMode = options.colorMode ?? "modulate"
         this.border = options.border ?? margins
         this.tiling = options.tiling ?? null
         if(!NineSlice.#isWhole(this.border)){
@@ -174,8 +184,25 @@ export class NineSlice {
     public draw(painter: Painter, x: number, y: number, width: number, height: number): void {
         if(width <= 0 || height <= 0) return
         this.#writeGrid(x, y, width, height)
+        const mixed = this.colorMode !== "modulate"
+        if(mixed){
+            painter.push()
+            painter.setColorMode(this.colorMode)
+        }
         if(this.tiling) this.#drawTiles(painter, this.tiling)
         else this.#drawQuads(painter)
+        if(mixed) painter.pop()
+    }
+
+    /**
+     * The same frame as a silhouette of one color: its opacity, drawn in the color given. Drawn a little
+     * larger under the frame, it outlines it along its edges, however worn they are.
+     */
+    public masked(color: Color): NineSlice {
+        const { left, top, right, bottom } = this
+        return new NineSlice(this.sprite, { left, top, right, bottom }, {
+            color, colorMode: "mask", border: this.border, tiling: this.tiling,
+        })
     }
 
     /**

@@ -1,7 +1,7 @@
-import { AGILITE, DISTANCE, UNIT } from "../../../base/keywords"
+import { AGILITE, DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { UnitContext } from "../../../battle/Action"
-import { frenchNumber } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { GLASS_HEART } from "../../../heart/subs/GlassHeartKind"
 import { CHESS_PIECE } from "../../../status/subs/ChessPieces"
@@ -53,7 +53,7 @@ export class SilenceJar extends AbstractUsable {
     constructor(){
         super("Bocal de silence", visual("usables/silence_jar"), [
             "L'", UNIT, " ennemie la plus proche à ", frenchNumber(SILENCE_RANGE), " ", DISTANCE,
-            " perd sa prochaine étape. 2 utilisations, rechargées à chaque combat.",
+            " perd sa prochaine ", BATTLE_TURN.as("étape"), ". 2 utilisations, rechargées à chaque combat.",
         ], { charges: 2, refill: "battle" })
     }
 
@@ -90,7 +90,7 @@ export class IronMagnet extends AbstractUsable {
 
     constructor(){
         super("Aimant à fer", visual("usables/iron_magnet"), [
-            "Tire de ", MAGNET_PULL, " ", DISTANCE, " vers toi chacune de tes invocations à ", MAGNET_RANGE, " ", DISTANCE,
+            "Tire de ", MAGNET_PULL, " ", DISTANCE, " vers toi chacune de tes ", INVOCATION.as("invocations"), " à ", MAGNET_RANGE, " ", DISTANCE,
             " autour. 2 utilisations.",
         ], { charges: 2 })
     }
@@ -114,7 +114,7 @@ export class PawnPowder extends AbstractUsable {
     constructor(){
         super("Poudre de pion", visual("usables/pawn_powder"), [
             "L'allié le plus proche à ", POWDER_RANGE, " ", DISTANCE, " devient une pièce d'échecs pour ", POWDER_ROUNDS,
-            " rounds. 2 utilisations.",
+            " ", BATTLE_ROUND.as("rounds"), ". 2 utilisations.",
         ], { charges: 2 })
     }
 
@@ -133,7 +133,7 @@ export class GlassFlask extends AbstractUsable {
 
     constructor(){
         super("Fiole de verre", visual("usables/glass_flask"), [
-            "Te donne ", GLASS_FLASK_HEARTS, " cœurs de verre. Rechargée à chaque combat.",
+            "Te donne ", new HeartCount(GLASS_FLASK_HEARTS), " ", GLASS_HEART, ". Rechargée à chaque combat.",
         ], { charges: 1, refill: "battle" })
     }
 

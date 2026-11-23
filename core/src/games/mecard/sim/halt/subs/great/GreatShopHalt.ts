@@ -1,6 +1,6 @@
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, ITEM, USABLE } from "../../../base/keywords"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -31,7 +31,10 @@ export class GreatShopHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(GREAT_SHOP_HALT, run,
-            [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, et un quart moins cher !"],
+            [
+                CARTE.as("Cartes"), ", ", ITEM.as("objets"), ", ", USABLE.as("utilisables"),
+                " : par un, deux ou trois, et un quart moins cher !",
+            ],
             sceneLook(36, 28, 15, "shop", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
@@ -117,7 +120,10 @@ export class GreatShopHalt extends AbstractHalt {
 export const GREAT_SHOP_HALT: HaltType = {
     id: "greatShop",
     name: "Grand magasin",
-    description: [CARTE.as("Cartes"), ", objets, utilisables : par un, deux ou trois, un quart moins cher."],
+    description: [
+        CARTE.as("Cartes"), ", ", ITEM.as("objets"), ", ", USABLE.as("utilisables"),
+        " : par un, deux ou trois, un quart moins cher.",
+    ],
     icon: visual("halts/shop", { letter: "MA*" }),
     glow: GREAT_COLOR,
     transition: visual("warm-door", { coloration: GREAT_COLORATION }),

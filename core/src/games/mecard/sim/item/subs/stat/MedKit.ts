@@ -1,3 +1,4 @@
+import { HEAL } from "../../../base/keywords"
 import { HeartCount } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
@@ -12,6 +13,6 @@ export const MED_KIT = new StatItem("Trousse de soin", visual("items/med_kit"), 
         stat: stats => stats.heal,
         amount: MED_KIT_BONUS,
         shown: new HeartCount(MED_KIT_BONUS),
-        text: ["de soin"],
+        text: [HEAL],
     },
 ])

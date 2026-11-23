@@ -4,6 +4,7 @@ import { MODULE } from "../../CardType"
 import type { Module } from "../../CardType"
 import { Rarity } from "../../Rarity"
 import type { Unit } from "../../../battle/Unit"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
@@ -64,7 +65,7 @@ export const THRUSTERS = new ModuleModifierCard("Propulseurs", [
 ], Rarity.RARE, cards => [STEP, ...cards])
 
 export const ARMOR_PLATING = new ModuleModifierCard("Blindage", [
-    "Module : ajoute Blocage en fin de module ; le robot gagne un cœur de bouclier.",
+    "Module : ajoute Blocage en fin de module ; le robot gagne ", new HeartCount(1), " ", SHIELD_HEART, ".",
 ], Rarity.RARE, cards => [...cards, BLOCK], body => body.hearts.give(new Heart(SHIELD_HEART)))
 
 export const TURBO = new ModuleModifierCard("Turbo", [

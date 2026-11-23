@@ -3,6 +3,7 @@ import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** How much strength and precision a compass gives at most, for a round. */
 const COMPASS_MAX = 3
@@ -16,7 +17,7 @@ export class MadCompass extends AbstractItem {
         public readonly most: number,
     ){
         super("Boussole affolée", visual("items/mad_compass"), [
-            "Chaque fois qu'une unité subit des dégâts pendant une de tes actions : +1 force et +1 précision jusqu'à la fin du round (", most, " au plus).",
+            "Chaque fois qu'une unité subit des dégâts pendant une de tes actions : +1 force et +1 précision jusqu'à la fin du ", BATTLE_ROUND, " (", most, " au plus).",
         ])
     }
 

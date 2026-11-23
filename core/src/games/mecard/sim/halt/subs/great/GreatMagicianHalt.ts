@@ -1,5 +1,5 @@
 import { rgba } from "../../../base/Rgba"
-import { CARTE } from "../../../base/keywords"
+import { BOOSTER, CARTE } from "../../../base/keywords"
 import { LOOT_BOOSTERS, openBooster } from "../../../catalog/boosters"
 import type { Booster } from "../../../catalog/boosters"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
@@ -23,7 +23,7 @@ export class GreatMagicianHalt extends CardGiftHalt {
 
     constructor(run: Run){
         super(GREAT_MAGICIAN_HALT, run,
-            ["Trois boosters, et chacun tient deux fois plus de ", CARTE.as("cartes"), " assorties."],
+            ["Trois ", BOOSTER.as("boosters"), ", et chacun tient deux fois plus de ",CARTE.as("cartes"), " assorties."],
             sceneLook(26, 13, 41, "magician", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
@@ -54,7 +54,7 @@ export class GreatMagicianHalt extends CardGiftHalt {
 export const GREAT_MAGICIAN_HALT: HaltType = {
     id: "greatMagician",
     name: "Grand magicien",
-    description: ["Un booster parmi trois, en double : deux fois plus de ", CARTE.as("cartes"), "."],
+    description: ["Un ", BOOSTER, " parmi trois, en double : deux fois plus de ", CARTE.as("cartes"), "."],
     icon: visual("halts/magician", { letter: "MG**" }),
     glow: GREAT_COLOR,
     transition: visual("portal", { coloration: GREAT_COLORATION }),

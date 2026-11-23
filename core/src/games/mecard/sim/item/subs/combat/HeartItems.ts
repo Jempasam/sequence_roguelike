@@ -1,9 +1,11 @@
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
+import { HeartCount } from "../../../battle/words"
 import { EXPLOSIVE } from "../../../status/subs/Explosive"
 import { RESURRECTED, revive } from "../../../status/subs/Resurrection"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** The level of the explosive status the heart bomb gives. */
 const HEART_BOMB_LEVEL = 2
@@ -45,7 +47,7 @@ export class PhoenixHeart extends AbstractItem {
         public readonly threshold: number,
     ){
         super("Cœur de phénix", visual("items/phoenix_heart"), [
-            "Si tu perds plus de ", threshold, " cœurs dans le même round, gagne ", RESURRECTED, " 1.",
+            "Si tu perds plus de ", new HeartCount(threshold), " dans le même ", BATTLE_ROUND, ", gagne ", RESURRECTED, " 1.",
         ])
     }
 

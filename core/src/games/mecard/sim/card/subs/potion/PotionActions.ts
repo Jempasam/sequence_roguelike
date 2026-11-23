@@ -1,10 +1,11 @@
 import { visual } from "../../../base/Visual"
+import { concat, deferred } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { counted, frenchNumber, HeartCount } from "../../../battle/words"
+import { counted, frenchNumber, SummonedHearts } from "../../../battle/words"
 import type { Action, Pose, UnitContext } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Battle } from "../../../battle/Battle"
@@ -20,7 +21,7 @@ import { Rarity } from "../../Rarity"
 import { AbstractCard } from "../AbstractCard"
 import { flight, hold, SHORT_TIME, wait } from "../tools/playing"
 import { summonedHearts, summonShown } from "../summon/SummonCard"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { ALCHEMY, DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -58,7 +59,8 @@ function shown(dose: Dose, area: Area): Indicator {
 
 /** What the level of a potion card reads as, for the player: `niveau 2 + alchimie`. */
 function levelText(times = 1): Text {
-    return `niveau ${POTION_LEVEL * times}${times > 1 ? ` + alchimie ×${times}` : " + alchimie"}`
+    const factor = times > 1 ? [` ×${times}`] : []
+    return deferred(() => concat("niveau ", POTION_LEVEL * times, " + ", ALCHEMY, ...factor))
 }
 
 /**
@@ -265,16 +267,16 @@ export const POTION_RAIN = new PotionRainCard("Pluie de potion", [
 ], Rarity.RARE, RAIN_RADIUS)
 
 export const BARREL = new BarrelCard("Tonneau", [
-    "Pose à ", BARREL_AHEAD, " ", DISTANCE, " devant un tonneau de ", new HeartCount(BARREL_HALVES),
-    " + invocation, plein de la potion. Quand il casse, il l'éclabousse à ", frenchNumber(SPLASH_RADIUS), " ",
+    "Pose à ", BARREL_AHEAD, " ", DISTANCE, " devant un tonneau de ", new SummonedHearts(BARREL_HALVES),
+    ", plein de la potion. Quand il casse, il l'éclabousse à ", frenchNumber(SPLASH_RADIUS), " ",
     DISTANCE, " autour, ", levelText(STRONG), ".",
 ], Rarity.RARE, STRONG)
 
 export const COATED_BLADE = new CoatCard("Lame enduite", [
-    "Jusqu'à la fin du round, chacune de tes attaques qui touche applique la potion, ", levelText(), ".",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", chacune de tes attaques qui touche applique la potion, ", levelText(), ".",
 ], Rarity.RARE, 1)
 
 export const PUDDLE = new PuddleCard("Flaque", [
     "Répand la potion à ", frenchNumber(PUDDLE_AHEAD), "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(PUDDLE_ROUNDS, "round"),
-    " : elle s'applique à qui y entre, puis en fin de round à qui s'y tient, ", levelText(), ".",
+    " : elle s'applique à qui y entre, puis en fin de ", BATTLE_ROUND, " à qui s'y tient, ", levelText(), ".",
 ], Rarity.RARE, PUDDLE_ROUNDS)

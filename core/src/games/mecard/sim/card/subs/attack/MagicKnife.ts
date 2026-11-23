@@ -1,5 +1,5 @@
 import { visual } from "../../../base/Visual"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -49,7 +49,7 @@ function wayOf(from: Vector2, to: Vector2): Area {
  */
 export const MAGIC_KNIFE = new ActionCard("Couteau magique", [
     "Lance un couteau droit devant, jusqu'à ", KNIFE_RANGE, "×", PORTEE, " ", DISTANCE, " : ", KNIFE_DAMAGE, " ",
-    DamageType.PHYSICAL, " à chaque ", UNIT, " sur le chemin. À la fin du round, il revient vers toi : ",
+    DamageType.PHYSICAL, " à chaque ", UNIT, " sur le chemin. À la fin du ", BATTLE_ROUND, ", il revient vers toi : ",
     KNIFE_RETURN_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " sur le chemin.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

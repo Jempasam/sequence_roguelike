@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import { rgba } from "../../base/Rgba"
 import type { HeartRule } from "../HeartRule"
 
@@ -10,7 +11,7 @@ export class RedHeartKind extends AbstractHeartKind {
 
     constructor(){
         super(
-            "rouge", "Le cœur de vie : se soigne, et reste comme contenant vide une fois perdu.",
+            "rouge", ["Le ", HEART, " de vie : se soigne, et reste comme contenant vide une fois perdu."],
             rgba(0.9, 0.15, 0.2), true,
         )
     }

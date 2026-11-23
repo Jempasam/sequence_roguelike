@@ -8,6 +8,8 @@ import { sceneLook } from "../../SceneLook"
 import { AbstractHalt } from "../AbstractHalt"
 import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { monsterShown, offeredMonsters } from "./monster_pool"
+import { BATTLE_ROUND, CARTE, MONSTER } from "../../../base/keywords"
+import { HeartCount } from "../../../battle/words"
 
 /** The shady tavern: a monster among some joins the party, planned by the players as a hero. */
 export class DarkTavernHalt extends AbstractHalt {
@@ -15,7 +17,7 @@ export class DarkTavernHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(DARK_TAVERN_HALT, run,
-            "Ces monstres boivent ici. L'un d'eux peut te suivre, et t'obéir.",
+            ["Ces ", MONSTER.as("monstres"), " boivent ici. L'un d'eux peut te suivre, et t'obéir."],
             sceneLook(36, 23, 13, "tavern", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "beret",
@@ -31,7 +33,10 @@ export class DarkTavernHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         ctx.offer("Qui rejoint l'équipe ?", this.#monsters, monster => {
-            return monsterShown(monster, [monster, " : ", monster.hearts, " cœurs, ", monster.draw, " cartes par round, joué comme un héros."])
+            return monsterShown(monster, [
+                monster, " : ", new HeartCount(monster.hearts), ", ", monster.draw, " ", CARTE.as("cartes"), " par ",
+                BATTLE_ROUND, ", joué comme un héros.",
+            ])
         }, monster => {
             this.impact()
             ctx.tell(concat(this.run.recruit(monster), " rejoint l'équipe."))
@@ -47,7 +52,7 @@ export class DarkTavernHalt extends AbstractHalt {
 export const DARK_TAVERN_HALT: HaltType = {
     id: "darkTavern",
     name: "Taverne mal famée",
-    description: "Un monstre parmi trois rejoint l'équipe, joué comme un héros.",
+    description: ["Un ", MONSTER, " parmi trois rejoint l'équipe, joué comme un héros."],
     icon: visual("halts/tavern", { letter: "TA!" }),
     glow: DARK_COLOR,
     transition: visual("warm-door", { coloration: DARK_COLORATION }),

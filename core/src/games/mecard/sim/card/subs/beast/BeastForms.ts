@@ -1,5 +1,6 @@
 import { visual } from "../../../base/Visual"
-import { CARTE } from "../../../base/keywords"
+import { CARTE, BATTLE_ROUND } from "../../../base/keywords"
+import { HeartCount } from "../../../battle/words"
 import type { Element } from "../../../element/Element"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import type { Card } from "../../Card"
@@ -52,7 +53,7 @@ export class CyberneticBeastCard extends AbstractCard<Module, Beast> {
 
     constructor(){
         super("Bête cybernétique", [
-            "Donne un module des ", CARTE.as("cartes"), " que sa bête joue à chaque round : son corps, sa course et sa morsure à leur place.",
+            "Donne un module des ", CARTE.as("cartes"), " que sa bête joue à chaque ", BATTLE_ROUND, " : son corps, sa course et sa morsure à leur place.",
         ], Rarity.RARE)
     }
 
@@ -98,7 +99,11 @@ export class BeastArmorCard extends AbstractCard<Beast, Beast> {
     public readonly input = BEAST
 
     constructor(){
-        super("Armure bestiale", ["Donne une copie de sa bête avec ", ARMOR_HEARTS, " cœurs bleus de plus."], Rarity.RARE)
+        super(
+            "Armure bestiale",
+            ["Donne une copie de sa bête avec ", new HeartCount(ARMOR_HEARTS), " ", BLUE_HEART, " de plus."],
+            Rarity.RARE,
+        )
     }
 
 

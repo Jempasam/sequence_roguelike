@@ -1,6 +1,6 @@
 import { concat, joinText } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, MONSTER } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import type { Monster } from "../../../catalog/monsters"
@@ -20,7 +20,7 @@ export class DarkStrategistHalt extends DeckHalt {
 
     constructor(run: Run){
         super(DARK_STRATEGIST_HALT, run,
-            ["Les monstres ont de bonnes ", CARTE.as("cartes"), ". Échangeons-en."],
+            ["Les ", MONSTER.as("monstres"), " ont de bonnes ", CARTE.as("cartes"), ". Échangeons-en."],
             // Waiting for its own art: the scene of the antiquarian, as the strategist.
             sceneLook(28, 30, 16, "strategist", { coloration: [0.72, 0.56, 0.78] }),
             {
@@ -42,7 +42,7 @@ export class DarkStrategistHalt extends DeckHalt {
     }
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
-        const ask = (): void => ctx.offer("Avec quel monstre ?", this.#monsters, monster => monsterShown(monster), monster => {
+        const ask = (): void => ctx.offer(["Avec quel ", MONSTER, " ?"], this.#monsters, monster => monsterShown(monster), monster => {
             this.#swap(ctx, hero, deck, monster, ask)
         }, { back })
         ask()
@@ -75,7 +75,7 @@ export class DarkStrategistHalt extends DeckHalt {
 export const DARK_STRATEGIST_HALT: HaltType = {
     id: "darkStrategist",
     name: "Traître",
-    description: ["Échange des ", CARTE.as("cartes"), " entre un ", DECK, " et celui d'un monstre parmi trois."],
+    description: ["Échange des ", CARTE.as("cartes"), " entre un ", DECK, " et celui d'un ", MONSTER, " parmi trois."],
     icon: visual("halts/strategist", { letter: "ST!" }),
     glow: DARK_COLOR,
     transition: visual("dungeon-door", { coloration: DARK_COLORATION }),

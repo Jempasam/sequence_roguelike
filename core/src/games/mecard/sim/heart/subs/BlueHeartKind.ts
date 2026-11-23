@@ -3,13 +3,14 @@ import type { UnitContext } from "../../battle/Action"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** Hearts that fade: never healed, the last one lost at the end of each round. */
 export class BlueHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("bleu", "Ne se soigne pas ; le dernier se perd à chaque fin de round.", rgba(0.3, 0.45, 1))
+        super("bleu", ["Ne se soigne pas ; le dernier se perd à chaque fin de ", BATTLE_ROUND, "."], rgba(0.3, 0.45, 1))
     }
 
 

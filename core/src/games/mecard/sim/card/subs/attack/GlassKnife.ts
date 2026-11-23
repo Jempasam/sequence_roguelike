@@ -1,4 +1,4 @@
-import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, FORCE, HEART, UNIT } from "../../../base/keywords"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -24,7 +24,7 @@ export class GlassKnifeCard extends BlowCard {
         super("Couteau de verre", [
             "Frappe devant : ", GLASS_KNIFE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
             " jusqu'à ", THRUST_RANGE, " ", DISTANCE, ". Contrecoup : tu subis ensuite autant de ", DamageType.PHYSICAL,
-            " que de cœurs perdus par les ennemis pendant cette action, moins ta ", FORCE, ".",
+            " que de ", HEART.as("cœurs"), " perdus par les ennemis pendant cette action, moins ta ", FORCE, ".",
         ], Rarity.RARE, GLASS_KNIFE_DAMAGE)
     }
 

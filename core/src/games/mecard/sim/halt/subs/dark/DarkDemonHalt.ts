@@ -1,5 +1,5 @@
 import { concat } from "../../../../../../semantic"
-import { CARTE, DECK, FUSION, UNIT } from "../../../base/keywords"
+import { CARTE, DECK, FUSION, MONSTER, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import type { Monster } from "../../../catalog/monsters"
@@ -19,7 +19,7 @@ export class DarkDemonHalt extends DeckHalt {
 
     constructor(run: Run){
         super(DARK_DEMON_HALT, run,
-            ["Signe, et chaque ", CARTE, " d'un ", DECK, " sera ", FUSION.as("collée"), " à celle d'un monstre."],
+            ["Signe, et chaque ", CARTE, " d'un ", DECK, " sera ", FUSION.as("collée"), " à celle d'un ", MONSTER, "."],
             sceneLook(31, 8, 10, "demon", { coloration: [0.72, 0.56, 0.78] }),
             {
                 hat: "hornedCrown",
@@ -41,7 +41,7 @@ export class DarkDemonHalt extends DeckHalt {
     }
 
     protected work(ctx: HaltContext, deck: Card[], back: () => void, hero: Hero): void {
-        ctx.offer("Quel monstre ?", this.#monsters, monster => monsterShown(monster), monster => {
+        ctx.offer(["Quel ", MONSTER, " ?"], this.#monsters, monster => monsterShown(monster), monster => {
             this.impact()
             const fused = this.run.changeDeck(deck, changed => possessBy(changed, monster.cards))
             ctx.tell(concat("Le ", DECK, " de ", hero, " est possédé par ", monster, " : ", fused.length, " ", CARTE.as("cartes"), "."))
@@ -57,7 +57,7 @@ export class DarkDemonHalt extends DeckHalt {
 export const DARK_DEMON_HALT: HaltType = {
     id: "darkDemon",
     name: "Archidémon",
-    description: ["Chaque ", CARTE, " d'une ", UNIT, " est ", FUSION.as("collée"), " à la ", CARTE, " d'un monstre au même rang."],
+    description: ["Chaque ", CARTE, " d'une ", UNIT, " est ", FUSION.as("collée"), " à la ", CARTE, " d'un ", MONSTER, " au même rang."],
     icon: visual("halts/demon", { letter: "DÉ!" }),
     glow: DARK_COLOR,
     transition: visual("warm-door", {coloration:[0.72, 0.56, 0.78]}),

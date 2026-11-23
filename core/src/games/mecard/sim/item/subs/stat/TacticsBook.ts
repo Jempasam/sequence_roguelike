@@ -1,4 +1,4 @@
-import { CARTE } from "../../../base/keywords"
+import { CARTE, BATTLE_ROUND } from "../../../base/keywords"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +11,7 @@ export const TACTICS_BOOK = new StatItem("Carnet de tactiques", visual("items/ta
     {
         stat: stats => stats.draw,
         amount: TACTICS_DRAW,
-        text: [CARTE, " piochée à chaque round"],
+        text: [CARTE, " piochée à chaque ", BATTLE_ROUND],
     },
     {
         stat: stats => stats.firstDraw,

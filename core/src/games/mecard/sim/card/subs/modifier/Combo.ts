@@ -1,4 +1,4 @@
-import { HEART, UNIT } from "../../../base/keywords"
+import { HEART, UNIT, BATTLE_TURN } from "../../../base/keywords"
 import type { Action, UnitContext } from "../../../battle/Action"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { Rarity } from "../../Rarity"
@@ -40,5 +40,5 @@ function combo(action: Action): Action {
 
 export const COMBO = new ModifierCard("Combo", [
     "Joue l'action ; tant qu'une ", UNIT, " ennemie y perd au moins un ", HEART, ", la rejoue, jusqu'à ", COMBO_MAX,
-    " fois en tout, en une seule étape.",
+    " fois en tout, en une seule ", BATTLE_TURN.as("étape"), ".",
 ], Rarity.EPIC, combo)

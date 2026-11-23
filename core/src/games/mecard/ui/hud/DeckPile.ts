@@ -6,6 +6,7 @@ import type { SizeHint, Theme } from "../../../../engine/ui"
 
 import { TEXT_OUTLINE } from "../look/theme"
 import { CARD_LOOKS } from "./CardView"
+import type { DetailText } from "./Detail"
 
 /** How many cards of a pile each card drawn under the top one stands for. */
 const CARDS_PER_LAYER = 5
@@ -31,6 +32,9 @@ export class DeckPile extends Component {
 
     /** What the pointer coming over it or leaving does, nothing when none. */
     public onHover: ((over: boolean) => void)|null = null
+
+    /** What it says while the pointer is over it, read by {@link viewDetails}, nothing when none. */
+    public detail: DetailText|null = null
 
     constructor(
         public readonly theme: Theme,

@@ -162,15 +162,16 @@ describe("loadParallaxPictures", () => {
         expect(warnings[0]).toContain("mecard/p.ora")
     })
 
-    test("a painting → its visible layers, the bottom one first, placed as on its canvas, centred, its longest side 1", async() => {
-        const { layers: loaded } = await loadParallaxPictures(assets({ "mecard/p.ora": painting() }), {
+    test("a painting → its visible layers, the bottom one first, placed in pixels of its canvas, which is its viewport", async() => {
+        const { layers: loaded, viewport } = await loadParallaxPictures(assets({ "mecard/p.ora": painting() }), {
             painting: "mecard/p.ora" as never,
         })
         expect(loaded.map(layer => layer.pixels.data[0])).toEqual([100, 200])
         expect(loaded.map(layer => layer.place)).toEqual([
-            { x: -0.5, y: -0.25, width: 0.025, height: 0.025 },
-            { x: -0.625, y: -0.325, width: 0.025, height: 0.025 },
+            { x: 0, y: 0, width: 1, height: 1 },
+            { x: -5, y: -3, width: 1, height: 1 },
         ])
+        expect(viewport).toEqual({ width: 40, height: 20 })
     })
 
     test("a layer half transparent → its alpha halved", async() => {
@@ -188,10 +189,11 @@ describe("loadParallaxPictures", () => {
     })
 
     test("pictures apart → each fitted on its own, no place", async() => {
-        const { layers: loaded } = await loadParallaxPictures(assets({ "mecard/a.png": pixel(1), "mecard/b.png": pixel(2) }), {
+        const { layers: loaded, viewport } = await loadParallaxPictures(assets({ "mecard/a.png": pixel(1), "mecard/b.png": pixel(2) }), {
             images: ["mecard/a.png", "mecard/b.png"] as never,
         })
         expect(loaded.map(layer => layer.place)).toEqual([null, null])
+        expect(viewport).toBeNull()
         expect(loaded.map(layer => layer.pixels.data[0])).toEqual([1, 2])
     })
 })

@@ -1,7 +1,7 @@
 import { composable } from "../../Card"
 import type { Card } from "../../Card"
 import { Rarity } from "../../Rarity"
-import { CARTE, FUSION, MERGE } from "../../../base/keywords"
+import { CARTE, FUSION, MERGE, BATTLE_TURN } from "../../../base/keywords"
 
 import { FusionCard } from "./FusionCard"
 import { mergeable, MergedCard } from "./MergedCard"
@@ -32,7 +32,7 @@ export function collageOf(cards: readonly Card[]): Card|null {
  */
 export const TIME_MANIPULATION = new RewriteCard("Manipulation temporelle", [
     "Fin de préparation : la plus longue suite d'actions qui la suit et qui peuvent se mélanger (celles qui prennent quelque chose prennent toutes la même chose) devient un seul ",
-    MERGE.as("mélange"), ", joué en une étape.",
+    MERGE.as("mélange"), ", joué en une ", BATTLE_TURN.as("étape"), ".",
 ], Rarity.EPIC, (_ctx, spot) => {
     const run = mergeableRun(spot.rest)
     if(run.length < 2) return { cards: [], consumed: 0, acting: false }

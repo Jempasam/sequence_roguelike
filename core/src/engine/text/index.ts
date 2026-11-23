@@ -10,4 +10,6 @@
  */
 
 export * from "./BitmapFont"
+export * from "./contrast"
 export * from "./TextLayout"
+export * from "./TextPictures"

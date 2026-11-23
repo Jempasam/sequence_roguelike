@@ -14,7 +14,7 @@ import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
 import { AbstractHalt } from "../AbstractHalt"
 import { described, usableText } from "../shown"
-import { CARTE, DECK, SUPPRESSION, UNIT } from "../../../base/keywords"
+import { CARTE, DECK, ITEM, SUPPRESSION, UNIT, USABLE } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** What an item costs at the shop, in gold. */
@@ -52,12 +52,12 @@ export function shopGoods(rng: Rng): Good[] {
 
 /** A good of the shop, with its price, the one it has unless another is given. */
 export function goodShown(good: Good, cost: number = good.price): Shown {
-    const price = `${cost} or`
+    const price = cost
     switch(good.kind){
-        case "card": return { cards: [good.card], text: concat(price, " · ", good.card, " : ", good.card.description) }
-        case "item": return { cards: [], items: [good.item], text: concat(price, " · ", described(good.item, good.item)) }
-        case "usable": return { cards: [], usables: [good.usable], text: concat(price, " · ", usableText(good.usable)) }
-        case "removal": return { cards: [], text: [price, " · ", SUPPRESSION.as("Retire"), " une ", CARTE, " du ", DECK, " d'une ", UNIT, "."] }
+        case "card": return { cards: [good.card], price, text: concat(good.card, " : ", good.card.description) }
+        case "item": return { cards: [], items: [good.item], price, text: described(good.item, good.item) }
+        case "usable": return { cards: [], usables: [good.usable], price, text: usableText(good.usable) }
+        case "removal": return { cards: [], price, text: [SUPPRESSION.as("Retire"), " une ", CARTE, " du ", DECK, " d'une ", UNIT, "."] }
         default: throw new Error("A good of an unknown kind is sold.")
     }
 }
@@ -68,7 +68,7 @@ export class ShopHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(SHOP_HALT, run,
-            [CARTE.as("Cartes"), ", objets, utilisables. Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"],
+            [CARTE.as("Cartes"), ", ", ITEM.as("objets"), ", ", USABLE.as("utilisables"), ". Je ", SUPPRESSION.as("retire"), " aussi une ", CARTE, " !"],
             sceneLook(36, 28, 15, "shop"),
             {
                 hat: "furToque",
@@ -151,7 +151,10 @@ export class ShopHalt extends AbstractHalt {
 export const SHOP_HALT: HaltType = {
     id: "shop",
     name: "Magasin",
-    description: ["Des ", CARTE.as("cartes"), ", des objets, des utilisables, et un service de ", SUPPRESSION, "."],
+    description: [
+        "Des ", CARTE.as("cartes"), ", des ", ITEM.as("objets"), ", des ", USABLE.as("utilisables"),
+        ", et un service de ", SUPPRESSION, ".",
+    ],
     icon: visual("halts/shop", { letter: "MA" }),
     transition: visual("warm-door"),
     create: run => new ShopHalt(run),

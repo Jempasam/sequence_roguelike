@@ -1,5 +1,6 @@
 import { concat } from "../../../../../../semantic"
-import { CARTE, DECK } from "../../../base/keywords"
+import { CARTE, DECK, BATTLE_ROUND, MONSTER, PET } from "../../../base/keywords"
+import { HeartCount } from "../../../battle/words"
 import { MASTER_COLOR, MASTER_MASK, MASTER_TRANSITION } from "../halt_common"
 import type { Monster } from "../../../catalog/monsters"
 import { upgradeAll, upgradeMatches, LOOT_UPGRADES } from "../../../catalog/upgrades"
@@ -40,7 +41,10 @@ export class MasterTrainerHalt extends AbstractHalt {
             cards: [...new Set(base.cards)],
             upgrades: upgrade ? [upgrade] : [],
             sprite: base.sprite,
-            text: [base, " : ", base.hearts, " cœurs, ", base.draw, " ", CARTE.as("cartes"), " par round, joué par un bot, son ", DECK, " rebattu."],
+            text: [
+                base, " : ", new HeartCount(base.hearts), ", ", base.draw, " ", CARTE.as("cartes"), " par ",
+                BATTLE_ROUND, ", joué par un bot, son ", DECK, " rebattu.",
+            ],
         }), ({ monster }) => {
             this.impact()
             ctx.tell(concat(this.run.tame(monster), " rejoint l'équipe."))
@@ -67,7 +71,10 @@ export class MasterTrainerHalt extends AbstractHalt {
 export const MASTER_TRAINER_HALT: HaltType = {
     id: "masterTrainer",
     name: "Maître dresseur",
-    description: ["Un allié parmi deux pets et un monstre, joué par un bot, une même amélioration sur toutes celles de ses ", CARTE.as("cartes"), " qui la prennent."],
+    description: [
+        "Un allié parmi deux ", PET.as("familiers"), " et un ", MONSTER, ", joué par un bot, une même amélioration sur toutes ",
+        "celles de ses ", CARTE.as("cartes"), " qui la prennent.",
+    ],
     icon: visual("halts/trainer", { letter: "D*" }),
     glow: MASTER_COLOR,
     transition: MASTER_TRANSITION,

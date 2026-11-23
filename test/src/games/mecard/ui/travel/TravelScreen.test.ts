@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { AssetError } from "@game/core"
-import type { Assets, Painter } from "@game/core"
-import { CHEST_HALT, Run } from "@game/core/mecard"
+import { AssetError, Button, plainText, Tabs } from "@game/core"
+import type { Assets, Component, Painter } from "@game/core"
+import { CHEST_HALT, HeroDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
+import { CardView } from "@game/core/mecard/card-view"
+import { JourneyView } from "@game/core/mecard/journey-view"
 import { TravelScreen } from "@game/core/mecard/travel-screen"
 import type { TravelScreenOptions } from "@game/core/mecard/travel-screen"
 
@@ -67,7 +69,119 @@ async function play({ setup, screen }: Shown, seconds: number, step = 1 / 60): P
     }
 }
 
+/** A screen whose panels are built: it reads the whole of the travel once its host is done building. */
+async function builtScreen(): Promise<Shown> {
+    const game = shown()
+    await settled()
+    // The first frame lays the panels out for the size of the interface.
+    game.screen.frame(game.setup.frame(), NO_WORLD, 0)
+    game.setup.ui.render()
+    return game
+}
+
+/** Every component under another, itself included. */
+function allUnder(root: Component): Component[] {
+    const found: Component[] = [root]
+    const children = (root as { children?: readonly Component[] }).children ?? []
+    for(const child of children) found.push(...allUnder(child))
+    return found
+}
+
+/** The components of the screen of a class. */
+function ofClass<Type extends Component>(
+    { setup }: Shown, kind: abstract new (...args: never[]) => Type,
+): Type[] {
+    const layer = setup.ui.layers.find(each => each.name === "ui")!
+    return allUnder(layer.content).filter((each): each is Type => each instanceof kind)
+}
+
+/** Where the middle of a component lies on the layers. */
+function middleOf(component: Component): { x: number, y: number } {
+    let x = component.bounds.width / 2
+    let y = component.bounds.height / 2
+    for(let each: Component|null = component; each; each = each.parent){
+        x += each.bounds.x
+        y += each.bounds.y
+    }
+    return { x: Math.floor(x), y: Math.floor(y) }
+}
+
+/** Move the pointer, and let the screen read the frame. */
+function pointTo({ setup, screen }: Shown, at: { x: number, y: number }): void {
+    setup.port.send({ type: "pointer-move", x: at.x, y: at.y })
+    screen.frame(setup.frame(), NO_WORLD, 0)
+    setup.ui.render()
+}
+
 // --- Tests ---
+
+describe("TravelScreen, what is hovered", () => {
+    test("pointer over the map → a place tells its name and what it hides, and nothing between places", async() => {
+        const game = await builtScreen()
+        const [view] = ofClass(game, JourneyView)
+        const { x: left, y: top } = middleOf(view)
+        const onPlace: { x: number, y: number }[] = []
+        const between: { x: number, y: number }[] = []
+        const local = { x: 0, y: 0 }
+        for(let y = top - view.bounds.height / 2; y < top + view.bounds.height / 2; y += 4){
+            for(let x = left - view.bounds.width / 2; x < left + view.bounds.width / 2; x += 4){
+                if(!view.localPoint(x, y, local)) continue
+                const found = view.placeAt(local.x, local.y) !== null
+                if(found) onPlace.push({ x, y })
+                else between.push({ x, y })
+            }
+        }
+        const told = onPlace.slice(0, 40).map(at => {
+            pointTo(game, at)
+            return game.screen.tooltip.text
+        }).find(text => text !== null)
+        expect(told).toBeDefined()
+        expect(plainText(told!)).toContain(" : ")
+        pointTo(game, between[0])
+        expect(game.screen.tooltip.open).toBe(false)
+    })
+
+    test("pointer over an option of a choice → the bubble tells what the step says of it", async() => {
+        const game = await builtScreen()
+        const { run, screen } = game
+        run.travel.heroAsked.notify(new HeroDialog("Qui ?", false, run.heroes, false))
+        game.setup.ui.render()
+        const layer = game.setup.ui.layers.find(each => each.name === "ui")!
+        const option = allUnder(layer.content).find(each => each.constructor.name === "ChoiceOption")!
+        pointTo(game, middleOf(option))
+        expect(screen.tooltip.open).toBe(true)
+        expect(plainText(screen.tooltip.text!)).toContain("cartes.")
+        pointTo(game, { x: 0, y: 0 })
+        expect(screen.tooltip.open).toBe(false)
+    })
+
+    test("a deck shown by a dialog → hovering one of its cards opens a bubble", async() => {
+        const game = await builtScreen()
+        const { run, screen } = game
+        run.travel.told.notify(new TellDialog("Voilà", { cards: [], decks: [[THRUST]] }))
+        game.setup.ui.render()
+        const view = ofClass(game, CardView).find(each => each.card === THRUST)!
+        pointTo(game, middleOf(view))
+        expect(screen.tooltip.open).toBe(true)
+        pointTo(game, { x: 0, y: 0 })
+        expect(screen.tooltip.open).toBe(false)
+    })
+
+    test("the tabs of the side changed and changed back → the cards of its deck tell again", async() => {
+        const game = await builtScreen()
+        const { screen } = game
+        const [tabs] = ofClass(game, Tabs)
+        const buttons = allUnder(tabs).filter((each): each is Button => each instanceof Button)
+        buttons[1].activate()
+        game.setup.ui.render()
+        buttons[0].activate()
+        game.setup.ui.render()
+        const inTabs = new Set(allUnder(tabs))
+        const view = ofClass(game, CardView).find(each => inTabs.has(each))!
+        pointTo(game, middleOf(view))
+        expect(screen.tooltip.open).toBe(true)
+    })
+})
 
 describe("TravelScreen", () => {
     test("the map locked, then free → it shows, whatever the travel does, and takes what it did", async() => {

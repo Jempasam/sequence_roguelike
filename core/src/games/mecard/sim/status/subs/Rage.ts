@@ -2,9 +2,10 @@ import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A rage: the unit turns on an enemy before each of its steps. */
-export const ENRAGED = new StatusType("rage", statusVisual("rage", 1, 0.3, 0.25), "neutral", level => new Rage(level), { description: ["Avant chacun de ses pas, se tourne droit vers un ennemi tiré au hasard, où qu'il soit, pendant ", STATUS_LEVEL, " rounds."] })
+export const ENRAGED = new StatusType("rage", statusVisual("rage", 1, 0.3, 0.25), "neutral", level => new Rage(level), { description: ["Avant chacun de ses pas, se tourne droit vers un ennemi tiré au hasard, où qu'il soit, pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."] })
 
 /** Enraged: before each of its steps, it turns straight at an enemy drawn at random, wherever it stands. */
 export class Rage extends RoundStatus {

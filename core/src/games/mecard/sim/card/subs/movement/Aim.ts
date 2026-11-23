@@ -1,4 +1,5 @@
 import type { Text } from "../../../../../../semantic"
+import { HEART } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
@@ -113,7 +114,7 @@ export const FAR_AIM = new AimCard("Viser le plus loin", [
 ], Rarity.COMMON, "farthest")
 
 export const STURDY_AIM = new AimCard("Viser le plus robuste", [
-    "Se tourne droit vers l'ennemi qui a le plus de cœurs.",
+    "Se tourne droit vers l'ennemi qui a le plus de ", HEART.as("cœurs"), ".",
 ], Rarity.RARE, "sturdiest")
 
 export const WEAK_AIM = new AimCard("Viser le plus blessé", [

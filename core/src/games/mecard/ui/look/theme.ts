@@ -4,6 +4,7 @@ import { NineSlice } from "../../../../engine/ui"
 import type { ButtonOptions, StateLooks, Theme } from "../../../../engine/ui"
 
 import { pixelFont } from "./pixelFont"
+import { PictureShelf } from "./pictureShelf"
 import { mecardDisplay } from "./textDisplay"
 
 /** The color of the text that matters less: hints, hidden cards. */
@@ -93,7 +94,7 @@ export function mecardTheme(gpu: Gpu): Theme {
     return {
         font, textScale: 1, white,
         textColor: new Color(1, 0.96, 0.8), disabledTextColor: new Color(0.6, 0.55, 0.4),
-        textDisplay: mecardDisplay,
+        textDisplay: mecardDisplay, textPictures: new PictureShelf(),
         focusRing: flat(1, 0.85, 0.35, 0.6),
         panel: { background: flat(0.12, 0.08, 0.05, 0.94), padding: 4 },
         button: { ...looks(), padding: 2 },

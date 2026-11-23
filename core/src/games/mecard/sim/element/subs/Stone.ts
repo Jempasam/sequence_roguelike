@@ -2,6 +2,7 @@ import { rgba } from "../../base/Rgba"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
+import { HeartCount } from "../../battle/words"
 import { placeBoulder } from "../../hazard/subs/Rocky"
 import { Heart } from "../../heart/Heart"
 import { SHIELD_HEART } from "../../heart/subs/ShieldHeartKind"
@@ -20,7 +21,7 @@ export class Stone extends AbstractElement {
         super(
             "Pierre", rgba(0.65, 0.62, 0.58), "écrasé",
             [STONE_DAMAGE, " ", DamageType.PHYSICAL],
-            ["un cœur ", SHIELD_HEART],
+            [new HeartCount(1), " ", SHIELD_HEART],
             "un rocher : qui le touche subit le négatif, une fois",
         )
     }

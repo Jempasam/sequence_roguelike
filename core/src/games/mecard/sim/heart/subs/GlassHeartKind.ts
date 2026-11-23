@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import { rgba } from "../../base/Rgba"
 import type { HeartLostEvent } from "../../battle/events"
 import { HeartRule } from "../HeartRule"
@@ -9,7 +10,10 @@ export class GlassHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("verre", "Quand un cœur de verre se brise, un autre cœur de verre se brise avec lui.", rgba(0.9, 0.95, 1))
+        super(
+            "verre", ["Quand un ", HEART, " de verre se brise, un autre ", HEART, " de verre se brise avec lui."],
+            rgba(0.9, 0.95, 1),
+        )
     }
 
 

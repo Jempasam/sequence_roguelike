@@ -1,5 +1,6 @@
 import { Vector2 } from "../../base/Vector2"
 import type { PlugContext } from "../../battle/Action"
+import { HeartCount } from "../../battle/words"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
 import type { Preview } from "../../battle/preview/Preview"
@@ -10,6 +11,7 @@ import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
 import * as Areas from "../../battle/area/Areas"
+import {  } from "../../base/keywords"
 
 /** How wide the laser between two allies cuts, in meters. */
 const LASER_WIDTH = 0.3
@@ -32,7 +34,7 @@ export class LaserLink extends AbstractProcess {
         public readonly damage: number,
     ){
         super("lien laser", visual("processes/laser_link", { color: [1, 0.3, 0.3] }),
-            `À chaque fin de tour, un laser relie l'allié : les ennemis en travers perdent ${damage} cœur${damage > 1 ? "s" : ""}.`,
+            ["À chaque fin de tour, un laser relie l'allié : les ennemis en travers perdent ", new HeartCount(damage), "."],
         )
     }
 

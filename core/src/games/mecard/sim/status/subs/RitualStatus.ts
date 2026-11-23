@@ -11,12 +11,13 @@ import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { elementOf, elementVariants } from "../StatusVariants"
 import type { ElementType } from "../StatusVariants"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** A ritual: an element kept for rounds, which makes the elements of the chain react with it. */
 export const RITUAL_STATUS = familyType(
     "rituel", statusVisual("ritual", 0.8, 0.6, 1).with({ coloration: [0.8, 0.6, 1] }), "positive", {
         description: [
-            "Pendant ", STATUS_LEVEL, " rounds, une fois la préparation finie, les éléments de ta chaîne qui réagissent ",
+            "Pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ", une fois la préparation finie, les éléments de ta chaîne qui réagissent ",
             "avec l'élément gardé deviennent leur composé.",
         ],
     },

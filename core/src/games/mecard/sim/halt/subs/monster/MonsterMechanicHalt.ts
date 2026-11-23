@@ -1,4 +1,4 @@
-import { UNIT } from "../../../base/keywords"
+import { MONSTER, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import { MODULE } from "../../../card/CardType"
@@ -19,7 +19,7 @@ export class MonsterMechanicHalt extends MonsterCardHalt {
 
     constructor(run: Run){
         super(MONSTER_MECHANIC_HALT, run,
-            `Un monstre, c'est juste une machine qui s'ignore. Je t'en tire un ${MODULE.name} !`,
+            ["Un ", MONSTER, ", c'est juste une machine qui s'ignore. Je t'en tire un ", MODULE, " !"],
             sceneLook(28, 18, 31, "trainer_monster", { visual: "workshop", coloration: [0.72, 0.56, 0.78] }),
             {
                 unit: visual("units/mechanic"),
@@ -45,7 +45,7 @@ export class MonsterMechanicHalt extends MonsterCardHalt {
 export const MONSTER_MECHANIC_HALT: HaltType = {
     id: "monsterMechanic",
     name: "Mécanicien monstrueux",
-    description: ["Fait d'un monstre un ", MODULE, " pour une ", UNIT, ", avec un robot si elle n'en a aucun."],
+    description: ["Fait d'un ", MONSTER, " un ", MODULE, " pour une ", UNIT, ", avec un robot si elle n'en a aucun."],
     icon: visual("units/mechanic", { letter: "MM!" }),
     glow: DARK_COLOR,
     transition: visual("house-door"),

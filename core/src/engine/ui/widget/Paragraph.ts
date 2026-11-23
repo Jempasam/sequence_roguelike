@@ -2,7 +2,7 @@ import type { Painter } from "../../gpu"
 import type { Color } from "../../math"
 import { spansOf } from "../../../semantic"
 import type { Text, TextDisplay, TextSpan } from "../../../semantic"
-import { TextLayout } from "../../text"
+import { outlineAgainst, TextLayout } from "../../text"
 
 import { Component } from "../Component"
 import type { UiEvent } from "../input/UiEvent"
@@ -20,6 +20,12 @@ export interface ParagraphOptions extends LabelOptions {
 
     /** Hear what the pointer is over in its text, set by {@link Paragraph.onLink}. */
     readonly onLink?: LinkListener
+
+    /**
+     * The tint of what the text lies on, none by default. A piece of text that tells too little apart from it
+     * is outlined, in black or in white, on its own: see {@link Paragraph.backdrop}.
+     */
+    readonly backdrop?: Readonly<Color>
 }
 
 /**
@@ -50,7 +56,7 @@ export class Paragraph extends Component {
         options: ParagraphOptions = {},
     ){
         super()
-        this.#layout = new TextLayout(theme.font, theme.textScale)
+        this.#layout = new TextLayout(theme.font, theme.textScale, theme.textPictures ?? null)
         this.#display = options.display ?? theme.textDisplay
         this.#onLink = options.onLink ?? null
         this.#text = text
@@ -58,6 +64,8 @@ export class Paragraph extends Component {
         this.#align = options.align ?? "start"
         this.#color = (options.color ?? theme.textColor).clone()
         this.#outline = options.outline?.clone() ?? null
+        this.#backdrop = options.backdrop?.clone() ?? null
+        this.#contrasted = this.#needsContrast()
     }
 
 
@@ -68,6 +76,7 @@ export class Paragraph extends Component {
         if(text === this.#text) return
         this.#text = text
         this.#spans = spansOf(text, this.#display)
+        this.#contrasted = this.#needsContrast()
         this.#link = null
         this.invalidateLayout()
     }
@@ -78,7 +87,22 @@ export class Paragraph extends Component {
     public set color(color: Readonly<Color>){
         if(this.#color.equals(color)) return
         this.#color.copyFrom(color)
-        this.invalidate()
+        this.#contrastChanged()
+    }
+
+    /**
+     * The tint of what the text lies on, none for none. Each piece of the text that is too close to it, as
+     * the contrast of its color with it says, is outlined in black or in white, whichever tells it apart the
+     * most: a white word on a light paper. The outline is of the pieces only, one pixel around them. It
+     * leaves the room of one pixel around the text, but only when some piece has one. None of it when the
+     * paragraph has an {@link Paragraph.outline}, which outlines all of its text already.
+     */
+    public get backdrop(): Readonly<Color>|null { return this.#backdrop }
+
+    public set backdrop(backdrop: Readonly<Color>|null){
+        if(backdrop === this.#backdrop || (backdrop && this.#backdrop?.equals(backdrop))) return
+        this.#backdrop = backdrop?.clone() ?? null
+        this.#contrastChanged()
     }
 
     /** The color of the outline around the text, none for none. Setting the same one does nothing. */
@@ -88,6 +112,7 @@ export class Paragraph extends Component {
         if(outline === this.#outline || (outline && this.#outline?.equals(outline))) return
         const resized = (outline === null) !== (this.#outline === null)
         this.#outline = outline?.clone() ?? null
+        this.#contrasted = this.#needsContrast()
         if(resized) this.invalidateLayout()
         else this.invalidate()
     }
@@ -132,8 +157,11 @@ export class Paragraph extends Component {
         const height = lines.length * layout.lineHeight + 2 * border
         let narrowest = 0
         for(const span of this.#spans){
-            if(span.kind === "svg") narrowest = Math.max(narrowest, layout.lineHeight)
-            else for(const character of span.text) narrowest = Math.max(narrowest, layout.widthOf(character))
+            if(span.kind === "string"){
+                for(const character of span.text) narrowest = Math.max(narrowest, layout.widthOf(character))
+            } else {
+                narrowest = Math.max(narrowest, layout.spansWidth([span]))
+            }
         }
         return sizeHint(narrowest + 2 * border, height, Math.max(widest, narrowest) + 2 * border, height)
     }
@@ -157,6 +185,9 @@ export class Paragraph extends Component {
             const x = this.#lineStart(line)
             const y = border + index * lineHeight
             if(outline) layout.drawSpansOutlined(painter, line, x, y, this.#color, outline)
+            else if(this.#contrasted){
+                layout.drawSpansContrasted(painter, line, x, y, this.#color, this.#outlineOf)
+            }
             else layout.drawSpans(painter, line, x, y, this.#color)
         }
         painter.pop()
@@ -172,10 +203,37 @@ export class Paragraph extends Component {
     #align: TextAlign
     readonly #color: Color
     #outline: Color|null
+    #backdrop: Color|null
+
+    /** Is some piece of its text outlined for want of contrast, so the room of an outline is kept? */
+    #contrasted: boolean
 
     /** The room its outline takes on each side of the text, in pixels. */
     get #border(): number {
-        return this.#outline ? 1 : 0
+        return this.#outline || this.#contrasted ? 1 : 0
+    }
+
+    /** The color of the outline of a piece of its text, none when it tells apart from the backdrop. */
+    readonly #outlineOf = (span: TextSpan): Color|null => {
+        const backdrop = this.#backdrop
+        return backdrop ? outlineAgainst(span.color ?? this.#color, backdrop) : null
+    }
+
+    /** Does any piece of its text need an outline of its own against the backdrop? Not with a general one. */
+    #needsContrast(): boolean {
+        if(this.#outline || this.#backdrop === null) return false
+        return this.#spans.some(span => this.#outlineOf(span) !== null)
+    }
+
+    /** The color or the backdrop changed: draw it again, laid out again if the room of an outline changed. */
+    #contrastChanged(): void {
+        const contrasted = this.#needsContrast()
+        if(contrasted === this.#contrasted){
+            this.invalidate()
+            return
+        }
+        this.#contrasted = contrasted
+        this.invalidateLayout()
     }
 
     /** The lines as drawn, cut at the width of the paragraph. */

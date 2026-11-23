@@ -1,10 +1,9 @@
-import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
 import type { Component, Image, Layer, Theme } from "../../../../engine/ui"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
-import { CARTE, UNIT } from "../../sim/base/keywords"
+import { CARTE } from "../../sim/base/keywords"
 import { deckName } from "../../sim/run/deckName"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Team } from "../../sim/battle/Team"
@@ -24,12 +23,15 @@ import type { StripCard } from "../hud/ChainStrip"
 import { CardChain } from "../../sim/card/CardChain"
 
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
-import { DetailBox } from "../hud/DetailBox"
+import { Detail } from "../hud/Detail"
+import type { DetailTooltip } from "../hud/DetailTooltip"
+import { viewDetails } from "../hud/viewDetails"
 import { SlotView } from "../hud/SlotView"
 import { previewDraw } from "./drawPreview"
 import type { DrawPreview } from "./drawPreview"
-import { processText, statusText, StatusProcessList } from "../hud/StatusProcessList"
-import { heartsRow, heartText } from "../hud/HeartView"
+import { StatusProcessList } from "../hud/StatusProcessList"
+import { heartsRow } from "../hud/HeartView"
+import type { Heart } from "../../sim/heart/Heart"
 import { HoverPanel } from "../hud/HoverPanel"
 import { TurnArrow } from "../hud/TurnArrow"
 import { colorOf } from "../look/colors"
@@ -66,9 +68,6 @@ const HAND_GAP = 2
 /** How many lines of the log the journal keeps. */
 const LOG_LINES = 40
 
-/** How many lines of text the zone of what is hovered shows without scrolling. */
-const INFO_LINES = 3
-
 /** What it says while the round is not the players' to start. */
 const WAITING = "En attente..."
 
@@ -82,9 +81,6 @@ const SKIP_TEXT = {
     end: "Passer jusqu'à la fin",
 } as const
 
-/** What the card info says while nothing is hovered. */
-const HINT = ["Clique une ", CARTE, " de ta main pour la poser dans ta chaîne, une ", CARTE, " de ta chaîne pour la reprendre. Survole pour voir ce qu'elle fait, clic droit pour figer ce texte."]
-
 /** The color behind a unit highlighted in the panels. */
 const HIGHLIGHT = new Color(0.75, 0.4, 0.2, 0.55)
 
@@ -96,9 +92,6 @@ const FOLLOW_SPEED = 240
 
 /** The color behind the unit selected, in the panels. */
 const SELECTED = new Color(0.45, 0.38, 0.15, 0.55)
-
-/** What the card info says while nothing is hovered, for a unit the players do not plan. */
-const LOOK_HINT = ["Survole une ", CARTE, " pour voir ce qu'elle fait, une ", UNIT, " pour la mettre en évidence. Clic droit pour figer ce texte."]
 
 /** The game, as the interface reads it and acts on it. */
 export interface HudHost {
@@ -197,8 +190,8 @@ const NO_ACTIONS: HudActions = {
  *
  * @remarks
  * It is built again whole each time the game changes: a few dozen widgets, and only when the player acts
- * or a step plays, never every frame. What the pointer hovers only changes the text of the card info, set
- * in place by {@link Hud.showInfo}, so hovering never rebuilds the widgets under the pointer.
+ * or a step plays, never every frame. What the pointer hovers is told in bubbles, which never rebuild the
+ * widgets under the pointer.
  */
 export class Hud {
 
@@ -214,12 +207,14 @@ export class Hud {
 
         /** The size of the interface, in virtual pixels, read at each build. */
         public readonly size: () => { readonly width: number, readonly height: number },
+
+        /** The bubbles that tell what is hovered, and the words of the texts of the panels. */
+        public readonly tooltip: DetailTooltip,
     ){
         this.#units = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
         this.#details = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
         this.#journal = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
         this.#chainScroll = new Scroll(theme, { axis: "horizontal", width: SCROLL_SIZE, height: SCROLL_SIZE })
-        this.#info = new DetailBox(theme, { color: DIM_TEXT, scrolled: true })
     }
 
 
@@ -227,7 +222,9 @@ export class Hud {
     public refresh(): void {
         const content = this.layer.content
         for(const child of [...content.children]) content.remove(child)
-        this.#info.tell(null)
+        this.#hovers?.remove()
+        this.#hovers = null
+        this.tooltip.reset()
         this.#standsFor.clear()
         this.#pictures.clear()
         this.#lit = null
@@ -241,9 +238,12 @@ export class Hud {
         if(belted && belted.unit.usables.length > 0) this.#place(this.#panel(this.#belt(belted)), grid.usables)
         this.#place(this.#panel(this.#journalled()), grid.journal)
         this.#place(this.#panel(this.#right()), grid.units)
-        this.#place(this.#panel(this.#told()), grid.info)
         this.#addSelected(grid)
         this.#addFlight()
+        // DETAILS //
+        const details = Detail.all(...viewDetails(content))
+        this.tooltip.attach(details)
+        this.#hovers = details
     }
 
     /** The room the arena is drawn in. */
@@ -298,19 +298,9 @@ export class Hud {
         if(scroll.offset === target || scroll.offset !== offset) this.#followed = null
     }
 
-    /** Show a text about what is hovered, in its zone, or the hint when none. */
-    public showInfo(text: Text|null): void {
-        this.#info.tell(text)
-    }
 
-    /** Let the text about what is hovered read a frame of the input, while the panel holding it is shown. */
-    public readInfo(input: InputFrame, pointerX: number, pointerY: number): void {
-        this.#info.frame(input, pointerX, pointerY)
-    }
-
-
-    /** The text about what is hovered, kept from one build to the next, locked or not. */
-    readonly #info: DetailBox
+    /** What the cards, hearts, icons and piles of the last build tell, until it is built again. */
+    #hovers: Detail|null = null
 
     /**
      * The scroll of the units, kept from one build to the next with only its content replaced, so it stays
@@ -402,7 +392,6 @@ export class Hud {
             chain: CARD_LOOKS.chain.height + LINK_ROOM + scrollbar.width,
             hand: PILE_HEIGHT,
             usables: this.#draft()?.unit.usables.length ? beltHeight : 0,
-            info: INFO_LINES * font.lineHeight * textScale + 2 * (padding + this.#info.padding),
         })
     }
 
@@ -487,13 +476,6 @@ export class Hud {
         return sheet
     }
 
-    /** The text about what is hovered, or the hint fitting what the player may do. */
-    #told(): Component {
-        this.#info.hint = this.#draft() ? HINT : LOOK_HINT
-        this.#info.parent?.remove(this.#info)
-        return this.#info
-    }
-
     /**
      * The belt of the unit planned: a button for each thing it carries, lit when it is to be used at the
      * start of the execution. The hover of one says what it does.
@@ -538,10 +520,8 @@ export class Hud {
      */
     #thing(unit: Unit, thing: Usable|Item, uses: string|null, told: Text): AbsItemIcon {
         const view = new AbsItemIcon(this.theme, this.host.sprites, thing.icon, uses ?? "", 1, THING_ICON_SIZE)
-        view.onHover = over => {
-            this.host.hoverThing(unit, thing, over)
-            this.showInfo(over ? told : null)
-        }
+        view.detail = told
+        view.onHover = over => this.host.hoverThing(unit, thing, over)
         return view
     }
 
@@ -611,12 +591,10 @@ export class Hud {
                 onStatusHover: (_unit, status, over) => {
                     this.host.hoverUnit(unit, over)
                     this.host.hoverThing(unit, unit.statusOf(status.type) ?? NO_PREVIEW, over)
-                    this.showInfo(over ? statusText(status) : null)
                 },
                 onProcessHover: (_unit, process, over) => {
                     this.host.hoverUnit(unit, over)
                     this.host.hoverThing(unit, process, over)
-                    this.showInfo(over ? processText(process) : null)
                 },
             }, { direction: "row", align: "center" })
             marks.unit = unit
@@ -791,13 +769,11 @@ export class Hud {
         for(const card of shown){
             const view = new CardView(this.theme, card, "hand")
             view.unlimited = true
-            view.onHover = over => this.#tellCard(card, over)
             hand.add(view)
         }
         cards.forEach((card, index) => {
             const view = new CardView(this.theme, card, "hand")
             view.deck = deckOf(card)
-            view.onHover = over => this.#tellCard(card, over)
             if(flight && index === cards.length - 1){
                 view.ghost = true
                 this.#landing = view
@@ -831,7 +807,9 @@ export class Hud {
             const upcoming = coming.length > 0
                 ? ` Prochaines : ${coming.map(each => each.card?.name ?? "?").join(", ")}.`
                 : ""
-            view.onHover = over => this.showInfo(over ? concat(name, ` : ${pile} `, CARTE.as("cartes"), `, ${discard} en défausse.${upcoming}`) : null)
+            view.detail = concat(
+                name, ` : ${pile} `, CARTE.as("cartes"), `, ${discard} en défausse.${upcoming}`,
+            )
             this.#piles.set(index, view)
             hand.add(view)
         })
@@ -871,10 +849,8 @@ export class Hud {
         const { scene } = this.host
         const hearts = scene.of(unit)?.hearts ?? unit.hearts.all
         const lit = scene.litHeart?.unit === unit ? scene.litHeart.indexes : []
-        return heartsRow(this.theme, hearts, (heart, over) => {
-            this.host.hoverUnit(unit, over)
-            this.showInfo(over ? heartText(heart) : null)
-        }, lit, scene.litHeart?.edge)
+        const hover = (_heart: Heart, over: boolean): void => this.host.hoverUnit(unit, over)
+        return heartsRow(this.theme, hearts, hover, lit, scene.litHeart?.edge)
     }
 
     /** The hand of a unit, face up: a click on a card selects the unit, and its hover highlights it. */
@@ -887,18 +863,10 @@ export class Hud {
             view.deck = deckOf(card)
             view.dimmed = this.host.isLocked(unit)
             view.onPick = () => this.actions.choose(unit)
-            view.onHover = over => {
-                this.host.hoverUnit(unit, over)
-                this.#tellCard(card, over)
-            }
+            view.onHover = over => this.host.hoverUnit(unit, over)
             row.add(view)
         }
         return row
-    }
-
-    /** Say what a card does while the pointer is over it. */
-    #tellCard(card: Card, over: boolean): void {
-        this.showInfo(over ? concat(card, " : ", card.description) : null)
     }
 
     /** The chain being put together, its cards linked to what they take, or a word when it is empty. */
@@ -957,7 +925,7 @@ export class Hud {
     }
 
     #paragraph(text: Text, color: Color): Paragraph {
-        return new Paragraph(this.theme, text, { color, onLink: this.#info.hearLink })
+        return new Paragraph(this.theme, text, { color, onLink: this.tooltip.hearLink })
     }
 
     #label(text: string, color?: Color): Label {

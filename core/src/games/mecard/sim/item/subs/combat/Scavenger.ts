@@ -3,6 +3,7 @@ import type { PlugContext } from "../../../battle/Action"
 import { LUCIDITY } from "../../../status/subs/Lucidity"
 
 import { AbstractItem } from "../AbstractItem"
+import { BATTLE_ROUND } from "../../../base/keywords"
 
 /** How far a feverish enemy is smelled, in meters. */
 const SCENT_RANGE = 3
@@ -16,7 +17,7 @@ export class ScavengerNose extends AbstractItem {
 
     constructor(){
         super("Flair de charognard", visual("items/scavenger_nose"), [
-            "Fin de round : si une unité ennemie fébrile est à moins de ", SCENT_RANGE, " m, gagne ", SCENT_LEVELS, " niveau de lucidité.",
+            "Fin de ", BATTLE_ROUND, " : si une unité ennemie fébrile est à moins de ", SCENT_RANGE, " m, gagne ", SCENT_LEVELS, " niveau de lucidité.",
         ])
     }
 

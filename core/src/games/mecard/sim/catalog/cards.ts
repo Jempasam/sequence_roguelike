@@ -56,8 +56,10 @@ import {
     SWALLOW, SWIFTNESS, VIGOR,
     MEMORY_GAP, ONE_MIND, PARROT, PAS_DE_DEUX, STUTTER, SYNCHRONISATION, CARRION_BREATH, EXO_NERF,
     PIERCING_SPEAR, ETHEREAL_FORM, HAUNT, PLAGIARISM,
+    CHESS_AIM,
+    ROOK_ARRIVAL,
 } from "../card/subs"
-import { CARTE } from "../base/keywords"
+import { CARTE, UPGRADE } from "../base/keywords"
 import { keywordsOf } from "../card/describe"
 import { RewriteCard } from "../card/subs/composite/RewriteCards"
 import { upgradedWith, upgradesFor } from "./upgrades"
@@ -83,7 +85,7 @@ export function chaosCard(): Card {
  * are known: they are read only when it is rewritten.
  */
 export const ENCHANTMENT: Card = new RewriteCard("Enchantement", [
-    "Fin de préparation : la ", CARTE, " qui la suit reçoit une amélioration tirée au hasard parmi celles qui lui vont.",
+    "Fin de préparation : la ", CARTE, " qui la suit reçoit une ", UPGRADE, " tirée au hasard parmi celles qui lui vont.",
 ], Rarity.RARE, (ctx, spot) => {
     const next = spot.next
     const fitting = next ? upgradesFor(next) : []
@@ -181,7 +183,7 @@ export const LOOT_CARDS: readonly Card[] = [
     POSSESSION, ...BEAST_CARDS, BITE, RUN, FURY, TRANSMUTATION, SUMMONING, TOTAL_TRANSFORMATION, ELEMENT_ON_BLADE, ENCHANTED_BLADE,
     CYBERNETIC_BEAST, FLESH_CURSE, BEAST_ARMOR, ELEMENTAL, HYBRIDIZATION, ADAPTATION, REVERSED_ADAPTATION,
     SYNCHRONISATION, STUTTER, PAS_DE_DEUX, PARROT, MEMORY_GAP, ONE_MIND, EXO_NERF, CARRION_BREATH,
-    PIERCING_SPEAR, ETHEREAL_FORM, HAUNT, PLAGIARISM, THROWN_FRENZY,
+    PIERCING_SPEAR, ETHEREAL_FORM, HAUNT, PLAGIARISM, THROWN_FRENZY, CHESS_AIM,
     ...POTION_CARDS,
 ]
 
@@ -206,6 +208,7 @@ export const LEGENDARY_CARDS: readonly Card[] = [
     BULLET_RAIN, SPIRIT_DASH, SHADOW_BLINK,
     DOUBLE_SLASH, TRIPLE_SLASH, BLOOD_STORM,
     THRUST_COMBO, STORM_BLADE, TOTAL_HYBRID, TAMING_MARK,
+    ROOK_ARRIVAL, ROOK_ARRIVAL,
 ]
 
 /**

@@ -1,6 +1,8 @@
+import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
+import { BATTLE_ROUND } from "../base/keywords"
 import type { Observer } from "../base/Observable"
-import { counted } from "../battle/words"
+import { counted, countedWord } from "../battle/words"
 import type { UnitContext } from "../battle/Action"
 
 import { BaseStatus } from "./BaseStatus"
@@ -14,7 +16,7 @@ export abstract class RoundStatus extends BaseStatus {
 
     public override toString(): string { return `${this.type} ${counted(this.level, "round")}` }
 
-    public override toSemString(): Text { return [this.type, ` ${counted(this.level, "round")}`] }
+    public override toSemString(): Text { return concat(this.type, " ", countedWord(this.level, BATTLE_ROUND)) }
 
     // What it plugs in acts at the end of a round before the count down, plugged in first.
     public init(ctx: UnitContext): void {

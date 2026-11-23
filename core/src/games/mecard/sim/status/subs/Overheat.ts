@@ -5,6 +5,7 @@ import type { UnitContext } from "../../battle/Action"
 import type { UnitStats } from "../../battle/Unit"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How much each stat of a unit overheated gains. */
 export const OVERHEAT_BONUS = 1
@@ -20,8 +21,8 @@ const RAISED: readonly ((stats: UnitStats) => Attribute<number>)[] = [
 /** An overheat: everything is raised, and each kill buys a round back, but the unit dies when the last round ends. */
 export const OVERHEATED = new StatusType("surchauffe", statusVisual("overheat", 1, 0.45, 0.1), "positive", level => new Overheat(level), {
     description: [
-        "+", OVERHEAT_BONUS, " force, précision, mouvement, chaîne max et pioche pendant ", STATUS_LEVEL, " rounds. ",
-        "Chaque unité tuée donne ", OVERHEAT_KILL_ROUNDS, " round de plus. À la fin, l'unité meurt.",
+        "+", OVERHEAT_BONUS, " force, précision, mouvement, chaîne max et pioche pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ". ",
+        "Chaque unité tuée donne ", OVERHEAT_KILL_ROUNDS, " ", BATTLE_ROUND, " de plus. À la fin, l'unité meurt.",
     ],
 })
 

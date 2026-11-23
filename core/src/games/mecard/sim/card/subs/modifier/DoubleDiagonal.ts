@@ -4,6 +4,7 @@ import type { Preview } from "../../../battle/preview/Preview"
 import { ModifierCard } from "../ModifierCard"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import { BATTLE_TURN } from "../../../base/keywords"
 
 /** Where a unit faces after an action played an eighth off ahead: ahead, unless the action turned it. */
 function settled(direction: Vector2, diagonal: Vector2, ahead: Vector2): Vector2 {
@@ -40,6 +41,7 @@ function doubled(inner: Action): Action {
 }
 
 export const DOUBLE_DIAGONAL = new ModifierCard(
-    "Double diagonale", "L'action est jouée tournée de 45° à gauche puis à droite, en une étape.", Rarity.RARE,
+    "Double diagonale", ["L'action est jouée tournée de 45° à gauche puis à droite, en une ", BATTLE_TURN.as("étape"), "."],
+    Rarity.RARE,
     doubled,
 )

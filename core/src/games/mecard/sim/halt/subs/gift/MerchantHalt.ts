@@ -1,4 +1,5 @@
 import { concat } from "../../../../../../semantic"
+import { ITEM } from "../../../base/keywords"
 import type { Rng } from "../../../base/Rng"
 import { LOOT_ITEMS } from "../../../catalog/index"
 import type { Item } from "../../../item/Item"
@@ -22,7 +23,7 @@ export class MerchantHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(MERCHANT_HALT, run,
-            "J'ai trois objets pour toi. Prends-en un !",
+            ["J'ai trois ", ITEM.as("objets"), " pour toi. Prends-en un !"],
             sceneLook(33, 23, 20, "merchant"),
             {
                 hat: "featherToque"
@@ -33,7 +34,7 @@ export class MerchantHalt extends AbstractHalt {
 
 
     public start(ctx: HaltContext): void {
-        ctx.offer("Choisis un objet", this.#items, item => ({ cards: [], items: [item], text: described(item, item) }), item => {
+        ctx.offer(["Choisis un ", ITEM], this.#items, item => ({ cards: [], items: [item], text: described(item, item) }), item => {
             ctx.hero(concat(item, " : pour qui ?"), hero => {
                 this.impact()
                 this.run.giveItem(hero, item)
@@ -51,7 +52,8 @@ export class MerchantHalt extends AbstractHalt {
 export const MERCHANT_HALT: HaltType = {
     id: "merchant",
     name: "Marchand ambulant",
-    description: "Un objet parmi trois.",    icon: visual("halts/merchant", { letter: "MB" }),
+    description: ["Un ", ITEM, " parmi trois."],
+    icon: visual("halts/merchant", { letter: "MB" }),
     transition: visual("stone-bridge"),
     create: run => new MerchantHalt(run),
 }

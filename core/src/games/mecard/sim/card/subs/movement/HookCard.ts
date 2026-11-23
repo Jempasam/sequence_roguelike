@@ -13,7 +13,7 @@ import { ActionCard } from "../ActionCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { hold, SHORT_TIME, travel } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT, BATTLE_TURN } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -143,5 +143,5 @@ export const GRAPPLE = new HookCard("Grappin", [
 
 export const VINE = new HookCard("Liane", [
     "Lance une liane droit devant, jusqu'à ", HOOK_RANGE, "×", PORTEE, " ", DISTANCE, " : une ", UNIT, " prise est tirée jusqu'à toi et ",
-    "immobilisée ", VINE_ROOT, " étape ; un pilier ou un mur te tire jusqu'à lui.",
+    "immobilisée ", VINE_ROOT, " ", BATTLE_TURN.as("étape"), " ; un pilier ou un mur te tire jusqu'à lui.",
 ], Rarity.RARE, HOOK_RANGE, true, true, VINE_ROOT)

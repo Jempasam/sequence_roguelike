@@ -65,19 +65,19 @@ describe("Parallax", () => {
             {
                 sprite: Sprite.whole(new Texture(setup.gpu, 260, 150)),
                 depth: 30,
-                place: { x: -0.65, y: -0.4, width: 1.3, height: 0.8 },
+                place: { x: -20, y: -10, width: 240, height: 140 },
             },
             {
                 sprite: Sprite.whole(new Texture(setup.gpu, 20, 10)),
                 depth: 50,
-                place: { x: 0.2, y: 0.1, width: 0.1, height: 0.05 },
+                place: { x: 120, y: 70, width: 20, height: 10 },
             },
             {
                 sprite: Sprite.whole(new Texture(setup.gpu, 20, 10)),
                 depth: 5,
-                place: { x: 2, y: -0.05, width: 0.1, height: 0.1 },
+                place: { x: 600, y: 50, width: 20, height: 10 },
             },
-        ], { tint: new Color(0.2, 0.5, 1) })
+        ], { tint: new Color(0.2, 0.5, 1), viewport: { width: 200, height: 120 } })
         setup.main.content.add(parallax, { x: "stretch", y: "stretch" })
         setup.ui.render()
         for(const [x, y] of [[0, 0], [319, 179], [160, 90], [0, 179]]){
@@ -93,15 +93,15 @@ describe("Parallax", () => {
                 sprite: Sprite.whole(new Texture(setup.gpu, 263, 151)),
                 depth: { x: 0, y: 20 },
                 warp: { x: -2, y: 40 },
-                place: { x: -0.65, y: -0.4, width: 1.3, height: 0.8 },
+                place: { x: -20, y: -10, width: 240, height: 140 },
             },
             {
                 sprite: Sprite.whole(new Texture(setup.gpu, 3, 2)),
                 depth: 50,
                 warp: { x: 0.3, y: 0 },
-                place: { x: 0.2, y: 0.1, width: 0.1, height: 0.05 },
+                place: { x: 120, y: 70, width: 20, height: 10 },
             },
-        ], { warpStrips: 7 })
+        ], { warpStrips: 7, viewport: { width: 200, height: 120 } })
         setup.main.content.add(parallax, { x: "stretch", y: "stretch" })
         setup.ui.render()
         for(const [x, y] of [[0, 0], [319, 179], [160, 90], [0, 179], [319, 0]]){
@@ -112,6 +112,18 @@ describe("Parallax", () => {
     test("strips not a whole number from 1 → an error", () => {
         expect(() => new Parallax([], { warpStrips: 0 })).toThrow()
         expect(() => new Parallax([], { warpStrips: 2.5 })).toThrow()
+    })
+
+    test("a placed layer with no viewport, or a viewport with no size → an error", () => {
+        const setup = uiSetup()
+        const placed = {
+            sprite: Sprite.whole(new Texture(setup.gpu, 20, 10)),
+            depth: 5,
+            place: { x: 0, y: 0, width: 20, height: 10 },
+        }
+        expect(() => new Parallax([placed])).toThrow()
+        expect(() => new Parallax([placed], { viewport: { width: 0, height: 10 } })).toThrow()
+        expect(() => new Parallax([placed], { viewport: { width: 20, height: 10 } })).not.toThrow()
     })
 
     test("asks no size → takes what its stack gives", () => {

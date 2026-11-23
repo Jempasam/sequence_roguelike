@@ -8,7 +8,7 @@ import { cardShown } from "../shown"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
 import { offeredMonsters } from "./monster_pool"
-import { CARTE, FUSION } from "../../../base/keywords"
+import { CARTE, FUSION, MONSTER } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** The necro chest: a fusion torn from a monster, among some, free. */
@@ -17,7 +17,7 @@ export class NecroChestHalt extends CardGiftHalt {
 
     constructor(run: Run){
         super(NECRO_CHEST_HALT, run,
-            ["Un ", FUSION.as("collage"), " arraché à un monstre, parmi trois, gratuit."],
+            ["Un ", FUSION.as("collage"), " arraché à un ", MONSTER, ", parmi trois, gratuit."],
             sceneLook(31, 23, 13, "chest", { coloration: [0.72, 0.56, 0.78] }),
             // A dark one keeps this chest, who tore its cards from the monsters.
             {
@@ -47,7 +47,7 @@ export class NecroChestHalt extends CardGiftHalt {
 export const NECRO_CHEST_HALT: HaltType = {
     id: "necroChest",
     name: "Nécro coffre",
-    description: ["Un ", FUSION.as("collage"), " d'une chaîne d'un monstre, parmi trois, gratuit."],
+    description: ["Un ", FUSION.as("collage"), " d'une chaîne d'un ", MONSTER, ", parmi trois, gratuit."],
     icon: visual("halts/chest", { letter: "CO!" }),
     glow: DARK_COLOR,
     transition: visual("dungeon-door", { coloration: DARK_COLORATION }),

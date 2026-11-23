@@ -1,3 +1,4 @@
+import { FLOOR } from "../../base/keywords"
 import type { Floor } from "../../floor/Floor"
 import type { Run } from "../../run/Run"
 import type { HaltContext } from "../HaltContext"
@@ -36,7 +37,7 @@ export class ExitHalt extends AbstractHalt {
 export const EXIT_HALT: HaltType = {
     id: "exit",
     name: "Sortie",
-    description: "Mène à un autre étage.",    icon: visual("floors/exit", { letter: "S" }),
+    description: ["Mène à un autre ", FLOOR, "."],    icon: visual("floors/exit", { letter: "S" }),
     transition: visual("spiral-stairs"),
     create: run => new ExitHalt(run, run.travel.place?.exitTo ?? run.travel.journey.exits[0]),
 }

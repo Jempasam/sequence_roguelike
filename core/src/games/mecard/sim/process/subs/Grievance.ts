@@ -1,5 +1,6 @@
 import { visual } from "../../base/Visual"
 import type { PlugContext } from "../../battle/Action"
+import { HeartCount } from "../../battle/words"
 import { DEMONIC } from "../../status/subs/DemonEnergy"
 import { AbstractProcess } from "../AbstractProcess"
 
@@ -12,7 +13,7 @@ export class WeakeningBlows extends AbstractProcess {
         public readonly bonus: number,
     ){
         super(`coups affaiblissants +${bonus}`, visual("processes/weakening_blows", { color: [0.8, 0.5, 0.4] }),
-            `Chaque blessure subie en ouvre une autre de ${bonus} cœur${bonus > 1 ? "s" : ""}.`,
+            ["Chaque blessure subie en ouvre une autre de ", new HeartCount(bonus), "."],
         )
     }
 

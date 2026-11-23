@@ -13,10 +13,10 @@ import { SOUL_LINKED, SOUL_SHIELDED } from "../../status/subs/Wounds"
 import type { Potion } from "../Potion"
 
 import { StatusPotion } from "./StatusPotion"
-import { UNIT } from "../../base/keywords"
+import { UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../base/keywords"
 
 export const POISON_POTION = new StatusPotion("poison", [
-    "En fin de round, autant de ", new HeartCount(1), " perdus que de rounds restants.",
+    "En fin de ", BATTLE_ROUND, ", autant de ", new HeartCount(1), " perdus que de ", BATTLE_ROUND.as("rounds"), " restants.",
 ], POISONED)
 
 export const SLOWNESS_POTION = new StatusPotion("lenteur", [
@@ -28,11 +28,11 @@ export const WEAKNESS_POTION = new StatusPotion("faiblesse", [
 ], WEAKENED)
 
 export const RAGE_POTION = new StatusPotion("rage", [
-    "Avant chaque étape, se tourne vers un ennemi au hasard.",
+    "Avant chaque ", BATTLE_TURN.as("étape"), ", se tourne vers un ennemi au hasard.",
 ], ENRAGED)
 
 export const CONFUSION_POTION = new StatusPotion("confusion", [
-    "Avant chaque étape, ", frenchNumber(CONFUSION_CHANCE * 100), " % de chances de se tourner n'importe où.",
+    "Avant chaque ", BATTLE_TURN.as("étape"), ", ", frenchNumber(CONFUSION_CHANCE * 100), " % de chances de se tourner n'importe où.",
 ], CONFUSED)
 
 export const VULNERABILITY_POTION = new StatusPotion("vulnérabilité", [
@@ -40,7 +40,7 @@ export const VULNERABILITY_POTION = new StatusPotion("vulnérabilité", [
 ], VULNERABLE)
 
 export const FRENZY_POTION = new StatusPotion("frénésie", [
-    "Avant chaque étape, se tourne vers l'", UNIT, " la plus proche, alliée ou ennemie.",
+    "Avant chaque ", BATTLE_TURN.as("étape"), ", se tourne vers l'", UNIT, " la plus proche, alliée ou ennemie.",
 ], FRENZIED)
 
 export const SOUL_LINK_POTION = new StatusPotion("lien d'âme", [
@@ -60,7 +60,7 @@ export const SWIFTNESS_POTION = new StatusPotion("célérité", [
 ], SWIFT)
 
 export const SWALLOW_POTION = new StatusPotion("hirondelle", [
-    "En fin de round, soigne ", new HeartCount(SWALLOW_HEAL), " ; disparaît dès que l'", UNIT, " subit des dégâts.",
+    "En fin de ", BATTLE_ROUND, ", soigne ", new HeartCount(SWALLOW_HEAL), " ; disparaît dès que l'", UNIT, " subit des dégâts.",
 ], SWALLOWED)
 
 /** Every potion, as saved by name. */

@@ -8,8 +8,8 @@ import { EMPTY_HINT } from "../SizeHint"
 import type { SizeHint } from "../SizeHint"
 
 /**
- * Where a layer lies at rest, in the view of its parallax: a box of 1 by 1 centred on 0, 0, from -0.5 to
- * 0.5, scaled alike on both axes to cover the bounds, so a layer keeps its proportions.
+ * Where a layer lies at rest, in pixels of the viewport of its parallax: the top left corner of the layer
+ * from the one of the viewport, and its size. It may reach past the viewport, which gives it room to move.
  */
 export interface ParallaxPlace {
     readonly x: number
@@ -36,7 +36,7 @@ export interface ParallaxLayer {
     readonly depth: number|ParallaxAxes
 
     /**
-     * Where it lies at rest, in the view, grown about its middle by the room its depth takes: none
+     * Where it lies at rest, in the viewport, grown about its middle by the room its depth takes: none
      * to fit it on its own, its middle on theirs.
      */
     readonly place?: ParallaxPlace
@@ -49,8 +49,20 @@ export interface ParallaxLayer {
     readonly warp?: ParallaxAxes
 }
 
+/** What a parallax shows at rest, in the pixels its placed layers are placed in. */
+export interface ParallaxViewport {
+    readonly width: number
+    readonly height: number
+}
+
 /** How a parallax is drawn, besides its layers. */
 export interface ParallaxOptions {
+    /**
+     * What the scene shows at rest, scaled alike on both axes to cover the bounds, centred on them. Required
+     * by a placed layer, which is placed in its pixels.
+     */
+    readonly viewport?: ParallaxViewport
+
     /** A hue every layer takes, its light and its saturation kept, none to draw them as they are. */
     readonly tint?: Color|null
 
@@ -105,7 +117,7 @@ interface Mapping {
  * @remarks
  * A layer fitted on its own is drawn at a whole scale, the smallest at which its sprite covers the bounds
  * and the room its depth takes, and only the part of it over the bounds. A placed layer is drawn over
- * its place in the view, which covers the bounds, and only the part of it over the bounds is drawn: one
+ * its place in the viewport, which covers the bounds, and only the part of it over the bounds is drawn: one
  * that holds too little leaves a gap, as it was placed. A layer that bends is drawn strip by strip, its
  * outer edges where they would be unbent. Nothing is drawn outside the bounds. It ticks while shown,
  * reading where the pointer is, and draws again only when a layer moved.
@@ -114,7 +126,8 @@ export class Parallax extends Component {
 
 
     /**
-     * @throws {@link Error} When the strips are not a whole number from 1.
+     * @throws {@link Error} When the strips are not a whole number from 1, the viewport has no size, or a
+     * layer is placed with none.
      */
     constructor(
         /** The layers, the farthest first. */
@@ -124,6 +137,14 @@ export class Parallax extends Component {
         super()
         const strips = options.warpStrips ?? WARP_STRIPS
         if(!Number.isInteger(strips) || strips < 1) throw new Error(`A parallax cuts its layers in a whole number of strips from 1, not ${strips}.`)
+        const viewport = options.viewport ?? null
+        if(viewport && !(viewport.width > 0 && viewport.height > 0)){
+            throw new Error(`A parallax shows a viewport of a positive size, not ${viewport.width} by ${viewport.height}.`)
+        }
+        if(!viewport && layers.some(layer => layer.place)){
+            throw new Error("A parallax with a placed layer needs the viewport the layer is placed in.")
+        }
+        this.#viewport = viewport
         this.warpStrips = strips
         this.#tint = options.tint ?? null
         this.opaque = options.opaque ?? false
@@ -189,6 +210,8 @@ export class Parallax extends Component {
 
     #tint: Color|null
 
+    readonly #viewport: ParallaxViewport|null
+
     /** Does a layer bend, so the pointer moving changes the drawing even where no shift does? */
     readonly #bends: boolean
 
@@ -236,18 +259,19 @@ export class Parallax extends Component {
         const layer = this.layers[index]
         const depth = depthOf(layer)
         const shift = this.#shifts[index]
-        // The view, a box of 1 by 1 centred on 0, 0, covers the bounds: scaled by their longest side, then
-        // grown about its middle by the room the depth of the layer takes, so its shift shows no edge of it.
+        const viewport = this.#viewport!
+        // The viewport, centred on the bounds, covers them: scaled alike on both axes, then grown about its
+        // middle by the room the depth of the layer takes, so its shift shows no edge of it.
         const grownX = (width + 2 * depth.x) / width
         const grownY = (height + 2 * depth.y) / height
-        const unit = Math.max(width, height)
+        const unit = Math.max(width / viewport.width, height / viewport.height)
         const mapping = this.#mapping
         mapping.sx = 0
         mapping.sy = 0
         mapping.sw = layer.sprite.width
         mapping.sh = layer.sprite.height
-        mapping.dx = width / 2 + place.x * unit * grownX + shift.x
-        mapping.dy = height / 2 + place.y * unit * grownY + shift.y
+        mapping.dx = width / 2 + (place.x - viewport.width / 2) * unit * grownX + shift.x
+        mapping.dy = height / 2 + (place.y - viewport.height / 2) * unit * grownY + shift.y
         mapping.dw = place.width * unit * grownX
         mapping.dh = place.height * unit * grownY
         return mapping

@@ -7,10 +7,11 @@ import { familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { elementVariants } from "../StatusVariants"
 import type { ElementType } from "../StatusVariants"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** An enchanted blade: the blows apply the negative of an element. */
 export const ENCHANTED = familyType("lame enchantée", statusVisual("coated", 0.7, 0.75, 1), "positive", {
-    description: ["Jusqu'à la fin du round, chaque attaque qui touche applique le négatif de son élément à sa cible."],
+    description: ["Jusqu'à la fin du ", BATTLE_ROUND, ", chaque attaque qui touche applique le négatif de son élément à sa cible."],
 })
 
 /** The kinds of enchanted blade, one for each element. */

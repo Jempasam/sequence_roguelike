@@ -1,5 +1,6 @@
 import { rgba } from "../../base/Rgba"
 import type { HeartLostEvent } from "../../battle/events"
+import { HeartCount } from "../../battle/words"
 import { HeartRule } from "../HeartRule"
 
 import { AbstractHeartKind } from "./AbstractHeartKind"
@@ -15,7 +16,7 @@ export class VitalHeartKind extends AbstractHeartKind {
         /** How many hearts it heals once lost. */
         public readonly healed: number,
     ){
-        super("vital", `Perdu, il soigne ${healed} cœur.`, rgba(0.45, 1, 0.65))
+        super("vital", ["Perdu, il soigne ", new HeartCount(healed), "."], rgba(0.45, 1, 0.65))
     }
 
 

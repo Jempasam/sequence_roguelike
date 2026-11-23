@@ -1,7 +1,7 @@
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, HEAL, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber } from "../../../battle/words"
+import { frenchNumber, HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -31,14 +31,14 @@ function negatives(unit: Unit) {
 }
 
 export const SCARIFICATION = new ActionCard("Scarification", [
-    "Prend ", SCARIFICATION_LEVEL, " rounds de saignement et gagne ", SCARIFICATION_LEVEL, " cœurs bleus.",
+    "Prend ", SCARIFICATION_LEVEL, " ", BATTLE_ROUND.as("rounds"), " de saignement et gagne ", new HeartCount(SCARIFICATION_LEVEL), " ", BLUE_HEART, ".",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     battle.applyStatus(unit, BLEEDING, SCARIFICATION_LEVEL)
     for(let each = 0; each < SCARIFICATION_LEVEL; each++) unit.hearts.give(new Heart(BLUE_HEART))
 }, "scarification"))
 
 export const INOCULATION = new ActionCard("Inoculation", [
-    "Prend ", INOCULATION_POISON, " round de poison et gagne +", INOCULATION_STRENGTH, " force jusqu'à la fin du round.",
+    "Prend ", INOCULATION_POISON, " ", BATTLE_ROUND, " de poison et gagne +", INOCULATION_STRENGTH, " force jusqu'à la fin du ", BATTLE_ROUND, ".",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     battle.applyStatus(unit, POISONED, INOCULATION_POISON)
     battle.startProcess(unit, new Strength(INOCULATION_STRENGTH))
@@ -52,14 +52,14 @@ export const AGGRAVATION = new ActionCard("Aggravation", [
 }, "aggravation"))
 
 export const PLAGUE_MASK = new ActionCard("Masque à bec", [
-    "Gagne un cœur bouclier par statut négatif que tu portes, au moins un.",
+    "Gagne ", new HeartCount(1), " ", SHIELD_HEART, " par statut négatif que tu portes, au moins un.",
 ], Rarity.RARE, onSelf((_battle, unit) => {
     const shields = Math.max(1, negatives(unit).length)
     for(let each = 0; each < shields; each++) unit.hearts.give(new Heart(SHIELD_HEART))
 }, "masque à bec"))
 
 export const PURGE = new ActionCard("Purge", [
-    "Retire tes statuts négatifs et soigne un cœur + soin par statut retiré.",
+    "Retire tes statuts négatifs et soigne ", new HeartCount(1), " + ", HEAL, " par statut retiré.",
 ], Rarity.RARE, onSelf((battle, unit) => {
     const bad = negatives(unit)
     for(const [type] of bad) battle.removeStatus(unit, type)
@@ -67,7 +67,7 @@ export const PURGE = new ActionCard("Purge", [
 }, "purge"))
 
 export const COMBAT_FEVER = new ActionCard("Fièvre de combat", [
-    "+1 force et +1 précision par statut négatif que tu portes, jusqu'à la fin du round.",
+    "+1 force et +1 précision par statut négatif que tu portes, jusqu'à la fin du ", BATTLE_ROUND, ".",
 ], Rarity.EPIC, onSelf((battle, unit) => {
     const count = negatives(unit).length
     if(count > 0) battle.startProcess(unit, new Fever(count))

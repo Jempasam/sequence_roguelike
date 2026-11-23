@@ -84,6 +84,11 @@ describe("the pictures the catalog names", () => {
         expect(missingFiles(visuals)).toEqual([])
     })
 
+    test("the tiny icons of the texts → a file of the game each", () => {
+        const keys = ["tiny_icon/heart", "tiny_icon/damage", "tiny_icon/gold"]
+        expect(missingFiles(keys.map(key => new Visual({ visual: key })))).toEqual([])
+    })
+
     test("halts and floors, their decorations and the hats of the characters → a file of the game each", () => {
         const fights = new Set(ALL_FIGHT_CATEGORIES.map(each => each.icon))
         const places = allPlaceTypes().map(each => each.icon).filter(each => !fights.has(each))

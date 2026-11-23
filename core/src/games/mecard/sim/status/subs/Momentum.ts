@@ -4,6 +4,7 @@ import { DamageType } from "../../battle/DamageType"
 import { ScalingStatus } from "../ScalingStatus"
 import type { StatGain } from "../ScalingStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How much farther, as a factor, a round of momentum makes the moves go. */
 export const MOMENTUM_MOVE = 0.25
@@ -17,8 +18,8 @@ const TURN_COS = Math.cos(10 * Math.PI / 180)
 /** A momentum: the moves go farther, and a unit going fast enough hurts what stops it. */
 export const MOMENTUM = new StatusType("élan", statusVisual("momentum", 1, 0.7, 0.3), "positive", level => new Momentum(level), {
     description: [
-        "Chaque déplacement va plus loin pour chaque round restant (", STATUS_LEVEL, "). À partir de ", MOMENTUM_RAM_LEVEL,
-        " rounds, un déplacement arrêté par une unité lui inflige autant de dégâts, et l'élan est perdu. Tourner de plus de 10° le fait perdre.",
+        "Chaque déplacement va plus loin pour chaque ", BATTLE_ROUND, " restant (", STATUS_LEVEL, "). À partir de ", MOMENTUM_RAM_LEVEL,
+        " ", BATTLE_ROUND.as("rounds"), ", un déplacement arrêté par une unité lui inflige autant de dégâts, et l'élan est perdu. Tourner de plus de 10° le fait perdre.",
     ],
 })
 

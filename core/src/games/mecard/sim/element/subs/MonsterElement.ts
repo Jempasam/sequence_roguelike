@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
@@ -40,7 +41,7 @@ export class MonsterElement extends AbstractElement {
             `${monster.name} (${negative.name}/${positive.name})`, negative.color, negative.name,
             ["verse ", negative],
             ["verse ", positive],
-            ["un ", monster, " à cœurs bleus, mouillé de ", negative],
+            ["un ", monster, " à ", HEART.as("cœurs"), " ", BLUE_HEART, ", mouillé de ", negative],
         )
     }
 

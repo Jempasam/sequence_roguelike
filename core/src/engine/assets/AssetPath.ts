@@ -51,7 +51,6 @@ export type AssetPath =
     | "mecard/floors/cave/bigshroom.png"
     | "mecard/floors/cave/bones.png"
     | "mecard/floors/cave/logo.png"
-    | "mecard/floors/cave/mouth.png"
     | "mecard/floors/cave/mushroom.png"
     | "mecard/floors/cave/pebbles.png"
     | "mecard/floors/cave/stalagmite.png"
@@ -70,7 +69,6 @@ export type AssetPath =
     | "mecard/floors/factory/lamp.png"
     | "mecard/floors/factory/logo.png"
     | "mecard/floors/factory/pipe.png"
-    | "mecard/floors/factory/press.png"
     | "mecard/floors/factory/small_gear.png"
     | "mecard/floors/forest/1.png"
     | "mecard/floors/forest/2.png"
@@ -94,8 +92,6 @@ export type AssetPath =
     | "mecard/floors/harbor/anchor.png"
     | "mecard/floors/harbor/border.png"
     | "mecard/floors/harbor/buoy.png"
-    | "mecard/floors/harbor/cask.png"
-    | "mecard/floors/harbor/crate.png"
     | "mecard/floors/harbor/logo.png"
     | "mecard/floors/harbor/mast.png"
     | "mecard/floors/harbor/small_wave.png"
@@ -185,6 +181,7 @@ export type AssetPath =
     | "mecard/hud/icon/cut.png"
     | "mecard/hud/icon/defeat.png"
     | "mecard/hud/icon/embarrassed.png"
+    | "mecard/hud/icon/gold.png"
     | "mecard/hud/icon/happy.png"
     | "mecard/hud/icon/heart.png"
     | "mecard/hud/icon/heart_empty.png"
@@ -479,6 +476,9 @@ export type AssetPath =
     | "mecard/tethers/grapple.png"
     | "mecard/tethers/iron_chain.png"
     | "mecard/tethers/laser.png"
+    | "mecard/tiny_icon/damage.png"
+    | "mecard/tiny_icon/gold.png"
+    | "mecard/tiny_icon/heart.png"
     | "mecard/transitions/back.ora"
     | "mecard/transitions/cage-door.ora"
     | "mecard/transitions/cave-exit.ora"
@@ -495,7 +495,6 @@ export type AssetPath =
     | "mecard/transitions/warm-door.ora"
     | "mecard/travel/hand.png"
     | "mecard/travel/map/circle.png"
-    | "mecard/travel/map/paper.png"
     | "mecard/travel/map/path.png"
     | "mecard/travel/map/shade.png"
     | "mecard/units/acrobat.png"
@@ -771,7 +770,6 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/cave/bigshroom.png",
     "mecard/floors/cave/bones.png",
     "mecard/floors/cave/logo.png",
-    "mecard/floors/cave/mouth.png",
     "mecard/floors/cave/mushroom.png",
     "mecard/floors/cave/pebbles.png",
     "mecard/floors/cave/stalagmite.png",
@@ -790,7 +788,6 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/factory/lamp.png",
     "mecard/floors/factory/logo.png",
     "mecard/floors/factory/pipe.png",
-    "mecard/floors/factory/press.png",
     "mecard/floors/factory/small_gear.png",
     "mecard/floors/forest/1.png",
     "mecard/floors/forest/2.png",
@@ -814,8 +811,6 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/harbor/anchor.png",
     "mecard/floors/harbor/border.png",
     "mecard/floors/harbor/buoy.png",
-    "mecard/floors/harbor/cask.png",
-    "mecard/floors/harbor/crate.png",
     "mecard/floors/harbor/logo.png",
     "mecard/floors/harbor/mast.png",
     "mecard/floors/harbor/small_wave.png",
@@ -905,6 +900,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/hud/icon/cut.png",
     "mecard/hud/icon/defeat.png",
     "mecard/hud/icon/embarrassed.png",
+    "mecard/hud/icon/gold.png",
     "mecard/hud/icon/happy.png",
     "mecard/hud/icon/heart.png",
     "mecard/hud/icon/heart_empty.png",
@@ -1199,6 +1195,9 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/tethers/grapple.png",
     "mecard/tethers/iron_chain.png",
     "mecard/tethers/laser.png",
+    "mecard/tiny_icon/damage.png",
+    "mecard/tiny_icon/gold.png",
+    "mecard/tiny_icon/heart.png",
     "mecard/transitions/back.ora",
     "mecard/transitions/cage-door.ora",
     "mecard/transitions/cave-exit.ora",
@@ -1215,7 +1214,6 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/transitions/warm-door.ora",
     "mecard/travel/hand.png",
     "mecard/travel/map/circle.png",
-    "mecard/travel/map/paper.png",
     "mecard/travel/map/path.png",
     "mecard/travel/map/shade.png",
     "mecard/units/acrobat.png",

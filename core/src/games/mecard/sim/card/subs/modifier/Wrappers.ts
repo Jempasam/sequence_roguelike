@@ -1,6 +1,6 @@
 import { Add, ModifierKey, Multiply } from "../../../base/Attribute"
 import type { Attribute, Modifier } from "../../../base/Attribute"
-import { ALLONGE, PORTEE, PRECISION } from "../../../base/keywords"
+import { ALLONGE, PORTEE, PRECISION, BATTLE_ROUND } from "../../../base/keywords"
 import { frenchNumber } from "../../../battle/words"
 import type { Action, UnitContext } from "../../../battle/Action"
 import type { Unit, UnitStats } from "../../../battle/Unit"
@@ -118,5 +118,5 @@ function delayed(action: Action): Action {
 }
 
 export const DELAYED_CHARGE = new ModifierCard("Charge différée", [
-    "Joue l'action une fois, et une fois de plus pour chaque paire d'actions jouées avant elle ce round.",
+    "Joue l'action une fois, et une fois de plus pour chaque paire d'actions jouées avant elle ce ", BATTLE_ROUND, ".",
 ], Rarity.EPIC, delayed)

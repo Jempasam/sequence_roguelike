@@ -57,8 +57,8 @@ describe("LibraryScreen", () => {
         expect(entriesOf(setup)).toBeGreaterThan(50)
         const scrolls = allUnder(setup.ui.layers.find(layer => layer.name === "library")!.content)
             .filter(component => component instanceof Scroll)
-        // The tabs, the list, and the text of the box of details.
-        expect(scrolls).toHaveLength(3)
+        // The tabs and the list.
+        expect(scrolls).toHaveLength(2)
     })
 
     test("another tab chosen → its entries listed in place", () => {
@@ -70,9 +70,8 @@ describe("LibraryScreen", () => {
         expect(entriesOf(setup)).not.toBe(cards)
     })
 
-    test("pointer over an entry → the box of details says its text, then its hint when it leaves", () => {
+    test("pointer over an entry → the tooltip says its text, then nothing when it leaves", () => {
         const { screen, setup } = shown()
-        const hint = screen.detail.text
         const wraps = allUnder(setup.ui.layers.find(layer => layer.name === "library")!.content)
             .filter(component => component instanceof WrapBox) as WrapBox[]
         const entry = wraps[wraps.length - 1].children[0]
@@ -84,13 +83,13 @@ describe("LibraryScreen", () => {
         }
         setup.port.send({ type: "pointer-move", x: Math.floor(x), y: Math.floor(y) })
         screen.frame(setup.frame())
-        expect(screen.detail.text).not.toBe(hint)
+        expect(screen.tooltip.text).not.toBeNull()
         setup.port.send({ type: "pointer-move", x: 0, y: 0 })
         screen.frame(setup.frame())
-        expect(screen.detail.text).toBe(hint)
+        expect(screen.tooltip.text).toBeNull()
     })
 
-    test("pointer over a card of an entry → the box of details says that card, not the entry", () => {
+    test("pointer over a card of an entry → the tooltip says that card, not the entry", () => {
         // Tall enough for the cards of the first entry to lie in the list, not cut by it.
         const { screen, setup } = shown(600)
         screen.selected = 4
@@ -109,8 +108,31 @@ describe("LibraryScreen", () => {
         setup.port.send({ type: "pointer-move", x: Math.floor(x), y: Math.floor(y) })
         expect(x).toBeGreaterThan(0)
         screen.frame(setup.frame())
-        expect(plainText(screen.detail.text)).toContain(view.card.name)
-        expect(plainText(screen.detail.text)).toContain(plainText(view.card.description))
+        expect(plainText(screen.tooltip.text!)).toContain(view.card.name)
+        expect(plainText(screen.tooltip.text!)).toContain(plainText(view.card.description))
+    })
+
+    test("pointer over an entry → a bubble opens with its text, and closes when the pointer leaves", () => {
+        const { screen, setup } = shown()
+        // Each bubble is its shadow, its outline, then its frame.
+        const bubbles = () => setup.ui.layers.find(layer => layer.name === "library-tooltip")!.content.children
+            .filter((_, index) => index % 3 === 2)
+        const wraps = allUnder(setup.ui.layers.find(layer => layer.name === "library")!.content)
+            .filter(component => component instanceof WrapBox) as WrapBox[]
+        const entry = wraps[wraps.length - 1].children[0]
+        let x = entry.bounds.width / 2
+        let y = entry.bounds.height / 2
+        for(let each: Component|null = entry; each; each = each.parent){
+            x += each.bounds.x
+            y += each.bounds.y
+        }
+        expect(bubbles()).toHaveLength(0)
+        setup.port.send({ type: "pointer-move", x: Math.floor(x), y: Math.floor(y) })
+        screen.frame(setup.frame())
+        expect(bubbles()).toHaveLength(1)
+        setup.port.send({ type: "pointer-move", x: 0, y: 0 })
+        screen.frame(setup.frame())
+        expect(bubbles()).toHaveLength(0)
     })
 
     test("adventurers searched by name or by a card → the kit is found", () => {

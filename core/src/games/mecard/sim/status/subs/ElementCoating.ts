@@ -8,10 +8,11 @@ import { STATUS_LEVEL, familyType, statusVisual } from "../Status"
 import type { StatusType } from "../Status"
 import { elementVariants } from "../StatusVariants"
 import type { ElementType } from "../StatusVariants"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** An element coating: the body applies the negative of an element to what it touches. */
 export const ELEMENT_COATING = familyType("enrobage élémentaire", statusVisual("coated", 0.7, 0.75, 1), "positive", {
-    description: ["Au contact d'une unité, applique à celle-ci le négatif de son élément. Dure encore ", STATUS_LEVEL, " rounds."],
+    description: ["Au contact d'une unité, applique à celle-ci le négatif de son élément. Dure encore ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), "."],
 })
 
 /** The kinds of element coating, one for each element. */

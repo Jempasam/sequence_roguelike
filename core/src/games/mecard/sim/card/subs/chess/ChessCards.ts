@@ -1,4 +1,4 @@
-import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { DISTANCE, FORCE, ITEM, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { Action, Pose } from "../../../battle/Action"
@@ -22,6 +22,11 @@ import { EVERY_PIECE, LAST_PIECE, NEAREST_PIECE, piecesOf, playedBy } from "../t
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
+import { FusionCard } from "../composite/FusionCard"
+import { AIM } from "../movement/Aim"
+import { MEGA_SLASH } from "../attack/MegaSlash"
+import { STEP } from "../movement/Step"
+import { THRUST } from "../attack/Thrust"
 
 /** How long a swap takes to fade out and back in, in seconds. */
 const SWAP_TIME = 0.15
@@ -135,7 +140,7 @@ export const QUEEN_CARD = pieceCard({
     name: "Reine", sprite: "queen", status: QUEEN_PIECE, hearts: QUEEN_HEARTS, rarity: Rarity.EPIC,
     description: [
         "Pose à ", AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
-        "de tous tes objets.",
+        "de tous tes ", ITEM.as("objets"), ".",
     ],
     equip: (battle, body, owner) => {
         for(const item of owner.items) battle.equip(body, item)
@@ -157,7 +162,7 @@ export const PLAYED_BY_ALL = new ModifierCard("Par toutes les pièces", [
 /** Make the nearest ally a piece for a few rounds. */
 export const PROMOTION = new ActionCard("Promotion", [
     "L'allié le plus proche à ", PROMOTION_RANGE, " ", DISTANCE, " devient une pièce d'échecs pour ", PROMOTION_ROUNDS,
-    " rounds.",
+    " ", BATTLE_ROUND.as("rounds"), ".",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const ally = battle.nearestAllyFromEdge(unit, PROMOTION_RANGE)
@@ -234,3 +239,9 @@ export const CHECK = new ActionCard("Échec", [
         return Previews.still(pose, ...shown)
     },
 })
+
+export const CHESS_AIM = new FusionCard([PLAYED_BY_ALL, AIM],{name: "Visée des pions", rarity:Rarity.RARE})
+
+export const ROOK_ARRIVAL = new FusionCard([ROOK_CARD, PLAYED_BY_LAST, MEGA_SLASH], { name: "La tour arrive", rarity: Rarity.LEGENDARY })
+
+export const CHECKMATE = new FusionCard([PLAYED_BY_ALL, AIM, PLAYED_BY_ALL, STEP, PLAYED_BY_ALL, THRUST], { name: "Echec et mat", rarity: Rarity.LEGENDARY })

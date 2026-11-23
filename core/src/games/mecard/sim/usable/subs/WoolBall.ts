@@ -3,6 +3,7 @@ import type { UnitContext } from "../../battle/Action"
 import { SOUL_LINKED } from "../../status/subs/Wounds"
 
 import { AbstractUsable } from "./AbstractUsable"
+import { BATTLE_ROUND } from "../../base/keywords"
 
 /** How far a ball of wool is thrown, in meters. */
 const WOOL_RANGE = 5
@@ -22,7 +23,7 @@ export class WoolBall extends AbstractUsable {
             "Pelote de laine", visual("usables/wool_ball"),
             [
                 "Lie l'ennemi le plus proche, à ", range, " m au plus, à toi pendant ", WOOL_ROUNDS,
-                " round : chaque blessure de l'un est répétée à l'identique sur l'autre. 2 utilisations, rechargées à chaque combat.",
+                " ", BATTLE_ROUND, " : chaque blessure de l'un est répétée à l'identique sur l'autre. 2 utilisations, rechargées à chaque combat.",
             ],
             { charges: 2, refill: "battle" },
         )

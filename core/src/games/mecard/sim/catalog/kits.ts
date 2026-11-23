@@ -30,6 +30,8 @@ import {
     PAWN_CARD, ROOK_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, CASTLING, REFLECTION, GLASS_KNIFE, BEAR_TRAP, MISDIRECTION,
     STRIDE, SHY_AWAY, KICK, TRANSFUSION, EPIDEMIC, STUFFING, TAMING_MARK,
     SCARIFICATION, PLAGUE_MASK, AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, TROPHY,
+    CHESS_AIM,
+    PLAYED_BY_ALL,
 } from "../card/subs"
 import {
     BACK_EYES, ALEMBIC, BOOTS, BLOOD_PACT, CHIPPED_BLADE, DEMON_FANG, DODGE_SCEPTER, DOLL, ECHO_ITEM, ELEMENT_BAG,
@@ -54,9 +56,8 @@ import { visual } from "../base/Visual"
 const BASICS: readonly Card[] = [BACK_DASH, AIM, AIM, WAIT]
 
 /** The basics of the kits that fight up close: one of their aims finds the way to the enemy. */
-const CLOSE_BASICS: readonly Card[] = BASICS.map((card, index) => {
-    return index === BASICS.indexOf(AIM) ? PATH_AIM : card
-})
+const CLOSE_BASICS: readonly Card[] = BASICS
+    .map((card, index) => index === BASICS.indexOf(AIM) ? PATH_AIM : card)
 
 /** How many red hearts a kit defined without hearts starts with. */
 export const KIT_HEARTS = 6
@@ -80,6 +81,7 @@ function pinks(count: number): HeartGroup {
 function deckAround(...attacks: Card[]): Card[] {
     return [...BASICS, ...attacks, DODGE_CARD]
 }
+
 
 /** The cards a hero starts a run with: the basics, three copies of its attack, and a dodge. */
 export function starterDeck(attack: Card): Card[] {
@@ -451,7 +453,7 @@ export const BLACK_KNIGHT_KIT: Kit = {
     cards: closeDeckAround(SLASH, SLASH, SWEEP, SCYTHE, BLOOD_AXE, BLOCK),
     items: [FANG],
     usables: [STRENGTH_ELIXIR],
-    hearts: [blacks(10)],
+    hearts: [blacks(8)],
 }
 
 export const BLEEDER_KIT: Kit = {
@@ -565,7 +567,7 @@ export const SPELLBLADE_KIT: Kit = {
 export const CHESS_PLAYER_KIT: Kit = {
     name: "Joueur d'échecs",
     sprite: visual("units/chess_player"),
-    cards: deckAround(PAWN_CARD, ROOK_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, CASTLING),
+    cards: [...BASICS, PAWN_CARD, BISHOP_CARD, PLAYED_BY_NEAREST, PLAYED_BY_ALL, CASTLING, CHESS_AIM, THRUST],
     items: [DOLL],
     usables: [INFLATABLE_DECOY],
     hearts: [reds(3)],

@@ -58,12 +58,14 @@ import { HistoryScreen } from "./history/HistoryScreen"
 import { LiveContext, registerCommands } from "./commands"
 import type { MecardContext, MecardHost } from "./commands"
 import { LibraryScreen } from "./library/LibraryScreen"
+import { lendPictures } from "./look/pictureShelf"
 import { UnitSprites } from "./look/UnitSprites"
 import { GuideScreen } from "./guide/GuideScreen"
 import { MainMenuScreen } from "./menu/MainMenuScreen"
 import { PnjScreen } from "./pnj/PnjScreen"
 import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { locksForUnits } from "./MecardViewer"
+import { Forwarded } from "./forward/Forwarded"
 import { RunSoundLink } from "./sound/RunSoundLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { QuitPopup } from "./hud/QuitPopup"
@@ -221,10 +223,12 @@ export class MecardGame {
         this.#catalog.attach(this.run)
         // Made before the screen, so it hears each battle before the screen starts its first round.
         this.#broadcaster = viewers ? new RunBroadcaster(this.run, viewers) : null
-        this.#sound = sounds ? new RunSoundLink(this.run, sounds) : null
+        const forwarded = new Forwarded(error => this.#console.print(String(error)))
+        this.#sound = sounds ? new RunSoundLink(this.run, sounds, forwarded) : null
         // Listens to the interface for as long as the game lives: nothing to let go of.
         const uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
+        lendPictures(theme, sprites.picture)
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
             report: text => this.#console.print(text),
@@ -248,7 +252,7 @@ export class MecardGame {
         }, sprites)
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites, this.#catalog)
         this.#screen = new RunScreen(ui, this.run, {
-            theme, assets, sprites, toWorld, toUi, sounds: uiSound,
+            theme, assets, sprites, toWorld, toUi, sounds: uiSound, forwarded,
             // The party fell: its save is gone, back to the menu to start again.
             restart: () => {
                 if(this.#shared) this.#shared.onOver?.()
@@ -329,7 +333,7 @@ export class MecardGame {
             report: text => this.#console.print(text),
         }, assets)
         // Over the menu, which it replaces while it is read.
-        this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() })
+        this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() }, undefined, () => sprites.paper)
         this.#history = new HistoryScreen(theme, ui, { leave: () => this.#menuOn() }, sprites)
         this.#chat = new ChatScreen(theme, ui, { leave: () => this.leaveChat() })
         this.#menu.hasNetwork = network !== null

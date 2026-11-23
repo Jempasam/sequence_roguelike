@@ -1,3 +1,4 @@
+import { HEART } from "../../base/keywords"
 import { rgba } from "../../base/Rgba"
 import { Heart } from "../Heart"
 import { HeartRule } from "../HeartRule"
@@ -10,7 +11,7 @@ export class GreenHeartKind extends AbstractHeartKind {
 
 
     constructor(){
-        super("vert", "Perdu, il devient un cœur rouge plein.", rgba(0.3, 0.8, 0.3))
+        super("vert", ["Perdu, il devient un ", HEART, " ", RED_HEART, " plein."], rgba(0.3, 0.8, 0.3))
     }
 
 

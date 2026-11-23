@@ -4,6 +4,7 @@ import { Color } from "../math"
 import type { BitmapFont } from "./BitmapFont"
 import { svgContours } from "../../semantic"
 import type { SvgPath, TextColor, TextSpan } from "../../semantic"
+import type { TextPictures } from "./TextPictures"
 
 /** A piece of a line and where it lies on it, in pixels from the start of the line. */
 export interface SpanPlace {
@@ -50,6 +51,9 @@ export class TextLayout {
         public readonly font: BitmapFont,
 
         public readonly scale = 1,
+
+        /** The pictures its texts may hold, none for a text with only strings and shapes. */
+        public readonly pictures: TextPictures|null = null,
     ){
         if(!Number.isInteger(scale) || scale <= 0){
             throw new Error(`A bitmap font scales by a positive whole factor, not ${scale}.`)
@@ -122,7 +126,11 @@ export class TextLayout {
     /** The width of pieces of text on one line, in pixels. */
     public spansWidth(spans: readonly TextSpan[]): number {
         let width = 0
-        for(const span of spans) width += span.kind === "string" ? this.widthOf(span.text) : this.lineHeight
+        for(const span of spans){
+            if(span.kind === "string") width += this.widthOf(span.text)
+            else if(span.kind === "svg") width += this.lineHeight
+            else width += this.#pictureWidth(span.picture.picture)
+        }
         return width
     }
 
@@ -167,6 +175,10 @@ export class TextLayout {
                 pen += this.widthOf(span.text)
                 continue
             }
+            if(span.kind === "picture"){
+                pen += this.#drawPicture(painter, span.picture.picture, pen, y, false)
+                continue
+            }
             const side = this.lineHeight
             painter.push()
             painter.translate(pen, y)
@@ -186,6 +198,31 @@ export class TextLayout {
         painter: Painter, spans: readonly TextSpan[], x: number, y: number, color: Color, outline: Color,
     ): void {
         for(const [dx, dy] of OUTLINE_OFFSETS) this.#drawSpansIn(painter, spans, x + dx, y + dy, outline)
+        this.drawSpans(painter, spans, x, y, color)
+    }
+
+    /**
+     * Draw pieces of text on one line as {@link TextLayout.drawSpans} draws them, some over an outline of one
+     * pixel around their glyphs or picture. The outlines are all drawn first, so the outline of a piece never
+     * covers its neighbour. An outlined piece reaches a pixel beyond the line on each side.
+     *
+     * @param outlineOf - The color of the outline of a piece, none for a piece without one.
+     */
+    public drawSpansContrasted(
+        painter: Painter, spans: readonly TextSpan[], x: number, y: number, color: Color,
+        outlineOf: (span: TextSpan) => Color|null,
+    ): void {
+        let pen = x
+        for(const span of spans){
+            const outline = outlineOf(span)
+            if(outline){
+                const piece = [span]
+                for(const [dx, dy] of OUTLINE_OFFSETS){
+                    this.#drawSpansIn(painter, piece, pen + dx, y + dy, outline)
+                }
+            }
+            pen += this.spansWidth([span])
+        }
         this.drawSpans(painter, spans, x, y, color)
     }
 
@@ -249,6 +286,10 @@ export class TextLayout {
                 pen += this.widthOf(span.text)
                 continue
             }
+            if(span.kind === "picture"){
+                pen += this.#drawPicture(painter, span.picture.picture, pen, y, true)
+                continue
+            }
             const side = this.lineHeight
             painter.push()
             painter.translate(pen, y)
@@ -257,6 +298,32 @@ export class TextLayout {
             painter.pop()
             pen += side
         }
+    }
+
+    /** The width of a picture on a line, as wide as it is, none when it has none. */
+    #pictureWidth(key: string): number {
+        const picture = this.pictures?.of(key)
+        return picture ? picture.sprite.width * this.scale : 0
+    }
+
+    /**
+     * Draw a picture at a place of a line, centered on the height of the line, and tell how wide it is. It
+     * is drawn in the tint of the painter when it takes it, else as it is; an outline takes only its opacity.
+     */
+    #drawPicture(painter: Painter, key: string, x: number, y: number, outline: boolean): number {
+        const picture = this.pictures?.of(key)
+        if(!picture) return 0
+        const { sprite } = picture
+        const top = y + Math.floor((this.lineHeight - sprite.height * this.scale) / 2)
+        if(outline && !picture.tinted) painter.setColorMode("mask")
+        else if(!picture.tinted) painter.setTint(this.#tint.set(1, 1, 1, 1))
+        painter.push()
+        painter.translate(x, top)
+        painter.scale(this.scale)
+        painter.sprite(sprite, 0, 0)
+        painter.pop()
+        if(outline && !picture.tinted) painter.setColorMode("modulate")
+        return sprite.width * this.scale
     }
 
     /** The contours of each path drawn, read once. */
@@ -337,7 +404,7 @@ function paragraphsOf(spans: readonly TextSpan[]): TextSpan[][][] {
     let words: TextSpan[][] = []
     let word: TextSpan[] = []
     for(const span of spans){
-        if(span.kind === "svg"){
+        if(span.kind !== "string"){
             word.push(span)
             continue
         }
@@ -362,7 +429,7 @@ function paragraphsOf(spans: readonly TextSpan[]): TextSpan[][][] {
 /** The pieces of a word one character or one picture each, in their colors. */
 function charactersOf(word: readonly TextSpan[]): TextSpan[] {
     return word.flatMap((span): TextSpan[] => {
-        return span.kind === "svg" ? [span] : [...span.text].map(text => ({ ...span, text }))
+        return span.kind !== "string" ? [span] : [...span.text].map(text => ({ ...span, text }))
     })
 }
 

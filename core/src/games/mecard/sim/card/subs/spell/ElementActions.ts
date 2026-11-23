@@ -14,7 +14,7 @@ import { AbstractCard } from "../AbstractCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -69,7 +69,7 @@ export const AURA = new ElementActionCard("Aura", "S'applique le positif de l'é
 
 /** The element on the blade of the unit for the round: each blow that lands applies its negative. */
 export const ELEMENT_ON_BLADE = new ElementActionCard("Élément sur lame", [
-    "Jusqu'à la fin du round, chacune de tes attaques qui touche applique le négatif de l'élément.",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", chacune de tes attaques qui touche applique le négatif de l'élément.",
 ], Rarity.RARE, element => ({
     use: function (ctx){
         ctx.battle.applyStatus(ctx.unit, enchantmentOf(element), 1)

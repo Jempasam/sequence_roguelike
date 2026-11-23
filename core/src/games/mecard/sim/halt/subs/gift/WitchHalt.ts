@@ -1,3 +1,4 @@
+import { USABLE } from "../../../base/keywords"
 import { rgba } from "../../../base/Rgba"
 import { concat } from "../../../../../../semantic"
 import type { Rng } from "../../../base/Rng"
@@ -23,7 +24,7 @@ export class WitchHalt extends AbstractHalt {
 
     constructor(run: Run){
         super(WITCH_HALT, run,
-            "Trois utilisables mijotent ici. Prends-en un.",
+            ["Trois ", USABLE.as("utilisables"), " mijotent ici. Prends-en un."],
             sceneLook(20, 31, 15, "witch"),
             {
                 hat: "witchHat",
@@ -39,7 +40,7 @@ export class WitchHalt extends AbstractHalt {
 
     public start(ctx: HaltContext): void {
         const show = (usable: Usable) => ({ cards: [], usables: [usable], text: usableText(usable) })
-        ctx.offer("Choisis un utilisable", this.#usables, show, usable => {
+        ctx.offer(["Choisis un ", USABLE], this.#usables, show, usable => {
             ctx.hero(concat(usable, " : pour qui ?"), hero => {
                 this.impact()
                 this.run.giveUsable(hero, usable)
@@ -57,7 +58,8 @@ export class WitchHalt extends AbstractHalt {
 export const WITCH_HALT: HaltType = {
     id: "witch",
     name: "Sorcière",
-    description: "Un utilisable parmi trois.",    icon: visual("halts/witch", { letter: "SO" }),
+    description: ["Un ", USABLE, " parmi trois."],
+    icon: visual("halts/witch", { letter: "SO" }),
     transition: visual("dungeon-door"),
     create: run => new WitchHalt(run),
 }

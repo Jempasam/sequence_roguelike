@@ -1,5 +1,5 @@
 import type { Keyword, KeywordWord, Semantic, Text } from "../../../../semantic"
-import { HEART } from "../base/keywords"
+import { GOLD, HEART, SUMMON_STAT } from "../base/keywords"
 import { colored, rgba } from "../base/Rgba"
 import { numberText } from "../base/text"
 
@@ -30,6 +30,44 @@ export class HeartCount implements Semantic {
         const word = this.amount > 1 ? "cœurs" : "cœur"
         return colored(HEARTS_COLOR, [frenchNumber(this.amount), " ", HEART.as(word)])
     }
+}
+
+/**
+ * The hearts of a body summoned, its number then the summon stat added to it, then the sort of heart:
+ * `1 + invocation cœur bouclier`.
+ */
+export class SummonedHearts implements Semantic {
+
+
+    constructor(
+        public readonly amount: number,
+
+        /** The sort of its hearts, red ones when none. */
+        public readonly kind?: Semantic,
+    ){}
+
+
+    public toString(): string { return `${frenchNumber(this.amount)} + invocation` }
+
+    public toSemString(): Text {
+        const word = this.amount > 1 ? "cœurs" : "cœur"
+        const number = colored(HEARTS_COLOR, [frenchNumber(this.amount), " + ", SUMMON_STAT])
+        return this.kind ? [number, " ", HEART.as(word), " ", this.kind] : [number, " ", HEART.as(word)]
+    }
+}
+
+/** An amount of gold: a number and the coin. */
+export class GoldCount implements Semantic {
+
+
+    constructor(
+        public readonly amount: number,
+    ){}
+
+
+    public toString(): string { return `${frenchNumber(this.amount)} or` }
+
+    public toSemString(): Text { return [frenchNumber(this.amount), " ", GOLD] }
 }
 
 /** A count of something, its word made plural past one: `2 rounds`, `1 étape`. */

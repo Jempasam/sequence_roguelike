@@ -2,8 +2,7 @@ import type { Component } from "../Component"
 import type { Layer } from "../Layer"
 import type { Theme } from "../Theme"
 import type { UiRoot } from "../UiRoot"
-import { placePopup } from "./ContextMenu"
-import { Panel } from "./Panel"
+import { PopupBubble } from "./PopupBubble"
 import type { Removable } from "../../../lifetime"
 
 /** How long the pointer stays over a component before its tooltip opens, in seconds. */
@@ -35,6 +34,7 @@ export class Tooltip {
         /** The look of its bubble. */
         public readonly theme: Theme,
     ){
+        this.#bubble = new PopupBubble(layer, theme)
         this.#ticks = ui.onUpdate(dt => this.#tick(dt))
     }
 
@@ -73,7 +73,7 @@ export class Tooltip {
 
     /** How long the target has been hovered, in seconds. */
     #elapsed = 0
-    #bubble: Panel|null = null
+    readonly #bubble: PopupBubble
 
     #tick(dt: number): void {
         const focused = this.ui.focused
@@ -85,7 +85,7 @@ export class Tooltip {
             this.#byFocus = byFocus
             this.#elapsed = 0
         }
-        if(!target || this.#bubble) return
+        if(!target || this.#bubble.open) return
         this.#elapsed += dt
         if(this.#byFocus || this.#elapsed >= TOOLTIP_DELAY) this.#open(target)
     }
@@ -99,17 +99,11 @@ export class Tooltip {
     #open(target: Component): void {
         const content = this.#contents.get(target)
         if(!content) return
-        const { background, padding } = this.theme.tooltip
-        const bubble = new Panel(this.theme, { background, padding, interactive: false })
-        bubble.content = content()
-        const at = this.#byFocus ? target : { x: this.ui.pointerX, y: this.ui.pointerY + POINTER_GAP }
-        const [x, y] = placePopup(bubble, this.layer, at)
-        this.layer.content.add(bubble, { x: "start", y: "start", offsetX: x, offsetY: y })
-        this.#bubble = bubble
+        if(this.#byFocus) this.#bubble.show(content(), target)
+        else this.#bubble.show(content(), { x: this.ui.pointerX, y: this.ui.pointerY }, { gap: POINTER_GAP })
     }
 
     #close(): void {
-        if(this.#bubble?.parent) this.layer.content.remove(this.#bubble)
-        this.#bubble = null
+        this.#bubble.close()
     }
 }

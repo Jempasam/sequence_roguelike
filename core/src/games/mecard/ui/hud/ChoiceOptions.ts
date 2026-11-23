@@ -1,24 +1,15 @@
 import { Color } from "../../../../engine/math"
-import { Box, Image, Label, NineSlice, OverflowContainer, Panel, Paragraph } from "../../../../engine/ui"
-import { Component } from "../../../../engine/ui"
-import type { Theme } from "../../../../engine/ui"
+import { Box, Image, NineSlice, OverflowContainer, Panel, Paragraph } from "../../../../engine/ui"
+import type { Component, Theme } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import type { Visual } from "../../sim/base/Visual"
 import type { Card } from "../../sim/card/Card"
-import { allCards } from "../../sim/run/Hero"
-import type { Hero } from "../../sim/run/Hero"
 
-import { CHOSEN_TEXT, DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
 import { CARD_LOOKS, CardView } from "./CardView"
-import { heartsRow } from "./HeartView"
-import { withPicture } from "./UnitPicture"
 
 /** How wide an option showing cards or a text is at least, in virtual pixels. */
 const OPTION_WIDTH = 120
-
-/** How wide a character offered is, in virtual pixels. */
-const HERO_WIDTH = 84
 
 /** The space between two cards of an option, in virtual pixels. */
 const CARD_GAP = 2
@@ -44,15 +35,12 @@ export interface OptionExtras {
     /** The place of the deck its cards come from, which colors them, none for cards of no deck. */
     readonly deck?: number|null
 
-    /** What the pointer coming over a card or leaving it does, nothing when none. */
-    readonly onCardHover?: (card: Card, over: boolean) => void
-
     /** How the sprite shown left of the text looks, nothing when none. */
     readonly sprite?: Visual
     readonly sprites?: UnitSprites
 
-    /** The picture of an item or a usable shown left of the text, with its uses over it, nothing when none. */
-    readonly thing?: Component|null
+    /** How wide it is at least, in virtual pixels: 120 when none. */
+    readonly least?: number
 
     /** How many cards at most lie in a row, the others going on rows under it. All in one row when none. */
     readonly perRow?: number
@@ -85,8 +73,6 @@ export function cardsOption(
             for(const card of cards.slice(first, first + perRow)){
                 const view = new CardView(theme, card, "hand")
                 view.deck = extras.deck ?? null
-                const onCardHover = extras.onCardHover
-                if(onCardHover) view.onHover = over => onCardHover(card, over)
                 row.add(view)
             }
             rows.add(row)
@@ -96,12 +82,11 @@ export function cardsOption(
     if(extras.under) column.add(extras.under)
     if(text !== null){
         const paragraph = new Paragraph(theme, text)
-        const { sprites, sprite, thing } = extras
-        const picture = thing ?? (sprites && sprite ? sprites.of(sprite) : null)
-        const shown = picture instanceof Component ? picture : picture ? new Image(picture) : null
-        column.add(shown ? pictured(theme, shown, paragraph) : paragraph, { align: "stretch" })
+        const { sprites, sprite } = extras
+        const picture = sprites && sprite ? sprites.of(sprite) : null
+        column.add(picture ? pictured(theme, new Image(picture), paragraph) : paragraph, { align: "stretch" })
     }
-    return framed(theme, column, OPTION_WIDTH)
+    return framed(theme, column, extras.least ?? OPTION_WIDTH)
 }
 
 /**
@@ -122,31 +107,6 @@ function pictured(theme: Theme, image: Component, paragraph: Paragraph): Compone
     row.add(paragraph, { grow: 1 })
     row.fixedSize = { width, height }
     return row
-}
-
-/** Who a character offered is, on one row, to head its option: its sprite, its name and its hearts. */
-export function unitHead(theme: Theme, unit: Hero, sprites: UnitSprites): Component {
-    const row = new Box("row", { gap: 4, align: "center" })
-    row.add(new Label(theme, unit.name, { color: CHOSEN_TEXT }))
-    row.add(heartsRow(theme, unit.hearts, () => {}))
-    return withPicture(sprites, unit.sprite, row)
-}
-
-/** A character shown with its cards: its head above its cards, which overlap, then its text. */
-export function unitOption(
-    theme: Theme, unit: Hero, sprites: UnitSprites, cards: readonly Card[], text: Text|null, extras: OptionExtras = {},
-): Component {
-    return cardsOption(theme, cards, text, { ...extras, head: unitHead(theme, unit, sprites), overlapped: true })
-}
-
-/** A character of the party offered in a choice: its sprite, then its name, its hearts and its deck. */
-export function heroOption(theme: Theme, hero: Hero, sprites: UnitSprites): Component {
-    const column = new Box("column", { gap: 2, align: "center" })
-    column.add(new Label(theme, hero.name, { color: CHOSEN_TEXT }))
-    column.add(heartsRow(theme, hero.hearts, () => {}))
-    const bot = hero.controller !== "player" ? " · bot" : ""
-    column.add(new Label(theme, `${allCards(hero).length} cartes${bot}`, { color: DIM_TEXT }))
-    return framed(theme, withPicture(sprites, hero.sprite, column), HERO_WIDTH)
 }
 
 /**

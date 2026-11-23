@@ -1,6 +1,6 @@
 import type { Assets } from "../../../../engine/assets"
 import type { OraLayer, PixelData } from "../../../../engine/image"
-import type { ParallaxAxes, ParallaxPlace } from "../../../../engine/ui"
+import type { ParallaxAxes, ParallaxPlace, ParallaxViewport } from "../../../../engine/ui"
 
 import type { ParallaxSource } from "../look/visualPath"
 
@@ -48,6 +48,9 @@ export interface ParallaxPictures {
 
     /** What the layer of settings of the painting sets, nothing for pictures apart. */
     readonly ranges: PaintingRanges
+
+    /** What its canvas shows at rest, in the pixels its layers are placed in, none for pictures apart. */
+    readonly viewport: ParallaxViewport|null
     readonly warnings: readonly string[]
 }
 
@@ -186,13 +189,11 @@ export async function loadParallaxPictures(assets: Assets, source: ParallaxSourc
                 name: `n°${index + 1}`, pixels, place: null, depth: null, warp: null,
             })),
             ranges: NO_RANGES,
+            viewport: null,
             warnings: [],
         }
     }
     const { width, height, layers } = await assets.layeredImage(source.painting)
-    // The view of the parallax is a box of 1 by 1 centred on 0, 0: the canvas, its middle there, its
-    // longest side 1 long.
-    const unit = Math.max(width, height)
     const warnings: string[] = []
     // The layer of settings, shown or not, is read and never drawn; the first one counts.
     const settings = layers.filter(layer => isSettingsLayer(layer.name))
@@ -209,17 +210,12 @@ export async function loadParallaxPictures(assets: Assets, source: ParallaxSourc
         return {
             name: read.name,
             pixels: faded(layer),
-            place: {
-                x: (layer.x - width / 2) / unit,
-                y: (layer.y - height / 2) / unit,
-                width: layer.pixels.width / unit,
-                height: layer.pixels.height / unit,
-            },
+            place: { x: layer.x, y: layer.y, width: layer.pixels.width, height: layer.pixels.height },
             depth: read.depth,
             warp: read.warp,
         }
     })
-    return { layers: pictures, ranges, warnings }
+    return { layers: pictures, ranges, viewport: { width, height }, warnings }
 }
 
 /** The pixels of a layer, its opacity multiplying their alpha. */

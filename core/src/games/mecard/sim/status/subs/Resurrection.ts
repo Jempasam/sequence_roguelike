@@ -5,6 +5,8 @@ import { Heart } from "../../heart/Heart"
 import { BLUE_HEART } from "../../heart/subs/BlueHeartKind"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
+import { BATTLE_ROUND, UNIT } from "../../base/keywords"
+import { HeartCount } from "../../battle/words"
 
 /** How many hearts a resurrection heals, before the blue one it gives. */
 export const RESURRECTION_HEAL = 1
@@ -12,8 +14,8 @@ export const RESURRECTION_HEAL = 1
 /** A resurrection: death is undone once. */
 export const RESURRECTED = new StatusType("résurrection", statusVisual("resurrection", 1, 0.9, 0.4), "positive", level => new Resurrection(level), {
     description: [
-        "Si l'unité meurt pendant ", STATUS_LEVEL, " rounds, elle revient avec ", RESURRECTION_HEAL,
-        " cœur soigné et un cœur bleu. Ne sert qu'une fois.",
+        "Si l'", UNIT, " meurt pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ", elle revient avec ",
+        new HeartCount(RESURRECTION_HEAL), " soigné et ", new HeartCount(1), " ", BLUE_HEART, ". Ne sert qu'une fois.",
     ],
 })
 

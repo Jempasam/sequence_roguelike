@@ -1,0 +1,36 @@
+declare description "machines, doors, alarms and electricity";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+
+// Each one is a complete sound: process(t) = sfx.mech.alarm(t);
+
+// @ engine(f, t) -- idling motor with a wobble; f is the pitch in Hz (try 55 for a truck, 110 for a scooter)
+engine(f, t) = (os.sawtooth(f * (1 + 0.03 * os.osc(7))) : fi.lowpass(2, f * 6)) * 0.6 * se.fadeio(0.15, 0.2, t);
+
+// @ servo(t) -- small motor whining up in pitch (0.6 s)
+servo(t) = (os.sawtooth(se.sweep(180, 600, t)) : xf.lpf(2500, 1)) * 0.4 * se.fadeio(0.05, 0.2, t);
+
+// @ creak(t) -- door or hinge: a wobbling saw through a moving vowel filter (1.2 s)
+creak(t) = (os.sawtooth(xo.vibrato(se.lin(110, 150, t), 0.12, 9)) : xf.wah(se.curve(0, t), 6)) * 0.35 * se.fadeio(0.1, 0.25, t);
+
+// @ click(t) -- switch / latch: a small band of noise (0.05 s)
+click(t) = (no.noise : fi.resonbp(2500, 4, 1)) * 3 * se.decay(60, t);
+
+// @ latch(t) -- two clicks, the second duller: a door shutting (0.3 s)
+latch(t) = click(t * 6) * 0.4 * (t < 0.16) + 0.6 * (no.noise : fi.lowpass(2, 700)) * se.decay(40, max(t - 0.2, 0)) * (t >= 0.2) * 3;
+
+// @ alarm(t) -- two-tone square alarm switching 3 times a second (2 s)
+alarm(t) = xo.square(700 + 300 * os.lf_squarewavepos(3)) * 0.3 * se.fadeio(0.02, 0.05, t);
+
+// @ siren(t) -- wailing siren between 600 and 1000 Hz (3 s)
+siren(t) = os.sawtooth(800 + 200 * os.osc(0.7)) * 0.3 * se.fadeio(0.05, 0.1, t);
+
+// @ zap(t) -- electric arc: crackles over a 100 Hz hum (0.6 s)
+zap(t) = ((xn.crackle(0.04) : fi.highpass(2, 1500)) * 0.5 + os.sawtooth(100) * 0.12) * se.fadeio(0.02, 0.3, t);
+
+// @ beep(f, t) -- clean beep at f Hz (0.15 s)
+beep(f, t) = os.osc(f) * 0.5 * se.fadeio(0.05, 0.4, t);

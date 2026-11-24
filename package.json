@@ -7,7 +7,8 @@
         "desktop",
         "server",
         "test",
-        "command_line"
+        "command_line",
+        "art_tools"
     ],
     "engines": {
         "node": ">=22"
@@ -33,6 +34,7 @@
         "art": "node scripts/renderArt.ts",
         "art:changed": "node scripts/renderArt.ts --changed",
         "art:preview": "node scripts/renderArt.ts --preview",
+        "art:sync": "node scripts/syncArtTools.ts",
         "wasm": "node scripts/compileWasm.ts"
     },
     "devDependencies": {

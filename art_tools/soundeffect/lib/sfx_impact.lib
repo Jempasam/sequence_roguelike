@@ -1,0 +1,78 @@
+declare description "physical impacts: striking wood, metal, a bar, a blade, plastic, stone and cloth, plus bounces and showers of hits";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xf = library("sfx_filter.lib");
+xs = library("sfx_seq.lib");
+xr = library("sfx_rand.lib");
+
+// A struck object rings with a few decaying sine "modes" (modal synthesis) plus a short noise tick where the hit lands.
+// Every material is mat(f, hard, t): f is the pitch in Hz, hard 0..1 is how hard / bright the strike is (0 = soft mallet, 1 = hard stick)
+// and t is the 0 -> 1 ramp. mat(f, hard) with t missing is a sub-sound: it plugs into sfx.sequence, bounce, roll_hits...
+// The decays are relative to the whole sound, so each material lists the duration it is tuned for; other durations stretch it.
+// Material ids for sfx.impact.material:  0 wood, 1 metal, 2 bar, 3 blade, 4 plastic, 5 stone, 6 cloth.
+
+eps = 0.0001;
+
+m_wood = 0;  m_metal = 1;  m_bar = 2;  m_blade = 3;  m_plastic = 4;  m_stone = 5;  m_cloth = 6;
+
+// @ modal(n, ratios, amps, decays, hard, f, t) -- n sine modes at f * ratios[i], levels amps[i], decay rates decays[i] (see decay); hard 0..1 fades the high modes
+modal(n, ratios, amps, decays, hard, f, t) = par(i, n, os.osc(f * r(i)) * rdtable(amps, i) * tilt(i) * se.decay(rdtable(decays, i), t) * (f * r(i) < 18000)) :> _
+with {
+    r(i) = rdtable(ratios, i);
+    tilt(i) = pow(0.4 + 0.6 * hard, i);
+};
+
+// @ tick(fc, hard, t) -- the click of the contact: a very short band of noise around fc Hz, brighter and louder when hard
+tick(fc, hard, t) = (no.noise : xf.bpf(min(fc * (0.6 + 0.8 * hard), 18000), 1.2)) * (0.25 + 0.75 * hard) * se.decay(45, t);
+
+// @ wood(f, hard, t) -- wood block or table knock: a short hollow "tok" (0.25 s; try f 300 for a plank, 800 for a block)
+wood(f, hard, t) = (modal(3, waveform{1, 2.4, 4.1}, waveform{1, 0.5, 0.25}, waveform{9, 14, 20}, hard, f, t) * 0.5 + tick(2200, hard, t) * 0.6) * se.fadeio(0.002, 0.05, t) * 0.7;
+
+// @ metal(f, hard, t) -- struck metal plate, pot or anvil: dense inharmonic ring (1.5 s; try f 250 for an anvil, 600 for a pan)
+metal(f, hard, t) = (modal(6, waveform{1, 1.58, 2.33, 2.9, 4.1, 5.6}, waveform{1, 0.8, 0.6, 0.5, 0.35, 0.25}, waveform{4.5, 5.5, 7, 8, 10, 13}, hard, f, t) * 0.3
+    + tick(5000, hard, t) * 0.5) * se.fadeio(0.001, 0.1, t) * 0.6;
+
+// @ bar(f, hard, t) -- struck bar (xylophone, glockenspiel, metal tube): clean partials at 1, 2.76, 5.40, 8.93 (1.2 s)
+bar(f, hard, t) = (modal(4, waveform{1, 2.756, 5.404, 8.933}, waveform{1, 0.5, 0.25, 0.12}, waveform{5, 9, 14, 20}, hard, f, t) * 0.5
+    + tick(4000, hard, t) * 0.25) * se.fadeio(0.001, 0.1, t) * 0.75;
+
+// @ blade(f, hard, t) -- sword or knife struck once: bright scrape at the contact over a ringing steel body (1 s; try f 700)
+blade(f, hard, t) = (modal(5, waveform{1, 2.9, 5.2, 8.1, 11.7}, waveform{1, 0.7, 0.5, 0.35, 0.25}, waveform{6, 9, 13, 18, 24}, hard, f, t) * 0.3
+    + tick(7000, hard, t) * 0.7 + (no.noise : xf.hpf(5000, 1)) * 0.2 * se.decay(25, t) * hard) * se.fadeio(0.001, 0.1, t) * 0.6;
+
+// @ clash(f, hard, t) -- two blades hitting each other: two slightly different rings and a shared bright scrape (1 s)
+clash(f, hard, t) = (blade(f, hard, t) + blade(f * 1.07, hard, t) * 0.8 + (no.noise : xf.hpf(6000, 1)) * 0.3 * se.decay(18, t)) * 0.6;
+
+// @ plastic(f, hard, t) -- plastic toy, bucket or bottle: a hollow quick "bonk" (0.2 s; try f 400)
+plastic(f, hard, t) = (modal(3, waveform{1, 1.6, 2.3}, waveform{1, 0.6, 0.3}, waveform{12, 18, 26}, hard, f * (1 + 0.05 * se.decay(30, t)), t) * 0.5
+    + tick(3200, hard, t) * 0.4) * se.fadeio(0.002, 0.05, t);
+
+// @ stone(f, hard, t) -- stone, brick or rock: a dry crack over a dull thud (0.2 s; try f 150 for a boulder, 400 for a pebble)
+stone(f, hard, t) = (modal(4, waveform{1, 1.5, 2.1, 3.2}, waveform{1, 0.6, 0.4, 0.3}, waveform{16, 22, 30, 40}, hard, f, t) * 0.5
+    + (no.noise : xf.bpf(min(1500 + 2500 * hard, 18000), 0.9)) * 0.7 * se.decay(40, t) * (0.4 + 0.6 * hard)) * se.fadeio(0.001, 0.05, t) * 0.7;
+
+// @ cloth(hard, t) -- cloth, a sack or a pillow hitting something: a soft muffled flop (0.3 s)
+cloth(hard, t) = ((no.noise : xf.lpf(250 + 900 * hard, 0.8)) * 3 * se.attack(0.04, t) * se.decay(9, t)
+    + os.osc(70 + 40 * hard) * 0.3 * se.attack(0.03, t) * se.decay(10, t)) * se.fadeio(0.001, 0.15, t) * 1.1;
+
+// @ material(m, f, hard, t) -- picks a material by id: 0 wood, 1 metal, 2 bar, 3 blade, 4 plastic, 5 stone, 6 cloth
+material(m, f, hard, t) = ba.selectn(7, int(m), wood(f, hard, t), metal(f, hard, t), bar(f, hard, t), blade(f, hard, t), plastic(f, hard, t), stone(f, hard, t), cloth(hard, t));
+
+// @ bounce(n, w, hit, t) -- hit(t) falls and bounces n times, each bounce sooner and weaker; every bounce lasts w (0.2 .. 0.6) of the sound
+bounce(n, w, hit, t) = par(i, n, xs.part(s(i), min(s(i) + w, 1), hit, t) * pow(0.65, i)) :> _
+with {
+    r = 0.62;
+    s(i) = (1 - w) * (1 - pow(r, i)) / max(1 - pow(r, max(n - 1, 1)), eps) * (n > 1);
+};
+
+// @ roll_hits(n, seed, w, mat, f, t) -- n hits of mat(f, hard, t) at random moments with random pitch and strength (rubble, a spilled box); same seed, same shower
+roll_hits(n, seed, w, mat, f, t) = par(i, n, xs.part(s(i), min(s(i) + w, 1), mat(fi_(i), hd(i)), t) * xr.pick(seed, i * 5 + 2, 0.35, 1)) :> _
+with {
+    s(i) = (1 - w) * xr.rnd(seed, i * 5) * (i > 0);
+    fi_(i) = f * pow(2, xr.pick(seed, i * 5 + 1, 0 - 0.5, 0.5));
+    hd(i) = xr.pick(seed, i * 5 + 3, 0.3, 1);
+};
+
+// @ scrape(f, t) -- something dragged or rubbed across a surface: a gritty band of noise around f Hz (try 900 for wood, 2500 for stone)
+scrape(f, t) = (no.noise : xf.bpf(f * (0.85 + 0.3 * os.osc(3.1)), 2.2)) * (0.6 + 0.4 * os.osc(31) * os.osc(7.3)) * 1.5 * se.fadeio(0.15, 0.25, t);

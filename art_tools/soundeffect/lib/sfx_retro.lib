@@ -1,0 +1,45 @@
+declare description "8-bit game sounds: coins, lasers, power-ups, hits, UI clicks";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xf = library("sfx_filter.lib");
+xx = library("sfx_fx.lib");
+
+// Each one is a complete sound: process(t) = sfx.retro.coin(t);
+
+// @ coin(t) -- two quick notes, the second one higher (0.4 s)
+coin(t) = xo.pulse(select2(t > 0.18, 988, 1319), 0.5) * 0.35 * exp(0 - 5 * local)
+with {
+    local = select2(t > 0.18, t / 0.18, (t - 0.18) / 0.82);
+};
+
+// @ laser(t) -- pew: a pulse wave falling from 2200 to 180 Hz (0.3 s)
+laser(t) = xo.pulse(se.sweep(2200, 180, t), 0.4) * 0.4 * se.fadeio(0.01, 0.4, t);
+
+// @ powerup(t) -- eight notes climbing by three semitones (0.6 s)
+powerup(t) = xo.pulse(xo.steps(330, 3, 8, t), 0.5) * 0.35 * se.fadeio(0.02, 0.25, t);
+
+// @ jump(t) -- a square wave rising from 260 to 780 Hz (0.25 s)
+jump(t) = xo.square(se.sweep(260, 780, t)) * 0.3 * se.fadeio(0.02, 0.3, t);
+
+// @ hit(t) -- punchy impact: a noise slap on a falling pulse (0.2 s)
+hit(t) = ((no.noise : fi.lowpass(2, 4000)) * 0.6 + xo.pulse(se.sweep(300, 60, t), 0.5) * 0.4) * se.decay(8, t);
+
+// @ explosion(t) -- noise through a closing low-pass, then bit-crushed (1 s)
+explosion(t) = ((no.noise : xf.sweep_lp(6000, 90, 1.2, t)) * se.decay(4, t) * 0.8) : xx.crush(6);
+
+// @ error(t) -- buzzer: two low notes, the second lower (0.4 s)
+error(t) = xo.pulse(select2(t > 0.5, 220, 165), 0.5) * 0.35 * se.fadeio(0.01, 0.08, t);
+
+// @ blip(t) -- tiny UI tick (0.06 s)
+blip(t) = os.osc(1400) * se.decay(40, t) * 0.5;
+
+// @ select(t) -- menu cursor: a short square beep (0.1 s)
+select(t) = xo.square(900) * 0.3 * se.fadeio(0.02, 0.4, t);
+
+// @ confirm(t) -- UI accept: two rising beeps (0.25 s)
+confirm(t) = xo.square(select2(t > 0.4, 660, 990)) * 0.3 * se.fadeio(0.02, 0.15, t);
+
+// @ cancel(t) -- UI back: two falling beeps (0.25 s)
+cancel(t) = xo.square(select2(t > 0.4, 660, 440)) * 0.3 * se.fadeio(0.02, 0.15, t);

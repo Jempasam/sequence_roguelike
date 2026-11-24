@@ -1,0 +1,48 @@
+declare description "envelopes and time curves: functions of t, the 0 -> 1 ramp of the whole sound";
+import("stdfaust.lib");
+
+// Everything here takes t (the input of `process(t)`): 0 on the first sample, 1 on the last.
+// Times a, b, d, r are fractions of the sound, not seconds, so the shape stretches with the duration.
+
+eps = 0.0001;
+
+// @ ad(a, t) -- attack / decay: rises 0 -> 1 until t = a, then falls linearly to 0 at t = 1
+ad(a, t) = select2(t < a, (1 - t) / max(1 - a, eps), t / max(a, eps));
+
+// @ decay(k, t) -- exponential decay: 1 at t = 0, exp(-k) at t = 1 (k = 6 is -52 dB, k = 8 is -69 dB)
+decay(k, t) = exp(0 - k * t);
+
+// @ attack(a, t) -- smooth start: 0 -> 1 over the first a, then stays at 1
+attack(a, t) = min(t / max(a, eps), 1);
+
+// @ fadeio(a, b, t) -- fade in over the first a and out over the last b, 1 in between (the fade-out is eased: it ends softly at 0)
+fadeio(a, b, t) = min(t / max(a, eps), 1) * pow(min((1 - t) / max(b, eps), 1), 2);
+
+// @ adsr(a, d, s, r, t) -- attack until t = a, decay to level s over d, hold s, release to 0 over the last r
+adsr(a, d, s, r, t) = rise * fall * release
+with {
+    rise = min(t / max(a, eps), 1);
+    fall = 1 - (1 - s) * min(max(t - a, 0) / max(d, eps), 1);
+    release = pow(min((1 - t) / max(r, eps), 1), 2);
+};
+
+// @ gate(a, b, t) -- 1 while a <= t < b, 0 elsewhere
+gate(a, b, t) = (t >= a) * (t < b);
+
+// @ ramp(a, b, t) -- 0 before a, linear 0 -> 1 between a and b, 1 after b
+ramp(a, b, t) = min(max((t - a) / max(b - a, eps), 0), 1);
+
+// @ lin(x0, x1, t) -- straight line from x0 (t = 0) to x1 (t = 1)
+lin(x0, x1, t) = x0 + (x1 - x0) * t;
+
+// @ sweep(f0, f1, t) -- exponential glide from f0 Hz to f1 Hz: feed it to an oscillator or a filter cutoff
+sweep(f0, f1, t) = f0 * pow(f1 / f0, t);
+
+// @ curve(k, t) -- bends t: k > 0 starts slowly (ease in), k < 0 starts fast (ease out), k = 0 is straight
+curve(k, t) = pow(max(t, 0), exp(k));
+
+// @ tooth(n, t) -- n sawtooth ramps 0 -> 1 across the sound: a repeating clock for stutters and bursts
+tooth(n, t) = t * n - floor(t * n);
+
+// @ secs -- seconds since the start, whatever the duration (use it for an LFO that must keep its rate in Hz)
+secs = (+(1) ~ _) / ma.SR;

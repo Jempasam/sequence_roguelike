@@ -1,0 +1,56 @@
+declare description "fire and magma: red noise, pops, crackles, roar, embers and lava";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+xr = library("sfx_rand.lib");
+
+// Fire is a low roar (red noise = brown noise) plus a hiss plus random pops. The random events use sfx.rand.scatter:
+// they happen at a rate in Hz and the seed chooses them. Each complete sound is process(t) = sfx.fire.flame(14, seed, t);
+
+eps = 0.0001;
+
+// @ red(f) -- red noise: brown noise rolled off above f Hz, the deep body of a fire or a rumble (try f 300 for fire, 120 for lava)
+red(f) = xn.brown : xf.lpf(f, 0.7) : fi.dcblocker : *(0.12);
+
+// @ pop(f, hard, t) -- one pop or snap of a burning log: a very short ringing band of noise at f Hz (hard 0..1); duration 0.05 s, as an event of sfx.rand.scatter
+pop(f, hard, t) = (no.noise : xf.bpf(f, 4 + 4 * hard)) * (0.4 + 0.8 * hard) * se.decay(14, t) * se.attack(0.05, t);
+
+// @ roar(t) -- the breathing of a fire: mid-low noise whose level flutters slowly
+roar(t) = (no.pink_noise : xf.bpf(260 + 140 * os.osc(0.35) + 80 * os.osc(1.3), 0.7)) * (0.6 + 0.4 * os.osc(0.9) * os.osc(0.37)) * 9;
+
+// @ sizzle(t) -- fine fizzing of wet wood or embers: tiny random clicks in the highs
+sizzle(t) = (xn.crackle(0.006) : xf.hpf(3000, 0.8)) * 1.2;
+
+// @ flame(rate, seed, t) -- a campfire: red noise, roar, sizzle, and pops of random pitch and strength at about rate / 2 per second (rate 14 is a lively fire; 3 s or more)
+flame(rate, seed, t) = (red(350) * 1.6 + roar(t) * 0.7 + sizzle(t) * 0.35 + small + big) * se.fadeio(0.15, 0.25, t) * 0.8
+with {
+    small = xr.scatter(rate, seed, 0.55, 0.5, ev1) * 0.6;
+    big = xr.scatter(rate / 3, seed + 1, 0.3, 0.7, ev2) * 1.2;
+    ev1(u) = pop(1200 + 4000 * xr.slot_rnd(rate, seed, 3), xr.slot_rnd(rate, seed, 4), u);
+    ev2(u) = pop(500 + 900 * xr.slot_rnd(rate / 3, seed + 1, 3), 1, u) + pop(2500, 0.8, u) * 0.5;
+};
+
+// @ ember(t) -- dying embers: a faint low glow with rare ticks (3 s or more)
+ember(t) = (red(200) * 0.5 + (xr.scatter(4, 3, 0.4, 0.5, ev) * 0.5)) * se.fadeio(0.2, 0.3, t) * 0.7
+with {
+    ev(u) = pop(2500, 0.5, u);
+};
+
+// @ plop(f, t) -- a slow thick bubble bursting: a sine climbing from f to 1.8 f Hz and dying; duration 0.25 s, as an event
+plop(f, t) = os.osc(se.sweep(f, f * 1.8, t)) * se.decay(7, t) * se.attack(0.04, t) * 0.7;
+
+// @ lava(rate, seed, t) -- magma: a very deep rumble, thick slow plops, a hiss of steam and cracking crust (4 s or more; rate 2 = slow and heavy, 5 = boiling)
+lava(rate, seed, t) = (red(130) * 1.4 + steam + plops + crust + (os.osc(38) * 0.12 * (0.6 + 0.4 * os.osc(0.4)))) * se.fadeio(0.2, 0.3, t) * 0.8
+with {
+    steam = (no.pink_noise : xf.hpf(2500, 0.8)) * 0.08 * (0.5 + 0.5 * os.osc(0.23));
+    plops = xr.scatter(rate, seed, 0.7, 0.8, ev) * 0.8
+    with {
+        ev(u) = plop(60 + 120 * xr.slot_rnd(rate, seed, 3), u) * 0.7 + (no.noise : xf.lpf(500, 1)) * 0.3 * se.decay(12, u);
+    };
+    crust = xr.scatter(rate * 2, seed + 2, 0.25, 0.4, ev) * 0.5
+    with {
+        ev(u) = pop(500 + 700 * xr.slot_rnd(rate * 2, seed + 2, 3), 0.7, u);
+    };
+};

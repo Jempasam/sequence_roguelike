@@ -1,0 +1,23 @@
+declare description "noise sources";
+import("stdfaust.lib");
+
+// @ white -- white noise (all frequencies equally loud: hiss, spray)
+white = no.noise;
+
+// @ pink -- pink noise (softer highs: rain, wind, surf, a more natural hiss)
+pink = no.pink_noise;
+
+// @ brown -- brown noise (mostly lows: rumble, distant thunder, engines)
+brown = no.noise : fi.pole(0.985) : *(0.17);
+
+// @ crackle(density) -- random clicks; density 0..1 is the share of samples that click (0.002 = fire, 0.05 = static)
+crackle(density) = no.noises(2, 0) * ((no.noises(2, 1) : abs) < density);
+
+// @ held(rate) -- white noise held for 1/rate seconds: random steps, a computer-chatter voice
+held(rate) = (os.lf_imptrain(rate), no.noise) : ba.sAndH;
+
+// @ hiss(f) -- white noise with everything below f Hz removed
+hiss(f) = no.noise : fi.highpass(2, f);
+
+// @ rumble(f) -- brown noise with everything above f Hz removed
+rumble(f) = brown : fi.lowpass(2, f);

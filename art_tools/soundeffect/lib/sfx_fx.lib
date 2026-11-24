@@ -1,0 +1,44 @@
+declare description "effects: use them as blocks, signal : sfx.fx.drive(4)";
+import("stdfaust.lib");
+
+// @ gain(dB) -- volume change in decibels (-6 is half as loud)
+gain(dB) = *(ba.db2linear(dB));
+
+// @ drive(g) -- soft saturation: g = 1 warms, 5 growls, 20 is a fuzz
+drive(g) = *(g) : ma.tanh;
+
+// @ clip -- hard limiter at +-1
+clip = max(-1) : min(1);
+
+// @ crush(bits) -- bit crusher: 8 is gritty, 4 is a toy, 2 is harsh
+crush(bits) = *(q) : rint : /(q)
+with {
+    q = pow(2, bits - 1);
+};
+
+// @ decimate(f) -- sample-rate reducer: keeps one sample every 1/f seconds (4000 = lo-fi console)
+decimate(f) = (os.lf_imptrain(f), _) : ba.sAndH;
+
+// @ tremolo(rate, depth) -- volume wobble at rate Hz, depth 0..1
+tremolo(rate, depth) = *(1 - depth * (0.5 - 0.5 * os.osc(rate)));
+
+// @ ring(f) -- ring modulation with a sine at f Hz: bells, robots, daleks
+ring(f) = *(os.osc(f));
+
+// @ echo(dur, fb) -- repeats every dur seconds (max 2), feedback fb 0..0.9
+echo(dur, fb) = ef.echo(2, dur, fb);
+
+// @ flange(rate, depth) -- sweeping comb: jets, sci-fi whooshes; depth 0..1
+flange(rate, depth) = _ <: _, de.fdelay(1024, 60 + 50 * depth * os.osc(rate)) :> *(0.5);
+
+// @ reverb(size, wet) -- small room; size 0.5..0.95, wet 0..1 (longer tails need a longer duration)
+reverb(size, wet) = _ <: *(1 - wet), (re.mono_freeverb(size, 0.5, 0.5, 23) * wet) :> _;
+
+// @ dcblock -- removes a constant offset, so the file starts and ends on zero
+dcblock = fi.dcblocker;
+
+// @ pan(p) -- mono to stereo, p = 0 left, 0.5 centre, 1 right
+pan(p) = _ <: *(sqrt(1 - p)), *(sqrt(p));
+
+// @ haas(ms) -- mono to stereo with the right ear delayed by ms (1..20): widens the sound
+haas(ms) = _ <: _, de.delay(2048, int(ma.SR * ms / 1000));

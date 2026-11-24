@@ -1,0 +1,44 @@
+declare description "seeded randomness: a sound that varies with a slider named seed";
+import("stdfaust.lib");
+
+// Add  seed = hslider("seed", 1, 1, 9999, 1);  to a sound and use it here: the same seed always gives
+// the same sound, a different seed gives a variant. `sfx variants` moves the seed by itself.
+
+// @ noise(seed) -- white noise whose sequence depends on seed
+noise(seed) = (+(12345 + int(seed) * 2531011) ~ *(1103515245)) / 2147483647.0;
+
+// @ rnd(seed, k) -- a constant between 0 and 1 for this seed; change k to draw another value
+rnd(seed, k) = x - floor(x)
+with {
+    x = sin(seed * 12.9898 + k * 78.233) * 43758.5453;
+};
+
+// @ pick(seed, k, lo, hi) -- a constant between lo and hi for this seed (for a pitch, a cutoff, a delay...)
+pick(seed, k, lo, hi) = lo + (hi - lo) * rnd(seed, k);
+
+// @ chance(seed, k, p) -- 1 with probability p, else 0 (to switch an element on or off in a variant)
+chance(seed, k, p) = rnd(seed, k) < p;
+
+// Random events in time, at a rate in Hz whatever the duration of the sound (pops, drops, bubbles, bird calls...).
+// Time is cut in slots of 1/rate seconds; in every slot a seeded dice decides if an event happens, when, and with which random values.
+//   process(t) = sfx.rand.scatter(8, seed, 0.5, 0.6, ev)  with  ev(u) = sfx.fire.pop(3000, 0.7, u);
+se = library("sfx_env.lib");
+
+// @ slot(rate) -- number of the current slot (0, 1, 2 ...) when time is cut in slots of 1/rate seconds
+slot(rate) = floor(se.secs * rate);
+
+// @ slot_t(rate) -- local 0 -> 1 ramp inside the current slot of 1/rate seconds
+slot_t(rate) = se.secs * rate - floor(se.secs * rate);
+
+// @ slot_rnd(rate, seed, k) -- a random value 0..1 that stays the same inside a slot and changes at the next one; change k to draw another value
+slot_rnd(rate, seed, k) = rnd(seed * 17.13 + slot(rate) * 3.71, k);
+
+// @ slot_on(rate, seed, p) -- 1 in a slot where an event happens (probability p), else 0
+slot_on(rate, seed, p) = slot_rnd(rate, seed, 0) < p;
+
+// @ scatter(rate, seed, p, w, f) -- calls sub-sound f(u) at random moments: a slot of 1/rate s is picked with probability p, f starts at a random moment of it and lasts w (0..1) of the slot with its own 0 -> 1
+scatter(rate, seed, p, w, f) = f(min(max(slot_t(rate) - start, 0) / max(w, eps), 1)) * (slot_t(rate) >= start) * (slot_t(rate) < start + w) * slot_on(rate, seed, p)
+with {
+    eps = 0.0001;
+    start = (1 - w) * slot_rnd(rate, seed, 1);
+};

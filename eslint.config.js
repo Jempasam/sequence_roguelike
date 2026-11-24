@@ -13,7 +13,7 @@ const CORE_FORBIDDEN_GLOBALS = [
 const NO_EM_DASH = { selector: "Literal[value=/\\u2014/]", message: "No em dash." }
 
 export default tseslint.config(
-    { ignores: ["**/dist/**", "**/node_modules/**", ".generated/**"] },
+    { ignores: ["**/dist/**", "**/node_modules/**", ".generated/**", "art_tools/**"] },
     ...tseslint.configs.recommended,
     {
         plugins: { "@stylistic": stylistic },

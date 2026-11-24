@@ -1,4 +1,4 @@
-import { GHOST_FIGHT } from "../fight/GhostFightType"
+import { GHOST_AMBUSH, GHOST_FIGHT } from "../fight/GhostFightType"
 import { KitFightType } from "../fight/KitFightType"
 import type { FightType } from "../fight/FightType"
 import { CASTLE_FIGHTS } from "../floor/fights/castleFights"
@@ -28,7 +28,7 @@ export function allFightTypes(): readonly FightType[] {
     ]
     const laid = floors.flatMap(fights => fights.map(each => each.type))
     const ambushes = laid.filter(type => type instanceof KitFightType).map(type => type.ambush)
-    return [...laid, ...ambushes, GHOST_FIGHT, EMPTY_FIGHT]
+    return [...laid, ...ambushes, GHOST_FIGHT, GHOST_AMBUSH, EMPTY_FIGHT]
 }
 
 /**

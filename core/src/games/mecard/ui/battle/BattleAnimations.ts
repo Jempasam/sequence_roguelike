@@ -10,9 +10,6 @@ import type { Effect, HeartsSignal } from "../../sim/battle/signals"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 
-import type { Forwarded } from "../forward/Forwarded"
-import { forwarding, telling } from "../forward/animate"
-import type { Tell } from "../forward/animate"
 import type { PlayControl } from "../hud/PlayControl"
 import { Color } from "../../../../engine/math"
 import { ADDED_EDGE, FOCUS_EDGE, NOTICE_EDGE, REMOVED_EDGE } from "../look/colors"
@@ -77,9 +74,6 @@ export class BattleAnimations {
         public readonly chain: AnimationChain,
         public readonly clock: FrameClock,
         public readonly control: PlayControl,
-
-        /** What is told of each signal as its animation starts and ends, nothing by default. */
-        public readonly forwarded: Forwarded|null = null,
     ){}
 
 
@@ -87,24 +81,20 @@ export class BattleAnimations {
      * Add what a battle tells to the chain, until the observers returned are removed.
      *
      * @remarks
-     * Each signal is forwarded once, by the animation that shows it: when the scene has changed for a signal
-     * played as a {@link Play}, when it starts for the others.
+     * It tells nothing of the signals to what follows the pace of the screen: see {@link forwardAround}.
      */
     public register(battle: Battle): Observer[] {
         const { signals } = battle
         const { scene } = this
         const observers: Observer[] = []
-        const tell = <T>(observable: Observable<T>, event: T): Tell => {
-            return telling(this.forwarded, observable, event)
-        }
         const on = <T>(observable: Observable<T>, handle: (event: T) => Play): void => {
             observers.push(observable.add(event => {
-                this.chain.add(this.#stopping(handle(event), false, tell(observable, event)))
+                this.chain.add(this.#stopping(handle(event)))
             }))
         }
         const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => Animation): void => {
             observers.push(observable.add(event => {
-                this.chain.add(forwarding(tell(observable, event), animate(event)))
+                this.chain.add(animate(event))
             }))
         }
         //// ROUND ////
@@ -117,7 +107,7 @@ export class BattleAnimations {
             const { unit, card, deck } = signal
             const animated = this.animates(unit)
             if(animated) this.chain.add(this.#stopping(() => this.#watchDraw(unit), true))
-            this.chain.add(forwarding(tell(signals.drawn, signal), async() => {
+            this.chain.add(async() => {
                 scene.change(unit, shown => {
                     shown.hand.push(card)
                     if(deck < 0) return
@@ -130,7 +120,7 @@ export class BattleAnimations {
                     if(scene.flight) scene.flight.share = share
                 })
                 scene.land()
-            }))
+            })
             if(animated) this.chain.add(this.#stopping(() => BEAT, true))
         }))
 
@@ -146,7 +136,7 @@ export class BattleAnimations {
                 const piles = shown.decks[deck]
                 piles.pile += piles.discard
                 piles.discard = 0
-            }), true, tell(signals.reshuffled, signal)))
+            }), true))
         }))
 
         //// MOVEMENT ////
@@ -172,22 +162,16 @@ export class BattleAnimations {
             return BEAT
         }
 
-        // Card Activated : Held while Paused, Light the Cards
+        // Card Activated : Light the Cards
         observers.push(signals.cardActivated.add(event => {
             const { unit, first, last } = event
-            this.chain.add(this.control.gate())
-            this.chain.add(this.#stopping(
-                () => litCards(unit, first, last, false), false, tell(signals.cardActivated, event),
-            ))
+            this.chain.add(this.#stopping(() => litCards(unit, first, last, false)))
         }))
 
-        // Card Invalid : Held while Paused, Light the Card as Invalid
+        // Card Invalid : Light the Card as Invalid
         observers.push(signals.cardInvalid.add(event => {
             const { unit, index } = event
-            this.chain.add(this.control.gate())
-            this.chain.add(this.#stopping(
-                () => litCards(unit, index, index, true), false, tell(signals.cardInvalid, event),
-            ))
+            this.chain.add(this.#stopping(() => litCards(unit, index, index, true)))
         }))
 
         // Chain Overflowed : Outline Every Card of the Chain in Red, it is emptied right after
@@ -200,7 +184,7 @@ export class BattleAnimations {
                     indexes: cards.map((_, index) => index), edge: REMOVED_EDGE,
                 })
                 return BEAT
-            }, false, tell(signals.chainOverflowed, event)))
+            }))
         }))
 
         // Chain Changed : Outline Leaving Cards in Red then Remove, Put In Cards then Outline in Green
@@ -231,7 +215,7 @@ export class BattleAnimations {
                     indexes: added, edge: ADDED_EDGE,
                 })
                 return BEAT
-            }, false, tell(signals.chainChanged, event)))
+            }))
         }))
 
         //// STEPS ////
@@ -270,11 +254,7 @@ export class BattleAnimations {
 
         // Heart Removed : Light the Hearts Together where they Stand, then Leave
         observers.push(signals.heartRemoved.add(signal => {
-            this.chain.add(this.#stopping(
-                () => litHearts(signal.unit, signal.indexes, REMOVED_EDGE),
-                false,
-                tell(signals.heartRemoved, signal),
-            ))
+            this.chain.add(this.#stopping(() => litHearts(signal.unit, signal.indexes, REMOVED_EDGE)))
             this.chain.add(this.#stopping(bar(signal)))
         }))
 
@@ -284,7 +264,7 @@ export class BattleAnimations {
             this.chain.add(this.#stopping(() => {
                 bar(signal)()
                 return litHearts(signal.unit, signal.indexes, ADDED_EDGE)
-            }, false, tell(signals.heartReplaced, signal)))
+            }))
         }))
 
         // Heart Wounded : Hearts Change
@@ -309,7 +289,7 @@ export class BattleAnimations {
                 shown.processes = []
                 shown.alive = true
                 scene.enterOrder(unit, battle.initiative)
-            }, false, tell(signals.spawned, signal)))
+            }))
         }))
 
         // Unit Vanished : Removed from the Scene
@@ -390,23 +370,17 @@ export class BattleAnimations {
      * An animation changing the scene, then stopping on it for as long as it says, what it lit put out after.
      *
      * @param draws - Is it part of a draw, so the view stays on the hand for it?
-     * @param tell - What tells the scene has changed, and that the stop is over.
      */
-    #stopping(play: Play, draws = false, tell?: Tell): Animation {
+    #stopping(play: Play, draws = false): Animation {
         return async() => {
             if(!draws) this.scene.watchDraw(null)
             const hold = play() ?? 0
-            tell?.("start")
-            if(hold === 0){
-                tell?.("end")
-                return
-            }
+            if(hold === 0) return
             // The pauses of the replay follow its speed, the others are as long as they are.
             if(hold === BEAT) await this.control.speed()()
             else await this.clock.wait(hold)
             this.scene.notice = null
             this.scene.unlight()
-            tell?.("end")
         }
     }
 

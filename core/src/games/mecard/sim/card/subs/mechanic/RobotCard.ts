@@ -1,10 +1,6 @@
 import type { Text } from "../../../../../../semantic"
-import type { Vector2 } from "../../../base/Vector2"
-import { NOTE_COLOR } from "../../../battle/previewColors"
-import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
-import type { Unit } from "../../../battle/Unit"
 import { HeartCount, SummonedHearts } from "../../../battle/words"
-import type { Action, Pose } from "../../../battle/Action"
+import type { Action } from "../../../battle/Action"
 import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 import type { Card } from "../../Card"
@@ -15,25 +11,15 @@ import { Rarity } from "../../Rarity"
 import { AbstractCard } from "../AbstractCard"
 import { InputRewriteCard } from "../composite/RewriteCards"
 import { WAIT } from "../movement/Wait"
-import { hold, SHORT_TIME } from "../tools/playing"
-import { summonShown } from "../summon/SummonCard"
+import { SUMMON_AHEAD, summonSpot, summoning } from "../tools/playing"
 import { CARTE, DISTANCE, BATTLE_ROUND, SUMMON_STAT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
-import * as Previews from "../../../battle/preview/Previews"
-
-/** How far ahead a robot stands, in meters. */
-const ROBOT_AHEAD = 1 - UNIT_RADIUS
 
 /** How many shield hearts the improvised robot lives by, before the summoning of the unit. */
 const ROBOT_HEARTS = 2
 
 /** How many times the hearts of the tank robot are those of a robot. */
 const TANK_FACTOR = 2
-
-/** Where a robot stands, ahead of the edge of a unit at a pose. */
-function spotOf(unit: Unit, pose: Pose): Vector2 {
-    return unit.muzzle(pose).plus(pose.direction.times(ROBOT_AHEAD))
-}
 
 /**
  * A robot built from the module plugged into it: a body a little ahead, facing as its unit, with nothing but
@@ -64,22 +50,15 @@ export class RobotCard extends AbstractCard<Action, Module> {
 
 
     static #building(card: RobotCard, module: Module): Action {
-        return {
-            use: function ({ battle, unit }){
-                const count = (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts
-                const robot = battle.place(unit, {
-                    sprite: visual("units/robot"), name: "Robot", at: spotOf(unit, unit), direction: unit.direction,
-                    hearts: Heart.many(SHIELD_HEART, count), cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
-                })
-                if(robot) module.tune(robot)
-                hold(battle, SHORT_TIME)
-            },
-            preview: ({ battle, unit, pose }) => {
-                const spot = spotOf(unit, pose)
-                if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
-                return Previews.still(pose, summonShown(spot))
-            },
-        }
+        return summoning(
+            (unit, pose) => [summonSpot(unit, pose)],
+            (unit, battle) => ({
+                sprite: visual("units/robot"), name: "Robot",
+                hearts: () => Heart.many(SHIELD_HEART, (ROBOT_HEARTS + unit.stats.summon.value) * card.hearts),
+                cards: card.program(module.cards(options => battle.rng.pick(options) ?? options[0])),
+            }),
+            { equip: (_battle, robot) => module.tune(robot) },
+        )
     }
 }
 
@@ -89,13 +68,13 @@ function slowed(cards: readonly Card[]): Card[] {
 }
 
 export const IMPROVISED_ROBOT = new RobotCard("Robot improvisé", [
-    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART),
+    "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART),
     ", tourné ",
     "comme toi. Juste après toi, à chaque ", BATTLE_ROUND, ", il joue les ", CARTE.as("cartes"), " du module.",
 ], Rarity.RARE, 1, cards => cards)
 
 export const TANK_ROBOT = new RobotCard("Robot tank", [
-    "Invoque à ", ROBOT_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
+    "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
     " ", SHIELD_HEART, ", ×", TANK_FACTOR, " ", SUMMON_STAT, " comprise. Juste après toi, à chaque ", BATTLE_ROUND,
     ", il joue les ", CARTE.as("cartes"), " du module, en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)

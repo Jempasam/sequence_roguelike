@@ -15,17 +15,15 @@ import { offeredMonsters } from "../dark/monster_pool"
 import type { MonsterOffer } from "./monsterCards"
 
 /**
- * A halt that makes a card of a monster for a deck: a few monsters are offered, each already made a card, and
- * the one taken goes into the deck, with a key card if the deck holds none that can use it.
+ * A halt that makes a card of monsters for a deck: a few cards are offered, each already made of a monster or
+ * of several, and the one taken goes into the deck, with a key card if the deck holds none that can use it.
  */
 export abstract class MonsterCardHalt extends AbstractHalt {
 
 
     constructor(type: HaltType, run: Run, line: Text, look: SceneLook, pnj: Partial<ScenePnj>){
         super(type, run, line, look, pnj)
-        this.#offers = offeredMonsters(run.rng).map(monster => {
-            return { monster, card: this.make(monster, run.rng) }
-        })
+        this.#offers = this.offered(run.rng)
     }
 
 
@@ -40,11 +38,19 @@ export abstract class MonsterCardHalt extends AbstractHalt {
     }
 
 
-    /** The card the monster is made, drawn when the halt is made so opening it again offers the same. */
-    /** The key card given with it to a deck holding none that uses what it is, said in what each offer shows. */
+    /** The key card given with it to a deck holding none that uses it, said in what each offer shows. */
     protected abstract readonly key: Card
 
-    protected abstract make(monster: Monster, rng: Rng): Card
+    /**
+     * The cards offered, each with the monsters it is made of, drawn when the halt is made: opened again, it
+     * offers the same.
+     */
+    protected abstract offered(rng: Rng): readonly MonsterOffer[]
+
+    /** One offer for each of a few monsters, each made a card by `make`. */
+    protected offersOf(rng: Rng, make: (monster: Monster) => Card): MonsterOffer[] {
+        return offeredMonsters(rng).map(monster => ({ sources: [monster], card: make(monster) }))
+    }
 
     /**
      * Put the card made in a deck, with a key card first when the deck holds none that uses what it is.
@@ -67,7 +73,12 @@ export abstract class MonsterCardHalt extends AbstractHalt {
     }
 
     /** An offer, the card it makes shown with the monster. */
-    #shown({ monster, card }: MonsterOffer): Shown {
-        return { cards: [card], sprite: monster.sprite, text: [monster, " devient ", card, ", avec ", this.key, " si le ", DECK, " n'a aucune ", CARTE, " qui l'utilise."] }
+    #shown({ sources, card }: MonsterOffer): Shown {
+        const [first, second] = sources
+        const made = second ? [first, " et ", second, " deviennent "] : [first, " devient "]
+        return {
+            cards: [card], sprite: first.sprite,
+            text: [...made, card, ", avec ", this.key, " si le ", DECK, " n'a aucune ", CARTE, " qui l'utilise."],
+        }
     }
 }

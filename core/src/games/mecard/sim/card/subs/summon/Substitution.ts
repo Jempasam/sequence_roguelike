@@ -6,9 +6,9 @@ import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
-import { travel, wait } from "../tools/playing"
+import { summonAt, summonShown, travel, wait } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { summonedHearts, summonShown } from "./SummonCard"
+import { summonedHearts } from "./SummonCard"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the log of the catalog lives by, before the summoning of the unit. */
@@ -43,7 +43,11 @@ export class SubstitutionCard extends ActionCard {
                 const from = unit.position
                 const distance = length * unit.stats.move.value
                 const gone = travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
-                if(gone.distance > 0) battle.summon(unit, visual("units/log"), "Tronc", from, summonedHearts(unit, halves))
+                if(gone.distance > 0){
+                    summonAt(battle, unit, [from], {
+                        sprite: visual("units/log"), name: "Tronc", hearts: () => summonedHearts(unit, halves), fleeting: true,
+                    })
+                }
                 wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     CARD_CODECS, COCAINE, FIRE, FusionCard, GLUE_TUBE, MECHANICAL_CLONE, MergedCard, ModuleCard, SPELL, STEP,
-    THRUST, TIME_POCKET,
+    THRUST, TIME_POCKET, TURNS,
 } from "@game/core/mecard"
 import type { Battle, Card, Unit, Usable, UsableSlot } from "@game/core/mecard"
 
@@ -52,9 +52,29 @@ describe("Chain usables", () => {
     test("cocaine → the actions merged two by two, what cannot be merged left as it is", () => {
         const { on, hero } = committed(THRUST, STEP, THRUST, SPELL)
         use(COCAINE, on, hero)
-        // The spell and the thrust before it may be merged too: the merge takes an element, as the spell does.
+        // The spell and the thrust before it stay apart: a merge of them would take an element, with none after.
         const { cards } = hero.chain
-        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[THRUST, STEP], [THRUST, SPELL]])
+        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[THRUST, STEP], THRUST, SPELL])
+    })
+
+    test("cocaine → a turn merged, though it has variants to choose from in the deck", () => {
+        const { on, hero } = committed(TURNS[8], STEP)
+        use(COCAINE, on, hero)
+        const { cards } = hero.chain
+        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[TURNS[8], STEP]])
+    })
+
+    test("cocaine → a pair taking an element merged when an element follows", () => {
+        const { on, hero } = committed(THRUST, SPELL, FIRE)
+        use(COCAINE, on, hero)
+        const { cards } = hero.chain
+        expect(cards.map(card => card instanceof MergedCard ? card.contents : card)).toEqual([[THRUST, SPELL], FIRE])
+    })
+
+    test("a tube of glue → a turn kept in the collage", () => {
+        const { on, hero } = committed(TURNS[8], STEP)
+        const [collage] = givenForGood(on, hero, () => use(GLUE_TUBE, on, hero))
+        expect(collage.contents).toEqual([TURNS[8], STEP])
     })
 
     test("cocaine → nothing merged across an element, that does not give actions", () => {

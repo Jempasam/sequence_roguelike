@@ -5,6 +5,7 @@ import {
 } from "@game/core"
 import type { SoundFilter } from "@game/core"
 import { FakeAudio } from "../../fixtures/fakeAudio"
+import { ManualTimer } from "../../fixtures/manualTimer"
 
 // --- Fixture builders ---
 
@@ -32,7 +33,47 @@ function stageOf(filter: SoundFilter): string {
     return (filter.build(audio) as { made: string }).made
 }
 
+/** A player that has a timer to wait with. */
+function timedPlayerOf(): { player: SoundPlayer, audio: FakeAudio, timer: ManualTimer } {
+    const audio = new FakeAudio()
+    const timer = new ManualTimer()
+    const assets = new Assets(new MemoryAssets({ "mecard/sounds/pop.wav": new Uint8Array([1]) }))
+    return { player: new SoundPlayer(new SoundSettings(), audio, assets, () => {}, timer), audio, timer }
+}
+
 // --- Tests ---
+
+describe("SoundPlayer, delay", () => {
+    test("a sound played late, with a timer → heard only once the time has passed", async() => {
+        const { player, audio, timer } = timedPlayerOf()
+        player.play("effects", "mecard/sounds/pop.wav", { delay: 2000 })
+        await settle()
+        expect(audio.played).toEqual([])
+        timer.advance(1999)
+        await settle()
+        expect(audio.played).toEqual([])
+        timer.advance(1)
+        await settle()
+        expect(audio.played).toHaveLength(1)
+    })
+
+    test("a sound played late, with no timer → heard at once", async() => {
+        const { player, audio } = playerOf()
+        player.play("effects", "mecard/sounds/pop.wav", { delay: 2000 })
+        await settle()
+        expect(audio.played).toHaveLength(1)
+    })
+
+    test("a sound waiting, the player disposed → never heard", async() => {
+        const { player, audio, timer } = timedPlayerOf()
+        player.play("effects", "mecard/sounds/pop.wav", { delay: 2000 })
+        player.dispose()
+        timer.advance(5000)
+        await settle()
+        expect(audio.played).toEqual([])
+        expect(timer.pending).toBe(0)
+    })
+})
 
 describe("SoundPlayer, volume", () => {
     test("a sound played → master, channel and its own volume multiplied", async() => {

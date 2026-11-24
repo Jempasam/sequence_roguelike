@@ -7,7 +7,7 @@ const HALT_VOLUME = 0.5
 
 /** A sound of a halt, among those of a folder: the entrance ones, or the impact ones. */
 function haltCue(folder: string, file: string): Cue {
-    return { path: `mecard/sounds/${folder}/${file}.wav` as SoundPath, volume: HALT_VOLUME }
+    return { path: `mecard/sounds/${folder}/${file}.ogg` as SoundPath, volume: HALT_VOLUME }
 }
 
 /** What a halt has no sound of its own to be heard by. */

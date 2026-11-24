@@ -4,7 +4,7 @@ import type { Text } from "../../../../../semantic"
 import type { Vector2 } from "../../base/Vector2"
 import type { Kit } from "../../catalog/kits"
 import type { Monster } from "../../catalog/monsters"
-import { GHOST_FIGHT } from "../../fight/GhostFightType"
+import { GHOST_AMBUSH, GHOST_FIGHT, isGhostFight } from "../../fight/GhostFightType"
 import { KitFightType } from "../../fight/KitFightType"
 import type { FightStage } from "../../fight/Fight"
 import type { FightCategory } from "../../fight/FightCategory"
@@ -105,10 +105,17 @@ export function lay(type: HazardType, column: number, row: number, direction?: V
 }
 
 /** The fights every floor may lay, besides its own: the ghosts, after the first elites. */
-const EVERYWHERE: readonly Laid[] = [{ type: GHOST_FIGHT, from: 4, to: 9 }]
+const EVERYWHERE: readonly Laid[] = [
+    { type: GHOST_FIGHT, from: 4, to: 9 },
+    { type: GHOST_AMBUSH, from: 4, to: 9 },
+]
+
+/** How likely the ghosts are, when they may be laid, against all the other fights of the category together. */
+const GHOST_CHANCE = 0.5
 
 /**
- * The fight of a category a floor lays in a layer, one of those that may lie there, as likely as each other.
+ * The fight of a category a floor lays in a layer, one of those that may lie there, as likely as each other,
+ * but for the ghosts: when they may lie there, they are as likely as all the others together.
  *
  * @throws {@link Error} When the floor has none for the category and the layer.
  */
@@ -120,7 +127,11 @@ export function laidIn(
     const fitting = [...fights, ...EVERYWHERE].filter(each => {
         return each.from <= layer && layer <= each.to && fightsAs(each.type, category) && (each.type.available?.(here) ?? true)
     })
-    const chosen = rng.pick(fitting)
+    const ghosts = fitting.filter(each => isGhostFight(each.type))
+    const others = fitting.filter(each => !isGhostFight(each.type))
+    const chosen = ghosts.length > 0 && others.length > 0
+        ? rng.chance(GHOST_CHANCE) ? ghosts[0] : rng.pick(others)
+        : rng.pick(fitting)
     if(!chosen) throw new Error(`The floor has no fight of category "${category.id}" for layer ${layer}.`)
     return chosen.type instanceof KitFightType && category === AMBUSH ? chosen.type.ambush : chosen.type
 }

@@ -23,13 +23,13 @@ describe("soundOfHalt", () => {
     })
 
     test("a sort with no sound → the fallback", () => {
-        expect(soundOfHalt({ id: "unknown" }).path).toBe("mecard/sounds/halt/fallback.wav")
+        expect(soundOfHalt({ id: "unknown" }).path).toBe("mecard/sounds/halt/fallback.ogg")
     })
 
     test("a sort → an entrance sound and an impact sound, in two folders", () => {
-        expect(soundOfHalt({ id: "chest" }).path).toBe("mecard/sounds/halt/chest.wav")
-        expect(soundOfImpact({ id: "chest" }).path).toBe("mecard/sounds/halt_impacts/chest.wav")
-        expect(soundOfImpact({ id: "unknown" }).path).toBe("mecard/sounds/halt_impacts/fallback.wav")
+        expect(soundOfHalt({ id: "chest" }).path).toBe("mecard/sounds/halt/chest.ogg")
+        expect(soundOfImpact({ id: "chest" }).path).toBe("mecard/sounds/halt_impacts/chest.ogg")
+        expect(soundOfImpact({ id: "unknown" }).path).toBe("mecard/sounds/halt_impacts/fallback.ogg")
     })
 
     test("two sorts → two different sounds", () => {

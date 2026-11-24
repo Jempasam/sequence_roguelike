@@ -16,16 +16,22 @@ const GAP = 3
  * is left out.
  *
  * @param count - Tell how many cards it has?
+ * @param bare - Tell the count alone, without the word "cartes"?
  * @returns The row, none when it has nothing to tell.
  */
-export function stuffRow(theme: Theme, sprites: UnitSprites, hero: Hero, count: boolean): Component|null {
+export function stuffRow(
+    theme: Theme, sprites: UnitSprites, hero: Hero, count: boolean, bare = false,
+): Component|null {
     const groups = [
         itemIcons(theme, sprites, hero.items),
         usableIcons(theme, sprites, hero.usables.map(carried => carried.usable)),
     ].filter(group => group.length > 0)
     if(!count && groups.length === 0) return null
     const row = new Box("row", { gap: GAP, align: "center" })
-    if(count) row.add(new Label(theme, `${allCards(hero).length} cartes`, { color: DIM_TEXT }))
+    if(count){
+        const total = allCards(hero).length
+        row.add(new Label(theme, bare ? `${total}` : `${total} cartes`, { color: DIM_TEXT }))
+    }
     for(const group of groups){
         if(count || group !== groups[0]) row.add(new Bar(1, THING_ICON_SIZE, DIM_TEXT))
         for(const icon of group) row.add(icon)

@@ -4,23 +4,29 @@ declare duration "1.6";
 
 import("sfx.lib");
 
-v0(u) = (sfx.perc.tom(70,u)) * sfx.env.fadeio(.002, .1, u);
-v1(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v2(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v3(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v4(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v5(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v6(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v7(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v8(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v9(u) = (sfx.inst.lead(ba.midikey2hz(60),u)) * sfx.env.fadeio(.002, .1, u);
-v10(u) = (sfx.inst.lead(ba.midikey2hz(64),u)) * sfx.env.fadeio(.002, .1, u);
-v11(u) = (sfx.inst.lead(ba.midikey2hz(67),u)) * sfx.env.fadeio(.002, .1, u);
-v12(u) = (sfx.inst.lead(ba.midikey2hz(72),u)) * sfx.env.fadeio(.002, .1, u);
-v13(u) = (sfx.inst.lead(ba.midikey2hz(76),u)) * sfx.env.fadeio(.002, .1, u);
-v14(u) = (sfx.voice.monks(98,u)) * sfx.env.fadeio(.002, .1, u);
+voice = library("../filters/voice.lib.dsp");
+category = library("filters/impact.lib.dsp");
+coin = library("../lib/halt_voices/coin.lib.dsp");
+lead_67 = library("../lib/halt_voices/lead_67.lib.dsp");
+lead_72 = library("../lib/halt_voices/lead_72.lib.dsp");
 
-process(t) = (
+v0(u) = voice.filter(sfx.perc.tom(70), u);
+v1(u) = voice.filter(coin.sound, u);
+v2(u) = voice.filter(coin.sound, u);
+v3(u) = voice.filter(coin.sound, u);
+v4(u) = voice.filter(coin.sound, u);
+v5(u) = voice.filter(coin.sound, u);
+v6(u) = voice.filter(coin.sound, u);
+v7(u) = voice.filter(coin.sound, u);
+v8(u) = voice.filter(coin.sound, u);
+v9(u) = voice.filter(sfx.inst.lead(ba.midikey2hz(60)), u);
+v10(u) = voice.filter(sfx.inst.lead(ba.midikey2hz(64)), u);
+v11(u) = voice.filter(lead_67.sound, u);
+v12(u) = voice.filter(lead_72.sound, u);
+v13(u) = voice.filter(sfx.inst.lead(ba.midikey2hz(76)), u);
+v14(u) = voice.filter(sfx.voice.monks(98), u);
+
+mix(t) = (
     sfx.sequence.part(0.0000, 0.1563, v0, t) * 0.8
     +     sfx.sequence.part(0.0625, 0.1875, v1, t) * 0.4
     +     sfx.sequence.part(0.0969, 0.2219, v2, t) * 0.4
@@ -36,4 +42,8 @@ process(t) = (
     +     sfx.sequence.part(0.5000, 0.8125, v12, t) * 0.6
     +     sfx.sequence.part(0.5625, 0.8750, v13, t) * 0.6
     +     sfx.sequence.part(0.3125, 1.0000, v14, t) * 0.6
-) : sfx.fx.reverb(.6,.08) : sfx.fx.dcblock : *(sfx.env.fadeio(.004, .12, t));
+);
+
+sound(t) = category.filter(mix, t);
+
+process(t) = sound(t);

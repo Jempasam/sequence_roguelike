@@ -1,5 +1,9 @@
 import type { Observable, Observer } from "../../sim/base/Observable"
 
+/** An observable of any kind of event, since an observable of one kind is no observable of another. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyObservable = Observable<any>
+
 /** The moment of an animation a forward tells of: its start, or its end. */
 export type ForwardPhase = "start"|"end"
 
@@ -16,6 +20,9 @@ interface Entry {
  * the observable and the value it notified, when the animation starts and when it ends.
  *
  * @remarks
+ * The start is told before the screen shows the event, the end after: see {@link forwardAround}. What needs
+ * the scene as the event leaves it listens to the end.
+ *
  * What reacts to the pace of the screen, the sounds or the particles, listens here rather than to the
  * observables themselves, which tell everything at once. It knows only observables and their values, nothing
  * of the screen: another interface tells it the same way.

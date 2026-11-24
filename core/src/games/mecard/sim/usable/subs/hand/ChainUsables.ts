@@ -4,7 +4,6 @@ import type { Unit } from "../../../battle/Unit"
 import { Heart } from "../../../heart/Heart"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 import { MODULE } from "../../../card/CardType"
-import { composable } from "../../../card/Card"
 import type { Card } from "../../../card/Card"
 import { collageOf } from "../../../card/subs/composite/ChainRewrites"
 import { FISHING } from "../../../card/subs/attack/Crosses"
@@ -13,7 +12,7 @@ import { turnUnitsIn } from "../../../card/subs/tools/turning"
 import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
-import { mergeable, MergedCard } from "../../../card/subs/composite/MergedCard"
+import { mergeableInChain, MergedCard, suppliedAfter } from "../../../card/subs/composite/MergedCard"
 
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
@@ -247,9 +246,8 @@ export class GlueTube extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        // A card with variants to choose from stays out: no collage holds it.
-        const cards = chainLeft(unit).filter(composable)
-        if(cards.length >= 2) battle.giveCards(unit, [new FusionCard(cards)])
+        const cards = chainLeft(unit)
+        if(cards.length >= 2) battle.giveCards(unit, [FusionCard.ofChain(cards)])
     }
 }
 
@@ -273,8 +271,10 @@ export class Cocaine extends AbstractUsable {
         const { chain } = unit
         let at = chain.cursor
         while(at + 1 < chain.cards.length){
-            const [first, second] = [chain.cards[at], chain.cards[at + 1]]
-            if(mergeable([first, second])) battle.replaceInChain(unit, at, 2, new MergedCard([first, second]))
+            const pair = [chain.cards[at], chain.cards[at + 1]]
+            if(mergeableInChain(pair) && suppliedAfter(pair, chain.cards[at + 2] as Card|undefined)){
+                battle.replaceInChain(unit, at, 2, MergedCard.ofChain(pair))
+            }
             at++
         }
     }

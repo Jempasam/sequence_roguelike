@@ -5,7 +5,9 @@ import { exitsOf } from "../catalog/floors"
 import type { Fight } from "../fight/Fight"
 import type { Floor } from "../floor/Floor"
 import type { Halt } from "../halt/Halt"
-import type { CardChoosing, Choosing, Count, HaltContext, Shown, Way } from "../halt/HaltContext"
+import type {
+    CardChoosing, CatalogChoosing, CatalogPick, Choosing, Count, HaltContext, Shown, Way,
+} from "../halt/HaltContext"
 import type { HaltType } from "../halt/HaltType"
 import { EXIT_HALT } from "../halt/subs/ExitHalt"
 import type { HaltMoment } from "../halt/SceneLook"
@@ -16,7 +18,7 @@ import type { Run } from "../run/Run"
 import { loadTravel, saveTravel } from "../save/travelSave"
 import type { TravelSave } from "../save/travelSave"
 
-import { CardsDialog, ConfirmDialog, HeroDialog, OfferDialog, TellDialog } from "./dialogs"
+import { CardsDialog, CatalogDialog, ConfirmDialog, HeroDialog, OfferDialog, TellDialog } from "./dialogs"
 import type { Dialog } from "./dialogs"
 
 /**
@@ -48,6 +50,9 @@ export interface TravelState {
 export interface Answer<D extends Dialog> {
     readonly dialog: D
     readonly picks: readonly number[]
+
+    /** The thing of the catalogue picked, for a dialog that asks for one, which has no list to pick in. */
+    readonly pick?: CatalogPick
 }
 
 /** What a journey waits for from the players. */
@@ -62,7 +67,7 @@ export interface TravelAwaited {
 /** A dialog open, and what its answers do, in the indices of what it offers. */
 interface Step {
     readonly dialog: Dialog
-    answer(picks: readonly number[]): void
+    answer(picks: readonly number[], pick?: CatalogPick): void
     readonly back: (() => void)|undefined
 }
 
@@ -125,6 +130,9 @@ export class Travel {
     /** Cards are asked for. */
     public readonly cardsAsked: Observable<CardsDialog>
 
+    /** A thing of the catalogue is asked for. */
+    public readonly catalogAsked: Observable<CatalogDialog>
+
     /** Something is shown, to go on with or not. */
     public readonly confirmAsked: Observable<ConfirmDialog>
 
@@ -139,6 +147,9 @@ export class Travel {
 
     /** The cards asked for were taken, before what it does. */
     public readonly cardsTaken: Observable<Answer<CardsDialog>>
+
+    /** The thing of the catalogue asked for was taken, before what it does. */
+    public readonly catalogTaken: Observable<Answer<CatalogDialog>>
 
     /** What a dialog showed was gone on with, before what it does. */
     public readonly confirmAccepted: Observable<Answer<ConfirmDialog>>
@@ -184,11 +195,13 @@ export class Travel {
         this.offerAsked = new Observable(report)
         this.heroAsked = new Observable(report)
         this.cardsAsked = new Observable(report)
+        this.catalogAsked = new Observable(report)
         this.confirmAsked = new Observable(report)
         this.told = new Observable(report)
         this.offerTaken = new Observable(report)
         this.heroTaken = new Observable(report)
         this.cardsTaken = new Observable(report)
+        this.catalogTaken = new Observable(report)
         this.confirmAccepted = new Observable(report)
         this.wentBack = new Observable(report)
         this.reacted = new Observable(report)
@@ -499,6 +512,18 @@ export class Travel {
     }
 
     /**
+     * Take the thing of the catalogue a dialog asks for.
+     *
+     * @throws {@link Error} When the dialog is not open, or does not let that thing be picked: its type is not
+     *   among those allowed, or its name not among the keys.
+     */
+    public takeCatalog(dialog: CatalogDialog, pick: CatalogPick): void {
+        if(!dialog.allowed.includes(pick.category)) throw new Error(`${pick.category} cannot be searched here.`)
+        if(dialog.keys && !dialog.keys.has(pick.key)) throw new Error(`${pick.key} cannot be picked here.`)
+        this.#answer(dialog, [], this.catalogTaken, pick)
+    }
+
+    /**
      * Go on with what a dialog shows.
      *
      * @throws {@link Error} When the dialog is not open.
@@ -585,6 +610,14 @@ export class Travel {
             this.#ask(dialog, picks => done(picks.map(index => shown[index])), pick)
             this.cardsAsked.notify(dialog)
         },
+        catalog: (title: Text, choosing: CatalogChoosing, done: (pick: CatalogPick) => void): void => {
+            const back = choosing.back !== undefined
+            const dialog = new CatalogDialog(title, back, choosing.allowed, choosing.keys ?? null)
+            this.#ask(dialog, (_, pick) => {
+                if(pick) done(pick)
+            }, choosing)
+            this.catalogAsked.notify(dialog)
+        },
         confirm: (title: Text, shown: Shown, action: string, done: () => void, way: Way = {}): void => {
             const dialog = new ConfirmDialog(title, way.back !== undefined, shown, action)
             this.#ask(dialog, () => done(), way)
@@ -645,17 +678,19 @@ export class Travel {
     }
 
     /** Answer a dialog, the steps after it taken back. */
-    #answer<D extends Dialog>(dialog: D, picks: readonly number[], taken: Observable<Answer<D>>): void {
+    #answer<D extends Dialog>(
+        dialog: D, picks: readonly number[], taken: Observable<Answer<D>>, pick?: CatalogPick,
+    ): void {
         const at = this.#indexOf(dialog)
         const step = this.#steps[at]
         this.#steps.length = at + 1
-        taken.notify({ dialog, picks })
+        taken.notify(pick ? { dialog, picks, pick } : { dialog, picks })
         this.#context.react("pick")
         // Only a choice of the screen (an offer, a character) is followed by the next step of its choice: what
         // a confirmation or cards leads to is a dialog of its own, which replaces the screen.
         this.#picking = dialog instanceof OfferDialog || dialog instanceof HeroDialog
         try {
-            step.answer(picks)
+            step.answer(picks, pick)
         } finally {
             this.#picking = false
         }

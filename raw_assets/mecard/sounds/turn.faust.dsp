@@ -4,10 +4,12 @@ declare duration "0.16";
 
 import("sfx.lib");
 
+scuff = library("lib/scuff.lib.dsp");
+
 seed = hslider("seed", 1, 0, 9999, 1);
 
 grain(t) = 0.55 + 0.45 * os.osc(sfx.rand.pick(seed, 2, 55, 75) + 30 * t);
-rub(t) = (sfx.rand.noise(seed) : fi.lowpass(2, sfx.rand.pick(seed, 1, 200, 260)) : fi.highpass(1, 90))
+rub(t) = scuff.rub_noise(seed, 200, 260, 90)
     * grain(t) * sfx.env.fadeio(0.2, 0.6, t) * 3.2;
 body(t) = sfx.osc.sine(sfx.env.sweep(95, 70, t)) * sfx.env.fadeio(0.3, 0.6, t) * 0.25;
 

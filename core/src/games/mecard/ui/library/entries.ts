@@ -7,6 +7,8 @@ import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { HEART } from "../../sim/base/keywords"
 import { HeartCount } from "../../sim/battle/words"
+import { BeastCard } from "../../sim/card/subs/beast/BeastCard"
+import { ModuleCard } from "../../sim/card/subs/mechanic/ModuleCard"
 import { TURNS } from "../../sim/card/subs/movement/TurnCard"
 import { STEP } from "../../sim/card/subs/movement/Step"
 import { ALL_BOOSTERS } from "../../sim/catalog/boosters"
@@ -49,6 +51,20 @@ export interface Entry {
 
     /** The name that tells it among the entries of its category, as the catalogue of the player counts it. */
     readonly key: string
+
+    /** What the game holds that the entry shows: a card, a monster, a kit, a booster. None when none. */
+    readonly value?: unknown
+}
+
+/** A way to keep some of the entries of a tab only, named for the player to turn on. */
+export interface EntryFilter {
+    readonly id: string
+
+    /** What the player reads on the toggle that turns it on. */
+    readonly label: string
+
+    /** Does an entry stay when it is on? */
+    test(entry: Entry): boolean
 }
 
 /** A tab of the catalogue: its title, and the entries it lists, made when it is shown. */
@@ -60,6 +76,9 @@ export interface Section {
 
     /** What the catalogue of the player counts its entries as. */
     readonly category: CatalogCategory
+
+    /** The ways to keep some of its entries only, none by default. */
+    readonly filters?: readonly EntryFilter[]
     entries(): Entry[]
 }
 
@@ -70,6 +89,16 @@ export interface LibraryLook {
 
     /** How many cards fit in a row of an entry at the width of the interface now. */
     readonly perRow: () => number
+}
+
+/** How wide a card of an entry is, the space between two, and the frame around the cards of an entry. */
+const CARD_WIDTH = 44
+const CARD_GAP = 2
+const ENTRY_FRAME = 16
+
+/** How many cards fit in a row of an entry in a room of a width, in virtual pixels. */
+export function cardsPerRow(room: number): number {
+    return Math.max(1, Math.floor((room - ENTRY_FRAME + CARD_GAP) / (CARD_WIDTH + CARD_GAP)))
 }
 
 /** An entry before it is given its key. */
@@ -92,14 +121,20 @@ function heartText(kind: HeartKind, count: number|null): Text {
 }
 
 /** The option of a monster or a pet: its picture and cards, and what it has. */
-function monsterEntry(look: LibraryLook, monster: Monster, hero: Hero): Entry {
+export function monsterEntry(look: LibraryLook, monster: Monster, hero: Hero): Entry {
     const text = concat(
         monster, " : ", new HeartCount(monster.hearts), ", pioche ", String(monster.draw), " : ",
         joinText([...new Set(monster.cards)], ", "), ".",
     )
     const view = unitView(look.theme, look.sprites, hero, { perRow: look.perRow() })
-    return { view, text, key: monster.name }
+    return { view, text, key: monster.name, value: monster }
 }
+
+/** The filters of the cards: the cards that make a module, those that make a beast. */
+const CARD_FILTERS: readonly EntryFilter[] = [
+    { id: "modules", label: "Modules", test: entry => entry.value instanceof ModuleCard },
+    { id: "beasts", label: "Bêtes", test: entry => entry.value instanceof BeastCard },
+]
 
 /** The sections of the catalogue, in the order of its tabs. */
 export function sections(look: LibraryLook): Section[] {
@@ -110,17 +145,20 @@ export function sections(look: LibraryLook): Section[] {
             title: "Cartes",
             group: "Cartes",
             category: "cards",
+            filters: CARD_FILTERS,
             entries: () => [...new Set([STEP, TURNS[0], ...ALL_CARDS])].map(card => {
                 const text = concat(card, " : ", card.description)
                 const view = cardsOption(theme, [card], card.description, { perRow: perRow() })
-                return keyed(card.name, { view, text })
+                return keyed(card.name, { view, text, value: card })
             }),
         },
         {
             title: "Boosters",
             group: "Cartes",
             category: "boosters",
-            entries: () => ALL_BOOSTERS.map(booster => keyed(booster.name, boosterEntry(look, booster))),
+            entries: () => ALL_BOOSTERS.map(booster => {
+                return keyed(booster.name, { ...boosterEntry(look, booster), value: booster })
+            }),
         },
         {
             title: "Améliorations",
@@ -132,7 +170,7 @@ export function sections(look: LibraryLook): Section[] {
             title: "Aventuriers",
             group: "Unités",
             category: "kits",
-            entries: () => ALL_KITS.map(kit => keyed(kit.name, kitEntry(look, kit))),
+            entries: () => ALL_KITS.map(kit => keyed(kit.name, { ...kitEntry(look, kit), value: kit })),
         },
         {
             title: "Monstres",

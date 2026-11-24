@@ -1,10 +1,10 @@
 import { DISTANCE, FORCE, ITEM, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
-import type { Action, Pose } from "../../../battle/Action"
+import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
-import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
+import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
 import { HeartCount } from "../../../battle/words"
@@ -16,8 +16,8 @@ import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
-import { hold, SHORT_TIME } from "../tools/playing"
-import { summonedHearts, summonShown } from "../summon/SummonCard"
+import { hold, SHORT_TIME, SUMMON_AHEAD, summonSpot, summoning } from "../tools/playing"
+import { summonedHearts } from "../summon/SummonCard"
 import { EVERY_PIECE, LAST_PIECE, NEAREST_PIECE, piecesOf, playedBy } from "../tools/delegating"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import * as Areas from "../../../battle/area/Areas"
@@ -30,9 +30,6 @@ import { THRUST } from "../attack/Thrust"
 
 /** How long a swap takes to fade out and back in, in seconds. */
 const SWAP_TIME = 0.15
-
-/** How far ahead a piece is set down, in meters: at the contact. */
-const AHEAD = 1 - UNIT_RADIUS
 
 /** How many hearts each piece lives by, before the summoning of the unit. */
 const PAWN_HEARTS = 1
@@ -75,39 +72,27 @@ interface Piece {
     readonly equip?: (battle: Battle, body: Unit, owner: Unit) => void
 }
 
-/** The spot where a piece stands, ahead of the edge of a unit at a pose. */
-function spotOf(unit: Unit, pose: Pose): Vector2 {
-    return unit.muzzle(pose).plus(pose.direction.times(AHEAD))
-}
-
 /** A card setting down a piece: a body with no deck, which plays what its owner has it play. */
 function pieceCard(piece: Piece): ActionCard {
-    const action: Action = {
-        use: function ({ battle, unit }){
-            const body = battle.place(unit, {
-                sprite: visual(`units/${piece.sprite}`),
-                name: piece.name, at: spotOf(unit, unit), direction: unit.direction,
-                hearts: summonedHearts(unit, piece.hearts),
-            })
-            if(body){
+    const action: Action = summoning(
+        (unit, pose) => [summonSpot(unit, pose)],
+        unit => ({
+            sprite: visual(`units/${piece.sprite}`), name: piece.name, hearts: () => summonedHearts(unit, piece.hearts),
+        }),
+        {
+            equip: (battle, body, owner) => {
                 battle.applyStatus(body, piece.status, 1)
-                piece.equip?.(battle, body, unit)
-            }
-            hold(battle, SHORT_TIME)
+                piece.equip?.(battle, body, owner)
+            },
         },
-        preview: ({ battle, unit, pose }) => {
-            const spot = spotOf(unit, pose)
-            if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
-            return Previews.still(pose, summonShown(spot))
-        },
-    }
+    )
     return new ActionCard(piece.name, piece.description, piece.rarity, action)
 }
 
 export const PAWN_CARD = pieceCard({
     name: "Pion", sprite: "pawn", status: PAWN_PIECE, hearts: PAWN_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
+        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
         "jouent la même action, il la joue avant les autres.",
     ],
 })
@@ -115,7 +100,7 @@ export const PAWN_CARD = pieceCard({
 export const ROOK_CARD = pieceCard({
     name: "Tour", sprite: "rook", status: ROOK_PIECE, hearts: ROOK_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
+        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
         "elle avance de ", ROOK_EXTRA, " ", DISTANCE, " de plus dans la même direction.",
     ],
 })
@@ -123,7 +108,7 @@ export const ROOK_CARD = pieceCard({
 export const KNIGHT_PIECE_CARD = pieceCard({
     name: "Cavalier", sprite: "chess_knight", status: KNIGHT_PIECE, hearts: KNIGHT_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
+        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
         "déplacement, il se décale de ", KNIGHT_EXTRA, " ", DISTANCE, " à droite.",
     ],
 })
@@ -131,7 +116,7 @@ export const KNIGHT_PIECE_CARD = pieceCard({
 export const BISHOP_CARD = pieceCard({
     name: "Fou", sprite: "bishop", status: BISHOP_PIECE, hearts: BISHOP_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
+        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
         BISHOP_MOVE * 100, " % plus loin.",
     ],
 })
@@ -139,7 +124,7 @@ export const BISHOP_CARD = pieceCard({
 export const QUEEN_CARD = pieceCard({
     name: "Reine", sprite: "queen", status: QUEEN_PIECE, hearts: QUEEN_HEARTS, rarity: Rarity.EPIC,
     description: [
-        "Pose à ", AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
+        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
         "de tous tes ", ITEM.as("objets"), ".",
     ],
     equip: (battle, body, owner) => {

@@ -27,7 +27,7 @@ describe("soundOfStatus", () => {
     test("a kind with no sound → the fallback of its polarity", () => {
         const sounds = (["positive", "negative", "neutral"] as const).map(polarity => soundOfStatus(silentOf(polarity)))
         expect(new Set(sounds).size).toBe(3)
-        expect(sounds[1].path).toBe("mecard/sounds/statuses/fallback_negative.wav")
+        expect(sounds[1].path).toBe("mecard/sounds/statuses/fallback_negative.ogg")
     })
 
     test("two kinds → two different sounds", () => {

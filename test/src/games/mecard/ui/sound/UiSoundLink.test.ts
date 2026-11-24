@@ -13,12 +13,13 @@ import type { UiSetup } from "../../../../fixtures/uiFixtures"
 const SOUNDS_DIRECTORY = join(__dirname, "../../../../../../assets/mecard/sounds")
 const FILES = readdirSync(SOUNDS_DIRECTORY).sort()
 
-/** The real files of the game, their first byte replaced by their id, so what is played says which it is. */
+/** The real files of the game, their first bytes replaced by their id, so what is played says which it is. */
 function shippedSounds(): MemoryAssets {
     const files: Record<string, Uint8Array> = {}
     FILES.forEach((file, id) => {
         const bytes = new Uint8Array(readFileSync(join(SOUNDS_DIRECTORY, file)))
         bytes[0] = id
+        bytes[1] = 0
         files[`mecard/sounds/${file}`] = bytes
     })
     return new MemoryAssets(files)

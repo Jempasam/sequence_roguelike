@@ -10,6 +10,7 @@ import { VIGOR_BONUS, VIGOROUS } from "../../status/subs/Vigor"
 import { VULNERABILITY_DAMAGE, VULNERABLE } from "../../status/subs/Vulnerability"
 import { WEAKENED, WEAKNESS_MALUS } from "../../status/subs/Weakness"
 import { SOUL_LINKED, SOUL_SHIELDED } from "../../status/subs/Wounds"
+import type { StatusType } from "../../status/Status"
 import type { Potion } from "../Potion"
 
 import { StatusPotion } from "./StatusPotion"
@@ -68,3 +69,21 @@ export const POTIONS: readonly Potion[] = [
     POISON_POTION, SLOWNESS_POTION, WEAKNESS_POTION, RAGE_POTION, CONFUSION_POTION, VULNERABILITY_POTION,
     FRENZY_POTION, SOUL_LINK_POTION, SOUL_SHIELD_POTION, VIGOR_POTION, SWIFTNESS_POTION, SWALLOW_POTION,
 ]
+
+/** The potions made for the kinds of status that have none in the catalog, each made once. */
+const MADE = new Map<StatusType, Potion>()
+
+/**
+ * The potion that puts a kind of status on: the one of the catalog when it has one, else one made for it,
+ * which is the same each time and is none of the catalog, so what draws a potion of the game never draws it.
+ */
+export function potionOfStatus(type: StatusType): Potion {
+    const known = POTIONS.find(potion => potion instanceof StatusPotion && potion.type === type)
+    if(known) return known
+    let made = MADE.get(type)
+    if(!made){
+        made = new StatusPotion(type.name, type.description, type)
+        MADE.set(type, made)
+    }
+    return made
+}

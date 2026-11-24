@@ -1,11 +1,10 @@
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
-import type { Action, Pose } from "../../../battle/Action"
+import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { Disk } from "../../../battle/hitbox/Disk"
-import { UNIT_HITBOX, UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { RANGE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber, HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
@@ -19,16 +18,13 @@ import { AIM } from "../movement/Aim"
 import { ENERGETIC_AIM, SHOUT, TAUNT } from "../movement/Orientation"
 import { WAIT } from "../movement/Wait"
 import { SUCTION } from "../combat/Shoves"
-import { hold, SHORT_TIME } from "../tools/playing"
+import { hold, SHORT_TIME, SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../tools/playing"
 import { ring } from "../tools/targeting"
-import { summonedHearts, summonShown } from "./SummonCard"
+import { summonedHearts } from "./SummonCard"
 import type { Visual } from "../../../base/Visual"
 import { visual } from "../../../base/Visual"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
-
-/** How far ahead the bodies of the cards of this file stand, in meters: at the contact. */
-const AHEAD = 1 - UNIT_RADIUS
 
 /** The radii of the zones the bodies work in, in meters. */
 const BLACK_HOLE_RADIUS = 3
@@ -70,11 +66,6 @@ export interface ChainSummon {
     placed?(body: Unit): void
 }
 
-/** Where the body of a summon stands, ahead of the edge of its owner at a pose. */
-function spotOf(owner: Unit, pose: Pose, ahead = AHEAD): Vector2 {
-    return owner.muzzle(pose).plus(pose.direction.times(ahead))
-}
-
 /** The units but the owner within a distance of a point. */
 function around(battle: Battle, owner: Unit, at: Vector2, radius: number): Unit[] {
     return battle.touchables.filter(other => other !== owner && other.hitbox.gapToDisk(other, new Disk(radius), { position: at, direction: other.direction }) <= 0)
@@ -108,12 +99,11 @@ export class ChainSummonCard extends ActionCard {
                 hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const spot = spotOf(unit, pose, summon.ahead)
-                if(!battle.free(spot, unit, UNIT_HITBOX)) return Previews.still(pose, Previews.label(spot, "pas de place", NOTE_COLOR))
-                return Previews.still(
-                    pose, summonShown(spot), Previews.polygon(Areas.circle(spot, summon.radius), RANGE_COLOR),
-                    ...summon.targets(battle, unit, spot).map(ring),
-                )
+                const spot = summonSpot(unit, pose, summon.ahead)
+                return Previews.still(pose, ...summonShows(battle, unit, [spot], summon.size, at => [
+                    Previews.polygon(Areas.circle(at, summon.radius), RANGE_COLOR),
+                    ...summon.targets(battle, unit, at).map(ring),
+                ]))
             },
         }
     }
@@ -121,12 +111,11 @@ export class ChainSummonCard extends ActionCard {
 
 /** Set down the body of a summon a meter ahead of its owner, none when there is no room. */
 export function placeChainSummon(battle: Battle, owner: Unit, summon: ChainSummon): Unit|null {
-    const body = battle.place(owner, {
-        sprite: summon.sprite, name: summon.name, at: spotOf(owner, owner, summon.ahead), direction: owner.direction,
-        hearts: summon.hearts(owner), cards: summon.cards, size: summon.size,
-    })
-    if(body) summon.placed?.(body)
-    return body
+    const [body] = summonAt(battle, owner, [summonSpot(owner, owner, summon.ahead)], {
+        sprite: summon.sprite, name: summon.name, hearts: () => summon.hearts(owner), cards: summon.cards,
+        ...summon.size === undefined ? {} : { size: summon.size },
+    }, placed => summon.placed?.(placed))
+    return body ?? null
 }
 
 /** Time hearts for a number of rounds. */
@@ -135,7 +124,7 @@ function timed(rounds: number): Heart[] {
 }
 
 export const BLACK_HOLE = new ChainSummonCard("Trou noir", [
-    "Ouvre à ", AHEAD, " ", DISTANCE, " devant un trou noir de ", new HeartCount(BLACK_HOLE_ROUNDS),
+    "Ouvre à ", SUMMON_AHEAD, " ", DISTANCE, " devant un trou noir de ", new HeartCount(BLACK_HOLE_ROUNDS),
     " de ", TIME_HEART, " : deux fois Aspiration, de ", BLACK_HOLE_RADIUS, " ", DISTANCE, " autour de lui.",
 ], Rarity.EPIC, {
     sprite: visual("units/mine"), name: "Trou noir", hearts: () => timed(BLACK_HOLE_ROUNDS), cards: [SUCTION, SUCTION],
@@ -143,7 +132,7 @@ export const BLACK_HOLE = new ChainSummonCard("Trou noir", [
 })
 
 export const TURRET = new ChainSummonCard("Tourelle", [
-    "Pose à ", AHEAD, " ", DISTANCE, " devant une tourelle de ", new HeartCount(TURRET_ROUNDS),
+    "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tourelle de ", new HeartCount(TURRET_ROUNDS),
     " de ", TIME_HEART, " : Viser puis Tir, tir ", frenchNumber(SHOT_RANGE), " ", DISTANCE, ".",
 ], Rarity.RARE, {
     sprite: visual("units/robot"), name: "Tourelle", hearts: () => timed(TURRET_ROUNDS), cards: [AIM, SHOT],
@@ -151,7 +140,7 @@ export const TURRET = new ChainSummonCard("Tourelle", [
 })
 
 export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
-    "Plante à ", AHEAD, " ", DISTANCE, " devant un totem de ", new HeartCount(SHOUT_TOTEM_ROUNDS),
+    "Plante à ", SUMMON_AHEAD, " ", DISTANCE, " devant un totem de ", new HeartCount(SHOUT_TOTEM_ROUNDS),
     " de ", TIME_HEART, " : Cri puis Attendre, ", frenchNumber(TOTEM_SHOUT_RADIUS), " ", DISTANCE, " autour de lui.",
 ], Rarity.RARE, {
     sprite: visual("units/totem"), name: "Totem de cri", hearts: () => timed(SHOUT_TOTEM_ROUNDS), cards: [SHOUT, WAIT],
@@ -159,7 +148,7 @@ export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
 })
 
 export const DECOY = new ChainSummonCard("Leurre", [
-    "Pose à ", AHEAD, " ", DISTANCE, " devant un leurre d'", new HeartCount(1), " : Provocation, tourne chaque ", UNIT, " à ",
+    "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un leurre d'", new HeartCount(1), " : Provocation, tourne chaque ", UNIT, " à ",
     frenchNumber(DECOY_RADIUS), " ", DISTANCE, " vers lui.",
 ], Rarity.COMMON, {
     sprite: visual("units/puppeteer"), name: "Leurre", hearts: owner => summonedHearts(owner, 1), cards: [TAUNT],
@@ -167,7 +156,7 @@ export const DECOY = new ChainSummonCard("Leurre", [
 })
 
 export const SENTINEL = new ChainSummonCard("Sentinelle", [
-    "Pose à ", AHEAD, " ", DISTANCE, " devant une sentinelle de ", new HeartCount(SENTINEL_ROUNDS), " de ", TIME_HEART, " : Visée ",
+    "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une sentinelle de ", new HeartCount(SENTINEL_ROUNDS), " de ", TIME_HEART, " : Visée ",
     "énergique, puis Grande estoc.",
 ], Rarity.RARE, {
     sprite: visual("units/stone_golem"), name: "Sentinelle", hearts: () => timed(SENTINEL_ROUNDS), cards: [ENERGETIC_AIM, GREAT_THRUST],

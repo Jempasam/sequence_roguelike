@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest"
 import {
-    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_FIGHT, historyEntry, ghostOfEntry,
+    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_AMBUSH, GHOST_FIGHT, isGhostFight, historyEntry, ghostOfEntry,
     fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, SWORDSMAN_KIT, Vector2,
 } from "@game/core/mecard"
 import type { FightType, Ghost, Visual } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
+import { visual } from "../../../../../../core/src/games/mecard/sim/base/Visual"
+import { laidIn } from "../../../../../../core/src/games/mecard/sim/floor/fights/designed"
+import type { Laid } from "../../../../../../core/src/games/mecard/sim/floor/fights/designed"
 
 const AT = { layer: 0, across: 0.5 }
 
@@ -150,7 +153,7 @@ describe("the fights of the floors", () => {
         }
     })
 
-    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type })))(
+    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && !isGhostFight(type)).map(type => ({ id: type.id, type })))(
         "$id → monsters stand apart and in the top rows of the arena, whatever the level",
         ({ type }) => {
             for(let level = 1; level <= 4; level++){
@@ -172,7 +175,7 @@ describe("the fights of the floors", () => {
 })
 
 describe("the hazards of the fights of the floors", () => {
-    const fights = allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type }))
+    const fights = allFightTypes().filter(type => type !== EMPTY_FIGHT && !isGhostFight(type)).map(type => ({ id: type.id, type }))
 
     test.each(fights)("$id → some hazards laid, and not too many acting", ({ type }) => {
         const hazards = type.hazards ?? []
@@ -226,7 +229,7 @@ describe("the hazards of the fights of the floors", () => {
 })
 
 describe("the picture of a fight of a floor", () => {
-    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && type !== GHOST_FIGHT).map(type => ({ id: type.id, type })))(
+    test.each(allFightTypes().filter(type => type !== EMPTY_FIGHT && !isGhostFight(type)).map(type => ({ id: type.id, type })))(
         "$id → the sprite of one of its monsters",
         ({ type }) => {
             const sprites: Visual[] = []
@@ -247,6 +250,17 @@ describe("the ghost fight", () => {
         const past = startedRun(depth)
         past.travel.depth = depth
         return ghostOfEntry(historyEntry(past, depth, 0))
+    }
+
+    /** Three other fights of the category, laid in every layer. */
+    function aggressions(): Laid[] {
+        return ["a", "b", "c"].map(id => ({
+            type: fightType({
+                id, name: id, description: id, icon: visual("units/ghost"), category: AGGRESSION, populate: () => {},
+            }),
+            from: 0,
+            to: 9,
+        }))
     }
 
     test("no game kept → never laid, whatever the seed", () => {
@@ -275,6 +289,41 @@ describe("the ghost fight", () => {
         }
         expect(laid.size).toBeGreaterThan(0)
         expect([...laid].every(layer => layer >= 4 && layer <= 9)).toBe(true)
+    })
+
+    test("a game in reach and other fights → the ghosts are drawn about half of the time", () => {
+        const context = { depth: 5, ghosts: [ghostOf(7)] }
+        const rng = new Rng(1)
+        const draws = 2000
+        let ghosts = 0
+        for(let i = 0; i < draws; i++){
+            if(laidIn(aggressions(), AGGRESSION, 5, rng, context) === GHOST_FIGHT) ghosts++
+        }
+        expect(ghosts / draws).toBeGreaterThan(0.4)
+        expect(ghosts / draws).toBeLessThan(0.6)
+    })
+
+    test("a game in reach → the ghosts are drawn as an ambush only for the ambushes", () => {
+        const context = { depth: 5, ghosts: [ghostOf(7)] }
+        const rng = new Rng(1)
+        let ambushes = 0
+        for(let i = 0; i < 300; i++){
+            expect(laidIn(aggressions(), AGGRESSION, 5, rng, context)).not.toBe(GHOST_AMBUSH)
+            if(laidIn(aggressions(), AMBUSH, 5, rng, context) === GHOST_AMBUSH) ambushes++
+        }
+        expect(ambushes).toBeGreaterThan(0)
+    })
+
+    test("saved by id → the ambush of the ghosts is found again", () => {
+        expect(fightTypeById("ghost-embuscade")).toBe(GHOST_AMBUSH)
+        expect(GHOST_AMBUSH.category).toBe(AMBUSH)
+    })
+
+    test("no game in reach → the ghosts are never drawn", () => {
+        const rng = new Rng(1)
+        for(let i = 0; i < 300; i++){
+            expect(laidIn(aggressions(), AGGRESSION, 5, rng)).not.toBe(GHOST_FIGHT)
+        }
     })
 
     test("made → the party of the game stands against ours, and ours is untouched", () => {

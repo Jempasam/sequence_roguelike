@@ -268,6 +268,19 @@ export abstract class Component {
         return internals.toAbsolute(this, out)
     }
 
+    /**
+     * Scroll every viewport around it so it shows, from the innermost one out, as when it takes the focus.
+     * Nothing moves before it is laid out.
+     */
+    public scrollIntoView(): void {
+        const rect = Component.#revealed.copyFrom(this.#bounds)
+        for(let parent = this.#parent; parent; parent = parent.parent){
+            internals.reveal(parent, rect)
+            const { x, y } = parent.bounds
+            rect.translate(x - internals.scrollXOf(parent), y - internals.scrollYOf(parent))
+        }
+    }
+
     /** Ask for its area to be drawn again at the next frame. Asking twice changes nothing. */
     public invalidate(): void {
         if(this.#dirty) return
@@ -476,6 +489,9 @@ export abstract class Component {
 
     /** A point to compute in, so asking where a point lies allocates nothing. */
     static readonly #point = { x: 0, y: 0 }
+
+    /** The zone to bring into view, in the coordinates of the container being revealed in. */
+    static readonly #revealed = new Rect()
 
     /** The rectangle of a component in its own coordinates, written in a shared rectangle. */
     static #ownRect(component: Component): Rect {

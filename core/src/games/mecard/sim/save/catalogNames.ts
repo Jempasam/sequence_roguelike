@@ -15,13 +15,15 @@ import { ModuleCard } from "../card/subs/mechanic/ModuleCard"
 import { RandomCard } from "../card/subs/composite/RandomCard"
 import { ALL_FLOORS } from "../catalog/floors"
 import { ALL_CARDS, ALL_USABLES, ALL_ITEMS, VARIANT_CARDS } from "../catalog/index"
-import { ALL_MONSTERS } from "../catalog/monsters"
+import { ALL_MONSTERS, monster as monsterOf } from "../catalog/monsters"
 import type { Monster } from "../catalog/monsters"
 import { ALL_PETS } from "../catalog/pets"
 import type { Element } from "../element/Element"
 import type { FloorType } from "../floor/Floor"
 import { BASE_ELEMENTS, COMPOUNDS } from "../element/reactions"
-import { MonsterElement } from "../element/subs/MonsterElement"
+import { BodyElement } from "../element/subs/BodyElement"
+import { HeartsBoon } from "../element/subs/body/HeartsBoon"
+import { PotionBoon } from "../element/subs/body/PotionBoon"
 import type { Usable } from "../usable/Usable"
 import type { HeartKind } from "../heart/HeartKind"
 import { BLACK_HEART } from "../heart/subs/BlackHeartKind"
@@ -39,7 +41,8 @@ import { TIME_HEART } from "../heart/subs/TimeHeartKind"
 import { VITAL_HEART } from "../heart/subs/VitalHeartKind"
 import type { Item } from "../item/Item"
 import type { Potion } from "../potion/Potion"
-import { POTIONS } from "../potion/subs/potions"
+import { potionOfStatus, POTIONS } from "../potion/subs/potions"
+import { STATUS_TYPES } from "../status/statusTypes"
 
 /** Every kind of heart, as saved by name. */
 export const HEART_KINDS: readonly HeartKind[] = [
@@ -47,8 +50,22 @@ export const HEART_KINDS: readonly HeartKind[] = [
     BLACK_HEART, EXPLOSIVE_HEART, VITAL_HEART, QUICK_HEART, GREEN_HEART,
 ]
 
-/** The potions by name. */
+/** The potions of the catalog by name. */
 export const POTION_NAMES = new Map<string, Potion>(POTIONS.map(potion => [potion.name, potion]))
+
+/**
+ * The potion of a name: one of the catalog, else the one that puts on the kind of status of that name, which
+ * is how an element made of a status with no potion of the catalog is written down.
+ *
+ * @throws {@link Error} When neither has the name: a save of another version, or a corrupted one.
+ */
+export function potionNamed(name: string): Potion {
+    const potion = POTION_NAMES.get(String(name))
+    if(potion) return potion
+    const type = STATUS_TYPES.find(each => each.name === String(name))
+    if(!type) throw new Error(`No potion is named "${name}": the save comes from another version.`)
+    return potionOfStatus(type)
+}
 
 /**
  * Values found by their name, as a save writes them down: a name names one value of its kind, which the
@@ -91,8 +108,8 @@ class Names<T extends { readonly name: string }> {
 export const CARD_CODECS: Codecs<Card> = new Codecs<Card>("card", [
     variantCodec(),
     routeCodec("card", [...ALL_CARDS, SECRET_CARD]),
-    cardsCodec("fused", FusionCard, (cards, name) => new FusionCard(cards, name === undefined ? {} : { name })),
-    cardsCodec("merged", MergedCard, (cards, name) => new MergedCard(cards, name === undefined ? {} : { name })),
+    cardsCodec("fused", FusionCard, (cards, name) => FusionCard.ofChain(cards, name === undefined ? {} : { name })),
+    cardsCodec("merged", MergedCard, (cards, name) => MergedCard.ofChain(cards, name === undefined ? {} : { name })),
     cardsCodec("random", RandomCard, cards => new RandomCard(...pair(cards))),
     moduleCodec(),
     beastCodec(),
@@ -106,40 +123,98 @@ export const CARD_CODECS: Codecs<Card> = new Codecs<Card>("card", [
 export const ELEMENT_CODECS: Codecs<Element> = new Codecs<Element>("element", [
     routeCodec("base", [...BASE_ELEMENTS, ...COMPOUNDS]),
     monsterElementCodec(),
+    bodyElementCodec(),
 ])
 
-/** The codec of an element made from a monster: the monster and its two potions, each by its name. */
+/**
+ * The codec of an element made from a monster of the game and two potions: the monster and the potions, each
+ * by its name. The first format of an element of a body, still read, and still written for those.
+ */
 function monsterElementCodec(): Codec<Element> {
     return {
         prefix: "monster",
-        is: element => element instanceof MonsterElement,
+        is: element => {
+            return element instanceof BodyElement
+                && MONSTER_NAMES.has(element.monster)
+                && element.positive instanceof PotionBoon
+        },
         serialize: element => {
-            const { monster, negative, positive } = element as MonsterElement
-            return JSON.stringify([monster.name, negative.name, positive.name])
+            const { monster, negative, positive } = element as BodyElement
+            return JSON.stringify([monster.name, negative.name, (positive as PotionBoon).potion.name])
         },
         parse: text => {
             const [monster, negative, positive] = JSON.parse(text) as [string, string, string]
-            return new MonsterElement(MONSTER_NAMES.of(monster), potionNamed(negative), potionNamed(positive))
+            return BodyElement.ofPotions(
+                MONSTER_NAMES.of(monster), potionNamed(negative), potionNamed(positive),
+            )
         },
     }
 }
 
 /**
- * The potion of a name.
- *
- * @throws {@link Error} When the catalog has none: a save of another version, or a corrupted one.
+ * The codec of any other element of a body: a body an analysis built is none of the game's, so it is written
+ * whole, with its cards, and so are the effects, a potion by its name, hearts by their kind and number.
  */
-function potionNamed(name: string): Potion {
-    const potion = POTION_NAMES.get(String(name))
-    if(!potion) throw new Error(`No potion is named "${name}": the save comes from another version.`)
-    return potion
+function bodyElementCodec(): Codec<Element> {
+    return {
+        prefix: "body",
+        is: element => element instanceof BodyElement,
+        serialize: element => {
+            const { monster, negative, positive } = element as BodyElement
+            const saved: SavedBodyElement = {
+                body: {
+                    name: monster.name,
+                    sprite: monster.sprite.toData(),
+                    hearts: monster.hearts,
+                    draw: monster.draw,
+                    ...monster.size === undefined ? {} : { size: monster.size },
+                    cards: monster.cards.map(card => CARD_CODECS.save(card)),
+                },
+                negative: negative.name,
+                positive: positive instanceof HeartsBoon
+                    ? { hearts: positive.heart.name, count: positive.count }
+                    : { potion: (positive as PotionBoon).potion.name },
+            }
+            return JSON.stringify(saved)
+        },
+        parse: text => {
+            const saved = JSON.parse(text) as SavedBodyElement
+            const { body } = saved
+            const monster = monsterOf({
+                name: body.name,
+                sprite: Visual.of(body.sprite),
+                hearts: body.hearts,
+                draw: body.draw,
+                ...body.size === undefined ? {} : { size: body.size },
+                cards: body.cards.map(card => CARD_CODECS.load(card)),
+            })
+            const positive = "hearts" in saved.positive
+                ? new HeartsBoon(HEART_NAMES.of(saved.positive.hearts), saved.positive.count)
+                : new PotionBoon(potionNamed(saved.positive.potion))
+            return new BodyElement(monster, potionNamed(saved.negative), positive)
+        },
+    }
+}
+
+/** An element of a body as {@link bodyElementCodec} writes it. */
+interface SavedBodyElement {
+    readonly body: {
+        readonly name: string
+        readonly sprite: VisualData
+        readonly hearts: number
+        readonly draw: number
+        readonly size?: number
+        readonly cards: readonly string[]
+    }
+    readonly negative: string
+    readonly positive: { readonly potion: string }|{ readonly hearts: string, readonly count: number }
 }
 
 /** The codec of the element card of an element made from a monster, whose rarity is always the same. */
 function monsterElementCardCodec(): Codec<Card> {
     return {
         prefix: "monsterElement",
-        is: card => card instanceof ElementCard && card.element instanceof MonsterElement,
+        is: card => card instanceof ElementCard && card.element instanceof BodyElement,
         serialize: card => ELEMENT_CODECS.save((card as ElementCard).element),
         parse: text => new ElementCard(ELEMENT_CODECS.load(text), Rarity.RARE),
     }

@@ -1361,17 +1361,23 @@ export class Battle {
         return clone
     }
 
+    /**
+     * Where a clone of a unit appears, none when there is no room.
+     *
+     * @param pose - Where the unit stands and faces, as it does by default: a preview asks for where it would.
+     */
+    public cloneSpot(unit: Unit, pose: Pose = unit): Vector2|null {
+        const scale = unit.stats.size.value
+        return CLONE_SPOTS
+            .map(([forward, side]) => pose.position.plus(Vector2.relative(pose.direction, forward * scale, side * scale)))
+            .find(spot => this.free(spot, null, unit.hitbox, 0, pose.direction)) ?? null
+    }
+
     /** Where a clone of a unit appears, none when there is no room, which it tells. */
     #cloneSpot(unit: Unit): Vector2|null {
-        const scale = unit.stats.size.value
-        const spot = CLONE_SPOTS
-            .map(([forward, side]) => {
-                return unit.position.plus(Vector2.relative(unit.direction, forward * scale, side * scale))
-            })
-            .find(spot => this.free(spot, null, unit.hitbox, 0, unit.direction))
-        if(spot) return spot
-        this.events.push({ type: "skipped", unit, reason: "pas de place pour le clone" })
-        return null
+        const spot = this.cloneSpot(unit)
+        if(!spot) this.events.push({ type: "skipped", unit, reason: "pas de place pour le clone" })
+        return spot
     }
 
     /** Have a clone play what is left of the chain of its maker, right after it, and tell it came. */

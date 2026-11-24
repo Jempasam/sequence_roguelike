@@ -4,18 +4,24 @@ declare duration "1.05";
 
 import("sfx.lib");
 
-v0(u) = (sfx.perc.tom(100,u)) * sfx.env.fadeio(.002, .1, u);
-v1(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v2(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v3(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v4(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v5(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v6(u) = (sfx.retro.coin(u)) * sfx.env.fadeio(.002, .1, u);
-v7(u) = (sfx.inst.lead(ba.midikey2hz(67),u)) * sfx.env.fadeio(.002, .1, u);
-v8(u) = (sfx.inst.lead(ba.midikey2hz(71),u)) * sfx.env.fadeio(.002, .1, u);
-v9(u) = (sfx.inst.lead(ba.midikey2hz(74),u)) * sfx.env.fadeio(.002, .1, u);
+voice = library("../filters/voice.lib.dsp");
+category = library("filters/impact.lib.dsp");
+coin = library("../lib/halt_voices/coin.lib.dsp");
+lead_67 = library("../lib/halt_voices/lead_67.lib.dsp");
+tom_100 = library("../lib/halt_voices/tom_100.lib.dsp");
 
-process(t) = (
+v0(u) = voice.filter(tom_100.sound, u);
+v1(u) = voice.filter(coin.sound, u);
+v2(u) = voice.filter(coin.sound, u);
+v3(u) = voice.filter(coin.sound, u);
+v4(u) = voice.filter(coin.sound, u);
+v5(u) = voice.filter(coin.sound, u);
+v6(u) = voice.filter(coin.sound, u);
+v7(u) = voice.filter(lead_67.sound, u);
+v8(u) = voice.filter(sfx.inst.lead(ba.midikey2hz(71)), u);
+v9(u) = voice.filter(sfx.inst.lead(ba.midikey2hz(74)), u);
+
+mix(t) = (
     sfx.sequence.part(0.0000, 0.1905, v0, t) * 0.7
     +     sfx.sequence.part(0.0952, 0.2857, v1, t) * 0.4
     +     sfx.sequence.part(0.1429, 0.3333, v2, t) * 0.4
@@ -26,4 +32,8 @@ process(t) = (
     +     sfx.sequence.part(0.3333, 0.7143, v7, t) * 0.6
     +     sfx.sequence.part(0.4762, 0.8571, v8, t) * 0.6
     +     sfx.sequence.part(0.6190, 1.0000, v9, t) * 0.6
-) : sfx.fx.reverb(.6,.08) : sfx.fx.dcblock : *(sfx.env.fadeio(.004, .12, t));
+);
+
+sound(t) = category.filter(mix, t);
+
+process(t) = sound(t);

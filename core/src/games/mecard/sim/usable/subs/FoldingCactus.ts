@@ -1,17 +1,14 @@
-import { UNIT_RADIUS } from "../../battle/Unit"
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
 import { SummonedHearts } from "../../battle/words"
 import { summonedHearts } from "../../card/subs/summon/SummonCard"
+import { SUMMON_AHEAD, summonAt, summonSpot } from "../../card/subs/tools/playing"
 import { THORN_HEART } from "../../heart/subs/ThornHeartKind"
 
 import { AbstractUsable } from "./AbstractUsable"
 
 /** How many thorn hearts the cactus of the catalog lives by, before the summoning of the unit. */
 const CACTUS_HEARTS = 2
-
-/** How far ahead of the edge of its unit the cactus is set down, in meters. */
-const CACTUS_AHEAD = 1 - UNIT_RADIUS
 
 /** A folding cactus: a body of thorn hearts set down ahead, that wounds whoever breaks them. */
 export class FoldingCactus extends AbstractUsable {
@@ -23,16 +20,17 @@ export class FoldingCactus extends AbstractUsable {
     ){
         super(
             "Cactus pliable", visual("usables/cactus"),
-            ["Pose un cactus à ", CACTUS_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 2 utilisations."],
+            ["Pose un cactus à ", SUMMON_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 2 utilisations."],
             { charges: 2 },
         )
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
-        const spot = unit.muzzle(unit).plus(unit.direction.times(CACTUS_AHEAD))
-        if(!battle.arena.inside(spot, UNIT_RADIUS)) return
-        battle.summon(unit, visual("units/cactus"), "Cactus", spot, summonedHearts(unit, this.hearts, THORN_HEART))
+        summonAt(battle, unit, [summonSpot(unit, unit, SUMMON_AHEAD)], {
+            sprite: visual("units/cactus"), name: "Cactus", hearts: () => summonedHearts(unit, this.hearts, THORN_HEART),
+            fleeting: true,
+        })
     }
 }
 

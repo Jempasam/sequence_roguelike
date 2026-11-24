@@ -4,7 +4,7 @@ import type { Cue } from "./Cue"
 
 /** The sound of a fight, among those of the folder of the fights. */
 function fightCue(file: string): Cue {
-    return { path: `mecard/sounds/fights/${file}.wav` as SoundPath, volume: 1 }
+    return { path: `mecard/sounds/fights/${file}.ogg` as SoundPath, volume: 1 }
 }
 
 /** What a fight of no known category is heard by. */

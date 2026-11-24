@@ -9,6 +9,7 @@ import {
     Panel, Paragraph, Rect, Scroll, Stack, Tabs,
 } from "../../../../engine/ui"
 import type { ChoiceStep, Component, Layer, ParagraphOptions, Theme, UiRoot } from "../../../../engine/ui"
+import type { TravelAnchors } from "../particles/ParticleContext"
 import type { Painter } from "../../../../engine/gpu"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
@@ -24,11 +25,14 @@ import type { Place } from "../../sim/run/Journey"
 import { BACK_VISUAL } from "../../sim/run/PlaceType"
 import type { Run } from "../../sim/run/Run"
 import type {
-    CardsDialog, ConfirmDialog, Dialog, HeroDialog, OfferDialog, TellDialog,
+    CardsDialog, CatalogDialog, ConfirmDialog, Dialog, HeroDialog, OfferDialog, TellDialog,
 } from "../../sim/travel/dialogs"
 import type { Travel } from "../../sim/travel/Travel"
 
+import { CatalogBrowser } from "../catalog/CatalogBrowser"
 import { attributeLines } from "../describe"
+import { cardsPerRow, sections } from "../library/entries"
+import type { LibraryLook } from "../library/entries"
 import { CardView } from "../hud/CardView"
 import type { CardPlace } from "../hud/CardView"
 import { DeckView } from "../hud/DeckView"
@@ -64,7 +68,8 @@ import { CUE_ANIMATIONS } from "./travelLooks"
 import { TravelScenes } from "./TravelScenes"
 import type { TravelScene } from "./TravelScenes"
 import type { UiSoundLink } from "../sound/UiSoundLink"
-import { animate } from "../forward/animate"
+import { forwardAround } from "../forward/around"
+import { travelForwardables } from "../forward/forwardables"
 import type { Forwarded } from "../forward/Forwarded"
 
 /** The share of the width the column of the party takes, on the left. */
@@ -369,6 +374,32 @@ export class TravelScreen {
         this.#tooltip.frame(input)
     }
 
+    /** Where the gold, the party and the places are in the interface, for the particles. */
+    public readonly anchors: TravelAnchors = {
+        goldCounter: () => this.#centerOf(this.#goldRow),
+        deckPile: () => this.#centerOf(this.#partyScroll),
+        heroPortrait: hero => this.#centerOf(this.#tiles.get(hero) ?? null),
+        placePosition: place => {
+            const view = this.#mapView
+            if(!view || !view.layerRectOf(view.tokenRect(place, this.#anchorArea), this.#anchorArea)) return null
+            return this.#centerOfRect(this.#anchorArea)
+        },
+    }
+
+    /** The middle of a component in the interface, none when it is not shown. */
+    #centerOf(component: Component|null): { readonly x: number, readonly y: number }|null {
+        if(!component || !this.visible || !component.areaOnLayer(this.#anchorArea)) return null
+        return this.#centerOfRect(this.#anchorArea)
+    }
+
+    #centerOfRect({ x, y, width, height }: Rect): { readonly x: number, readonly y: number } {
+        return { x: x + width / 2, y: y + height / 2 }
+    }
+
+    readonly #anchorArea = new Rect()
+    readonly #tiles = new Map<Hero, Component>()
+    #goldRow: Component|null = null
+
     /** Build the panels again, from the run as it stands. */
     public refresh(): void {
         const content = this.#layer.content
@@ -566,11 +597,9 @@ export class TravelScreen {
         const travel = this.engine
         const forwarded = this.options.forwarded ?? null
         this.#observers.remove()
-        this.#observers = new Scope(
-            animate(this.animations, forwarded, travel.moved, ({ to }) => () => this.#walk(travel, to)),
-            // Without an animation of their own, they take their place in the chain to be forwarded in time.
-            animate(this.animations, forwarded, travel.fightEntered),
-            animate(this.animations, forwarded, travel.fightLeft),
+        const forwardables = travelForwardables(travel)
+        this.#observers = new Scope(...forwardAround(this.animations, forwarded, forwardables, () => [
+            travel.moved.add(({ to }) => this.animations.add(() => this.#walk(travel, to))),
             travel.phaseChanged.add(phase => {
                 if(phase === "entering") this.animations.add(instant(() => this.#enter(travel)))
             }),
@@ -583,20 +612,19 @@ export class TravelScreen {
             travel.offerAsked.add(dialog => this.#showOffer(dialog)),
             travel.heroAsked.add(dialog => this.#showHero(dialog)),
             travel.cardsAsked.add(dialog => this.#showCards(dialog)),
+            travel.catalogAsked.add(dialog => this.#showCatalog(dialog)),
             travel.confirmAsked.add(dialog => this.#showConfirm(dialog)),
             travel.told.add(dialog => this.#showTold(dialog)),
             travel.reacted.add(moment => this.#react(moment)),
-            animate(this.animations, forwarded, travel.visitStarted, halt => {
+            travel.visitStarted.add(halt => {
                 this.#arriving = true
-                return () => this.#arrive(halt)
+                this.animations.add(() => this.#arrive(halt))
             }),
-            // Without an animation of their own, so the sound of a change comes in its place in the chain.
-            animate(this.animations, forwarded, travel.haltImpacted),
-            animate(this.animations, forwarded, travel.visitEnded, halt => {
+            travel.visitEnded.add(halt => {
                 this.#leaving = halt
-                return () => this.#leave(halt)
+                this.animations.add(() => this.#leave(halt))
             }),
-        )
+        ]))
     }
 
     #unregisterObservers(): void {
@@ -789,6 +817,29 @@ export class TravelScreen {
             row.add(view)
         })
         return row
+    }
+
+    /**
+     * A thing of the catalogue asked for: the browser of the catalogue, among the types the dialog allows, a
+     * click on an entry taking it. The browser is kept while the dialog is open, so what was typed stays.
+     */
+    #showCatalog(dialog: CatalogDialog): void {
+        const look: LibraryLook = {
+            theme: this.theme, sprites: this.sprites, perRow: () => cardsPerRow(this.#middleRoom()),
+        }
+        const browser = new CatalogBrowser(this.theme, {
+            sections: sections(look), width: () => this.#middleRoom(), allowed: new Set(dialog.allowed),
+            keys: dialog.keys,
+        })
+        browser.onPick = (section, entry) => this.engine.takeCatalog(dialog, {
+            category: section.category, key: entry.key,
+        })
+        browser.onDetail = detail => this.#hear(detail)
+        this.#open(() => {
+            browser.parent?.remove(browser)
+            browser.refresh()
+            return this.#haltFrame(dialog.title, browser, dialog, null)
+        })
     }
 
     #showConfirm(dialog: ConfirmDialog): void {
@@ -997,7 +1048,8 @@ export class TravelScreen {
         column.add(this.#label(place, CHOSEN_TEXT))
         const line = new Box("row", { gap: 3, align: "center" })
         line.add(this.#label(`Niveau ${floor.level} · Profondeur ${depth} ·`, DIM_TEXT))
-        line.add(goldAmount(this.theme, this.sprites, this.run.gold, DIM_TEXT))
+        this.#goldRow = goldAmount(this.theme, this.sprites, this.run.gold, DIM_TEXT)
+        line.add(this.#goldRow)
         column.add(line)
         return this.#panel(column, true)
     }
@@ -1007,6 +1059,7 @@ export class TravelScreen {
         const shown = this.#shownHero()
         const row = new Box("row", { gap: MARGIN, align: "start" })
         let tallest = 0
+        this.#tiles.clear()
         for(const hero of this.run.heroes){
             const block = new Box("column", { gap: 1 })
             block.add(this.#label(hero.name, hero === shown ? CHOSEN_TEXT : undefined))
@@ -1019,6 +1072,7 @@ export class TravelScreen {
                 : { background: NineSlice.flat(this.theme.white, hero === shown ? SELECTED_TILE : TILE), padding: 2 })
             tile.content = withPicture(this.sprites, hero.sprite, block)
             tile.onPick = () => this.#select(hero)
+            this.#tiles.set(hero, tile)
             tallest = Math.max(tallest, tile.measure(Infinity).preferredHeight)
             row.add(tile)
         }

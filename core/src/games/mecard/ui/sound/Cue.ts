@@ -7,4 +7,7 @@ export interface Cue {
 
     /** The factor its volume is multiplied by, since the files are not recorded at the same level. */
     readonly volume: number
+
+    /** How long to wait before playing it, in milliseconds, none to play it at once. */
+    readonly delay?: number
 }

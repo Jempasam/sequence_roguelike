@@ -60,7 +60,9 @@ export function startGame(platform: Platform): Removable {
     const soundSettings = new SoundSettings()
     // Silent on a platform without speakers.
     const sounds = platform.audio
-        ? new SoundPlayer(soundSettings, platform.audio, assets, text => console.warn(text))
+        ? new SoundPlayer(
+            soundSettings, platform.audio, assets, text => console.warn(text), platform.timer ?? null,
+        )
         : null
     const game = sync?.role === "viewer"
         ? new MecardViewer(theme, ui, sync, assets, toWorld, toUi, sync.link, sounds)

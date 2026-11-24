@@ -1,5 +1,5 @@
 import { Color } from "../../../../engine/math"
-import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Scroll } from "../../../../engine/ui"
+import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Rect, Scroll } from "../../../../engine/ui"
 import type { Component, Image, Layer, Theme } from "../../../../engine/ui"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
@@ -232,6 +232,7 @@ export class Hud {
         this.#selected = NineSlice.flat(this.theme.white, SELECTED)
         this.#piles.clear()
         this.#landing = null
+        this.#litViews = []
         const grid = this.#grid()
         this.#place(this.#panel(this.#selectedStats()), grid.stats)
         const belted = this.#draft()
@@ -244,6 +245,16 @@ export class Hud {
         const details = Detail.all(...viewDetails(content))
         this.tooltip.attach(details)
         this.#hovers = details
+    }
+
+    /** The middle of the first pile of cards shown, in the interface, none when no pile is shown. */
+    public pileCenter(): { readonly x: number, readonly y: number }|null {
+        for(const pile of this.#piles.values()){
+            if(!pile.areaOnLayer(this.#pileArea)) continue
+            const { x, y, width, height } = this.#pileArea
+            return { x: x + width / 2, y: y + height / 2 }
+        }
+        return null
     }
 
     /** The room the arena is drawn in. */
@@ -270,6 +281,7 @@ export class Hud {
     public follow(unit: Unit): void {
         this.#followed = unit
         this.#followedAt = this.#units.offset
+        this.#revealLit = true
     }
 
     /** Go on toward the unit followed, once laid out. The player scrolling the list stops it. */
@@ -278,6 +290,14 @@ export class Hud {
             this.#roundLock = Math.max(0, this.#roundLock - dt)
             if(this.#roundLock === 0 && this.#roundButton) this.#roundButton.enabled = true
         }
+        // LIT CARD //
+        if(this.#revealLit){
+            const lit = this.#litViews.filter(({ unit }) => unit === this.#followed)
+            const placed = lit.length > 0 && lit.every(({ view }) => view.bounds.width > 0)
+            if(placed) for(const { view } of lit) view.scrollIntoView()
+            if(placed || !this.host.scene.litCards) this.#revealLit = false
+        }
+        // LIST //
         const scroll = this.#units
         const panel = this.#followed ? this.#standsFor.get(this.#followed)?.[0] : undefined
         if(!panel || scroll.offset !== this.#followedAt){
@@ -329,6 +349,15 @@ export class Hud {
 
     #followed: Unit|null = null
 
+    /** The mini chains of the units, each in its own scroll, kept from one build to the next. */
+    readonly #miniScrolls = new Map<Unit, Scroll>()
+
+    /** The cards outlined as looked at in the last build, with the unit they belong to. */
+    #litViews: { readonly unit: Unit, readonly view: Component }[] = []
+
+    /** Is the card looked at by the unit followed still to be brought into view? */
+    #revealLit = false
+
     /** Where the list stood when it last moved toward it. */
     #followedAt = 0
 
@@ -346,6 +375,8 @@ export class Hud {
 
     /** The unit lit up, none when none. */
     #lit: Unit|null = null
+
+    readonly #pileArea = new Rect()
 
     /** The piles shown, by the place of their deck. */
     readonly #piles = new Map<number, Component>()
@@ -604,7 +635,7 @@ export class Hud {
             if(crowded) block.add(hearts)
             const showing = this.#shown(unit)
             if(showing === "hand") block.add(this.#openHand(unit, "mini"))
-            else if(showing === "chain" || showing === "plan") block.add(this.#scrolled(this.#looked(unit, roots, "mini")))
+            else if(showing === "chain" || showing === "plan") block.add(this.#scrolled(unit, this.#looked(unit, roots, "mini")))
             column.add(this.#standingFor(unit, withPicture(this.host.sprites, unit.sprite, block, 2, 1, image => {
                 if(unit === this.host.active) image.edge = PICTURE_EDGE
                 this.#pictures.set(unit, [...this.#pictures.get(unit) ?? [], image])
@@ -662,9 +693,15 @@ export class Hud {
      * A mini chain in a horizontal scroll, as tall as the chain and the bar: a chain too long for the panel
      * scrolls by its bar, and the wheel stays with the list of the units.
      */
-    #scrolled(chain: Component): Component {
+    #scrolled(unit: Unit, chain: Component): Component {
         const height = CARD_LOOKS.mini.height + LINK_ROOM + this.theme.scrollbar.width
-        const scroll = new Scroll(this.theme, { axis: "horizontal", width: SCROLL_SIZE, height, wheel: false })
+        // Kept from one build to the next, so a card brought into view stays in it.
+        let scroll = this.#miniScrolls.get(unit)
+        if(!scroll){
+            scroll = new Scroll(this.theme, { axis: "horizontal", width: SCROLL_SIZE, height, wheel: false })
+            this.#miniScrolls.set(unit, scroll)
+        }
+        scroll.parent?.remove(scroll)
         scroll.content = chain
         return scroll
     }
@@ -675,7 +712,7 @@ export class Hud {
      */
     #looked(unit: Unit, roots: readonly StripCard[], place: CardPlace): Component {
         if(roots.length === 0) return this.#label("(rien)", DIM_TEXT)
-        return new ChainStrip(this.theme, roots, place, {
+        const strip = new ChainStrip(this.theme, roots, place, {
             pick: () => this.actions.choose(unit),
             hoverRoot: (index, over, card) => {
                 this.host.hoverRoot(unit, index, over, card)
@@ -684,6 +721,8 @@ export class Hud {
             deckOf: unit.decks.homeTeller(),
             cross: this.host.sprites.invalidCard,
         })
+        if(strip.lit) this.#litViews.push({ unit, view: strip.lit })
+        return strip
     }
 
 

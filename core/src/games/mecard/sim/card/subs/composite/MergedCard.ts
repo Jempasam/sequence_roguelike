@@ -2,7 +2,7 @@ import { joinText } from "../../../../../../semantic"
 import type { Action } from "../../../battle/Action"
 import { composable } from "../../Card"
 import type { Card } from "../../Card"
-import { ACTION } from "../../CardType"
+import { ACTION, CARD } from "../../CardType"
 import type { CardType } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
@@ -34,14 +34,14 @@ export class MergedCard extends CompositeCard<Action, unknown> {
      */
     constructor(cards: readonly Card[], look: CompositeLook = {}){
         if(cards.length < 2) throw new Error(`A merge holds two cards at least, not ${cards.length}.`)
-        requireComposable(cards)
+        if(!look.chosen) requireComposable(cards)
         for(const card of cards){
             if(card.output !== ACTION){
                 throw new Error(`${card.name} does not give actions: it cannot be played at once with another.`)
             }
         }
         const taking = cards.filter(card => card.input !== null)
-        if(!mergeable(cards)){
+        if(!(look.chosen ? mergeableInChain(cards) : mergeable(cards))){
             throw new Error(`A merge holds cards taking one kind of thing at most, not ${taking.map(card => `${card.name} (${card.input?.name})`).join(", ")}.`)
         }
         super(cards, MERGED_JOIN, contents => {
@@ -53,6 +53,17 @@ export class MergedCard extends CompositeCard<Action, unknown> {
             ]
         }, look)
         this.input = taking[0]?.input ?? null
+    }
+
+
+    /**
+     * A merge of cards taken from a chain, each a variant already chosen: a card with variants to choose from
+     * may be held.
+     *
+     * @throws {@link Error} As the constructor does, but for a card with variants.
+     */
+    public static ofChain(cards: readonly Card[], look: CompositeLook = {}): MergedCard {
+        return new MergedCard(cards, { ...look, chosen: true })
     }
 
 
@@ -75,7 +86,15 @@ export class MergedCard extends CompositeCard<Action, unknown> {
  * row that grows.
  */
 export function mergeable(cards: readonly Card[]): boolean {
-    if(!cards.every(card => card.output === ACTION && composable(card))) return false
+    return cards.every(composable) && mergeableInChain(cards)
+}
+
+/**
+ * The same rule for cards taken from a chain, each a variant already chosen: one with variants to choose from
+ * may be merged, a turn as a card of its own.
+ */
+export function mergeableInChain(cards: readonly Card[]): boolean {
+    if(!cards.every(card => card.output === ACTION)) return false
     const taken = new Set(cards.map(card => card.input).filter(input => input !== null))
     return taken.size <= 1
 }
@@ -83,6 +102,16 @@ export function mergeable(cards: readonly Card[]): boolean {
 /** What the cards of a merge take, all the same kind: nothing when none takes anything. */
 export function mergedInput(cards: readonly Card[]): CardType<unknown>|null {
     return cards.find(card => card.input !== null)?.input ?? null
+}
+
+/**
+ * Would a merge of cards be given what it takes by the card after it: it takes nothing, or the card after it
+ * gives that, any card when it takes cards as they are.
+ */
+export function suppliedAfter(cards: readonly Card[], next: Card|undefined): boolean {
+    const input = mergedInput(cards)
+    if(input === null) return true
+    return next !== undefined && (input === CARD || next.output === input)
 }
 
 /** A step forward, thrusting as it goes. */

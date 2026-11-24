@@ -2,6 +2,7 @@ import type { Text } from "../../../../semantic"
 import type { Card } from "../card/Card"
 import type { Count, Shown } from "../halt/HaltContext"
 import type { Hero } from "../run/Hero"
+import type { CatalogCategory } from "../save/catalogSave"
 
 /**
  * What a halt asks the players, open until they answer it through its {@link Travel}: all of it is read
@@ -73,6 +74,24 @@ export class CardsDialog extends Dialog {
 
         /** The deck of the party the pool comes from. */
         public readonly from: readonly Card[],
+    ){
+        super(title, back)
+    }
+}
+
+/** A thing of the catalogue of the game asked for, searched by type. */
+export class CatalogDialog extends Dialog {
+
+
+    constructor(
+        title: Text,
+        back: boolean,
+
+        /** The types of things that may be searched: the categories of the catalogue. */
+        public readonly allowed: readonly CatalogCategory[],
+
+        /** The only names that may be picked, none when all may. */
+        public readonly keys: ReadonlySet<string>|null,
     ){
         super(title, back)
     }

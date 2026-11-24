@@ -15,6 +15,12 @@ export interface Element {
     /** What it is called, `Feu`: the name of its card too. */
     readonly name: string
 
+    /**
+     * What tells it apart from the other elements: two elements are the same to a status made for an element
+     * when they have the same key. Its name when nothing else sets two of the same name apart.
+     */
+    readonly key: string
+
     /** The color its name and its bolts show in. */
     readonly color: Rgba
 

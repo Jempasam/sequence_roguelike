@@ -10,6 +10,7 @@
  */
 
 export * from "./ai"
+export * from "./analysis"
 export * from "./base"
 export * from "./battle"
 export * from "./card"

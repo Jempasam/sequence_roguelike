@@ -17,6 +17,14 @@ npm run cli -- --help
 
 `sim` est documenté à part dans [SIM.md](SIM.md) ; `npm run cli -- sim --help` en donne le résumé.
 
+## Conversion
+
+```
+npm run cli -- convert <type>:<nom> <cible> [--run a..b] [--bite a..b] [--main a..b] [--pool n]
+```
+
+Types (sources) : `monster`, `pet`, `kit`, `booster`, `module`, `beast`. Cibles : les mêmes, plus `fusion` (un collage de la chaîne qui représente l'unité, nommé « Estoc de Gobelin »), `merged` (le mélange le plus identitaire) et `element` (un élément fait de l'unité : une potion contre, une potion ou des cœurs pour). Ces trois-là peuvent ne rien donner : la sortie dit alors pourquoi (« aucun mélange possible », « aucun élément possible : pas d'effet positif »). Convertit une chose d'un type en une chose d'un autre (`convert pet:Loup beast`, `convert monster:Gobelin module`, `convert monster:Gobelin fusion`) avec l'analyse de `core/src/games/mecard/sim/analysis/`. La sortie montre la source, le profil de chaque carte (course, morsure, visée... avec ce que la carte a fait seule face à un mannequin), puis le résultat. Les options changent la longueur de la chaîne de course, de morsure, principale, ou la taille du pool (familier, booster) ; sans option, ce sont les valeurs par défaut du type cible (`Kind.defaults`).
+
 Astuce : `npm run cli --silent -- list cards` supprime les lignes d'en-tête de npm (`> cli`, `> node ...`).
 
 `npm run cli` construit d'abord un bundle JavaScript avec esbuild (`command_line/dist/`, moins d'une seconde), puis le lance : deux fois plus rapide que de lire les sources TypeScript avec tsx, `sim` surtout. Les threads de `--jobs` lancent `dist/worker.mjs`. `npm run start:tsx -w @game/command_line -- …` lance encore les sources directement.

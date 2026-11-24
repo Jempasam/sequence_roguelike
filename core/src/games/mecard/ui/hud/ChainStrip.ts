@@ -164,6 +164,7 @@ export class ChainStrip extends Stack {
                 const card = new CardView(theme, strip.card, cardPlace)
                 card.dimmed = !strip.active
                 card.edge = strip.edge
+                if(strip.edge && !this.#lit) this.#lit = card
                 card.borrowed = strip.borrowed
                 card.cross = strip.crossed ? host.cross ?? null : null
                 card.deck = strip.card ? host.deckOf(strip.card) : null
@@ -182,6 +183,10 @@ export class ChainStrip extends Stack {
     }
 
 
+    /** The first card outlined as looked at, none when none is. */
+    public get lit(): Component|null { return this.#lit }
+
+
     protected override computeHint(maxWidth: number): SizeHint {
         const hint = this.#row.measure(maxWidth)
         return {
@@ -192,6 +197,7 @@ export class ChainStrip extends Stack {
 
 
     readonly #row: Box
+    #lit: Component|null = null
 }
 
 /** A card of a flat strip: whether it plays, rather than being greyed out. */

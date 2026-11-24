@@ -3,7 +3,7 @@ import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import { BEAST } from "../../../card/CardType"
 import { FURY } from "../../../card/subs/beast/BeastRewrites"
-import type { Monster } from "../../../catalog/monsters"
+import type { Rng } from "../../../base/Rng"
 import type { Run } from "../../../run/Run"
 import { giveKeyIfLacking } from "../../../run/visits"
 import type { HaltType } from "../../HaltType"
@@ -11,6 +11,7 @@ import { sceneLook } from "../../SceneLook"
 import { DARK_COLOR } from "../halt_common"
 
 import { beastCardOfMonster } from "./monsterCards"
+import type { MonsterOffer } from "./monsterCards"
 import { MonsterCardHalt } from "./MonsterCardHalt"
 
 /** The monster shaman: a monster made a spirit for a deck, with a fury if the deck has no use for one. */
@@ -30,8 +31,8 @@ export class MonsterShamanHalt extends MonsterCardHalt {
 
     protected readonly key = FURY
 
-    protected make(monster: Monster): Card {
-        return beastCardOfMonster(monster)
+    protected offered(rng: Rng): readonly MonsterOffer[] {
+        return this.offersOf(rng, beastCardOfMonster)
     }
 
     protected receive(deck: Card[], card: Card): Card|null {

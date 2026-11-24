@@ -136,6 +136,35 @@ describe("RunSoundLink, the journey", () => {
 
 })
 
+describe("RunSoundLink, the battle", () => {
+    test("a unit blinks → the blink sound, not the step", async() => {
+        const run = startedRun(1)
+        reachFight(run)
+        const { audio, forwarded } = linkOf(run)
+        run.startBattle()
+        await settle()
+        const { blinked } = run.battle!.signals
+        forwarded.forward(blinked, {} as never, "start")
+        await settle()
+        expect(heard(audio)).toEqual(["fights/battle.wav", "blink.wav"])
+    })
+
+    test.each([
+        [1, "hit2.wav"], [2, "hit2.wav"], [3, "hit4.wav"], [4, "hit4.wav"],
+        [5, "hit8.wav"], [8, "hit8.wav"], [9, "hit12.wav"], [20, "hit12.wav"],
+    ])("a blow of %i hearts → the sound %s", async(amount, file) => {
+        const run = startedRun(1)
+        reachFight(run)
+        const { audio, forwarded } = linkOf(run)
+        run.startBattle()
+        await settle()
+        const { damaged } = run.battle!.signals
+        forwarded.forward(damaged, { amount } as never, "start")
+        await settle()
+        expect(heard(audio)).toEqual(["fights/battle.wav", file])
+    })
+})
+
 describe("RunSoundLink, letting go", () => {
     test("disposed → nothing is played", async() => {
         const run = startedRun(1)

@@ -30,11 +30,20 @@ const BOARD_STEP: Cue = { path: "mecard/sounds/step.wav", volume: 1 }
 /** A unit turns on the spot, its place unchanged. */
 const TURN: Cue = { path: "mecard/sounds/turn.wav", volume: 1 }
 
-/** A unit is hurt. */
-const HURT: Cue = { path: "mecard/sounds/hit.wav", volume: 1 }
+/** A unit blinks across the board. */
+const BLINK: Cue = { path: "mecard/sounds/blink.wav", volume: 1 }
 
-/** A unit is hurt badly. */
-const HURT_HEAVY: Cue = { path: "mecard/sounds/hit_heavy.wav", volume: 1 }
+/** A unit is hurt for 1 or 2 hearts. */
+const HIT_2: Cue = { path: "mecard/sounds/hit2.wav", volume: 1 }
+
+/** A unit is hurt for 3 or 4 hearts. */
+const HIT_4: Cue = { path: "mecard/sounds/hit4.wav", volume: 1 }
+
+/** A unit is hurt for 5 to 8 hearts. */
+const HIT_8: Cue = { path: "mecard/sounds/hit8.wav", volume: 1 }
+
+/** A unit is hurt for 9 hearts or more. */
+const HIT_12: Cue = { path: "mecard/sounds/hit12.wav", volume: 1 }
 
 /** A unit loses hearts. */
 const HEART_LOST: Cue = { path: "mecard/sounds/heart_lost.wav", volume: 0.8 }
@@ -63,12 +72,21 @@ const ROUND: Cue = { path: "mecard/sounds/round_start.wav", volume: 1 }
 /** Gold is gained: a coin. */
 const GOLD: Cue = { path: "mecard/sounds/gold.wav", volume: 1 }
 
-/** The damage, in hearts, from which a blow is heavy. */
-const HEAVY_DAMAGE = 3
+/** The sounds of a blow, from the lightest: each is played up to the damage, in hearts, it is given. */
+const HURTS: readonly { readonly upTo: number, readonly cue: Cue }[] = [
+    { upTo: 2, cue: HIT_2 },
+    { upTo: 4, cue: HIT_4 },
+    { upTo: 8, cue: HIT_8 },
+]
+
+/** The sound of a blow of some hearts: the first that goes up to them, the heaviest beyond. */
+function hurtCue(amount: number): Cue {
+    return HURTS.find(({ upTo }) => amount <= upTo)?.cue ?? HIT_12
+}
 
 /** Every sound the link plays, loaded as it starts. */
 const CUES: readonly Cue[] = [
-    END, STEP, DRAW, PLAY, BOARD_STEP, TURN, HURT, HURT_HEAVY, HEART_LOST, HEAL,
+    END, STEP, DRAW, PLAY, BOARD_STEP, TURN, BLINK, HIT_2, HIT_4, HIT_8, HIT_12, HEART_LOST, HEAL,
     STATUS_END, APPEAR, DEATH, BUMP, REFUSED, ROUND, GOLD, ...STATUS_CUES, ...HALT_CUES, ...FIGHT_CUES,
 ]
 
@@ -151,8 +169,9 @@ export class RunSoundLink {
             this.#on(signals.cardInvalid, REFUSED),
             this.#on(signals.chainOverflowed, REFUSED),
             this.#on(signals.moved, ({ from, to }) => from.position.equals(to.position) ? TURN : BOARD_STEP),
+            this.#on(signals.blinked, BLINK),
             this.#on(signals.bumped, BUMP),
-            this.#on(signals.damaged, ({ amount }) => amount >= HEAVY_DAMAGE ? HURT_HEAVY : HURT),
+            this.#on(signals.damaged, ({ amount }) => hurtCue(amount)),
             this.#on(signals.heartWounded, HEART_LOST),
             this.#on(signals.healed, HEAL),
             this.#on(signals.statusAdded, ({ type }) => soundOfStatus(type)),

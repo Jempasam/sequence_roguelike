@@ -1,12 +1,13 @@
 declare name "step";
-declare description "a soft footfall on the board: a muted thump and a short scuff";
+declare description "a footstep on the board: a low, grainy rub of a sole dragging on the floor";
 declare duration "0.14";
 
 import("sfx.lib");
 
 seed = hslider("seed", 1, 0, 9999, 1);
 
-thump(t) = sfx.osc.sine(sfx.env.sweep(sfx.rand.pick(seed, 1, 110, 150), 60, t)) * sfx.env.decay(18, t);
-scuff(t) = (sfx.rand.noise(seed) : fi.lowpass(2, 1800)) * sfx.env.decay(30, t) * 0.5;
+rub(t) = (sfx.rand.noise(seed) : fi.lowpass(2, sfx.rand.pick(seed, 1, 280, 360)) : fi.highpass(1, 120))
+    * sfx.env.attack(0.1, t) * sfx.env.decay(5, t) * 9;
+grain(t) = 0.35 + 0.65 * abs(os.osc(sfx.rand.pick(seed, 2, 95, 125) - 30 * t));
 
-process(t) = (thump(t) + scuff(t)) * 0.7;
+process(t) = rub(t) * grain(t) * 0.7;

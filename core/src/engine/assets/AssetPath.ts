@@ -411,6 +411,7 @@ export type AssetPath =
     | "mecard/processes/taming.png"
     | "mecard/processes/taxidermy.png"
     | "mecard/processes/vanishing.png"
+    | "mecard/sounds/blink.wav"
     | "mecard/sounds/bump.wav"
     | "mecard/sounds/card.wav"
     | "mecard/sounds/card_hover.wav"
@@ -538,8 +539,10 @@ export type AssetPath =
     | "mecard/sounds/halt_impacts/witch.wav"
     | "mecard/sounds/heal.wav"
     | "mecard/sounds/heart_lost.wav"
-    | "mecard/sounds/hit.wav"
-    | "mecard/sounds/hit_heavy.wav"
+    | "mecard/sounds/hit12.wav"
+    | "mecard/sounds/hit2.wav"
+    | "mecard/sounds/hit4.wav"
+    | "mecard/sounds/hit8.wav"
     | "mecard/sounds/liquide.wav"
     | "mecard/sounds/pop.wav"
     | "mecard/sounds/round_start.wav"
@@ -1318,6 +1321,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/processes/taming.png",
     "mecard/processes/taxidermy.png",
     "mecard/processes/vanishing.png",
+    "mecard/sounds/blink.wav",
     "mecard/sounds/bump.wav",
     "mecard/sounds/card.wav",
     "mecard/sounds/card_hover.wav",
@@ -1445,8 +1449,10 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/sounds/halt_impacts/witch.wav",
     "mecard/sounds/heal.wav",
     "mecard/sounds/heart_lost.wav",
-    "mecard/sounds/hit.wav",
-    "mecard/sounds/hit_heavy.wav",
+    "mecard/sounds/hit12.wav",
+    "mecard/sounds/hit2.wav",
+    "mecard/sounds/hit4.wav",
+    "mecard/sounds/hit8.wav",
     "mecard/sounds/liquide.wav",
     "mecard/sounds/pop.wav",
     "mecard/sounds/round_start.wav",

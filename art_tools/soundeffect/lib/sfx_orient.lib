@@ -1,0 +1,87 @@
+declare description "East Asian sounds (deliberate clichés): pentatonic and Japanese scales, erhu, guzheng, flutes, shamisen, gong, taiko, kabuki clappers and the kabuki cry";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xf = library("sfx_filter.lib");
+xs = library("sfx_seq.lib");
+xi = library("sfx_impact.lib");
+xv = library("sfx_voice.lib");
+xp = library("sfx_perc.lib");
+xj = library("sfx_inst.lib");
+
+// Instruments are inst(freq, t) like sfx.inst, so they work in sfx.sequence.arp3..6 and melody. Scales are waveform tables of semitones (5 notes);
+// degree_hz(scale, root, deg) walks them upwards across octaves: deg 0..4 is the first octave, 5..9 the next.
+//   process(t) = sfx.orient.china_phrase(62, t);
+
+eps = 0.0001;
+
+// Scales: pass them to degree_hz.
+penta = waveform{0, 2, 4, 7, 9};
+miyako = waveform{0, 1, 5, 7, 8};
+
+// @ degree_hz(scale, root, deg) -- frequency in Hz of degree deg (0, 1, 2 ...) of a 5-note scale (penta or miyako) starting on MIDI note root
+degree_hz(scale, root, deg) = ba.midikey2hz(root + 12 * floor(deg / 5) + rdtable(scale, int(deg) % 5));
+
+// @ erhu(f, t) -- Chinese two-string fiddle: a nasal bowed saw that slides up into the note and sings with a slow vibrato
+erhu(f, t) = ((xo.saw(g) : xf.lpf(min(f * 7, 5000), 0.9)) + (xo.saw(g) : xf.bpf(1300, 3)) * 0.7) * 0.3 * se.adsr(0.12, 0.1, 0.8, 0.25, t)
+with {
+    g = xo.vibrato(f * (1 - 0.06 * se.decay(20, t)), 0.012 * se.ramp(0.2, 0.5, t), 5.8);
+};
+
+// @ guzheng(f, t) -- Chinese zither: a bright plucked string that bends down into the note
+guzheng(f, t) = xj.pluck(f * (1 + 0.04 * se.decay(30, t)), t) * 1.3;
+
+// @ dizi(f, t) -- Chinese bamboo flute: a bright airy tone with a little buzz and a slight scoop up (hold it, 0.5 s or more)
+dizi(f, t) = (os.osc(g) * 0.5 + os.osc(2 * g) * 0.25 + os.osc(3 * g) * 0.1 + (no.noise : xf.bpf(g * 2, 5)) * 0.25) * 0.4 * se.adsr(0.08, 0.1, 0.8, 0.2, t)
+with {
+    g = xo.vibrato(f * (1 - 0.03 * se.decay(15, t)), 0.008 * se.ramp(0.3, 0.6, t), 5.5);
+};
+
+// @ shakuhachi(f, t) -- Japanese bamboo flute: very breathy, a deep scoop into the note and a wide late vibrato (hold it, 0.7 s or more)
+shakuhachi(f, t) = (os.osc(g) * 0.5 + os.osc(2 * g) * 0.12 + (no.noise : xf.bpf(g * 1.5, 3)) * 0.5) * 0.4 * se.adsr(0.15, 0.1, 0.75, 0.3, t)
+with {
+    g = xo.vibrato(f * (1 - 0.08 * se.decay(10, t)), 0.015 * se.ramp(0.4, 0.8, t), 5);
+};
+
+// @ shamisen(f, t) -- Japanese three-string lute: a hard pluck that buzzes, with a snap of the plectrum
+shamisen(f, t) = (((xo.saw(f) : xf.lpf(min(f * (2 + 12 * se.decay(14, t)), 9000), 2)) * 0.5 + xo.square(f * 1.004) * 0.1) * se.decay(7, t) + (no.noise : xf.bpf(3000, 3)) * 0.12 * se.decay(60, t)) * se.attack(0.003, t) * 0.7;
+
+// @ gong(f, t) -- a big gong: inharmonic partials that swell then ring for the whole sound (3 s or more; try f 90 for the "dooong")
+gong(f, t) = (xi.modal(5, waveform{1, 1.5, 2.2, 3.0, 4.1}, waveform{1, 0.6, 0.5, 0.35, 0.25}, waveform{2.2, 2.8, 3.5, 4.5, 6}, 0.4, f, t) * 0.25 + os.osc(f * 1.007) * 0.15 * se.decay(2, t)) * se.attack(0.04, t) * se.fadeio(0.001, 0.1, t);
+
+// @ taiko(f, t) -- Japanese drum: a deep tom with a skin slap (0.5 s; try f 70)
+taiko(f, t) = (xp.tom(f, t) * 0.8 + (no.noise : xf.lpf(1500, 1)) * 0.3 * se.decay(35, t)) * 0.8;
+
+// @ hyoshigi(t) -- the wooden clappers of kabuki: hard clacks that speed up, then a last loud one (1.5 s)
+hyoshigi(t) = xs.seqw2(3, xi.bounce(9, 0.2, xi.wood(1200, 1)), 0.6, xi.wood(900, 1), t);
+
+// @ gliss(f0, f1, inst, t) -- plays instrument inst gliding from f0 to f1 Hz (a slide, a portamento)
+gliss(f0, f1, inst, t) = inst(se.sweep(f0, f1, t), t);
+
+// @ yo(f, t) -- a short sung "yo": an "i" opening to an "o" around f Hz (0.6 s)
+yo(f, t) = xv.vowel_morph(3, 4, f * (1 + 0.15 * se.decay(10, t)), t);
+
+// @ kiai(f, t) -- the kabuki cry "a-yooo": a short "a", then a long "yo-oo" that jumps up, then falls with a widening vibrato (try f 230; 2 s)
+kiai(f, t) = xs.seqw2(0.22, short, 1, long, t) * 0.6
+with {
+    short(u) = xv.vowel_morph(0, 3, f * 0.9, u);
+    long(u) = xv.vowel_morph(3, 4, f * (1 + 0.3 * se.ramp(0, 0.12, u) - 0.5 * se.ramp(0.35, 1, u)) * (1 + 0.025 * se.ramp(0.4, 1, u) * os.osc(6.5)), u);
+};
+
+// @ china_phrase(root, t) -- the cliché Chinese line: a gong, a falling-and-rising guzheng run in the pentatonic scale, an erhu slide and a last ring (root = MIDI note, try 62; 5 s)
+china_phrase(root, t) = (gong(ba.midikey2hz(root) / 2, t) * 0.8 + xs.seqw3(0.25, quiet, 2.2, run, 2.6, tail, t)) * 0.7
+with {
+    h(d) = degree_hz(penta, root, d);
+    quiet(u) = 0 * u;
+    run(u) = xs.arp6(h(5), h(4), h(3), h(2), h(1), h(2), guzheng, u);
+    tail(u) = gliss(h(4), h(7), erhu, u) + xi.bar(h(9), 0.5, u) * 0.4 * se.ramp(0.6, 0.65, u);
+};
+
+// @ kabuki_phrase(root, t) -- Japanese theatre music: clappers, a shamisen figure in the Japanese scale over taiko beats, then the "a-yooo" cry and a last drum hit (root = MIDI note, try 57; 7 s)
+kabuki_phrase(root, t) = (xs.seqw3(1.3, hyoshigi, 3, sham, 2.2, ending, t) + xs.euclid(3, 8, 0, taiko(75), t) * se.gate(0.2, 0.6, t) * 0.8) * 0.7
+with {
+    h(d) = degree_hz(miyako, root, d);
+    sham(u) = xs.arp6(h(4), h(2), h(4), h(5), h(4), h(2), shamisen, u) * 1.2;
+    ending(u) = kiai(ba.midikey2hz(root + 7), u) * 0.9;
+};

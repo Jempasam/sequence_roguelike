@@ -1,0 +1,37 @@
+declare description "drums and impacts, tuned for sounds of about 0.1 to 0.6 s; they stretch with the duration";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xf = library("sfx_filter.lib");
+
+// Each one is a complete sound: process(t) = sfx.perc.kick(t);
+
+// @ kick(t) -- bass drum: a sine dropping from 155 to 45 Hz (0.35 s)
+kick(t) = os.osc(45 + 110 * exp(0 - t * 40)) * se.decay(7, t);
+
+// @ snare(t) -- snare: noise crack over a 190 Hz body (0.25 s)
+snare(t) = (no.noise : fi.highpass(2, 1800)) * se.decay(9, t) * 0.55 + os.osc(190) * se.decay(14, t) * 0.45;
+
+// @ hat(t) -- closed hi-hat: very short high noise (0.08 s)
+hat(t) = (no.noise : fi.highpass(2, 7500)) * se.decay(12, t) * 0.5;
+
+// @ openhat(t) -- open hi-hat: the same noise, ringing longer (0.4 s)
+openhat(t) = (no.noise : fi.highpass(2, 6500)) * se.decay(6, t) * 0.5;
+
+// @ clap(t) -- hand clap: three quick noise bursts then a tail (0.3 s)
+clap(t) = (no.noise : fi.resonbp(1400, 1.5, 1)) * 2 * max(burst, 0.5 * se.decay(10, t))
+with {
+    burst = (t < 0.2) * se.decay(6, se.tooth(15, t));
+};
+
+// @ tom(f, t) -- tom: a sine falling to f Hz (try 110 for a floor tom, 220 for a high one)
+tom(f, t) = os.osc(f * (1 + 0.6 * exp(0 - t * 30))) * se.decay(6, t);
+
+// @ thud(t) -- dull body hit: a falling 90 Hz thump with a muffled slap (0.2 s)
+thud(t) = os.osc(se.sweep(90, 45, t)) * se.decay(9, t) + (no.noise : fi.lowpass(2, 300)) * se.decay(25, t) * 1.5;
+
+// @ boom(t) -- low explosion: a dark noise burst that closes, over a 70 -> 28 Hz sine (1.5 s)
+boom(t) = ((no.noise : xf.sweep_lp(900, 40, 0.8, t)) * 3 + os.osc(se.sweep(70, 28, t))) * se.decay(5, t) * 0.4;
+
+// @ clang(f, t) -- struck metal: FM bell at f Hz (try 600 for a sword, 300 for a pot)
+clang(f, t) = os.osc(f + 3 * f * 1.41 * os.osc(f * 1.41)) * se.decay(6, t) * 0.7;

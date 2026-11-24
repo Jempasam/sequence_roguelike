@@ -1,0 +1,30 @@
+declare description "filters; the cutoff can be a signal, so it can sweep";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+
+// Use them as blocks:  noise : sfx.filter.lpf(1200, 0.7).  q is the resonance (0.7 neutral, 2..10 whistles).
+
+// @ lpf(f, q) -- low-pass, f may be a signal
+lpf(f, q) = fi.svf.lp(f, q);
+
+// @ hpf(f, q) -- high-pass, f may be a signal
+hpf(f, q) = fi.svf.hp(f, q);
+
+// @ bpf(f, q) -- band-pass (a narrow band of the sound around f; unit gain at f)
+bpf(f, q) = fi.svf.bp(f, q);
+
+// @ sweep_lp(f0, f1, q, t) -- low-pass whose cutoff glides from f0 to f1 Hz over the sound (explosions close it, wahs open it)
+sweep_lp(f0, f1, q, t) = fi.svf.lp(se.sweep(f0, f1, t), q);
+
+// @ sweep_bp(f0, f1, q, t) -- band-pass whose centre glides from f0 to f1 Hz (whooshes, laser tails)
+sweep_bp(f0, f1, q, t) = fi.svf.bp(se.sweep(f0, f1, t), q);
+
+// @ wah(pos, q) -- band-pass moved by pos (0..1) between 350 and 2200 Hz
+wah(pos, q) = fi.svf.bp(350 * pow(2200 / 350, pos), q);
+
+// @ comb(f, fb) -- resonating comb tuned to f Hz, feedback fb (0..0.95): metallic, robotic, tube-like
+comb(f, fb) = (+ : de.fdelay(4096, max(2, ma.SR / f - 1))) ~ *(fb);
+
+// @ formant(f1, f2, f3) -- three resonances: turns noise or a saw into a vowel (a: 800 1200 2800, o: 450 800 2800, i: 300 2300 3000)
+formant(f1, f2, f3) = _ <: (fi.resonbp(f1, 9, 1), fi.resonbp(f2, 12, 0.7), fi.resonbp(f3, 15, 0.4)) :> _;

@@ -1,0 +1,41 @@
+declare description "weather, water, fire and footsteps";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+xr = library("sfx_rand.lib");
+
+// Ambiences fade in and out so they can be cut into a loop; the slow movement (wind gusts, waves) keeps
+// its rate in Hz whatever the duration. Each one is a complete sound: process(t) = sfx.nature.rain(t);
+
+// @ rain(t) -- steady rain: a hiss of pink noise with fine drops on top (2 s or more)
+rain(t) = ((no.pink_noise : fi.highpass(1, 600)) * 0.5 + (xn.crackle(0.004) : fi.resonbp(3500, 3, 1)) * 2.5) * se.fadeio(0.15, 0.25, t);
+
+// @ wind(t) -- gusts: pink noise through a band that wanders between 200 and 700 Hz (3 s or more)
+wind(t) = (no.pink_noise : xf.bpf(450 + 250 * os.osc(0.3) + 100 * os.osc(0.77), 2)) * 4.5 * se.fadeio(0.3, 0.3, t);
+
+// @ fire(t) -- campfire: a low roar with crackles (3 s or more)
+fire(t) = ((xn.brown : fi.lowpass(2, 500)) * 0.4 + (xn.crackle(0.0035) : fi.resonbp(2200, 2, 1)) * 0.8) : fi.dcblocker : *(se.fadeio(0.2, 0.25, t));
+
+// @ waves(t) -- surf: filtered noise swelling and receding every 5.5 s (6 s or more)
+waves(t) = (no.pink_noise : xf.lpf(700 + 900 * swell, 0.7)) * (0.3 + 0.9 * swell) * 3.5 * se.fadeio(0.1, 0.2, t)
+with {
+    swell = 0.5 + 0.5 * os.osc(0.18);
+};
+
+// @ thunder(t) -- rolling thunder: dark noise whose cutoff falls (3 s)
+thunder(t) = (xn.brown : xf.sweep_lp(900, 50, 0.8, t) : fi.dcblocker) * 0.45 * se.fadeio(0.05, 0.5, t);
+
+// @ drip(t) -- a water drop: a sine that rises fast and fades (0.25 s)
+drip(t) = os.osc(900 + 1900 * (1 - exp(0 - 40 * t))) * se.decay(9, t) * 0.6;
+
+// @ splash(t) -- water splash: a burst of mid noise (0.5 s)
+splash(t) = (no.pink_noise : xf.bpf(1500, 0.8)) * 15 * se.decay(6, t);
+
+// @ footstep(seed, t) -- one step: a body thump and a scuff; each seed is a different step (0.2 s)
+footstep(seed, t) = (os.osc(se.sweep(f * 1.6, f, t)) * se.decay(14, t) * 0.7 + (xr.noise(seed) : fi.lowpass(2, scuff)) * se.decay(22, t) * 0.9)
+with {
+    f = xr.pick(seed, 1, 60, 95);
+    scuff = xr.pick(seed, 2, 500, 1500);
+};

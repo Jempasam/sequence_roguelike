@@ -1,0 +1,70 @@
+declare description "water: drops, bubbles, a faucet, pouring, a bucket, a boiling cauldron, streams and dense rain";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+xs = library("sfx_seq.lib");
+xr = library("sfx_rand.lib");
+
+// Small events (drop, bubble, plink) are meant for sfx.rand.scatter; the big ones are complete sounds with their duration in the doc.
+
+eps = 0.0001;
+
+// @ drop(f, t) -- a water drop falling into a pool: a sine that jumps up in pitch from f Hz and fades; duration 0.2 s, as an event
+drop(f, t) = os.osc(f * (1 + 1.3 * (1 - exp(0 - 35 * t)))) * se.decay(9, t) * se.attack(0.02, t) * 0.5;
+
+// @ bubble(f, t) -- a bubble popping: a short sine rising from f to 1.5 f Hz (try f 150..900); duration 0.15 s, as an event
+bubble(f, t) = os.osc(se.sweep(f, f * 1.5, t)) * se.decay(8, t) * se.attack(0.03, t) * 0.6;
+
+// @ splash_big(t) -- a big splash: a wide burst of noise with a deep slap under it (1 s)
+splash_big(t) = ((no.pink_noise : xf.bpf(1300, 0.7)) * 4 * se.decay(7, t) + (no.pink_noise : xf.lpf(300, 0.8)) * 4 * se.decay(10, t)) * se.attack(0.01, t) * 0.9;
+
+// @ slosh(t) -- water moving in a container: low noise sloshing back and forth, calming down (2 s)
+slosh(t) = (no.pink_noise : xf.bpf(500 + 300 * os.osc(1.7), 1.2)) * 3 * (0.5 + 0.5 * os.osc(2.2)) * se.decay(2.5, t) * se.fadeio(0.05, 0.3, t) * 1.6;
+
+// @ stream(t) -- a stream or brook: bright pink noise that gurgles, with bubbles (3 s or more)
+stream(t) = ((no.pink_noise : xf.bpf(1800 + 700 * os.osc(1.1) + 400 * os.osc(2.9), 0.6)) * 1.8 * (0.7 + 0.3 * os.osc(5.3))
+    + xr.scatter(14, 5, 0.6, 0.6, ev) * 0.8) * se.fadeio(0.15, 0.25, t) * 0.7
+with {
+    ev(u) = bubble(500 + 1500 * xr.slot_rnd(14, 5, 3), u);
+};
+
+// @ faucet(flow, t) -- a tap running into a basin: a jet of hiss over a resonance that rises as the basin fills; flow 0..1 (0.3 a trickle, 1 full open; 3 s or more)
+faucet(flow, t) = (jet + basin + drops) * se.fadeio(0.08, 0.15, t) * 0.5
+with {
+    jet = (no.pink_noise : xf.hpf(600 + 900 * flow, 0.7)) * (0.15 + 0.85 * flow) * 1.8 * se.attack(0.05, t);
+    basin = (no.pink_noise : xf.bpf(se.sweep(260, 750, t), 9)) * 5 * (0.2 + 0.8 * flow);
+    drops = xr.scatter(9, 11, 0.7 * (1 - flow) + 0.1, 0.5, ev) * 0.8 * (1 - flow)
+    with {
+        ev(u) = drop(900 + 800 * xr.slot_rnd(9, 11, 3), u);
+    };
+};
+
+// @ pour(t) -- water poured from a jug: a stream of hiss with a glug glug that rises in pitch (2 s)
+pour(t) = ((no.pink_noise : xf.bpf(se.sweep(700, 1600, t), 0.8)) * 2.5 * se.fadeio(0.08, 0.2, t) + glug) * 1.0
+with {
+    glug = os.osc(se.sweep(240, 520, t) * (1 + 0.15 * os.osc(9))) * (0.5 + 0.5 * os.osc(9)) * 0.3 * se.fadeio(0.1, 0.2, t);
+};
+
+// @ bucket(t) -- a bucket of water: filling with a rising glug, then tipped out in a big splash and a slosh (4 s)
+bucket(t) = xs.seqw3(1.6, pour, 0.5, splash_big, 1.2, slosh, t);
+
+// @ bubbling(rate, seed, t) -- a cauldron at the boil: a swarm of bubbles of random size, a warm simmer and a deep boil (4 s or more; rate 8 gently, 20 rolling boil)
+bubbling(rate, seed, t) = (simmer + big + small + rumble) * se.fadeio(0.15, 0.25, t) * 0.7
+with {
+    big = xr.scatter(rate / 2, seed, 0.8, 0.8, evb) * 0.9
+    with {
+        evb(u) = bubble(110 + 200 * xr.slot_rnd(rate / 2, seed, 3), u);
+    };
+    small = xr.scatter(rate, seed + 1, 0.7, 0.6, evs) * 0.6
+    with {
+        evs(u) = bubble(350 + 700 * xr.slot_rnd(rate, seed + 1, 3), u);
+    };
+    simmer = (no.pink_noise : xf.bpf(700 + 300 * os.osc(0.8), 0.9)) * 1.1 * (0.6 + 0.4 * os.osc(3.3));
+    rumble = (xn.brown : xf.lpf(180, 0.7) : fi.dcblocker) * 0.6;
+};
+
+// @ rain_bed(density, t) -- a dense bed of rain on the ground: pink noise and many drops; density 0..1 (3 s or more)
+rain_bed(density, t) = ((no.pink_noise : xf.hpf(900, 0.7)) * 0.7 * (0.3 + 0.7 * density) + (xn.crackle(0.002 + 0.01 * density) : xf.bpf(3500, 2)) * 3) * se.fadeio(0.2, 0.3, t) * 0.7;

@@ -1,0 +1,77 @@
+declare description "harmony: scales, chords, arpeggios and chord progressions played by any sfx.inst instrument";
+import("stdfaust.lib");
+
+xs = library("sfx_seq.lib");
+
+// Notes are MIDI numbers (60 = C4, 69 = A4). `root` is the MIDI note of the key (48 = C3, 57 = A3).
+// `deg` is a scale degree, 0 = tonic, 4 = the fifth; it may be negative or above 6 (it wraps by octaves).
+// Modes: 0 major, 1 natural minor, 2 dorian, 3 mixolydian, 4 harmonic minor, 5 major pentatonic, 6 minor pentatonic.
+// Chord kinds: 0 major, 1 minor, 2 dominant 7, 3 major 7, 4 minor 7, 5 diminished, 6 sus2, 7 sus4, 8 power chord.
+// `inst` is an instrument inst(freq, t) such as sfx.inst.pad.
+
+scale_table = waveform{0, 2, 4, 5, 7, 9, 11,  0, 2, 3, 5, 7, 8, 10,  0, 2, 3, 5, 7, 9, 10,  0, 2, 4, 5, 7, 9, 10,  0, 2, 3, 5, 7, 8, 11,  0, 2, 4, 7, 9, 0, 0,  0, 3, 5, 7, 10, 0, 0};
+size_table = waveform{7, 7, 7, 7, 7, 5, 5};
+chord_table = waveform{0, 4, 7, 12,  0, 3, 7, 12,  0, 4, 7, 10,  0, 4, 7, 11,  0, 3, 7, 10,  0, 3, 6, 12,  0, 2, 7, 12,  0, 5, 7, 12,  0, 7, 12, 19};
+
+// @ scale(mode, root, deg) -- MIDI note of degree deg of the scale (deg 7 is the tonic an octave up)
+scale(mode, root, deg) = root + 12 * q + rdtable(scale_table, int(mode) * 7 + r)
+with {
+    n = rdtable(size_table, int(mode));
+    q = floor(int(deg) / n);
+    r = int(deg) - n * q;
+};
+
+// @ chord(kind, i) -- semitone offset above the root of note i (0..3) of a chord kind
+chord(kind, i) = rdtable(chord_table, int(kind) * 4 + int(i));
+
+// @ degree_note(mode, root, deg, k) -- note k (0 root, 1 third, 2 fifth, 3 seventh) of the chord built on degree deg
+degree_note(mode, root, deg, k) = scale(mode, root, int(deg) + 2 * int(k));
+
+// @ deg_chord(mode, root, deg, inst, t) -- the triad on degree deg, every note played together by inst
+deg_chord(mode, root, deg, inst, t) = sum(k, 3, inst(ba.midikey2hz(degree_note(mode, root, deg, k)), t)) * 0.5;
+
+// @ deg_chord7(mode, root, deg, inst, t) -- the seventh chord on degree deg (4 notes), played together by inst
+deg_chord7(mode, root, deg, inst, t) = sum(k, 4, inst(ba.midikey2hz(degree_note(mode, root, deg, k)), t)) * 0.4;
+
+// @ play_chord(kind, root, inst, t) -- a chord of the given kind on root, all four notes together
+play_chord(kind, root, inst, t) = sum(i, 4, inst(ba.midikey2hz(root + chord(kind, i)), t)) * 0.4;
+
+// @ strum(kind, root, spread, inst, t) -- the chord with each note starting a little later (spread = fraction of the sound between notes, 0.03 is a guitar strum)
+strum(kind, root, spread, inst, t) = sum(i, 4, xs.part(i * spread, 1, inst(ba.midikey2hz(root + chord(kind, i))), t)) * 0.4;
+
+// @ arpeggio(mode, root, deg, n, dir, inst, t) -- the triad on degree deg broken into n notes (dir 0 up, 1 down, 2 up and back)
+arpeggio(mode, root, deg, n, dir, inst, t) = inst(ba.midikey2hz(degree_note(mode, root, deg, pos)), xs.step_t(n, t))
+with {
+    s = xs.step_index(n, t);
+    pos = select3(int(dir), s % 3, 2 - s % 3, select2((s % 4) < 3, 1, s % 4));
+};
+
+// @ bass_note(mode, root, deg, inst, t) -- only the root of the chord on degree deg, two octaves down: the bass line of a progression
+bass_note(mode, root, deg, inst, t) = inst(ba.midikey2hz(scale(mode, root, deg) - 24), t);
+
+// @ prog4(mode, root, d1, d2, d3, d4, inst, t) -- four triads in a row, one per equal slice (degrees d1..d4)
+prog4(mode, root, d1, d2, d3, d4, inst, t) = xs.seq4(deg_chord(mode, root, d1, inst), deg_chord(mode, root, d2, inst), deg_chord(mode, root, d3, inst), deg_chord(mode, root, d4, inst), t);
+
+// @ prog4_7(mode, root, d1, d2, d3, d4, inst, t) -- four seventh chords in a row, one per equal slice
+prog4_7(mode, root, d1, d2, d3, d4, inst, t) = xs.seq4(deg_chord7(mode, root, d1, inst), deg_chord7(mode, root, d2, inst), deg_chord7(mode, root, d3, inst), deg_chord7(mode, root, d4, inst), t);
+
+// @ prog4_bass(mode, root, d1, d2, d3, d4, inst, t) -- the roots of the same four chords: the bass line that goes with prog4
+prog4_bass(mode, root, d1, d2, d3, d4, inst, t) = xs.seq4(bass_note(mode, root, d1, inst), bass_note(mode, root, d2, inst), bass_note(mode, root, d3, inst), bass_note(mode, root, d4, inst), t);
+
+// @ pop(root, inst, t) -- the pop progression I V vi IV in major (four chords)
+pop(root, inst, t) = prog4(0, root, 0, 4, 5, 3, inst, t);
+
+// @ pop_bass(root, inst, t) -- bass line for pop: roots of I V vi IV
+pop_bass(root, inst, t) = prog4_bass(0, root, 0, 4, 5, 3, inst, t);
+
+// @ sad(root, inst, t) -- the minor progression i VI III VII (four chords): epic, melancholic
+sad(root, inst, t) = prog4(1, root, 0, 5, 2, 6, inst, t);
+
+// @ sad_bass(root, inst, t) -- bass line for sad: roots of i VI III VII
+sad_bass(root, inst, t) = prog4_bass(1, root, 0, 5, 2, 6, inst, t);
+
+// @ jazz(root, inst, t) -- the jazz cadence ii V I vi with seventh chords in major
+jazz(root, inst, t) = prog4_7(0, root, 1, 4, 0, 5, inst, t);
+
+// @ jazz_bass(root, inst, t) -- bass line for jazz: roots of ii V I vi
+jazz_bass(root, inst, t) = prog4_bass(0, root, 1, 4, 0, 5, inst, t);

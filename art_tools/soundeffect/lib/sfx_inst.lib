@@ -1,0 +1,40 @@
+declare description "instruments: inst(freq, t) with freq in Hz and t the 0 -> 1 of the note, envelope included; plug them into sfx.seq and sfx.harm";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xf = library("sfx_filter.lib");
+
+// Every instrument is one note: the envelope spans t = 0 -> 1, so the note dies on its own.
+// inst(440) (partial application) is a sub-sound for sfx.seq; stack them with + and balance with *.
+// For rhythm use the drums of sfx.perc directly (sfx.perc.kick, snare, hat ...) with sfx.seq.hits / euclid.
+
+// @ pluck(f, t) -- plucked string: a saw whose brightness collapses fast (guitar, harp, bass pluck)
+pluck(f, t) = xo.saw(f) : xf.lpf(min(f * (1 + 10 * se.decay(8, t)), 12000), 1) : *(0.5 * se.decay(5, t) * se.attack(0.02, t));
+
+// @ bell(f, t) -- bell: inharmonic FM (ratio 3.5) that decays together with its brightness
+bell(f, t) = xo.fm(f, 3.5, 2 * se.decay(4, t)) * se.decay(4, t) * 0.4;
+
+// @ epiano(f, t) -- electric piano: soft FM tine with an octave sparkle, medium decay
+epiano(f, t) = (xo.fm(f, 1, 1.2 * se.decay(6, t)) * 0.5 + xo.sine(f * 2) * 0.1 * se.decay(8, t)) * se.decay(3, t) * se.attack(0.01, t);
+
+// @ organ(f, t) -- drawbar organ: four harmonics with a light vibrato, holds then releases
+organ(f, t) = (xo.sine(g) + 0.5 * xo.sine(2 * g) + 0.3 * xo.sine(3 * g) + 0.2 * xo.sine(4 * g)) * 0.28 * se.adsr(0.05, 0.1, 0.8, 0.15, t)
+with {
+    g = xo.vibrato(f, 0.003, 5);
+};
+
+// @ pad(f, t) -- pad: detuned saws through a dark filter, slow attack and long release (needs a long note to bloom)
+pad(f, t) = xo.supersaw(f, 0.008) : xf.lpf(min(f * 4, 8000), 0.8) : *(0.45 * se.adsr(0.35, 0.1, 0.8, 0.4, t));
+
+// @ bass(f, t) -- bass: saw plus a sub-octave sine, filter that closes after the attack (give it a low f, 40..110 Hz)
+bass(f, t) = (xo.saw(f) * 0.6 + xo.sine(f / 2) * 0.6) : xf.lpf(f * (2 + 6 * se.decay(8, t)), 1.2) : *(0.6 * se.adsr(0.01, 0.2, 0.7, 0.15, t));
+
+// @ lead(f, t) -- lead: narrow pulse with a vibrato that fades in, the chiptune / synth melody voice
+lead(f, t) = xo.pulse(xo.vibrato(f, 0.01 * se.ramp(0.3, 0.6, t), 5.5), 0.35) * 0.3 * se.adsr(0.02, 0.1, 0.8, 0.2, t);
+
+// @ marimba(f, t) -- marimba / xylophone: a sine with a fast-dying 4th harmonic, short and woody
+marimba(f, t) = (xo.sine(f) + 0.4 * xo.sine(f * 4) * se.decay(15, t)) * se.decay(7, t) * se.attack(0.01, t) * 0.5;
+
+// @ flute(f, t) -- flute: soft sine with breath noise and a delayed vibrato
+flute(f, t) = (xo.sine(xo.vibrato(f, 0.005 * se.ramp(0.2, 0.5, t), 5)) * 0.4 + 0.3 * (no.noise : xf.bpf(f * 2, 3))) * se.adsr(0.15, 0.1, 0.8, 0.2, t);

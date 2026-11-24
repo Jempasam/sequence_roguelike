@@ -1,0 +1,114 @@
+declare description "sequencing: cut the 0 -> 1 of a sound into slices and give each slice to a sub-sound that sees its own 0 -> 1";
+import("stdfaust.lib");
+
+// A sub-sound is a function of one argument: f(t) with t = 0 -> 1 over its slice.
+// Give it parameters by partial application: seq2(sfx.perc.tom(110), sfx.perc.kick, t).
+// A sound is silent outside its slice (hard cut); its tail is lost, so give it a slice long enough.
+// Notes: an instrument is inst(freq, t); inst(440) is then a sub-sound that plays A4.
+
+eps = 0.0001;
+
+// @ slice(a, b, t) -- local 0 -> 1 ramp: 0 until t = a, 1 from t = b (the t a sub-sound sees)
+slice(a, b, t) = min(max((t - a) / max(b - a, eps), 0), 1);
+
+// @ window(a, b, t) -- 1 while a <= t < b, 0 elsewhere (the last slice, b = 1, includes t = 1)
+window(a, b, t) = (t >= a) * ((t < b) | (b >= 1));
+
+// @ part(a, b, f, t) -- plays sub-sound f during [a, b[ of the sound, with its own local t
+part(a, b, f, t) = f(slice(a, b, t)) * window(a, b, t);
+
+// @ seqw2(w1, f1, w2, f2, t) -- two sub-sounds one after the other, durations in proportion w1 : w2
+seqw2(w1, f1, w2, f2, t) = part(0, c1, f1, t) + part(c1, 1, f2, t)
+with {
+    s = max(w1 + w2, eps);
+    c1 = w1 / s;
+};
+
+// @ seqw3(w1, f1, w2, f2, w3, f3, t) -- three sub-sounds in a row, durations in proportion w1 : w2 : w3
+seqw3(w1, f1, w2, f2, w3, f3, t) = part(0, c1, f1, t) + part(c1, c2, f2, t) + part(c2, 1, f3, t)
+with {
+    s = max(w1 + w2 + w3, eps);
+    c1 = w1 / s;
+    c2 = (w1 + w2) / s;
+};
+
+// @ seqw4(w1, f1, w2, f2, w3, f3, w4, f4, t) -- four sub-sounds in a row, durations in proportion
+seqw4(w1, f1, w2, f2, w3, f3, w4, f4, t) = part(0, c1, f1, t) + part(c1, c2, f2, t) + part(c2, c3, f3, t) + part(c3, 1, f4, t)
+with {
+    s = max(w1 + w2 + w3 + w4, eps);
+    c1 = w1 / s;
+    c2 = (w1 + w2) / s;
+    c3 = (w1 + w2 + w3) / s;
+};
+
+// @ seqw5(w1, f1, w2, f2, w3, f3, w4, f4, w5, f5, t) -- five sub-sounds in a row, durations in proportion
+seqw5(w1, f1, w2, f2, w3, f3, w4, f4, w5, f5, t) = part(0, c1, f1, t) + part(c1, c2, f2, t) + part(c2, c3, f3, t) + part(c3, c4, f4, t) + part(c4, 1, f5, t)
+with {
+    s = max(w1 + w2 + w3 + w4 + w5, eps);
+    c1 = w1 / s;
+    c2 = (w1 + w2) / s;
+    c3 = (w1 + w2 + w3) / s;
+    c4 = (w1 + w2 + w3 + w4) / s;
+};
+
+// @ seqw6(w1, f1, w2, f2, w3, f3, w4, f4, w5, f5, w6, f6, t) -- six sub-sounds in a row, durations in proportion
+seqw6(w1, f1, w2, f2, w3, f3, w4, f4, w5, f5, w6, f6, t) = part(0, c1, f1, t) + part(c1, c2, f2, t) + part(c2, c3, f3, t) + part(c3, c4, f4, t) + part(c4, c5, f5, t) + part(c5, 1, f6, t)
+with {
+    s = max(w1 + w2 + w3 + w4 + w5 + w6, eps);
+    c1 = w1 / s;
+    c2 = (w1 + w2) / s;
+    c3 = (w1 + w2 + w3) / s;
+    c4 = (w1 + w2 + w3 + w4) / s;
+    c5 = (w1 + w2 + w3 + w4 + w5) / s;
+};
+
+// @ seq2(f1, f2, t) -- two sub-sounds one after the other, equal slices
+seq2(f1, f2, t) = seqw2(1, f1, 1, f2, t);
+
+// @ seq3(f1, f2, f3, t) -- three sub-sounds in a row, equal slices
+seq3(f1, f2, f3, t) = seqw3(1, f1, 1, f2, 1, f3, t);
+
+// @ seq4(f1, f2, f3, f4, t) -- four sub-sounds in a row, equal slices
+seq4(f1, f2, f3, f4, t) = seqw4(1, f1, 1, f2, 1, f3, 1, f4, t);
+
+// @ seq5(f1, f2, f3, f4, f5, t) -- five sub-sounds in a row, equal slices
+seq5(f1, f2, f3, f4, f5, t) = seqw5(1, f1, 1, f2, 1, f3, 1, f4, 1, f5, t);
+
+// @ seq6(f1, f2, f3, f4, f5, f6, t) -- six sub-sounds in a row, equal slices
+seq6(f1, f2, f3, f4, f5, f6, t) = seqw6(1, f1, 1, f2, 1, f3, 1, f4, 1, f5, 1, f6, t);
+
+// @ overlap2(o, f1, f2, t) -- two sub-sounds where the second starts before the first ends: o is the overlap (0..0.5) as a fraction of the sound
+overlap2(o, f1, f2, t) = part(0, 0.5 + o / 2, f1, t) + part(0.5 - o / 2, 1, f2, t);
+
+// @ overlap3(o, f1, f2, f3, t) -- three sub-sounds, each slice stretched by o (0..0.3) so neighbours overlap
+overlap3(o, f1, f2, f3, t) = part(0, 1 / 3 + o, f1, t) + part(1 / 3 - o, 2 / 3 + o, f2, t) + part(2 / 3 - o, 1, f3, t);
+
+// @ step_index(n, t) -- which of n equal steps t is in: 0 .. n-1
+step_index(n, t) = int(floor(min(t, 0.999999) * n));
+
+// @ step_t(n, t) -- local 0 -> 1 ramp inside the current step of n (a sawtooth, n teeth)
+step_t(n, t) = min(t, 0.999999) * n - floor(min(t, 0.999999) * n);
+
+// @ every(n, f, t) -- repeats sub-sound f n times in a row, each with its own 0 -> 1
+every(n, f, t) = f(step_t(n, t));
+
+// @ hits(bits, n, f, t) -- step sequencer: n steps, step i plays f when bit i of the integer `bits` is 1 (bits = 9, n = 4 plays steps 0 and 3)
+hits(bits, n, f, t) = f(step_t(n, t)) * (int(floor(bits / pow(2, step_index(n, t)))) % 2);
+
+// @ euclid(k, n, rot, f, t) -- euclidean rhythm: k hits spread as evenly as possible over n steps, shifted by rot (3, 8 = tresillo)
+euclid(k, n, rot, f, t) = f(step_t(n, t)) * (((step_index(n, t) + rot) % n * k) % n < k);
+
+// @ melody(n, notes, inst, t) -- n notes read in order from a waveform of MIDI numbers (0 = rest); each note plays inst(freq, local t)
+melody(n, notes, inst, t) = inst(ba.midikey2hz(note), step_t(n, t)) * (note > 0)
+with {
+    note = rdtable(notes, step_index(n, t));
+};
+
+// @ arp3(f1, f2, f3, inst, t) -- three notes (Hz) in a row on the same instrument
+arp3(f1, f2, f3, inst, t) = seq3(inst(f1), inst(f2), inst(f3), t);
+
+// @ arp4(f1, f2, f3, f4, inst, t) -- four notes (Hz) in a row on the same instrument
+arp4(f1, f2, f3, f4, inst, t) = seq4(inst(f1), inst(f2), inst(f3), inst(f4), t);
+
+// @ arp6(f1, f2, f3, f4, f5, f6, inst, t) -- six notes (Hz) in a row on the same instrument
+arp6(f1, f2, f3, f4, f5, f6, inst, t) = seq6(inst(f1), inst(f2), inst(f3), inst(f4), inst(f5), inst(f6), t);

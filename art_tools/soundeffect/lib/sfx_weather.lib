@@ -1,0 +1,51 @@
+declare description "weather: layered rain, thunder, drafts, gusts and howling wind";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+xr = library("sfx_rand.lib");
+
+// Weather sounds are layers; the slow movement keeps its rate in Hz whatever the duration.
+
+eps = 0.0001;
+
+// @ rain_rich(intensity, t) -- rain in three layers: a soft wash of pink noise, fine drops, and big drops hitting hard ground; intensity 0..1 (0.3 drizzle, 1 downpour; 3 s or more)
+rain_rich(intensity, t) = (wash + fine + big + patter) * se.fadeio(0.2, 0.3, t) * 1.2
+with {
+    wash = (no.pink_noise : xf.hpf(700, 0.7) : xf.lpf(9000, 0.7)) * (1 + 2 * intensity) * (0.85 + 0.15 * os.osc(0.21));
+    fine = (xn.crackle(0.002 + 0.012 * intensity) : xf.bpf(4500, 2.5)) * 1;
+    big = xr.scatter(10 + 40 * intensity, 21, 0.7, 0.4, ev) * 0.3
+    with {
+        ev(u) = (no.noise : xf.bpf(1500 + 3500 * xr.slot_rnd(10 + 40 * intensity, 21, 3), 3)) * 1.5 * se.decay(40, u);
+    };
+    patter = (xn.brown : xf.lpf(250, 0.7) : fi.dcblocker) * 0.15 * intensity;
+};
+
+// @ thunder_rich(t) -- thunder: a sharp crack, a deep rolling that swells in waves, and a distant echo (5 s; fire it once per sound)
+thunder_rich(t) = (crack + rolling + far) * se.fadeio(0.002, 0.2, t) * 0.8
+with {
+    crack = (no.noise : xf.hpf(1500, 0.8)) * se.decay(45, t) * 0.3 + (no.noise : xf.bpf(600, 0.7)) * se.decay(18, t) * 1.6;
+    wave = 0.55 + 0.45 * os.osc(1.1);
+    rolling = (xn.brown : xf.sweep_lp(1400, 70, 0.8, t) : fi.dcblocker) * 0.4 * se.attack(0.03, t) * se.decay(1.6, t) * wave;
+    far = (xn.brown : xf.lpf(160, 0.8) : fi.dcblocker) * 0.3 * se.ramp(0.3, 0.45, t) * se.decay(3.5, max(t - 0.4, 0)) * (0.5 + 0.5 * os.osc(1.6));
+};
+
+// @ draft(t) -- a draught under a door: a narrow whistling band that drifts, a soft hiss and a faint hollow resonance (4 s or more)
+draft(t) = (whistle + hiss + hollow) * se.fadeio(0.25, 0.3, t) * 2
+with {
+    gust = 0.55 + 0.45 * os.osc(0.35) * os.osc(0.13);
+    whistle = (no.noise : xf.bpf(900 + 250 * os.osc(0.27) + 120 * os.osc(0.9), 25)) * 0.03 * gust;
+    hiss = (no.pink_noise : xf.bpf(2200 + 500 * os.osc(0.31), 1.2)) * 2.5 * gust;
+    hollow = (no.pink_noise : xf.bpf(160 + 40 * os.osc(0.2), 4)) * 1.1 * gust;
+};
+
+// @ gust(t) -- a gust of wind through trees or a street: a broad swell of noise whose cutoff opens then closes (2 s)
+gust(t) = (no.pink_noise : xf.lpf(300 + 1800 * sin(3.14159 * t), 0.8)) * 5 * pow(sin(3.14159 * t), 2) * se.fadeio(0.1, 0.2, t) * 0.7;
+
+// @ howl(f, t) -- wind howling round a corner: a thin pitched whistle at about f Hz (try 500) that wanders (4 s or more)
+howl(f, t) = ((os.osc(f * (1 + 0.05 * os.osc(0.31) + 0.02 * os.osc(1.7))) * 0.15) + (no.pink_noise : xf.bpf(f * (1 + 0.05 * os.osc(0.31)), 12)) * 1.5) * (0.5 + 0.5 * os.osc(0.22)) * se.fadeio(0.3, 0.3, t);
+
+// @ storm(t) -- rain, wind and a few thunder cracks: a whole storm in 6 s
+storm(t) = rain_rich(0.9, t) * 0.8 + howl(420, t) * 0.4 + thunder_rich(min(max(t - 0.15, 0) / 0.85, 1)) * (t > 0.15) * 0.9;

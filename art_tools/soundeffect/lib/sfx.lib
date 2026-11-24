@@ -1,0 +1,27 @@
+declare description "sound-effect library: import sfx.lib to get the Faust standard library and sfx.<module>.<function>";
+import("stdfaust.lib");
+
+// process(t) = sfx.retro.coin(t);          // a complete sound
+// process(t) = sfx.noise.white * sfx.env.decay(6, t);   // build your own
+sfx = environment {
+    env = library("sfx_env.lib");
+    osc = library("sfx_osc.lib");
+    noise = library("sfx_noise.lib");
+    filter = library("sfx_filter.lib");
+    fx = library("sfx_fx.lib");
+    perc = library("sfx_perc.lib");
+    retro = library("sfx_retro.lib");
+    nature = library("sfx_nature.lib");
+    mech = library("sfx_mech.lib");
+    rand = library("sfx_rand.lib");
+    sequence = library("sfx_seq.lib");
+    inst = library("sfx_inst.lib");
+    harm = library("sfx_harm.lib");
+    voice = library("sfx_voice.lib");
+    impact = library("sfx_impact.lib");
+    fire = library("sfx_fire.lib");
+    water = library("sfx_water.lib");
+    weather = library("sfx_weather.lib");
+    life = library("sfx_life.lib");
+    orient = library("sfx_orient.lib");
+};

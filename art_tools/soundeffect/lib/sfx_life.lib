@@ -1,0 +1,105 @@
+declare description "living nature: frogs, crickets, cicadas, birds, owls, monkeys, wolves, leaves, and whole ambience beds for swamp, jungle, forest and desert";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xn = library("sfx_noise.lib");
+xf = library("sfx_filter.lib");
+xs = library("sfx_seq.lib");
+xr = library("sfx_rand.lib");
+xv = library("sfx_voice.lib");
+xw = library("sfx_water.lib");
+xi = library("sfx_impact.lib");
+
+// Single calls (frog, cricket, bird...) are events of about 0.2 to 1 s: use them alone, with sfx.sequence, or scattered at random with
+// sfx.rand.scatter. frogs / birds / crickets already do the scattering. The beds are complete ambiences (5 s or more) that fade in and out.
+
+eps = 0.0001;
+
+// @ frog(f, t) -- one croak: a buzzing saw dropping from 1.2 f Hz through a moving nasal band, twice (try f 110 for a big bullfrog, 250 for a tree frog); 0.4 s
+frog(f, t) = (os.sawtooth(f * (1.2 - 0.25 * t)) : xf.bpf(se.sweep(380, 900, t), 2.5)) * (0.55 + 0.45 * os.osc(34)) * sin(3.14159 * xs.step_t(2, t)) * se.fadeio(0.03, 0.1, t) * 0.5;
+
+// @ cricket(f, t) -- one chirp of a cricket: a high sine (f about 4000 Hz) in four quick pulses; 0.15 s
+cricket(f, t) = os.osc(f) * max(sin(6.2832 * se.tooth(4, t)), 0) * se.fadeio(0.03, 0.1, t) * 0.25;
+
+// @ cicada(t) -- a cicada: a bright band of noise buzzing at 70 Hz in a swell (2 s)
+cicada(t) = (no.pink_noise : xf.bpf(6500, 4)) * (0.4 + 0.6 * os.osc(70)) * 2.5 * se.fadeio(0.25, 0.3, t);
+
+// @ bird(f, t) -- a small bird: three quick rising chirps (f 2500 Hz sparrow, 4000 Hz tit); 0.4 s
+bird(f, t) = os.osc(f * (1 + 0.5 * se.tooth(3, t)) * (1 + 0.02 * os.osc(45))) * sin(3.14159 * se.tooth(3, t)) * se.fadeio(0.02, 0.1, t) * 0.25;
+
+// @ bird_tropical(f, t) -- a jungle bird: an FM scream that falls from 1.4 f to 0.7 f Hz (try f 900); 0.8 s
+bird_tropical(f, t) = xo.fm(se.sweep(f * 1.4, f * 0.7, t), 2.01, 3 * se.decay(3, t)) * se.adsr(0.05, 0.2, 0.6, 0.3, t) * 0.25;
+
+// @ owl(f, t) -- an owl: a short hoot, a pause and a long one (try f 380); 2 s
+owl(f, t) = xs.seqw3(1, hoot(f), 0.4, quiet, 2, hoot(f * 0.93), t)
+with {
+    hoot(g, u) = (os.osc(g * (1 - 0.04 * u)) * 0.35 + (no.noise : xf.bpf(g, 8)) * 0.15) * pow(sin(3.14159 * u), 2);
+    quiet(u) = 0 * u;
+};
+
+// @ monkey(t) -- a monkey hooting: five quick squeaks that climb (1.5 s)
+monkey(t) = xs.every(5, xv.squeak(650 + 450 * t), t) * se.fadeio(0.05, 0.2, t) * 1.2;
+
+// @ wolf(f, t) -- a wolf or coyote howl: an "oo" that rises then falls around f Hz (try f 330; 4 s)
+wolf(f, t) = xv.vowel_morph(5, 4, f * (0.75 + 0.5 * sin(3.14159 * min(t * 1.1, 1))), t) * 0.5;
+
+// @ leaves(t) -- dry leaves rustling: a spray of tiny clicks and a soft hiss that swells (2 s or more)
+leaves(t) = ((xn.crackle(0.01) : xf.bpf(3000, 1)) * 0.8 + (no.pink_noise : xf.hpf(3500, 0.7)) * 0.3) * (0.4 + 0.6 * os.osc(0.5) * os.osc(0.21)) * se.fadeio(0.2, 0.3, t) * 3;
+
+// @ frogs(rate, seed, lo, hi, t) -- a chorus of frogs: random croaks about rate / 2 per second between lo and hi Hz (try 1.6, seed, 110, 200)
+frogs(rate, seed, lo, hi, t) = xr.scatter(rate, seed, 0.8, 0.5, ev)
+with {
+    ev(u) = frog(lo + (hi - lo) * xr.slot_rnd(rate, seed, 3), u);
+};
+
+// @ crickets(rate, seed, lo, hi, t) -- crickets and insects: random chirps between lo and hi Hz (try 5, seed, 3500, 5000)
+crickets(rate, seed, lo, hi, t) = xr.scatter(rate, seed, 0.6, 0.6, ev)
+with {
+    ev(u) = cricket(lo + (hi - lo) * xr.slot_rnd(rate, seed, 3), u);
+};
+
+// @ birds(rate, seed, lo, hi, t) -- a dawn chorus: random bird calls between lo and hi Hz (try 2.5, seed, 2200, 4000)
+birds(rate, seed, lo, hi, t) = xr.scatter(rate, seed, 0.65, 0.5, ev)
+with {
+    ev(u) = bird(lo + (hi - lo) * xr.slot_rnd(rate, seed, 3), u);
+};
+
+// @ swamp_bed(seed, t) -- a swamp at dusk: frogs, bubbling mud, crickets, a mosquito whine and a low damp wind (6 s or more)
+swamp_bed(seed, t) = 1.0 * (wind + frogs(1.6, seed, 110, 200, t) * 0.8 + frogs(2.3, seed + 1, 150, 260, t) * 0.4 + mud + crickets(5, seed + 3, 3200, 4800, t) * 0.7 + mosquito) * se.fadeio(0.06, 0.2, t) * 0.8
+with {
+    wind = (no.pink_noise : xf.bpf(260 + 90 * os.osc(0.13), 1)) * 0.8 * (0.6 + 0.4 * os.osc(0.17));
+    mud = xr.scatter(3, seed + 2, 0.5, 0.5, ev) * 0.8
+    with {
+        ev(u) = xw.bubble(90 + 220 * xr.slot_rnd(3, seed + 2, 3), u);
+    };
+    mosquito = os.osc(560 + 40 * os.osc(0.9) + 15 * os.osc(5)) * 0.01 * (0.5 + 0.5 * os.osc(0.19));
+};
+
+// @ jungle_bed(seed, t) -- a dense jungle: cicadas, tropical birds, monkeys, frogs, far rain and a deep hum (6 s or more)
+jungle_bed(seed, t) = (hum + cicada(t) * 0.35 + xr.scatter(1.2, seed, 0.7, 0.6, evb) * 0.8 + xr.scatter(0.35, seed + 1, 0.55, 0.8, evm) * 0.7 + frogs(2, seed + 2, 150, 260, t) * 0.4 + xw.rain_bed(0.3, t) * 0.25 + crickets(6, seed + 3, 3000, 5200, t) * 0.5) * se.fadeio(0.06, 0.2, t) * 0.8
+with {
+    hum = (xn.brown : xf.lpf(200, 0.7) : fi.dcblocker) * 0.3;
+    evb(u) = bird_tropical(600 + 700 * xr.slot_rnd(1.2, seed, 3), u);
+    evm(u) = monkey(u);
+};
+
+// @ forest_bed(seed, t) -- a temperate forest in the morning: soft wind in the leaves, many small birds, rustling, a woodpecker and a distant owl (6 s or more)
+forest_bed(seed, t) = (breeze + leaves(t) * 0.35 + birds(2.5, seed, 2200, 4200, t) + birds(1.1, seed + 1, 3200, 5000, t) * 0.6 + pecker + xr.scatter(0.2, seed + 3, 0.6, 0.9, evo) * 0.4) * se.fadeio(0.06, 0.2, t) * 0.8
+with {
+    breeze = (no.pink_noise : xf.bpf(500 + 250 * os.osc(0.11) + 100 * os.osc(0.43), 1.2)) * 0.9 * (0.5 + 0.5 * os.osc(0.15));
+    pecker = xr.scatter(0.25, seed + 2, 0.5, 0.9, evp) * 0.7
+    with {
+        evp(u) = xs.every(9, xi.wood(1000, 0.9), u);
+    };
+    evo(u) = owl(360 + 60 * xr.slot_rnd(0.2, seed + 3, 3), u);
+};
+
+// @ desert_bed(night, seed, t) -- a desert: a hot dry wind, hissing sand, rare howls and in the night (night 1) crickets, in the day (night 0) a faint cicada (6 s or more)
+desert_bed(night, seed, t) = (wind + sand + xr.scatter(0.12, seed, 0.8, 0.95, evw) * 0.5 * night + crickets(4, seed + 2, 3600, 4600, t) * 0.4 * night + cicada(t) * 0.12 * (1 - night)) * se.fadeio(0.06, 0.2, t) * 0.8
+with {
+    gust = 0.4 + 0.6 * (0.5 + 0.5 * os.osc(0.11)) * (0.6 + 0.4 * os.osc(0.37));
+    wind = (no.pink_noise : xf.bpf(700 + 500 * os.osc(0.09), 0.8)) * 1.1 * gust;
+    sand = (no.pink_noise : xf.hpf(4000, 0.7)) * 0.35 * gust * (0.5 + 0.5 * os.osc(0.17));
+    evw(u) = wolf(300 + 80 * xr.slot_rnd(0.12, seed, 3), u);
+};

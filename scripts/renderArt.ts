@@ -9,11 +9,11 @@
 //   npm run art:preview -- <folder> also writes a preview.png in each parallax folder built, to help create it;
 //                                  no other command writes one
 // A .faust.dsp is a sound effect: rendered to an .ogg at the same path, in one call, through the CLI of the soundeffect
-// project, looked for next to this repository, or where SFX points to. --changed applies to it as to a picture.
+// project, embedded in art_tools/ or where SFX points to. --changed applies to it as to a picture.
 // A .lib.dsp is no sound of the game: it is never rendered, only imported by the sounds that use it.
 // A .json beside a .pic.json (units/wolf.json for units/wolf.pic.json) is copied beside the .png: the data of the picture.
 // A folder holding a parallax.json is assembled into one painting, <folder>.ora (see buildParallax.ts).
-// The picture project is looked for next to this repository, or where PICTURE points to.
+// The picture project is embedded in art_tools/ (updated by `npm run art:sync`), or where PICTURE points to.
 
 import { execFileSync } from "node:child_process"
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs"
@@ -31,14 +31,16 @@ const GENERATED = join(REPO, "generated_assets")
 /** Seen as one: what is generated first, then what is written by hand. */
 const SOURCES = [GENERATED, join(REPO, "assets")]
 const ROOTS: AssetRoots = { art: ART, assets: SOURCES }
-const PICTURE = process.env.PICTURE ?? join(REPO, "..", "picture", "bin", "picture.js")
-const SFX = process.env.SFX ?? join(REPO, "..", "soundeffect", "bin", "sfx.js")
+const PICTURE = process.env.PICTURE ?? join(REPO, "art_tools", "picture", "bin", "picture.js")
+const SFX = process.env.SFX ?? join(REPO, "art_tools", "soundeffect", "bin", "sfx.js")
 const EXTENSION = ".pic.json"
 const SOUND_EXTENSION = ".faust.dsp"
 const SOUND_FORMAT = "ogg"
 const SOUND_OUTPUT = "." + SOUND_FORMAT
 
-if(!existsSync(PICTURE)) fail(`The picture project is not at ${PICTURE}. Set PICTURE to its bin/picture.js.`)
+if(!existsSync(PICTURE)){
+    fail(`The picture project is not at ${PICTURE}. Run npm run art:sync, or set PICTURE to its bin/picture.js.`)
+}
 
 const args = process.argv.slice(2)
 const changedOnly = args.includes("--changed")
@@ -75,7 +77,9 @@ const sounds = files.filter(file => file.endsWith(SOUND_EXTENSION)).map(source =
     out: join(GENERATED, relative(ART, source).slice(0, -SOUND_EXTENSION.length) + SOUND_OUTPUT),
 })).filter(sound => !changedOnly || isStale(sound.out, sourcesOf(sound.source, ROOTS)))
 if(sounds.length > 0){
-    if(!existsSync(SFX)) fail(`The soundeffect project is not at ${SFX}. Set SFX to its bin/sfx.js.`)
+    if(!existsSync(SFX)){
+        fail(`The soundeffect project is not at ${SFX}. Run npm run art:sync, or set SFX to its bin/sfx.js.`)
+    }
     for(const sound of sounds) mkdirSync(dirname(sound.out), { recursive: true })
     // A manifest, not the command line: all the sounds at once do not fit in the one of Windows.
     const scratch = mkdtempSync(join(tmpdir(), "sfx-"))

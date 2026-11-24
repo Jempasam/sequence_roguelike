@@ -1,0 +1,34 @@
+declare description "oscillators and pitch movement";
+import("stdfaust.lib");
+
+// Frequencies are in Hz and can be signals: sine(se.sweep(800, 200, t)) glides from 800 to 200 Hz.
+
+// @ sine(f) -- sine wave
+sine(f) = os.osc(f);
+
+// @ saw(f) -- band-limited sawtooth, -1..1
+saw(f) = os.sawtooth(f);
+
+// @ square(f) -- band-limited square wave
+square(f) = os.square(f);
+
+// @ tri(f) -- band-limited triangle wave
+tri(f) = os.triangle(f);
+
+// @ pulse(f, w) -- pulse wave of width w (0..1), the chiptune "PWM" voice (not band-limited: a little rough, on purpose; no DC offset)
+pulse(f, w) = (os.lf_sawpos(f) < w) * 2 - 2 * w;
+
+// @ fm(fc, ratio, index) -- two-operator FM: carrier fc, modulator at fc * ratio, modulation depth index (0 = sine, 2..8 = bell / metal)
+fm(fc, ratio, index) = os.osc(fc + index * fc * ratio * os.osc(fc * ratio));
+
+// @ supersaw(f, spread) -- three detuned saws; spread 0.005 is a gentle chorus, 0.03 a wide unison
+supersaw(f, spread) = (os.sawtooth(f) + os.sawtooth(f * (1 + spread)) + os.sawtooth(f / (1 + spread))) / 3;
+
+// @ vibrato(f, depth, rate) -- f wobbling by depth (0.02 = 2 %) at rate Hz: feed it to an oscillator
+vibrato(f, depth, rate) = f * (1 + depth * os.osc(rate));
+
+// @ steps(f0, semitones, n, t) -- frequency that climbs by `semitones` n times across the sound: an arpeggio / power-up staircase
+steps(f0, semitones, n, t) = f0 * pow(2, floor(t * n) * semitones / 12);
+
+// @ midi(note) -- frequency of a MIDI note (69 = A4 = 440 Hz)
+midi(note) = ba.midikey2hz(note);

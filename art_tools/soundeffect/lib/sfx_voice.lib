@@ -1,0 +1,225 @@
+declare description "voices: formant synthesis of vowels, consonants and syllables, to sing, speak or babble";
+import("stdfaust.lib");
+
+se = library("sfx_env.lib");
+xo = library("sfx_osc.lib");
+xf = library("sfx_filter.lib");
+xs = library("sfx_seq.lib");
+xr = library("sfx_rand.lib");
+
+// A syllable is a consonant id, a vowel id, a pitch and the 0 -> 1 ramp of the syllable.
+// syl(c, v) with a missing f and t is an instrument inst(freq, t): it plugs into sfx.sequence.arp4, sfx.harm.deg_chord, ...
+// Vowel ids (also named v_a ...):    0 a, 1 e (é), 2 eh (è), 3 i, 4 o, 5 ou, 6 u, 7 eu
+// Consonant ids (also named c_m ...): 0 none, 1 m, 2 n, 3 l, 4 r, 5 b, 6 d, 7 g, 8 p, 9 t, 10 k, 11 f, 12 s, 13 ch, 14 v, 15 z, 16 j, 17 h
+// Tables for sfx.voice.lyric are waveform{...} of those ids (waveforms only take numbers).
+
+eps = 0.0001;
+
+v_a = 0;  v_e = 1;  v_eh = 2;  v_i = 3;  v_o = 4;  v_ou = 5;  v_u = 6;  v_eu = 7;
+c_none = 0;  c_m = 1;  c_n = 2;  c_l = 3;  c_r = 4;  c_b = 5;  c_d = 6;  c_g = 7;  c_p = 8;  c_t = 9;  c_k = 10;
+c_f = 11;  c_s = 12;  c_ch = 13;  c_v = 14;  c_z = 15;  c_j = 16;  c_h = 17;
+
+// F1, F2, F3 in Hz of each vowel
+vowel_table = waveform{
+    800, 1300, 2800,
+    400, 2100, 2800,
+    550, 1900, 2700,
+    280, 2300, 3000,
+    450,  800, 2600,
+    320,  800, 2400,
+    280, 1800, 2300,
+    400, 1500, 2500};
+
+// per consonant: class (0 none, 1 nasal, 2 liquid, 3 plosive, 4 fricative, 5 breath), length (fraction of the syllable),
+// voice level, noise centre Hz, noise Q, noise level, locus F1, locus F2
+consonant_table = waveform{
+    0, 0.00, 0.00,    0, 1.0, 0.0,    0,    0,
+    1, 0.25, 0.60,    0, 1.0, 0.0,  250, 1100,
+    1, 0.22, 0.60,    0, 1.0, 0.0,  250, 1600,
+    2, 0.18, 0.70,    0, 1.0, 0.0,  350, 1300,
+    2, 0.18, 0.70,    0, 1.0, 0.0,  400, 1100,
+    3, 0.18, 0.35,  700, 1.5, 0.8,  250,  900,
+    3, 0.18, 0.35, 3500, 1.5, 0.7,  250, 1700,
+    3, 0.20, 0.35, 2000, 2.0, 0.7,  250, 1900,
+    3, 0.18, 0.00,  900, 1.2, 1.0,  250,  900,
+    3, 0.18, 0.00, 5000, 1.5, 1.0,  250, 1700,
+    3, 0.20, 0.00, 1800, 2.5, 1.0,  250, 1900,
+    4, 0.25, 0.00, 5500, 0.6, 0.9,    0,    0,
+    4, 0.28, 0.00, 7000, 2.5, 0.9,    0,    0,
+    4, 0.28, 0.00, 3200, 2.0, 0.9,    0,    0,
+    4, 0.22, 0.35, 5500, 0.6, 0.6,    0,    0,
+    4, 0.25, 0.35, 7000, 2.5, 0.6,    0,    0,
+    4, 0.25, 0.35, 3200, 2.0, 0.6,    0,    0,
+    5, 0.20, 0.00,    0, 1.0, 0.0,    0,    0};
+
+vt(v, i) = rdtable(vowel_table, int(v) * 3 + i);
+cp(c, k) = rdtable(consonant_table, int(c) * 8 + k);
+
+// three moving resonances turn a sound into a vowel
+formants(f1, f2, f3) = _ <: (xf.bpf(min(f1, 18000), 6), xf.bpf(min(f2, 18000), 9) * 0.7, xf.bpf(min(f3, 18000), 12) * 0.45) :> _;
+
+// @ source(f, breath) -- the voice before the mouth: a band-limited saw at f Hz plus breath (0..1) of noise (0.05 sung, 0.5 breathy, 1 whisper)
+source(f, breath) = (os.lf_sawpos(f) * 2 - 1) * (1 - 0.6 * breath) + breath * 0.5 * no.noise;
+
+// @ vowel_morph(v1, v2, f, t) -- a sustained note at f Hz whose vowel glides from v1 to v2 (wah, "aou", diphthongs)
+vowel_morph(v1, v2, f, t) = source(xo.vibrato(f, 0.005 * se.ramp(0.3, 0.6, t), 5.5), 0.05) * env : formants(form(0), form(1), form(2))
+with {
+    m = se.ramp(0.15, 0.85, t);
+    form(i) = vt(v1, i) * (1 - m) + vt(v2, i) * m;
+    env = 0.19 * se.adsr(0.08, 0.1, 0.85, 0.2, t);
+};
+
+// @ vowel(v, f, t) -- a sustained vowel v at f Hz with a soft attack and release
+vowel(v, f, t) = vowel_morph(v, v, f, t);
+
+// @ vox(c, v, f, size, breath, t) -- a syllable with full control: consonant c then vowel v at f Hz, size scales the formants (below 1 = long throat: big, deep man or giant; above 1 = child or small creature), breath 0..1
+vox(c, v, f, size, breath, t) = voxcore(c, v, f, size, breath, 0.006, t);
+
+// @ syl(c, v, f, t) -- a sung syllable: consonant id c, vowel id v, pitch f Hz; partially applied, syl(c, v) is an instrument inst(freq, t)
+syl(c, v, f, t) = vox(c, v, f, 1, 0.06, t);
+
+// @ say(c, v, f, t) -- a spoken syllable: like syl but no vibrato and a slightly breathy voice
+say(c, v, f, t) = voxcore(c, v, f, 1, 0.12, 0, t);
+
+// @ deep(c, v, f, t) -- a sung syllable in a big deep voice (long throat: formants 20 % lower); use f around 70..130 Hz
+deep(c, v, f, t) = vox(c, v, f, 0.8, 0.1, t);
+
+// @ deep_say(c, v, f, t) -- a spoken syllable in a big deep voice (narrator, giant); use f around 65..110 Hz
+deep_say(c, v, f, t) = voxcore(c, v, f, 0.8, 0.15, 0, t);
+
+// @ elder(c, v, f, t) -- a sung syllable in an old voice: breathy, a wide slow tremor and an unsteady pitch
+elder(c, v, f, t) = voxcore(c, v, f * (1 + 0.02 * wobble), 0.95, 0.3, 0.025, t)
+with {
+    wobble = no.noise : fi.lowpass(1, 12) : *(40) : max(0 - 1) : min(1);
+};
+
+// @ elder_say(c, v, f, t) -- a spoken syllable in an old voice (grandfather ~ 95..130 Hz, grandmother ~ 170..220 Hz): breath, tremor, wavering pitch
+elder_say(c, v, f, t) = voxcore(c, v, f * (1 + 0.02 * wobble), 0.95, 0.35, 0.02, t)
+with {
+    wobble = no.noise : fi.lowpass(1, 12) : *(40) : max(0 - 1) : min(1);
+};
+
+voxcore(c, v, f, size, breath, vib, t) =voiced * 0.19 + noisy
+with {
+    ci = int(c);
+    cls = cp(ci, 0);
+    cd = cp(ci, 1);
+    camp = cp(ci, 2);
+    inc = t < cd;
+    cu = xs.slice(0, max(cd, eps), t);
+    vu = xs.slice(cd, 1, t);
+    locus = (cls >= 1) * (cls <= 3);
+    m = select2(locus, 1, se.ramp(cd, cd + 0.4 * (1 - cd), t));
+    form1 = (cp(ci, 6) * (1 - m) + vt(v, 0) * m) * size;
+    form2 = (cp(ci, 7) * (1 - m) + vt(v, 1) * m) * size;
+    form3 = vt(v, 2) * size;
+    rel = pow(min((1 - vu) / 0.25, 1), 2);
+    amp = select2(inc, (camp + (1 - camp) * se.attack(0.15, vu)) * rel, camp);
+    fenv = min(cu / 0.2, 1) * min((1 - cu) / 0.25, 1) * inc;
+    asp = no.noise * 0.5 * ((cls == 5) * fenv + (cls == 3) * (camp == 0) * (1 - inc) * se.decay(14, vu));
+    g = xo.vibrato(f, vib * se.ramp(0.3, 0.7, t), 5.5);
+    voiced = (source(g, breath) * amp + asp) : formants(form1, form2, form3);
+    burst = (t >= 0.5 * cd) * exp(0 - 6 * max(t - 0.5 * cd, 0) / max(cd * 0.5, eps));
+    nenv = (cls == 4) * fenv + (cls == 3) * burst;
+    noisy = (no.noise : xf.bpf(max(cp(ci, 3), 200), max(cp(ci, 4), 0.3))) * cp(ci, 5) * nenv * 0.16;
+};
+
+// @ lyric(n, cons, vow, notes, t) -- a sung line: n syllables, one per step, read from three waveforms (consonant ids, vowel ids, MIDI notes; note 0 = rest)
+lyric(n, cons, vow, notes, t) = lyric_with(syl, n, cons, vow, notes, t);
+
+// @ lyric_with(singer, n, cons, vow, notes, t) -- lyric with the voice of your choice: singer = syl, deep or elder (any function (c, v, f, t))
+lyric_with(singer, n, cons, vow, notes, t) = singer(rdtable(cons, i), rdtable(vow, i), ba.midikey2hz(note), xs.step_t(n, t)) * (note > 0)
+with {
+    i = xs.step_index(n, t);
+    note = rdtable(notes, i);
+};
+
+// @ talk(n, cons, vow, acc, f0, inton, t) -- a spoken line: n syllables from waveforms of ids; f0 Hz base pitch, acc = semitones of accent per syllable, inton = semitones the pitch rises (+) or falls (-) over the line
+talk(n, cons, vow, acc, f0, inton, t) = talk_with(say, n, cons, vow, acc, f0, inton, t);
+
+// @ talk_with(speaker, n, cons, vow, acc, f0, inton, t) -- talk with the voice of your choice: speaker = say, deep_say or elder_say (any function (c, v, f, t))
+talk_with(speaker, n, cons, vow, acc, f0, inton, t) = speaker(rdtable(cons, i), rdtable(vow, i), f, xs.step_t(n, t))
+with {
+    i = xs.step_index(n, t);
+    f = f0 * pow(2, (inton * i / max(n - 1, 1) + rdtable(acc, i)) / 12);
+};
+
+// @ choir_v(v, f, t) -- three detuned voices singing vowel v at f Hz: a vocal pad with slow attack and release
+choir_v(v, f, t) = choir_size(v, 1, f, t);
+
+// @ choir_size(v, k, f, t) -- choir_v with the formants scaled by k: 0.8 = a deep bass choir (monks, with f around 60..150 Hz), 1.15 = children
+choir_size(v, k, f, t) = (one(0.997, 0.95 * k, 5.2) + one(1, k, 5.5) + one(1.004, 1.07 * k, 4.9)) * 0.09
+with {
+    env = se.adsr(0.3, 0.1, 0.85, 0.4, t);
+    one(d, size, rate) = source(xo.vibrato(f * d, 0.004, rate), 0.05) * env : formants(vt(v, 0) * size, vt(v, 1) * size, vt(v, 2) * size);
+};
+
+// @ ah(f, t) -- choir singing "ah", an instrument inst(freq, t) for pads and chords
+ah(f, t) = choir_v(0, f, t);
+
+// @ oh(f, t) -- choir singing "oh", an instrument inst(freq, t)
+oh(f, t) = choir_v(4, f, t);
+
+// @ monks(f, t) -- deep bass choir singing "o", an instrument inst(freq, t) for low chants (use notes 36..55)
+monks(f, t) = choir_size(4, 0.8, f, t);
+
+// @ ooh(f, t) -- choir singing "ou" (as in "doux"), an instrument inst(freq, t)
+ooh(f, t) = choir_v(5, f, t);
+
+// @ babble(n, seed, f0, range, t) -- nonsense speech (Animal Crossing style): n random short syllables around f0 Hz, pitch within +-range semitones; the same seed gives the same line
+babble(n, seed, f0, range, t) = say(c, v, f0 * pow(2, pitch / 12), xs.step_t(n, t)) * level * (1 - gap)
+with {
+    i = xs.step_index(n, t);
+    k = i * 7;
+    c = int(xr.pick(seed, k + 1, 0, 11));
+    v = int(xr.pick(seed, k + 2, 0, 8));
+    pitch = xr.pick(seed, k + 3, 0 - range, range);
+    level = xr.pick(seed, k + 4, 0.6, 1);
+    gap = xr.chance(seed, k + 5, 0.12);
+};
+
+// @ grunt(f, t) -- creature growl: an open "a" falling from 1.3 f to 0.8 f Hz, big mouth, breathy
+grunt(f, t) = vox(0, 0, se.sweep(f * 1.3, f * 0.8, t), 0.85, 0.3, t) : fi.dcblocker;
+
+// @ squeak(f, t) -- small creature squeak: a narrow "i" rising from f to 1.6 f Hz
+squeak(f, t) = vox(3, 3, se.sweep(f, f * 1.6, t), 1.15, 0.05, t);
+
+// @ word_hey(f0, t) -- the word "hey" at f0 Hz (0.4 s)
+word_hey(f0, t) = talk(1, wc, wv, wa, f0, 0, t)
+with {
+    wc = waveform{17};
+    wv = waveform{1};
+    wa = waveform{2};
+};
+
+// @ word_oh(f0, t) -- the word "oh" falling in pitch at f0 Hz (0.5 s)
+word_oh(f0, t) = talk(2, wc, wv, wa, f0, 0 - 4, t)
+with {
+    wc = waveform{0, 0};
+    wv = waveform{4, 4};
+    wa = waveform{2, 0};
+};
+
+// @ word_haha(f0, t) -- "ha ha ha" laughing down at f0 Hz (0.9 s)
+word_haha(f0, t) = talk(3, wc, wv, wa, f0, 0 - 5, t)
+with {
+    wc = waveform{17, 17, 17};
+    wv = waveform{0, 0, 0};
+    wa = waveform{0, 0, 0};
+};
+
+// @ word_hmm(f0, t) -- a thinking "mmh" at f0 Hz (0.6 s)
+word_hmm(f0, t) = talk(2, wc, wv, wa, f0, 3, t)
+with {
+    wc = waveform{1, 1};
+    wv = waveform{7, 7};
+    wa = waveform{0, 0};
+};
+
+// @ word_bonjour(f0, t) -- "bo jou r" approximating the word bonjour, with a lifting last syllable, at f0 Hz (0.9 s)
+word_bonjour(f0, t) = talk(3, wc, wv, wa, f0, 0, t)
+with {
+    wc = waveform{5, 16, 4};
+    wv = waveform{4, 5, 7};
+    wa = waveform{0, 2, 4};
+};

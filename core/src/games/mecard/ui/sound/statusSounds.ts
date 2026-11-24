@@ -46,7 +46,7 @@ import type { Cue } from "./Cue"
 
 /** The sound of a status, among those of the folder of the statuses. */
 function statusCue(id: string): Cue {
-    return { path: `mecard/sounds/statuses/${id}.wav` as SoundPath, volume: 1 }
+    return { path: `mecard/sounds/statuses/${id}.ogg` as SoundPath, volume: 1 }
 }
 
 /** What a status has no sound of its own to be heard by: one for each polarity. */

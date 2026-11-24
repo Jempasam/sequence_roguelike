@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
-    BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN, MONSTER_BOOSTER_SIZE, Rng, TAMED_BOSS_WEAKENING, allCards, monsterBooster,
+    BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN, boosterOfMonster, Rng, TAMED_BOSS_WEAKENING, allCards,
+    monsterBooster,
     offeredMonsters, openBooster, possessBy, readsWhole, tamedBoss,
 } from "@game/core/mecard"
 import { startedRun } from "../../../../../../fixtures/startedRun"
@@ -17,10 +18,20 @@ describe("offeredMonsters", () => {
 })
 
 describe("monsterBooster", () => {
-    test("opened → cards of the monster's deck only", () => {
-        const cards = openBooster(new Rng(1), monsterBooster(GOBLIN))
-        expect(cards).toHaveLength(MONSTER_BOOSTER_SIZE)
+    test("opened → a card of each pool of the monster converted, all of its deck, read whole", () => {
+        const booster = monsterBooster(GOBLIN)
+        const cards = openBooster(new Rng(1), booster)
+        expect(cards).toHaveLength(booster.pools.reduce((sum, { count }) => sum + count, 0))
         for(const card of cards) expect(GOBLIN.cards).toContain(card)
+    })
+
+    test("the booster of a monster → the same as the conversion makes, in the dark colors", () => {
+        for(const monster of LOOT_MONSTERS){
+            const made = boosterOfMonster(monster)
+            const dark = monsterBooster(monster)
+            expect(dark.name).toBe(monster.name)
+            expect(dark.pools).toEqual(made.pools)
+        }
     })
 })
 

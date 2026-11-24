@@ -16,6 +16,7 @@ import { DIM_TEXT, WARNING_TEXT } from "./look/theme"
 import { ALL_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { Forwarded } from "./forward/Forwarded"
 import { RunSoundLink } from "./sound/RunSoundLink"
+import { RunParticleLink } from "./particles/RunParticleLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import type { RunLocks } from "./run/RunScreen"
 
@@ -66,12 +67,14 @@ export class MecardViewer {
         this.#uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         lendPictures(theme, sprites.picture)
+        this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
             if(!(error instanceof AssetError)) throw error
             this.#warn(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: this.#uiSound, forwarded,
+            particles: this.#particles,
             locks: ALL_RUN_LOCKS,
             restart: () => {},
             ready: () => this.#guest?.ready(),
@@ -104,6 +107,7 @@ export class MecardViewer {
     /** Stop listening for the run. */
     public dispose(): void {
         this.#sound?.dispose()
+        this.#particles.dispose()
         this.#uiSound?.dispose()
         this.#guest?.dispose()
         this.#receiver.dispose()
@@ -112,6 +116,7 @@ export class MecardViewer {
 
 
     readonly #sound: RunSoundLink|null
+    readonly #particles: RunParticleLink
     readonly #uiSound: UiSoundLink|null
     readonly #receiver: RunReceiver
     readonly #screen: RunScreen

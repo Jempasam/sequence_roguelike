@@ -25,6 +25,7 @@ import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
 import { allFightTypes } from "../sim/catalog/fightTypes"
 import type { FightType } from "../sim/fight/FightType"
+import { GHOST_FIGHT, GHOST_REACH, ghostsFor } from "../sim/fight/GhostFightType"
 import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
@@ -114,6 +115,9 @@ export interface MecardContext extends CommandContext {
     /** Forget all that the player found. @returns How many entries were forgotten. */
     clearCatalog(): number
 
+    /** Open the bench of conversions: what a card, a monster, a pet, a kit or a booster becomes as another kind. */
+    showConverter(): void
+
     /** Open the bench of the parallaxes, on the one a visual names, for a try. */
     showParallax(parallax: Visual): void
 
@@ -188,6 +192,7 @@ export class LiveContext implements MecardContext {
     public showArm(): void { this.host().showArm() }
     public showLibrary(playerOnly: boolean): void { this.host().showLibrary(playerOnly) }
     public clearCatalog(): number { return this.host().clearCatalog() }
+    public showConverter(): void { this.host().showConverter() }
     public showParallax(parallax: Visual): void { this.host().showParallax(parallax) }
     public showSprites(sprite: Visual|null): void { this.host().showSprites(sprite) }
     public playTransition(transition: Visual, duration: number, reverse: boolean): void {
@@ -447,6 +452,12 @@ function printNames(ctx: MecardContext, title: string, names: readonly string[])
     }
 }
 
+/** A unit on one line: its team, hearts, place and statuses. */
+function unitLine(unit: Unit): string {
+    const statuses = [...unit.statuses.values()].join(", ")
+    return `${wordOf(unit.name)} (${unit.team.name}) ${heartsText(unit)} en ${unit.position}${statuses ? ` · ${statuses}` : ""}`
+}
+
 /** Each heart, empty ones told: `rouge, rouge vide, bouclier`. */
 function heartList(hearts: readonly Heart[]): string {
     return hearts.join(", ") || "(aucun)"
@@ -553,11 +564,7 @@ function battleCommands(): Record<string, Command<MecardContext, unknown>> {
         }),
         unit: group("unit", "les unités du combat.", {
             list: command("unit list : liste les unités, leurs cœurs et leur place.", [], ctx => {
-                for(const unit of ctx.battle.living){
-                    const statuses = [...unit.statuses.values()].join(", ")
-                    const team = unit.team.name
-                    ctx.print(`${wordOf(unit.name)} (${team}) ${heartsText(unit)} en ${unit.position}${statuses ? ` · ${statuses}` : ""}`)
-                }
+                for(const unit of ctx.battle.living) ctx.print(unitLine(unit))
             }),
             info: command("unit info <unité> : décrit une unité.", [UNIT], (ctx, unit) => {
                 const who = unit.controller === "player" ? "joueur" : "bot"
@@ -1344,6 +1351,12 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
         bras: command("bras : ouvre le banc d'essai du bras des haltes, qui pointe vers la souris.", [], ctx => {
             ctx.showArm()
         }),
+        convertir: command(
+            "convertir : ouvre le banc des conversions : ce qu'un monstre, un familier, un aventurier, "
+                + "un booster ou une carte devient en un autre type.",
+            [],
+            ctx => ctx.showConverter(),
+        ),
         catalogue: group("catalogue", "le catalogue des cartes, cœurs, monstres et autres.", {
             show: command("catalogue show : ouvre le catalogue de ce que le joueur a découvert.", [], ctx => {
                 ctx.showLibrary(true)
@@ -1366,6 +1379,34 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
                     + " dans chaque mode de dessin, et copie le JSON à poser à côté de l'image.",
                 [optional(named("l'unité", () => shippedPictures("units"), key => key.replace("units/", "")), null)],
                 (ctx, key) => ctx.showSprites(key === null ? null : visual(key)),
+            ),
+            ghost: command(
+                "debug ghost : résout un combat de fantômes de l'historique, sans le lancer, et liste ses unités.",
+                [],
+                (ctx: MecardContext) => {
+                    // CHECK //
+                    if(!ctx.playing){
+                        ctx.print(NOT_PLAYING)
+                        return
+                    }
+                    const { run } = ctx
+                    const { depth } = run.travel
+                    if(!GHOST_FIGHT.available?.({ ghosts: run.ghosts, depth })){
+                        const reachable = ghostsFor(run.ghosts, depth).length
+                        ctx.print(
+                            `Pas de combat de fantômes : ${run.ghosts.length} partie(s) dans l'historique, `
+                                + `${reachable} à portée (au plus ${GHOST_REACH} lieux au-delà de la profondeur ${depth}).`,
+                        )
+                        return
+                    }
+
+                    // RESOLVE //
+                    const fight = GHOST_FIGHT.create(run, { layer: 0, across: 0.5 })
+
+                    // PRINT //
+                    ctx.print("Combat de fantômes résolu :")
+                    for(const unit of fight.battle.living) ctx.print(`  ${unitLine(unit)}`)
+                },
             ),
             transition: command(
                 "debug transition <nom> [ms] [endroit|envers] : joue une transition des lieux par-dessus l'écran, en"

@@ -6,7 +6,8 @@ import type { Spot } from "../run/Journey"
 import type { Run } from "../run/Run"
 
 import type { Fight, FightStage } from "./Fight"
-import { AGGRESSION, EMPTY_FIGHT } from "./fights"
+import type { FightCategory } from "./FightCategory"
+import { AGGRESSION, AMBUSH, EMPTY_FIGHT } from "./fights"
 import { FIGHT_TEXT, fightType } from "./FightType"
 import type { FightContext, FightType, Ghost } from "./FightType"
 
@@ -27,11 +28,11 @@ export function ghostsFor(ghosts: readonly Ghost[], depth: number): Ghost[] {
  */
 class GhostFightType implements FightType {
 
-    public readonly id = "ghost"
     public readonly name = "Fantômes"
     public readonly description: Text = "L'équipe d'une partie précédente, telle qu'elle est tombée, rôde ici."
     public readonly icon = visual("units/ghost")
-    public readonly category = AGGRESSION
+
+    constructor(public readonly id: string, public readonly category: FightCategory) {}
 
     public toString(): string { return this.name }
 
@@ -60,4 +61,12 @@ class GhostFightType implements FightType {
 }
 
 /** The fight against the party of a game of the past. */
-export const GHOST_FIGHT: FightType = new GhostFightType()
+export const GHOST_FIGHT: FightType = new GhostFightType("ghost", AGGRESSION)
+
+/** The same fight, fought as an {@link AMBUSH}. */
+export const GHOST_AMBUSH: FightType = new GhostFightType("ghost-embuscade", AMBUSH)
+
+/** Is a fight one against a game of the past, as an aggression or as an ambush? */
+export function isGhostFight(type: FightType): boolean {
+    return type === GHOST_FIGHT || type === GHOST_AMBUSH
+}

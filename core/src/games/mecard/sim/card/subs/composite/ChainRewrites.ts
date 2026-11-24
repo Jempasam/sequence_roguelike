@@ -1,29 +1,31 @@
-import { composable } from "../../Card"
 import type { Card } from "../../Card"
 import { Rarity } from "../../Rarity"
 import { CARTE, FUSION, MERGE, BATTLE_TURN } from "../../../base/keywords"
 
 import { FusionCard } from "./FusionCard"
-import { mergeable, MergedCard } from "./MergedCard"
+import { mergeableInChain, MergedCard, suppliedAfter } from "./MergedCard"
 import { RewriteCard } from "./RewriteCards"
 
-/** The cards on the right of a spot from its start, as long as they may all be merged together. */
+/**
+ * The cards on the right of a spot from its start, as long as they may all be merged together, and leave the
+ * card the merge takes its input from, which stays out: a merge of cards taking actions is followed by one.
+ */
 function mergeableRun(rest: readonly Card[]): readonly Card[] {
     let end = 0
-    while(end < rest.length && mergeable(rest.slice(0, end + 1))) end++
+    while(end < rest.length && mergeableInChain(rest.slice(0, end + 1))) end++
+    while(end > 0 && !suppliedAfter(rest.slice(0, end), rest[end] as Card|undefined)) end--
     return rest.slice(0, end)
 }
 
 /**
- * One card standing for cards in order: a collage of them, the card itself when alone. A card with variants
- * to choose from cannot be held by a collage, and is left out.
+ * One card standing for cards in order: a collage of them, the card itself when alone. The cards come from a
+ * chain, each a variant already chosen: a card with variants to choose from is held as it is.
  *
- * @returns None when no card is left.
+ * @returns None when there is no card.
  */
 export function collageOf(cards: readonly Card[]): Card|null {
-    const held = cards.filter(composable)
-    if(held.length === 0) return null
-    return held.length === 1 ? held[0] : new FusionCard(held)
+    if(cards.length === 0) return null
+    return cards.length === 1 ? cards[0] : FusionCard.ofChain(cards)
 }
 
 /**
@@ -36,8 +38,8 @@ export const TIME_MANIPULATION = new RewriteCard("Manipulation temporelle", [
 ], Rarity.EPIC, (_ctx, spot) => {
     const run = mergeableRun(spot.rest)
     if(run.length < 2) return { cards: [], consumed: 0, acting: false }
-    return { cards: [new MergedCard(run)], consumed: run.length, acting: false }
-})
+    return { cards: [MergedCard.ofChain(run)], consumed: run.length, acting: false }
+}, undefined, "prepless")
 
 /**
  * The whole chain on its right taken out, and given back in the hand as one fleeting collage, in order: it

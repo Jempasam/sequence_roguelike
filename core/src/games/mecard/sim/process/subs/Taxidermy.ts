@@ -1,9 +1,10 @@
-import { visual } from "../../base/Visual"
 import type { PlugContext } from "../../battle/Action"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
+import { visual } from "../../base/Visual"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
+import { summonAt } from "../../card/subs/tools/playing"
 import { AbstractProcess } from "../AbstractProcess"
 import { BATTLE_ROUND, HEART, UNIT } from "../../base/keywords"
 
@@ -26,12 +27,11 @@ export function stuffed(battle: Battle, owner: Unit, dead: Unit): Unit|null {
         ...dead.decks.all.flatMap(deck => [...deck.pile, ...deck.discard]), ...dead.hand, ...dead.chain.cards,
     ]
     const kind = dead.hearts.all[0]?.kind ?? RED_HEART
-    const body = battle.place(owner, {
-        name: `${dead.name} empaillé`, sprite: dead.sprite, at: dead.position, direction: dead.direction,
-        hearts: Heart.many(kind, Math.max(1, Math.floor(dead.hearts.all.length / 2))), size: dead.stats.size.value, cards,
-    })
-    if(body) STUFFED_BODIES.add(body)
-    return body
+    const [body] = summonAt(battle, owner, [dead.position], {
+        name: `${dead.name} empaillé`, sprite: dead.sprite, direction: dead.direction, size: dead.stats.size.value, cards,
+        hearts: () => Heart.many(kind, Math.max(1, Math.floor(dead.hearts.all.length / 2))),
+    }, stuffedBody => STUFFED_BODIES.add(stuffedBody))
+    return body ?? null
 }
 
 /** What a process of the next kill does with the enemy killed, once: the process is armed until it kills. */

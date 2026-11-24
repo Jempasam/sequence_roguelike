@@ -1,4 +1,4 @@
-import type { AudioPort, Sound } from "../../platform"
+import type { AudioPort, Cancel, Sound, TimerPort } from "../../platform"
 import type { Assets, AssetPath } from "../assets"
 
 import type { SoundFilter } from "./SoundFilter"
@@ -14,6 +14,9 @@ export interface SoundOptions {
 
     /** The filters this sound goes through, after those of its channel. */
     readonly filters?: readonly SoundFilter[]
+
+    /** How long to wait before it plays, in milliseconds: none, or no timer to wait with, plays it now. */
+    readonly delay?: number
 }
 
 /**
@@ -39,6 +42,9 @@ export class SoundPlayer {
 
         /** Where what cannot be loaded or decoded is told. */
         public readonly report: (text: string) => void,
+
+        /** What waits for the sounds played late, none when there is none: they then play at once. */
+        public readonly timer: TimerPort|null = null,
     ){}
 
 
@@ -53,21 +59,40 @@ export class SoundPlayer {
      */
     public play(channel: string, path: SoundPath, options: SoundOptions = {}): void {
         if(this.#isDisposed) return
-        void this.#sound(path).then(sound => {
-            if(sound && !this.#isDisposed) this.#start(sound, channel, options)
-        })
+        const { delay = 0 } = options
+        if(delay > 0 && this.timer){
+            const wait = this.timer.after(delay, () => {
+                this.#waits.delete(wait)
+                this.#play(channel, path, options)
+            })
+            this.#waits.add(wait)
+            return
+        }
+        this.#play(channel, path, options)
     }
 
-    /** Let the sounds go, and play none more: a sound still loading is dropped when it arrives. */
+    /**
+     * Let the sounds go, and play none more: a sound still loading is dropped when it arrives, and one still
+     * waiting is never played.
+     */
     public dispose(): void {
         this.#isDisposed = true
         this.#sounds.clear()
+        for(const wait of this.#waits) wait.cancel()
+        this.#waits.clear()
     }
 
 
     /** The sounds asked for, each loaded once, none when it could not be. */
     readonly #sounds = new Map<SoundPath, Promise<Sound|null>>()
+    readonly #waits = new Set<Cancel>()
     #isDisposed = false
+
+    #play(channel: string, path: SoundPath, options: SoundOptions): void {
+        void this.#sound(path).then(sound => {
+            if(sound && !this.#isDisposed) this.#start(sound, channel, options)
+        })
+    }
 
     #sound(path: SoundPath): Promise<Sound|null> {
         const known = this.#sounds.get(path)

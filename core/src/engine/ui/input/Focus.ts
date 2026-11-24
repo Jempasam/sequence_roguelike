@@ -1,7 +1,6 @@
 import { DIRECTION_AXES, internals } from "../Component"
 import type { Component } from "../Component"
 import { Container } from "../Container"
-import { Rect } from "../Rect"
 import type { UiAction } from "./UiAction"
 
 /**
@@ -42,7 +41,7 @@ export class Focus {
         if(old) internals.focusChanged(old)
         if(component){
             internals.focusChanged(component)
-            Focus.#reveal(component)
+            component.scrollIntoView()
         }
     }
 
@@ -121,20 +120,6 @@ export class Focus {
         if(!inScope) this.set(null)
     }
 
-
-    /** The zone to bring into view, in the coordinates of the container being revealed in. */
-    static readonly #revealed = new Rect()
-
-    /** Scroll every viewport around a component so it shows, from the innermost one out. */
-    static #reveal(component: Component): void {
-        const rect = Focus.#revealed.copyFrom(component.bounds)
-        let child = component
-        for(let parent = child.parent; parent; child = parent, parent = parent.parent){
-            internals.reveal(parent, rect)
-            const { x, y } = parent.bounds
-            rect.translate(x - internals.scrollXOf(parent), y - internals.scrollYOf(parent))
-        }
-    }
 
     /** The first focusable component shown in a subtree, in the order of the tree, none when none is. */
     static #firstIn(component: Component): Component|null {

@@ -256,6 +256,12 @@ export class BattleSignals {
     /** A unit is about to act, out of its steps: an item, a rule. */
     public readonly notifyUnit: Observable<UnitSignal>
 
+    /** Every observable of the signals, so none is forgotten by whoever follows them all. */
+    public all(): Observable<unknown>[] {
+        const values: unknown[] = Object.values(this)
+        return values.filter((value): value is Observable<unknown> => value instanceof Observable)
+    }
+
     /**
      * @param before - What runs before each signal is told: the battle tells the move going on first, so
      *   what happens along it comes after it.

@@ -4,9 +4,6 @@ declare duration "0.8";
 
 import("sfx.lib");
 
-u1(a, t) = min(t / a, 1);
-u2(a, t) = max((t - a) / (1 - a), 0);
-g1(a, t) = (t < a);
-g2(a, t) = (t >= a);
+timing = library("../lib/timing.lib.dsp");
 
-process(t) = (sfx.perc.thud(u1(.25, t)) * g1(.25, t) * .8 + sfx.perc.clang(420, u2(.25, t)) * g2(.25, t) * .6 + sfx.perc.clang(330, u2(.6, t)) * g2(.6, t) * .0) : sfx.fx.dcblock : *(1.043);
+process(t) = (sfx.perc.thud(timing.u1(.25, t)) * timing.g1(.25, t) * .8 + sfx.perc.clang(420, timing.u2(.25, t)) * timing.g2(.25, t) * .6 + sfx.perc.clang(330, timing.u2(.6, t)) * timing.g2(.6, t) * .0) : sfx.fx.dcblock : *(1.043);

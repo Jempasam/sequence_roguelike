@@ -1,5 +1,6 @@
 import { CATALOGS } from "./catalogs"
 import type { Catalog } from "./catalogs"
+import { convertCommand } from "./convert"
 import { sim, UsageError } from "./sim"
 
 const USAGE = `Usage :
@@ -7,6 +8,7 @@ const USAGE = `Usage :
   npm run cli -- list <catalogue> [--desc]      les noms, ou "Nom: description"
   npm run cli -- list all [--desc]              tous les catalogues, groupés
   npm run cli -- sim [options]                  combats aléatoires en masse (sim --help)
+  npm run cli -- convert <type>:<nom> <cible>   convertit un monstre, bête, module, collage, mélange, élément... (convert --help)
 Catalogues : ${CATALOGS.map(catalog => catalog.name).join(", ")}`
 
 /** What a catalog prints: a name per line, or `Name: description`. */
@@ -59,6 +61,16 @@ async function main(args: readonly string[]): Promise<void> {
         try {
             const output = await sim(args.slice(1))
             if(output !== "") console.log(output)
+        }
+        catch(error){
+            if(error instanceof UsageError) fail(error.message)
+            throw error
+        }
+        return
+    }
+    if(args[0] === "convert"){
+        try {
+            console.log(convertCommand(args.slice(1)))
         }
         catch(error){
             if(error instanceof UsageError) fail(error.message)

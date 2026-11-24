@@ -78,7 +78,7 @@ function pinks(count: number): HeartGroup {
 }
 
 /** A deck to start with: the basics, the attacks, then a dodge. */
-function deckAround(...attacks: Card[]): Card[] {
+export function deckAround(...attacks: readonly Card[]): Card[] {
     return [...BASICS, ...attacks, DODGE_CARD]
 }
 
@@ -108,6 +108,9 @@ export interface Kit {
     readonly sprite: Visual
 
     readonly cards: readonly Card[]
+
+    /** The cards the hero plays as often as it wishes, with none in its hand: the step and the turns when it has none. */
+    readonly unlimited?: readonly Card[]
 
     /** The items the hero starts with. */
     readonly items: readonly Item[]

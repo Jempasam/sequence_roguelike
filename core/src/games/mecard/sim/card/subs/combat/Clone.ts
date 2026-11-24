@@ -4,7 +4,7 @@ import { Heart } from "../../../heart/Heart"
 import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME } from "../tools/playing"
+import { hold, SHORT_TIME, summonShown } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -18,6 +18,9 @@ export const CLONE = new ActionCard(
             battle.cloneUnit(unit, Heart.many(RED_HEART, CLONE_HEARTS))
             hold(battle, SHORT_TIME, [Previews.label(unit.position, "clone", NOTE_COLOR)])
         },
-        preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, "clone", NOTE_COLOR)),
+        preview: ({ battle, unit, pose }) => {
+            const spot = battle.cloneSpot(unit, pose)
+            return Previews.still(pose, ...spot ? [summonShown(spot)] : [Previews.label(pose.position, "pas de place", NOTE_COLOR)])
+        },
     },
 )

@@ -53,7 +53,7 @@ Monorepo en npm workspaces :
 | `command_line/` | Outil en ligne de commande, dépend de `core` : liste les catalogues Mecard (cartes, kits, monstres…). Voir [command_line/CLI.md](command_line/CLI.md). |
 | `assets/` | Images et sons livrés avec le jeu, faits à la main. |
 | `generated_assets/` | Ce que `npm run art` génère. Non commité ; le chargement le voit comme faisant partie d'`assets/` (un chemin n'est que dans l'un des deux). |
-| `raw_assets/` | Les sources des images faites avec le projet `picture` (`.pic.json`) et des bruitages faits avec le projet `soundeffect` (`.faust.dsp`, rendus en `.wav`), rendues dans `generated_assets/` au même chemin. |
+| `raw_assets/` | Les sources des images faites avec le projet `picture` (`.pic.json`) et des bruitages faits avec le projet `soundeffect` (`.faust.dsp`, rendus en `.ogg`), rendues dans `generated_assets/` au même chemin. Un son peut importer des `.lib.dsp` (jamais rendus) ou d'autres `.faust.dsp` de son dossier avec `library("chemin")`, et `npm run art:changed` refait ce qui dépend d'un fichier modifié (`scripts/assetDependencies.ts`). |
 
 Les règles importantes, que l'ESLint fait respecter :
 

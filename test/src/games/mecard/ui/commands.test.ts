@@ -33,6 +33,9 @@ interface Game {
     /** The chats opened or left, in order: the role, the code, the name and the hue of the author. */
     readonly chats: (readonly [string, string|null, string, number])[]
 
+    /** The benches opened by name, in order. */
+    readonly benches: string[]
+
     /** The text the clipboard holds. */
     readonly board: { text: string }
 
@@ -51,6 +54,7 @@ function game(): Game {
     const connections: (readonly [string, boolean])[] = []
     const chats: (readonly [string, string|null, string, number])[] = []
     const board = { text: "" }
+    const benches: string[] = []
     const state = { playing: true }
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
         playing: state.playing,
@@ -74,6 +78,7 @@ function game(): Game {
         showPnj: () => {},
         showArm: () => {},
         showLibrary: () => {},
+        showConverter: () => benches.push("converter"),
         clearCatalog: () => 0,
         showParallax: () => {},
         showSprites: () => {},
@@ -86,7 +91,7 @@ function game(): Game {
     registerCommands(made)
     return {
         console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, chats, board,
-        state,
+        state, benches,
     }
 }
 
@@ -140,6 +145,15 @@ describe("Mecard commands", () => {
         state.playing = false
         console.submit("catalogue")
         console.submit("card list")
+        expect(errors(console)).toEqual([])
+    })
+
+    test("convertir → the bench of conversions opened, in a run or at the main menu", () => {
+        const { console, state, benches } = game()
+        console.submit("convertir")
+        state.playing = false
+        console.submit("convertir")
+        expect(benches).toEqual(["converter", "converter"])
         expect(errors(console)).toEqual([])
     })
 

@@ -74,7 +74,7 @@ export function unitView(
     if(description !== null) head.add(new Paragraph(theme, description), { align: "stretch" })
     return cardsOption(theme, withCards ? shown.cards : [], null, {
         head,
-        under: stuffRow(theme, sprites, unit, shown.count || !withCards),
+        under: stuffRow(theme, sprites, unit, shown.count || !withCards, !withCards),
         perRow,
         deck,
         overlapped: true,

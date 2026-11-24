@@ -57,6 +57,7 @@ import { HistoryScreen } from "./history/HistoryScreen"
 
 import { LiveContext, registerCommands } from "./commands"
 import type { MecardContext, MecardHost } from "./commands"
+import { ConverterScreen } from "./catalog/ConverterScreen"
 import { LibraryScreen } from "./library/LibraryScreen"
 import { lendPictures } from "./look/pictureShelf"
 import { UnitSprites } from "./look/UnitSprites"
@@ -67,6 +68,7 @@ import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { locksForUnits } from "./MecardViewer"
 import { Forwarded } from "./forward/Forwarded"
 import { RunSoundLink } from "./sound/RunSoundLink"
+import { RunParticleLink } from "./particles/RunParticleLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { QuitPopup } from "./hud/QuitPopup"
 import { ArmScreen } from "./travel/ArmScreen"
@@ -229,6 +231,7 @@ export class MecardGame {
         const uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         lendPictures(theme, sprites.picture)
+        this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
             report: text => this.#console.print(text),
@@ -251,8 +254,12 @@ export class MecardGame {
             leave: () => this.#leaveBench(),
         }, sprites)
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites, this.#catalog)
+        this.#converter = new ConverterScreen(
+            theme, ui, { leave: () => this.#leaveBench() }, sprites, this.#catalog,
+        )
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: uiSound, forwarded,
+            particles: this.#particles,
             // The party fell: its save is gone, back to the menu to start again.
             restart: () => {
                 if(this.#shared) this.#shared.onOver?.()
@@ -297,6 +304,7 @@ export class MecardGame {
             showSprites: sprite => this.#spritesOn(sprite),
             showLibrary: playerOnly => this.#libraryOn(playerOnly),
             clearCatalog: () => this.#catalog.clear(),
+            showConverter: () => this.#converterOn(),
             hostGame: (mode, policy) => this.hostGame(mode, policy),
             connect: (code, guest) => this.#connect(code, guest),
             openChat: (role, code, author) => this.openChat(role, code, author),
@@ -408,6 +416,7 @@ export class MecardGame {
         else if(this.#arm.visible) this.#arm.frame()
         else if(this.#parallax.visible) this.#parallax.frame()
         else if(this.#library.visible) this.#library.frame(input)
+        else if(this.#converter.visible) this.#converter.frame(input)
         // The tab of a race holds its own way out: the button only lies over the other shared games.
         this.#exit.content.visible = this.#shared !== null && this.#screen.visible && !this.#raceTab.active
         this.#raceTab.visible = this.#shared !== null && this.#screen.visible
@@ -530,6 +539,7 @@ export class MecardGame {
         if(this.#historian) this.#historian.engine = this.run
         void this.#lendGhosts()
         if(this.#sound) this.#sound.engine = this.run
+        this.#particles.engine = this.run
         this.#screen.engine = this.run
         this.#playing = true
         this.#travelOn()
@@ -550,8 +560,10 @@ export class MecardGame {
     readonly #parallax: ParallaxScreen
     readonly #spriteBench: SpriteBenchScreen
     readonly #library: LibraryScreen
+    readonly #converter: ConverterScreen
     readonly #broadcaster: RunBroadcaster|null
     readonly #sound: RunSoundLink|null
+    readonly #particles: RunParticleLink
     readonly #console: Console<MecardContext>
 
     /** Tell the player of a fault in the game console, and the JavaScript console too. */
@@ -677,6 +689,7 @@ export class MecardGame {
         this.#historian?.dispose()
         this.#broadcaster?.dispose()
         this.#sound?.dispose()
+        this.#particles.dispose()
         this.#screen.dispose()
         this.#menu.dispose()
         this.#parallax.dispose()
@@ -785,6 +798,7 @@ export class MecardGame {
         this.#parallax.visible = false
         this.#spriteBench.visible = false
         this.#library.visible = false
+        this.#converter.visible = false
         this.#guide.visible = false
         this.#history.visible = false
         this.#chat.visible = false
@@ -1053,6 +1067,7 @@ export class MecardGame {
         this.#parallax.visible = false
         this.#spriteBench.visible = false
         this.#library.visible = false
+        this.#converter.visible = false
         if(!this.#screen.visible) this.#screen.visible = true
     }
 
@@ -1074,6 +1089,7 @@ export class MecardGame {
         this.#parallax.visible = false
         this.#spriteBench.visible = false
         this.#library.visible = false
+        this.#converter.visible = false
     }
 
     /** Leave a bench for where it was opened from: the menu, or the run. */
@@ -1114,6 +1130,12 @@ export class MecardGame {
         this.#openBench()
         this.#library.playerOnly = playerOnly
         this.#library.visible = true
+    }
+
+    /** Show the bench of conversions alone, the run left where it stands. */
+    #converterOn(): void {
+        this.#openBench()
+        this.#converter.visible = true
     }
 
 

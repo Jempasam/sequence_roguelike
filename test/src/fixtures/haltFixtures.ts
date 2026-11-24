@@ -1,7 +1,9 @@
 import { plainText } from "@game/core"
 import type { Text } from "@game/core"
 import { deckNameOf, forge, GOBLIN, Run, SLASH, STEP, THRUST } from "@game/core/mecard"
-import type { Card, Choosing, Count, Fight, HaltContext, HaltMoment, Hero, Shown, Way } from "@game/core/mecard"
+import type {
+    Card, CatalogChoosing, CatalogPick, Choosing, Count, Fight, HaltContext, HaltMoment, Hero, Shown, Way,
+} from "@game/core/mecard"
 import { startedRun } from "./startedRun"
 
 /** How many answers a play gives at most, so a shop that can always be asked again ends. */
@@ -75,6 +77,12 @@ export class ScriptedPlayer implements HaltContext {
         const start = among.length > count.min ? this.choose(among.length - count.min + 1) : 0
         const cards = among.slice(start, start + count.min)
         this.#answer = () => done(cards)
+    }
+
+    public catalog(title: Text, choosing: CatalogChoosing, done: (pick: CatalogPick) => void): void {
+        this.#say("catalog", title, ...choosing.allowed)
+        const [key = ""] = choosing.keys ?? []
+        this.#answer = () => done({ category: choosing.allowed[0], key })
     }
 
     public confirm(title: Text, shown: Shown, action: string, done: () => void, way: Way = {}): void {

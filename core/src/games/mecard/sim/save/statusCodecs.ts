@@ -21,7 +21,7 @@ import { ELEMENT_COATING, ELEMENT_COATINGS } from "../status/subs/ElementCoating
 import { POTION_COATING, POTION_COATINGS } from "../status/subs/PotionCoating"
 import { ENCHANTED, ENCHANTMENTS } from "../status/subs/EnchantedBlade"
 
-import { ELEMENT_CODECS, POTION_NAMES } from "./catalogNames"
+import { ELEMENT_CODECS, potionNamed } from "./catalogNames"
 
 /**
  * The codec of the variants of a kind of status made for a dose: the dose, as {@link doseKey} writes it, read
@@ -42,8 +42,7 @@ function doseCodec(
         },
         parse: text => {
             const [name, sign, factor] = JSON.parse(text) as [string, number, number]
-            const potion = POTION_NAMES.get(String(name))
-            if(!potion) throw new Error(`No potion is named "${name}": the save comes from another version.`)
+            const potion = potionNamed(name)
             return variants.of({ potion, sign: sign === -1 ? -1 : 1, factor: Number(factor) })
         },
     }

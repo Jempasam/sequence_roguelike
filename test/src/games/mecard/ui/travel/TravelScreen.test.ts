@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { AssetError, Button, plainText, Tabs } from "@game/core"
+import { AssetError, Button, plainText, Tabs, WrapBox } from "@game/core"
 import type { Assets, Component, Painter } from "@game/core"
-import { CHEST_HALT, HeroDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
+import { CatalogDialog, CHEST_HALT, HeroDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
+import type { CatalogPick } from "@game/core/mecard"
 import { CardView } from "@game/core/mecard/card-view"
+import { CatalogBrowser } from "@game/core/mecard/catalog-browser"
 import { JourneyView } from "@game/core/mecard/journey-view"
 import { TravelScreen } from "@game/core/mecard/travel-screen"
 import type { TravelScreenOptions } from "@game/core/mecard/travel-screen"
@@ -153,6 +155,27 @@ describe("TravelScreen, what is hovered", () => {
         expect(plainText(screen.tooltip.text!)).toContain("cartes.")
         pointTo(game, { x: 0, y: 0 })
         expect(screen.tooltip.open).toBe(false)
+    })
+
+    test("a thing of the catalogue asked → its browser shows the types allowed, a click takes it", async() => {
+        const game = await builtScreen()
+        const { run, screen, setup } = game
+        const taken: CatalogPick[] = []
+        run.travel.takeCatalog = (_, pick) => { taken.push(pick) }
+        const dialog = new CatalogDialog("Quel aventurier ?", false, ["kits"], new Set(["Lancier"]))
+        run.travel.catalogAsked.notify(dialog)
+        setup.ui.render()
+        const [browser] = ofClass(game, CatalogBrowser)
+        expect(browser.sections.map(section => section.title)).toEqual(["Aventuriers"])
+        const wraps = allUnder(browser.list).filter(each => each instanceof WrapBox)
+        const entry = wraps[wraps.length - 1].children[0]
+        expect(wraps[wraps.length - 1].children).toHaveLength(1)
+        const at = middleOf(entry)
+        const { x, y } = at
+        setup.port.send({ type: "pointer-move", x, y }, { type: "pointer-down", button: 0, x, y })
+        setup.port.send({ type: "pointer-up", button: 0, x, y })
+        screen.frame(setup.frame(), NO_WORLD, 0)
+        expect(taken).toEqual([{ category: "kits", key: "Lancier" }])
     })
 
     test("a deck shown by a dialog → hovering one of its cards opens a bubble", async() => {

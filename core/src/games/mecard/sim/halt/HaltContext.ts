@@ -5,6 +5,7 @@ import type { CardUpgrade } from "../catalog/upgrades"
 import type { Fight } from "../fight/Fight"
 import type { Item } from "../item/Item"
 import type { Hero } from "../run/Hero"
+import type { CatalogCategory } from "../save/catalogSave"
 import type { Usable } from "../usable/Usable"
 
 import type { HaltMoment } from "./SceneLook"
@@ -77,6 +78,21 @@ export interface CardChoosing extends Choosing<Card> {
     readonly copies?: boolean
 }
 
+/** A thing of the catalogue of the game: the category of its tab, and its name among that category's. */
+export interface CatalogPick {
+    readonly category: CatalogCategory
+    readonly key: string
+}
+
+/** How a dialog asking for a thing of the catalogue lets it be picked. */
+export interface CatalogChoosing extends Way {
+    /** The types of things the players may search: the categories of the catalogue. */
+    readonly allowed: readonly CatalogCategory[]
+
+    /** The only names that may be picked, none to let them all. */
+    readonly keys?: ReadonlySet<string>|null
+}
+
 /**
  * What a halt asks the players through: dialogs, each with a way to leave the place, or to go back. A
  * dialog opens in place of the one before, and calls back once the players chose.
@@ -103,6 +119,9 @@ export interface HaltContext {
         title: Text, pool: readonly Card[], count: Count, done: (cards: Card[]) => void,
         pick?: CardChoosing,
     ): void
+
+    /** Ask for a thing of the catalogue of the game, searched by type, among those the choosing allows. */
+    catalog(title: Text, choosing: CatalogChoosing, done: (pick: CatalogPick) => void): void
 
     /** Show something, and ask whether to go on with it. */
     confirm(title: Text, shown: Shown, action: string, done: () => void, way?: Way): void

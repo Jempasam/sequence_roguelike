@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     ALL_CARDS, BASE_ELEMENTS, CardChain, canWeave, CARD_CODECS, collageOf, composable, FIRE, FusionCard, Heart, mergeable,
-    MergedCard, RandomCard, readsWhole, RED_HEART, STEP, TURNS, UNIVERSAL_ELEMENTS, VARIANT_CARDS, Vector2, WALKS,
+    mergeableInChain, MergedCard, RandomCard, readsWhole, RED_HEART, STEP, TURNS, UNIVERSAL_ELEMENTS, VARIANT_CARDS, Vector2, WALKS,
 } from "@game/core/mecard"
 import type { Card } from "@game/core/mecard"
 
@@ -123,11 +123,26 @@ describe("the variants, in a composite", () => {
         expect(canWeave([TURNS[0], TURNS[1]], "random")).toBe(false)
     })
 
-    test("a collage of a chain → made of the cards that can be held, none when none can", () => {
-        expect(collageOf([STEP, TURNS[0], STEP])?.contents).toEqual([STEP, STEP])
-        expect(collageOf([TURNS[0], STEP])).toBe(STEP)
-        expect(collageOf([TURNS[0], WALKS[1]])).toBeNull()
+    test("a collage of a chain → made of all its cards, those with variants too, none for none", () => {
+        expect(collageOf([STEP, TURNS[0], STEP])?.contents).toEqual([STEP, TURNS[0], STEP])
+        expect(collageOf([TURNS[0], WALKS[1]])?.contents).toEqual([TURNS[0], WALKS[1]])
+        expect(collageOf([TURNS[0]])).toBe(TURNS[0])
         expect(collageOf([])).toBeNull()
+    })
+
+    test("a merge of a chain → holds a turn, which a merge of the deck refuses", () => {
+        expect(() => new MergedCard([STEP, TURNS[0]])).toThrow()
+        expect(MergedCard.ofChain([STEP, TURNS[0]]).contents).toEqual([STEP, TURNS[0]])
+        expect(MergedCard.ofChain([STEP, TURNS[0]]).with([TURNS[1], STEP]).contents).toEqual([TURNS[1], STEP])
+        expect(mergeable([STEP, TURNS[0]])).toBe(false)
+        expect(mergeableInChain([STEP, TURNS[0]])).toBe(true)
+    })
+
+    test("a merge written in a save → read back whole, a turn in it", () => {
+        const merge = MergedCard.ofChain([STEP, TURNS[8]])
+        const read = CARD_CODECS.load(CARD_CODECS.save(merge))
+        expect(read).toBeInstanceOf(MergedCard)
+        expect(read.contents).toEqual([STEP, TURNS[8]])
     })
 })
 

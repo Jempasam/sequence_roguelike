@@ -4,14 +4,23 @@ declare duration "0.95";
 
 import("sfx.lib");
 
-v0(u) = (sfx.water.pour(u)) * sfx.env.fadeio(.002, .1, u);
-v1(u) = (sfx.water.pour(u)) * sfx.env.fadeio(.002, .1, u);
-v2(u) = (sfx.water.pour(u)) * sfx.env.fadeio(.002, .1, u);
-v3(u) = (sfx.mech.zap(u)) * sfx.env.fadeio(.002, .1, u);
+voice = library("../filters/voice.lib.dsp");
+category = library("filters/impact.lib.dsp");
+pour = library("../lib/halt_voices/pour.lib.dsp");
+zap = library("../lib/halt_voices/zap.lib.dsp");
 
-process(t) = (
+v0(u) = voice.filter(pour.sound, u);
+v1(u) = voice.filter(pour.sound, u);
+v2(u) = voice.filter(pour.sound, u);
+v3(u) = voice.filter(zap.sound, u);
+
+mix(t) = (
     sfx.sequence.part(0.0000, 0.3158, v0, t) * 0.5
     +     sfx.sequence.part(0.2105, 0.5263, v1, t) * 0.5
     +     sfx.sequence.part(0.4211, 0.7368, v2, t) * 0.5
     +     sfx.sequence.part(0.6316, 1.0000, v3, t) * 0.6
-) : sfx.fx.reverb(.6,.08) : sfx.fx.dcblock : *(sfx.env.fadeio(.004, .12, t));
+);
+
+sound(t) = category.filter(mix, t);
+
+process(t) = sound(t);

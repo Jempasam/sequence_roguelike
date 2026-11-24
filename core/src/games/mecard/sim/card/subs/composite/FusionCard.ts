@@ -37,6 +37,17 @@ export class FusionCard extends CompositeCard<Preparation> {
     }
 
 
+    /**
+     * A fusion of cards taken from a chain, each a variant already chosen: a card with variants to choose from
+     * may be held.
+     *
+     * @throws {@link Error} For less than two cards.
+     */
+    public static ofChain(cards: readonly Card[], look: CompositeLook = {}): FusionCard {
+        return new FusionCard(cards, { ...look, chosen: true })
+    }
+
+
     public with(cards: readonly Card[]): FusionCard {
         return new FusionCard(cards, this.look)
     }

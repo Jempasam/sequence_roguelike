@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest"
 import {
-    BEAST, BeastCard, CARD_CODECS, CONJURATION, ELEMENT, ElementCard, FURY, GOBLIN, IMPROVISED_ROBOT, MODULE,
-    ModuleCard, MONSTER_MAGE_HALT, MONSTER_MECHANIC_HALT, MONSTER_SHAMAN_HALT, darkHalts, RED_HEART,
-    beastCardOfMonster, giveKeyIfLacking, moduleOfMonster, signatureOf, STEP,
+    ALL_MONSTERS, BEAST, BeastCard, BOOSTER_KIND, boosterOfMonster, CARD_CODECS, CONJURATION, convert,
+    ELEMENT, elementCardOfMonsters, ElementCard, FURY, FUSION_TARGET, fusionOfMonster, GOBLIN,
+    IMPROVISED_ROBOT, LOOT_MONSTERS, MODULE, ModuleCard, MONSTER_KIND, MONSTER_MAGE_HALT,
+    MONSTER_MECHANIC_HALT, MONSTER_SHAMAN_HALT, darkHalts, offeredElements, RED_HEART, Rng,
+    beastCardOfMonster, giveKeyIfLacking, moduleOfMonster, readsWhole, signatureOf, STEP,
 } from "@game/core/mecard"
 import type { Card, HaltType } from "@game/core/mecard"
 
@@ -43,10 +45,45 @@ describe("the halts making a card of a monster", () => {
         expect(cards).toContain(FURY)
     })
 
-    test("the mage → an element of a monster, and a conjuration to call it", () => {
+    test("the mage → an element of two monsters, and a conjuration to call it", () => {
         const cards = given(MONSTER_MAGE_HALT)
         expect(cards.some(card => card instanceof ElementCard)).toBe(true)
         expect(cards).toContain(CONJURATION)
+    })
+
+    test("the mage → offers elements of two monsters each, the same as the conversion makes", () => {
+        for(let seed = 1; seed <= 5; seed++){
+            const offers = offeredElements(new Rng(seed))
+            expect(offers.length).toBeGreaterThan(0)
+            expect(offers.length).toBeLessThanOrEqual(3)
+            for(const { sources, card } of offers){
+                expect(sources).toHaveLength(2)
+                expect(sources[0]).not.toBe(sources[1])
+                expect(card.name).toBe(elementCardOfMonsters(sources).name)
+                expect(card.name).toBe(sources.map(monster => monster.name).join("-"))
+            }
+        }
+    })
+
+    test("the mage → the same offers for the same seed, and never the same pair twice", () => {
+        const names = (seed: number): string[] => offeredElements(new Rng(seed)).map(({ card }) => card.name)
+        expect(names(3)).toEqual(names(3))
+        const found = names(4)
+        expect(new Set(found).size).toBe(found.length)
+    })
+
+    test("monsters that make no element together → fewer offers, no error, no endless search", () => {
+        const [goblin, archer] = [GOBLIN, ALL_MONSTERS.find(each => each.name === "Archer")!]
+        expect(offeredElements(new Rng(1), 3, [goblin, archer])).toEqual([])
+        expect(offeredElements(new Rng(1), 3, [goblin])).toEqual([])
+    })
+
+    test("a fusion and a booster of a monster → the ones of the conversion", () => {
+        for(const monster of LOOT_MONSTERS){
+            expect(fusionOfMonster(monster).name).toBe(convert(MONSTER_KIND, monster, FUSION_TARGET).name)
+            const converted = convert(MONSTER_KIND, monster, BOOSTER_KIND)
+            expect(boosterOfMonster(monster).pools).toEqual(converted.pools)
+        }
     })
 
     test("opened again → the same offers", () => {
@@ -84,8 +121,11 @@ describe("giveKeyIfLacking", () => {
 })
 
 describe("the cards made of a monster", () => {
-    test("a module → the first round of the monster", () => {
-        expect(moduleOfMonster(GOBLIN).cards).toEqual(GOBLIN.cards.slice(0, GOBLIN.draw))
+    test("a module → cards of the monster that read whole, as the analysis of its deck leads its fight", () => {
+        const { cards } = moduleOfMonster(GOBLIN)
+        expect(cards.length).toBeGreaterThan(0)
+        expect(readsWhole(cards)).toBe(true)
+        expect(cards.every(card => GOBLIN.cards.includes(card))).toBe(true)
     })
 
     test("a spirit → the body of the monster, written down then found back whole", () => {

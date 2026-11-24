@@ -4,10 +4,17 @@ declare duration "0.55";
 
 import("sfx.lib");
 
-v0(u) = (sfx.perc.clang(200,u)*sfx.env.fadeio(.003,.3,u)) * sfx.env.fadeio(.002, .1, u);
-v1(u) = (sfx.mech.beep(1200,u)) * sfx.env.fadeio(.002, .1, u);
+voice = library("../filters/voice.lib.dsp");
+category = library("filters/impact.lib.dsp");
 
-process(t) = (
+v0(u) = voice.filter(\(u).(sfx.perc.clang(200,u)*sfx.env.fadeio(.003,.3,u)), u);
+v1(u) = voice.filter(sfx.mech.beep(1200), u);
+
+mix(t) = (
     sfx.sequence.part(0.0000, 0.5455, v0, t) * 0.7
     +     sfx.sequence.part(0.4545, 1.0000, v1, t) * 0.5
-) : sfx.fx.reverb(.6,.08) : sfx.fx.dcblock : *(sfx.env.fadeio(.004, .12, t));
+);
+
+sound(t) = category.filter(mix, t);
+
+process(t) = sound(t);

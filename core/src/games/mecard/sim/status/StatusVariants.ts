@@ -98,7 +98,7 @@ export function elementVariants(
     look: (family: Visual, element: Element) => Visual = visual => visual,
 ): StatusVariants<Element, ElementType> {
     return new StatusVariants(
-        element => element.name,
+        element => element.key,
         element => new ElementTypeOf(family, name(element), element, make, look(family.visual, element)),
     )
 }

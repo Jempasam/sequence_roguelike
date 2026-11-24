@@ -2,7 +2,7 @@ import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
-import type { Layer, Theme, UiRoot } from "../../../../engine/ui"
+import type { Animation, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import { Scope } from "../../../../lifetime"
 import { eventText } from "../../sim/battle/events"
@@ -18,7 +18,10 @@ import { CardChain } from "../../sim/card/CardChain"
 import type { RootPreview } from "../../sim/card/CardChain"
 
 import { BattleAnimations } from "./BattleAnimations"
-import { animate } from "../forward/animate"
+import { forwardAround } from "../forward/around"
+import type { Holds } from "../forward/around"
+import type { AnyObservable } from "../forward/Forwarded"
+import { battleForwardables } from "../forward/forwardables"
 import type { Forwarded } from "../forward/Forwarded"
 import { PlayControl } from "../hud/PlayControl"
 import { CONTROLS_FRAME, PlayControlView } from "../hud/PlayControlView"
@@ -38,6 +41,7 @@ import { DetailTooltip } from "../hud/DetailTooltip"
 import { DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { UiSoundLink } from "../sound/UiSoundLink"
+import type { BattleAnchors } from "../particles/ParticleContext"
 import { CARTE } from "../../sim/base/keywords"
 
 /** The frame behind the button of the tactical view while it is on. */
@@ -231,7 +235,7 @@ export class BattleScreen implements HudHost {
         this.animations = new AnimationChain(error => options.report(String(error)))
         this.#playControl = new PlayControl(this.#clock)
         this.#battleAnimations = new BattleAnimations(
-            this.scene, this.animations, this.#clock, this.#playControl, options.forwarded ?? null,
+            this.scene, this.animations, this.#clock, this.#playControl,
         )
         // Not told by being ready: the players still are when the next round draws.
         this.#battleAnimations.animates = unit => {
@@ -510,33 +514,39 @@ export class BattleScreen implements HudHost {
     #registerObservers(): void {
         const battle = this.#engine
         this.#observers.remove()
-        this.#observers = new Scope(
-            ...this.#battleAnimations.register(battle),
-            // Without an animation of their own, they take their place in the chain to be forwarded in time.
-            animate(this.animations, this.options.forwarded ?? null, battle.roundStarted),
-            animate(this.animations, this.options.forwarded ?? null, battle.onGetGold),
-            battle.phaseChanged.add(phase => {
-                if(phase === "execution"){
-                    this.animations.add(instant(() => this.#startPlaying()))
-                    return
-                }
-                const take = this.scene.capture(battle)
-                this.animations.add(instant(() => {
-                    this.#readEvents()
-                    this.#fill(take, phase)
-                }))
-            }),
-            battle.loaded.add(() => {
-                this.#watchPlans()
-                this.#showLoaded()
-            }),
-            // Not chained: the planning panel closes at once, whatever holds the replay of what comes.
-            battle.preparationEnding.add(() => {
-                this.#launched = true
-                this.drafts.clear()
-                this.refresh()
-            }),
-        )
+        // The replay holds on a card played, or refused, while paused.
+        const holds: Holds = new Map<AnyObservable, Animation>([
+            [battle.signals.cardActivated, this.#playControl.gate()],
+            [battle.signals.cardInvalid, this.#playControl.gate()],
+        ])
+        this.#observers = new Scope(...forwardAround(
+            this.animations, this.options.forwarded ?? null, battleForwardables(battle),
+            () => [
+                ...this.#battleAnimations.register(battle),
+                battle.phaseChanged.add(phase => {
+                    if(phase === "execution"){
+                        this.animations.add(instant(() => this.#startPlaying()))
+                        return
+                    }
+                    const take = this.scene.capture(battle)
+                    this.animations.add(instant(() => {
+                        this.#readEvents()
+                        this.#fill(take, phase)
+                    }))
+                }),
+                battle.loaded.add(() => {
+                    this.#watchPlans()
+                    this.#showLoaded()
+                }),
+                // Not chained: the planning panel closes at once, whatever holds the replay of what comes.
+                battle.preparationEnding.add(() => {
+                    this.#launched = true
+                    this.drafts.clear()
+                    this.refresh()
+                }),
+            ],
+            holds,
+        ))
         this.#watchPlans()
     }
 
@@ -725,6 +735,22 @@ export class BattleScreen implements HudHost {
     }
 
     /** Lay the arena over the room the panels leave, and tell where it lies. */
+    /** Where the units and the deck are in the interface, for the particles. */
+    public readonly anchors: BattleAnchors = {
+        unitPosition: unit => this.#unitAt(unit, (x, y) => ({ x, y })),
+        heartsOf: unit => this.#unitAt(unit, (x, y) => ({ x, y })),
+        feetOf: unit => this.#unitAt(unit, (x, y) => ({ x, y }), true),
+        deckPile: () => this.#hud.pileCenter(),
+    }
+
+    /** A point of a unit on the arena, in the interface, none while the arena is not placed. */
+    #unitAt<T>(unit: Unit, make: (x: number, y: number) => T, feet = false): T|null {
+        const room = this.#arenaRoom
+        if(!room || !this.visible) return null
+        const [x, y] = feet ? this.#board.feetAnchor(unit) : this.#board.heartsAnchor(unit)
+        return make(room.left + x, room.top + y)
+    }
+
     #placeArena(): UiRect {
         const room = this.#hud.arenaRoom()
         const view = this.#arenaView

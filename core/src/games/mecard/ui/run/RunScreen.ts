@@ -18,7 +18,11 @@ import type { TravelLocks } from "../travel/TravelScreen"
 import { LoadingOverlay } from "./LoadingOverlay"
 import { PlaceTransitions } from "./PlaceTransitions"
 import type { UiSoundLink } from "../sound/UiSoundLink"
-import { animate } from "../forward/animate"
+import type { ParticleContext } from "../particles/ParticleContext"
+import type { RunParticleLink } from "../particles/RunParticleLink"
+import { ParticleOverlay } from "../particles/ParticleOverlay"
+import { forwardAround } from "../forward/around"
+import { runForwardables } from "../forward/forwardables"
 import type { Forwarded } from "../forward/Forwarded"
 
 /** The share of the screen the panel of the end of a battle takes. */
@@ -57,6 +61,9 @@ export interface RunScreenOptions {
 
     /** What is told as the animations of the run, of its journey and of its battles play, none by default. */
     readonly forwarded?: Forwarded|null
+
+    /** What holds the particles of the run, laid over the interface by the screen, none by default. */
+    readonly particles?: RunParticleLink|null
 
     /** Where a point of the interface, in virtual pixels, lies in the world, in its pixels. */
     toWorld(x: number, y: number): readonly [number, number]
@@ -176,6 +183,12 @@ export class RunScreen {
         this.transitions = new PlaceTransitions(ui, theme, assets, report)
         // Made after the transitions, so it lies over them.
         this.loading = new LoadingOverlay(ui, theme)
+        // Over everything, the tooltips apart.
+        if(options.particles){
+            options.particles.context = this.#particleContext()
+            const layer = ui.addLayer("particles")
+            layer.content.add(new ParticleOverlay(options.particles), { x: "stretch", y: "stretch" })
+        }
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
     }
@@ -208,6 +221,28 @@ export class RunScreen {
         }
         if(this.#visible) this.travelScreen.frame(input, world, dt)
         this.ui.update(dt)
+    }
+
+    /** Where the particles start and go: the screen shown answers, the other one when it cannot. */
+    #particleContext(): ParticleContext {
+        const { ui, battleScreen, travelScreen } = this
+        const battle = battleScreen.anchors
+        const travel = travelScreen.anchors
+        return {
+            unitPosition: unit => battle.unitPosition(unit),
+            heartsOf: unit => battle.heartsOf(unit),
+            feetOf: unit => battle.feetOf(unit),
+            goldCounter: () => travel.goldCounter(),
+            deckPile: () => {
+                const inBattle = this.#visible && battleScreen.visible
+                return inBattle ? battle.deckPile() ?? travel.deckPile() : travel.deckPile() ?? battle.deckPile()
+            },
+            heroPortrait: hero => travel.heroPortrait(hero),
+            placePosition: place => travel.placePosition(place),
+            pointer: () => ({ x: ui.pointerX, y: ui.pointerY }),
+            center: () => ({ x: ui.width / 2, y: ui.height / 2 }),
+            size: () => ({ width: ui.width, height: ui.height }),
+        }
     }
 
     /** Build what comes after a battle again, the screens under it building themselves. */
@@ -256,15 +291,17 @@ export class RunScreen {
         const run = this.#engine
         const forwarded = this.options.forwarded ?? null
         this.#observers.remove()
+        const journey = this.travelScreen.animations
+        const forwardables = runForwardables(run).filter(observable => observable !== run.defeated)
         this.#observers = new Scope(
             run.travel.fightReached.add(() => this.#startFight()),
             // Played where the journey is shown, so a fight comes once the party walked to it.
-            animate(this.travelScreen.animations, forwarded, run.battleStarted, battle => () => {
-                return this.#enterBattle(battle)
-            }),
-            animate(this.animations, forwarded, run.defeated, () => {
-                return instant(() => this.#showEnd(() => this.#defeat()))
-            }),
+            ...forwardAround(journey, forwarded, forwardables, () => [
+                run.battleStarted.add(battle => journey.add(() => this.#enterBattle(battle))),
+            ]),
+            ...forwardAround(this.animations, forwarded, [run.defeated], () => [
+                run.defeated.add(() => this.animations.add(instant(() => this.#showEnd(() => this.#defeat())))),
+            ]),
             run.phaseChanged.add(phase => {
                 if(phase === "travel") this.animations.add(() => this.#backToTravel())
             }),

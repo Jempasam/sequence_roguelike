@@ -15,7 +15,7 @@ describe("soundOfFight", () => {
     })
 
     test("no category → the fallback", () => {
-        expect(soundOfFight(null).path).toBe("mecard/sounds/fights/fallback.wav")
+        expect(soundOfFight(null).path).toBe("mecard/sounds/fights/fallback.ogg")
         expect(soundOfFight(undefined)).toBe(soundOfFight(null))
         expect(soundOfFight({ id: "unknown" })).toBe(soundOfFight(null))
     })

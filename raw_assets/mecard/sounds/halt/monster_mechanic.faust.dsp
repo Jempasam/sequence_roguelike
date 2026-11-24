@@ -4,14 +4,22 @@ declare duration "1.6";
 
 import("sfx.lib");
 
-v0(u) = (sfx.perc.clang(500,u)) * sfx.env.fadeio(.002, .1, u);
-v1(u) = (sfx.mech.servo(u)) * sfx.env.fadeio(.002, .1, u);
-v2(u) = (sfx.mech.beep(1200,u)) * sfx.env.fadeio(.002, .1, u);
-v3(u) = (sfx.mech.beep(1500,u)) * sfx.env.fadeio(.002, .1, u);
+voice = library("../filters/voice.lib.dsp");
+category = library("filters/workshop.lib.dsp");
+servo = library("../lib/halt_voices/servo.lib.dsp");
 
-process(t) = (
+v0(u) = voice.filter(sfx.perc.clang(500), u);
+v1(u) = voice.filter(servo.sound, u);
+v2(u) = voice.filter(sfx.mech.beep(1200), u);
+v3(u) = voice.filter(sfx.mech.beep(1500), u);
+
+mix(t) = (
     sfx.sequence.part(0, 0.25, v0, t) * 0.8
     + sfx.sequence.part(0.1875, 0.5, v1, t) * 0.5
     + sfx.sequence.part(0.625, 0.7813, v2, t) * 0.5
     + sfx.sequence.part(0.75, 0.9062, v3, t) * 0.5
-) : sfx.fx.reverb(0.5, 0.08) : sfx.fx.dcblock : *(sfx.env.fadeio(.004, .12, t)) : *(1.6218);
+);
+
+sound(t) = category.filter(mix, t) * 1.6218;
+
+process(t) = sound(t);

@@ -3,7 +3,7 @@ import { visual } from "../../../base/Visual"
 import type { Card } from "../../../card/Card"
 import { MODULE } from "../../../card/CardType"
 import { IMPROVISED_ROBOT } from "../../../card/subs/mechanic/RobotCard"
-import type { Monster } from "../../../catalog/monsters"
+import type { Rng } from "../../../base/Rng"
 import type { Run } from "../../../run/Run"
 import { giveKeyIfLacking } from "../../../run/visits"
 import type { HaltType } from "../../HaltType"
@@ -11,6 +11,7 @@ import { sceneLook } from "../../SceneLook"
 import { DARK_COLOR } from "../halt_common"
 
 import { moduleOfMonster } from "./monsterCards"
+import type { MonsterOffer } from "./monsterCards"
 import { MonsterCardHalt } from "./MonsterCardHalt"
 
 /** The monstrous mechanic: a monster made a module for a deck, with a robot if the deck has none. */
@@ -30,8 +31,8 @@ export class MonsterMechanicHalt extends MonsterCardHalt {
 
     protected readonly key = IMPROVISED_ROBOT
 
-    protected make(monster: Monster): Card {
-        return moduleOfMonster(monster)
+    protected offered(rng: Rng): readonly MonsterOffer[] {
+        return this.offersOf(rng, moduleOfMonster)
     }
 
     protected receive(deck: Card[], card: Card): Card|null {

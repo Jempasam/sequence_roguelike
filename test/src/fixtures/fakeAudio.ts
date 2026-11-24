@@ -5,7 +5,7 @@ export type FakeStage = { readonly made: string }
 
 /** One sound played on a {@link FakeAudio}. */
 export interface Played {
-    /** The first byte of the file, which tells which file it is. */
+    /** The first two bytes of the file, which tell which file it is. */
     readonly id: number
 
     /** The volume it was played at. */
@@ -27,7 +27,7 @@ export class FakeAudio implements AudioPort {
 
     public async decode(bytes: Uint8Array): Promise<Sound> {
         if(this.broken) throw new Error("Not a sound.")
-        return { duration: 1, id: bytes[0] } as Sound
+        return { duration: 1, id: bytes[0] + (bytes[1] ?? 0) * 256 } as Sound
     }
 
     public play(sound: Sound, { volume, stages }: PlayOptions): void {

@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from "vitest"
 import {
     AIM, AimCard, ARC_DISTANCE, ARC_STEP, BLINK, BLEED, BLUE_HEART, BOUNCE_DASH, cardMentions, CHARGE, ChainSummonCard, COMBO,
-    DamageType, ELEMENT, ELEMENT_ON_BLADE, ELEPHANT_CARD, ENCHANTED_BLADE, FORCE, FusionCard, Heart,
-    LIGHTNING, LIGHTNING_ELEMENT, LOOT_MONSTERS, MergedCard, monsterFusion, nearestTurn, POSSESSION,
-    PREPARATION_CARD, RED_HEART, REPEAT_2, Rng, SLASH, SPELL, STEP, TRANSMUTATION, THRUST, TIME_MANIPULATION, TURN_STEPS,
+    DamageType, ELEMENT, ELEMENT_ON_BLADE, ELEPHANT_CARD, ENCHANTED_BLADE, FIRE, FORCE, FusionCard, Heart,
+    LIGHTNING, LIGHTNING_ELEMENT, fusionOfMonster, LOOT_MONSTERS, MergedCard, nearestTurn, POSSESSION,
+    PREPARATION_CARD, RED_HEART, REPEAT_2, REPETITION, resolve, SLASH, SPELL, STEP, TRANSMUTATION, THRUST, TIME_MANIPULATION, TURN_STEPS,
     TURNS, Vector2, WAIT, WINGS, WOLF_CARD,
 } from "@game/core/mecard"
 import type { Action, Card, RewriteSpot } from "@game/core/mecard"
@@ -74,14 +74,57 @@ describe("the arc", () => {
 describe("the preparations on the chain", () => {
     test("a temporal manipulation → the actions after it that may be merged, merged, the rest left", () => {
         const rewrite = TIME_MANIPULATION.get().rewrite(FIRST, spotOf(STEP, THRUST, REPEAT_2, SLASH))
-        // The repeat takes actions: it may be merged, as nothing else takes another kind of thing.
-        expect(rewrite.consumed).toBe(4)
+        // The repeat takes an action: the slash stays out of the merge, for it to take.
+        expect(rewrite.consumed).toBe(3)
         expect(rewrite.cards[0]).toBeInstanceOf(MergedCard)
-        expect(rewrite.cards[0].contents).toEqual([STEP, THRUST, REPEAT_2, SLASH])
+        expect(rewrite.cards[0].contents).toEqual([STEP, THRUST, REPEAT_2])
+    })
+
+    test("a temporal manipulation, actions taking an action with none after → nothing merged", () => {
+        const rewrite = TIME_MANIPULATION.get().rewrite(FIRST, spotOf(REPEAT_2, STEP))
+        expect(rewrite.cards).toHaveLength(0)
+    })
+
+    test("a temporal manipulation → a turn, which has variants, merged all the same", () => {
+        const rewrite = TIME_MANIPULATION.get().rewrite(FIRST, spotOf(TURNS[8], STEP))
+        expect(rewrite.consumed).toBe(2)
+        expect(rewrite.cards[0].contents).toEqual([TURNS[8], STEP])
+    })
+
+    test("a temporal manipulation, read as a chain → one merge, nothing greyed out", () => {
+        const resolution = resolve([TIME_MANIPULATION, TURNS[8], STEP, THRUST], FIRST)
+        expect(resolution.cards).toHaveLength(1)
+        expect(resolution.cards[0]).toBeInstanceOf(MergedCard)
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
+    })
+
+    test("a temporal manipulation, a repetition after it → what it became is merged", () => {
+        const resolution = resolve([TIME_MANIPULATION, REPETITION, STEP, THRUST], FIRST)
+        expect(resolution.cards).toHaveLength(1)
+        expect(resolution.cards[0].contents).toEqual([STEP, STEP, THRUST])
+    })
+
+    test("a temporal manipulation, a repeat then its action → the repeat takes the action left out", () => {
+        const resolution = resolve([TIME_MANIPULATION, STEP, REPEAT_2, SLASH], FIRST)
+        expect(resolution.cards).toHaveLength(2)
+        expect(resolution.cards[0].contents).toEqual([STEP, REPEAT_2])
+        expect(resolution.chain.actionsLeft()).toHaveLength(1)
+        expect(resolution.reading.greyed).toHaveLength(0)
+    })
+
+    test("a temporal manipulation, played → both actions in one turn", () => {
+        const on = battle()
+        const hero = unit(on, 3, 5)
+        unit(on, 1, 1, { team: MONSTERS })
+        const start = hero.position.y
+        play(on, [[hero, chain(TIME_MANIPULATION, TURNS[8], STEP)]])
+        expect(hero.direction).toEqual(TURNS[8].direction)
+        expect(hero.position.y).toBeCloseTo(start, 1)
+        expect(hero.position.x).toBeGreaterThan(3)
     })
 
     test("a temporal manipulation → the row stops before the first card taking another kind of thing", () => {
-        const rewrite = TIME_MANIPULATION.get().rewrite(FIRST, spotOf(STEP, ELEMENT_ON_BLADE, REPEAT_2, SLASH))
+        const rewrite = TIME_MANIPULATION.get().rewrite(FIRST, spotOf(STEP, ELEMENT_ON_BLADE, FIRE, SLASH))
         expect(rewrite.consumed).toBe(2)
         expect(rewrite.cards).toHaveLength(1)
         expect(rewrite.cards[0]).toBeInstanceOf(MergedCard)
@@ -221,14 +264,11 @@ describe("what the descriptions tell", () => {
 })
 
 describe("the fusions of monsters", () => {
-    test("for every monster of the loot → a chain it plays, named after it, never only steps and aims", () => {
+    test("for every monster of the loot → the chain that stands for it, named after it, never only steps and aims", () => {
         for(const monster of LOOT_MONSTERS){
-            for(let seed = 1; seed <= 5; seed++){
-                const fusion = monsterFusion(monster, new Rng(seed))
-                if(!fusion) continue
-                expect(fusion.name.endsWith(` de ${monster.name}`)).toBe(true)
-                expect(fusion.contents?.some(card => card !== STEP && !(card instanceof AimCard))).toBe(true)
-            }
+            const fusion = fusionOfMonster(monster)
+            expect(fusion.name.endsWith(` de ${monster.name}`)).toBe(true)
+            expect(fusion.contents?.some(card => card !== STEP && !(card instanceof AimCard))).toBe(true)
         }
     })
 })

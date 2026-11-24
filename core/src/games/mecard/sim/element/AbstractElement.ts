@@ -21,6 +21,8 @@ export abstract class AbstractElement implements Element {
     ){}
 
 
+    public get key(): string { return this.name }
+
     public toString(): string { return this.name }
 
     public toSemString(): Text { return colored(this.color, this.name) }

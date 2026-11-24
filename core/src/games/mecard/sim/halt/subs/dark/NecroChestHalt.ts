@@ -1,5 +1,5 @@
 import type { Card } from "../../../card/Card"
-import { monsterFusion } from "../../../run/offers"
+import { fusionOfMonster } from "../monster/monsterCards"
 import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
@@ -30,7 +30,7 @@ export class NecroChestHalt extends CardGiftHalt {
                 itemColor: DARK_COLOR,
             },
         )
-        this.#cards = offeredMonsters(run.rng).flatMap(monster => monsterFusion(monster, run.rng) ?? [])
+        this.#cards = offeredMonsters(run.rng).map(fusionOfMonster)
     }
 
 

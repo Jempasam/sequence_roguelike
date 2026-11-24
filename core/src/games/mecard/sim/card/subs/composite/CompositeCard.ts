@@ -12,6 +12,12 @@ export interface CompositeLook {
 
     /** Its rarity, the highest of its cards by default. */
     readonly rarity?: Rarity
+
+    /**
+     * Are its cards taken from a chain, each a variant already chosen? Then a card with variants to choose from
+     * may be held: it is one of them. Never set for a card made from the deck.
+     */
+    readonly chosen?: boolean
 }
 
 /**
@@ -37,7 +43,7 @@ export abstract class CompositeCard<T, U = undefined> extends AbstractCard<T, U>
         cards: readonly Card[], joiner: string,
         description: (cards: readonly Card[]) => Text, look: CompositeLook,
     ){
-        requireComposable(cards)
+        if(!look.chosen) requireComposable(cards)
         const contents = [...cards]
         super(
             look.name ?? contents.map(each => each.name).join(joiner),

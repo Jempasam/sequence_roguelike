@@ -67,7 +67,7 @@ export function hero(spec: HeroSpec): Hero {
 export function heroOf(kit: Kit, name = kit.name): Hero {
     return hero({
         name, sprite: kit.sprite, controller: "player", decks: [[...kit.cards]],
-        unlimited: UNLIMITED_CARDS, hearts: Heart.groups(kit.hearts), items: [...kit.items],
+        unlimited: kit.unlimited ?? UNLIMITED_CARDS, hearts: Heart.groups(kit.hearts), items: [...kit.items],
         usables: kit.usables.map(usable => new Carried(usable)),
         bases: { showChain: false, showHand: true },
     })

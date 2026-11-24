@@ -10,19 +10,16 @@ import { sceneLook } from "../../SceneLook"
 import { CardGiftHalt } from "../gift/CardGiftHalt"
 import { boosterShown } from "../gift/MagicianHalt"
 import { DARK_COLOR, DARK_COLORATION, DARK_MASK } from "../halt_common"
+import { boosterOfMonster } from "../monster/monsterCards"
 import { offeredMonsters } from "./monster_pool"
 
-/** How many cards a booster of a monster gives. */
-export const MONSTER_BOOSTER_SIZE = 3
-
-/** The booster of a monster: cards drawn from its deck, each kind of card once in the pool. */
+/**
+ * The booster of a monster, as the conversion makes it: a pool for each link of the chain that stands for it,
+ * one card drawn from each, so what is drawn reads whole. Its colors are the dark ones.
+ */
 export function monsterBooster(monster: Monster): Booster {
-    return booster({
-        name: monster.name,
-        color: DARK_COLOR,
-        icon: monster.cards[monster.cards.length - 1],
-        pools: [{ count: MONSTER_BOOSTER_SIZE, pool: [...new Set(monster.cards)] }],
-    })
+    const { pools, icon } = boosterOfMonster(monster)
+    return booster({ name: monster.name, color: DARK_COLOR, icon, pools })
 }
 
 /** The dark magician: a booster among some, each drawn from the deck of a monster. */

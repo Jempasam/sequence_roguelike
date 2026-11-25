@@ -5,7 +5,11 @@ import type { Unit } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { BLEEDING } from "../../../status/subs/Wounds"
 import { CONCENTRATED } from "../../../status/subs/Calm"
-import { turnUnitsIn } from "../../../card/subs/tools/turning"
+import { turning, turnsIn, turnUnitsIn } from "../../../card/subs/tools/turning"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { MOVE_COLOR, MOVE_WIDTH, RANGE_COLOR } from "../../../battle/previewColors"
 import { shoveNow } from "../../../card/subs/tools/shoving"
 import { WAIT } from "../../../card/subs/movement/Wait"
 
@@ -100,6 +104,12 @@ export class ScaryMask extends AbstractItem {
             )
         }))
     }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Areas.circle(pose.position, MASK_RADIUS)
+        const turned = turnsIn(battle, zone, unit, other => other.position.minus(pose.position).normalized)
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(turning))
+    }
 }
 
 export const SCARY_MASK = new ScaryMask()
@@ -143,6 +153,14 @@ export class Magnet extends AbstractItem {
                 if(toward) shoveNow(battle, unit, other, toward, MAGNET_PULL)
             }
         }))
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Areas.circle(pose.position, MAGNET_RADIUS)
+        const pulls = battle.fetch(zone, unit).map(other => {
+            return Previews.arrow([other.position, pose.position], MOVE_WIDTH / 2, MOVE_COLOR)
+        })
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...pulls)
     }
 }
 

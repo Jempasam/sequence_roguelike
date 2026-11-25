@@ -223,6 +223,7 @@ export class BattleAnimations {
         on(signals.stepStarted, ({ unit, left }) => () => {
             scene.actor = unit
             scene.change(unit, shown => shown.steps = left)
+            this.onSelect?.(unit)
         })
 
         //// HEARTS ////

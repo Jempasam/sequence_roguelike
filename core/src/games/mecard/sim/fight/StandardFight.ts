@@ -58,7 +58,7 @@ export class StandardFight implements Fight {
                 controller: pose.controller ?? "bot",
                 position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
                 hearts: fighter.hearts, decks: fighter.decks, unlimited: fighter.unlimited, items: fighter.items,
-                usables: fighter.usables, bases: { ...fighter.bases, showChain: true, showHand: true },
+                usables: fighter.usables, bases: { showChain: true, showHand: true, ...fighter.bases },
             })
             battle.refill(unit)
         }
@@ -89,6 +89,7 @@ export class StandardFight implements Fight {
         battle.onGetGold.add(({ unit, amount }) => {
             if(unit.team === heroesTeam) run.gold += amount
         })
+        battle.goldOf = unit => unit.team === heroesTeam ? run.gold : 0
         battle.onGetCards.add(({ unit, cards }) => {
             const hero = heroes.find(each => this.#units.get(each) === unit)
             if(hero) run.changeDeck(firstDeck(hero), deck => deck.push(...cards))

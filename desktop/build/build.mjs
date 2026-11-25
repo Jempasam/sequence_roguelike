@@ -28,6 +28,8 @@ const SEA_FUSE = "NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2"
 
 // Writes main.cjs and native/ into OUT, see vite.config.ts.
 await build({ root: DESKTOP, logLevel: "warn" })
+// audioWorker.cjs, next to it: a worker starts from a file, so the executable does not carry it.
+execFileSync(process.execPath, [join(DESKTOP, "build", "audioWorker.mjs")], { stdio: "inherit" })
 // generated_assets/ is not committed: it holds what npm run art makes, and is shipped as if it was in assets/.
 for(const folder of ["assets", "generated_assets"]){
     if(existsSync(join(REPO, folder))) cpSync(join(REPO, folder), join(OUT, "assets"), { recursive: true })

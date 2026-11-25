@@ -6,40 +6,35 @@ export type AssetPath =
     | "mecard/border/altar.png"
     | "mecard/border/antiquarian.png"
     | "mecard/border/butcher.png"
-    | "mecard/border/castle.png"
     | "mecard/border/chest.png"
     | "mecard/border/demon.png"
-    | "mecard/border/dojo.png"
     | "mecard/border/enchanter.png"
-    | "mecard/border/factory.png"
-    | "mecard/border/forest.png"
     | "mecard/border/forge.png"
-    | "mecard/border/graveyard.png"
-    | "mecard/border/harbor.png"
-    | "mecard/border/hell.png"
     | "mecard/border/hospital.png"
     | "mecard/border/inventor.png"
     | "mecard/border/mad-doctor.png"
     | "mecard/border/magician.png"
     | "mecard/border/map.png"
     | "mecard/border/merchant.png"
-    | "mecard/border/mine.png"
     | "mecard/border/necromancer.png"
     | "mecard/border/removal.png"
     | "mecard/border/shop.png"
     | "mecard/border/strategist.png"
-    | "mecard/border/swamp.png"
     | "mecard/border/tavern.png"
     | "mecard/border/trainer.png"
     | "mecard/border/trainer_monster.png"
-    | "mecard/border/tundra.png"
-    | "mecard/border/volcano.png"
     | "mecard/border/weaver.png"
     | "mecard/border/witch.png"
     | "mecard/cards/back.png"
+    | "mecard/cards/back_10.png"
     | "mecard/cards/back_2.png"
     | "mecard/cards/back_3.png"
     | "mecard/cards/back_4.png"
+    | "mecard/cards/back_5.png"
+    | "mecard/cards/back_6.png"
+    | "mecard/cards/back_7.png"
+    | "mecard/cards/back_8.png"
+    | "mecard/cards/back_9.png"
     | "mecard/cards/invalid.png"
     | "mecard/floors/castle/armor.png"
     | "mecard/floors/castle/banner.png"
@@ -50,6 +45,7 @@ export type AssetPath =
     | "mecard/floors/castle/tower.png"
     | "mecard/floors/cave/bigshroom.png"
     | "mecard/floors/cave/bones.png"
+    | "mecard/floors/cave/border.png"
     | "mecard/floors/cave/logo.png"
     | "mecard/floors/cave/mushroom.png"
     | "mecard/floors/cave/pebbles.png"
@@ -225,8 +221,10 @@ export type AssetPath =
     | "mecard/hud/wood_plank.png"
     | "mecard/items/alembic.png"
     | "mecard/items/amulet.png"
+    | "mecard/items/anchor.png"
     | "mecard/items/ashtray.png"
     | "mecard/items/bag.png"
+    | "mecard/items/bandolier.png"
     | "mecard/items/banner.png"
     | "mecard/items/battery.png"
     | "mecard/items/belt.png"
@@ -234,18 +232,27 @@ export type AssetPath =
     | "mecard/items/blood_trail.png"
     | "mecard/items/boots.png"
     | "mecard/items/bottle_bag.png"
+    | "mecard/items/breathalyzer.png"
     | "mecard/items/bubble_body.png"
+    | "mecard/items/camp_soup.png"
+    | "mecard/items/chalk.png"
+    | "mecard/items/chew_bone.png"
+    | "mecard/items/chewing_gum.png"
     | "mecard/items/clover.png"
     | "mecard/items/cooler.png"
+    | "mecard/items/cord.png"
     | "mecard/items/debt.png"
     | "mecard/items/demon_fang.png"
+    | "mecard/items/detonator.png"
     | "mecard/items/dodge_scepter.png"
     | "mecard/items/doll.png"
     | "mecard/items/echo.png"
     | "mecard/items/element_bag.png"
+    | "mecard/items/expired_pillbox.png"
     | "mecard/items/fang.png"
     | "mecard/items/fang_necklace.png"
     | "mecard/items/flower_crown.png"
+    | "mecard/items/funeral_notice.png"
     | "mecard/items/gear.png"
     | "mecard/items/glass_heart.png"
     | "mecard/items/grimoire.png"
@@ -253,16 +260,25 @@ export type AssetPath =
     | "mecard/items/horseshoe.png"
     | "mecard/items/hourglass.png"
     | "mecard/items/king_crown.png"
+    | "mecard/items/label.png"
+    | "mecard/items/lightning_rod.png"
     | "mecard/items/loaded_die.png"
+    | "mecard/items/lottery_ticket.png"
     | "mecard/items/mad_compass.png"
     | "mecard/items/magnet.png"
     | "mecard/items/med_kit.png"
+    | "mecard/items/metal_detector.png"
     | "mecard/items/nesting_dolls.png"
+    | "mecard/items/patch.png"
     | "mecard/items/pedometer.png"
     | "mecard/items/phoenix_heart.png"
+    | "mecard/items/piggy_bank.png"
+    | "mecard/items/pillbox.png"
     | "mecard/items/plaster.png"
+    | "mecard/items/plumb_line.png"
     | "mecard/items/potion_bag.png"
     | "mecard/items/reactor.png"
+    | "mecard/items/rigged_coin.png"
     | "mecard/items/roller.png"
     | "mecard/items/rosary.png"
     | "mecard/items/salt_glass.png"
@@ -279,6 +295,8 @@ export type AssetPath =
     | "mecard/items/summon_heart.png"
     | "mecard/items/tactics_book.png"
     | "mecard/items/testament.png"
+    | "mecard/items/urn.png"
+    | "mecard/items/weather_vane.png"
     | "mecard/items/whetstone.png"
     | "mecard/items/wings.png"
     | "mecard/menu/title.png"
@@ -1047,40 +1065,35 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/border/altar.png",
     "mecard/border/antiquarian.png",
     "mecard/border/butcher.png",
-    "mecard/border/castle.png",
     "mecard/border/chest.png",
     "mecard/border/demon.png",
-    "mecard/border/dojo.png",
     "mecard/border/enchanter.png",
-    "mecard/border/factory.png",
-    "mecard/border/forest.png",
     "mecard/border/forge.png",
-    "mecard/border/graveyard.png",
-    "mecard/border/harbor.png",
-    "mecard/border/hell.png",
     "mecard/border/hospital.png",
     "mecard/border/inventor.png",
     "mecard/border/mad-doctor.png",
     "mecard/border/magician.png",
     "mecard/border/map.png",
     "mecard/border/merchant.png",
-    "mecard/border/mine.png",
     "mecard/border/necromancer.png",
     "mecard/border/removal.png",
     "mecard/border/shop.png",
     "mecard/border/strategist.png",
-    "mecard/border/swamp.png",
     "mecard/border/tavern.png",
     "mecard/border/trainer.png",
     "mecard/border/trainer_monster.png",
-    "mecard/border/tundra.png",
-    "mecard/border/volcano.png",
     "mecard/border/weaver.png",
     "mecard/border/witch.png",
     "mecard/cards/back.png",
+    "mecard/cards/back_10.png",
     "mecard/cards/back_2.png",
     "mecard/cards/back_3.png",
     "mecard/cards/back_4.png",
+    "mecard/cards/back_5.png",
+    "mecard/cards/back_6.png",
+    "mecard/cards/back_7.png",
+    "mecard/cards/back_8.png",
+    "mecard/cards/back_9.png",
     "mecard/cards/invalid.png",
     "mecard/floors/castle/armor.png",
     "mecard/floors/castle/banner.png",
@@ -1091,6 +1104,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/castle/tower.png",
     "mecard/floors/cave/bigshroom.png",
     "mecard/floors/cave/bones.png",
+    "mecard/floors/cave/border.png",
     "mecard/floors/cave/logo.png",
     "mecard/floors/cave/mushroom.png",
     "mecard/floors/cave/pebbles.png",
@@ -1266,8 +1280,10 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/hud/wood_plank.png",
     "mecard/items/alembic.png",
     "mecard/items/amulet.png",
+    "mecard/items/anchor.png",
     "mecard/items/ashtray.png",
     "mecard/items/bag.png",
+    "mecard/items/bandolier.png",
     "mecard/items/banner.png",
     "mecard/items/battery.png",
     "mecard/items/belt.png",
@@ -1275,18 +1291,27 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/blood_trail.png",
     "mecard/items/boots.png",
     "mecard/items/bottle_bag.png",
+    "mecard/items/breathalyzer.png",
     "mecard/items/bubble_body.png",
+    "mecard/items/camp_soup.png",
+    "mecard/items/chalk.png",
+    "mecard/items/chew_bone.png",
+    "mecard/items/chewing_gum.png",
     "mecard/items/clover.png",
     "mecard/items/cooler.png",
+    "mecard/items/cord.png",
     "mecard/items/debt.png",
     "mecard/items/demon_fang.png",
+    "mecard/items/detonator.png",
     "mecard/items/dodge_scepter.png",
     "mecard/items/doll.png",
     "mecard/items/echo.png",
     "mecard/items/element_bag.png",
+    "mecard/items/expired_pillbox.png",
     "mecard/items/fang.png",
     "mecard/items/fang_necklace.png",
     "mecard/items/flower_crown.png",
+    "mecard/items/funeral_notice.png",
     "mecard/items/gear.png",
     "mecard/items/glass_heart.png",
     "mecard/items/grimoire.png",
@@ -1294,16 +1319,25 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/horseshoe.png",
     "mecard/items/hourglass.png",
     "mecard/items/king_crown.png",
+    "mecard/items/label.png",
+    "mecard/items/lightning_rod.png",
     "mecard/items/loaded_die.png",
+    "mecard/items/lottery_ticket.png",
     "mecard/items/mad_compass.png",
     "mecard/items/magnet.png",
     "mecard/items/med_kit.png",
+    "mecard/items/metal_detector.png",
     "mecard/items/nesting_dolls.png",
+    "mecard/items/patch.png",
     "mecard/items/pedometer.png",
     "mecard/items/phoenix_heart.png",
+    "mecard/items/piggy_bank.png",
+    "mecard/items/pillbox.png",
     "mecard/items/plaster.png",
+    "mecard/items/plumb_line.png",
     "mecard/items/potion_bag.png",
     "mecard/items/reactor.png",
+    "mecard/items/rigged_coin.png",
     "mecard/items/roller.png",
     "mecard/items/rosary.png",
     "mecard/items/salt_glass.png",
@@ -1320,6 +1354,8 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/summon_heart.png",
     "mecard/items/tactics_book.png",
     "mecard/items/testament.png",
+    "mecard/items/urn.png",
+    "mecard/items/weather_vane.png",
     "mecard/items/whetstone.png",
     "mecard/items/wings.png",
     "mecard/menu/title.png",

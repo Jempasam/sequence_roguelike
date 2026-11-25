@@ -69,10 +69,9 @@ describe("a fight made", () => {
         expect(ambush.kits).toEqual(type.kits)
         expect(ambush.ambush).toBe(ambush)
         const foesOf = (fight: FightType) => fight.create(run, AT).battle.units.filter(unit => unit.team === run.monstersTeam)
-        for(const fight of [type, ambush]){
-            const shown = foesOf(fight).map(unit => [unit.stats.showChain.value, unit.stats.showHand.value])
-            expect(shown).toEqual([[true, true], [true, true]])
-        }
+        const shownOf = (fight: FightType) => foesOf(fight).map(unit => [unit.stats.showChain.value, unit.stats.showHand.value])
+        expect(shownOf(type)).toEqual([[true, true], [true, true]])
+        expect(shownOf(ambush)).toEqual([[false, true], [false, true]])
     })
 
     test("every fight against kits → has its ambush among the fights of the catalog", () => {
@@ -91,7 +90,7 @@ describe("a fight made", () => {
         const { battle } = type.create(run, AT)
         const loaded = battle.clone()
         const foe = loaded.units.find(unit => unit.team.name === run.monstersTeam.name)!
-        expect([foe.stats.showChain.value, foe.stats.showHand.value]).toEqual([true, true])
+        expect([foe.stats.showChain.value, foe.stats.showHand.value]).toEqual([false, true])
         for(const hero of loaded.units.filter(unit => unit.team.name !== run.monstersTeam.name)){
             expect([hero.stats.showChain.value, hero.stats.showHand.value]).toEqual([false, true])
         }
@@ -333,6 +332,16 @@ describe("the ghost fight", () => {
         const foes = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
         expect(foes.map(unit => unit.name)).toEqual(run.ghosts[0].party().map(hero => hero.name))
         expect(run.heroes).toHaveLength(2)
+    })
+
+    test("made as a fight → the chains of the ghosts are shown, hidden as an ambush", () => {
+        const run = startedRun(1)
+        run.ghosts = [ghostOf(2)]
+        const shownOf = (type: FightType) => type.create(run, { layer: 5, across: 0.5 }).battle.units
+            .filter(unit => unit.team === run.monstersTeam)
+            .map(unit => unit.stats.showChain.value)
+        expect(shownOf(GHOST_FIGHT).every(shown => shown)).toBe(true)
+        expect(shownOf(GHOST_AMBUSH).some(shown => shown)).toBe(false)
     })
 
     test("made with no game in reach → an empty fight rather than a broken one", () => {

@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { WITCH_HALT } from "../../halt/subs/gift/WitchHalt"
 import { ALCHEMIST_HALT } from "../../halt/subs/deck/AlchemistHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
@@ -33,7 +33,7 @@ export const SWAMP_FLOOR: FloorType = {
     name: "Marais",
     description: "Boue, poisons et crapauds, et une hydre au bout. Plus de sorcières, d'alchimistes et d'hôpitaux.",
     icon: visual("floors/swamp/logo"),
-    look: sceneLook(28, 38, 22, "swamp"),
+    look: floorLook(28, 38, 22, "swamp"),
     decorations: [
         { picture: visual("floors/swamp/reed"), size: 2 },
         { picture: visual("floors/swamp/small_reed"), size: 2 },

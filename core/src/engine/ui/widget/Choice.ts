@@ -83,6 +83,9 @@ export class Choice extends ContentContainer {
     /** What the pointer coming over an option or leaving does, nothing when none. */
     public onHover: ((step: number, option: number, over: boolean) => void)|null = null
 
+    /** Are the options not to be picked? They are still hovered, and what marks or appends still shows. */
+    public locked = false
+
     /**
      * @param next - The step following picks, the index of the option picked in each step before: the
      *   first step for none, none once the picks are done.
@@ -112,6 +115,29 @@ export class Choice extends ContentContainer {
 
     /** The index of the option picked in each step so far. */
     public get picks(): readonly number[] { return this.#picks }
+
+    /**
+     * Show an option as the one picked in its step, the steps after it dropped, without asking what follows:
+     * what picked it, such as the click of a player, already told whatever decides of the steps. Nothing is
+     * done for a step or an option that is not shown.
+     */
+    public mark(depth: number, index: number): void {
+        const options = this.#options[depth]
+        if(!options?.[index]) return
+        const steps = this.#steps.children
+        for(let after = steps.length - 1; after > depth; after--) this.#steps.remove(steps[after])
+        this.#options.length = depth + 1
+        this.#picks.length = depth
+        this.#picks.push(index)
+        options.forEach((option, each) => {
+            option.picked = each === index
+        })
+    }
+
+    /** Show a step under the others, offered by whatever decides of the steps rather than asked for. */
+    public append(step: ChoiceStep): void {
+        this.#open(step)
+    }
 
 
     protected computeHint(maxWidth: number): SizeHint {
@@ -162,14 +188,8 @@ export class Choice extends ContentContainer {
 
     /** Pick an option of a step: the steps after it go, then the next one comes, or the picks are done. */
     #pick(depth: number, index: number): void {
-        const steps = this.#steps.children
-        for(let after = steps.length - 1; after > depth; after--) this.#steps.remove(steps[after])
-        this.#options.length = depth + 1
-        this.#picks.length = depth
-        this.#picks.push(index)
-        this.#options[depth].forEach((option, each) => {
-            option.picked = each === index
-        })
+        if(this.locked) return
+        this.mark(depth, index)
         const next = this.#next(this.#picks)
         if(next) this.#open(next)
         else this.#done([...this.#picks])

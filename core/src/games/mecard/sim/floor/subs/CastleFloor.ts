@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { STRATEGIST_HALT } from "../../halt/subs/deck/StrategistHalt"
 import { MERCHANT_HALT } from "../../halt/subs/gift/MerchantHalt"
@@ -33,7 +33,7 @@ export const CASTLE_FLOOR: FloorType = {
     name: "Château",
     description: "Des gardes, des chevaliers et un seigneur noir au bout. Plus de forges, de stratèges et de marchands.",
     icon: visual("floors/castle/logo"),
-    look: sceneLook(30, 28, 34, "castle"),
+    look: floorLook(30, 28, 34, "castle"),
     decorations: [
         { picture: visual("floors/castle/tower"), size: 2 },
         { picture: visual("floors/castle/banner"), size: 2 },

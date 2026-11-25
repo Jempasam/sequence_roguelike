@@ -17,6 +17,26 @@ export function assetsDirectories(): string[] {
     return [resolve(here, "..", "..", "assets"), resolve(here, "..", "..", "generated_assets")]
 }
 
+/**
+ * The file of the audio worker. In the release it sits next to the bundle, since a worker is started from
+ * a file; in dev it is the one `npm run desktop` builds in the release folder before starting.
+ */
+export function audioWorkerFile(): string {
+    const here = dirname(fileURLToPath(import.meta.url))
+    if(!import.meta.env.DEV) return join(here, "audioWorker.cjs")
+    return resolve(here, "..", "dist", `${process.platform}-${process.arch}`, "audioWorker.cjs")
+}
+
+/**
+ * The `sdl.node` addon the audio worker drives the device with: the copy the release ships in native/, or
+ * the one npm installed in dev.
+ */
+export function sdlAddonFile(): string {
+    const here = dirname(fileURLToPath(import.meta.url))
+    if(!import.meta.env.DEV) return join(here, "native", "sdl", "sdl.node")
+    return resolve(here, "..", "..", "node_modules", "@kmamal", "sdl", "dist", "sdl.node")
+}
+
 /** The folder the data of the player is kept in, in the data folder of the user. */
 export function saveDirectory(): string {
     return join(userDataDirectory(), APP_DIRECTORY)

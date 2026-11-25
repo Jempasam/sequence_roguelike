@@ -8,7 +8,7 @@ export class Energizer extends AbstractUsable {
 
 
     constructor(){
-        super("Énergisant", visual("usables/energizer"), "La chaîne de ce round est jouée deux fois.")
+        super("Énergisant", visual("usables/energizer"), "La chaîne de ce round est jouée deux fois.", { charges: 4 })
     }
 
 

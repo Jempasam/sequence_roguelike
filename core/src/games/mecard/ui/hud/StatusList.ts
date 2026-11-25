@@ -4,7 +4,9 @@ import type { BattleScene, ShownStatus } from "../battle/BattleScene"
 import type { UnitSprites } from "../look/UnitSprites"
 
 import type { Process } from "../../sim/process/Process"
+import { Detail } from "./Detail"
 import { StatusProcessList } from "./StatusProcessList"
+import { viewDetails } from "./viewDetails"
 
 /** The space between the list and the edges of the arena, in virtual pixels. */
 const MARGIN = 3
@@ -35,19 +37,24 @@ export class StatusList {
     ){}
 
 
-    /** Build the list again for a unit, none for an empty list: its statuses, then its processes. */
-    public rebuild(unit: Unit|null, scene: BattleScene): void {
+    /**
+     * Build the list again for a unit, none for an empty list: its statuses, then its processes.
+     *
+     * @returns What they tell while the pointer is over them.
+     */
+    public rebuild(unit: Unit|null, scene: BattleScene): Detail {
         if(this.#list) this.layer.content.remove(this.#list)
         this.#list = null
-        if(!unit || !scene.alive(unit)) return
+        if(!unit || !scene.alive(unit)) return Detail.none()
         const list = new StatusProcessList(this.theme, this.sprites, scene, {
             onStatusHover: this.onHover,
             onProcessHover: this.onProcessHover,
         }, { direction: "column", align: "start", scale: LIST_SCALE })
         list.unit = unit
-        if(list.count === 0) return
+        if(list.count === 0) return Detail.none()
         this.#list = list
         this.layer.content.add(list)
+        return Detail.all(...viewDetails(list))
     }
 
     /** Lay it over the bottom left corner of a room of the arena, in virtual pixels. */

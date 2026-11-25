@@ -66,6 +66,38 @@ describe("AnimationChain", () => {
         expect(chain.busy).toBe(false)
     })
 
+    test("nothing going on → idle is done at once", async() => {
+        const { chain } = chained()
+        await chain.idle()
+    })
+
+    test("animations going on → idle is done after the last one ends", async() => {
+        const { chain, clock, played, timed } = chained()
+        chain.add(timed("first", 1))
+        chain.add(timed("second", 1))
+        let idle = false
+        void chain.idle().then(() => { idle = true })
+        clock.advance(1)
+        await settle()
+        expect(idle).toBe(false)
+        clock.advance(1)
+        await settle()
+        expect(idle).toBe(true)
+        expect(played.at(-1)).toBe("second ends")
+    })
+
+    test("cancelled while one goes on → idle is done once it ends", async() => {
+        const { chain, clock, timed } = chained()
+        chain.add(timed("first", 1))
+        chain.add(timed("second", 1))
+        let idle = false
+        void chain.idle().then(() => { idle = true })
+        chain.cancel()
+        clock.advance(1)
+        await settle()
+        expect(idle).toBe(true)
+    })
+
     test("an animation failing → told, and the next plays", async() => {
         const { chain, played, errors, timed } = chained()
         const failure = new Error("no picture")

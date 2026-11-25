@@ -76,7 +76,7 @@ export type { Migration, SaveErrorReason, SaveFormat } from "./engine/save"
 export { BitmapFont, contrastRatio, luminance, MIN_CONTRAST, outlineAgainst, TextLayout } from "./engine/text"
 export type { BitmapFontOptions, Glyph, GridFontOptions, Tint } from "./engine/text"
 export {
-    AnimationChain, Box, Bubble, Button, Choice, Component, Container, ContentContainer, ContextMenu,
+    AnimationChain, ArrowScroll, Box, Bubble, Button, Choice, Component, Container, ContentContainer, ContextMenu,
     CURSOR_BLINK, Dial, DirtyRegion, EMPTY_HINT, FitBox, FrameClock, Image, instant, Label, Layer,
     MAX_DIRTY_RECTS, MIN_VIRTUAL_HEIGHT, OverflowContainer,
     Fade, NineSlice, NumberInput, Panel, Paragraph, Parallax, readTransition, Rect, Rope, Scroll, sizeHint,
@@ -88,7 +88,7 @@ export {
 export type {
     BubbleOutline, BubbleSide, BubbleSize, BubblePlacement, PopupBubbleFrame, PopupBubbleOptions,
     PopupBubbleTarget,
-    Align, Animation, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
+    Align, Animation, ArrowScrollOptions, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
     ChoiceOptions, DialLook,
     DropdownOption, ChoiceStep, FitMode, ImageOptions, LabelOptions, MenuEntry, NavigationAxis, NineSliceMargins,
     NineSliceOptions, NumberInputOptions, OverflowContainerOptions, PanelOptions, ParagraphOptions, ParallaxAxes, ParallaxLayer, ParallaxOptions, ParallaxPlace, PopupAnchor, Pose,

@@ -44,6 +44,10 @@ export interface TravelState {
     readonly journey: Journey
     readonly place: Place|null
     readonly depth: number
+    readonly floorNumber: number|null
+
+    /** The places of the map the party stood on, in order. */
+    readonly trail: readonly Place[]
 }
 
 /** A dialog answered, and the indices of what was picked in it, none for a dialog only gone on with. */
@@ -169,6 +173,15 @@ export class Travel {
     /** How many places the party went to, from 1 once it stands on the first, the exits not counted. */
     public depth = 1
 
+    /**
+     * Which floor of the run is being gone through, from 1 for the first: none for a run read back from a save
+     * that did not tell it, which cannot know.
+     */
+    public floorNumber: number|null = 1
+
+    /** The places of the map the party stood on, in order, the map of the floor being gone through only. */
+    public readonly trail: Place[] = []
+
     /** The floor being gone through. */
     public floor: Floor
 
@@ -290,17 +303,23 @@ export class Travel {
      */
     public state(): TravelState {
         if(this.#phase !== "map") throw new Error(`A journey is written down on the map, not during ${this.#phase}.`)
-        return { floor: this.floor, journey: this.journey, place: this.#place, depth: this.depth }
+        return {
+            floor: this.floor, journey: this.journey, place: this.#place, depth: this.depth,
+            floorNumber: this.floorNumber, trail: [...this.trail],
+        }
     }
 
     /**
      * Stand the journey where a state has it, nothing told: it is another journey, not a move of this one.
      * The run makes its journey itself, so a state is read back into it rather than into a new one.
      */
-    public restore({ floor, journey, place, depth }: TravelState): void {
+    public restore({ floor, journey, place, depth, floorNumber, trail }: TravelState): void {
         this.floor = floor
         this.journey = journey
         this.depth = depth
+        this.floorNumber = floorNumber
+        this.trail.length = 0
+        this.trail.push(...trail)
         this.#place = place
         this.#halts.clear()
         this.#phase = "map"
@@ -340,6 +359,18 @@ export class Travel {
             if(this.#place && !place.exitTo) this.depth++
             this.#standOn(place)
         }
+        this.#enterPhase("entering")
+    }
+
+    /**
+     * Wait to enter the place the party stands on, as {@link Travel.go} leaves it, without moving: for a journey
+     * that was already stood on the place by a move it heard of.
+     *
+     * @throws {@link Error} Out of the map, or where the party stands on no place.
+     */
+    public arrive(): void {
+        if(this.#phase !== "map") throw new Error(`The party arrives from the map, not during ${this.#phase}.`)
+        if(!this.#place) throw new Error("The party stands on no place to arrive at.")
         this.#enterPhase("entering")
     }
 
@@ -458,6 +489,7 @@ export class Travel {
     /** Go into a floor, its map new, the party standing before its first layer. */
     public enterFloor(floor: Floor): void {
         this.depth++
+        if(this.floorNumber !== null) this.floorNumber++
         this.floor = floor
         this.redrawMap()
         this.floorEntered.notify(floor)
@@ -467,6 +499,7 @@ export class Travel {
     public redrawMap(): void {
         this.journey = this.#newJourney()
         this.#place = null
+        this.trail.length = 0
         this.#halts.clear()
         this.mapDrawn.notify(this.journey)
     }
@@ -653,6 +686,7 @@ export class Travel {
     #standOn(place: Place): void {
         const from = this.#place
         this.#place = place
+        this.trail.push(place)
         this.moved.notify({ from, to: place })
     }
 

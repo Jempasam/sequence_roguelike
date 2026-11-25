@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
 import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
@@ -39,7 +39,7 @@ export const FOREST_FLOOR: FloorType = {
     name: "Forêt",
     description: "Des chasseurs rapides, et un troll au bout. Plus d'hôpitaux, de tavernes et de dresseurs.",
     icon: visual("floors/forest/logo"),
-    look: sceneLook(16, 32, 22, "forest"),
+    look: floorLook(16, 32, 22, "forest"),
     decorations: [
         { picture: visual("floors/forest/cabin"), size: 2 },
         { picture: visual("floors/forest/tree"), size: 2 },

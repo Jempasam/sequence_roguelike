@@ -36,4 +36,4 @@ export class HeartFlask extends AbstractUsable {
     }
 }
 
-export const SHIELD_FLASK = new HeartFlask("Fiole de garde", visual("usables/shield_flask"), SHIELD_HEART)
+export const SHIELD_FLASK = new HeartFlask("Fiole de garde", visual("usables/shield_flask"), SHIELD_HEART, 1, { charges: 6 })

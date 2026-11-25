@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { AssetError, Button, plainText, Tabs, WrapBox } from "@game/core"
-import type { Assets, Component, Painter } from "@game/core"
-import { CatalogDialog, CHEST_HALT, HeroDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
+import { AssetError, Button, Label, plainText, Tabs, WrapBox } from "@game/core"
+import type { Assets, ChoiceOption, Component, Painter } from "@game/core"
+import { CatalogDialog, CHEST_HALT, HeroDialog, OfferDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
 import type { CatalogPick } from "@game/core/mecard"
 import { CardView } from "@game/core/mecard/card-view"
 import { CatalogBrowser } from "@game/core/mecard/catalog-browser"
@@ -97,6 +97,12 @@ function ofClass<Type extends Component>(
     return allUnder(layer.content).filter((each): each is Type => each instanceof kind)
 }
 
+/** The options of the choices of the screen, in the order shown. */
+function optionsOf(game: Shown): ChoiceOption[] {
+    const layer = game.setup.ui.layers.find(each => each.name === "ui")!
+    return allUnder(layer.content).filter(each => each.constructor.name === "ChoiceOption") as ChoiceOption[]
+}
+
 /** Where the middle of a component lies on the layers. */
 function middleOf(component: Component): { x: number, y: number } {
     let x = component.bounds.width / 2
@@ -157,6 +163,89 @@ describe("TravelScreen, what is hovered", () => {
         expect(screen.tooltip.open).toBe(false)
     })
 
+    test("an offer taken by the travel, then a character → each option shows picked, the characters under it", async() => {
+        const game = await builtScreen()
+        const { run } = game
+        const offer = new OfferDialog("Quoi ?", false, [{ cards: [], text: "a" }, { cards: [], text: "b" }])
+        run.travel.offerAsked.notify(offer)
+        game.setup.ui.render()
+        const picked = () => optionsOf(game).map(option => option.picked)
+        expect(picked()).toEqual([false, false])
+        run.travel.offerTaken.notify({ dialog: offer, picks: [1] })
+        expect(picked()).toEqual([false, true])
+        const hero = new HeroDialog("Qui ?", false, run.heroes, true)
+        run.travel.heroAsked.notify(hero)
+        game.setup.ui.render()
+        expect(picked()).toHaveLength(2 + run.heroes.length)
+        run.travel.heroTaken.notify({ dialog: hero, picks: [0] })
+        expect(picked().slice(2)).toEqual(run.heroes.map((_, index) => index === 0))
+        run.travel.offerTaken.notify({ dialog: offer, picks: [0] })
+        expect(picked()).toEqual([true, false])
+    })
+
+    test("an option clicked, the travel taking it and asking a character → the same state as taken alone", async() => {
+        const game = await builtScreen()
+        const { run, setup, screen } = game
+        const offer = new OfferDialog("Quoi ?", false, [{ cards: [], text: "a" }, { cards: [], text: "b" }])
+        run.travel.takeOffer = (dialog, index) => {
+            run.travel.offerTaken.notify({ dialog, picks: [index] })
+            run.travel.heroAsked.notify(new HeroDialog("Qui ?", false, run.heroes, true))
+        }
+        run.travel.offerAsked.notify(offer)
+        setup.ui.render()
+        const [, second] = optionsOf(game)
+        const { x, y } = middleOf(second)
+        setup.port.send({ type: "pointer-move", x, y }, { type: "pointer-down", button: 0, x, y })
+        setup.port.send({ type: "pointer-up", button: 0, x, y })
+        screen.frame(setup.frame(), NO_WORLD, 0)
+        setup.ui.render()
+        const options = optionsOf(game)
+        expect(options).toHaveLength(2 + run.heroes.length)
+        expect(options.slice(0, 2).map(option => option.picked)).toEqual([false, true])
+    })
+
+    test("halts locked, an option clicked → nothing taken, nothing shown picked, until the travel takes it", async() => {
+        const game = await builtScreen()
+        const { run, setup, screen } = game
+        screen.locks = { map: false, halts: true }
+        const taken: number[] = []
+        run.travel.takeOffer = (_, index) => { taken.push(index) }
+        const offer = new OfferDialog("Quoi ?", false, [{ cards: [], text: "a" }, { cards: [], text: "b" }])
+        run.travel.offerAsked.notify(offer)
+        setup.ui.render()
+        const [, second] = optionsOf(game)
+        const { x, y } = middleOf(second)
+        setup.port.send({ type: "pointer-move", x, y }, { type: "pointer-down", button: 0, x, y })
+        setup.port.send({ type: "pointer-up", button: 0, x, y })
+        screen.frame(setup.frame(), NO_WORLD, 0)
+        setup.ui.render()
+        expect(taken).toEqual([])
+        expect(optionsOf(game).map(option => option.picked)).toEqual([false, false])
+        run.travel.offerTaken.notify({ dialog: offer, picks: [1] })
+        expect(optionsOf(game).map(option => option.picked)).toEqual([false, true])
+    })
+
+    test("halts locked → the buttons of a dialog do nothing, and free again they do", async() => {
+        const game = await builtScreen()
+        const { run, setup, screen } = game
+        let left = 0
+        run.travel.leave = () => { left++ }
+        screen.locks = { map: false, halts: true }
+        run.travel.told.notify(new TellDialog("Voilà", null))
+        setup.ui.render()
+        const next = () => ofClass(game, Button).find(button => {
+            return allUnder(button).some(each => each instanceof Label && each.text === "Continuer")
+        })!
+        expect(next().enabled).toBe(false)
+        next().activate()
+        expect(left).toBe(0)
+        screen.locks = { map: false, halts: false }
+        setup.ui.render()
+        expect(next().enabled).toBe(true)
+        next().activate()
+        expect(left).toBe(1)
+    })
+
     test("a thing of the catalogue asked → its browser shows the types allowed, a click takes it", async() => {
         const game = await builtScreen()
         const { run, screen, setup } = game
@@ -210,12 +299,12 @@ describe("TravelScreen", () => {
     test("the map locked, then free → it shows, whatever the travel does, and takes what it did", async() => {
         const game = shown()
         const { setup, run, screen, enters } = game
-        screen.locks = { map: true }
+        screen.locks = { map: true, halts: false }
         setup.ui.render()
         run.travel.jump(run.travel.next[0])
         await play(game, 0.6)
         expect(enters).toHaveLength(0)
-        screen.locks = { map: false }
+        screen.locks = { map: false, halts: false }
         setup.ui.render()
         expect(screen.locks.map).toBe(false)
     })

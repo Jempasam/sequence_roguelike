@@ -179,7 +179,7 @@ export class PlayerCatalog {
     #saveSoon(): void {
         if(!this.slot || this.#saving) return
         this.#saving = true
-        void Promise.resolve().then(async () => {
+        void Promise.resolve().then(async() => {
             this.#saving = false
             const save = {} as Record<CatalogCategory, string[]>
             for(const category of CATALOG_CATEGORIES) save[category] = [...this.#found[category]]

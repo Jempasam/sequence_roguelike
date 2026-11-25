@@ -94,8 +94,11 @@ export interface Internals {
     poseOf(container: Container<unknown>): Pose|null
     holdsPointer(container: Container<unknown>): boolean
     navigationAxisOf(container: Container<unknown>): NavigationAxis|null
-    reveal(container: Container<unknown>, rect: Readonly<Rect>): void
+    reveal(container: Container<unknown>, rect: Readonly<Rect>, align: RevealAlign): void
 }
+
+/** Where a zone revealed ends up: anywhere in sight, moving the least, or at the start of the viewport. */
+export type RevealAlign = "nearest"|"start"
 
 /** The axis a container navigates its children along with the direction actions. */
 export type NavigationAxis = "vertical"|"horizontal"
@@ -271,11 +274,13 @@ export abstract class Component {
     /**
      * Scroll every viewport around it so it shows, from the innermost one out, as when it takes the focus.
      * Nothing moves before it is laid out.
+     *
+     * @param align - `"start"` puts it at the start of the horizontal viewports as far as they scroll.
      */
-    public scrollIntoView(): void {
+    public scrollIntoView(align: RevealAlign = "nearest"): void {
         const rect = Component.#revealed.copyFrom(this.#bounds)
         for(let parent = this.#parent; parent; parent = parent.parent){
-            internals.reveal(parent, rect)
+            internals.reveal(parent, rect, align)
             const { x, y } = parent.bounds
             rect.translate(x - internals.scrollXOf(parent), y - internals.scrollYOf(parent))
         }

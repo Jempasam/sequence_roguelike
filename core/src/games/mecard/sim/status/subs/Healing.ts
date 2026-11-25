@@ -5,6 +5,10 @@ import type { UnitContext } from "../../battle/Action"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 import * as Areas from "../../battle/area/Areas"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../battle/previewColors"
 
 /** How far a totem heals, in meters. */
 export const TOTEM_RADIUS = 1.5
@@ -37,6 +41,13 @@ export class Healing extends BaseStatus {
             if(allies.length > 0) battle.signals.notifyStatus.notify({ unit, target: this })
             for(const ally of allies) ally.hearts.heal(this.level)
         }))
+    }
+
+    /** The zone it heals at the end of the round, from where its unit stands now, and the allies in it. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const area = Areas.circle(pose.position, TOTEM_RADIUS)
+        const allies = battle.fetch(area, unit).filter(ally => ally.team === unit.team)
+        return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...Previews.strike([], allies))
     }
 
     public remove(): void {

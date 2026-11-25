@@ -11,6 +11,7 @@ import { CardChain } from "../card/CardChain"
 import { ACTION } from "../card/CardType"
 import type { Carried, UsableSlot } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
+import { SHIELD_HEART } from "../heart/subs/ShieldHeartKind"
 import { SOLID_HEART } from "../heart/subs/SolidHeartKind"
 import type { Item } from "../item/Item"
 import type { Process } from "../process/Process"
@@ -188,6 +189,9 @@ export class Battle {
 
     /** A unit won gold: the battle knows no purse, the game adds it to the one of the run. */
     public readonly onGetGold: Observable<GoldEvent>
+
+    /** How much gold a unit's purse holds: the battle knows no purse, the game says, none by default. */
+    public goldOf: (unit: Unit) => number = () => 0
 
     /** A unit won cards for good: the battle knows no deck of the run, the game adds them to it. */
     public readonly onGetCards: Observable<CardsEvent>
@@ -388,6 +392,7 @@ export class Battle {
     public add(spec: UnitSpec): Unit {
         const unit = new Unit(spec, this)
         this.#enter(unit)
+        unit.bareShields = unit.hearts.all.filter(heart => heart.kind === SHIELD_HEART && !heart.isEmpty).length
         for(const item of unit.items) this.#plug(unit, item)
         return unit
     }
@@ -1768,6 +1773,7 @@ export class Battle {
                 this.events.push({ type: "status", unit, text: ["utilise ", carried.usable] })
                 try {
                     carried.usable.use({ battle: this, unit }, this.#slotOf(unit, carried))
+                    this.signals.usableUsed.notify({ unit, carried })
                 } catch(error){
                     this.report(error)
                 }

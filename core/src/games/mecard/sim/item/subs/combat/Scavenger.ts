@@ -1,4 +1,9 @@
 import { visual } from "../../../base/Visual"
+import * as Areas from "../../../battle/area/Areas"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../../battle/previewColors"
 import type { PlugContext } from "../../../battle/Action"
 import { LUCIDITY } from "../../../status/subs/Lucidity"
 
@@ -30,6 +35,10 @@ export class ScavengerNose extends AbstractItem {
             })
             if(smelled) battle.applyStatus(unit, LUCIDITY, SCENT_LEVELS)
         }))
+    }
+
+    public preview({ pose }: PreviewContext): Preview {
+        return Previews.still(pose, Previews.polygon(Areas.circle(pose.position, SCENT_RANGE), RANGE_COLOR))
     }
 }
 

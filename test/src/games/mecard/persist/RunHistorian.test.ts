@@ -40,6 +40,68 @@ describe("RunHistorian", () => {
         historian.dispose()
     })
 
+    test("the party fell → the game tells its floor number, its route and its version", async() => {
+        const slot = await slotOf()
+        const run = startedRun(1)
+        const historian = new RunHistorian(run, slot, () => 9, () => {}, () => 1, () => "1.2.3")
+        run.defeated.notify(run)
+        await settle()
+        const [entry] = (await slot.load())!.entries
+        expect(entry.floorNumber).toBe(run.travel.floorNumber)
+        expect(entry.gameVersion).toBe("1.2.3")
+        expect(entry.route!.layers.length).toBeGreaterThan(0)
+        expect(entry.route!.fallAt).toBeLessThan(entry.route!.layers.length)
+        historian.dispose()
+    })
+
+    test("a history of the first version → its games are read, without what came after", async() => {
+        const old = { version: 1, date: 5, seed: 3, depth: 2, floor: "Grotte", gold: 4, heroes: [] }
+        const history = HISTORY_FORMAT.migrations[0]({ entries: [old] })
+        const migrated = history as { entries: Record<string, unknown>[] }
+        expect(migrated.entries[0]).toMatchObject({ version: 2, date: 5, gold: 4 })
+        expect(migrated.entries[0].route).toBeUndefined()
+        expect(HISTORY_FORMAT.decode(migrated)).toEqual(migrated)
+    })
+
+    test("a history written by the first version → read through the storage, its games kept", async() => {
+        const storage = (await new MemoryStorage().open())!
+        const first = new SaveSlot<unknown>(storage, HISTORY_SLOT_KEY, {
+            version: 1, migrations: [], encode: state => state as never, decode: json => json,
+        })
+        const old = { version: 1, date: 5, seed: 3, depth: 2, floor: "Grotte", gold: 4, heroes: [] }
+        await first.update(() => ({ entries: [old] }))
+        const slot = new SaveSlot(storage, HISTORY_SLOT_KEY, HISTORY_FORMAT)
+        const entries = (await slot.load())!.entries
+        expect(entries).toEqual([{ ...old, version: 2 }])
+    })
+
+    test("a route that is not sound → the game stays, without its route, the others untouched", () => {
+        const sound = { version: 2, date: 1, seed: 1, depth: 1, floor: "Grotte", gold: 1, heroes: [] }
+        const route = { layers: [{ kind: "fight", taken: true }], fallAt: 0 }
+        const decoded = HISTORY_FORMAT.decode({ entries: [
+            { ...sound, floorNumber: 2, route },
+            { ...sound, floorNumber: 0, route: { layers: "none", fallAt: 3 } },
+            { ...sound, route: { layers: route.layers, fallAt: 5 } },
+        ] })
+        expect(decoded.entries[0]).toMatchObject({ floorNumber: 2, route })
+        expect(decoded.entries[1].route).toBeUndefined()
+        expect(decoded.entries[1].floorNumber).toBeUndefined()
+        expect(decoded.entries[2].route).toBeUndefined()
+    })
+
+    test("a run that does not know its floor → the game tells neither its floor number nor its route", async() => {
+        const slot = await slotOf()
+        const run = startedRun(1)
+        run.travel.floorNumber = null
+        const historian = new RunHistorian(run, slot, () => 9, () => {})
+        run.defeated.notify(run)
+        await settle()
+        const [entry] = (await slot.load())!.entries
+        expect(entry.floorNumber).toBeUndefined()
+        expect(entry.route).toBeUndefined()
+        historian.dispose()
+    })
+
     test("two games ending at once → both kept, none lost to the other's write", async() => {
         const slot = await slotOf()
         const first = startedRun(1)

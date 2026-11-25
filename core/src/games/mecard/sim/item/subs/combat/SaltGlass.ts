@@ -1,5 +1,11 @@
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
+import * as Areas from "../../../battle/area/Areas"
+import type { Battle } from "../../../battle/Battle"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../../battle/previewColors"
 import type { Unit } from "../../../battle/Unit"
 import type { StatusType } from "../../../status/Status"
 
@@ -25,11 +31,7 @@ export class SaltGlass extends AbstractItem {
         const seen = new Map<StatusType, number>()
         const spread = (type: StatusType, delta: number): void => {
             if(spreading || delta <= 0) return
-            let nearest: Unit|null = null
-            for(const other of battle.touchables){
-                if(other === unit || other.position.distance(unit.position) > SALT_RANGE) continue
-                if(!nearest || other.position.distance(unit.position) < nearest.position.distance(unit.position)) nearest = other
-            }
+            const nearest = nearestTo(battle, unit)
             if(!nearest) return
             spreading = true
             try {
@@ -53,6 +55,26 @@ export class SaltGlass extends AbstractItem {
             if(held === unit) seen.delete(type)
         }))
     }
+
+    /** The range of the glass around its unit, and the unit that would catch what it suffers. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const nearest = nearestTo(battle, unit)
+        return Previews.still(
+            pose,
+            Previews.polygon(Areas.circle(pose.position, SALT_RANGE), RANGE_COLOR),
+            ...Previews.strike([], nearest ? [nearest] : []),
+        )
+    }
+}
+
+/** The unit nearest to a unit within the range of the glass, none when nobody is that close. */
+function nearestTo(battle: Battle, unit: Unit): Unit|null {
+    let nearest: Unit|null = null
+    for(const other of battle.touchables){
+        if(other === unit || other.position.distance(unit.position) > SALT_RANGE) continue
+        if(!nearest || other.position.distance(unit.position) < nearest.position.distance(unit.position)) nearest = other
+    }
+    return nearest
 }
 
 export const SALT_GLASS = new SaltGlass()

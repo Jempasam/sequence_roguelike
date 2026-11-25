@@ -35,6 +35,12 @@ export class AnimationChain {
         return this.#waiting.length
     }
 
+    /** Wait for the chain to have nothing going on nor waiting: done at once when it is not busy. */
+    public idle(): Promise<void> {
+        if(!this.busy) return Promise.resolve()
+        return new Promise(resolve => this.#idlers.push(resolve))
+    }
+
     /** Add an animation at the end: started at once when nothing is going on. */
     public add(animation: Animation): void {
         this.#waiting.push(animation)
@@ -51,10 +57,16 @@ export class AnimationChain {
 
     #playing = false
 
+    /** What waits for the chain to be idle. */
+    readonly #idlers: (() => void)[] = []
+
     #playNext(): void {
         const animation = this.#waiting.shift()
         this.#playing = animation !== undefined
-        if(!animation) return
+        if(!animation){
+            for(const resolve of this.#idlers.splice(0)) resolve()
+            return
+        }
         this.#start(animation).catch(this.report).finally(() => this.#playNext())
     }
 

@@ -36,6 +36,25 @@ describe("saveTravel", () => {
         expect(ways(loaded)).toEqual(ways(travel))
     })
 
+    test("a floor number and a trail → the same once read back, the trail by places", () => {
+        const { travel } = startedRun(7)
+        walk(travel, 3)
+        travel.floorNumber = 4
+        const loaded = reloaded(saveTravel(travel))
+        expect(loaded.floorNumber).toBe(4)
+        const ranks = (of: Travel): number[] => of.trail.map(place => of.journey.places.indexOf(place))
+        expect(ranks(loaded)).toEqual(ranks(travel))
+        expect(loaded.trail.length).toBe(3)
+    })
+
+    test("a save without a floor number → the floor of the run is not known", () => {
+        const kept = Object.entries(saveTravel(startedRun(7).travel))
+            .filter(([key]) => key !== "floorNumber" && key !== "trail")
+        const loaded = reloaded(Object.fromEntries(kept) as unknown as TravelSave)
+        expect(loaded.floorNumber).toBeNull()
+        expect(loaded.trail).toEqual([])
+    })
+
     test("a map read back → its links, fights and exits as they were", () => {
         const { travel } = startedRun(3)
         const loaded = reloaded(saveTravel(travel))

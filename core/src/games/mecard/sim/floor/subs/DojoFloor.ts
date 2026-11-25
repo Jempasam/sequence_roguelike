@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { TRAINER_HALT } from "../../halt/subs/gift/TrainerHalt"
 import { ENCHANTER_HALT } from "../../halt/subs/deck/EnchanterHalt"
 import type { FightCategory } from "../../fight/FightCategory"
@@ -32,7 +32,7 @@ export const DOJO_FLOOR: FloorType = {
     name: "Dojo",
     description: "Des lames rapides, et un shogun fantôme au bout. Plus de dresseurs et d'enchanteurs.",
     icon: visual("floors/dojo/logo"),
-    look: sceneLook(40, 20, 28, "dojo"),
+    look: floorLook(40, 20, 28, "dojo"),
     decorations: [
         { picture: visual("floors/dojo/lantern"), size: 2 },
         { picture: visual("floors/dojo/bamboo"), size: 2 },

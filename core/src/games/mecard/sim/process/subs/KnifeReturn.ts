@@ -1,4 +1,7 @@
 import type { PlugContext, UnitContext } from "../../battle/Action"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
 import { DamageType } from "../../battle/DamageType"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
@@ -32,6 +35,14 @@ export class KnifeReturn extends AbstractProcess {
         hold(battle.tether(unit, this.knife, visual("tethers/laser", { color: [0.85, 0.9, 1] })))
     }
 
+
+    /** The way back of the knife at the end of the round, and the units it would wound. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        if(!this.knife.alive) return Previews.still(pose)
+        const way = Areas.line(this.knife.position, pose.position, KNIFE_RETURN_WIDTH)
+        const wounded = battle.fetch(way, unit).filter(other => other !== this.knife)
+        return Previews.still(pose, ...Previews.strike([way], wounded))
+    }
 
     public dispose({ battle, unit }: UnitContext): void {
         const { knife } = this

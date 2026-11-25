@@ -1,5 +1,9 @@
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { MOVE_WIDTH } from "../../../battle/previewColors"
 import type { Unit } from "../../../battle/Unit"
 import { BLEEDING } from "../../../status/subs/Wounds"
 
@@ -38,6 +42,19 @@ export class BloodTrail extends AbstractItem {
                 following = false
             }
         }))
+    }
+
+    /** The way the trail would carry the unit on, toward the nearest bleeding enemy. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const prey = bleedingNearest(battle.enemiesOf(unit), unit)
+        const toward = prey ? prey.position.minus(pose.position).normalized : null
+        if(!prey || !toward) return Previews.still(pose)
+        const to = pose.position.plus(toward.times(TRAIL_LENGTH * unit.stats.move.value))
+        return Previews.still(
+            pose,
+            ...Previews.moving(unit, pose.position, to, to, MOVE_WIDTH),
+            ...Previews.strike([], [prey]),
+        )
     }
 }
 

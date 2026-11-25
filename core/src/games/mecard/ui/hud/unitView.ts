@@ -35,6 +35,9 @@ export interface UnitViewOptions {
 
     /** The place of the deck its cards come from, which colors them, none for cards of no deck. */
     readonly deck?: number|null
+
+    /** The place of the deck each card comes from, when they differ: it wins over `deck`. */
+    readonly deckOf?: (card: Card) => number|null
 }
 
 /**
@@ -67,7 +70,7 @@ export function unitHead(theme: Theme, unit: Hero, sprites: UnitSprites): Compon
 export function unitView(
     theme: Theme, sprites: UnitSprites, unit: Hero, options: UnitViewOptions = {},
 ): Component {
-    const { description = null, cards: withCards = true, perRow, deck } = options
+    const { description = null, cards: withCards = true, perRow, deck, deckOf } = options
     const shown = unitDeckShown(unit)
     const head = new Box("column", { gap: 2, align: "center" })
     head.add(unitHead(theme, unit, sprites))
@@ -77,6 +80,7 @@ export function unitView(
         under: stuffRow(theme, sprites, unit, shown.count || !withCards, !withCards),
         perRow,
         deck,
+        deckOf,
         overlapped: true,
         least: withCards ? undefined : BARE_WIDTH,
     })

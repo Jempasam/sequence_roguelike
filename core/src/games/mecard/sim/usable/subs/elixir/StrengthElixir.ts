@@ -15,8 +15,10 @@ export class StrengthElixir extends RoundElixir {
     constructor(
         /** How many hearts it adds to each attack. */
         public readonly bonus: number,
+
+        charges = 1,
     ){
-        super("Élixir de force", visual("usables/strength_elixir"), ["+", bonus, " ", FORCE, " ce ", BATTLE_ROUND, "."])
+        super("Élixir de force", visual("usables/strength_elixir"), ["+", bonus, " ", FORCE, " ce ", BATTLE_ROUND, "."], { charges })
     }
 
 
@@ -27,4 +29,4 @@ export class StrengthElixir extends RoundElixir {
     }
 }
 
-export const STRENGTH_ELIXIR = new StrengthElixir(STRENGTH_BONUS)
+export const STRENGTH_ELIXIR = new StrengthElixir(STRENGTH_BONUS, 5)

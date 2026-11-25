@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { TAVERN_HALT } from "../../halt/subs/gift/TavernHalt"
 import { HOSPITAL_HALT } from "../../halt/subs/party/HospitalHalt"
 import type { FightCategory } from "../../fight/FightCategory"
@@ -32,7 +32,7 @@ export const TUNDRA_FLOOR: FloorType = {
     name: "Toundra",
     description: "Du froid, des loups et un géant de givre au bout. Plus de tavernes et d'hôpitaux.",
     icon: visual("floors/tundra/logo"),
-    look: sceneLook(28, 36, 44, "tundra"),
+    look: floorLook(28, 36, 44, "tundra"),
     decorations: [
         { picture: visual("floors/tundra/snow"), size: 2 },
         { picture: visual("floors/tundra/pine"), size: 2 },

@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { INVENTOR_HALT } from "../../halt/subs/gift/InventorHalt"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import type { FightCategory } from "../../fight/FightCategory"
@@ -32,7 +32,7 @@ export const FACTORY_FLOOR: FloorType = {
     name: "Usine gobelin",
     description: "Des robots, des gobelins pilotes, et un mécha-gobelin au bout. Plus d'inventeurs et de forges.",
     icon: visual("floors/factory/logo"),
-    look: sceneLook(38, 34, 24, "factory"),
+    look: floorLook(38, 34, 24, "factory"),
     decorations: [
         { picture: visual("floors/factory/gear"), size: 2 },
         { picture: visual("floors/factory/small_gear"), size: 2 },

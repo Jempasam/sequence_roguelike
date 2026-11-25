@@ -53,7 +53,12 @@ class GhostFightType implements FightType {
         const against = fightType({
             id: this.id, name: this.name, description: this.description, icon: this.icon, category: this.category,
             populate: (stage: FightStage) => {
-                for(const hero of met.party()) stage.addHero(hero, { controller: BEST_AI(stage.rng) })
+                for(const hero of met.party()){
+                    stage.addHero(
+                        { ...hero, bases: { ...hero.bases, showChain: this.category !== AMBUSH } },
+                        { controller: BEST_AI(stage.rng) },
+                    )
+                }
             },
         })
         return against.create(run, place)

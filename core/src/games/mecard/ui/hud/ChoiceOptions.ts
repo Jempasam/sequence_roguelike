@@ -35,6 +35,9 @@ export interface OptionExtras {
     /** The place of the deck its cards come from, which colors them, none for cards of no deck. */
     readonly deck?: number|null
 
+    /** The place of the deck each card comes from, when they differ: it wins over `deck`. */
+    readonly deckOf?: (card: Card) => number|null
+
     /** How the sprite shown left of the text looks, nothing when none. */
     readonly sprite?: Visual
     readonly sprites?: UnitSprites
@@ -72,7 +75,7 @@ export function cardsOption(
                 : new Box("row", { gap: CARD_GAP, align: "start" })
             for(const card of cards.slice(first, first + perRow)){
                 const view = new CardView(theme, card, "hand")
-                view.deck = extras.deck ?? null
+                view.deck = extras.deckOf?.(card) ?? extras.deck ?? null
                 row.add(view)
             }
             rows.add(row)

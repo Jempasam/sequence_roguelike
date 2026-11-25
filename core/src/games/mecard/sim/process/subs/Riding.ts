@@ -1,4 +1,8 @@
 import type { PlugContext } from "../../battle/Action"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { MOVE_WIDTH } from "../../battle/previewColors"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { BATTLE_ROUND } from "../../base/keywords"
@@ -23,5 +27,11 @@ export class Riding extends AbstractProcess {
         }
         ride()
         hold(unit.stepStarted.add(ride))
+    }
+
+    /** One ride straight ahead, with nothing in the way. */
+    public preview({ unit, pose }: PreviewContext): Preview {
+        const to = pose.position.plus(pose.direction.times(this.length * unit.stats.move.value))
+        return Previews.still(pose, ...Previews.moving(unit, pose.position, to, to, MOVE_WIDTH))
     }
 }

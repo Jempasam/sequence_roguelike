@@ -7,6 +7,7 @@ import type { HeartKind } from "../heart/HeartKind"
 import type { Process } from "../process/Process"
 import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
+import type { Carried } from "../usable/Usable"
 
 import type { Pose } from "./Action"
 import type { Indicator } from "./preview/Preview"
@@ -101,6 +102,12 @@ export interface UnitSignal {
 export interface StepSignal {
     readonly unit: Unit
     readonly left: number
+}
+
+/** A usable used by a unit, as its belt holds it. */
+export interface UsableSignal {
+    readonly unit: Unit
+    readonly carried: Carried
 }
 
 /** A status put on a unit, or taken off it. */
@@ -234,6 +241,9 @@ export class BattleSignals {
     /** A unit left the battle for good: a clone vanishing, a hazard gone off. */
     public readonly vanished: Observable<UnitSignal>
 
+    /** A unit used a usable of its belt, whose charge is spent. */
+    public readonly usableUsed: Observable<UsableSignal>
+
     public readonly statusAdded: Observable<StatusLevelSignal>
     public readonly statusRemoved: Observable<StatusSignal>
     public readonly statusLeveled: Observable<StatusLevelSignal>
@@ -292,6 +302,7 @@ export class BattleSignals {
         this.died = signal()
         this.spawned = signal()
         this.vanished = signal()
+        this.usableUsed = signal()
         this.statusAdded = signal()
         this.statusRemoved = signal()
         this.statusLeveled = signal()

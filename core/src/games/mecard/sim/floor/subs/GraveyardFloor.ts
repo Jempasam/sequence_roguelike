@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { NECROMANCER_HALT } from "../../halt/subs/party/NecromancerHalt"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
@@ -34,7 +34,7 @@ export const GRAVEYARD_FLOOR: FloorType = {
     name: "Cimetière",
     description: "Des morts qui ne restent pas couchés, et un roi liche au bout. Plus de nécromanciens, d'autels et d'élites.",
     icon: visual("floors/graveyard/logo"),
-    look: sceneLook(24, 24, 36, "graveyard"),
+    look: floorLook(24, 24, 36, "graveyard"),
     decorations: [
         { picture: visual("floors/graveyard/tombstone"), size: 2 },
         { picture: visual("floors/graveyard/cross"), size: 2 },

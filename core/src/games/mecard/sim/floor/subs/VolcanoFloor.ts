@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { FORGE_HALT } from "../../halt/subs/deck/ForgeHalt"
 import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
@@ -34,7 +34,7 @@ export const VOLCANO_FLOOR: FloorType = {
     name: "Volcan",
     description: "De la lave et des lézards de feu, et un dragon de magma au bout. Plus de forges et d'élites.",
     icon: visual("floors/volcano/logo"),
-    look: sceneLook(42, 22, 12, "volcano"),
+    look: floorLook(42, 22, 12, "volcano"),
     decorations: [
         { picture: visual("floors/volcano/lava"), size: 2 },
         { picture: visual("floors/volcano/rock"), size: 2 },

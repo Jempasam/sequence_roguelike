@@ -16,6 +16,7 @@
         "@game/core": "*",
         "@kmamal/gl": "^9.1.0",
         "@kmamal/sdl": "^0.11.13",
+        "@wasm-audio-decoders/ogg-vorbis": "^0.1.20",
         "node-datachannel": "^0.33.6"
     },
     "devDependencies": {

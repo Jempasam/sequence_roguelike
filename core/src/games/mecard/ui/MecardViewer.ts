@@ -14,11 +14,10 @@ import { lendPictures } from "./look/pictureShelf"
 import { UnitSprites } from "./look/UnitSprites"
 import { DIM_TEXT, WARNING_TEXT } from "./look/theme"
 import { ALL_RUN_LOCKS, RunScreen } from "./run/RunScreen"
+import { seatRun, viewRun } from "./run/runWiring"
 import { Forwarded } from "./forward/Forwarded"
-import { RunSoundLink } from "./sound/RunSoundLink"
 import { RunParticleLink } from "./particles/RunParticleLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
-import type { RunLocks } from "./run/RunScreen"
 
 /** What the viewer says before the first battle comes. */
 const WAITING = "En attente d'une partie à regarder..."
@@ -63,7 +62,6 @@ export class MecardViewer {
         sounds: SoundPlayer|null = null,
     ){
         const forwarded = new Forwarded(error => this.#warn(String(error)))
-        this.#sound = sounds ? new RunSoundLink(this.run, sounds, forwarded) : null
         this.#uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         lendPictures(theme, sprites.picture)
@@ -80,6 +78,7 @@ export class MecardViewer {
             ready: () => this.#guest?.ready(),
             report: text => this.#warn(text),
         })
+        this.#view = viewRun(this.run, this.#screen, sounds, forwarded)
         this.#screen.visible = false
         // Laid after the screens, so what goes wrong is told over them.
         this.#waiting = new Label(theme, WAITING, { color: DIM_TEXT })
@@ -92,7 +91,7 @@ export class MecardViewer {
         this.#receiver.battle.desynced.add(({ round }) => this.#warn(`Désynchronisé au round ${round} : rattrapé.`))
         this.#receiver.travel.desynced.add(() => this.#warn("Désynchronisé sur la carte : rattrapé."))
         if(link){
-            this.#guest = new RunGuest(this.run, link, units => { this.#screen.locks = locksForUnits(units) })
+            this.#guest = new RunGuest(this.run, link, units => seatRun(this.#screen, this.run, units))
             this.#guest.faulted.add(fault => this.#warn(fault.describe()))
         }
     }
@@ -106,7 +105,7 @@ export class MecardViewer {
 
     /** Stop listening for the run. */
     public dispose(): void {
-        this.#sound?.dispose()
+        this.#view.dispose()
         this.#particles.dispose()
         this.#uiSound?.dispose()
         this.#guest?.dispose()
@@ -115,7 +114,7 @@ export class MecardViewer {
     }
 
 
-    readonly #sound: RunSoundLink|null
+    readonly #view: { dispose(): void }
     readonly #particles: RunParticleLink
     readonly #uiSound: UiSoundLink|null
     readonly #receiver: RunReceiver
@@ -139,10 +138,4 @@ export class MecardViewer {
         this.#waiting.color = WARNING_TEXT
         this.#waiting.visible = true
     }
-}
-
-/** What may be done with units to play: planning them, then saying so. Everything else stays locked. */
-export function locksForUnits(units: readonly string[]): RunLocks {
-    if(units.length === 0) return ALL_RUN_LOCKS
-    return { ...ALL_RUN_LOCKS, battle: { isLocked: unit => !units.includes(unit.name), round: "ready" } }
 }

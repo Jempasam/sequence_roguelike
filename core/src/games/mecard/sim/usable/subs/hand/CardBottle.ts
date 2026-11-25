@@ -7,7 +7,7 @@ import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
 
 /** How many times the bottles of cards of the catalog are used before they break. */
-const CARD_BOTTLE_CHARGES = 3
+const CARD_BOTTLE_CHARGES = 8
 
 /** A bottle of a card: a copy of the card in hand at each use, broken after its last. */
 export class CardBottle extends AbstractUsable {

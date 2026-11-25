@@ -67,7 +67,7 @@ export const FRAGILITY_FLASK = new SplashFlask(
     "Fiole de fragilité", visual("usables/glue_flask"),
     [
         "Lancée à ", FLASK_FLIGHT, "×", PORTEE, " ", DISTANCE, " devant : chaque ", UNIT, " à ", FLASK_SPLASH, " ", DISTANCE,
-        " de l'impact devient fragile pendant 2 ", BATTLE_ROUND.as("rounds"), ".",
+        " de l'impact devient fragile pendant 1 ", BATTLE_ROUND, ".",
     ],
-    {}, () => new Fragility(2),
+    { charges: 5 }, () => new Fragility(1),
 )

@@ -6,6 +6,7 @@ import path from "node:path"
 import {fileURLToPath} from "node:url"
 import {analyze, describe, warnings} from "../dist/analyze.js"
 import {expandGlob, outputPath, planJobs, readManifest, runJobs, soundName} from "../dist/batch.js"
+import {runJobsInWorkers} from "../dist/parallel.js"
 import {DEFAULT_BITRATE, DEFAULT_FORMAT, encodeAudio, FORMATS} from "../dist/encode.js"
 import {describeExamples, describeLibraries} from "../dist/library.js"
 import {nodeEngine, readSound, EXAMPLES_DIR, LIB_DIR} from "../dist/node.js"
@@ -44,12 +45,14 @@ Options
   -n, --count <n>          variants: how many (default 5)
       --seed <n>           variants: random seed (default 1)
       --fail-fast          stop a batch at the first failure
+  -j, --jobs <n>           render, batch: how many sounds are rendered at once, each on a thread with its own
+                           Faust engine (default 1). The files are the same, only the order of the lines varies.
 `
 
 const VALUED = {
     o: "out", out: "out", d: "duration", duration: "duration", r: "rate", rate: "rate", p: "param", param: "param",
     f: "format", format: "format", b: "bitrate", bitrate: "bitrate", normalize: "normalize",
-    n: "count", count: "count", seed: "seed", batch: "batch",
+    n: "count", count: "count", seed: "seed", batch: "batch", j: "jobs", jobs: "jobs",
 }
 const BOOLEAN = {"no-fade": "noFade", "fail-fast": "failFast", help: "help", h: "help", json: "json"}
 const REPEATABLE = new Set(["out", "param"])
@@ -148,8 +151,11 @@ async function renderCommand({positional, flags}){
     catch(error){
         fail(error.message)
     }
-    const engine = await nodeEngine()
-    const results = await runJobs(engine, jobs, {failFast: flags.failFast, onResult: report})
+    const workers = number(flags, "jobs") ?? 1
+    if(!Number.isInteger(workers) || workers < 1) fail(`--jobs must be a whole number of 1 or more, got "${flags.jobs}"`)
+    const results = workers > 1 && jobs.length > 1
+        ? await runJobsInWorkers(jobs, {workers, failFast: flags.failFast, onResult: report})
+        : await runJobs(await nodeEngine(), jobs, {failFast: flags.failFast, onResult: report})
     process.exit(summary(results) ? 1 : 0)
 }
 

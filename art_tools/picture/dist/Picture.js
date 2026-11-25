@@ -62,7 +62,7 @@ export class Picture {
      * Mixing the colors of the pixels in a smart way.
      */
     superSampled() {
-        const supersampled = new Picture(structuredClone(this.materials), undefined, undefined, this.width * 3, this.height * 3);
+        const supersampled = new Picture(copyMaterials(this.materials), undefined, undefined, this.width * 3, this.height * 3);
         for (let [x, y] of this.indexes()) {
             let xx = x * 3;
             let yy = y * 3;
@@ -102,11 +102,15 @@ export class Picture {
         return supersampled;
     }
     clone() {
-        return new Picture(structuredClone(this.materials), structuredClone(this.pixel_materials), structuredClone(this.pixel_depth), this.width, this.height);
+        return new Picture(copyMaterials(this.materials), [...this.pixel_materials], [...this.pixel_depth], this.width, this.height);
     }
     baked() {
         return new BakedPicture(this);
     }
+}
+/** A copy of the materials: their colour is the only nested value. */
+function copyMaterials(materials) {
+    return materials.map(material => ({ ...material, color: [...material.color] }));
 }
 /**
  * Create a new material that is a linear interpolation of two materials.

@@ -3,8 +3,10 @@ import { parseArgs } from "node:util"
 import { video } from "@kmamal/sdl"
 import { Fault, NetSync, signalingAt, startGame } from "@game/core"
 
-import { assetsDirectories, saveDirectory } from "./directories"
-import { FsAssets, FsStorage, NodeNet, NodeTimer, SdlClipboard, SdlGfx, SdlInput, SdlLoop } from "./platform"
+import { assetsDirectories, audioWorkerFile, saveDirectory, sdlAddonFile } from "./directories"
+import {
+    FsAssets, FsStorage, NodeNet, NodeTimer, SdlClipboard, SdlGfx, SdlInput, SdlLoop, SdlWorkerAudio,
+} from "./platform"
 
 /** The signaling server when `--signal` names no other: the one `npm run server` starts on this host. */
 const DEFAULT_SIGNALING = "ws://localhost:8787"
@@ -33,6 +35,7 @@ const game = startGame({
     loop: new SdlLoop(window),
     input: new SdlInput(window),
     clipboard: new SdlClipboard(),
+    audio: new SdlWorkerAudio(audioWorkerFile(), sdlAddonFile()),
     assets: new FsAssets(assetsDirectories()),
     storage: new FsStorage(saveDirectory()),
     net,

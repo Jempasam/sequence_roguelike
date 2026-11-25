@@ -1,7 +1,7 @@
-// Compiles every C file of core/src and test/src, and writes the declarations TypeScript reads for each to
-// .generated/, as Vite does when it imports one. So a C file changed while no Vite runs is typechecked
-// against what it exports now, and an error in it shows up without starting the game. The folder is
-// emptied first, so a deleted C file leaves no declarations behind.
+// Compiles every C file of core/src, desktop/src and test/src, and writes the declarations TypeScript
+// reads for each to .generated/, as Vite does when it imports one. So a C file changed while no Vite
+// runs is typechecked against what it exports now, and an error in it shows up without starting the game.
+// The folder is emptied first, so a deleted C file leaves no declarations behind.
 //   npm run wasm
 
 import { readdirSync, rmSync } from "node:fs"
@@ -13,7 +13,7 @@ import { compileC } from "../core/build/compileC.ts"
 import { GENERATED, writeDeclarations } from "../core/build/cWasm.ts"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-const SOURCES = [join(REPO, "core", "src"), join(REPO, "test", "src")]
+const SOURCES = [join(REPO, "core", "src"), join(REPO, "desktop", "src"), join(REPO, "test", "src")]
 
 rmSync(GENERATED, { recursive: true, force: true })
 for(const file of SOURCES.flatMap(cFilesUnder)){

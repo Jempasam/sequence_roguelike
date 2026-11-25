@@ -1,5 +1,6 @@
 import type { Painter } from "../../gpu"
 
+import type { RevealAlign } from "../Component"
 import { ContentContainer } from "../Container"
 import type { UiEvent } from "../input/UiEvent"
 import { Rect } from "../Rect"
@@ -79,10 +80,17 @@ export class Scroll extends ContentContainer {
         if(clamped === this.#offset) return
         this.#offset = clamped
         this.invalidate()
+        this.onScrolled?.()
     }
+
+    /** How far the content can be scrolled at most, once laid out: 0 when it does not overflow. */
+    public get maxOffset(): number { return this.#maxOffset }
 
     /** Does the content overflow, so it can scroll? */
     public get overflows(): boolean { return this.#overflows }
+
+    /** What hears that the offset or the room to scroll changed, nothing when none. */
+    public onScrolled: (() => void)|null = null
 
     /** Scroll to the end of the content, once it is laid out: what was just added to it comes into view. */
     public scrollToEnd(): void {
@@ -162,7 +170,10 @@ export class Scroll extends ContentContainer {
         this.#toEnd = false
         // The bar is drawn by the scroll itself: a content laid out again inside it, bounds unchanged, does not
         // draw it again.
-        if(this.#hasBar !== hadBar || this.#maxOffset !== hadMax) this.invalidate()
+        if(this.#hasBar !== hadBar || this.#maxOffset !== hadMax){
+            this.invalidate()
+            this.onScrolled?.()
+        }
     }
 
     protected paint(painter: Painter): void {
@@ -183,7 +194,7 @@ export class Scroll extends ContentContainer {
     protected override handle(event: UiEvent): void {
         switch(event.type){
             case "wheel": {
-                if(!this.#followsWheel) break
+                if(!this.#followsWheel || !this.#overflows) break
                 const notches = this.axis === "vertical" ? event.dy : event.dy || event.dx
                 // A notch is a share of the view, and an event never goes further than the view is long.
                 const view = this.axis === "vertical" ? this.#viewport.height : this.#viewport.width
@@ -219,8 +230,12 @@ export class Scroll extends ContentContainer {
         }
     }
 
-    protected override reveal(rect: Readonly<Rect>): void {
+    protected override reveal(rect: Readonly<Rect>, align: RevealAlign): void {
         const isVertical = this.axis === "vertical"
+        if(align === "start" && !isVertical){
+            this.offset = rect.x
+            return
+        }
         const start = isVertical ? rect.y : rect.x
         const end = isVertical ? rect.y + rect.height : rect.x + rect.width
         const length = isVertical ? this.#viewport.height : this.#viewport.width

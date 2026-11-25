@@ -16,8 +16,10 @@ export class HasteElixir extends RoundElixir {
     constructor(
         /** How much farther it takes every move, added to the move factor. */
         public readonly move: number,
+
+        charges = 1,
     ){
-        super("Élixir de hâte", visual("usables/haste_elixir"), ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce ", BATTLE_ROUND, "."])
+        super("Élixir de hâte", visual("usables/haste_elixir"), ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce ", BATTLE_ROUND, "."], { charges })
     }
 
 
@@ -28,4 +30,4 @@ export class HasteElixir extends RoundElixir {
     }
 }
 
-export const HASTE_ELIXIR = new HasteElixir(HASTE_MOVE)
+export const HASTE_ELIXIR = new HasteElixir(HASTE_MOVE, 5)

@@ -10,6 +10,7 @@ import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "../../sim/halt/PnjHats"
 import type { PnjHatLook } from "../../sim/halt/PnjHats"
 import type { ScenePnj, SceneLook } from "../../sim/halt/SceneLook"
 
+import { borderSlice } from "../look/borders"
 import { engineColor } from "../look/colors"
 import { parallaxSource, pathOf } from "../look/visualPath"
 import { loadParallaxPictures } from "./parallaxPictures"
@@ -36,9 +37,6 @@ export const SCENE_WARPS: SceneRanges = {
     x: { far: 0, near: 0 },
     y: { far: 0, near: 0 },
 }
-
-/** How many virtual pixels a pixel of the frame of a scene takes: how thick it is drawn. */
-const BORDER_SCALE = 2
 
 /** The value of a layer, by its rank among a count, the farthest first: from far to near, on each axis. */
 export function rangedOf(index: number, count: number, ranges: SceneRanges): ParallaxAxes {
@@ -235,10 +233,6 @@ export class TravelScenes {
         const warps = backdrop.ranges.warp ?? this.warps
         const layers = backdrop.layers.map(layer => ({ ...layer, texture: Texture.fromPixels(this.gpu, layer.pixels) }))
         kept.textures.push(...layers.map(layer => layer.texture))
-        const side = Math.floor(border.width / 3)
-        const end = Math.floor(border.height / 3)
-        const across = side * BORDER_SCALE
-        const down = end * BORDER_SCALE
         kept.scene = {
             backdrop: new Parallax(layers.map((layer, index) => ({
                 sprite: Sprite.whole(layer.texture),
@@ -251,9 +245,7 @@ export class TravelScenes {
                 opaque: true,
                 ...backdrop.viewport && { viewport: backdrop.viewport },
             }),
-            border: new NineSlice(Sprite.whole(border), { left: side, right: side, top: end, bottom: end }, {
-                border: { left: across, right: across, top: down, bottom: down },
-            }),
+            border: borderSlice(border),
             pnj: character && look.pnj ? this.#pnjView(character, look.pnj, accessories, depths) : null,
         }
         for(const accessory of accessories) if(accessory) kept.textures.push(accessory.texture)

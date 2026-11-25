@@ -50,6 +50,7 @@ import type { RunSave } from "../sim/save/runSave"
 import { RunSaver } from "../persist/RunSaver"
 import { PlayerCatalog } from "../persist/PlayerCatalog"
 import { RunHistorian } from "../persist/RunHistorian"
+import { ALL_FLOORS } from "../sim/catalog/floors"
 import type { CatalogSave } from "../sim/save/catalogSave"
 import { ghostOfEntry } from "../sim/save/historySave"
 import type { History } from "../sim/save/historySave"
@@ -60,14 +61,14 @@ import type { MecardContext, MecardHost } from "./commands"
 import { ConverterScreen } from "./catalog/ConverterScreen"
 import { LibraryScreen } from "./library/LibraryScreen"
 import { lendPictures } from "./look/pictureShelf"
+import { FloorBorders } from "./look/borders"
 import { UnitSprites } from "./look/UnitSprites"
 import { GuideScreen } from "./guide/GuideScreen"
 import { MainMenuScreen } from "./menu/MainMenuScreen"
 import { PnjScreen } from "./pnj/PnjScreen"
 import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
-import { locksForUnits } from "./MecardViewer"
+import { controlRun, seatRun, viewRun } from "./run/runWiring"
 import { Forwarded } from "./forward/Forwarded"
-import { RunSoundLink } from "./sound/RunSoundLink"
 import { RunParticleLink } from "./particles/RunParticleLink"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { QuitPopup } from "./hud/QuitPopup"
@@ -218,6 +219,9 @@ export class MecardGame {
 
         /** What plays the sounds of the run, none when the game is played silent. */
         sounds: SoundPlayer|null = null,
+
+        /** The version of the game, written in each game of the history, none when it is not known. */
+        private readonly gameVersion?: string,
     ){
         this.#seed = seed
         this.#network = network
@@ -226,10 +230,10 @@ export class MecardGame {
         // Made before the screen, so it hears each battle before the screen starts its first round.
         this.#broadcaster = viewers ? new RunBroadcaster(this.run, viewers) : null
         const forwarded = new Forwarded(error => this.#console.print(String(error)))
-        this.#sound = sounds ? new RunSoundLink(this.run, sounds, forwarded) : null
         // Listens to the interface for as long as the game lives: nothing to let go of.
         const uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
+        const borders = new FloorBorders()
         lendPictures(theme, sprites.picture)
         this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
         // Made before the screen, so the transitions it lays lie over them.
@@ -273,10 +277,13 @@ export class MecardGame {
             seen: battle => this.#shared?.onSeen?.(battle),
             report: text => this.report(text),
         })
+        // Whichever run the screen shows, the player's own or one of a table, is heard.
+        this.#view = viewRun(this.run, this.#screen, sounds, forwarded)
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
             if(!(error instanceof AssetError)) throw error
             this.#console.print(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
+        void borders.load(ui.gpu, assets, ALL_FLOORS)
         const actions: Omit<MecardHost, "run"|"battle"|"playing"> = {
             print: text => this.#console.print(text),
             refresh: () => {
@@ -342,7 +349,9 @@ export class MecardGame {
         }, assets)
         // Over the menu, which it replaces while it is read.
         this.#guide = new GuideScreen(theme, ui, { leave: () => this.#menuOn() }, undefined, () => sprites.paper)
-        this.#history = new HistoryScreen(theme, ui, { leave: () => this.#menuOn() }, sprites)
+        this.#history = new HistoryScreen(
+            theme, ui, { leave: () => this.#menuOn() }, sprites, { borders, clipboard },
+        )
         this.#chat = new ChatScreen(theme, ui, { leave: () => this.leaveChat() })
         this.#menu.hasNetwork = network !== null
         this.#bench = {
@@ -452,7 +461,9 @@ export class MecardGame {
     public keepHistory(slot: SaveSlot<History>): void {
         this.#historySlot = slot
         this.#historian?.dispose()
-        this.#historian = new RunHistorian(this.run, slot, () => this.#seed, text => this.#console.print(text))
+        this.#historian = new RunHistorian(
+            this.run, slot, () => this.#seed, text => this.#console.print(text), Date.now, () => this.gameVersion,
+        )
         void this.#lendGhosts()
     }
 
@@ -538,8 +549,6 @@ export class MecardGame {
         if(this.#saver) this.#saver.engine = this.run
         if(this.#historian) this.#historian.engine = this.run
         void this.#lendGhosts()
-        if(this.#sound) this.#sound.engine = this.run
-        this.#particles.engine = this.run
         this.#screen.engine = this.run
         this.#playing = true
         this.#travelOn()
@@ -562,7 +571,7 @@ export class MecardGame {
     readonly #library: LibraryScreen
     readonly #converter: ConverterScreen
     readonly #broadcaster: RunBroadcaster|null
-    readonly #sound: RunSoundLink|null
+    readonly #view: { dispose(): void }
     readonly #particles: RunParticleLink
     readonly #console: Console<MecardContext>
 
@@ -670,9 +679,7 @@ export class MecardGame {
         const host = new RunHost(this.run, room, mode, policy, () => this.#screen.battleScreen.startRound())
         host.faulted.add(fault => this.#printFault(fault.describe()))
         this.#host = host
-        this.#screen.locks = {
-            ...NO_RUN_LOCKS, battle: { isLocked: unit => host.isGuests(unit), round: "gather" },
-        }
+        controlRun(this.#screen, this.run, unit => host.isGuests(unit))
     }
 
     /**
@@ -688,7 +695,7 @@ export class MecardGame {
         this.#saver?.dispose()
         this.#historian?.dispose()
         this.#broadcaster?.dispose()
-        this.#sound?.dispose()
+        this.#view.dispose()
         this.#particles.dispose()
         this.#screen.dispose()
         this.#menu.dispose()
@@ -846,9 +853,8 @@ export class MecardGame {
         const shared = { onReady: ready, onOver: over }
         this.#table = { run, shared }
         this.#shared = shared
-        this.#screen.locks = { ...NO_RUN_LOCKS, battle: { isLocked: unit => isGuests(unit), round: "gather" } }
+        controlRun(this.#screen, run, isGuests)
         if(!first) return
-        this.#screen.engine = run
         // The owner of a table runs it: its commands act on the run the clients are told.
         this.#playing = true
         this.#travelOn()
@@ -861,9 +867,8 @@ export class MecardGame {
         const watching = first ? new Scope() : this.#table?.watching
         this.#table = { run, shared, ...watching && { watching } }
         this.#shared = shared
-        this.#screen.locks = locksForUnits(units)
+        seatRun(this.#screen, run, units)
         if(!first || !watching) return
-        this.#screen.engine = run
         // A client only shows the run its host tells, which would overwrite what a command changed.
         this.#playing = false
         const show = (): void => {
@@ -893,8 +898,7 @@ export class MecardGame {
         const shared: SharedRun = { onReady: null }
         const disposers: (() => void)[] = []
         this.#shared = shared
-        this.#screen.engine = run
-        this.#screen.locks = NO_RUN_LOCKS
+        controlRun(this.#screen, run, null)
         // A race is a game with others: a command would be a way to cheat.
         this.#playing = false
         this.#travelOn()
@@ -929,7 +933,7 @@ export class MecardGame {
         const show = (duel: DuelAccess): void => {
             access = duel
             shown = duel.battle
-            this.#screen.locks = locksForUnits(duel.units)
+            seatRun(this.#screen, run, duel.units)
             run.backToMap()
             run.playBattle(duel.battle)
         }
@@ -939,7 +943,7 @@ export class MecardGame {
             if(battle !== shown) return
             shown = null
             access = null
-            this.#screen.locks = NO_RUN_LOCKS
+            controlRun(this.#screen, run, null)
             this.#screen.showMap()
         }
         const observers = [
@@ -963,14 +967,13 @@ export class MecardGame {
             duel = { onReady: null, onSeen: null, run: this.#newSharedRun() }
             this.#duel = duel
             this.#shared = duel
-            this.#screen.engine = duel.run
             this.#playing = false
         }
         duel.onReady = ready
         // The duel is left when it was seen to its end: the network only brings the battle there, the screen goes
         // at its own pace. A newer duel shown meanwhile is not left.
         duel.onSeen = seen => { if(seen === battle) this.#hideDuel() }
-        this.#screen.locks = locksForUnits(units)
+        seatRun(this.#screen, duel.run, units)
         this.#benchesOff()
         duel.run.backToMap()
         duel.run.playBattle(battle)
@@ -988,8 +991,7 @@ export class MecardGame {
         if(this.#shared !== shared) return
         this.#quit.close()
         this.#shared = null
-        this.#screen.locks = NO_RUN_LOCKS
-        this.#screen.engine = this.run
+        controlRun(this.#screen, this.run, null)
         this.#playing = false
         this.#screen.visible = false
         if(this.#lobby) this.#lobby.visible = true

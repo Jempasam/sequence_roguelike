@@ -1,5 +1,6 @@
 import { Color } from "../../../../engine/math"
 import type { Rgba } from "../../sim/base/Rgba"
+import { deckColorOf } from "../../sim/run/deckName"
 import type { CardType } from "../../sim/card/CardType"
 import type { Unit } from "../../sim/battle/Unit"
 import type { HeartKind } from "../../sim/heart/HeartKind"
@@ -63,6 +64,38 @@ export function typeColorOf(type: CardType<unknown>): Color {
         typeColors.set(type.name, color)
     }
     return color
+}
+
+/** The paper a card is drawn on when it comes from no deck, and what a deck color is mixed into. */
+const PAPER = new Color(0.9, 0.83, 0.68)
+
+/** How much of the color of its deck the face of a card takes, the rest being paper. */
+const DECK_FACE_SHARE = 0.3
+
+/** How much lighter than its own the face of a card under the pointer is: the share of white mixed in. */
+const HOVER_LIGHTEN = 0.14
+
+const deckFaces = new Map<string, Color>()
+
+/**
+ * The face of a card of a deck: its color over paper, lighter under the pointer. Paper alone for a card
+ * from no deck. The color is shared: it is never changed.
+ *
+ * @param deck - The place of the deck among those of its character, none for a card from elsewhere.
+ */
+export function deckFaceOf(deck: number|null, hovered: boolean): Color {
+    const key = `${deck ?? "none"}:${hovered}`
+    let face = deckFaces.get(key)
+    if(!face){
+        const color = deck === null ? null : deckColorOf(deck)
+        const mix = (paper: number, deckChannel: number | undefined): number => {
+            const base = deckChannel === undefined ? paper : paper + (deckChannel - paper) * DECK_FACE_SHARE
+            return hovered ? base + (1 - base) * HOVER_LIGHTEN : base
+        }
+        face = new Color(mix(PAPER.r, color?.r), mix(PAPER.g, color?.g), mix(PAPER.b, color?.b))
+        deckFaces.set(key, face)
+    }
+    return face
 }
 
 /** The color a unit is drawn in, the same on the board and in the interface: the one its battle gave it. */

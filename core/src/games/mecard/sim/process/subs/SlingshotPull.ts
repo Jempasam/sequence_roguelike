@@ -1,6 +1,10 @@
 import type { Vector2 } from "../../base/Vector2"
 import type { PlugContext, UnitContext } from "../../battle/Action"
 import type { Battle } from "../../battle/Battle"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { MOVE_WIDTH } from "../../battle/previewColors"
 import { DamageType } from "../../battle/DamageType"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
@@ -38,6 +42,15 @@ export class SlingshotPull extends AbstractProcess {
         hold(battle.tether(unit, this.slingshot, visual("tethers/laser", { color: [0.85, 0.7, 0.45] })))
     }
 
+
+    /** The flight at the end of the round, from where the unit stands now, with nothing in the way. */
+    public preview({ unit, pose }: PreviewContext): Preview {
+        const toward = this.slingshot.position.minus(pose.position)
+        const way = this.slingshot.alive ? toward.normalized : null
+        if(!way) return Previews.still(pose)
+        const to = pose.position.plus(way.times(toward.length * SLINGSHOT_FACTOR))
+        return Previews.still(pose, ...Previews.moving(unit, pose.position, to, to, MOVE_WIDTH))
+    }
 
     public dispose({ battle, unit }: UnitContext): void {
         const { slingshot } = this

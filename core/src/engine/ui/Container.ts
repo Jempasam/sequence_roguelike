@@ -1,5 +1,5 @@
 import { Component, internals } from "./Component"
-import type { NavigationAxis } from "./Component"
+import type { NavigationAxis, RevealAlign } from "./Component"
 import { unposed } from "./Pose"
 import type { Pose } from "./Pose"
 import type { Rect } from "./Rect"
@@ -146,8 +146,9 @@ export abstract class Container<Slot> extends Component {
      * Bring into view a zone of its content that took the focus, in the coordinates of its children. Does
      * nothing by default: a `Scroll` scrolls to it.
      */
-    protected reveal(rect: Readonly<Rect>): void {
+    protected reveal(rect: Readonly<Rect>, align: RevealAlign): void {
         void rect
+        void align
     }
 
 
@@ -182,7 +183,7 @@ export abstract class Container<Slot> extends Component {
             return false
         }
         internals.navigationAxisOf = container => container.navigationAxis
-        internals.reveal = (container, rect) => container.reveal(rect)
+        internals.reveal = (container, rect, align) => container.reveal(rect, align)
     }
 
     /** The components from one up to the top of its tree, so finding a point in it allocates nothing. */

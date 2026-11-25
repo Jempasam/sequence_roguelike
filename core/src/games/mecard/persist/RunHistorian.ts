@@ -39,6 +39,9 @@ export class RunHistorian {
 
         /** When it is, in milliseconds since 1970. */
         private readonly now: () => number = Date.now,
+
+        /** The version of the game, none when it is not known. */
+        private readonly gameVersion: () => string|undefined = () => undefined,
     ){
         this.#engine = engine
         this.#register()
@@ -62,7 +65,7 @@ export class RunHistorian {
     }
 
     #write(run: Run): void {
-        const entry = historyEntry(run, this.seed(), this.now())
+        const entry = historyEntry(run, this.seed(), this.now(), this.gameVersion())
         // Read and written as one operation: two games ending close together both stay in the history.
         this.slot.update(history => ({ entries: [...history?.entries ?? [], entry] })).catch((error: unknown) => {
             this.report(`La partie n'a pas pu être ajoutée à l'historique : ${String(error)}`)

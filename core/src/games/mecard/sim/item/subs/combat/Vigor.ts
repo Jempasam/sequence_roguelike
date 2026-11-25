@@ -1,6 +1,9 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
 import { DISTANCE, FORCE, HEART, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
 import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLACK_HEART } from "../../../heart/subs/BlackHeartKind"
@@ -81,6 +84,11 @@ export class UnstableReactor extends AbstractItem {
         hold(unit.hearts.onRemove.add(burst))
         hold(unit.hearts.onWound.add(burst))
         hold(unit.hearts.onReplace.add(burst))
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Areas.circle(pose.position, REACTOR_RADIUS)
+        return Previews.still(pose, ...Previews.strike([zone], battle.fetch(zone, unit)))
     }
 }
 

@@ -97,6 +97,11 @@ export function sceneLook(
     }
 }
 
+/** The look of a floor: a scene look whose frame is the one drawn for the floor, `floors/<id>/border`. */
+export function floorLook(red: number, green: number, blue: number, id: string): SceneLook {
+    return { ...sceneLook(red, green, blue, id), border: visual(`floors/${id}/border`) }
+}
+
 /**
  * A character from what it says, the rest being filled: the common painting, nothing worn, and the default
  * move at each moment it does not play otherwise.

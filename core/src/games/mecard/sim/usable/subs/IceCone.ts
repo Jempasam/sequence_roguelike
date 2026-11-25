@@ -7,7 +7,10 @@ import { AbstractUsable } from "./AbstractUsable"
 import { BATTLE_ROUND, HEAL } from "../../base/keywords"
 
 /** How many hearts the ice cone of the catalog gives back. */
-const CONE_HEAL = 3
+const CONE_HEAL = 2
+
+/** How many times the ice cone of the catalog may be eaten. */
+const CONE_CHARGES = 5
 
 /** How many rounds of slowness the cold of the cone leaves. */
 const CONE_SLOWNESS = 1
@@ -22,10 +25,12 @@ export class IceCone extends AbstractUsable {
 
         /** How many rounds of slowness it leaves. */
         public readonly slowness: number,
+
+        charges = 1,
     ){
         super("Cornet de glace", visual("usables/ice_cone"), [
             "Soigne ", new HeartCount(heal), " + ", HEAL, ", mais te ralentit ", slowness, " ", BATTLE_ROUND, ".",
-        ])
+        ], { charges })
     }
 
 
@@ -35,4 +40,4 @@ export class IceCone extends AbstractUsable {
     }
 }
 
-export const ICE_CONE = new IceCone(CONE_HEAL, CONE_SLOWNESS)
+export const ICE_CONE = new IceCone(CONE_HEAL, CONE_SLOWNESS, CONE_CHARGES)

@@ -26,6 +26,21 @@ describe("Scroll", () => {
         expect(scroll.offset).toBe(40)
     })
 
+    test("scrollIntoView at the start on a horizontal row → child at the left, clamped to the end", () => {
+        const setup = uiSetup()
+        const scroll = new Scroll(setup.theme, { axis: "horizontal", width: 30, height: 20 })
+        const row = new Box("row")
+        const items = Array.from({ length: 10 }, (_, index) => new Probe(`i${index}`, [10, 10]))
+        for(const item of items) row.add(item)
+        scroll.content = row
+        setup.main.content.add(scroll)
+        setup.ui.render()
+        items[3].scrollIntoView("start")
+        expect(scroll.offset).toBe(30)
+        items[9].scrollIntoView("start")
+        expect(scroll.offset).toBe(70)
+    })
+
     test("scrollToEnd with a content growing → at its new end, once laid out", () => {
         const setup = uiSetup()
         const { scroll } = list(setup)
@@ -51,6 +66,24 @@ describe("Scroll", () => {
         setup.port.send({ type: "wheel", dx: 0, dy: 10 }, { type: "wheel", dx: 0, dy: 10 })
         setup.frame()
         expect(scroll.offset).toBe(70)
+    })
+
+    test("content that fits → the wheel is not consumed, the scroll around it moves", () => {
+        const setup = uiSetup()
+        const inner = new Scroll(setup.theme, { width: 20, height: 30 })
+        inner.content = new Probe("small", [10, 10])
+        const column = new Box("column")
+        column.add(inner)
+        column.add(new Probe("tall", [10, 100]))
+        const outer = new Scroll(setup.theme, { width: 20, height: 30 })
+        outer.content = column
+        setup.main.content.add(outer)
+        setup.ui.render()
+        expect(inner.overflows).toBe(false)
+        setup.port.send({ type: "pointer-move", x: 5, y: 5 }, { type: "wheel", dx: 0, dy: 1 })
+        setup.frame()
+        expect(inner.offset).toBe(0)
+        expect(outer.offset).toBe(WHEEL_STEP)
     })
 
     test("without a bar, overflowing → the content keeps the whole width", () => {

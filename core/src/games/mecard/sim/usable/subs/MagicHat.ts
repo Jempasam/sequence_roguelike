@@ -18,8 +18,8 @@ export class MagicHat extends AbstractUsable {
     constructor(){
         super(
             "Chapeau magique", visual("usables/magic_hat"),
-            ["Invoque devant toi une bête tirée au hasard, qui joue chaque ", BATTLE_ROUND, ". 2 utilisations."],
-            { charges: 2 },
+            ["Invoque devant toi une bête tirée au hasard, qui joue chaque ", BATTLE_ROUND, ". 6 utilisations."],
+            { charges: 6 },
         )
     }
 

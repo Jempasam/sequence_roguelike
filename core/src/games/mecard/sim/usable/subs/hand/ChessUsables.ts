@@ -1,6 +1,11 @@
 import { AGILITE, DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { UnitContext } from "../../../battle/Action"
+import * as Areas from "../../../battle/area/Areas"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import { frenchNumber, HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { GLASS_HEART } from "../../../heart/subs/GlassHeartKind"
@@ -42,6 +47,17 @@ export class Spring extends AbstractUsable {
     protected act({ battle, unit }: UnitContext): void {
         battle.move(unit, unit.direction.opposite, SPRING_LENGTH * unit.stats.move.value)
     }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const length = SPRING_LENGTH * unit.stats.move.value
+        const way = pose.direction.opposite
+        const gone = battle.moveSpot(unit, pose.position, way, length)
+        const full = pose.position.plus(way.times(length))
+        return Previews.still(
+            { ...pose, position: gone.to },
+            ...Previews.moving(unit, pose.position, full, gone.to, MOVE_WIDTH),
+        )
+    }
 }
 
 export const SPRING = new Spring()
@@ -62,6 +78,16 @@ export class SilenceJar extends AbstractUsable {
         const enemy = battle.nearestEnemy(unit, SILENCE_RANGE)
         if(enemy) battle.stun(enemy)
     }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const enemy = battle.nearestEnemy(unit, SILENCE_RANGE, pose.position)
+        if(!enemy) return Previews.still(pose, Previews.label(pose.position, "personne à portée", NOTE_COLOR))
+        return Previews.still(
+            pose,
+            ...Previews.strike([], [enemy]),
+            Previews.label(enemy.position, "étourdi", NOTE_COLOR),
+        )
+    }
 }
 
 export const SILENCE_JAR = new SilenceJar()
@@ -80,6 +106,15 @@ export class Kite extends AbstractUsable {
     protected act({ battle, unit }: UnitContext): void {
         battle.blink(unit, unit.position.plus(unit.direction.times(KITE_LENGTH * unit.stats.move.value)))
     }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const to = pose.position.plus(pose.direction.times(KITE_LENGTH * unit.stats.move.value))
+        const landing = battle.blinkSpot(unit, pose.position, to)
+        return Previews.still(
+            { ...pose, position: landing },
+            ...Previews.moving(unit, pose.position, to, landing, MOVE_WIDTH / 2),
+        )
+    }
 }
 
 export const KITE = new Kite()
@@ -91,8 +126,8 @@ export class IronMagnet extends AbstractUsable {
     constructor(){
         super("Aimant à fer", visual("usables/iron_magnet"), [
             "Tire de ", MAGNET_PULL, " ", DISTANCE, " vers toi chacune de tes ", INVOCATION.as("invocations"), " à ", MAGNET_RANGE, " ", DISTANCE,
-            " autour. 2 utilisations.",
-        ], { charges: 2 })
+            " autour. 6 utilisations.",
+        ], { charges: 6 })
     }
 
 
@@ -102,6 +137,16 @@ export class IronMagnet extends AbstractUsable {
             const way = unit.position.minus(body.position).normalized
             if(way) battle.move(body, way, MAGNET_PULL, true)
         }
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Previews.polygon(Areas.circle(pose.position, MAGNET_RANGE), RANGE_COLOR)
+        const pulls = battle.units
+            .filter(body => {
+                return body.owner === unit && body.alive && body.position.distance(pose.position) <= MAGNET_RANGE
+            })
+            .map(body => Previews.arrow([body.position, pose.position], MOVE_WIDTH / 2, MOVE_COLOR))
+        return Previews.still(pose, zone, ...pulls)
     }
 }
 
@@ -114,14 +159,20 @@ export class PawnPowder extends AbstractUsable {
     constructor(){
         super("Poudre de pion", visual("usables/pawn_powder"), [
             "L'allié le plus proche à ", POWDER_RANGE, " ", DISTANCE, " devient une pièce d'échecs pour ", POWDER_ROUNDS,
-            " ", BATTLE_ROUND.as("rounds"), ". 2 utilisations.",
-        ], { charges: 2 })
+            " ", BATTLE_ROUND.as("rounds"), ". 6 utilisations.",
+        ], { charges: 6 })
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
         const ally = battle.nearestAlly(unit, POWDER_RANGE)
         if(ally) battle.applyStatus(ally, CHESS_PIECE, POWDER_ROUNDS)
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const ally = battle.nearestAlly(unit, POWDER_RANGE, pose.position)
+        const text = ally ? "promotion" : "personne en vue"
+        return Previews.still(pose, Previews.label(ally?.position ?? pose.position, text, NOTE_COLOR))
     }
 }
 

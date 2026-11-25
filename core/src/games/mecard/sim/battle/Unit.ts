@@ -301,6 +301,9 @@ export class Unit {
     /** Who summoned it, none when nobody did: a body that plays its cards plays right after its owner. */
     public owner: Unit|null = null
 
+    /** How many shield hearts it had before any item was plugged in, for the items that read what it starts with. */
+    public bareShields = 0
+
     /** The ground it covers, for a body lying on the arena, none for one standing. */
     public readonly zone: Area|null
 

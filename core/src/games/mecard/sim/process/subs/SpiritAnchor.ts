@@ -1,4 +1,8 @@
 import type { PlugContext, UnitContext } from "../../battle/Action"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { MOVE_COLOR, MOVE_WIDTH } from "../../battle/previewColors"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
@@ -25,6 +29,18 @@ export class SpiritAnchor extends AbstractProcess {
         hold(battle.tether(unit, this.spirit, visual("tethers/laser", { color: [0.6, 0.85, 1] })))
     }
 
+
+    /** The blink back to the spirit at the end of the round, and the unit as it faces there. */
+    public preview({ unit, pose }: PreviewContext): Preview {
+        const { spirit } = this
+        if(!spirit.alive) return Previews.still(pose)
+        const to = spirit.position
+        return Previews.still(
+            pose,
+            Previews.arrow([pose.position, to], MOVE_WIDTH, MOVE_COLOR),
+            Previews.body(unit, to, spirit.direction),
+        )
+    }
 
     public dispose({ battle, unit }: UnitContext): void {
         const { spirit } = this

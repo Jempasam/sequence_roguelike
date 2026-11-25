@@ -36,13 +36,13 @@ export class StatusElixir extends AbstractUsable {
 }
 
 export const DEMON_ELIXIR = new StatusElixir(
-    "Élixir démoniaque", visual("usables/strength_elixir", { coloration: [0.6, 0.1, 0.7] }), ["Donne 3 ", BATTLE_ROUND.as("rounds"), " d'énergie démoniaque."], {},
-    () => new DemonEnergy(3),
+    "Élixir démoniaque", visual("usables/strength_elixir", { coloration: [0.6, 0.1, 0.7] }), ["Donne 2 ", BATTLE_ROUND.as("rounds"), " d'énergie démoniaque."], { charges: 4 },
+    () => new DemonEnergy(2),
 )
 
 export const CALM_INFUSION = new StatusElixir(
-    "Infusion de calme", visual("usables/haste_elixir", { coloration: [0.4, 0.8, 0.9] }), ["Donne 3 ", BATTLE_ROUND.as("rounds"), " de concentration."], {},
-    () => new Concentration(3),
+    "Infusion de calme", visual("usables/haste_elixir", { coloration: [0.4, 0.8, 0.9] }), ["Donne 2 ", BATTLE_ROUND.as("rounds"), " de concentration."], { charges: 4 },
+    () => new Concentration(2),
 )
 
 /** Boots with a spring in them: a push forward, twice, each combat. */
@@ -53,8 +53,8 @@ export const REACTION_BOOTS = new StatusElixir(
 )
 
 export const FURY_ELIXIR = new StatusElixir(
-    "Élixir de fureur", visual("usables/strength_elixir", { coloration: [0.95, 0.45, 0.1] }), ["Donne 2 ", BATTLE_ROUND.as("rounds"), " de fureur contenue."], {},
-    () => new HeldFury(2),
+    "Élixir de fureur", visual("usables/strength_elixir", { coloration: [0.95, 0.45, 0.1] }), ["Donne 1 ", BATTLE_ROUND, " de fureur contenue."], { charges: 4 },
+    () => new HeldFury(1),
 )
 
 /** A syrup taking the negative statuses off its unit. */

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { Choice, Container, OverflowContainer, Scroll } from "@game/core"
-import type { ChoiceStep, Component } from "@game/core"
+import type { ChoiceOption, ChoiceStep, Component } from "@game/core"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"
@@ -125,6 +125,52 @@ describe("Choice", () => {
         expect(choice.picks).toEqual([1])
         expect(choiceSteps(choice)).toHaveLength(2)
         expect(done).toEqual([])
+    })
+
+    test("an option marked → it shows picked and the steps after it go, nothing asked nor done", () => {
+        const setup = uiSetup()
+        const { choice, done } = twoSteps(setup)
+        pick(setup, choice, 0, 2)
+        choice.mark(0, 1)
+        const [first] = choiceSteps(choice)
+        expect(first.map(option => (option as ChoiceOption).picked)).toEqual([false, true, false])
+        expect(choiceSteps(choice)).toHaveLength(1)
+        expect(choice.picks).toEqual([1])
+        expect(done).toEqual([])
+    })
+
+    test("locked, an option clicked → nothing picked, asked nor done, and what marks still shows", () => {
+        const setup = uiSetup()
+        const { choice, done } = twoSteps(setup)
+        choice.locked = true
+        pick(setup, choice, 0, 2)
+        expect(choice.picks).toEqual([])
+        expect(choiceSteps(choice)).toHaveLength(1)
+        expect(done).toEqual([])
+        choice.mark(0, 2)
+        expect(choice.picks).toEqual([2])
+        choice.locked = false
+        pick(setup, choice, 0, 1)
+        expect(choice.picks).toEqual([1])
+    })
+
+    test("a step or an option not shown marked → nothing changes", () => {
+        const setup = uiSetup()
+        const { choice } = twoSteps(setup)
+        choice.mark(1, 0)
+        choice.mark(0, 5)
+        expect(choice.picks).toEqual([])
+        expect(choiceSteps(choice)).toHaveLength(1)
+    })
+
+    test("a step appended → it shows under the others, offered by what decides of the steps", () => {
+        const setup = uiSetup()
+        const { choice } = twoSteps(setup)
+        choice.mark(0, 2)
+        choice.append(step([2]))
+        expect(choiceSteps(choice)).toHaveLength(2)
+        choice.mark(1, 0)
+        expect(choice.picks).toEqual([2, 0])
     })
 
     test("no first step → an error", () => {

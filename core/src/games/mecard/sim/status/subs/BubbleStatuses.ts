@@ -3,6 +3,11 @@ import { Forced, ModifierKey } from "../../base/Attribute"
 import type { Observer } from "../../base/Observable"
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
+import * as Areas from "../../battle/area/Areas"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../battle/previewColors"
 import type { Unit } from "../../battle/Unit"
 import { BaseStatus } from "../BaseStatus"
 import { RoundStatus } from "../RoundStatus"
@@ -113,6 +118,17 @@ export class Soapy extends RoundStatus {
             battle.signals.statusRemoved.add(relink),
             { remove: () => this.#unlink() },
         ]
+    }
+
+
+    /** The reach of the soapiness from where its unit stands now, and the bubbles it would command. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const commanded = battle.living.filter(bubble => this.#commands(unit, bubble))
+        return Previews.still(
+            pose,
+            Previews.polygon(Areas.circle(pose.position, SOAPY_REACH), RANGE_COLOR),
+            ...Previews.strike([], commanded),
+        )
     }
 
 

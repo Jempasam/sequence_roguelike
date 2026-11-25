@@ -8,7 +8,11 @@ import type { Card } from "../../../card/Card"
 import { collageOf } from "../../../card/subs/composite/ChainRewrites"
 import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
-import { turnUnitsIn } from "../../../card/subs/tools/turning"
+import { turning, turnsIn, turnUnitsIn } from "../../../card/subs/tools/turning"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../../battle/previewColors"
 import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
@@ -32,7 +36,7 @@ export class EngineOil extends AbstractUsable {
 
 
     constructor(){
-        super("Huile de moteur", visual("usables/energizer"), ["Ce ", BATTLE_ROUND, ", chaque robot joue sa chaîne deux fois de suite."])
+        super("Huile de moteur", visual("usables/energizer"), ["Ce ", BATTLE_ROUND, ", chaque robot joue sa chaîne deux fois de suite."], { charges: 4 })
     }
 
 
@@ -91,7 +95,7 @@ export class FishingCard extends AbstractUsable {
 
 
     constructor(){
-        super("Carte de pêche", visual("usables/thrust_bottle"), ["Ajoute ", FISHING, " à ta main. 2 utilisations."], { charges: 2 })
+        super("Carte de pêche", visual("usables/thrust_bottle"), ["Ajoute ", FISHING, " à ta main. 6 utilisations."], { charges: 6 })
     }
 
 
@@ -123,6 +127,12 @@ export class Whistle extends AbstractUsable {
             other => unit.position.minus(other.position).normalized,
         )
     }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Areas.circle(pose.position, WHISTLE_RADIUS)
+        const turned = turnsIn(battle, zone, unit, other => pose.position.minus(other.position).normalized)
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(turning))
+    }
 }
 
 export const WHISTLE = new Whistle()
@@ -132,12 +142,16 @@ export class FoldingTurret extends AbstractUsable {
 
 
     constructor(){
-        super("Tourelle pliable", visual("usables/plant_bag"), ["Pose ", TURRET, " à un mètre devant toi. 2 utilisations."], { charges: 2 })
+        super("Tourelle pliable", visual("usables/plant_bag"), ["Pose ", TURRET, " à un mètre devant toi. 6 utilisations."], { charges: 6 })
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
         placeChainSummon(battle, unit, TURRET.summon)
+    }
+
+    public preview(ctx: PreviewContext): Preview {
+        return TURRET.action.preview(ctx)
     }
 }
 
@@ -157,6 +171,10 @@ export class InflatableDecoy extends AbstractUsable {
 
     protected act({ battle, unit }: UnitContext): void {
         placeChainSummon(battle, unit, DECOY.summon)
+    }
+
+    public preview(ctx: PreviewContext): Preview {
+        return DECOY.action.preview(ctx)
     }
 }
 

@@ -56,6 +56,12 @@ export interface TravelSave {
 
     /** Where the party stands, by its rank on the map, none before the first place of the floor. */
     readonly place: number|null
+
+    /** Which floor of the run it is, from 1: a save without it does not know. */
+    readonly floorNumber?: number
+
+    /** The places the party stood on, by their rank on the map, in order: a save without it has none. */
+    readonly trail?: readonly number[]
 }
 
 /**
@@ -64,12 +70,14 @@ export interface TravelSave {
  * @throws {@link Error} Out of the map, or for a monster the catalog does not have.
  */
 export function saveTravel(travel: Travel): TravelSave {
-    const { floor, journey, place, depth } = travel.state()
+    const { floor, journey, place, depth, floorNumber, trail } = travel.state()
     return {
         version: TRAVEL_SAVE_VERSION, depth,
         floor: savedFloor(floor),
         journey: savedJourney(journey),
         place: place ? journey.places.indexOf(place) : null,
+        ...floorNumber === null ? {} : { floorNumber },
+        trail: trail.map(each => journey.places.indexOf(each)).filter(rank => rank >= 0),
     }
 }
 
@@ -87,6 +95,8 @@ export function loadTravel(save: TravelSave, run: Run): Travel {
     run.travel.restore({
         floor: loadedFloor(save.floor), journey, depth: save.depth,
         place: save.place === null ? null : placeAt(journey, save.place),
+        floorNumber: save.floorNumber ?? null,
+        trail: (save.trail ?? []).map(rank => placeAt(journey, rank)),
     })
     return run.travel
 }

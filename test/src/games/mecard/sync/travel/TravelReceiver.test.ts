@@ -116,8 +116,94 @@ describe("TravelReceiver", () => {
         run.travel.jump(run.travel.next[0])
         channel.listen(text => viewer.receive(text))
         visitAndLeave(run)
-        expect(drifts).toEqual([{ number: 1, sequence: 3 }])
+        expect(drifts).toEqual([{ number: 1, sequence: 5 }])
         expect(rankOf(viewer.engine)).toBe(rankOf(run.travel))
+    })
+
+    test("a place entered → the viewer enters it too, its visit open", () => {
+        const { run, viewer } = session()
+        const exit = placeOf(run.travel, EXIT_HALT)
+        run.travel.jump(exit)
+        run.travel.arrive()
+        run.travel.enter()
+        expect(viewer.engine.phase).toBe("visit")
+        expect(viewer.engine.halt?.type).toBe(EXIT_HALT)
+        expect(viewer.engine.dialogs).toHaveLength(run.travel.dialogs.length)
+    })
+
+    test("a halt left → the viewer's visit ends, told, before its map is loaded", () => {
+        const { run, viewer } = session()
+        const told: string[] = []
+        viewer.engine.visitEnded.add(() => told.push("ended"))
+        viewer.engine.loaded.add(() => told.push("loaded"))
+        visitAndLeave(run)
+        expect(told).toEqual(["ended", "loaded"])
+        expect(viewer.engine.phase).toBe("map")
+    })
+
+    test("a screen going in by itself as the party arrives → entered once, no fault", () => {
+        const { run, viewer } = session()
+        const faults: unknown[] = []
+        viewer.faulted.add(fault => faults.push(fault))
+        viewer.engine.phaseChanged.add(phase => {
+            if(phase === "entering" && viewer.engine.canAdvance) viewer.engine.advance()
+        })
+        run.travel.jump(placeOf(run.travel, EXIT_HALT))
+        run.travel.arrive()
+        run.travel.enter()
+        expect(faults).toEqual([])
+        expect(viewer.engine.phase).toBe("visit")
+    })
+
+    test("a halt visited by its sort → the viewer visits it too", () => {
+        const { run, viewer } = session()
+        run.travel.visit(CHEST_HALT)
+        expect(viewer.engine.phase).toBe("visit")
+        expect(viewer.engine.halt?.type).toBe(CHEST_HALT)
+    })
+
+    test("a dialog answered → the viewer answers the same, the run alike", () => {
+        const { run, viewer } = session()
+        run.travel.jump(placeOf(run.travel, EXIT_HALT))
+        run.travel.arrive()
+        run.travel.enter()
+        run.travel.accept(run.travel.dialogs[0] as ConfirmDialog)
+        expect(viewer.engine.floor.level).toBe(2)
+        expect(viewer.engine.phase).toBe("map")
+    })
+
+    test("a visit with no dialog open on the viewer → an answer ignored, no fault", () => {
+        const { run, viewer } = session()
+        const faults: unknown[] = []
+        viewer.faulted.add(fault => faults.push(fault))
+        viewer.receive(writeTravelMessage({
+            kind: "answered", number: 1, sequence: 99, dialog: 0, answer: "confirm", picks: [],
+        }))
+        expect(faults).toEqual([])
+        expect(viewer.engine.phase).toBe("map")
+        expect(run.travel.phase).toBe("map")
+    })
+
+    test("an answer for a dialog the viewer has not → a fault told", () => {
+        const { run, viewer } = session()
+        const faults: unknown[] = []
+        viewer.faulted.add(fault => faults.push(fault))
+        run.travel.visit(CHEST_HALT)
+        viewer.receive(writeTravelMessage({
+            kind: "answered", number: 1, sequence: 99, dialog: 7, answer: "offer", picks: [0],
+        }))
+        expect(faults).toHaveLength(1)
+    })
+
+    test("a dialog gone back from → the viewer goes back the same", () => {
+        const { run, viewer } = session()
+        const backs: unknown[] = []
+        viewer.engine.wentBack.add(dialog => backs.push(dialog))
+        run.travel.visit(CHEST_HALT)
+        const [dialog] = run.travel.dialogs
+        if(!dialog.back) return
+        run.travel.goBack(dialog)
+        expect(backs).toHaveLength(1)
     })
 
     test("a move before any save → ignored, the next save taken in", () => {
@@ -185,13 +271,26 @@ describe("TravelBroadcaster", () => {
         expect(sent).toHaveLength(1)
     })
 
-    test("a halt left → the journey sent once", () => {
+    test("a halt left → the journey sent once, after the visit told", () => {
         const sent: string[] = []
         const run = startedRun(2)
         new TravelBroadcaster(run.travel, writingTo(sent))
         run.travel.visit(CHEST_HALT)
         run.backToMap()
-        expect(sent).toHaveLength(2)
+        expect(sent).toHaveLength(4)
+        expect(sent.filter(message => message.includes("\"save\""))).toHaveLength(2)
+        expect(sent[1]).toContain("\"visited\"")
+        expect(sent[2]).toContain("\"left\"")
+        expect(sent[3]).toContain("\"save\"")
+    })
+
+    test("a fight place entered → no entry told, the fight is the battle's", () => {
+        const sent: string[] = []
+        const run = startedRun(2)
+        new TravelBroadcaster(run.travel, writingTo(sent))
+        run.travel.go(run.travel.next[0])
+        run.travel.enter()
+        expect(sent.some(message => message.includes("\"entered\""))).toBe(false)
     })
 
     test("a viewer connecting after a move → hears what stands, not the move", () => {

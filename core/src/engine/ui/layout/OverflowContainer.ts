@@ -1,5 +1,5 @@
 import { internals } from "../Component"
-import type { Component } from "../Component"
+import type { Component, RevealAlign } from "../Component"
 import { Container } from "../Container"
 import type { UiEvent } from "../input/UiEvent"
 import { Rect } from "../Rect"
@@ -133,8 +133,12 @@ export class OverflowContainer extends Container<object> {
         event.consume()
     }
 
-    protected override reveal(rect: Readonly<Rect>): void {
+    protected override reveal(rect: Readonly<Rect>, align: RevealAlign): void {
         const { width } = this.bounds
+        if(align === "start"){
+            this.#setOffset(rect.x)
+            return
+        }
         if(rect.x < this.#offset) this.#setOffset(rect.x)
         else if(rect.x + rect.width > this.#offset + width) this.#setOffset(rect.x + rect.width - width)
     }

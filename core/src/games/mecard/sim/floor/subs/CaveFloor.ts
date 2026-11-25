@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import type { FightCategory } from "../../fight/FightCategory"
 import type { FightType } from "../../fight/FightType"
 import { laidIn } from "../fights/designed"
@@ -27,7 +27,7 @@ export const CAVE_FLOOR: FloorType = {
     description: "Des gobelins et leurs amis, gardés par un golem runique. Un peu de tout sur le chemin.",
     icon: visual("floors/cave/logo"),
     // The cave has no frame of its own: it keeps that of the generic map.
-    look: { ...sceneLook(20, 18, 31, "cave"), border: visual("border/map") },
+    look: floorLook(20, 18, 31, "cave"),
     decorations: [
         { picture: visual("floors/cave/bigshroom"), size: 2 },
         { picture: visual("floors/cave/stalagmite"), size: 2 },

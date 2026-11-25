@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { MERCHANT_HALT } from "../../halt/subs/gift/MerchantHalt"
 import { SHOP_HALT } from "../../halt/subs/gift/ShopHalt"
 import { CHEST_HALT } from "../../halt/subs/gift/ChestHalt"
@@ -33,7 +33,7 @@ export const HARBOR_FLOOR: FloorType = {
     name: "Port",
     description: "Des pirates, des quais, et un capitaine Kraken au bout. Plus de marchands, de boutiques et de coffres.",
     icon: visual("floors/harbor/logo"),
-    look: sceneLook(20, 34, 44, "harbor"),
+    look: floorLook(20, 34, 44, "harbor"),
     decorations: [
         { picture: visual("floors/harbor/anchor"), size: 2 },
         { picture: visual("floors/harbor/wave"), size: 2 },

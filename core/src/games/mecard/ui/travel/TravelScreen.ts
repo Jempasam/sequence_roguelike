@@ -114,10 +114,13 @@ const MAP_SCROLL_TIME = 0.6
 export interface TravelLocks {
     /** May they not choose where the party goes? */
     readonly map: boolean
+
+    /** May they not answer what a halt asks: pick an offer, a character or cards, go on, go back, leave? */
+    readonly halts: boolean
 }
 
 /** Nothing locked: the players play the journey. */
-export const NO_TRAVEL_LOCKS: TravelLocks = { map: false }
+export const NO_TRAVEL_LOCKS: TravelLocks = { map: false, halts: false }
 
 /** What a screen is built with, besides what it shows. */
 export interface TravelScreenOptions {
@@ -159,6 +162,8 @@ export interface TravelScreenOptions {
  * character it shows, when it offers characters.
  */
 interface StepOfChoice {
+    /** The dialog of the travel it answers. */
+    readonly dialog: Dialog
     readonly step: ChoiceStep
     pick(index: number): void
     tell(index: number): Text|null
@@ -241,6 +246,7 @@ export class TravelScreen {
     public set engine(travel: Travel){
         this.#unregisterObservers()
         this.#stopAnimations()
+        this.#choice = null
         this.#engine = travel
         this.#registerObservers()
         this.animations.add(() => this.#fillLoaded())
@@ -433,7 +439,9 @@ export class TravelScreen {
         const middle = dialog ? dialog() : this.#map()
         const right = new Box("column", { gap: MARGIN, align: "stretch" })
         right.add(middle, { grow: 1 })
-        const row = new Box("row", { gap: MARGIN, padding: MARGIN, align: "stretch" })
+        const frame = scene?.border.border
+        const thickness = frame ? Math.max(frame.left, frame.right, frame.top, frame.bottom) / 2 : 0
+        const row = new Box("row", { gap: MARGIN, padding: MARGIN + thickness, align: "stretch" })
         row.fixedSize = { width: this.ui.width, height: this.ui.height }
         row.add(this.#side())
         row.add(right, { grow: 1 })
@@ -559,8 +567,8 @@ export class TravelScreen {
     /** The steps of the choice open, none while none is. */
     #steps: StepOfChoice[] = []
 
-    /** The step asked while a pick was taken in, none when none was. */
-    #pending: StepOfChoice|null = null
+    /** The choice open, none while none is. */
+    #choice: Choice|null = null
 
     /** Is the transition into a visit going on? The map stays shown until its middle, whatever is asked. */
     #arriving = false
@@ -611,6 +619,8 @@ export class TravelScreen {
             }),
             travel.offerAsked.add(dialog => this.#showOffer(dialog)),
             travel.heroAsked.add(dialog => this.#showHero(dialog)),
+            travel.offerTaken.add(({ dialog, picks }) => this.#markTaken(dialog, picks[0])),
+            travel.heroTaken.add(({ dialog, picks }) => this.#markTaken(dialog, picks[0])),
             travel.cardsAsked.add(dialog => this.#showCards(dialog)),
             travel.catalogAsked.add(dialog => this.#showCatalog(dialog)),
             travel.confirmAsked.add(dialog => this.#showConfirm(dialog)),
@@ -718,6 +728,7 @@ export class TravelScreen {
             return shown.price === undefined ? content : forSale(this.theme, this.sprites, shown.price, content)
         })
         this.#choose({
+            dialog,
             step: { title: this.#title(dialog.title), options },
             pick: index => this.engine.takeOffer(dialog, index),
             tell: index => {
@@ -731,7 +742,7 @@ export class TravelScreen {
                     ? Detail.on(option, text, parts)
                     : saleDetail(option, sold[index], price, text, parts)
             },
-        }, dialog, false)
+        }, false)
     }
 
 
@@ -741,11 +752,12 @@ export class TravelScreen {
             cards: false, description: each.controller !== "player" ? "Bot" : null,
         }))
         this.#choose({
+            dialog,
             step: { title: this.#title(dialog.title), options },
             pick: index => this.engine.takeHero(dialog, heroes[index]),
             tell: index => concat(heroes[index], " : ", `${allCards(heroes[index]).length} cartes.`),
             show: index => this.#select(heroes[index]),
-        }, dialog, dialog.follows)
+        }, dialog.follows)
     }
 
     #showCards(dialog: CardsDialog): void {
@@ -760,7 +772,7 @@ export class TravelScreen {
                 size: "chain",
                 deck,
                 pickable: (_, index) => {
-                    if(!selectable[index]) return null
+                    if(!selectable[index] || this.#locks.halts) return null
                     const times = picked.filter(each => each === index).length
                     return {
                         // A card picked once says it with an edge; one that may be picked again, how many times.
@@ -813,7 +825,7 @@ export class TravelScreen {
             const view = new CardView(this.theme, card, "chain")
             view.deck = deck
             this.#hear(cardDetail(view))
-            view.onPick = () => leave(at)
+            if(!this.#locks.halts) view.onPick = () => leave(at)
             row.add(view)
         })
         return row
@@ -831,9 +843,10 @@ export class TravelScreen {
             sections: sections(look), width: () => this.#middleRoom(), allowed: new Set(dialog.allowed),
             keys: dialog.keys,
         })
-        browser.onPick = (section, entry) => this.engine.takeCatalog(dialog, {
-            category: section.category, key: entry.key,
-        })
+        browser.onPick = (section, entry) => {
+            if(this.#locks.halts) return
+            this.engine.takeCatalog(dialog, { category: section.category, key: entry.key })
+        }
         browser.onDetail = detail => this.#hear(detail)
         this.#open(() => {
             browser.parent?.remove(browser)
@@ -931,12 +944,15 @@ export class TravelScreen {
     }
 
     /**
-     * Ask a step of a choice: the next step of the choice open when it follows one of its picks, else the
-     * first step of a new choice, left by the way of its dialog.
+     * Ask a step of a choice: the next step of the choice open when it follows one of its picks, shown under
+     * it as the travel asks it, else the first step of a new choice, left by the way of its dialog.
      */
-    #choose(step: StepOfChoice, dialog: Dialog, follows: boolean): void {
-        if(follows){
-            this.#pending = step
+    #choose(step: StepOfChoice, follows: boolean): void {
+        const open = this.#choice
+        if(follows && open){
+            this.#detailOptions(step, this.#steps.length)
+            this.#steps.push(step)
+            open.append(step.step)
             return
         }
         const steps: StepOfChoice[] = [step]
@@ -945,8 +961,17 @@ export class TravelScreen {
             gap: OPTION_GAP, spacing: STEP_SPACING,
             picked: { frame: NineSlice.flat(this.theme.white, CHOSEN_TEXT), width: PICKED_WIDTH },
         })
+        this.#choice = choice
         this.#detailOptions(step, 0)
-        this.#open(() => this.#choiceFrame(choice, steps, dialog))
+        this.#open(() => this.#choiceFrame(choice, steps, step.dialog))
+    }
+
+    /** Show the option the travel took as the one picked in its step, the steps after it dropped. */
+    #markTaken(dialog: Dialog, index: number): void {
+        const depth = this.#steps.findIndex(each => each.dialog === dialog)
+        if(depth < 0 || !this.#choice) return
+        this.#steps.length = depth + 1
+        this.#choice.mark(depth, index)
     }
 
     /**
@@ -972,27 +997,15 @@ export class TravelScreen {
     }
 
     /**
-     * The step following picks in a choice: the pick of the last step taken in, then the step it asked,
-     * none when it asked none, its dialog having replaced the choice or the visit being over.
+     * The step following picks in a choice: the first step for none, else none: the pick of the last step is
+     * taken in by the travel, which asks the step that follows it, shown as it is asked.
      */
     #nextStep(steps: StepOfChoice[], picks: readonly number[]): ChoiceStep|null {
         if(picks.length === 0) return steps[0].step
         const depth = picks.length - 1
         steps.length = depth + 1
-        this.#pending = null
         steps[depth].pick(picks[depth])
-        const pending = this.#takePending()
-        if(!pending || this.#steps !== steps) return null
-        steps.push(pending)
-        this.#detailOptions(pending, depth + 1)
-        return pending.step
-    }
-
-    /** The step asked while a pick was taken in, none when none was, forgotten once taken. */
-    #takePending(): StepOfChoice|null {
-        const pending = this.#pending
-        this.#pending = null
-        return pending
+        return null
     }
 
     /** Show a character in full, in place of the one shown. */
@@ -1064,8 +1077,6 @@ export class TravelScreen {
             const block = new Box("column", { gap: 1 })
             block.add(this.#label(hero.name, hero === shown ? CHOSEN_TEXT : undefined))
             block.add(this.#hearts(hero))
-            const things = hero.items.length + hero.usables.length
-            block.add(this.#label(`${allCards(hero).length} cartes · ${things} objets`, DIM_TEXT))
             const wood = this.sprites.wood
             const tile = new HoverPanel(this.theme, wood
                 ? { background: hero === shown ? wood.frameActive : wood.frame, padding: 2 + FRAME_THICKNESS }
@@ -1278,7 +1289,7 @@ export class TravelScreen {
             foot.add(new Box("row"), { grow: 1 })
             if(next){
                 const button = this.#button(next.label, next.action, CHOSEN_TEXT)
-                button.enabled = next.enabled ?? true
+                button.enabled = (next.enabled ?? true) && !this.#locks.halts
                 foot.add(button)
             }
             column.add(foot)
@@ -1292,6 +1303,7 @@ export class TravelScreen {
     #choiceFrame(choice: Choice, steps: readonly StepOfChoice[], dialog: Dialog): Component {
         const middle = new Stack()
         choice.parent?.remove(choice)
+        choice.locked = this.#locks.halts
         middle.add(choice, { x: "stretch", y: "end" })
         choice.onHover = (depth, index, over) => {
             if(over) steps[depth]?.show?.(index)
@@ -1430,6 +1442,7 @@ export class TravelScreen {
     #button(text: string, activate: () => void, color?: Color): Button {
         const button = new Button(this.theme, color ? this.#label(text, color) : text)
         button.onActivate = activate
+        button.enabled = !this.#locks.halts
         return button
     }
 }

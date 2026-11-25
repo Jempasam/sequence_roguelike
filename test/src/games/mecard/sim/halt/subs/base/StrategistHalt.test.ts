@@ -62,8 +62,8 @@ describe("StrategistHalt, a new deck", () => {
         const halves = player.log.findIndex(line => line.includes("Le deck est divisé"))
         const swap = player.log.findIndex(line => line.includes("à échanger"))
         expect(halves).toBeGreaterThanOrEqual(0)
-        expect(player.log[halves]).toMatch(/Deck violet \[\S+\]/)
-        expect(player.log[halves]).toMatch(/Deck rouge \[\S+\]/)
+        expect(player.log[halves]).toMatch(/Deck jaune \[\S+\]/)
+        expect(player.log[halves]).toMatch(/Deck bleu \[\S+\]/)
         expect(swap).toBeGreaterThan(halves)
     })
 
@@ -128,8 +128,8 @@ describe("StrategistHalt, sorting", () => {
         STRATEGIST_HALT.create(run).start(player)
         player.play()
         const told = player.log.find(line => line.startsWith("tell: Échangées"))
-        expect(told).toContain(`Deck violet [${AIM.name}, ${THRUST.name}]`)
-        expect(told).toContain(`Deck rouge [${WAIT.name}, ${STEP.name}]`)
+        expect(told).toContain(`Deck jaune [${AIM.name}, ${THRUST.name}]`)
+        expect(told).toContain(`Deck bleu [${WAIT.name}, ${STEP.name}]`)
     })
 
     test("two decks → the first cards of each swapped", () => {

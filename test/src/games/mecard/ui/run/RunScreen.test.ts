@@ -22,6 +22,7 @@ const NO_SPRITES = {
     of: () => null,
     thing: () => null,
     cardBack: () => null,
+    eye: () => null,
     whenLoaded: () => {},
     load: () => Promise.resolve(),
 } as unknown as RunScreenOptions["sprites"]
@@ -65,6 +66,22 @@ describe("RunScreen", () => {
         await crossed(setup)
         expect(screen.battleScreen.engine).toBe(run.battle)
         expect(screen.battleScreen.visible).toBe(true)
+    })
+
+    test("run loaded while its battle still plays → the battle stays until it is played", async() => {
+        const { run, screen, setup } = shown(ALL_RUN_LOCKS)
+        run.joinBattle(started(startedRun(5)).save())
+        await crossed(setup)
+        let release = () => {}
+        screen.battleScreen.animations.add(() => new Promise<void>(resolve => { release = resolve }))
+        run.load(startedRun(3).save())
+        await settled()
+        expect(screen.battleScreen.visible).toBe(true)
+        expect(screen.travelScreen.visible).toBe(false)
+        release()
+        await settled()
+        expect(screen.battleScreen.visible).toBe(false)
+        expect(screen.travelScreen.visible).toBe(true)
     })
 
     test("left before its way in ended → the map stays", async() => {

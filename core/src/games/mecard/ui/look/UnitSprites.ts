@@ -49,6 +49,8 @@ const GOLD = "hud/icon/gold"
 /** The backs of the cards, as large as a card of the hand: each deck has its own, in turn, which names it. */
 const CARD_BACK_PATHS: readonly ImagePath[] = [
     "mecard/cards/back.png", "mecard/cards/back_2.png", "mecard/cards/back_3.png", "mecard/cards/back_4.png",
+    "mecard/cards/back_5.png", "mecard/cards/back_6.png", "mecard/cards/back_7.png", "mecard/cards/back_8.png",
+    "mecard/cards/back_9.png", "mecard/cards/back_10.png",
 ]
 
 /** What crosses out a card that could not be built. */

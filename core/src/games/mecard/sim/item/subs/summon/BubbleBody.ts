@@ -1,5 +1,10 @@
 import type { PlugContext } from "../../../battle/Action"
 import { visual } from "../../../base/Visual"
+import * as Areas from "../../../battle/area/Areas"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { RANGE_COLOR } from "../../../battle/previewColors"
 import { BUBBLE, BULLE, SOAPY } from "../../../status/subs/BubbleStatuses"
 
 import { AbstractItem } from "../AbstractItem"
@@ -39,6 +44,11 @@ export class BubbleBody extends AbstractItem {
                 if(gap > 0) battle.applyStatus(other, SOAPY, gap)
             }
         }))
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const zone = Areas.circle(pose.position, BUBBLE_BODY_REACH)
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...Previews.strike([], battle.fetch(zone, unit)))
     }
 }
 

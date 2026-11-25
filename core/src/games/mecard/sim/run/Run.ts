@@ -339,6 +339,7 @@ export class Run {
         if(!battle || battle.phase !== "over") throw new Error("Only a battle fought and over ends.")
         const result = this.#fight?.finish()
         const won = result ? result === "won" : battle.winner === this.heroesTeam
+        this.lastFight = this.#fight
         this.#battle = null
         this.#fight = null
         if(!won){
@@ -490,6 +491,9 @@ export class Run {
         this.heroLeft.notify(hero)
     }
 
+
+    /** The fight whose battle ended last, kept after the run let go of it: the one a lost run fell to. */
+    public lastFight: Fight|null = null
 
     #phase: RunPhase = "travel"
     #battle: Battle|null = null

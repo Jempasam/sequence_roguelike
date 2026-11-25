@@ -2,7 +2,10 @@ import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
 import { SummonedHearts } from "../../battle/words"
 import { summonedHearts } from "../../card/subs/summon/SummonCard"
-import { SUMMON_AHEAD, summonAt, summonSpot } from "../../card/subs/tools/playing"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../../card/subs/tools/playing"
 import { THORN_HEART } from "../../heart/subs/ThornHeartKind"
 
 import { AbstractUsable } from "./AbstractUsable"
@@ -20,8 +23,8 @@ export class FoldingCactus extends AbstractUsable {
     ){
         super(
             "Cactus pliable", visual("usables/cactus"),
-            ["Pose un cactus à ", SUMMON_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 2 utilisations."],
-            { charges: 2 },
+            ["Pose un cactus à ", SUMMON_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 6 utilisations."],
+            { charges: 6 },
         )
     }
 
@@ -31,6 +34,10 @@ export class FoldingCactus extends AbstractUsable {
             sprite: visual("units/cactus"), name: "Cactus", hearts: () => summonedHearts(unit, this.hearts, THORN_HEART),
             fleeting: true,
         })
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        return Previews.still(pose, ...summonShows(battle, unit, [summonSpot(unit, pose, SUMMON_AHEAD)]))
     }
 }
 

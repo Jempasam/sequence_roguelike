@@ -1,5 +1,9 @@
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
+import { MOVE_WIDTH, NOTE_COLOR, CONTROL_COLOR } from "../../battle/previewColors"
 import { SOUL_LINKED } from "../../status/subs/Wounds"
 
 import { AbstractUsable } from "./AbstractUsable"
@@ -38,6 +42,17 @@ export class WoolBall extends AbstractUsable {
         }
         battle.applyStatus(unit, SOUL_LINKED, WOOL_ROUNDS)
         battle.applyStatus(target, SOUL_LINKED, WOOL_ROUNDS)
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const target = battle.nearestEnemy(unit, this.range, pose.position)
+        if(!target) return Previews.still(pose, Previews.label(pose.position, "personne à portée", NOTE_COLOR))
+        return Previews.still(
+            pose,
+            Previews.arrow([pose.position, target.position], MOVE_WIDTH / 2, CONTROL_COLOR),
+            ...Previews.strike([], [target]),
+            Previews.label(target.position, "lié", NOTE_COLOR),
+        )
     }
 }
 

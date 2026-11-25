@@ -1,5 +1,5 @@
 import type { Rng } from "../../base/Rng"
-import { sceneLook } from "../../halt/SceneLook"
+import { floorLook } from "../../halt/SceneLook"
 import { ELITE } from "../../fight/fights"
 import { ALTAR_HALT } from "../../halt/subs/deck/AltarHalt"
 import { DEMON_HALT } from "../../halt/subs/deck/DemonHalt"
@@ -39,7 +39,7 @@ export const HELL_FLOOR: FloorType = {
     name: "Enfer",
     description: "Du feu et de la rage, et le diable au bout. Plus de démons, d'autels et d'élites, peu d'hôpitaux.",
     icon: visual("floors/hell/logo"),
-    look: sceneLook(38, 14, 14, "hell"),
+    look: floorLook(38, 14, 14, "hell"),
     decorations: [
         { picture: visual("floors/hell/statue"), size: 2 },
         { picture: visual("floors/hell/flame"), size: 2 },

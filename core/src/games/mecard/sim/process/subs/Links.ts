@@ -3,9 +3,10 @@ import type { PlugContext } from "../../battle/Action"
 import { HeartCount } from "../../battle/words"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
-import type { Preview } from "../../battle/preview/Preview"
+import type { Indicator, Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
+import { MOVE_COLOR, MOVE_WIDTH } from "../../battle/previewColors"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
@@ -146,5 +147,18 @@ export class IronChain extends AbstractProcess {
             battle.move(unit, toward, this.pull, true)
             battle.move(target, toward.opposite, this.pull, true)
         }))
+    }
+
+    /** The pull at the end of a turn when the two stand too far apart, each toward the other. */
+    public preview({ pose }: PreviewContext): Preview {
+        const { target } = this
+        const toward = target.position.minus(pose.position).normalized
+        if(!target.alive || !toward || target.position.distance(pose.position) <= this.slack){
+            return Previews.still(pose)
+        }
+        const pulled = (from: Vector2, way: Vector2): Indicator => {
+            return Previews.arrow([from, from.plus(way.times(this.pull))], MOVE_WIDTH, MOVE_COLOR)
+        }
+        return Previews.still(pose, pulled(pose.position, toward), pulled(target.position, toward.opposite))
     }
 }

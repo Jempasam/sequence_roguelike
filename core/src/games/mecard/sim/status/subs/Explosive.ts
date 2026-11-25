@@ -2,6 +2,9 @@ import type { Text } from "../../../../../semantic"
 import { DISTANCE, UNIT } from "../../base/keywords"
 import type { UnitContext } from "../../battle/Action"
 import * as Areas from "../../battle/area/Areas"
+import type { Preview } from "../../battle/preview/Preview"
+import type { PreviewContext } from "../../battle/preview/PreviewContext"
+import * as Previews from "../../battle/preview/Previews"
 import { BaseStatus } from "../BaseStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 
@@ -43,6 +46,13 @@ export class Explosive extends BaseStatus {
             battle.signals.notifyStatus.notify({ unit, target: this })
             battle.explode(area, this.level, unit.owner ?? unit, unit)
         }))
+    }
+
+    /** The blast it would make if its unit died where it stands now, and the units it would reach. */
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const area = Areas.circle(pose.position, explosiveRadius(this.level))
+        const reached = battle.fetch(area, unit).filter(other => other !== unit)
+        return Previews.still(pose, ...Previews.strike([area], reached))
     }
 
     public remove(): void {

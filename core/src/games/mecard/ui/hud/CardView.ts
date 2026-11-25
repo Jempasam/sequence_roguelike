@@ -4,7 +4,7 @@ import { TextLayout } from "../../../../engine/text"
 import { Component, Dial, sizeHint } from "../../../../engine/ui"
 import type { Rect as PartRect, SizeHint, Theme, UiEvent } from "../../../../engine/ui"
 import { plainText } from "../../../../semantic"
-import { typeColorOf } from "../look/colors"
+import { deckFaceOf, typeColorOf } from "../look/colors"
 import { joinGlyph } from "../look/joinGlyph"
 import { DIM_INK_TEXT, INK_TEXT, TEXT_OUTLINE } from "../look/theme"
 import { topMark } from "../look/topMark"
@@ -41,18 +41,6 @@ export const CARD_LOOKS: Readonly<Record<CardPlace, CardLook>> = {
     chain: { width: 40, height: 50, padding: 3, band: 5, lines: 3, foot: true },
     mini: { width: 32, height: 24, padding: 2, band: 2, lines: 2, foot: false },
 }
-
-/** The face of a card by the deck it comes from, in turn: paper, a little different for each deck. */
-const FACES: readonly Color[] = [
-    new Color(0.9, 0.83, 0.68), new Color(0.92, 0.8, 0.66),
-    new Color(0.86, 0.84, 0.66), new Color(0.91, 0.82, 0.6),
-]
-
-/** The same, under the pointer: lighter. */
-const FACES_HOVERED: readonly Color[] = [
-    new Color(0.97, 0.91, 0.77), new Color(0.98, 0.89, 0.75),
-    new Color(0.94, 0.92, 0.75), new Color(0.98, 0.9, 0.69),
-]
 
 const BACK = new Color(0.3, 0.2, 0.12)
 const EDGE = new Color(0.2, 0.12, 0.06)
@@ -583,8 +571,8 @@ export class CardView extends Component {
         painter.rect(x, y, width, height)
         let top = y + 1
         if(!contents || !bare){
-            const faces = this.hovered && this.#overVariants === null ? FACES_HOVERED : FACES
-            painter.setTint(card ? faces[(this.deck ?? 0) % faces.length] : BACK)
+            const hovered = this.hovered && this.#overVariants === null
+            painter.setTint(card ? deckFaceOf(this.deck, hovered) : BACK)
             painter.rect(x + 1, y + 1, width - 2, height - 2)
             painter.setTint(color)
             painter.rect(x + 1, y + 1, width - 2, look.band)

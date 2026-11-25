@@ -37,6 +37,7 @@ import type { UiRect } from "../hud/BattleGrid"
 import { StatusList } from "../hud/StatusList"
 import type { ShownStatus } from "./BattleScene"
 import { ArenaHearts } from "../hud/ArenaHearts"
+import { Detail } from "../hud/Detail"
 import { DetailTooltip } from "../hud/DetailTooltip"
 import { DIM_TEXT } from "../look/theme"
 import type { UnitSprites } from "../look/UnitSprites"
@@ -269,8 +270,9 @@ export class BattleScreen implements HudHost {
         this.#tooltip = new DetailTooltip(ui, ui.addLayer("battle-tooltip"), theme, {
             color: DIM_TEXT, paper: () => sprites.paper,
         })
-        this.#hud = new Hud(theme, main, this, () => ({ width: ui.width, height: ui.height }), this.#tooltip)
-        this.#arenaHearts.tooltip = this.#tooltip
+        this.#hud = new Hud(
+            theme, main, this, () => ({ width: ui.width, height: ui.height }), this.#tooltip.hearLink,
+        )
         this.#controlsView = new PlayControlView(theme, this.#playControl)
         this.#controlsRow.add(this.#controlsView)
         controls.content.add(this.#controlsRow, { x: "start", y: "start" })
@@ -366,8 +368,10 @@ export class BattleScreen implements HudHost {
         this.#panelUnit = null
         this.#panelHovers.clear()
         this.#board.indicators = []
-        this.#hud.refresh()
-        this.#arenaHearts.rebuild(this.scene)
+        this.#hovers?.remove()
+        this.#tooltip.reset()
+        this.#hovers = Detail.all(this.#hud.refresh(), this.#arenaHearts.rebuild(this.scene))
+        this.#tooltip.attach(this.#hovers)
         this.#listed = undefined
         this.#shownVersion = this.scene.version
         this.#showHighlighted()
@@ -430,6 +434,12 @@ export class BattleScreen implements HudHost {
 
     /** The bubbles that tell what is hovered. */
     readonly #tooltip: DetailTooltip
+
+    /** What the panels and the arena tell while hovered, until they are built again. */
+    #hovers: Detail|null = null
+
+    /** What the list of the statuses and processes tells while hovered, until it is built again. */
+    #statusHovers: Detail|null = null
     readonly #statusList: StatusList
 
     /** The unit whose statuses the list shows, undefined before it is built. */
@@ -807,7 +817,9 @@ export class BattleScreen implements HudHost {
         const listed = this.highlighted ?? this.active
         if(listed !== this.#listed){
             this.#listed = listed
-            this.#statusList.rebuild(listed, this.scene)
+            this.#statusHovers?.remove()
+            this.#statusHovers = this.#statusList.rebuild(listed, this.scene)
+            this.#tooltip.attach(this.#statusHovers)
         }
         this.#board.highlighted = this.highlighted
         this.#hud.highlight(this.highlighted)

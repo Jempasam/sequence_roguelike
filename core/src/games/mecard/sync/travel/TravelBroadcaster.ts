@@ -1,9 +1,13 @@
 import type { Observer } from "../../sim/base/Observable"
+import type { Halt } from "../../sim/halt/Halt"
+import type { CatalogPick } from "../../sim/halt/HaltContext"
 import type { Place } from "../../sim/run/Journey"
-import type { PlaceMove, Travel } from "../../sim/travel/Travel"
+import type { Dialog } from "../../sim/travel/dialogs"
+import type { PlaceMove, Travel, TravelPhase } from "../../sim/travel/Travel"
 
 import type { SyncSender } from "../SyncChannel"
 import { writeTravelMessage } from "./TravelMessage"
+import type { TravelAnswerKind, TravelBody } from "./TravelMessage"
 import type { Removable } from "../../../../lifetime"
 
 /**
@@ -68,10 +72,74 @@ export class TravelBroadcaster {
 
     #registerObservers(): void {
         const travel = this.#engine
+        this.#before = travel.phase
         this.#observers = [
             travel.moved.add(move => this.#sendMove(move)),
-            travel.visitEnded.add(() => this.#sendSave()),
+            travel.phaseChanged.add(phase => this.#phaseChanged(phase)),
+            travel.visitStarted.add(halt => this.#sendOpening(halt)),
+            travel.offerTaken.add(({ dialog, picks }) => this.#sendAnswer(dialog, "offer", picks)),
+            travel.heroTaken.add(({ dialog, picks }) => this.#sendAnswer(dialog, "hero", picks)),
+            travel.cardsTaken.add(({ dialog, picks }) => this.#sendAnswer(dialog, "cards", picks)),
+            travel.catalogTaken.add(({ dialog, picks, pick }) => this.#sendAnswer(dialog, "catalog", picks, pick)),
+            travel.confirmAccepted.add(({ dialog, picks }) => this.#sendAnswer(dialog, "confirm", picks)),
+            travel.wentBack.add(dialog => this.#sendBack(dialog)),
+            travel.visitEnded.add(() => {
+                if(this.#told) this.#sendStamped({ kind: "left" })
+                this.#told = false
+                this.#sendSave()
+            }),
         ]
+    }
+
+    /** The phase the journey was in before the one it is in, to tell how a visit opened. */
+    #before: TravelPhase = "map"
+
+    /** The phase before the one just entered, kept as the visit that follows reads it. */
+    #beforeVisit: TravelPhase = "map"
+
+    #phaseChanged(phase: TravelPhase): void {
+        this.#beforeVisit = this.#before
+        this.#before = phase
+    }
+
+    /**
+     * Tell a visit that opens, but not the one a fight won leads to, nor a fight: a viewer takes those from
+     * the battle it is told, and from the journey when the halt is left.
+     */
+    #sendOpening(halt: Halt): void {
+        const travel = this.#engine
+        const { place } = travel
+        this.#told = false
+        if(this.#beforeVisit === "entering" && place && !place.fight){
+            this.#told = true
+            this.#sendStamped({ kind: "entered", place: travel.journey.places.indexOf(place) })
+        } else if(this.#beforeVisit === "map"){
+            this.#told = true
+            this.#sendStamped({ kind: "visited", halt: halt.type.id })
+        }
+    }
+
+    #sendAnswer(
+        dialog: Dialog, answer: TravelAnswerKind, picks: readonly number[], pick?: CatalogPick,
+    ): void {
+        const at = this.#engine.dialogs.indexOf(dialog)
+        if(at < 0 || !this.#told) return
+        this.#sendStamped({ kind: "answered", dialog: at, answer, picks, ...pick ? { pick } : {} })
+    }
+
+    #sendBack(dialog: Dialog): void {
+        const at = this.#engine.dialogs.indexOf(dialog)
+        if(at < 0 || !this.#told) return
+        this.#sendStamped({ kind: "back", dialog: at })
+    }
+
+    /** Was the visit open told as it opened? One a won fight leads to is not, nor are its answers. */
+    #told = false
+
+    /** Send a message of the journey, stamped as the next. */
+    #sendStamped(message: TravelBody): void {
+        this.#sequence++
+        this.sender.send(writeTravelMessage({ ...message, number: this.#number, sequence: this.#sequence }))
     }
 
     #unregisterObservers(): void {

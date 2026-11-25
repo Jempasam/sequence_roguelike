@@ -25,7 +25,9 @@ import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
 import { allFightTypes } from "../sim/catalog/fightTypes"
 import type { FightType } from "../sim/fight/FightType"
-import { GHOST_FIGHT, GHOST_REACH, ghostsFor } from "../sim/fight/GhostFightType"
+import { GHOST_FIGHT, GHOST_REACH, ghostsFor, isGhostFight } from "../sim/fight/GhostFightType"
+import { AGGRESSION, AMBUSH } from "../sim/fight/fights"
+import { Journey } from "../sim/run/Journey"
 import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
@@ -1330,6 +1332,61 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
 /** How long a transition tried takes when no duration is typed, in milliseconds. */
 const DEFAULT_TRANSITION = 1500
 
+/** A percentage of a total, for the census of the fights. */
+function percent(part: number, total: number): string {
+    return `${(total === 0 ? 0 : part * 100 / total).toFixed(1)} %`
+}
+
+/**
+ * Draw maps of a floor, each from a seed of its own so the run is left as it is, and count the fights of the
+ * aggressions and of the ambushes laid on them, by type, the ghosts shown apart.
+ */
+function fightCensus(run: Run, count: number, floorType: FloorType|null): string[] {
+    // DRAW //
+    const { depth } = run.travel
+    const floor = floorType ? floorType.create(run.travel.floor.level) : run.travel.floor
+    const categories = [AGGRESSION, AMBUSH]
+    const found = new Map<string, Map<string, { name: string, ghost: boolean, count: number }>>()
+    const withGhost = new Map<string, number>()
+    for(const category of categories) found.set(category.id, new Map())
+    for(let index = 0; index < count; index++){
+        const map = new Journey(new Rng(index + 1))
+        map.fights = { depth, ghosts: run.ghosts }
+        floor.fillMap(map)
+        const ghostsHere = new Set<string>()
+        for(const { fight } of map.places){
+            const kinds = fight && found.get(fight.category.id)
+            if(!fight || !kinds) continue
+            const kind = kinds.get(fight.id) ?? { name: fight.name, ghost: isGhostFight(fight), count: 0 }
+            kind.count++
+            kinds.set(fight.id, kind)
+            if(kind.ghost) ghostsHere.add(fight.category.id)
+        }
+        for(const id of ghostsHere) withGhost.set(id, (withGhost.get(id) ?? 0) + 1)
+    }
+
+    // PRINT //
+    const lines = [
+        `${count} carte(s) de l'étage ${floor.type.name}, profondeur ${depth} : ${run.ghosts.length} partie(s) dans `
+            + `l'historique, ${ghostsFor(run.ghosts, depth).length} à portée de la profondeur ${depth} `
+            + `(au plus ${GHOST_REACH} lieux au-delà).`,
+    ]
+    for(const category of categories){
+        const kinds = [...found.get(category.id)!.values()].sort((a, b) => b.count - a.count)
+        const total = kinds.reduce((sum, kind) => sum + kind.count, 0)
+        const ghosts = kinds.filter(kind => kind.ghost).reduce((sum, kind) => sum + kind.count, 0)
+        lines.push(`${category.id} : ${total} combat(s)`)
+        for(const kind of kinds){
+            lines.push(`  ${kind.ghost ? "[FANTÔME] " : ""}${kind.name} : ${kind.count} (${percent(kind.count, total)})`)
+        }
+        lines.push(
+            `  fantômes : ${ghosts} (${percent(ghosts, total)}), cartes avec au moins un fantôme : `
+                + `${withGhost.get(category.id) ?? 0}/${count}`,
+        )
+    }
+    return lines
+}
+
 /** The ways a transition is played, as typed. */
 const TRANSITION_WAYS = ["endroit", "envers"] as const
 
@@ -1406,6 +1463,18 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
                     // PRINT //
                     ctx.print("Combat de fantômes résolu :")
                     for(const unit of fight.battle.living) ctx.print(`  ${unitLine(unit)}`)
+                },
+            ),
+            fights: command(
+                "debug fights [nombre] [étage] : génère des cartes et compte, par type, les agressions et les"
+                    + " embuscades posées, les fantômes mis en évidence. L'étage courant par défaut. La partie n'est pas touchée.",
+                [optional(whole("le nombre de cartes", 1), 200), optional(FLOOR, null)],
+                (ctx: MecardContext, count, type) => {
+                    if(!ctx.playing){
+                        ctx.print(NOT_PLAYING)
+                        return
+                    }
+                    for(const line of fightCensus(ctx.run, count, type)) ctx.print(line)
                 },
             ),
             transition: command(

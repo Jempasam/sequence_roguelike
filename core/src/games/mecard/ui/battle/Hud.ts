@@ -1,6 +1,6 @@
 import { Color } from "../../../../engine/math"
 import { Box, Button, Label, OverflowContainer, NineSlice, Panel, Paragraph, Rect, Scroll } from "../../../../engine/ui"
-import type { Component, Image, Layer, Theme } from "../../../../engine/ui"
+import type { Component, Image, Layer, LinkListener, Theme } from "../../../../engine/ui"
 import { concat, joinText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { CARTE } from "../../sim/base/keywords"
@@ -24,7 +24,6 @@ import { CardChain } from "../../sim/card/CardChain"
 
 import { DeckPile, PILE_HEIGHT } from "../hud/DeckPile"
 import { Detail } from "../hud/Detail"
-import type { DetailTooltip } from "../hud/DetailTooltip"
 import { viewDetails } from "../hud/viewDetails"
 import { SlotView } from "../hud/SlotView"
 import { previewDraw } from "./drawPreview"
@@ -89,6 +88,9 @@ const PICTURE_EDGE = new Color(1, 1, 1)
 
 /** How fast the list of the units goes to the unit followed, in virtual pixels per second. */
 const FOLLOW_SPEED = 240
+
+/** The share of the distance left that the list covers each second when following, so far units are reached fast. */
+const FOLLOW_EASE = 8
 
 /** The color behind the unit selected, in the panels. */
 const SELECTED = new Color(0.45, 0.38, 0.15, 0.55)
@@ -208,8 +210,8 @@ export class Hud {
         /** The size of the interface, in virtual pixels, read at each build. */
         public readonly size: () => { readonly width: number, readonly height: number },
 
-        /** The bubbles that tell what is hovered, and the words of the texts of the panels. */
-        public readonly tooltip: DetailTooltip,
+        /** What hears the words of the texts of the panels the pointer comes over. */
+        public readonly hearLink: LinkListener,
     ){
         this.#units = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
         this.#details = new Scroll(theme, { width: SCROLL_SIZE, height: SCROLL_SIZE })
@@ -218,13 +220,14 @@ export class Hud {
     }
 
 
-    /** Build the interface again from the game. */
-    public refresh(): void {
+    /**
+     * Build the interface again from the game.
+     *
+     * @returns What the cards, hearts, icons and piles built tell while the pointer is over them.
+     */
+    public refresh(): Detail {
         const content = this.layer.content
         for(const child of [...content.children]) content.remove(child)
-        this.#hovers?.remove()
-        this.#hovers = null
-        this.tooltip.reset()
         this.#standsFor.clear()
         this.#pictures.clear()
         this.#lit = null
@@ -242,9 +245,7 @@ export class Hud {
         this.#addSelected(grid)
         this.#addFlight()
         // DETAILS //
-        const details = Detail.all(...viewDetails(content))
-        this.tooltip.attach(details)
-        this.#hovers = details
+        return Detail.all(...viewDetails(content))
     }
 
     /** The middle of the first pile of cards shown, in the interface, none when no pile is shown. */
@@ -294,7 +295,7 @@ export class Hud {
         if(this.#revealLit){
             const lit = this.#litViews.filter(({ unit }) => unit === this.#followed)
             const placed = lit.length > 0 && lit.every(({ view }) => view.bounds.width > 0)
-            if(placed) for(const { view } of lit) view.scrollIntoView()
+            if(placed) for(const { view } of lit) view.scrollIntoView("start")
             if(placed || !this.host.scene.litCards) this.#revealLit = false
         }
         // LIST //
@@ -310,7 +311,8 @@ export class Hud {
         const room = scroll.bounds.height
         const from = scroll.offset
         const target = top < from ? top : top + height > from + room ? top + height - room : from
-        const step = Math.max(1, Math.round(FOLLOW_SPEED * dt))
+        const left = Math.abs(target - from)
+        const step = Math.max(1, Math.round(Math.max(FOLLOW_SPEED * dt, left * Math.min(1, FOLLOW_EASE * dt))))
         const offset = from + Math.sign(target - from) * Math.min(step, Math.abs(target - from))
         scroll.offset = offset
         this.#followedAt = scroll.offset
@@ -318,9 +320,6 @@ export class Hud {
         if(scroll.offset === target || scroll.offset !== offset) this.#followed = null
     }
 
-
-    /** What the cards, hearts, icons and piles of the last build tell, until it is built again. */
-    #hovers: Detail|null = null
 
     /**
      * The scroll of the units, kept from one build to the next with only its content replaced, so it stays
@@ -964,7 +963,7 @@ export class Hud {
     }
 
     #paragraph(text: Text, color: Color): Paragraph {
-        return new Paragraph(this.theme, text, { color, onLink: this.tooltip.hearLink })
+        return new Paragraph(this.theme, text, { color, onLink: this.hearLink })
     }
 
     #label(text: string, color?: Color): Label {

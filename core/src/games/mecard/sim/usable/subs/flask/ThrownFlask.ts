@@ -1,6 +1,10 @@
 import type { Visual } from "../../../base/Visual"
 import type { Text } from "../../../../../../semantic"
 import type { UnitContext } from "../../../battle/Action"
+import type { Preview } from "../../../battle/preview/Preview"
+import type { PreviewContext } from "../../../battle/preview/PreviewContext"
+import * as Previews from "../../../battle/preview/Previews"
+import { NOTE_COLOR } from "../../../battle/previewColors"
 import type { Status } from "../../../status/Status"
 
 import { AbstractUsable } from "../AbstractUsable"
@@ -17,8 +21,10 @@ export abstract class ThrownFlask extends AbstractUsable {
 
         /** How far it reaches, in meters: the nearest enemy within it is hit. */
         public readonly range: number,
+
+        charges = 1,
     ){
-        super(name, icon, description)
+        super(name, icon, description, { charges })
     }
 
 
@@ -32,5 +38,15 @@ export abstract class ThrownFlask extends AbstractUsable {
             battle.applyStatus(target, given.type, given.level)
         }
         else battle.events.push({ type: "skipped", unit, reason: "personne à portée" })
+    }
+
+    public preview({ battle, unit, pose }: PreviewContext): Preview {
+        const target = battle.nearestEnemy(unit, this.range, pose.position)
+        if(!target) return Previews.still(pose, Previews.label(pose.position, "personne à portée", NOTE_COLOR))
+        return Previews.still(
+            pose,
+            ...Previews.strike([], [target]),
+            Previews.label(target.position, this.status().type.name, NOTE_COLOR),
+        )
     }
 }

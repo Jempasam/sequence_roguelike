@@ -25,6 +25,11 @@ import { forwardAround } from "../forward/around"
 import { runForwardables } from "../forward/forwardables"
 import type { Forwarded } from "../forward/Forwarded"
 
+/** What follows the run a screen shows: it is given each run the screen shows in turn. */
+export interface RunFollower {
+    engine: Run
+}
+
 /** The share of the screen the panel of the end of a battle takes. */
 const MODAL_SHARE = 0.85
 
@@ -41,7 +46,7 @@ export interface RunLocks {
 export const NO_RUN_LOCKS: RunLocks = { battle: NO_BATTLE_LOCKS, travel: NO_TRAVEL_LOCKS, fights: false }
 
 /** Everything locked: the players only watch. */
-export const ALL_RUN_LOCKS: RunLocks = { battle: ALL_BATTLE_LOCKS, travel: { map: true }, fights: true }
+export const ALL_RUN_LOCKS: RunLocks = { battle: ALL_BATTLE_LOCKS, travel: { map: true, halts: true }, fights: true }
 
 /** What a screen is built with, besides what it shows. */
 export interface RunScreenOptions {
@@ -119,6 +124,8 @@ export class RunScreen {
         this.#unregisterObservers()
         this.animations.cancel()
         this.#engine = run
+        if(this.options.particles) this.options.particles.engine = run
+        for(const follower of this.#followers) follower.engine = run
         this.travelScreen.engine = run.travel
         this.#registerObservers()
         this.animations.add(instant(() => this.#fill()))
@@ -194,6 +201,20 @@ export class RunScreen {
     }
 
 
+    /**
+     * Have something follow the run shown from now on, whichever it is: it is given each run the screen shows.
+     *
+     * @returns What stops it.
+     */
+    public follow(follower: RunFollower): () => void {
+        follower.engine = this.#engine
+        this.#followers.push(follower)
+        return () => {
+            const index = this.#followers.indexOf(follower)
+            if(index >= 0) this.#followers.splice(index, 1)
+        }
+    }
+
     /** Go back to the map, whatever was going on left, and show it. */
     public showMap(): void {
         this.#engine.backToMap()
@@ -257,6 +278,7 @@ export class RunScreen {
     readonly #layer: Layer
 
     #engine: Run
+    readonly #followers: RunFollower[] = []
 
     #locks: RunLocks
 
@@ -305,8 +327,17 @@ export class RunScreen {
             run.phaseChanged.add(phase => {
                 if(phase === "travel") this.animations.add(() => this.#backToTravel())
             }),
-            run.loaded.add(() => this.animations.add(instant(() => this.#fill()))),
+            run.loaded.add(() => this.animations.add(async() => {
+                await this.#battleShown()
+                this.#fill()
+            })),
         )
+    }
+
+    /** Wait for the battle shown to be played to the end of what it was told, at once when none is shown. */
+    #battleShown(): Promise<void> {
+        if(!this.#visible || !this.battleScreen.visible) return Promise.resolve()
+        return this.battleScreen.animations.idle()
     }
 
     #unregisterObservers(): void {
@@ -346,6 +377,7 @@ export class RunScreen {
     async #backToTravel(): Promise<void> {
         // A won fight leads to a halt: the transition into it already took the screen over.
         if(this.#engine.travel.phase === "visit") return
+        await this.#battleShown()
         if(this.#visible && !this.travelScreen.visible){
             await this.travelScreen.prepareBack()
             await this.transitions.leave()
@@ -376,6 +408,7 @@ export class RunScreen {
      * left at the middle for the halt, so the transition goes from one to the other.
      */
     async #enterVisit(visual: Visual): Promise<void> {
+        await this.#battleShown()
         await this.transitions.enter(visual)
         if(!this.#visible || !this.battleScreen.visible) return
         this.#hideEnd()

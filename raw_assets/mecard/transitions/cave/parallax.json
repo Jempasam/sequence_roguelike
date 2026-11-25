@@ -24,11 +24,11 @@
         "black: a=0 > a=1 > a=1 m > hold > hold > a=0"
     ],
     "layers": [
-        {"name": "r1", "tag": "border", "picture": "r1.pic.json", "at": [-816, -444]},
-        {"name": "r2", "tag": "border", "picture": "r2.pic.json", "at": [-816, -444]},
-        {"name": "r3", "tag": "border", "picture": "r3.pic.json", "at": [-816, -444]},
-        {"name": "r4", "tag": "border", "picture": "r4.pic.json", "at": [-816, -444]},
-        {"name": "r5", "tag": "border", "picture": "r5.pic.json", "at": [-816, -444]},
-        {"name": "black", "tag": "border", "picture": "black.pic.json", "at": [-816, -444]}
+        {"name": "r1", "tag": "border", "picture": "r1.pic.json", "at": [-780, -426]},
+        {"name": "r2", "tag": "border", "picture": "r2.pic.json", "at": [-594, -324]},
+        {"name": "r3", "tag": "border", "picture": "r3.pic.json", "at": [-432, -234]},
+        {"name": "r4", "tag": "border", "picture": "r4.pic.json", "at": [-288, -156]},
+        {"name": "r5", "tag": "border", "picture": "r5.pic.json", "at": [-186, -102]},
+        {"name": "black", "tag": "border", "picture": "black.pic.json", "at": [0, 0]}
     ]
 }

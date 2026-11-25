@@ -16,14 +16,15 @@
 // The picture project is embedded in art_tools/ (updated by `npm run art:sync`), or where PICTURE points to.
 
 import { execFileSync } from "node:child_process"
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { basename, dirname, join, relative, resolve, sep } from "node:path"
+import { basename, delimiter, dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { filesUnder, sourcesOf } from "./assetDependencies.ts"
 import type { AssetRoots } from "./assetDependencies.ts"
-import { buildParallax, PARALLAX_SPEC } from "./buildParallax.ts"
+import { PARALLAX_SPEC } from "./buildParallax.ts"
+import { LIMIT, runNode } from "./jobPool.ts"
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const ART = join(REPO, "raw_assets")
@@ -31,6 +32,8 @@ const GENERATED = join(REPO, "generated_assets")
 /** Seen as one: what is generated first, then what is written by hand. */
 const SOURCES = [GENERATED, join(REPO, "assets")]
 const ROOTS: AssetRoots = { art: ART, assets: SOURCES }
+/** The script building one painting, run as a process of its own. */
+const BUILD_PARALLAX = join(REPO, "scripts", "buildParallaxCli.ts")
 const PICTURE = process.env.PICTURE ?? join(REPO, "art_tools", "picture", "bin", "picture.js")
 const SFX = process.env.SFX ?? join(REPO, "art_tools", "soundeffect", "bin", "sfx.js")
 const EXTENSION = ".pic.json"
@@ -52,25 +55,8 @@ const files = filesUnder(under)
 const paintings = files.filter(file => file.endsWith(sep + PARALLAX_SPEC)).map(dirname)
 const documents = files.filter(file => file.endsWith(EXTENSION))
     .filter(file => !paintings.some(folder => file.startsWith(folder + sep)))
-for(const folder of paintings){
-    const path = relative(ART, folder).split(sep).join("/")
-    const ora = join(GENERATED, path + ".ora")
-    if(changedOnly && !isStale(ora, sourcesOf(join(folder, PARALLAX_SPEC), ROOTS))) continue
-    try {
-        await buildParallax(folder, ora, SOURCES, PICTURE, preview)
-    } catch(error){
-        fail(error instanceof Error ? error.message : String(error))
-    }
-    console.log(`Built ${path}.ora`)
-}
-for(const document of documents){
-    const path = relative(ART, document).split(sep).join("/")
-    const out = join(GENERATED, path.slice(0, -EXTENSION.length) + ".png")
-    if(changedOnly && !isStale(out, sourcesOf(document, ROOTS))) continue
-    mkdirSync(dirname(out), { recursive: true })
-    execFileSync(process.execPath, [PICTURE, "generate", document, "-o", out, "-s", "1"], { stdio: "ignore" })
-    console.log(`Rendered ${path}`)
-}
+// The sounds, the paintings and the pictures are all rendered at once, the processes sharing the cores (see jobPool.ts).
+const renderings: Promise<void>[] = []
 const sounds = files.filter(file => file.endsWith(SOUND_EXTENSION)).map(source => ({
     path: relative(ART, source).split(sep).join("/"),
     source,
@@ -85,16 +71,47 @@ if(sounds.length > 0){
     const scratch = mkdtempSync(join(tmpdir(), "sfx-"))
     const manifest = join(scratch, "jobs.json")
     writeFileSync(manifest, JSON.stringify(sounds.map(sound => ({ src: sound.source, out: sound.out, format: SOUND_FORMAT }))))
-    try {
-        execFileSync(process.execPath, [SFX, "render", "--batch", manifest], {
-            stdio: ["ignore", "ignore", "inherit"],
-        })
-    } catch {
-        fail("A sound failed to render.")
-    } finally {
-        rmSync(scratch, { recursive: true, force: true })
+    // They are the longest job: asked first, on half of the threads, which they take from the pool.
+    const threads = Math.max(1, Math.min(LIMIT, Number(process.env.ART_SOUND_JOBS) || Math.ceil(LIMIT / 2)))
+    renderings.push(runNode([SFX, "render", "--batch", manifest, "--jobs", String(threads)], threads).catch(error => {
+        throw new Error(`A sound failed to render. ${error instanceof Error ? error.message : String(error)}`)
+    }).then(() => {
+        for(const sound of sounds) console.log(`Rendered ${sound.path}`)
+    }).finally(() => rmSync(scratch, { recursive: true, force: true })))
+}
+const paintingsToBuild = paintings.filter(folder => {
+    const ora = join(GENERATED, relative(ART, folder).split(sep).join("/") + ".ora")
+    return !changedOnly || isStale(ora, sourcesOf(join(folder, PARALLAX_SPEC), ROOTS))
+})
+const building = new Map<string, Promise<void>>()
+/** A painting built, after the paintings it takes layers from, when those are built in this run too. */
+function buildPainting(folder: string): Promise<void> {
+    let promise = building.get(folder)
+    if(promise === undefined){
+        promise = (async () => {
+            await Promise.all(paintingsTakenFrom(folder).filter(source => paintingsToBuild.includes(source)).map(buildPainting))
+            const path = relative(ART, folder).split(sep).join("/")
+            const told = await runNode([
+                BUILD_PARALLAX, folder, join(GENERATED, path + ".ora"), PICTURE, preview ? "preview" : "nopreview", SOURCES.join(delimiter),
+            ])
+            console.log(`${told}Built ${path}.ora`)
+        })()
+        building.set(folder, promise)
     }
-    for(const sound of sounds) console.log(`Rendered ${sound.path}`)
+    return promise
+}
+renderings.push(...paintingsToBuild.map(buildPainting))
+for(const document of documents){
+    const path = relative(ART, document).split(sep).join("/")
+    const out = join(GENERATED, path.slice(0, -EXTENSION.length) + ".png")
+    if(changedOnly && !isStale(out, sourcesOf(document, ROOTS))) continue
+    mkdirSync(dirname(out), { recursive: true })
+    renderings.push(runNode([PICTURE, "generate", document, "-o", out, "-s", "1"]).then(() => console.log(`Rendered ${path}`)))
+}
+try {
+    await Promise.all(renderings)
+} catch(error){
+    fail(error instanceof Error ? error.message : String(error))
 }
 // A .json beside a document, of the name of its picture, is its data: copied to the same path, so the game finds it
 // next to the .png. A parallax.json is no data of a picture, and a folder holding one is a painting.
@@ -110,6 +127,16 @@ for(const file of data){
 }
 execFileSync(process.execPath, [join(REPO, "scripts", "indexAssets.ts")], { stdio: "inherit" })
 
+
+/** The folders of the paintings a painting takes layers from (`from` in its parallax.json). */
+function paintingsTakenFrom(folder: string): string[] {
+    const spec = JSON.parse(readFileSync(join(folder, PARALLAX_SPEC), "utf8")) as { layers: { from?: { ora: string } }[] }
+    return spec.layers.flatMap(layer => {
+        if(layer.from === undefined) return []
+        const segments = layer.from.ora.split("/")
+        return [join(ART, ...segments.slice(0, -1), basename(segments[segments.length - 1], ".ora"))]
+    })
+}
 
 /** True when the output is missing or older than one of its sources. */
 function isStale(output: string, sources: string[]): boolean {

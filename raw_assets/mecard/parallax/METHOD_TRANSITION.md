@@ -371,11 +371,15 @@ ce qu'on choisit de peindre est l'instant où l'écran est couvert, le reste du 
     peint au repos, est à refaire dans ce sens.
 - **Cave, calques plus grands que le canevas** : avec un `z` < 1 au début (0,35 à 0,85), le bord rectangulaire des
   calques apparaissait. Le milieu étant à `0;0;1;1`, on ne peut pas le corriger par une piste : on **peint chaque
-  calque plus grand que le canevas** (3× : 816×444 en document, 2448×1332 px rendus) et on le pose avec un `at`
-  négatif (`[-816, -444]`, en pixels rendus), centré, donc le zoom (autour du centre du calque) reste celui du
-  canevas. Règle : marge ≥ `1/z_min` fois le canevas de chaque côté du centre (0,35 → 2,86×, pris 3×). Les formes
-  se décalent du même `at` en unités de document (`+272`, `+148`) ; la roche texturée est prolongée sur tout le
-  document. Le noir `black` est agrandi pareil. Le constructeur n'objecte pas à un calque plus grand que le canevas.
+  calque plus grand que le canevas** et on le pose avec un `at` négatif (en pixels rendus), centré, donc le zoom
+  (autour du centre du calque) reste celui du canevas. Règle : marge ≥ `1/z_min` fois le canevas de chaque côté du
+  centre, **calque par calque** (pas 3× pour tous : la surface rendue, 9 fois le canevas à 3×, coûte cher, 2448×1332
+  px au lieu de 816×444, et dominait le temps de `npm run art`). Cave : `r1` (z 0,35) 2,9× = 792×432 en document,
+  `at` `[-780, -426]` ; `r2` 2,45× = 668×364 ; `r3` 2,05× = 560×304 ; `r4` 1,7× = 464×252 ; `r5` 1,45× = 396×216 ;
+  `black` (aucun zoom) 1× = 272×148 à `[0, 0]`. Une taille de document paire en largeur et hauteur garde `at` entier
+  (`at = -(3×taille − canevas) / 2`). Les formes se décalent de `(taille/2 − centre)` en unités de document ; la
+  roche texturée est prolongée sur tout le document. Le constructeur n'objecte pas à un calque plus grand que le
+  canevas.
 - **Cave (marche dans une cave), v2** : 5 anneaux de roche (`r1` devant à `r5` loin) au trou de plus en plus petit,
   plus un calque `black` plein dessous. Générés par un petit script (superellipse irrégulière : voûte arrondie,
   stalactites fines sur la voûte, quelques stalagmites au sol, `erase` du trou) puis un `.pic.json` par anneau.

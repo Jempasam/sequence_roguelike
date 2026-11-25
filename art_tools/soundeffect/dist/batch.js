@@ -83,29 +83,32 @@ export function readManifest(file, defaults = {}) {
 export function outputPath(job) {
     return job.out ?? path.join(path.dirname(job.src), `${soundName(job.src)}.${job.format}`);
 }
+/** Render one job with the engine and write its file. A failure is a result, never an exception. */
+export async function runJob(engine, job) {
+    try {
+        const rendered = await engine.render(readSound(job.src), job.options);
+        const bytes = await encodeAudio(rendered, job.format, job.bitrate);
+        const out = outputPath(job);
+        mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
+        writeFileSync(out, bytes);
+        const { stats } = rendered;
+        return {
+            job,
+            ok: true,
+            out,
+            warnings: warnings(stats),
+            message: `${out} — ${stats.duration.toFixed(3)} s ${stats.channels === 1 ? "mono" : "stereo"}, peak ${stats.peakDb.toFixed(1)} dBFS, rms ${stats.rmsDb.toFixed(1)} dBFS, ${(bytes.length / 1024).toFixed(1)} KB`,
+        };
+    }
+    catch (cause) {
+        return { job, ok: false, warnings: [], message: `${job.src}: ${cause instanceof Error ? cause.message : String(cause)}` };
+    }
+}
 /** Render every job with the same engine. A failing job is reported and does not stop the others. */
 export async function runJobs(engine, jobs, run = {}) {
     const results = [];
     for (const job of jobs) {
-        let result;
-        try {
-            const rendered = await engine.render(readSound(job.src), job.options);
-            const bytes = await encodeAudio(rendered, job.format, job.bitrate);
-            const out = outputPath(job);
-            mkdirSync(path.dirname(path.resolve(out)), { recursive: true });
-            writeFileSync(out, bytes);
-            const { stats } = rendered;
-            result = {
-                job,
-                ok: true,
-                out,
-                warnings: warnings(stats),
-                message: `${out} — ${stats.duration.toFixed(3)} s ${stats.channels === 1 ? "mono" : "stereo"}, peak ${stats.peakDb.toFixed(1)} dBFS, rms ${stats.rmsDb.toFixed(1)} dBFS, ${(bytes.length / 1024).toFixed(1)} KB`,
-            };
-        }
-        catch (cause) {
-            result = { job, ok: false, warnings: [], message: `${job.src}: ${cause instanceof Error ? cause.message : String(cause)}` };
-        }
+        const result = await runJob(engine, job);
         results.push(result);
         run.onResult?.(result);
         if (!result.ok && run.failFast)

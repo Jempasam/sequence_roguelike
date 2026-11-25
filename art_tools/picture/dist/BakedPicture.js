@@ -41,7 +41,8 @@ export class BakedPicture {
             this.height = picture.height;
             this.pixel_colors = Array.from({ length: this.width * this.height });
             for (const [x, y] of picture.indexes()) {
-                const color = structuredClone(picture.get_material(x, y));
+                const material = picture.get_material(x, y);
+                const color = { ...material, color: [...material.color] };
                 const index = picture.get_material_index(x, y);
                 let depth = picture.get_depth(x, y);
                 let is_empty = depth == -1;
@@ -53,7 +54,7 @@ export class BakedPicture {
                 this.set(x, y, { ...color, material_id: index, depth, is_empty, alpha });
             }
         }
-        this.temp_data = Array.from({ length: this.width * this.height }, () => ({}));
+        this.temp_data = new Array(this.width * this.height);
     }
     /**
      * Get a pixel
@@ -85,7 +86,7 @@ export class BakedPicture {
      * @returns {T}
      */
     get_data_or(x, y, name, gen) {
-        let data = this.temp_data[x + y * this.width];
+        let data = this.temp_data[x + y * this.width] ??= {};
         if (!data[name])
             data[name] = gen();
         return data[name];
@@ -334,7 +335,7 @@ export class BakedPicture {
                 if (binfos.is_empty)
                     continue;
                 let color = colors.get(x + dx, y + dy);
-                binfos = structuredClone(binfos);
+                binfos = copyPixel(binfos);
                 //@ts-ignore
                 binfos.color = color.map(v => v * darkness);
                 if (different_mat)
@@ -403,7 +404,7 @@ export class BakedPicture {
             // Center color
             for (let xx = 0; xx < 3; xx++)
                 for (let yy = 0; yy < 3; yy++)
-                    ret.set(x * 3 + xx, y * 3 + yy, structuredClone(infos));
+                    ret.set(x * 3 + xx, y * 3 + yy, copyPixel(infos));
             // Corner Colors
             for (const dx of [-1, 1]) {
                 for (const dy of [-1, 1]) {
@@ -475,8 +476,16 @@ export class BakedPicture {
         for (let y = 0; y < this.height; y++)
             yield [x, y]; }
     clone() {
-        return new BakedPicture(this.width, this.height, structuredClone(this.pixel_colors));
+        return new BakedPicture(this.width, this.height, this.pixel_colors.map(copyPixel));
     }
+}
+/**
+ * A copy of a pixel: its colour is the only nested value, and the effects change it in place.
+ * @param {BakedPicturePixel} pixel
+ * @returns {BakedPicturePixel}
+ */
+function copyPixel(pixel) {
+    return { ...pixel, color: [...pixel.color] };
 }
 /**
  * Floats coming out of the effect pipeline are not guaranteed to stay in [0,1] — clamp on the way

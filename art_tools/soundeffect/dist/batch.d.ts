@@ -38,5 +38,7 @@ export interface RunOptions {
     /** Called after each job, so the command line prints as it goes. */
     onResult?: (result: JobResult) => void;
 }
+/** Render one job with the engine and write its file. A failure is a result, never an exception. */
+export declare function runJob(engine: Engine, job: Job): Promise<JobResult>;
 /** Render every job with the same engine. A failing job is reported and does not stop the others. */
 export declare function runJobs(engine: Engine, jobs: Job[], run?: RunOptions): Promise<JobResult[]>;

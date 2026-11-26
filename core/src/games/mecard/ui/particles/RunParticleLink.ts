@@ -7,6 +7,12 @@ import type { Battle } from "../../sim/battle/Battle"
 import type { Hero } from "../../sim/run/Hero"
 import type { Run } from "../../sim/run/Run"
 import type { ForwardPhase, Forwarded } from "../forward/Forwarded"
+import type { Visual } from "../../sim/base/Visual"
+import { AmbientDirector } from "./ambient/AmbientDirector"
+import type { AmbientOutcome } from "./ambient/AmbientDirector"
+import type { AmbientEffect } from "./ambient/AmbientEffect"
+import { AMBIENT_EFFECTS } from "./ambient/ambientEffects"
+import { TravelAmbientMap } from "./ambient/TravelAmbientMap"
 import type { ParticleContext, ParticlePoint } from "./ParticleContext"
 import type { Look } from "./recipes"
 import {
@@ -65,9 +71,14 @@ export class RunParticleLink {
 
         /** The randomness of the display, apart from the run. */
         public readonly random: Random = seededRandom(engine.rng.state),
+
+        /** The sprite of what the sim names by a visual, none before it is loaded. */
+        sprites: (visual: Visual|null) => Sprite|null = () => null,
     ){
         this.#engine = engine
         this.#follow(engine)
+        this.#ambient = new AmbientDirector(AMBIENT_EFFECTS, random)
+        this.#map = new TravelAmbientMap(() => this.#engine.travel, () => this.context, sprites, coin)
     }
 
 
@@ -78,6 +89,18 @@ export class RunParticleLink {
 
     /** Move the particles on, and start the ones that waited for it. */
     public update(dt: number): void {
+
+        // AMBIENCE //
+        if(this.#onMap()){
+            this.#ambient.update(dt, this.#map, this)
+            this.#ambienting = true
+        }
+        else if(this.#ambienting){
+            this.#ambient.stop()
+            this.#ambienting = false
+        }
+
+        // WAITING //
         for(const pending of [...this.#pending]){
             pending.left -= dt
             if(pending.left > 0) continue
@@ -86,6 +109,16 @@ export class RunParticleLink {
         }
         this.alpha.update(dt)
         this.additive.update(dt)
+    }
+
+    /**
+     * Start ambient effects of the map now, for a try, whatever the wait.
+     *
+     * @throws {@link Error} When the map is not shown.
+     */
+    public ambientNow(effects: readonly AmbientEffect[]): AmbientOutcome[] {
+        if(!this.#onMap()) throw new Error("La carte n'est pas affichée : reviens-y avec travel show.")
+        return this.#ambient.trigger(this.#map, this, effects)
     }
 
     /** Draw the particles, in the interface. */
@@ -109,12 +142,20 @@ export class RunParticleLink {
 
 
     #engine: Run
+    readonly #ambient: AmbientDirector
+    readonly #map: TravelAmbientMap
+    #ambienting = false
     #observers = new Scope()
     #battleObservers: Observer[] = []
     readonly #pending: Pending[] = []
 
     /** The gold the party held when the screen last showed a change of it. */
     #gold = 0
+
+    /** Is the map shown, and placed by a screen? */
+    #onMap(): boolean {
+        return this.context !== null && this.#engine.travel.phase === "map"
+    }
 
     #follow(run: Run): void {
         this.#engine = run
@@ -150,13 +191,19 @@ export class RunParticleLink {
             return (place && context.placePosition(place)) ?? context.center()
         }
         return [
+            
+            // Déplacement : Pouf sur la cible
             this.#on(travel.moved, ({ to }, context) => {
                 const at = context.placePosition(to)
                 if(at) ring(this.additive, this.random, at, 12, 4, { from: 0xe8f4ff, size: 3, life: 0.4 }, 50)
             }),
+
+            // Entrée dans une halte : pouf au milieu de l'écran
             this.#on(travel.visitStarted, (_halt, context) => {
                 rise(this.additive, this.random, here(context), 6, { from: 0xffffff, size: 2, life: 0.6 })
             }),
+
+            // On utilise une halte pour faire quelque chose
             this.#on(travel.haltImpacted, (_halt, context) => {
                 radial(
                     this.additive, this.random, here(context), 10, { from: 0xfff2b0, size: 3, life: 0.4 },

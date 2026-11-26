@@ -65,7 +65,9 @@ export class MecardViewer {
         this.#uiSound = sounds ? new UiSoundLink(ui, sounds) : null
         const sprites = new UnitSprites()
         lendPictures(theme, sprites.picture)
-        this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
+        this.#particles = new RunParticleLink(
+            this.run, forwarded, () => sprites.gold, undefined, visual => sprites.of(visual),
+        )
         void sprites.load(ui.gpu, assets).catch((error: unknown) => {
             if(!(error instanceof AssetError)) throw error
             this.#warn(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)

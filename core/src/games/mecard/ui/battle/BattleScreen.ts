@@ -40,6 +40,7 @@ import { ArenaHearts } from "../hud/ArenaHearts"
 import { Detail } from "../hud/Detail"
 import { DetailTooltip } from "../hud/DetailTooltip"
 import { DIM_TEXT } from "../look/theme"
+import { resolveFx } from "../look/FxSprites"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import type { BattleAnchors } from "../particles/ParticleContext"
@@ -238,6 +239,9 @@ export class BattleScreen implements HudHost {
         this.#battleAnimations = new BattleAnimations(
             this.scene, this.animations, this.#clock, this.#playControl,
         )
+        this.#battleAnimations.resolveFx = (visual, target) => {
+            return resolveFx(sprites, visual, target ? sprites.look(target.sprite).tags : [])
+        }
         // Not told by being ready: the players still are when the next round draws.
         this.#battleAnimations.animates = unit => {
             return !this.#locks.isLocked(unit) && unit.team === this.viewpoint && unit.controller === "player"

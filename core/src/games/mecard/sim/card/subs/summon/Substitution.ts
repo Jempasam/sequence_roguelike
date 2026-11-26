@@ -1,6 +1,6 @@
 import { visual } from "../../../base/Visual"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
-import { AGILITE, DISTANCE } from "../../../base/keywords"
+import { AGILITE, DISTANCE, INVOCATION } from "../../../base/keywords"
 import { SummonedHearts } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
@@ -29,7 +29,7 @@ export class SubstitutionCard extends ActionCard {
         public readonly halves: number,
     ){
         super("Substitution", [
-            "Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner, et laisse à ta place un tronc de ",
+            "Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner, et ", INVOCATION.as("laisse"), " à ta place un tronc de ",
             new SummonedHearts(halves),
             ", qui prend les coups qui t'étaient destinés.",
         ], Rarity.RARE, SubstitutionCard.#substituting(length, halves))

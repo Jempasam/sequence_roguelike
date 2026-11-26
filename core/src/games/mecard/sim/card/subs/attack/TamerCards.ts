@@ -1,4 +1,5 @@
 import { DISTANCE, HEAL, HEART, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { CLAWS_LOOK } from "../tools/blowLooks"
 import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
@@ -46,7 +47,8 @@ function blowing(length: number, after: Aftermath, what: string): Action {
             if(target){
                 const wasFeverish = target.feverish
                 const damage = BLOW_DAMAGE + unit.stats.strength.value
-                battle.strike(unit, area, damage, DamageType.PHYSICAL, other => other === target ? 1 : 0)
+                const only = (other: Unit): number => other === target ? 1 : 0
+                battle.strike(unit, area, damage, DamageType.PHYSICAL, only, CLAWS_LOOK)
                 after(battle, unit, target, wasFeverish)
             }
             hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])

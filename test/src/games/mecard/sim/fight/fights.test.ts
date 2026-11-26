@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_AMBUSH, GHOST_FIGHT, isGhostFight, historyEntry, ghostOfEntry,
-    fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, SWORDSMAN_KIT, Vector2,
+    fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, Run, SWORDSMAN_KIT, Vector2,
 } from "@game/core/mecard"
 import type { FightType, Ghost, Visual } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -326,8 +326,7 @@ describe("the ghost fight", () => {
     })
 
     test("made → the party of the game stands against ours, and ours is untouched", () => {
-        const run = startedRun(1)
-        run.ghosts = [ghostOf(2)]
+        const run = startedRun(1, undefined, undefined, [ghostOf(2)])
         const fight = GHOST_FIGHT.create(run, { layer: 5, across: 0.5 })
         const foes = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
         expect(foes.map(unit => unit.name)).toEqual(run.ghosts[0].party().map(hero => hero.name))
@@ -335,13 +334,21 @@ describe("the ghost fight", () => {
     })
 
     test("made as a fight → the chains of the ghosts are shown, hidden as an ambush", () => {
-        const run = startedRun(1)
-        run.ghosts = [ghostOf(2)]
+        const run = startedRun(1, undefined, undefined, [ghostOf(2)])
         const shownOf = (type: FightType) => type.create(run, { layer: 5, across: 0.5 }).battle.units
             .filter(unit => unit.team === run.monstersTeam)
             .map(unit => unit.stats.showChain.value)
         expect(shownOf(GHOST_FIGHT).every(shown => shown)).toBe(true)
         expect(shownOf(GHOST_AMBUSH).some(shown => shown)).toBe(false)
+    })
+
+    test("a run made with a game in reach → its first map already holds ghosts", () => {
+        const maps = (ghosts: readonly Ghost[]) => Array.from({ length: 80 }, (_, seed) => {
+            const run = new Run(seed + 1, undefined, undefined, ghosts)
+            return run.travel.journey.places.filter(place => place.fight && isGhostFight(place.fight)).length
+        })
+        expect(maps([ghostOf(2)]).some(count => count > 0)).toBe(true)
+        expect(maps([]).every(count => count === 0)).toBe(true)
     })
 
     test("made with no game in reach → an empty fight rather than a broken one", () => {

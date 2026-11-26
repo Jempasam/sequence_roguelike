@@ -53,6 +53,7 @@ import { RunHistorian } from "../persist/RunHistorian"
 import { ALL_FLOORS } from "../sim/catalog/floors"
 import type { CatalogSave } from "../sim/save/catalogSave"
 import { ghostOfEntry } from "../sim/save/historySave"
+import type { Ghost } from "../sim/fight/FightType"
 import type { History } from "../sim/save/historySave"
 import { HistoryScreen } from "./history/HistoryScreen"
 
@@ -74,6 +75,7 @@ import { UiSoundLink } from "./sound/UiSoundLink"
 import { QuitPopup } from "./hud/QuitPopup"
 import { ArmScreen } from "./travel/ArmScreen"
 import { ParallaxScreen } from "./travel/ParallaxScreen"
+import { AnimationBenchScreen } from "./look/AnimationBenchScreen"
 import { SpriteBenchScreen } from "./look/SpriteBenchScreen"
 import type { Visual } from "../sim/base/Visual"
 import { Scope } from "../../../lifetime"
@@ -235,7 +237,9 @@ export class MecardGame {
         const sprites = new UnitSprites()
         const borders = new FloorBorders()
         lendPictures(theme, sprites.picture)
-        this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
+        this.#particles = new RunParticleLink(
+            this.run, forwarded, () => sprites.gold, undefined, visual => sprites.of(visual),
+        )
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
             report: text => this.#console.print(text),
@@ -255,6 +259,10 @@ export class MecardGame {
             report: text => this.#console.print(text),
             print: text => this.#console.print(text),
             clipboard,
+            leave: () => this.#leaveBench(),
+        }, sprites)
+        this.#animationBench = new AnimationBenchScreen(theme, ui, {
+            report: text => this.#console.print(text),
             leave: () => this.#leaveBench(),
         }, sprites)
         this.#library = new LibraryScreen(theme, ui, { leave: () => this.#leaveBench() }, sprites, this.#catalog)
@@ -295,7 +303,7 @@ export class MecardGame {
             newBattle: () => this.#newBattle(),
             playBattle: battle => this.#playBattle(battle),
             clipboard,
-            restart: () => this.restart(),
+            restart: () => void this.restart(),
             go: place => {
                 this.#travelOn()
                 this.#screen.travelScreen.go(place)
@@ -309,6 +317,7 @@ export class MecardGame {
             showArm: () => this.#armOn(),
             showParallax: parallax => this.#parallaxOn(parallax),
             showSprites: sprite => this.#spritesOn(sprite),
+            showAnim: blow => this.#animOn(blow),
             showLibrary: playerOnly => this.#libraryOn(playerOnly),
             clearCatalog: () => this.#catalog.clear(),
             showConverter: () => this.#converterOn(),
@@ -316,6 +325,7 @@ export class MecardGame {
             connect: (code, guest) => this.#connect(code, guest),
             openChat: (role, code, author) => this.openChat(role, code, author),
             leaveChat: () => this.leaveChat(),
+            ambient: effects => this.#particles.ambientNow(effects),
             playTransition: (transition, duration, reverse) => {
                 void this.#screen.transitions.play(transition, {
                     duration,
@@ -424,6 +434,7 @@ export class MecardGame {
         else if(this.#pnj.visible) this.#pnj.frame()
         else if(this.#arm.visible) this.#arm.frame()
         else if(this.#parallax.visible) this.#parallax.frame()
+        else if(this.#animationBench.visible) this.#animationBench.frame(dt)
         else if(this.#library.visible) this.#library.frame(input)
         else if(this.#converter.visible) this.#converter.frame(input)
         // The tab of a race holds its own way out: the button only lies over the other shared games.
@@ -464,7 +475,6 @@ export class MecardGame {
         this.#historian = new RunHistorian(
             this.run, slot, () => this.#seed, text => this.#console.print(text), Date.now, () => this.gameVersion,
         )
-        void this.#lendGhosts()
     }
 
     /**
@@ -537,18 +547,25 @@ export class MecardGame {
         if(wasShown) this.#leaveBench()
     }
 
-    /** Start a new run from the start of its journey. */
-    public restart(): void {
+    /** Start a new run from the start of its journey, once the history is read for its first map to hold ghosts. */
+    public async restart(): Promise<void> {
+        if(this.#restarting) return
+        this.#restarting = true
+        let ghosts: readonly Ghost[]
+        try {
+            ghosts = await this.#readGhosts()
+        } finally {
+            this.#restarting = false
+        }
         this.run.backToMap()
         this.#seed++
-        this.run = this.#newRun()
+        this.run = this.#newRun(ghosts)
         this.#catalog.attach(this.run)
         if(this.#host) this.#host.engine = this.run
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
         if(this.#saver) this.#saver.engine = this.run
         if(this.#historian) this.#historian.engine = this.run
-        void this.#lendGhosts()
         this.#screen.engine = this.run
         this.#playing = true
         this.#travelOn()
@@ -568,6 +585,7 @@ export class MecardGame {
     readonly #arm: ArmScreen
     readonly #parallax: ParallaxScreen
     readonly #spriteBench: SpriteBenchScreen
+    readonly #animationBench: AnimationBenchScreen
     readonly #library: LibraryScreen
     readonly #converter: ConverterScreen
     readonly #broadcaster: RunBroadcaster|null
@@ -633,11 +651,14 @@ export class MecardGame {
     #benchFromMenu = false
 
     /** A run of the current seed, the errors of what listens to it told in the console. */
-    #newRun(): Run {
+    #newRun(ghosts: readonly Ghost[] = []): Run {
         return new Run(this.#seed, error => {
             this.#console.print(error instanceof Error ? error.message : String(error))
-        })
+        }, undefined, ghosts)
     }
+
+    /** Whether a new run is being made, the history being read: another is not asked for meanwhile. */
+    #restarting = false
 
     /** Open the console when its key was pressed and nothing took the press: open, the console takes it. */
     #openConsole(input: InputFrame): void {
@@ -804,6 +825,7 @@ export class MecardGame {
         this.#arm.visible = false
         this.#parallax.visible = false
         this.#spriteBench.visible = false
+        this.#animationBench.visible = false
         this.#library.visible = false
         this.#converter.visible = false
         this.#guide.visible = false
@@ -815,13 +837,14 @@ export class MecardGame {
         void this.#readSave()
     }
 
-    /** Give the run the games of the history, for the fights against ghosts of the maps it draws from now on. */
-    async #lendGhosts(): Promise<void> {
-        const run = this.run
+    /** The games of the history, for a new run to bring back in its fights against ghosts. None when it is unreadable. */
+    async #readGhosts(): Promise<readonly Ghost[]> {
         try {
-            run.ghosts = ((await this.#historySlot?.load())?.entries ?? []).filter(each => each.heroes.length > 0).map(ghostOfEntry)
-        } catch {
-            // An unreadable history is reported where it is shown: the run meets no ghost.
+            const entries = (await this.#historySlot?.load())?.entries ?? []
+            return entries.filter(each => each.heroes.length > 0).map(ghostOfEntry)
+        } catch(error){
+            this.#console.print(`L'historique n'a pas pu être lu, aucun fantôme : ${String(error)}`)
+            return []
         }
     }
 
@@ -1038,7 +1061,7 @@ export class MecardGame {
     /** Leave the menu for a new run, the one kept forgotten once the new one leaves its first halt. */
     #startNewGame(): void {
         this.#menu.visible = false
-        this.restart()
+        void this.restart()
     }
 
     /** Leave the menu for the run kept. */
@@ -1068,6 +1091,7 @@ export class MecardGame {
         this.#arm.visible = false
         this.#parallax.visible = false
         this.#spriteBench.visible = false
+        this.#animationBench.visible = false
         this.#library.visible = false
         this.#converter.visible = false
         if(!this.#screen.visible) this.#screen.visible = true
@@ -1090,6 +1114,7 @@ export class MecardGame {
         this.#arm.visible = false
         this.#parallax.visible = false
         this.#spriteBench.visible = false
+        this.#animationBench.visible = false
         this.#library.visible = false
         this.#converter.visible = false
     }
@@ -1125,6 +1150,13 @@ export class MecardGame {
         this.#openBench()
         this.#spriteBench.visible = true
         this.#spriteBench.show(sprite)
+    }
+
+    /** Show the bench of the animations of the blows alone, on the one a visual names, the run left where it stands. */
+    #animOn(blow: Visual|null): void {
+        this.#openBench()
+        this.#animationBench.visible = true
+        this.#animationBench.show(blow)
     }
 
     /** Show the catalogue alone, the run left where it stands. */

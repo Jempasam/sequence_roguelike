@@ -12,7 +12,7 @@ import { AbstractCard } from "../AbstractCard"
 import { InputRewriteCard } from "../composite/RewriteCards"
 import { WAIT } from "../movement/Wait"
 import { SUMMON_AHEAD, summonSpot, summoning } from "../tools/playing"
-import { CARTE, DISTANCE, BATTLE_ROUND, SUMMON_STAT } from "../../../base/keywords"
+import { CARTE, DISTANCE, BATTLE_ROUND, INVOCATION, SUMMON_STAT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 
 /** How many shield hearts the improvised robot lives by, before the summoning of the unit. */
@@ -68,13 +68,13 @@ function slowed(cards: readonly Card[]): Card[] {
 }
 
 export const IMPROVISED_ROBOT = new RobotCard("Robot improvisé", [
-    "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART),
+    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART),
     ", tourné ",
     "comme toi. Juste après toi, à chaque ", BATTLE_ROUND, ", il joue les ", CARTE.as("cartes"), " du module.",
 ], Rarity.RARE, 1, cards => cards)
 
 export const TANK_ROBOT = new RobotCard("Robot tank", [
-    "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
+    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un robot de ", new HeartCount(ROBOT_HEARTS * TANK_FACTOR),
     " ", SHIELD_HEART, ", ×", TANK_FACTOR, " ", SUMMON_STAT, " comprise. Juste après toi, à chaque ", BATTLE_ROUND,
     ", il joue les ", CARTE.as("cartes"), " du module, en attendant entre chacune.",
 ], Rarity.RARE, TANK_FACTOR, slowed)

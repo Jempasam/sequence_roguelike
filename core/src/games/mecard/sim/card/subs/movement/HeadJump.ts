@@ -1,4 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
+import { HAMMER_LOOK } from "../tools/blowLooks"
 import { AGILITE, DISTANCE, FORCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -56,7 +57,8 @@ export class HeadJumpCard extends ActionCard {
                     if(!battle.leap(unit, to)) return
                     const area = under(unit)
                     if(battle.fetch(area, unit).length === 0) break
-                    battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
+                    const damage = amount + unit.stats.strength.value
+                    battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, HAMMER_LOOK)
                 }
                 battle.unblock(unit)
                 wait(battle, LEAP_TIME)

@@ -1,4 +1,5 @@
 import { Multiply, ModifierKey } from "../../../base/Attribute"
+import { SHOCKWAVE_LOOK } from "../../../card/subs/tools/blowLooks"
 import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
@@ -118,7 +119,8 @@ export class Detonator extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.unitDied.add(({ unit: dead }) => {
             if(dead.owner !== unit) return
-            battle.strike(unit, Areas.circle(dead.position, DETONATOR_RADIUS), 1, DamageType.PHYSICAL)
+            const area = Areas.circle(dead.position, DETONATOR_RADIUS)
+            battle.strike(unit, area, 1, DamageType.PHYSICAL, () => 1, SHOCKWAVE_LOOK)
         }))
     }
 }

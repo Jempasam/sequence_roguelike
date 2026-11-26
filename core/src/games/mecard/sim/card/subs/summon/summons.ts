@@ -1,5 +1,5 @@
 import { Vector2 } from "../../../base/Vector2"
-import { DISTANCE, HEAL, PORTEE, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, HEAL, INVOCATION, PORTEE, BATTLE_ROUND } from "../../../base/keywords"
 import { frenchNumber, HeartCount, SummonedHearts } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -42,7 +42,7 @@ function ahead(unit: Unit, pose: Pose, forward: number, side = 0): Vector2 {
 
 /** A coin thrown ahead, which stands there: a body that blocks and draws the aim. */
 export const COIN = new SummonCard("Pièce", [
-    "Lance une pièce à ", frenchNumber(COIN_THROW), "×", PORTEE, " ", DISTANCE, " devant : une alliée de ", new SummonedHearts(COIN_HALVES),
+    INVOCATION.as("Lance"), " une pièce à ", frenchNumber(COIN_THROW), "×", PORTEE, " ", DISTANCE, " devant : une alliée de ", new SummonedHearts(COIN_HALVES),
     ", qui bloque les coups et attire les visées. Perd ", new HeartCount(1), " à chaque fin de ", BATTLE_ROUND, ".",
 ], Rarity.COMMON, {
     sprite: visual("units/coin"), name: "Pièce", halves: COIN_HALVES, thrown: true,
@@ -51,7 +51,7 @@ export const COIN = new SummonCard("Pièce", [
 
 /** A wall of three stones ahead, across the way the unit faces. */
 export const STONE_WALL = new SummonCard("Mur de pierre", [
-    "Dresse trois pierres de ", new SummonedHearts(STONE_HALVES), " chacune, à ", AHEAD, " ", DISTANCE,
+    INVOCATION.as("Dresse"), " trois pierres de ",new SummonedHearts(STONE_HALVES), " chacune, à ", AHEAD, " ", DISTANCE,
     " devant, en travers. Chacune perd ", new HeartCount(1), " à chaque fin de ", BATTLE_ROUND, ".",
 ], Rarity.RARE, {
     sprite: visual("units/stone"), name: "Pierre", halves: STONE_HALVES,
@@ -60,7 +60,7 @@ export const STONE_WALL = new SummonCard("Mur de pierre", [
 
 /** A thorn bush ahead: whoever breaks its thorn heart is wounded. */
 export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
-    "Fait pousser des ronces à ", AHEAD, " ", DISTANCE, " devant : ", new SummonedHearts(THORNS_HALVES, THORN_HEART), ".",
+    INVOCATION.as("Fait pousser"), " des ronces à ", AHEAD, " ", DISTANCE, " devant : ", new SummonedHearts(THORNS_HALVES, THORN_HEART), ".",
 ], Rarity.RARE, {
     sprite: visual("units/thorns"), name: "Ronces", halves: THORNS_HALVES, kind: THORN_HEART,
     spots: (unit, pose) => [ahead(unit, pose, AHEAD)],
@@ -68,7 +68,7 @@ export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
 
 /** A totem ahead, healing the allies around it at the end of each round. */
 export const TOTEM = new SummonCard("Totem", [
-    "Plante un totem de ", new SummonedHearts(TOTEM_HALVES), " à ", AHEAD, " ", DISTANCE, " devant. En fin de ", BATTLE_ROUND, ", ",
+    INVOCATION.as("Plante"), " un totem de ", new SummonedHearts(TOTEM_HALVES), " à ", AHEAD, " ", DISTANCE, " devant. En fin de ", BATTLE_ROUND, ", ",
     "il soigne de ", new HeartCount(TOTEM_HEAL), " + ", HEAL, " chaque allié à ", frenchNumber(TOTEM_RADIUS), " ", DISTANCE, ".",
 ], Rarity.EPIC, {
     sprite: visual("units/totem"), name: "Totem", halves: TOTEM_HALVES,

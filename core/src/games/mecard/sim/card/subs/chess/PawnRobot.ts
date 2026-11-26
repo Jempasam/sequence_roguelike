@@ -1,4 +1,4 @@
-import { CARTE, DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { CARTE, DISTANCE, BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { Action } from "../../../battle/Action"
 import { SummonedHearts } from "../../../battle/words"
@@ -31,7 +31,7 @@ export class PawnRobotCard extends AbstractCard<Action, Module> {
 
     constructor(){
         super("Robot pion", [
-            "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant un petit robot d'",
+            INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un petit robot d'",
             new SummonedHearts(ROBOT_HEARTS, SHIELD_HEART), ", qui joue les ", CARTE.as("cartes"),
             " du module à chaque ", BATTLE_ROUND, ". Il est une pièce d'échecs pour ", ROBOT_PIECE_ROUNDS, " ",
             BATTLE_ROUND.as("rounds"), ". Ajoute à ta main Par la dernière pièce.",

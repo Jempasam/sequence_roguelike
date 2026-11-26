@@ -5,11 +5,13 @@ import type { Card } from "../card/Card"
 import type { Heart } from "../heart/Heart"
 import type { HeartKind } from "../heart/HeartKind"
 import type { Process } from "../process/Process"
+import type { Vector2 } from "../base/Vector2"
 import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
 import type { Carried } from "../usable/Usable"
 
 import type { Pose } from "./Action"
+import type { Area } from "./Area"
 import type { Indicator } from "./preview/Preview"
 import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent } from "./events"
 import type { DamageType } from "./DamageType"
@@ -64,6 +66,25 @@ export interface HeartsSignal {
 export interface DamageSignal extends HeartsSignal {
     readonly amount: number
     readonly nature: DamageType
+
+    /** Who dealt it, null for what hurts on its own: a poison, a trap. */
+    readonly source: Unit | null
+}
+
+/** A unit lashing out at an area, told before the wounds it causes. */
+export interface StrikeSignal {
+    readonly attacker: Unit
+
+    /** Where the attacker stood, copied as the battle goes on. */
+    readonly origin: Vector2
+
+    /** Where the attacker looked. */
+    readonly direction: Vector2
+    readonly area: Area
+    readonly nature: DamageType
+
+    /** How the blow looks, null when it has no look of its own. */
+    readonly visual: Visual | null
 }
 
 /** A unit healed: how many hearts came back, and its bar after. */
@@ -221,6 +242,9 @@ export class BattleSignals {
     public readonly chainOverflowed: Observable<ChainOverflowEvent>
 
     public readonly damaged: Observable<DamageSignal>
+
+    /** A unit lashed out at an area: once for each area of a blow. */
+    public readonly struck: Observable<StrikeSignal>
     public readonly healed: Observable<HealSignal>
     public readonly heartAdded: Observable<HeartSignal>
 
@@ -294,6 +318,7 @@ export class BattleSignals {
         this.chainChanged = signal()
         this.chainOverflowed = signal()
         this.damaged = signal()
+        this.struck = signal()
         this.healed = signal()
         this.heartAdded = signal()
         this.heartRemoved = signal()

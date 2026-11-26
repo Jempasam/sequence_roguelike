@@ -1,4 +1,5 @@
-import { DISTANCE, FORCE, ITEM, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, FORCE, INVOCATION, ITEM, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { Action } from "../../../battle/Action"
@@ -92,7 +93,7 @@ function pieceCard(piece: Piece): ActionCard {
 export const PAWN_CARD = pieceCard({
     name: "Pion", sprite: "pawn", status: PAWN_PIECE, hearts: PAWN_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
         "jouent la même action, il la joue avant les autres.",
     ],
 })
@@ -100,7 +101,7 @@ export const PAWN_CARD = pieceCard({
 export const ROOK_CARD = pieceCard({
     name: "Tour", sprite: "rook", status: ROOK_PIECE, hearts: ROOK_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
         "elle avance de ", ROOK_EXTRA, " ", DISTANCE, " de plus dans la même direction.",
     ],
 })
@@ -108,7 +109,7 @@ export const ROOK_CARD = pieceCard({
 export const KNIGHT_PIECE_CARD = pieceCard({
     name: "Cavalier", sprite: "chess_knight", status: KNIGHT_PIECE, hearts: KNIGHT_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
         "déplacement, il se décale de ", KNIGHT_EXTRA, " ", DISTANCE, " à droite.",
     ],
 })
@@ -116,7 +117,7 @@ export const KNIGHT_PIECE_CARD = pieceCard({
 export const BISHOP_CARD = pieceCard({
     name: "Fou", sprite: "bishop", status: BISHOP_PIECE, hearts: BISHOP_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
         BISHOP_MOVE * 100, " % plus loin.",
     ],
 })
@@ -124,7 +125,7 @@ export const BISHOP_CARD = pieceCard({
 export const QUEEN_CARD = pieceCard({
     name: "Reine", sprite: "queen", status: QUEEN_PIECE, hearts: QUEEN_HEARTS, rarity: Rarity.EPIC,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
         "de tous tes ", ITEM.as("objets"), ".",
     ],
     equip: (battle, body, owner) => {
@@ -213,7 +214,8 @@ export const CHECK = new ActionCard("Échec", [
             const way = enemy ? enemy.position.minus(piece.position).normalized : null
             if(!way) continue
             battle.turn(piece, way)
-            battle.strike(piece, checkArea(piece, way), CHECK_DAMAGE + piece.stats.strength.value, DamageType.PHYSICAL)
+            const damage = CHECK_DAMAGE + piece.stats.strength.value
+            battle.strike(piece, checkArea(piece, way), damage, DamageType.PHYSICAL, () => 1, SMASH_LOOK)
         }
         hold(battle, SHORT_TIME, [Previews.label(unit.position, "échec", NOTE_COLOR)])
     },

@@ -23,11 +23,14 @@ import { loadBattle, saveBattle } from "../sim/save/battleSave"
 import type { BattleSave } from "../sim/save/battleSave"
 import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
+import { AMBIENT_EFFECTS } from "./particles/ambient/ambientEffects"
+import type { AmbientOutcome } from "./particles/ambient/AmbientDirector"
+import type { AmbientEffect } from "./particles/ambient/AmbientEffect"
 import { allFightTypes } from "../sim/catalog/fightTypes"
 import type { FightType } from "../sim/fight/FightType"
 import { GHOST_FIGHT, GHOST_REACH, ghostsFor, isGhostFight } from "../sim/fight/GhostFightType"
 import { AGGRESSION, AMBUSH } from "../sim/fight/fights"
-import { Journey } from "../sim/run/Journey"
+import { Run } from "../sim/run/Run"
 import { allHalts, lootHalts } from "../sim/catalog/halts"
 import { allPlaceTypes, infoOf } from "../sim/catalog/places"
 import { forge, weave } from "../sim/run/visits"
@@ -46,7 +49,6 @@ import type { Place } from "../sim/run/Journey"
 import type { PlaceType } from "../sim/run/PlaceType"
 import type { HaltType } from "../sim/halt/HaltType"
 import type { FloorType } from "../sim/floor/Floor"
-import type { Run } from "../sim/run/Run"
 import type { StatusType } from "../sim/status/Status"
 import { STATUS_TYPES } from "../sim/status/statusTypes"
 import { MINE_HAZARD } from "../sim/hazard/subs/Mine"
@@ -126,8 +128,18 @@ export interface MecardContext extends CommandContext {
     /** Open the bench of the sprites of the units, on the one a visual names, the first for none, for a try. */
     showSprites(sprite: Visual|null): void
 
+    /** Open the bench of the animations of the blows, on the one a visual names, none for the area as it is. */
+    showAnim(blow: Visual|null): void
+
     /** Play a transition over the screen, for a try, telling its middle and its end. */
     playTransition(transition: Visual, duration: number, reverse: boolean): void
+
+    /**
+     * Start ambient effects of the map at once, for a try.
+     *
+     * @throws {@link Error} When the map is not shown.
+     */
+    ambient(effects: readonly AmbientEffect[]): AmbientOutcome[]
 
     /**
      * Open the game to others, printing the code they connect with.
@@ -197,9 +209,11 @@ export class LiveContext implements MecardContext {
     public showConverter(): void { this.host().showConverter() }
     public showParallax(parallax: Visual): void { this.host().showParallax(parallax) }
     public showSprites(sprite: Visual|null): void { this.host().showSprites(sprite) }
+    public showAnim(blow: Visual|null): void { this.host().showAnim(blow) }
     public playTransition(transition: Visual, duration: number, reverse: boolean): void {
         this.host().playTransition(transition, duration, reverse)
     }
+    public ambient(effects: readonly AmbientEffect[]): AmbientOutcome[] { return this.host().ambient(effects) }
     public hostGame(mode: SeatMode|null, policy: SeatPolicy): void { this.host().hostGame(mode, policy) }
     public connect(code: string, guest: boolean): void { this.host().connect(code, guest) }
     public openChat(role: "host"|"join", code: string|null, author: ChatAuthor): void {
@@ -347,7 +361,8 @@ function typeWord(type: PlaceType): string {
 
 const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
 const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => ALL_FLOORS, type => wordOf(type.name))
-const FIGHT: Arg<MecardContext, FightType> = named("le combat", allFightTypes, type => type.id)
+const EFFECT: Arg<MecardContext, AmbientEffect> = named("l'effet", () => AMBIENT_EFFECTS, effect => effect.id)
+const FIGHT: Arg<MecardContext, FightType> =named("le combat", allFightTypes, type => type.id)
 const KIT: Arg<MecardContext, Kit> = named("le kit", () => ALL_KITS, kit => wordOf(kit.name))
 const PET: Arg<MecardContext, Monster> = named("le familier", () => ALL_PETS, pet => wordOf(pet.name))
 const USABLE: Arg<MecardContext, Usable> = named("l'utilisable", () => ALL_USABLES, each => wordOf(each.name))
@@ -1324,6 +1339,14 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.print(`Nouvelle carte : ${floorText(ctx.run)}.`)
                 ctx.showMap()
             }),
+            ambient: command(
+                "travel ambient [effet] [nombre] : lance les effets d'ambiance de la carte, tous par défaut.",
+                [optional(EFFECT, null), optional(whole("le nombre", 1), 1)],
+                (ctx, effect, count) => {
+                    const asked = effect ? Array<AmbientEffect>(count).fill(effect) : AMBIENT_EFFECTS
+                    for(const { effect: each, status } of ctx.ambient(asked)) ctx.print(`${each.id} : ${status}.`)
+                },
+            ),
         }),
     }
 }
@@ -1338,23 +1361,24 @@ function percent(part: number, total: number): string {
 }
 
 /**
- * Draw maps of a floor, each from a seed of its own so the run is left as it is, and count the fights of the
- * aggressions and of the ambushes laid on them, by type, the ghosts shown apart.
+ * Start new runs as the game does, each from a seed of its own so the run played is left as it is, the games
+ * of its history lent to them as the game lends them, and count the fights of the aggressions and of the
+ * ambushes laid on their map, by type, the ghosts shown apart.
+ *
+ * @param from - The floor a new run goes into, none for the first map of a new run.
  */
-function fightCensus(run: Run, count: number, floorType: FloorType|null): string[] {
+function fightCensus(run: Run, count: number, from: FloorType|null): string[] {
     // DRAW //
-    const { depth } = run.travel
-    const floor = floorType ? floorType.create(run.travel.floor.level) : run.travel.floor
     const categories = [AGGRESSION, AMBUSH]
     const found = new Map<string, Map<string, { name: string, ghost: boolean, count: number }>>()
     const withGhost = new Map<string, number>()
     for(const category of categories) found.set(category.id, new Map())
+    let drawn: Run = run
     for(let index = 0; index < count; index++){
-        const map = new Journey(new Rng(index + 1))
-        map.fights = { depth, ghosts: run.ghosts }
-        floor.fillMap(map)
+        drawn = new Run(index + 1, undefined, undefined, run.ghosts)
+        if(from) drawn.travel.enterFloor(from.create(drawn.travel.floor.level + 1))
         const ghostsHere = new Set<string>()
-        for(const { fight } of map.places){
+        for(const { fight } of drawn.travel.journey.places){
             const kinds = fight && found.get(fight.category.id)
             if(!fight || !kinds) continue
             const kind = kinds.get(fight.id) ?? { name: fight.name, ghost: isGhostFight(fight), count: 0 }
@@ -1366,10 +1390,11 @@ function fightCensus(run: Run, count: number, floorType: FloorType|null): string
     }
 
     // PRINT //
+    const where = from ? `de l'étage ${from.name}` : "du début de partie"
     const lines = [
-        `${count} carte(s) de l'étage ${floor.type.name}, profondeur ${depth} : ${run.ghosts.length} partie(s) dans `
-            + `l'historique, ${ghostsFor(run.ghosts, depth).length} à portée de la profondeur ${depth} `
-            + `(au plus ${GHOST_REACH} lieux au-delà).`,
+        `${count} partie(s) neuve(s), carte ${where}, profondeur ${drawn.travel.depth} : ${run.ghosts.length} partie(s) `
+            + `dans l'historique, ${ghostsFor(run.ghosts, drawn.travel.depth).length} à portée de la profondeur `
+            + `${drawn.travel.depth} (au plus ${GHOST_REACH} lieux au-delà).`,
     ]
     for(const category of categories){
         const kinds = [...found.get(category.id)!.values()].sort((a, b) => b.count - a.count)
@@ -1437,6 +1462,12 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
                 [optional(named("l'unité", () => shippedPictures("units"), key => key.replace("units/", "")), null)],
                 (ctx, key) => ctx.showSprites(key === null ? null : visual(key)),
             ),
+            anim: command(
+                "debug anim [coup] : ouvre le banc d'essai des animations de coup : le coup frappé en boucle d'une unité"
+                    + " sur une autre, avec la forme de zone, la portée et la distance au choix.",
+                [optional(named("le coup", () => shippedPictures("fx").map(key => key.replace("fx/", "")), key => key), null)],
+                (ctx, key) => ctx.showAnim(key === null ? null : visual(key)),
+            ),
             ghost: command(
                 "debug ghost : résout un combat de fantômes de l'historique, sans le lancer, et liste ses unités.",
                 [],
@@ -1466,9 +1497,10 @@ function toolCommands(): Record<string, Command<MecardContext, unknown>> {
                 },
             ),
             fights: command(
-                "debug fights [nombre] [étage] : génère des cartes et compte, par type, les agressions et les"
-                    + " embuscades posées, les fantômes mis en évidence. L'étage courant par défaut. La partie n'est pas touchée.",
-                [optional(whole("le nombre de cartes", 1), 200), optional(FLOOR, null)],
+                "debug fights [nombre] [étage] : lance des parties neuves, comme le jeu, et compte, par type, les"
+                    + " agressions et les embuscades posées sur leur première carte, ou sur celle de l'étage où elles"
+                    + " entrent si un étage est donné, les fantômes mis en évidence. La partie n'est pas touchée.",
+                [optional(whole("le nombre de parties", 1), 200), optional(FLOOR, null)],
                 (ctx: MecardContext, count, type) => {
                     if(!ctx.playing){
                         ctx.print(NOT_PLAYING)

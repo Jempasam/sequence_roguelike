@@ -10,6 +10,7 @@ import { Rarity } from "../../Rarity"
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
+import { visual } from "../../../base/Visual"
 
 /** How far the slash of the catalog reaches, in meters. */
 const SLASH_RANGE = 1.3 - UNIT_RADIUS
@@ -20,6 +21,8 @@ const SLASH_COS_HALF = 0.5
 /** A blow in an arc ahead of the unit. */
 export class SlashCard extends BlowCard {
 
+
+    public override readonly look = visual("slash")
 
     constructor(
         /** How far it reaches, in meters. */

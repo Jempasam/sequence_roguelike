@@ -1,4 +1,5 @@
 import { visual } from "../../../base/Visual"
+import { SHOT_LOOK } from "../tools/blowLooks"
 import { DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Pose } from "../../../battle/Action"
@@ -54,7 +55,7 @@ export const MAGIC_KNIFE = new ActionCard("Couteau magique", [
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
         const end = landing(battle, unit, unit)
-        battle.strike(unit, wayOf(unit.muzzle(), end), KNIFE_DAMAGE, DamageType.PHYSICAL)
+        battle.strike(unit, wayOf(unit.muzzle(), end), KNIFE_DAMAGE, DamageType.PHYSICAL, () => 1, SHOT_LOOK)
         const knife = battle.place(unit, {
             sprite: visual("units/spirit"), name: "Couteau de lancer", at: end, direction: unit.direction,
             hearts: [new Heart(SOLID_HEART)], tangible: false, targetable: false, touchable: false, movable: false,

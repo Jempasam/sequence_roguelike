@@ -1,4 +1,5 @@
 import { ELEMENTAL_COLOR } from "../../../battle/previewColors"
+import { SHOCKWAVE_LOOK } from "../tools/blowLooks"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -65,7 +66,7 @@ export class FlamethrowerCard extends ActionCard {
             use: function ({ battle, unit }){
                 sweep(battle, FLAME_TIME, share => [Previews.polygon(flames(unit, unit, share), ELEMENTAL_COLOR)])
                 const area = flames(unit, unit)
-                for(const target of battle.strike(unit, area, amount, DamageType.ELEMENTAL)){
+                for(const target of battle.strike(unit, area, amount, DamageType.ELEMENTAL, () => 1, SHOCKWAVE_LOOK)){
                     battle.applyStatus(target, BURN, burn)
                 }
                 placeFlames(battle, unit, unit.muzzle().plus(unit.direction.times(range / 2)), area)

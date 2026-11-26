@@ -13,6 +13,7 @@ import { AIM } from "../movement/Aim"
 import { FusionCard } from "../composite/FusionCard"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
+import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the mega slash of the catalog goes through, in meters, before the agility of the unit. */
@@ -23,6 +24,9 @@ const MEGA_SLASH_DAMAGE = 1
 
 /** How wide a mega slash cuts, in meters. */
 const MEGA_SLASH_WIDTH = 0.5
+
+/** How the cut looks. */
+const THRUST = visual("thrust")
 
 /** How long it takes to fade out and back in, in seconds. */
 const SLASH_TIME = 0.15
@@ -57,7 +61,8 @@ export class MegaSlashCard extends ActionCard {
                 const area = Areas.line(unit.position, to, MEGA_SLASH_WIDTH)
                 hold(battle, SLASH_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
                 if(!battle.leap(unit, to)) return
-                battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
+                const damage = amount + unit.stats.strength.value
+                battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, THRUST)
                 battle.unblock(unit)
                 wait(battle, SLASH_TIME)
             },

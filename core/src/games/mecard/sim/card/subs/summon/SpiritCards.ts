@@ -4,7 +4,7 @@ import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SOLID_HEART } from "../../../heart/subs/SolidHeartKind"
 import { SpiritAnchor } from "../../../process/subs/SpiritAnchor"
-import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
@@ -30,7 +30,7 @@ export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
 })
 
 export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
-    "Invoque à ", SUMMON_AHEAD, " ", DISTANCE, " devant toi un esprit d'", new HeartCount(1), " ", BLUE_HEART, ", qui joue les cartes qui ",
+    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant toi un esprit d'", new HeartCount(1), " ", BLUE_HEART, ", qui joue les cartes qui ",
     "suivent dans ta chaîne. Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

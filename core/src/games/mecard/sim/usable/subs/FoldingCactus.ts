@@ -5,6 +5,7 @@ import { summonedHearts } from "../../card/subs/summon/SummonCard"
 import type { Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
+import { INVOCATION } from "../../base/keywords"
 import { SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../../card/subs/tools/playing"
 import { THORN_HEART } from "../../heart/subs/ThornHeartKind"
 
@@ -23,7 +24,7 @@ export class FoldingCactus extends AbstractUsable {
     ){
         super(
             "Cactus pliable", visual("usables/cactus"),
-            ["Pose un cactus à ", SUMMON_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 6 utilisations."],
+            [INVOCATION.as("Invoque"), " un cactus à ", SUMMON_AHEAD, " m devant toi : ", new SummonedHearts(hearts, THORN_HEART), ". 6 utilisations."],
             { charges: 6 },
         )
     }

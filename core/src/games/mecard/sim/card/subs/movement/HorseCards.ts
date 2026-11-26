@@ -1,4 +1,5 @@
 import { DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Pose } from "../../../battle/Action"
 import { DamageType } from "../../../battle/DamageType"
 import type { Battle } from "../../../battle/Battle"
@@ -95,7 +96,8 @@ export const KICK = new ActionCard("Ruade", [
     DamageType.PHYSICAL, ", et la repousse de ", KICK_SHOVE, " ", DISTANCE, ".",
 ], Rarity.COMMON, {
     use: function ({ battle, unit }){
-        const hit = battle.strike(unit, kickArea(unit, unit), KICK_DAMAGE + unit.stats.strength.value, DamageType.PHYSICAL)
+        const kick = KICK_DAMAGE + unit.stats.strength.value
+        const hit = battle.strike(unit, kickArea(unit, unit), kick, DamageType.PHYSICAL, () => 1, SMASH_LOOK)
         for(const target of hit) shove({ battle, by: unit, target, direction: unit.direction.opposite, distance: KICK_SHOVE })
         hold(battle, SHORT_TIME)
     },

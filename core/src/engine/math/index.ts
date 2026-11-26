@@ -6,5 +6,6 @@
 
 export * from "./Color"
 export * from "./Mat4"
+export * from "./noise"
 export * from "./Quat"
 export * from "./Vec3"

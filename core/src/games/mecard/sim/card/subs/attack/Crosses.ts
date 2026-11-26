@@ -1,4 +1,5 @@
 import { ALLONGE, DISTANCE, FEBRILE, FORCE, UNIT } from "../../../base/keywords"
+import { SHOCKWAVE_LOOK, SLASH_LOOK, THRUST_LOOK } from "../tools/blowLooks"
 import type { Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
@@ -38,7 +39,7 @@ export const CROSS_CUT = new ActionCard("Taille croisée", [
     use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
         const areas = xAreas(unit, unit)
-        for(const area of areas) battle.strike(unit, area, amount, DamageType.PHYSICAL)
+        for(const area of areas) battle.strike(unit, area, amount, DamageType.PHYSICAL, () => 1, THRUST_LOOK)
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
     },
     preview: ({ battle, unit, pose }) => {
@@ -77,7 +78,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         )
         const amount = 1 + unit.stats.strength.value
         const hit = battle.strikeMany(
-            unit, areas, amount, DamageType.PHYSICAL, target => target.feverish ? 2 : 1,
+            unit, areas, amount, DamageType.PHYSICAL, target => target.feverish ? 2 : 1, THRUST_LOOK,
         )
         const killed = hit.filter(target => !target.alive).length
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
@@ -124,11 +125,11 @@ export const DEATH_SCYTHE = new ActionCard("Faux de la mort", [
 ], Rarity.LEGENDARY, {
     use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
-        let hit = battle.strike(unit, reapArea(unit, unit), amount, DamageType.PHYSICAL)
+        let hit = battle.strike(unit, reapArea(unit, unit), amount, DamageType.PHYSICAL, () => 1, SLASH_LOOK)
         hold(battle, SHORT_TIME, [Previews.polygon(reapArea(unit, unit), PHYSICAL_COLOR)])
         for(let wave = 1; wave < WAVES && hit.some(target => !target.alive); wave++){
             const everyone: Area = Areas.circle(unit.position, EVERYWHERE)
-            hit = battle.strike(unit, everyone, amount, DamageType.PHYSICAL)
+            hit = battle.strike(unit, everyone, amount, DamageType.PHYSICAL, () => 1, SHOCKWAVE_LOOK)
             hold(battle, SHORT_TIME)
         }
     },

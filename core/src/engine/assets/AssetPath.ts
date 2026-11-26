@@ -140,6 +140,33 @@ export type AssetPath =
     | "mecard/floors/volcano/logo.png"
     | "mecard/floors/volcano/obsidian.png"
     | "mecard/floors/volcano/rock.png"
+    | "mecard/fx/beam.json"
+    | "mecard/fx/beam.png"
+    | "mecard/fx/bomb.json"
+    | "mecard/fx/bomb.png"
+    | "mecard/fx/claws.json"
+    | "mecard/fx/claws.png"
+    | "mecard/fx/hammer.json"
+    | "mecard/fx/hammer.png"
+    | "mecard/fx/impact.json"
+    | "mecard/fx/impact.png"
+    | "mecard/fx/jaws.json"
+    | "mecard/fx/jaws.png"
+    | "mecard/fx/lightning.json"
+    | "mecard/fx/lightning.png"
+    | "mecard/fx/meteor.json"
+    | "mecard/fx/meteor.png"
+    | "mecard/fx/shockwave.json"
+    | "mecard/fx/shockwave.png"
+    | "mecard/fx/shot.json"
+    | "mecard/fx/shot.png"
+    | "mecard/fx/slash.json"
+    | "mecard/fx/slash.png"
+    | "mecard/fx/slash_ghost.png"
+    | "mecard/fx/smash.json"
+    | "mecard/fx/smash.png"
+    | "mecard/fx/thrust.json"
+    | "mecard/fx/thrust.png"
     | "mecard/halts/alchemist.png"
     | "mecard/halts/altar.png"
     | "mecard/halts/antiquarian.png"
@@ -892,6 +919,7 @@ export type AssetPath =
     | "mecard/units/geomancer.png"
     | "mecard/units/geyser.json"
     | "mecard/units/geyser.png"
+    | "mecard/units/ghost.json"
     | "mecard/units/ghost.png"
     | "mecard/units/ghost_shogun.png"
     | "mecard/units/glass_man.png"
@@ -905,7 +933,9 @@ export type AssetPath =
     | "mecard/units/gunner.png"
     | "mecard/units/hand.png"
     | "mecard/units/harpoon_pirate.png"
+    | "mecard/units/haunting_ghost.json"
     | "mecard/units/haunting_ghost.png"
+    | "mecard/units/hawk.json"
     | "mecard/units/hawk.png"
     | "mecard/units/hole.json"
     | "mecard/units/hole.png"
@@ -966,14 +996,19 @@ export type AssetPath =
     | "mecard/units/shield_guard.png"
     | "mecard/units/ship.png"
     | "mecard/units/skeleton_reaper.png"
+    | "mecard/units/slime.json"
     | "mecard/units/slime.png"
+    | "mecard/units/snake.json"
     | "mecard/units/snake.png"
     | "mecard/units/sniper.png"
+    | "mecard/units/spectre.json"
     | "mecard/units/spectre.png"
     | "mecard/units/spellblade.png"
+    | "mecard/units/spirit.json"
     | "mecard/units/spirit.png"
     | "mecard/units/spiritist.png"
     | "mecard/units/stone.png"
+    | "mecard/units/stone_golem.json"
     | "mecard/units/stone_golem.png"
     | "mecard/units/swamp_sorcerer.png"
     | "mecard/units/swordsman.png"
@@ -1022,6 +1057,7 @@ export type AssetPath =
     | "mecard/units/tree.png"
     | "mecard/units/troll.png"
     | "mecard/units/turret_engineer.png"
+    | "mecard/units/vengeful_spirit.json"
     | "mecard/units/vengeful_spirit.png"
     | "mecard/units/wall.json"
     | "mecard/units/wall.png"
@@ -1199,6 +1235,33 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/volcano/logo.png",
     "mecard/floors/volcano/obsidian.png",
     "mecard/floors/volcano/rock.png",
+    "mecard/fx/beam.json",
+    "mecard/fx/beam.png",
+    "mecard/fx/bomb.json",
+    "mecard/fx/bomb.png",
+    "mecard/fx/claws.json",
+    "mecard/fx/claws.png",
+    "mecard/fx/hammer.json",
+    "mecard/fx/hammer.png",
+    "mecard/fx/impact.json",
+    "mecard/fx/impact.png",
+    "mecard/fx/jaws.json",
+    "mecard/fx/jaws.png",
+    "mecard/fx/lightning.json",
+    "mecard/fx/lightning.png",
+    "mecard/fx/meteor.json",
+    "mecard/fx/meteor.png",
+    "mecard/fx/shockwave.json",
+    "mecard/fx/shockwave.png",
+    "mecard/fx/shot.json",
+    "mecard/fx/shot.png",
+    "mecard/fx/slash.json",
+    "mecard/fx/slash.png",
+    "mecard/fx/slash_ghost.png",
+    "mecard/fx/smash.json",
+    "mecard/fx/smash.png",
+    "mecard/fx/thrust.json",
+    "mecard/fx/thrust.png",
     "mecard/halts/alchemist.png",
     "mecard/halts/altar.png",
     "mecard/halts/antiquarian.png",
@@ -1951,6 +2014,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/geomancer.png",
     "mecard/units/geyser.json",
     "mecard/units/geyser.png",
+    "mecard/units/ghost.json",
     "mecard/units/ghost.png",
     "mecard/units/ghost_shogun.png",
     "mecard/units/glass_man.png",
@@ -1964,7 +2028,9 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/gunner.png",
     "mecard/units/hand.png",
     "mecard/units/harpoon_pirate.png",
+    "mecard/units/haunting_ghost.json",
     "mecard/units/haunting_ghost.png",
+    "mecard/units/hawk.json",
     "mecard/units/hawk.png",
     "mecard/units/hole.json",
     "mecard/units/hole.png",
@@ -2025,14 +2091,19 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/shield_guard.png",
     "mecard/units/ship.png",
     "mecard/units/skeleton_reaper.png",
+    "mecard/units/slime.json",
     "mecard/units/slime.png",
+    "mecard/units/snake.json",
     "mecard/units/snake.png",
     "mecard/units/sniper.png",
+    "mecard/units/spectre.json",
     "mecard/units/spectre.png",
     "mecard/units/spellblade.png",
+    "mecard/units/spirit.json",
     "mecard/units/spirit.png",
     "mecard/units/spiritist.png",
     "mecard/units/stone.png",
+    "mecard/units/stone_golem.json",
     "mecard/units/stone_golem.png",
     "mecard/units/swamp_sorcerer.png",
     "mecard/units/swordsman.png",
@@ -2081,6 +2152,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/tree.png",
     "mecard/units/troll.png",
     "mecard/units/turret_engineer.png",
+    "mecard/units/vengeful_spirit.json",
     "mecard/units/vengeful_spirit.png",
     "mecard/units/wall.json",
     "mecard/units/wall.png",

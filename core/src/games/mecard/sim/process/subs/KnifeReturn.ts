@@ -1,4 +1,5 @@
 import type { PlugContext, UnitContext } from "../../battle/Action"
+import { THRUST_LOOK } from "../../card/subs/tools/blowLooks"
 import type { Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
@@ -47,7 +48,8 @@ export class KnifeReturn extends AbstractProcess {
     public dispose({ battle, unit }: UnitContext): void {
         const { knife } = this
         if(unit.alive && battle.phase !== "over" && knife.alive){
-            battle.strike(unit, Areas.line(knife.position, unit.position, KNIFE_RETURN_WIDTH), KNIFE_RETURN_DAMAGE, DamageType.PHYSICAL)
+            const way = Areas.line(knife.position, unit.position, KNIFE_RETURN_WIDTH)
+            battle.strike(unit, way, KNIFE_RETURN_DAMAGE, DamageType.PHYSICAL, () => 1, THRUST_LOOK)
         }
         battle.vanish(knife)
     }

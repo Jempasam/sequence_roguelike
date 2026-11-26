@@ -1,6 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
+import type { Visual } from "../../../base/Visual"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit, UnitStats } from "../../../battle/Unit"
@@ -33,6 +34,9 @@ export abstract class BlowCard extends AbstractCard<Action> {
 
     /** What it plays. */
     public readonly action: Action
+
+    /** How its blow looks, none for the area to be shown as it is. */
+    public readonly look: Visual|null = null
 
     constructor(
         name: string, description: Text, rarity: Rarity,
@@ -71,7 +75,8 @@ export abstract class BlowCard extends AbstractCard<Action> {
      * @returns The units it landed on.
      */
     protected land(battle: Battle, unit: Unit, area: Area): Unit[] {
-        return battle.strike(unit, area, this.damage + this.bonus(unit.stats), DamageType.PHYSICAL)
+        const amount = this.damage + this.bonus(unit.stats)
+        return battle.strike(unit, area, amount, DamageType.PHYSICAL, () => 1, this.look)
     }
 
 

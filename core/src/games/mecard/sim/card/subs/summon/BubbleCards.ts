@@ -1,4 +1,4 @@
-import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
 import type { Unit } from "../../../battle/Unit"
 import { HeartCount } from "../../../battle/words"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
@@ -96,7 +96,7 @@ export const BURSTING = new ActionCard("Éclatement", [
 
 /** A bubble that plays the cards that follow in the chain of its blower, which plays none of them. */
 export const PROGRAMMED_BUBBLE = new ActionCard("Bulle programmée", [
-    "Invoque devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(2), " de ", TIME_HEART, ", qui joue les cartes qui suivent dans ta chaîne. ",
+    INVOCATION.as("Invoque"), " devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(2), " de ", TIME_HEART, ", qui joue les cartes qui suivent dans ta chaîne. ",
     "Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

@@ -1096,12 +1096,19 @@ export class Battle {
      * Lash out at an area: every unit it touches but the attacker takes the damage.
      *
      * @param scale - How many times the damage each unit touched takes, once by default: a stab in the back.
+     * @param visual - How the blow looks, none by default: the screen draws the area itself.
      * @returns The units the damage landed on.
      */
     public strike(
-        attacker: Unit, area: Area, amount: number, nature: DamageType, scale: (target: Unit) => number = () => 1,
+        attacker: Unit,
+        area: Area,
+        amount: number,
+        nature: DamageType,
+        scale: (target: Unit) => number = () => 1,
+        visual: Visual | null = null,
     ): Unit[] {
         attacker.attacking.notify({ attacker, area })
+        this.#tellStrike(attacker, area, nature, visual)
         this.events.push({ type: "struck", unit: attacker, area, nature })
         const hit: Unit[] = []
         for(const target of this.fetch(area, attacker)){
@@ -1119,14 +1126,21 @@ export class Battle {
      * the damage once.
      *
      * @param scale - How many times the damage each unit touched takes, once by default.
+     * @param visual - How the blow looks, none by default: the screen draws the areas itself.
      * @returns The units the damage landed on.
      */
     public strikeMany(
-        attacker: Unit, areas: readonly Area[], amount: number, nature: DamageType, scale: (target: Unit) => number = () => 1,
+        attacker: Unit,
+        areas: readonly Area[],
+        amount: number,
+        nature: DamageType,
+        scale: (target: Unit) => number = () => 1,
+        visual: Visual | null = null,
     ): Unit[] {
         const targets = new Set<Unit>()
         for(const area of areas){
             attacker.attacking.notify({ attacker, area })
+            this.#tellStrike(attacker, area, nature, visual)
             this.events.push({ type: "struck", unit: attacker, area, nature })
             for(const target of this.fetch(area, attacker)) targets.add(target)
         }
@@ -1820,13 +1834,25 @@ export class Battle {
         unit.hearts.plug()
     }
 
+    /** Tell whoever shows the battle that a unit lashes out at an area, from where it stands now. */
+    #tellStrike(attacker: Unit, area: Area, nature: DamageType, visual: Visual | null): void {
+        this.signals.struck.notify({
+            attacker,
+            origin: attacker.position,
+            direction: attacker.direction,
+            area,
+            nature,
+            visual,
+        })
+    }
+
     /** Tell whoever shows the battle what the hearts of a unit and the unit itself tell. */
     #forward(unit: Unit): void {
         const { signals } = this
         const { hearts } = unit
         const bar = (): Heart[] => Heart.copies(hearts.all)
-        hearts.onDamage.add(({ amount, nature }) => {
-            signals.damaged.notify({ unit, amount, nature, hearts: bar() })
+        hearts.onDamage.add(({ amount, nature, source }) => {
+            signals.damaged.notify({ unit, amount, nature, source, hearts: bar() })
         })
         hearts.onHeal.add(({ amount }) => signals.healed.notify({ unit, amount, hearts: bar() }))
         hearts.onAdd.add(({ heart, index }) => {

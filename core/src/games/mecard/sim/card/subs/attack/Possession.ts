@@ -1,4 +1,5 @@
 import { DISTANCE, HEART, UNIT } from "../../../base/keywords"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
@@ -48,7 +49,8 @@ export const POSSESSION = new ActionCard("Possession", [
         // Read before the blow: dying, the prey keeps its chain, but what it holds may change.
         const left = prey.unplayed()
         const at = prey.position
-        battle.strike(unit, area, POSSESSION_DAMAGE, DamageType.PHYSICAL, target => target === prey ? 1 : 0)
+        const only = (target: Unit): number => target === prey ? 1 : 0
+        battle.strike(unit, area, POSSESSION_DAMAGE, DamageType.PHYSICAL, only, SMASH_LOOK)
         hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
         if(prey.alive || !unit.alive) return
         battle.teleport(unit, at)

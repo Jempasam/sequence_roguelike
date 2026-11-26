@@ -45,7 +45,9 @@ export {
 export type {
     Arg, Command, CommandContext, ConsoleLine, ConsoleLineKind, GroupParsed, LineCheck, ValuesOf,
 } from "./engine/console"
-export { Color, Mat4, Quat, Vec3 } from "./engine/math"
+export {
+    Color, fractalNoise3, hash32, hashText, hashUnit, Mat4, octaveNoise3, Quat, valueNoise3, Vec3,
+} from "./engine/math"
 export {
     burst, emitAlong, emitInside, emitOutline, MAX_BURST_PARTICLES, motionAt, ParticleBurst, ParticleSpec,
     ParticleSystem, Rate, reachOf, seededRandom,
@@ -104,7 +106,7 @@ export type {
     ColoredText, ContourPoint, LinkedText, Semantic, Stringable, SvgPath, Text, TextColor, TextDisplay,
     TextSpan,
 } from "./semantic"
-export { startGame } from "./game"
+export { startCosmos, startGame } from "./game"
 export { GAMEPAD_BUTTONS } from "./platform"
 export type {
     AssetsPort, AudioPort, AudioStage, BiquadKind, ClipboardPort, FilterContext, PlayOptions, Sound, GamepadAxis, GamepadButton, GamepadState, GfxPort, InputPort, LoopPort,

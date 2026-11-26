@@ -1,5 +1,6 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
+import { SHOT_LOOK } from "../tools/blowLooks"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -125,7 +126,8 @@ export class RicochetCard extends ActionCard {
                 })
                 for(const line of path){
                     const shot = amount + unit.stats.precision.value
-                    if(battle.strike(unit, segment(line), shot, DamageType.PHYSICAL).length > 0) break
+                    const hit = battle.strike(unit, segment(line), shot, DamageType.PHYSICAL, () => 1, SHOT_LOOK)
+                    if(hit.length > 0) break
                 }
                 hold(battle, RECOVERY_TIME, path.map(line => Previews.polygon(segment(line), PHYSICAL_COLOR)))
             },

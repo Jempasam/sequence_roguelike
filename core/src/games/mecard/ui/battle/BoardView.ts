@@ -12,7 +12,11 @@ import type { Battle } from "../../sim/battle/Battle"
 import type { Unit } from "../../sim/battle/Unit"
 
 import { colorOf, NOTICE_EDGE } from "../look/colors"
-import type { BattleScene, SceneUnit } from "./BattleScene"
+import { frameSprite } from "../look/FxSprites"
+import { anchorOf, impactDrawing, strikeDrawings } from "../look/fxDrawings"
+import type { FxDrawing } from "../look/fxDrawings"
+import type { FxAnimation } from "../look/fxAnimation"
+import type { BattleScene, PlayedImpact, PlayedStrike, SceneUnit } from "./BattleScene"
 import { hitboxMetrics } from "../look/hitboxMetrics"
 import { drawSprite, FEET_DROP, modeOf, SPRITE_METER, spriteReach } from "../look/spriteModes"
 import type { SpriteView } from "../look/spriteModes"
@@ -29,6 +33,12 @@ const SPRITE_HEADROOM = 0.75
 
 /** Half the height of a line of text, in pixels: a label is centered on its point. */
 const LABEL_HALF_HEIGHT = 4
+
+/** How opaque the area of a blow is at the start, when no picture of it is played. */
+const STRIKE_ALPHA = 0.5
+
+/** How white a unit is at the start of its flash when hit. */
+const FLASH_ALPHA = 0.8
 
 /** How long the head of an arrow is, at least, in pixels. */
 const ARROW_HEAD = 5
@@ -235,6 +245,9 @@ export class BoardView {
         // What is shown over the arena stays in it: a reach wider than the room is cut at its walls.
         painter.clip(this.#left, this.#top, width * this.#meter, height * this.#meter)
         painter.setBlend("alpha")
+        for(const strike of this.scene.strikes) this.#drawStrike(painter, strike)
+        for(const impact of this.scene.impacts) this.#drawImpact(painter, impact)
+        painter.setBlend("alpha")
         for(const shown of this.scene.indicators) this.#drawIndicator(painter, shown, 1)
         for(const indicator of this.indicators) this.#drawIndicator(painter, indicator, 1)
         this.#drawNotice(painter)
@@ -434,7 +447,7 @@ export class BoardView {
         const look = this.sprites.look(unit.sprite)
         painter.setBlend("alpha")
         const mode = modeOf(look, unit.hitbox)
-        const metrics = hitboxMetrics(unit.hitbox, shown)
+        const metrics = hitboxMetrics(unit.hitbox, { position: shown.position.plus(shown.offset), direction: shown.direction })
         if(this.#isLit(unit)){
             painter.setColorMode("mask")
             painter.setTint(this.#faded.set(1, 1, 1, shown.opacity))
@@ -448,6 +461,12 @@ export class BoardView {
         }
         painter.setTint(this.#coloredBy(unit.sprite, shown.opacity))
         drawSprite(painter, sprite, mode, look, metrics, this.#view())
+        if(shown.flash > 0){
+            painter.setColorMode("mask")
+            painter.setTint(this.#faded.set(1, 1, 1, FLASH_ALPHA * shown.flash * shown.opacity))
+            drawSprite(painter, sprite, mode, look, metrics, this.#view())
+            painter.setColorMode("modulate")
+        }
         painter.setBlend("cutout")
     }
 
@@ -518,6 +537,43 @@ export class BoardView {
             default:
                 break
         }
+    }
+
+    /** A blow: its area, filled and fading out as it goes, where no picture of it is played. */
+    #drawStrike(painter: Painter, strike: PlayedStrike): void {
+        const { shown } = strike
+        const drawings = shown.kind === "sprite"
+            ? strikeDrawings(shown.animation, strike.placement, shown.sprite, strike.share, strike.seed)
+            : null
+        if(shown.kind === "sprite" && drawings){
+            for(const drawing of drawings) this.#drawFx(painter, shown.sprite, shown.animation, drawing)
+            return
+        }
+        painter.setTint(this.#faded.set(1, 1, 1, STRIKE_ALPHA * (1 - strike.share)))
+        this.#fillPolygon(painter, strike.area)
+    }
+
+    /** The picture of an impact on a unit it landed on. */
+    #drawImpact(painter: Painter, impact: PlayedImpact): void {
+        const { shown } = impact
+        const drawing = impactDrawing(shown.animation, impact.at, impact.forward, impact.scale, shown.sprite, impact.share)
+        this.#drawFx(painter, shown.sprite, shown.animation, drawing)
+    }
+
+    /** One drawing of a blow: the frame of its picture, held by its pixel, turned and stretched to its size. */
+    #drawFx(painter: Painter, picture: Sprite, animation: FxAnimation, drawing: FxDrawing): void {
+        const frame = frameSprite(picture, animation.frames, drawing.frame)
+        const [lengthPixels, widthPixels] = [animation.length ?? frame.width, animation.width ?? frame.height]
+        const [anchorX, anchorY] = anchorOf(animation, frame)
+        const [x, y] = this.#pixels(new Vector2(drawing.x, drawing.y))
+        painter.push()
+        painter.setBlend(animation.blend)
+        painter.setTint(this.#faded.set(1, 1, 1, drawing.alpha))
+        painter.translate(x, y)
+        painter.rotate(drawing.angle)
+        painter.scale(drawing.length * this.#meter / lengthPixels, drawing.width * this.#meter / widthPixels)
+        painter.sprite(frame, -anchorX, -anchorY)
+        painter.pop()
     }
 
     /** Fill a polygon of the arena its first point sees whole, as a fan of triangles from that point. */

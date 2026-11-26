@@ -1,4 +1,5 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Element } from "../../../element/Element"
@@ -56,7 +57,7 @@ export class SpellCard extends AbstractCard<Action, Element> {
                 const { start, end } = battle.ray(unit, card.range)
                 fly(battle, start, end, color)
                 const area = Areas.line(start, end, BOLT_WIDTH)
-                const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL)
+                const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL, () => 1, SMASH_LOOK)
                 if(hit) element.applyNegative(ctx, hit)
             },
             preview: ctx => {

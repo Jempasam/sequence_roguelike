@@ -21,7 +21,7 @@ import { Rarity } from "../../Rarity"
 import { AbstractCard } from "../AbstractCard"
 import { flight, hold, SHORT_TIME, SUMMON_AHEAD, summonAt, summonShows, summonSpot, wait } from "../tools/playing"
 import { summonedHearts } from "../summon/SummonCard"
-import { ALCHEMY, DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { ALCHEMY, DISTANCE, INVOCATION, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -260,7 +260,7 @@ export const POTION_RAIN = new PotionRainCard("Pluie de potion", [
 ], Rarity.RARE, RAIN_RADIUS)
 
 export const BARREL = new BarrelCard("Tonneau", [
-    "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un tonneau de ", new SummonedHearts(BARREL_HALVES),
+    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un tonneau de ", new SummonedHearts(BARREL_HALVES),
     ", plein de la potion. Quand il casse, il l'éclabousse à ", frenchNumber(SPLASH_RADIUS), " ",
     DISTANCE, " autour, ", levelText(STRONG), ".",
 ], Rarity.RARE, STRONG)

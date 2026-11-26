@@ -1,4 +1,5 @@
 import { AGILITE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { THRUST_LOOK } from "../tools/blowLooks"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -53,7 +54,7 @@ export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
         // Rooted, it cuts where it stands: the whole length ahead.
         const to = gone.distance > 0 ? unit.position : start.plus(unit.direction.times(length))
         const area = band(start, to, CHARGE_WIDTH)
-        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL)
+        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL, () => 1, THRUST_LOOK)
         // Ending the dash inside a body, it is moved out of it, as the slash does.
         battle.unblock(unit)
         hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
@@ -114,7 +115,8 @@ export const DEMON_SLASH = new ActionCard("Demon Slash", [
         const to = gone.distance > 0 ? unit.position : start.plus(unit.direction.times(length))
         const area = band(start, to, SLASH_WIDTH)
         const times = extensions >= SLASH_DOUBLE ? 2 : 1
-        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL, () => times)
+        const amount = 1 + unit.stats.strength.value
+        battle.strike(unit, area, amount, DamageType.PHYSICAL, () => times, THRUST_LOOK)
         battle.unblock(unit)
         hold(battle, SLASH_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
     },

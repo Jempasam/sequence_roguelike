@@ -1,4 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
+import { SHOT_LOOK } from "./blowLooks"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -31,5 +32,5 @@ export function shotHearts(unit: Unit): number {
 export function fireShot(battle: Battle, unit: Unit): Unit[] {
     const { area, start, end } = shotLine(battle, unit, unit)
     fly(battle, start, end, PHYSICAL_COLOR)
-    return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL)
+    return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL, () => 1, SHOT_LOOK)
 }

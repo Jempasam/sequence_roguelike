@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
 import { Console } from "@game/core"
-import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
+import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, RunUnitRules, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
 import type { Battle, HaltType, Unit } from "@game/core/mecard"
 import { AMBIENT_EFFECTS } from "@game/core/mecard/ambient-effects"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
@@ -61,9 +61,10 @@ function game(): Game {
     const benches: string[] = []
     const state = { playing: true }
     const asked: string[] = []
+    const unitRules = new RunUnitRules(run, text => made.print(text))
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
         playing: state.playing,
-        run, battle,
+        run, battle, unitRules,
         print: text => made.print(text),
         refresh: () => {},
         handChanged: unit => changed.push(unit),
@@ -522,6 +523,41 @@ describe("Mecard battle commands", () => {
         expect(arena.phase).not.toBe("over")
         expect(first.alive).toBe(false)
         expect(named(arena, "Mannequin")).not.toBe(first)
+    })
+
+    test("run rules → each rule given once, listed in the order they apply, then cleared", () => {
+        const { console } = game()
+        console.submit("run rules smart smart3")
+        console.submit("run rules strip chemin")
+        console.submit("run rules moves")
+        console.submit("run rules smart")
+        expect(errors(console)).toEqual([])
+        console.clear()
+        console.submit("run rules list")
+        const listed = console.lines.map(line => line.text).join(" ")
+        expect(listed.indexOf("Chemin")).toBeLessThan(listed.indexOf("permanentes"))
+        expect(listed.indexOf("permanentes")).toBeLessThan(listed.indexOf("« smart »"))
+        expect(listed).not.toContain("smart3")
+        console.submit("run rules clear")
+        console.clear()
+        console.submit("run rules list")
+        expect(console.lines.map(line => line.text).join(" ")).not.toContain("permanentes")
+    })
+
+    test("run rules all → every rule, the AI finding its way by default", () => {
+        const { console } = game()
+        console.submit("run rules all")
+        console.clear()
+        console.submit("run rules list")
+        const listed = console.lines.map(line => line.text).join(" ")
+        for(const word of ["Avancer", "Chemin", "mélange", "permanentes", "smart8_path"]) expect(listed).toContain(word)
+    })
+
+    test("run rules with an AI that is not smart or a card unknown → refused", () => {
+        const { console } = game()
+        console.submit("run rules smart deck")
+        console.submit("run rules strip tourner")
+        expect(errors(console)).toHaveLength(2)
     })
 
     test("run bot → the AI of the bots changed in this battle and the next ones, an unknown one refused", () => {

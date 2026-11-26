@@ -4,7 +4,7 @@ import type { Visual } from "../base/Visual"
 import { BEST_AI } from "../ai/catalog"
 import type { Kit } from "../catalog/kits"
 import type { Spot } from "../run/Journey"
-import { heroOf } from "../run/Hero"
+import { heroOf, scaledKit } from "../run/Hero"
 import type { Run } from "../run/Run"
 
 import type { Fight, FightStage } from "./Fight"
@@ -85,7 +85,7 @@ export class KitFightType implements FightType {
 
     public populate(stage: FightStage): void {
         for(const kit of this.kits){
-            const hero = heroOf(kit)
+            const hero = scaledKit(heroOf(kit), stage.level)
             stage.addHero(
                 { ...hero, bases: { ...hero.bases, showChain: !this.hiddenChains } },
                 { controller: BEST_AI(stage.rng) },

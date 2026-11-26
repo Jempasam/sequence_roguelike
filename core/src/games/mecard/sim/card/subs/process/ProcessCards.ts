@@ -8,7 +8,9 @@ import { Riding } from "../../../process/subs/Riding"
 import { Strength } from "../../../process/subs/Strength"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, TRAVEL_SLACK } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import type { Text } from "../../../../../../semantic"
 import * as Previews from "../../../battle/preview/Previews"
@@ -53,9 +55,9 @@ export class ProcessCard extends ActionCard {
 /** What a ride of the horse of the catalog would do from a pose: as far as nothing is in the way. */
 function ridden({ battle, unit, pose }: PreviewContext): Preview {
     const distance = RIDE_LENGTH * unit.stats.move.value
-    const gone = battle.moveSpot(unit, pose.position, pose.direction, distance)
+    const gone = Walk.spot(battle, unit, pose.position, pose.direction, distance)
     const indicators = [Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
-    if(gone.distance < distance - TRAVEL_SLACK) indicators.push(Previews.label(gone.to, "bloqué", NOTE_COLOR))
+    if(gone.distance < distance - Walk.TRAVEL_SLACK) indicators.push(Previews.label(gone.to, "bloqué", NOTE_COLOR))
     return { indicators, pose: { position: gone.to, direction: pose.direction } }
 }
 
@@ -64,5 +66,5 @@ export const STRENGTH_CARD = new ProcessCard("Force", [
 ], Rarity.COMMON, () => new Strength(STRENGTH_BONUS), "force")
 
 export const HORSE = new ProcessCard("Cheval", [
-    "Jusqu'à la fin du ", BATTLE_ROUND, ", avance de ", RIDE_LENGTH, "×", AGILITE, " ", DISTANCE, " tout de suite, puis avant chacune de tes ", BATTLE_TURN.as("étapes"), ".",
+    "Jusqu'à la fin du ", BATTLE_ROUND, ", ", WALK.as("avance"), " de ", RIDE_LENGTH, "×", AGILITE, " ", DISTANCE, " tout de suite, puis avant chacune de tes ", BATTLE_TURN.as("étapes"), ".",
 ], Rarity.RARE, () => new Riding(RIDE_LENGTH), "au galop", ctx => ({ ...ridden(ctx), beforeStep: ridden }))

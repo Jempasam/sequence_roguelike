@@ -1,8 +1,8 @@
-import { BATTLE, BOSS, ELITE, foeOf, Journey, Rng } from "@game/core/mecard"
+import { BATTLE, BOSS, ELITE, Journey, Rng } from "@game/core/mecard"
 import type { FightCategory, FloorType, Monster, Place } from "@game/core/mecard"
 
 import { normalize, UsageError } from "./errors"
-import type { Body, Fighter, FighterKind, Roster } from "./fighters"
+import type { Fighter, FighterKind, Roster } from "./fighters"
 import { fight } from "./fight"
 import type { Combatant, FightResult } from "./fight"
 import { MAX_FOES } from "./match"
@@ -63,12 +63,6 @@ function hash(...parts: readonly (string|number)[]): number {
     return value >>> 0
 }
 
-/** What a monster brings as a foe, as a run makes it: more hearts at a higher level, a deck kept in order. */
-function hostileBody(monster: Monster, level: number): Body {
-    const { hearts, decks, unlimited, items, usables, bases } = foeOf(monster, monster.name, level)
-    return { hearts, decks, unlimited, items, usables, bases }
-}
-
 /** The strategy of a fighter: the one named for it, else its side's, else its kind's. */
 function strategyFor(fighter: Fighter, setup: Setup, side: "allies"|"foes"): Strategy {
     const { ai } = setup
@@ -82,10 +76,8 @@ function ally(fighter: Fighter, setup: Setup): Combatant {
 
 function foe(fighter: Fighter, setup: Setup, index: number): Combatant {
     const strategy = strategyFor(fighter, setup, "foes")
-    if(fighter.monster){
-        return {
-            name: `${fighter.monster.name} ${index + 1}`, body: hostileBody(fighter.monster, setup.level), strategy, hostile: true,
-        }
+    if(fighter.foeBody){
+        return { name: `${fighter.name} ${index + 1}`, body: fighter.foeBody(setup.level), strategy, hostile: true }
     }
     return { name: fighter.name, body: fighter.body(), strategy, hostile: false }
 }

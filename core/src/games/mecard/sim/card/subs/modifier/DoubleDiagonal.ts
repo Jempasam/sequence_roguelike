@@ -5,6 +5,8 @@ import { ModifierCard } from "../ModifierCard"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 import { BATTLE_TURN } from "../../../base/keywords"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** Where a unit faces after an action played an eighth off ahead: ahead, unless the action turned it. */
 function settled(direction: Vector2, diagonal: Vector2, ahead: Vector2): Vector2 {
@@ -20,9 +22,9 @@ function doubled(inner: Action): Action {
             for(const side of [-1, 1] as const){
                 if(!unit.alive) return
                 const diagonal = ahead.eighth(side)
-                ctx.battle.turn(unit, diagonal)
+                Turn.turn(ctx.battle, unit, diagonal)
                 inner.use(ctx)
-                ctx.battle.turn(unit, settled(unit.direction, diagonal, ahead))
+                Turn.turn(ctx.battle, unit, settled(unit.direction, diagonal, ahead))
             }
         },
         preview: ctx => {
@@ -41,7 +43,7 @@ function doubled(inner: Action): Action {
 }
 
 export const DOUBLE_DIAGONAL = new ModifierCard(
-    "Double diagonale", ["L'action est jouée tournée de 45° à gauche puis à droite, en une ", BATTLE_TURN.as("étape"), "."],
+    "Double diagonale", ["L'action est jouée ", TURN.as("tournée"), " de 45° à gauche puis à droite, en une ", BATTLE_TURN.as("étape"), "."],
     Rarity.RARE,
     doubled,
 )

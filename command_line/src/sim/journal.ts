@@ -1,6 +1,6 @@
 import { plainText } from "@game/core"
 import type { Text } from "@game/core"
-import { eventText } from "@game/core/mecard"
+import { Blink, eventText, Leap, Pushing, Swap, Teleport, Turn, Walk } from "@game/core/mecard"
 import type { Battle, BattleEvent, Card, Heart, HeartsSignal, Pose, Unit } from "@game/core/mecard"
 import { mecardDisplay } from "@game/core/mecard/text-display"
 
@@ -54,8 +54,19 @@ export class Journal {
         signals.fleetingGiven.add(({ unit, card }) => this.#write(`${this.label(unit)} reçoit ${card.name} (éphémère)`))
         signals.fleetingSpent.add(({ unit, card }) => this.#write(`${this.label(unit)} perd ${card.name} (éphémère, joué ou jeté)`))
         signals.reshuffled.add(({ unit, deck }) => this.#write(`${this.label(unit)} rebat son deck ${deck + 1}`))
-        signals.moved.add(({ unit, from, to }) => this.#write(`${this.label(unit)} bouge ${poseOf(from)} → ${poseOf(to)}`))
-        signals.blinked.add(({ unit, from, to }) => this.#write(`${this.label(unit)} se téléporte ${poseOf(from)} → ${poseOf(to)}`))
+        const moves = [
+            [Walk.WALKED, "avance"], [Turn.TURNED, "pivote"], [Pushing.SHOVED, "est poussé"],
+        ] as const
+        for(const [key, word] of moves){
+            battle.observers.of(key).add(({ unit, from, to }) => this.#write(`${this.label(unit)} ${word} ${poseOf(from)} → ${poseOf(to)}`))
+        }
+        const jumps = [
+            [Blink.BLINKED, "cligne"], [Leap.LEAPED, "saute"], [Teleport.TELEPORTED, "se téléporte"],
+            [Swap.SWAPPED, "change de place"],
+        ] as const
+        for(const [key, word] of jumps){
+            battle.observers.of(key).add(({ unit, from, to }) => this.#write(`${this.label(unit)} ${word} ${poseOf(from)} → ${poseOf(to)}`))
+        }
         signals.stepStarted.add(({ unit, left }) => this.#write(`${this.label(unit)} joue un pas (${left} restant(s))`))
         signals.cardActivated.add(({ unit, first, last, cards }) => {
             this.#write(`${this.label(unit)} active ${cardsOf(cards)} (places ${first + 1}-${last + 1})`)

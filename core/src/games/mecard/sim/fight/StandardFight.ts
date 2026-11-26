@@ -7,7 +7,7 @@ import { Heart } from "../heart/Heart"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
 import type { Spot } from "../run/Journey"
 import { ARENA_SIZE, monsterStart, partyStarts } from "../run/formation"
-import { firstDeck, heroOf, heroSpec, monsterHearts } from "../run/Hero"
+import { firstDeck, foeOf, heroOf, heroSpec, scaledKit } from "../run/Hero"
 import type { Hero } from "../run/Hero"
 import type { Run } from "../run/Run"
 
@@ -65,20 +65,15 @@ export class StandardFight implements Fight {
         type.populate({
             rng, level, layer: place.layer,
             addHero,
-            addKit: (kit, pose) => addHero(heroOf(kit), pose),
+            addKit: (kit, pose) => addHero(scaledKit(heroOf(kit), level), pose),
             add: (monster, pose = {}) => {
                 const index = placed++
                 monsters.push(monster)
+                const foe = foeOf(monster, `${monster.name} ${monsters.length}`, level)
+                const position = pose.position ?? monsterStart(index)
                 const unit = battle.add({
-                    name: `${monster.name} ${monsters.length}`, sprite: monster.sprite, team: monstersTeam,
+                    ...heroSpec(foe, monstersTeam, position, pose.direction ?? Vector2.DOWN),
                     controller: pose.controller ?? "bot",
-                    position: pose.position ?? monsterStart(index), direction: pose.direction ?? Vector2.DOWN,
-                    hearts: monsterHearts(monster.hearts + level - 1), decks: [monster.cards],
-                    items: [...monster.items ?? []],
-                    bases: {
-                        draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true,
-                        size: monster.size ?? 1,
-                    },
                 })
                 this.#foes.set(unit, monster)
             },

@@ -11,8 +11,9 @@ import { frenchNumber } from "../../../battle/words"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
-import { hold, turn, WORD_TIME } from "../tools/playing"
-import { turning, turnsIn, turnUnitsIn } from "../tools/turning"
+import { hold, WORD_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
@@ -51,7 +52,7 @@ function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null
     const area = (unit: Unit, pose: Pose): Area => unit.around(SHOUT_RADIUS, pose)
     return {
         use: function ({ battle, unit }){
-            const turned = turnUnitsIn(battle, area(unit, unit), unit, directionOf(unit.position))
+            const turned = Turn.turnUnitsIn(battle, area(unit, unit), unit, directionOf(unit.position))
             hold(battle, WORD_TIME, [Previews.polygon(area(unit, unit), CONTROL_COLOR), ...turned.map(other => {
                 return Previews.arrow(
                     [other.position, other.position.plus(other.direction.times(TURN_LENGTH))], MOVE_WIDTH, CONTROL_COLOR,
@@ -59,20 +60,20 @@ function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null
             })])
         },
         preview: ({ battle, unit, pose }) => {
-            const turnings = turnsIn(battle, area(unit, pose), unit, directionOf(pose.position))
-            return Previews.still(pose, Previews.polygon(area(unit, pose), RANGE_COLOR), ...turnings.map(turning))
+            const turnings = Turn.turnsIn(battle, area(unit, pose), unit, directionOf(pose.position))
+            return Previews.still(pose, Previews.polygon(area(unit, pose), RANGE_COLOR), ...turnings.map(Turn.turningShown))
         },
     }
 }
 
 /** Every unit around, but the one that shouts, turns its back to it. */
 export const SHOUT = new ActionCard("Cri", [
-    "Tourne le dos à l'", UNIT, " de chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour. Aucun dégât.",
+    TURN.as("Tourne le dos"), " à l'", UNIT, " de chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour. Aucun dégât.",
 ], Rarity.COMMON, shouting(by => awayFrom(by)))
 
 /** Every unit around turns to face the one that taunts. */
 export const TAUNT = new ActionCard("Provocation", [
-    "Tourne chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour vers l'", UNIT, " qui provoque.",
+    TURN.as("Tourne"), " chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour vers l'", UNIT, " qui provoque.",
 ], Rarity.COMMON, shouting(by => towards(by)))
 
 
@@ -97,13 +98,13 @@ function sideTurn(battle: Battle, unit: Unit, pose: { position: Vector2, directi
 
 /** A turn of an eighth toward the side of the axis with the most enemies. */
 export const ORIENTATION = new ActionCard("Orientation", [
-    "Tourne d'un huitième de tour du côté de l'axe où il y a le plus d'ennemis. Rien à égalité.",
+    TURN.as("Tourne"), " d'un huitième de tour du côté de l'axe où il y a le plus d'ennemis. Rien à égalité.",
 ], Rarity.RARE, {
     use: function (ctx){
         const { battle, unit } = ctx
         const way = sideTurn(battle, unit, unit)
         if(way){
-            turn(ctx, way)
+            Turn.turnToward(ctx, way)
             return
         }
         battle.events.push({ type: "skipped", unit, reason: "autant d'ennemis de chaque côté" })
@@ -161,7 +162,7 @@ function aiming(
                 return
             }
             const stun = startled({ battle, unit, pose: unit }, found)
-            turn(ctx, found.way)
+            Turn.turnToward(ctx, found.way)
             if(stun) battle.stun(found.target)
         },
         preview: ctx => {
@@ -185,7 +186,7 @@ const ENERGETIC_RANGE = 2 - UNIT_RADIUS
 
 /** An aim at the nearest enemy within a short reach of the edge of the body, stunning an enemy it had to turn far to reach. */
 export const ENERGETIC_AIM = new ActionCard("Visée énergique", [
-    "Se tourne vers l'ennemi le plus proche, jusqu'à ", frenchNumber(ENERGETIC_RANGE), " ", DISTANCE, ". Si cela demande plus d'un quart ",
+    TURN.as("Se tourne"), " vers l'ennemi le plus proche, jusqu'à ", frenchNumber(ENERGETIC_RANGE), " ", DISTANCE, ". Si cela demande plus d'un quart ",
     "de tour, il est étourdi.",
 ], Rarity.RARE, aiming(
     ({ battle, unit, pose }, range) => {
@@ -197,7 +198,7 @@ export const ENERGETIC_AIM = new ActionCard("Visée énergique", [
 
 /** An aim at the nearest ally, the unit itself apart. */
 export const ALLY_AIM = new ActionCard("Viser allié", [
-    "Se tourne vers l'allié le plus proche.",
+    TURN.as("Se tourne"), " vers l'allié le plus proche.",
 ], Rarity.COMMON, aiming(
     ({ battle, unit, pose }, range) => {
         const allies = battle.bodies.filter(other => other !== unit && other.team === unit.team)
@@ -216,12 +217,12 @@ function behind(unit: Unit, pose: Pose): Area {
 
 /** A half turn, stunning the nearest unit behind. */
 export const ABOUT_FACE = new ActionCard("Volte-face", [
-    "Fait demi-tour. L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", est étourdie.",
+    TURN.as("Fait demi-tour"), ". L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", est étourdie.",
 ], Rarity.COMMON, {
     use: function (ctx){
         const { battle, unit } = ctx
         const hit = closest(battle.fetch(behind(unit, unit), unit), unit.position)
-        turn(ctx, unit.direction.opposite)
+        Turn.turnToward(ctx, unit.direction.opposite)
         if(hit) battle.stun(hit)
     },
     preview: ({ battle, unit, pose }) => {

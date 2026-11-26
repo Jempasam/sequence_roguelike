@@ -6,6 +6,8 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { hold, wait } from "../tools/playing"
+import { LEAPING } from "../../../battle/mecanic/leap/keyword"
+import * as Leap from "../../../battle/mecanic/leap"
 import { Rarity } from "../../Rarity"
 import { MergedCard } from "../composite/MergedCard"
 import { ABOUT_FACE } from "../movement/Orientation"
@@ -43,7 +45,7 @@ export class MegaSlashCard extends ActionCard {
         public readonly amount: number,
     ){
         super("Méga Slash", [
-            "Traverse tout sur ", length, "×", AGILITE, " ", DISTANCE, " devant : ", amount, "+", FORCE, " ",
+            LEAPING.as("Saute"), " de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout : ", amount, "+", FORCE, " ",
             DamageType.PHYSICAL, " à chaque corps sur le chemin. ",
             "Mal retombé, tu es éjecté à la place libre la plus proche.",
         ], Rarity.EPIC, MegaSlashCard.#slashing(length, amount))
@@ -60,10 +62,10 @@ export class MegaSlashCard extends ActionCard {
                 const to = reach(unit, unit)
                 const area = Areas.line(unit.position, to, MEGA_SLASH_WIDTH)
                 hold(battle, SLASH_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
-                if(!battle.leap(unit, to)) return
+                if(!Leap.leap(battle, unit, to)) return
                 const damage = amount + unit.stats.strength.value
                 battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, THRUST)
-                battle.unblock(unit)
+                Leap.unblock(battle, unit)
                 wait(battle, SLASH_TIME)
             },
             preview: ({ battle, unit, pose }) => {

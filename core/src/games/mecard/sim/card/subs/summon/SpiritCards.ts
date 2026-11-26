@@ -4,19 +4,24 @@ import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SOLID_HEART } from "../../../heart/subs/SolidHeartKind"
 import { SpiritAnchor } from "../../../process/subs/SpiritAnchor"
-import { DISTANCE, BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../../battle/mecanic/summon/summon"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
 
 import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
 import { RAM } from "../movement/Ram"
-import { hold, SHORT_TIME, SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
 
 export const SPIRIT_ANCHOR = new ActionCard("Ancre spirituelle", [
-    "Laisse un esprit intouchable là où tu es. En fin de ", BATTLE_ROUND, ", tu te téléportes sur lui, tourné comme lui, ",
-    "et il disparaît.",
+    "Laisse un esprit intouchable là où tu es. En fin de ", BATTLE_ROUND, ", tu ", TELEPORT.as("te téléportes"), " sur lui, ",
+    TURN.as("tourné"), " comme lui, et il disparaît.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const spirit = battle.place(unit, {
@@ -36,14 +41,14 @@ export const SPIRIT_PROJECTION = new ActionCard("Projection spirituelle", [
     use: function ({ battle, unit }){
         const cards = battle.cutChain(unit, unit.chain.cursor)
         if(cards.length > 0){
-            summonAt(battle, unit, [summonSpot(unit, unit)], {
+            Summons.summonAt(battle, unit, [Summons.summonSpot(unit, unit)], {
                 sprite: visual("units/spirit"), name: "Esprit projeté", hearts: () => [new Heart(BLUE_HEART)], cards,
             })
         }
         hold(battle, SHORT_TIME, [Previews.label(unit.position, "projection", NOTE_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
-        return Previews.still(pose, ...summonShows(battle, unit, [summonSpot(unit, pose)]))
+        return Previews.still(pose, ...Summons.summonShows(battle, unit, [Summons.summonSpot(unit, pose)]))
     },
 })
 

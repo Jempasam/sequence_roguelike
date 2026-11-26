@@ -2,10 +2,18 @@ import { concat, joinText, Keyword, plainText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import {
     ADVENTURER, AGILITE, ALLONGE, BATTLE_ROUND, BATTLE_TURN, BOOSTER, CARTE, COMPOSITE, DECK, DISTANCE,
-    ALCHEMY, FEBRILE, FIGHT, FLOOR, FORCE, FUSION, GOLD, HALT, HEAL, HEART, INVOCATION, ITEM, MERGE, MONSTER,
+    ALCHEMY, FEBRILE, FIGHT, FLOOR, FORCE, FUSION, GOLD, HALT, HEAL, HEART, ITEM, MERGE, MONSTER,
     PERFECT_CLONE, PET, PORTEE, PRECISION, RANDOM, REWARD, SUMMON_STAT, SUPPRESSION, TRAVEL_STEP, UNIT, UPGRADE,
     USABLE,
 } from "../../sim/base/keywords"
+import { BLINKING } from "../../sim/battle/mecanic/blink/keyword"
+import { LEAPING } from "../../sim/battle/mecanic/leap/keyword"
+import { VIOLENT_PUSH } from "../../sim/battle/mecanic/push/keyword"
+import { INVOCATION } from "../../sim/battle/mecanic/summon/keyword"
+import { SWAPPING } from "../../sim/battle/mecanic/swap/keyword"
+import { TELEPORT } from "../../sim/battle/mecanic/teleport/keyword"
+import { TURN } from "../../sim/battle/mecanic/turn/keyword"
+import { WALK } from "../../sim/battle/mecanic/walk/keyword"
 import { FIRE_ELEMENT } from "../../sim/element/subs/Fire"
 import { DamageType } from "../../sim/battle/DamageType"
 import { HeartCount } from "../../sim/battle/words"
@@ -97,6 +105,28 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
         "Une ", UNIT, " ", INVOCATION.as("invoquée"), " apparaît juste devant son invocateur, ou sur ses côtés si",
         " la place est prise, jamais derrière. Elle joue juste après lui dans l'ordre de tour, est contrôlée par",
         " un bot, et frappe ou se fait frapper comme toute ", UNIT, ". Sans place, rien n'apparaît.",
+    ]],
+    [WALK, [
+        "Se déplacer pas à pas dans une direction, jusqu'au premier obstacle. Foncer, c'est ", WALK, " plus vite.",
+    ]],
+    [TURN, [
+        "Changer l'orientation d'une ", UNIT, ". Tout le reste de sa chaîne part de là. Un corps non rond coincé",
+        " contre un obstacle peut ne pas pouvoir ", TURN, ".",
+    ]],
+    [BLINKING, [
+        "Aller droit à un point par-dessus tout. Sans place, on retombe un peu au-delà ou en deçà.",
+    ]],
+    [LEAPING, [
+        "Bondir par-dessus tout, même un mur. Mal retombé, on est éjecté à la place libre la plus proche.",
+    ]],
+    [TELEPORT, [
+        "Apparaître à un point, ou juste à côté s'il est pris. Sans place, la ", TELEPORT, " rate.",
+    ]],
+    [SWAPPING, ["Deux ", UNIT.as("unités"), " prennent la place l'une de l'autre."]],
+    [VIOLENT_PUSH, [
+        "Arrêtée en route, l'", UNIT, " prend les dégâts du choc. Celle qu'elle heurte les prend aussi, puis est",
+        " ", VIOLENT_PUSH.as("poussée violemment"), " à son tour, de la même distance, dans l'axe du choc, et ainsi",
+        " de suite. Un mur ou un pilier arrête la chaîne, et chaque ", UNIT, " n'y est poussée qu'une fois.",
     ]],
     [PERFECT_CLONE, [
         "Un ", PERFECT_CLONE, " a la même chaîne, pour ce qui reste à jouer, le même ", DECK, ", la même main,",

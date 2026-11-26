@@ -1,12 +1,12 @@
 import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
 import { SummonedHearts } from "../../battle/words"
-import { summonedHearts } from "../../card/subs/summon/SummonCard"
 import type { Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
-import { INVOCATION } from "../../base/keywords"
-import { SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../../card/subs/tools/playing"
+import { INVOCATION } from "../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../battle/mecanic/summon/summon"
+import * as Summons from "../../battle/mecanic/summon"
 import { THORN_HEART } from "../../heart/subs/ThornHeartKind"
 
 import { AbstractUsable } from "./AbstractUsable"
@@ -31,14 +31,15 @@ export class FoldingCactus extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        summonAt(battle, unit, [summonSpot(unit, unit, SUMMON_AHEAD)], {
-            sprite: visual("units/cactus"), name: "Cactus", hearts: () => summonedHearts(unit, this.hearts, THORN_HEART),
-            fleeting: true,
+        Summons.summonAt(battle, unit, [Summons.summonSpot(unit, unit, SUMMON_AHEAD)], {
+            sprite: visual("units/cactus"), name: "Cactus",
+            hearts: () => Summons.summonedHearts(unit, this.hearts, THORN_HEART), fleeting: true,
         })
     }
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
-        return Previews.still(pose, ...summonShows(battle, unit, [summonSpot(unit, pose, SUMMON_AHEAD)]))
+        const spot = Summons.summonSpot(unit, pose, SUMMON_AHEAD)
+        return Previews.still(pose, ...Summons.summonShows(battle, unit, [spot]))
     }
 }
 

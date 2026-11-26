@@ -10,6 +10,8 @@ import { Rarity } from "../../Rarity"
 import { BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** How many hearts the tackle of the catalog takes, before the strength of the unit. */
 const TACKLE_DAMAGE = 1
@@ -33,7 +35,7 @@ export class TackleCard extends BlowCard {
     ){
         super("Tacle", [
             "Fauche en arc devant, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : chaque ", UNIT,
-            " touchée te tourne le dos et prend ", TACKLE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
+            " touchée ", TURN.as("te tourne le dos"), " et prend ", TACKLE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
         ], Rarity.RARE, TACKLE_DAMAGE)
     }
 
@@ -45,7 +47,7 @@ export class TackleCard extends BlowCard {
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         for(const target of battle.fetch(area, unit)){
             const away = target.position.minus(unit.position).normalized
-            if(away) battle.turn(target, away)
+            if(away) Turn.turn(battle, target, away)
         }
         return super.land(battle, unit, area)
     }

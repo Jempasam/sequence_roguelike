@@ -9,10 +9,10 @@ import type { LookaheadOptions } from "./ShuffleAi"
 import type { Combination } from "./lookaheadHelpers"
 import type { UnitController } from "./UnitController"
 
-/** How many chains `smart1` to `smart8` try each round, by default. */
+/** How many chains `smart1` to `smart8_path` try each round, by default. */
 export const DEFAULT_CANDIDATES = 6
 
-/** What sets each lookahead AI apart from the one before: `smart2` to `smart8`. */
+/** What sets each lookahead AI apart from the one before: `smart2` to `smart8`, then `smart8_path`. */
 export const SMART_VARIANTS = {
     smart2: { heuristics: false, prune: false, local: false, durations: false },
     smart3: { heuristics: true, prune: false, local: false, durations: false },
@@ -21,6 +21,10 @@ export const SMART_VARIANTS = {
     smart6: { heuristics: true, prune: false, local: true, durations: true },
     smart7: { heuristics: true, prune: false, local: true, durations: true, threshold: 2, ahead: true },
     smart8: { heuristics: true, prune: false, local: true, durations: true, threshold: 2, ahead: true, valid: true },
+    smart8_path: {
+        heuristics: true, prune: false, local: true, durations: true, threshold: 2, ahead: true, valid: true,
+        paths: true,
+    },
 } as const satisfies Readonly<Record<string, Variant>>
 
 /** The latest `smartN`, which `smart` stands for: set to the last version at each new one. */
@@ -61,7 +65,7 @@ export const DEPTH_AIS = {
 /** The names of the AIs, in the order they are listed: `deck`, `random`, `smart1` to the `smart10`, then `smart`. */
 export const AI_NAMES = [
     "deck", "random", "smart1", "smart2", "smart3", "smart4", "smart5", "smart6", "smart7", "smart8",
-    "smart9_2", "smart9_1_2", "smart9_1_2_3", "smart10", "smart10_blind", "smart10_position", "smart10_future",
+    "smart8_path", "smart9_2", "smart9_1_2", "smart9_1_2_3", "smart10", "smart10_blind", "smart10_position", "smart10_future",
     "smart10_smartfuture", "smart10_safe", "smart10_unsafe", "smart",
 ] as const
 

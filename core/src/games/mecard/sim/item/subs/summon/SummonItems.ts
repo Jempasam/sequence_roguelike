@@ -1,4 +1,9 @@
-import { INVOCATION, UNIT } from "../../../base/keywords"
+import { UNIT } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
+import * as Walk from "../../../battle/mecanic/walk"
 import type { Observer } from "../../../base/Observable"
 import type { PlugContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"
@@ -71,7 +76,7 @@ export class Leash extends AbstractItem {
 
     constructor(){
         super("Laisse", visual("items/sling"), [
-            "Chaque ", INVOCATION.as("invocation"), " avance d'un mètre, puis se tourne vers l'", UNIT,
+            "Chaque ", INVOCATION.as("invocation"), " ", WALK.as("avance"), " d'un mètre, puis ", TURN.as("se tourne"), " vers l'", UNIT,
             " la plus proche, hors son invocatrice.",
         ])
     }
@@ -80,14 +85,14 @@ export class Leash extends AbstractItem {
     public init(ctx: PlugContext): void {
         const { battle, unit } = ctx
         onSummon(ctx, body => {
-            battle.move(body, body.direction, LEASH_STEP, true)
+            Walk.move(battle, body, body.direction, LEASH_STEP, true)
             let nearest: Unit|null = null
             for(const other of battle.touchables){
                 if(other === body || other === unit) continue
                 if(!nearest || other.position.distance(body.position) < nearest.position.distance(body.position)) nearest = other
             }
             const toward = nearest?.position.minus(body.position).normalized
-            if(toward) battle.turn(body, toward)
+            if(toward) Turn.turn(battle, body, toward)
         })
     }
 }

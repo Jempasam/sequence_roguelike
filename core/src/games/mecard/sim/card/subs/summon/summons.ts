@@ -1,5 +1,6 @@
 import { Vector2 } from "../../../base/Vector2"
-import { DISTANCE, HEAL, INVOCATION, PORTEE, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, HEAL, PORTEE, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { frenchNumber, HeartCount, SummonedHearts } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"

@@ -11,7 +11,7 @@ export const BATTLE_FORWARDED = ["roundStarted", "onGetGold", "onGetCards"] as c
  * signals tell again for a screen, and what the screen takes up at once.
  */
 export const BATTLE_NOT_FORWARDED = [
-    "prepEnded", "unitPrepared", "unitDied", "passStarted", "roundEnding", "roundEnded", "unitMoved",
+    "prepEnded", "unitPrepared", "unitDied", "passStarted", "roundEnding", "roundEnded",
     "unitStepping", "unitStepped", "signals", "phaseChanged", "preparationEnding", "loaded",
 ] as const satisfies readonly (keyof Battle)[]
 
@@ -36,9 +36,9 @@ export const RUN_FORWARDED = [
 /** The observables of a run that are not forwarded: what the screen takes up at once. */
 export const RUN_NOT_FORWARDED = ["phaseChanged", "loaded"] as const satisfies readonly (keyof Run)[]
 
-/** What a screen forwards of a battle: every signal, and what happens in its rounds. */
+/** What a screen forwards of a battle: every signal, those of its mechanics, and what happens in its rounds. */
 export function battleForwardables(battle: Battle): AnyObservable[] {
-    return [...battle.signals.all(), ...BATTLE_FORWARDED.map(name => battle[name])]
+    return [...battle.signals.all(), ...battle.observers.shown(), ...BATTLE_FORWARDED.map(name => battle[name])]
 }
 
 /** What a screen forwards of a travel. */

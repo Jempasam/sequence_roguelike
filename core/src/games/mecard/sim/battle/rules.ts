@@ -1,8 +1,5 @@
 import { Vector2 } from "../base/Vector2"
 
-/** How many hearts a unit pushed into something before the whole distance takes. */
-export const PUSH_BLOCKED_DAMAGE = 1
-
 /** How far beyond its point a blink looks for a free spot when the point is taken, in meters. */
 export const BLINK_OVERSHOOT = 1
 

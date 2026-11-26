@@ -1,6 +1,10 @@
 import { Multiply, ModifierKey } from "../../../base/Attribute"
 import { SHOCKWAVE_LOOK } from "../../../card/subs/tools/blowLooks"
-import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { INCOMING_SHOVE } from "../../../battle/mecanic/push/signals"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import { DamageType } from "../../../battle/DamageType"
@@ -59,7 +63,7 @@ export class Anchor extends AbstractItem {
 
     public init({ unit, hold }: PlugContext): void {
         const key = new ModifierKey(this.name)
-        hold(unit.incomingShove.add(incoming => {
+        hold(unit.observers.of(INCOMING_SHOVE).add(incoming => {
             incoming.distance *= ANCHOR_SHOVE
         }))
         unit.stats.move.add(key, new Multiply(ANCHOR_MOVE))
@@ -133,7 +137,7 @@ export class WeatherVane extends AbstractItem {
 
     constructor(){
         super("Girouette", visual("items/weather_vane"), [
-            "Début de ", BATTLE_ROUND, " : te tourne vers l'", UNIT, " ennemie la plus proche.",
+            "Début de ", BATTLE_ROUND, " : ", TURN.as("te tourne"), " vers l'", UNIT, " ennemie la plus proche.",
         ])
     }
 
@@ -142,7 +146,7 @@ export class WeatherVane extends AbstractItem {
         hold(battle.roundStarted.add(() => {
             const target = battle.nearestEnemy(unit)
             const toward = target?.position.minus(unit.position).normalized
-            if(toward) battle.turn(unit, toward)
+            if(toward) Turn.turn(battle, unit, toward)
         }))
     }
 

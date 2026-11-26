@@ -11,6 +11,8 @@ import { frenchNumber } from "../../../battle/words"
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { centeredSegment, cross } from "../tools/areas"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import * as Teleport from "../../../battle/mecanic/teleport"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
@@ -68,8 +70,8 @@ function fishingCenter(pose: Pose, unit: Unit) {
  */
 export const FISHING: ActionCard = new ActionCard("Pêche", [
     "Frappe en croix à ", frenchNumber(FISHING_AHEAD), "×", ALLONGE, " ", DISTANCE, " devant : ", 1, "+", FORCE, " ",
-    DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : se téléporte au centre, gagne ",
-    FISHING_GOLD,
+    DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : ",
+    TELEPORT.as("se téléporte"), " au centre, gagne ", FISHING_GOLD,
     " or par mort, et reprend une Pêche en main.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
@@ -83,7 +85,7 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         const killed = hit.filter(target => !target.alive).length
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
         if(killed === 0) return
-        battle.teleport(unit, fishingCenter(unit, unit))
+        Teleport.teleport(battle, unit, fishingCenter(unit, unit))
         battle.giveGold(unit, FISHING_GOLD * killed)
         battle.giveCard(unit, FISHING)
     },

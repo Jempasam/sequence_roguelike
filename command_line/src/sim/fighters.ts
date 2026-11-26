@@ -1,6 +1,5 @@
-import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, foeOf, Heart, heroOf, redHearts } from "@game/core/mecard"
-import type { Carried } from "@game/core/mecard"
-import type { Card, HeartGroup, Item, Kit, Monster, UnitSpec } from "@game/core/mecard"
+import { ALL_KITS, ALL_MONSTERS, ALL_PETS, allyOf, Carried, foeOf, Heart, heroOf, redHearts } from "@game/core/mecard"
+import type { Card, HeartGroup, Item, Kit, Monster, UnitSpec, Usable } from "@game/core/mecard"
 
 import { heartsOfKit } from "./define"
 import { normalize, UsageError, unknownName } from "./errors"
@@ -32,6 +31,9 @@ export interface Fighter {
 
     /** What it brings when it fights on the side of the heroes: a kit as a hero, a monster as an ally. */
     body(): Body
+
+    /** What it brings as a foe of a floor of a level, none for a kit, which brings the same on both sides. */
+    readonly foeBody: ((level: number) => Body)|null
 }
 
 /** Are two fighters the same one: a kind and a name are what tell them apart. */
@@ -47,7 +49,7 @@ const KIND_NAMES: Record<FighterKind, string> = { kit: "kit", monster: "monstre"
 
 export function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[], custom: boolean): Fighter {
     return {
-        name: kit.name, kind: "kit", custom, monster: null,
+        name: kit.name, kind: "kit", custom, monster: null, foeBody: null,
         body(): Body {
             const hero = heroOf(kit)
             return {
@@ -62,20 +64,26 @@ export function kitFighter(kit: Kit, hearts: number, bonus: readonly HeartGroup[
     }
 }
 
-export function monsterFighter(monster: Monster, kind: "monster"|"pet", custom: boolean): Fighter {
+/**
+ * A fighter made of a monster or a pet.
+ *
+ * @param usables - What it can use on either side, which no monster of the game has.
+ */
+export function monsterFighter(
+    monster: Monster, kind: "monster"|"pet", custom: boolean, usables: readonly Usable[] = [],
+): Fighter {
+    const bodyOf = ({ hearts, decks, unlimited, items, bases }: ReturnType<typeof foeOf>): Body => ({
+        hearts, decks, unlimited, items, bases,
+        usables: usables.map(usable => new Carried(usable)),
+    })
     return {
         name: monster.name, kind, custom, monster,
         body(): Body {
             // A monster keeps its deck in order, a pet is shuffled as a hero's is.
-            const hero = kind === "monster" ? foeOf(monster, monster.name) : allyOf(monster, monster.name)
-            return {
-                hearts: hero.hearts,
-                decks: hero.decks,
-                unlimited: hero.unlimited,
-                items: [],
-                usables: [],
-                bases: hero.bases,
-            }
+            return bodyOf(kind === "monster" ? foeOf(monster, monster.name) : allyOf(monster, monster.name))
+        },
+        foeBody(level: number): Body {
+            return bodyOf(foeOf(monster, monster.name, level))
         },
     }
 }

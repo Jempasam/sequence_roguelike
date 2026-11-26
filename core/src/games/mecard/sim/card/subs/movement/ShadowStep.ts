@@ -5,7 +5,11 @@ import type { Action } from "../../../battle/Action"
 import type { Arena } from "../../../battle/Arena"
 
 import { ActionCard } from "../ActionCard"
-import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
+import { wait } from "../tools/playing"
+import { LEAPING } from "../../../battle/mecanic/leap/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Leap from "../../../battle/mecanic/leap"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { DASH_SPEED } from "./MoveCard"
 import * as Previews from "../../../battle/preview/Previews"
@@ -57,8 +61,9 @@ export class ShadowStepCard extends ActionCard {
         public readonly length: number,
     ){
         super("Pas de l'ombre", [
-            "Avance de ", length, "×", AGILITE, " ", DISTANCE, ". Arrêté par un mur de l'arène, tu ressors par le ",
-            "mur opposé, à la même hauteur, et tu repars de ", length, "×", AGILITE, " ", DISTANCE, ".",
+            WALK.as("Avance"), " de ", length, "×", AGILITE, " ", DISTANCE, ". Arrêté par un mur de l'arène, tu ",
+            LEAPING.as("ressors"), " par le mur opposé, à la même hauteur, et tu ", WALK.as("repars"), " de ", length, "×",
+            AGILITE, " ", DISTANCE, ".",
         ], Rarity.RARE, ShadowStepCard.#stepping(length))
     }
 
@@ -68,25 +73,25 @@ export class ShadowStepCard extends ActionCard {
             use: function (ctx){
                 const { battle, unit } = ctx
                 const distance = length * unit.stats.move.value
-                const gone = travel(ctx, unit.direction, distance, DASH_SPEED)
+                const gone = Walk.travel(ctx, unit.direction, distance, DASH_SPEED)
                 const { position, direction, radius } = unit
                 const wall = gone.struck ? null : across(battle.arena, position, direction, radius)
-                if(wall && gone.distance < distance - TRAVEL_SLACK && battle.leap(unit, wall)){
-                    battle.unblock(unit)
+                if(wall && gone.distance < distance - Walk.TRAVEL_SLACK && Leap.leap(battle, unit, wall)){
+                    Leap.unblock(battle, unit)
                     wait(battle, JUMP_TIME)
-                    travel(ctx, unit.direction, distance, DASH_SPEED)
+                    Walk.travel(ctx, unit.direction, distance, DASH_SPEED)
                 }
                 wait(battle, JUMP_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = length * unit.stats.move.value
-                const gone = battle.moveSpot(unit, pose.position, pose.direction, distance)
+                const gone = Walk.spot(battle, unit, pose.position, pose.direction, distance)
                 const shown = [Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)]
                 const wall = gone.struck ? null : across(battle.arena, gone.to, pose.direction, unit.radius)
                 if(!wall || gone.distance >= distance){
                     return { indicators: shown, pose: { ...pose, position: gone.to } }
                 }
-                const again = battle.moveSpot(unit, wall, pose.direction, distance)
+                const again = Walk.spot(battle, unit, wall, pose.direction, distance)
                 shown.push(Previews.arrow([wall, again.to], MOVE_WIDTH, MOVE_COLOR))
                 return { indicators: shown, pose: { ...pose, position: again.to } }
             },

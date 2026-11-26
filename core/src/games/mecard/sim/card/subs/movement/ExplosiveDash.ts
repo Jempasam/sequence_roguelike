@@ -9,6 +9,7 @@ import type { Impact } from "./MoveCard"
 import { AGILITE, DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import { frenchNumber } from "../../../battle/words"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far the blast of the explosive dash of the catalog reaches, in meters, before the reach. */
@@ -31,7 +32,7 @@ export class ExplosiveDashCard extends MoveCard {
         public readonly blast: number,
     ){
         super("Dash explosif", [
-            "Fonce de ", length, "×", AGILITE, " ", DISTANCE, ". S'il percute quoi que ce soit, tout explose à ",
+            WALK.as("Fonce"), " de ", length, "×", AGILITE, " ", DISTANCE, ". S'il percute quoi que ce soit, tout explose à ",
             frenchNumber(radius), "×", PORTEE, " ", DISTANCE, " autour : ", blast, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
             ", sauf toi.",
         ], Rarity.RARE, length, speed)

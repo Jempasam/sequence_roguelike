@@ -13,9 +13,9 @@ import type { Unit } from "../../sim/battle/Unit"
 
 import { colorOf, NOTICE_EDGE } from "../look/colors"
 import { frameSprite } from "../look/FxSprites"
+import type { FxResolved } from "../look/FxSprites"
 import { anchorOf, impactDrawing, strikeDrawings } from "../look/fxDrawings"
 import type { FxDrawing } from "../look/fxDrawings"
-import type { FxAnimation } from "../look/fxAnimation"
 import type { BattleScene, PlayedImpact, PlayedStrike, SceneUnit } from "./BattleScene"
 import { hitboxMetrics } from "../look/hitboxMetrics"
 import { drawSprite, FEET_DROP, modeOf, SPRITE_METER, spriteReach } from "../look/spriteModes"
@@ -97,6 +97,9 @@ const SHADE_MARGIN = 0.1
 
 /** How thick the lines of the grid are, in pixels. */
 const GRID_THICKNESS = 2
+
+/** A blow shown by a picture. */
+type SpriteFx = Extract<FxResolved, { kind: "sprite" }>
 
 /** A rectangle of the world, in pixels. */
 export interface WorldRect {
@@ -546,7 +549,7 @@ export class BoardView {
             ? strikeDrawings(shown.animation, strike.placement, shown.sprite, strike.share, strike.seed)
             : null
         if(shown.kind === "sprite" && drawings){
-            for(const drawing of drawings) this.#drawFx(painter, shown.sprite, shown.animation, drawing)
+            for(const drawing of drawings) this.#drawFx(painter, shown, drawing)
             return
         }
         painter.setTint(this.#faded.set(1, 1, 1, STRIKE_ALPHA * (1 - strike.share)))
@@ -557,18 +560,24 @@ export class BoardView {
     #drawImpact(painter: Painter, impact: PlayedImpact): void {
         const { shown } = impact
         const drawing = impactDrawing(shown.animation, impact.at, impact.forward, impact.scale, shown.sprite, impact.share)
-        this.#drawFx(painter, shown.sprite, shown.animation, drawing)
+        this.#drawFx(painter, shown, drawing)
     }
 
-    /** One drawing of a blow: the frame of its picture, held by its pixel, turned and stretched to its size. */
-    #drawFx(painter: Painter, picture: Sprite, animation: FxAnimation, drawing: FxDrawing): void {
-        const frame = frameSprite(picture, animation.frames, drawing.frame)
+    /**
+     * One drawing of a blow: the frame of its picture, held by its pixel, turned and stretched to its size. A
+     * coloration gives the picture its hue: its light and saturation stay, so what is white stays white.
+     */
+    #drawFx(painter: Painter, shown: SpriteFx, drawing: FxDrawing): void {
+        const { sprite, animation, coloration } = shown
+        const frame = frameSprite(sprite, animation.frames, drawing.frame)
         const [lengthPixels, widthPixels] = [animation.length ?? frame.width, animation.width ?? frame.height]
         const [anchorX, anchorY] = anchorOf(animation, frame)
         const [x, y] = this.#pixels(new Vector2(drawing.x, drawing.y))
         painter.push()
         painter.setBlend(animation.blend)
-        painter.setTint(this.#faded.set(1, 1, 1, drawing.alpha))
+        const [r, g, b] = coloration ?? [1, 1, 1]
+        painter.setTint(this.#faded.set(r, g, b, drawing.alpha))
+        if(coloration) painter.setColorMode("hue")
         painter.translate(x, y)
         painter.rotate(drawing.angle)
         painter.scale(drawing.length * this.#meter / lengthPixels, drawing.width * this.#meter / widthPixels)

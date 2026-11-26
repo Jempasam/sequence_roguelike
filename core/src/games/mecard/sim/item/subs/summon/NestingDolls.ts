@@ -1,4 +1,5 @@
-import { HEART, INVOCATION } from "../../../base/keywords"
+import { HEART } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import type { Unit } from "../../../battle/Unit"

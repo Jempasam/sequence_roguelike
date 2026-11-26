@@ -31,7 +31,10 @@ export interface FightStage {
     /** The random numbers of the run. */
     readonly rng: Rng
 
-    /** How hard the floor is, from 1: a monster has one more heart for each level past the first. */
+    /**
+     * How hard the floor is, from 1: past the first, a monster has one more heart for each level, and the
+     * monsters and the kits play more cards and carry copies of the power.
+     */
     readonly level: number
 
     /** The row of the map the place lies in, from 0. */

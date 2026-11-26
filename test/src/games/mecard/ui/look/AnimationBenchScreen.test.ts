@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { visual } from "@game/core/mecard"
+import { Vector2, visual } from "@game/core/mecard"
 import { AnimationBenchScreen } from "@game/core/mecard/animation-bench"
 import { DEFAULT_LOOK } from "@game/core/mecard/sprite-look"
 import type { UnitSprites } from "@game/core/mecard/unit-sprites"
@@ -121,6 +121,34 @@ describe("AnimationBenchScreen", () => {
         game.bench.play()
         await settled()
         expect(game.bench.progress).toBe(0)
+    }, 20000)
+
+    test.each(["Croix", "Croix en X"])("the shape %s chosen → two bars ending just past the reach", name => {
+        const { bench } = opened()
+        bench.showShape(name)
+        const areas = bench.areasFrom(Vector2.ZERO, Vector2.RIGHT)
+        expect(areas).toHaveLength(2)
+        const farthest = Math.max(...areas.flatMap(area => area.map(point => point.x)))
+        expect(farthest).toBeGreaterThanOrEqual(1.3)
+        expect(farthest).toBeLessThan(1.6)
+    })
+
+    test.each(["Croix", "Croix en X"])("%s struck, the loop off → both bars played in turn, then over", async name => {
+        const game = opened()
+        game.bench.toggleLoop()
+        game.bench.showShape(name)
+        await settled()
+        let plays = 1
+        let was = 0
+        for(let step = 0; step < 120; step++){
+            await frame(game, 0.05)
+            const { progress } = game.bench
+            if(progress !== null && progress < was) plays++
+            was = progress ?? was
+        }
+        expect(plays).toBe(2)
+        expect(game.bench.progress).toBeNull()
+        expect(game.reported).toEqual([])
     }, 20000)
 
     test("a bench never shown → no blow played", async() => {

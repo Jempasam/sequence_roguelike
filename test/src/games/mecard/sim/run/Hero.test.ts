@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     allyOf, AMULET, baseOf, foeOf, GOBLIN, GREEN_HEART, Heart, heroOf, LANCER_KIT, merged, monsterHearts,
-    RED_HEART, SHIELD_GUARD, SHIELD_HEART, statsOf, SWORDSMAN_KIT, WHETSTONE,
+    POWER, RED_HEART, SHIELD_GUARD, SHIELD_HEART, statsOf, SWORDSMAN_KIT, WHETSTONE,
 } from "@game/core/mecard"
 
 // --- Tests ---
@@ -23,6 +23,23 @@ describe("foeOf", () => {
         expect(foe.hearts).toHaveLength(GOBLIN.hearts + 2)
         expect(baseOf(foe, "draw")).toBe(GOBLIN.draw)
         expect(baseOf(foe, "ordered")).toBe(true)
+    })
+
+    test("a goblin at level 5 → twice its draw and chain, its loop twice in its deck, two copies of the power", () => {
+        const foe = foeOf(GOBLIN, "Gobelin", 5)
+        expect(baseOf(foe, "draw")).toBe(2 * GOBLIN.draw)
+        expect(baseOf(foe, "firstDraw")).toBe(2 * GOBLIN.draw)
+        expect(baseOf(foe, "chainSize")).toBe(2 * GOBLIN.draw)
+        expect(baseOf(foe, "handSize")).toBe(16)
+        expect(foe.decks).toEqual([[...GOBLIN.cards, ...GOBLIN.cards]])
+        expect(foe.items).toEqual([...GOBLIN.items ?? [], POWER, POWER])
+    })
+
+    test("a goblin at level 1 → its own loop and items", () => {
+        const foe = foeOf(GOBLIN, "Gobelin")
+        expect(foe.decks).toEqual([GOBLIN.cards])
+        expect(foe.items).toEqual([...GOBLIN.items ?? []])
+        expect(baseOf(foe, "handSize")).toBe(8)
     })
 })
 

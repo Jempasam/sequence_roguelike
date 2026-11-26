@@ -9,8 +9,10 @@ import { Rarity } from "../../Rarity"
 import { ActionCard } from "../ActionCard"
 import { MergedCard } from "../composite/MergedCard"
 import { TURN_AROUND } from "../modifier/Wrappers"
-import { TRAVEL_SLACK, travel, WALK_SPEED } from "../tools/playing"
 import * as Previews from "../../../battle/preview/Previews"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
+
 /** How many strides the arc of the catalog takes. */
 const ARC_STRIDES = 6
 
@@ -49,8 +51,8 @@ const ARC: Action = {
         const length = ARC_STRIDE_LENGTH * ctx.unit.stats.move.value
         for(const heading of headings(ctx.unit.direction)){
             if(!ctx.unit.alive) return
-            const gone = travel(ctx, heading, length, WALK_SPEED)
-            if(gone.distance < length - TRAVEL_SLACK) return
+            const gone = Walk.travel(ctx, heading, length, Walk.WALK_SPEED)
+            if(gone.distance < length - Walk.TRAVEL_SLACK) return
         }
     },
     preview: ({ battle, unit, pose }) => {
@@ -59,10 +61,10 @@ const ARC: Action = {
         const indicators: Indicator[] = []
         let at: Pose = pose
         for(const heading of headings(pose.direction)){
-            const travelled = battle.moveSpot(unit, at.position, heading, length)
+            const travelled = Walk.spot(battle, unit, at.position, heading, length)
             at = { position: travelled.to, direction: heading }
             points.push(travelled.to)
-            if(travelled.distance < length - TRAVEL_SLACK){
+            if(travelled.distance < length - Walk.TRAVEL_SLACK){
                 indicators.push(Previews.label(travelled.to, "bloqué", NOTE_COLOR))
                 break
             }
@@ -73,7 +75,7 @@ const ARC: Action = {
 }
 
 export const ARC_STEP = new ActionCard("Avancer en arc", [
-    "Avance de ", frenchNumber(ARC_DISTANCE), "×", AGILITE, " ", DISTANCE,
+    WALK.as("Avance"), " de ", frenchNumber(ARC_DISTANCE), "×", AGILITE, " ", DISTANCE,
     " droit devant, en demi-cercle : part vers la gauche, sans tourner. S'arrête au premier obstacle.",
 ], Rarity.RARE, ARC)
 

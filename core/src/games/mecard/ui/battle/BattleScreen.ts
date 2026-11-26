@@ -2,7 +2,7 @@ import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
-import type { Animation, Layer, Theme, UiRoot } from "../../../../engine/ui"
+import type { UiAnimation, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import { Scope } from "../../../../lifetime"
 import { eventText } from "../../sim/battle/events"
@@ -529,7 +529,7 @@ export class BattleScreen implements HudHost {
         const battle = this.#engine
         this.#observers.remove()
         // The replay holds on a card played, or refused, while paused.
-        const holds: Holds = new Map<AnyObservable, Animation>([
+        const holds: Holds = new Map<AnyObservable, UiAnimation>([
             [battle.signals.cardActivated, this.#playControl.gate()],
             [battle.signals.cardInvalid, this.#playControl.gate()],
         ])

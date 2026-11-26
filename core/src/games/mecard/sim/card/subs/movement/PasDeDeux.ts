@@ -7,6 +7,11 @@ import { aimedCone, closestInCone, LONG_CONE_RANGE, NARROW_COS_HALF } from "../t
 import { hold, SHORT_TIME, wait } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import { SWAPPING } from "../../../battle/mecanic/swap/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Leap from "../../../battle/mecanic/leap"
+import * as Swap from "../../../battle/mecanic/swap"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** How long the dancers take to cross, in seconds. */
 const DANCE_TIME = 0.15
@@ -34,11 +39,11 @@ function dancing(range: number, cosHalf: number): Action {
             hold(battle, DANCE_TIME, [...aimedCone(unit, unit, range, cosHalf, partner, NOBODY), ...crossing])
             const mine = unit.direction
             const theirs = partner.direction
-            if(!battle.swap(unit, partner)) return
-            battle.unblock(unit)
-            battle.unblock(partner)
-            battle.turn(unit, theirs)
-            battle.turn(partner, mine)
+            if(!Swap.swap(battle, unit, partner)) return
+            Leap.unblock(battle, unit)
+            Leap.unblock(battle, partner)
+            Turn.turn(battle, unit, theirs)
+            Turn.turn(battle, partner, mine)
             wait(battle, DANCE_TIME)
         },
         preview: ({ battle, unit, pose }) => {
@@ -57,6 +62,6 @@ function dancing(range: number, cosHalf: number): Action {
 }
 
 export const PAS_DE_DEUX = new ActionCard("Pas de deux", [
-    "Échange ta place et ton orientation avec l'", UNIT, " la plus proche, alliée ou ennemie, dans un cône étroit ",
+    SWAPPING.as("Échange ta place"), " et ton ", TURN.as("orientation"), " avec l'", UNIT, " la plus proche, alliée ou ennemie, dans un cône étroit ",
     "et long devant, jusqu'à ", PAS_DE_DEUX_RANGE, " ", DISTANCE, ".",
 ], Rarity.RARE, dancing(PAS_DE_DEUX_RANGE, NARROW_COS_HALF))

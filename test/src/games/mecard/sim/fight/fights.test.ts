@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest"
 import {
     AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_AMBUSH, GHOST_FIGHT, isGhostFight, historyEntry, ghostOfEntry,
     fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, Run, SWORDSMAN_KIT, Vector2,
+    baseOf, POWER,
 } from "@game/core/mecard"
 import type { FightType, Ghost, Visual } from "@game/core/mecard"
 import { startedRun } from "../../../../fixtures/startedRun"
@@ -108,6 +109,23 @@ describe("a fight made", () => {
         expect(foes.map(unit => unit.name)).toEqual([SWORDSMAN_KIT.name, ARCHER_KIT.name])
         for(const foe of foes) expect(typeof foe.controller).toBe("object")
         expect(foes[0].controller).not.toBe(foes[1].controller)
+    })
+
+    test("a fight against kits on the fourth floor → its foes draw more cards and carry the power", () => {
+        const run = startedRun(1)
+        run.travel.enterFloor(ALL_FLOORS[0].create(4))
+        const type = new KitFightType({
+            id: "test-kits", name: "Aventuriers", description: "Un kit.", icon: BATTLE.icon, category: AGGRESSION,
+            kits: [SWORDSMAN_KIT],
+        })
+        const { battle } = type.create(run, AT)
+        const foe = battle.units.find(unit => unit.team === run.monstersTeam)!
+        expect(foe.stats.draw.value).toBe(4)
+        expect(foe.stats.chainSize.value).toBe(7)
+        expect(foe.items.filter(item => item === POWER)).toHaveLength(1)
+        for(const hero of battle.units.filter(unit => unit.team === run.heroesTeam)){
+            expect(hero.items).not.toContain(POWER)
+        }
     })
 
     test("a fight → hears the level of the floor and its layer", () => {
@@ -331,6 +349,17 @@ describe("the ghost fight", () => {
         const foes = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
         expect(foes.map(unit => unit.name)).toEqual(run.ghosts[0].party().map(hero => hero.name))
         expect(run.heroes).toHaveLength(2)
+    })
+
+    test("made on a high floor → the ghosts stand as they fell, with no power", () => {
+        const run = startedRun(1, undefined, undefined, [ghostOf(2)])
+        run.travel.enterFloor(ALL_FLOORS[0].create(9))
+        run.travel.depth = 2
+        const fight = GHOST_FIGHT.create(run, { layer: 5, across: 0.5 })
+        const foes = fight.battle.units.filter(unit => unit.team === run.monstersTeam)
+        expect(foes.length).toBeGreaterThan(0)
+        for(const foe of foes) expect(foe.items).not.toContain(POWER)
+        expect(foes.map(foe => foe.stats.draw.base)).toEqual(run.ghosts[0].party().map(hero => baseOf(hero, "draw")))
     })
 
     test("made as a fight → the chains of the ghosts are shown, hidden as an ambush", () => {

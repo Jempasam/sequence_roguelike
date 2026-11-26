@@ -48,7 +48,7 @@ describe("BattleAnimations, the strikes", () => {
         const { on, hero, scene, replay } = watched()
         const animation = { ...defaultAnimation("sweep"), duration: 0.6 }
         replay.animations.resolveFx = () => ({
-            kind: "sprite", key: "slash", sprite: {} as never, animation, rank: 0,
+            kind: "sprite", key: "slash", sprite: {} as never, animation, coloration: null, rank: 0,
         })
         on.strike(hero, Areas.arc(hero.position, hero.direction, 2, 0.5), 1, DamageType.PHYSICAL, () => 1, visual("slash"))
         await replay.frame(0)
@@ -108,8 +108,8 @@ describe("BattleAnimations, the strikes", () => {
         const sweep = { ...defaultAnimation("sweep"), impact: "impact" }
         const hit = { ...defaultAnimation("hit"), duration: 0.3 }
         replay.animations.resolveFx = look => look?.visual === "impact"
-            ? { kind: "sprite", key: "impact", sprite: {} as never, animation: hit, rank: 0 }
-            : { kind: "sprite", key: "slash", sprite: {} as never, animation: sweep, rank: 0 }
+            ? { kind: "sprite", key: "impact", sprite: {} as never, animation: hit, coloration: null, rank: 0 }
+            : { kind: "sprite", key: "slash", sprite: {} as never, animation: sweep, coloration: null, rank: 0 }
         on.strike(hero, Areas.arc(hero.position, hero.direction, 2, 0.5), 1, DamageType.PHYSICAL, () => 1, visual("slash"))
         await replay.frame(0)
         await replay.frame(sweep.duration + 0.05)
@@ -117,5 +117,23 @@ describe("BattleAnimations, the strikes", () => {
         expect(scene.impacts[0].scale).toBeCloseTo(1)
         await replay.played()
         expect(scene.impacts).toHaveLength(0)
+    })
+
+    test("a tinted blow naming an impact → the impact asked in the same hue", async() => {
+        const { on, hero, replay } = watched()
+        const sweep = { ...defaultAnimation("sweep"), impact: "impact" }
+        const asked: unknown[] = []
+        replay.animations.resolveFx = look => {
+            asked.push([look?.visual, look?.coloration])
+            return {
+                kind: "sprite", key: "slash", sprite: {} as never, animation: sweep,
+                coloration: look?.coloration ?? null, rank: 0,
+            }
+        }
+        const red = visual("slash", { coloration: [1, 0, 0] })
+        const area = Areas.arc(hero.position, hero.direction, 2, 0.5)
+        on.strike(hero, area, 1, DamageType.PHYSICAL, () => 1, red)
+        await replay.played()
+        expect(asked).toEqual([["slash", [1, 0, 0]], ["impact", [1, 0, 0]]])
     })
 })

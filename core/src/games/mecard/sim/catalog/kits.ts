@@ -32,6 +32,7 @@ import {
     SCARIFICATION, PLAGUE_MASK, AUTOPSY, WHIP, LURE, MUZZLE, TREAT, STUFFING_PAD, TROPHY,
     CHESS_AIM,
     PLAYED_BY_ALL,
+    PUSH,
 } from "../card/subs"
 import {
     BACK_EYES, ALEMBIC, BOOTS, BLOOD_PACT, CHIPPED_BLADE, DEMON_FANG, DODGE_SCEPTER, DOLL, ECHO_ITEM, ELEMENT_BAG,
@@ -501,7 +502,7 @@ export const SWAMP_SORCERER_KIT: Kit = {
 export const GEOMANCER_KIT: Kit = {
     name: "Géomancien",
     sprite: visual("units/geomancer"),
-    cards: deckAround(SPELL, STONE, STONE, SMALL_SPELL, QUAKE_SEISM, STONE_WALL, SAND_CARD, MAGNETITE_CARD),
+    cards: deckAround(SPELL, STONE, PUSH, CONJURATION, QUAKE_SEISM, STONE_WALL, SAND_CARD, MAGNETITE_CARD),
     items: [],
     usables: [SHIELD_FLASK],
     hearts: [reds(5)],

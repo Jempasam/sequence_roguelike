@@ -10,6 +10,7 @@ import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { BATTLE_ROUND } from "../../base/keywords"
+import * as Walk from "../../battle/mecanic/walk"
 
 /** How far a unit is flown, as a multiple of the distance that parts it from the slingshot. */
 export const SLINGSHOT_FACTOR = 2
@@ -59,7 +60,7 @@ export class SlingshotPull extends AbstractProcess {
             const way = toward.normalized
             if(way){
                 const asked = toward.length * SLINGSHOT_FACTOR
-                const trip = battle.move(unit, way, asked, true)
+                const trip = Walk.move(battle, unit, way, asked, true)
                 if(trip.struck) hit(battle, unit, trip.struck, way, asked, asked - trip.distance)
             }
         }
@@ -72,7 +73,7 @@ export class SlingshotPull extends AbstractProcess {
  * every meters it cut short, from either flight.
  */
 function hit(battle: Battle, unit: Unit, struck: Unit, way: Vector2, asked: number, cut: number): void {
-    const pushed = battle.move(struck, way, asked, true)
+    const pushed = Walk.move(battle, struck, way, asked, true)
     const hearts = Math.floor((cut + (asked - pushed.distance)) / SLINGSHOT_METERS_PER_HEART)
     if(hearts <= 0) return
     struck.hearts.damage(hearts, DamageType.PHYSICAL, unit)

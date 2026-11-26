@@ -81,8 +81,8 @@ un combattant s'écrit dans --match, comme une source.
 
 élément
   Carte, Carte*N       cartes, dans l'ordre du deck ("Coup d'épée*2")
-  item:Nom[*N]         objet de départ (kit seulement)
-  usable:Nom[*N]       usable de départ (kit seulement)
+  item:Nom[*N]         objet de départ (kit ou monstre)
+  usable:Nom[*N]       usable de départ (kit ou monstre)
   @Base                part d'un kit ou monstre du jeu (@kit:X, @monster:X si ambigu)
   -Carte  -item:Nom  -usable:Nom   (avec *N)   retire un élément hérité de @Base
   heart:Type[*N]       N cœurs de ce type, dans l'ordre donné : rouge (le seul d'un monstre), rose, noir… ;

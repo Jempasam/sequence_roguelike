@@ -18,8 +18,9 @@ import { ROOTED } from "../../../status/subs/Rooted"
 import { Rarity } from "../../Rarity"
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { shoveNow } from "../tools/shoving"
 import { ahead, nearest, onFirstAhead, onSelf, ring } from "../tools/targeting"
+import * as Pushing from "../../../battle/mecanic/push"
+import * as Summons from "../../../battle/mecanic/summon"
 
 /** Reaches, in meters, of the blows and the lines of the cards of this file. */
 const AUTOPSY_LENGTH = 1.1 - UNIT_RADIUS
@@ -64,7 +65,7 @@ function blowing(length: number, after: Aftermath, what: string): Action {
 
 /** The bodies of a unit that are stuffed and still stand. */
 function stuffedBodies(battle: Battle, owner: Unit): Unit[] {
-    return battle.summonsOf(owner).filter(body => isStuffed(body) && body.alive)
+    return Summons.summonsOf(battle, owner).filter(body => isStuffed(body) && body.alive)
 }
 
 export const AUTOPSY = new ActionCard("Autopsie", [
@@ -92,7 +93,8 @@ export const LURE = new ActionCard("Appeau", [
     const toward = unit.position.minus(caught.position).normalized
     if(!toward) return
     const gap = caught.position.distance(unit.position)
-    shoveNow(battle, unit, caught, toward, prey ? Math.max(0, gap - LURE_NEAR - UNIT_RADIUS) : LURE_FAR)
+    const distance = prey ? Math.max(0, gap - LURE_NEAR - UNIT_RADIUS) : LURE_FAR
+    Pushing.shove({ battle, by: unit, target: caught, direction: toward, distance, atOnce: true })
 }, "appeau"))
 
 export const MUZZLE = new ActionCard("Muselière", [

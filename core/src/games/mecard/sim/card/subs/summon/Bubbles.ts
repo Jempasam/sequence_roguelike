@@ -1,6 +1,6 @@
 import { joinText } from "../../../../../../semantic"
 import type { Text } from "../../../../../../semantic"
-import { INVOCATION } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { visual } from "../../../base/Visual"
 import type { Visual, VisualColor } from "../../../base/Visual"
 import type { Action } from "../../../battle/Action"

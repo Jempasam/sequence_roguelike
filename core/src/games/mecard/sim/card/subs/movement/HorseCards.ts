@@ -13,7 +13,10 @@ import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
 import { whileMoving } from "../modifier/Impacts"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { shove } from "../tools/shoving"
+import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../../battle/mecanic/push/shove"
+import type { ViolentShove } from "../../../battle/mecanic/push/violent"
+import * as Pushing from "../../../battle/mecanic/push"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -51,7 +54,7 @@ export const STRIDE = new ModifierCard("Foulée", [
     const brushed = ctx.battle.fetch(Areas.line(move.from.position, move.to.position, BRUSH_REACH * 2), ctx.unit)
     for(const other of brushed){
         if(other.team === ctx.unit.team) ctx.battle.applyStatus(other, DODGE, BRUSH_DODGE)
-        else shove({ battle: ctx.battle, by: ctx.unit, target: other, direction: way.right, distance: BRUSH_SHOVE })
+        else Pushing.shove({ battle: ctx.battle, by: ctx.unit, target: other, direction: way.right, distance: BRUSH_SHOVE })
     }
 }))
 
@@ -76,7 +79,7 @@ export const SHY_AWAY = new ActionCard("Écart", [
             hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne en vue", NOTE_COLOR)])
             return
         }
-        shove({ battle, by: unit, target, direction: unit.direction.right, distance: SHY_SHOVE })
+        Pushing.shove({ battle, by: unit, target, direction: unit.direction.right, distance: SHY_SHOVE })
         hold(battle, SHORT_TIME)
     },
     preview: ({ battle, unit, pose }) => {
@@ -91,15 +94,29 @@ function kickArea(unit: Unit, pose: Pose) {
     return Areas.line(from, from.minus(pose.direction.times(KICK_REACH * unit.stats.meleeRange.value)), KICK_WIDTH)
 }
 
+/** The violent push a kick gives what it lands on, from a pose: backward, the unit that kicks staying. */
+function kicked(battle: Battle, unit: Unit, pose: Pose, target: Unit): ViolentShove {
+    return {
+        battle, by: unit, target, direction: pose.direction.opposite, distance: KICK_SHOVE, damage: PUSH_DAMAGE,
+    }
+}
+
 export const KICK = new ActionCard("Ruade", [
     "Frappe l'", UNIT, " juste derrière toi, à ", KICK_REACH, " ", DISTANCE, " : ", KICK_DAMAGE, "+", FORCE, " ",
-    DamageType.PHYSICAL, ", et la repousse de ", KICK_SHOVE, " ", DISTANCE, ".",
+    DamageType.PHYSICAL, ", et la ", VIOLENT_PUSH.as("pousse violemment"), " de ", KICK_SHOVE, " ", DISTANCE, ". Choc : ",
+    PUSH_DAMAGE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.COMMON, {
     use: function ({ battle, unit }){
         const kick = KICK_DAMAGE + unit.stats.strength.value
         const hit = battle.strike(unit, kickArea(unit, unit), kick, DamageType.PHYSICAL, () => 1, SMASH_LOOK)
-        for(const target of hit) shove({ battle, by: unit, target, direction: unit.direction.opposite, distance: KICK_SHOVE })
+        for(const target of hit) Pushing.shoveViolently(kicked(battle, unit, unit, target))
         hold(battle, SHORT_TIME)
     },
-    preview: ({ unit, pose }) => Previews.still(pose, Previews.polygon(kickArea(unit, pose), PHYSICAL_COLOR)),
+    preview: ({ battle, unit, pose }) => {
+        const area = kickArea(unit, pose)
+        const pushes = battle.fetch(area, unit).flatMap(target => {
+            return Pushing.violentShoveShown(battle, kicked(battle, unit, pose, target))
+        })
+        return Previews.still(pose, Previews.polygon(area, PHYSICAL_COLOR), ...pushes)
+    },
 })

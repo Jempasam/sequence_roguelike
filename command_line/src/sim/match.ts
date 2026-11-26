@@ -159,7 +159,7 @@ function definedInPlace(kind: "kit"|"pet"|"monster", inner: string, text: string
         throw new UsageError(`${label} : ${kind}(…) demande size:N, la taille de la chaîne, et le deck en entier dans l'ordre où il se joue.`)
     }
     reading.names.add(made.name)
-    return monsterFighter(made, kind, true)
+    return monsterFighter(made, kind, true, made.usables)
 }
 
 function groupOf(text: string, reading: Reading): Source|null {

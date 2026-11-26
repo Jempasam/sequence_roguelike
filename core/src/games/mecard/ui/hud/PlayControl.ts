@@ -1,4 +1,4 @@
-import type { Animation, FrameClock } from "../../../../engine/ui"
+import type { UiAnimation, FrameClock } from "../../../../engine/ui"
 
 /** How a replay plays: stopped, slowly, a bit slower than its pace, at its pace, or at once. */
 export type PlayMode = "pause"|"slow"|"calm"|"play"|"fast"
@@ -46,7 +46,7 @@ export class PlayControl {
     }
 
     /** An animation that stops the replay a while: 2 seconds slow, half a second playing or paused, no time fast. */
-    public speed(): Animation {
+    public speed(): UiAnimation {
         return async() => {
             const epoch = this.#epoch
             let share = 0
@@ -60,7 +60,7 @@ export class PlayControl {
     }
 
     /** An animation that holds the replay while paused, until the pause is left or a step is asked. */
-    public gate(): Animation {
+    public gate(): UiAnimation {
         return async() => {
             const epoch = this.#epoch
             while(this.#mode === "pause" && epoch === this.#epoch){

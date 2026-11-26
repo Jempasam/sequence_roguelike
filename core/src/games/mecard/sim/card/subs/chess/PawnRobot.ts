@@ -1,4 +1,7 @@
-import { CARTE, DISTANCE, BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
+import { CARTE, DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../../battle/mecanic/summon/summon"
+import * as Summons from "../../../battle/mecanic/summon"
 import { visual } from "../../../base/Visual"
 import type { Action } from "../../../battle/Action"
 import { SummonedHearts } from "../../../battle/words"
@@ -10,7 +13,6 @@ import type { Module } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
-import { SUMMON_AHEAD, summonSpot, summoning } from "../tools/playing"
 import { PLAYED_BY_LAST } from "./ChessCards"
 
 /** How many shield hearts the small robot lives by, before the summoning of the unit. */
@@ -40,8 +42,8 @@ export class PawnRobotCard extends AbstractCard<Action, Module> {
 
 
     public get(module: Module): Action {
-        return summoning(
-            (unit, pose) => [summonSpot(unit, pose)],
+        return Summons.summoning(
+            (unit, pose) => [Summons.summonSpot(unit, pose)],
             (unit, battle) => ({
                 sprite: visual("units/robot"), name: "Petit robot",
                 hearts: () => Heart.many(SHIELD_HEART, ROBOT_HEARTS + unit.stats.summon.value),

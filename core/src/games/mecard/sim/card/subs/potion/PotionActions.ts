@@ -19,9 +19,11 @@ import { ACTION, POTION } from "../../CardType"
 import { Rarity } from "../../Rarity"
 
 import { AbstractCard } from "../AbstractCard"
-import { flight, hold, SHORT_TIME, SUMMON_AHEAD, summonAt, summonShows, summonSpot, wait } from "../tools/playing"
-import { summonedHearts } from "../summon/SummonCard"
-import { ALCHEMY, DISTANCE, INVOCATION, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { flight, hold, SHORT_TIME, wait } from "../tools/playing"
+import { ALCHEMY, DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../../battle/mecanic/summon/summon"
+import * as Summons from "../../../battle/mecanic/summon"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -183,14 +185,15 @@ export class BarrelCard extends PotionActionCard {
 
 
     protected pouring({ battle, unit }: UnitContext, dose: Dose, level: number): void {
-        summonAt(battle, unit, [summonSpot(unit, unit, SUMMON_AHEAD)], {
-            sprite: visual("units/barrel"), name: "Tonneau", hearts: () => summonedHearts(unit, BARREL_HALVES), fleeting: true,
+        Summons.summonAt(battle, unit, [Summons.summonSpot(unit, unit, SUMMON_AHEAD)], {
+            sprite: visual("units/barrel"), name: "Tonneau",
+            hearts: () => Summons.summonedHearts(unit, BARREL_HALVES), fleeting: true,
         }, barrel => battle.applyStatus(barrel, barrelOf(dose), Math.abs(level)))
         wait(battle, SHORT_TIME)
     }
 
     protected shows(battle: Battle, unit: Unit, pose: Pose, dose: Dose): Indicator[] {
-        return summonShows(battle, unit, [summonSpot(unit, pose, SUMMON_AHEAD)], 1, at => [
+        return Summons.summonShows(battle, unit, [Summons.summonSpot(unit, pose, SUMMON_AHEAD)], 1, at => [
             shown(dose, Areas.circle(at, SPLASH_RADIUS)),
         ])
     }

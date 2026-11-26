@@ -46,6 +46,16 @@ describe("resolveFx", () => {
         expect(found).toMatchObject({ key: "slash_fly", animation: SWEEP })
     })
 
+    test("a tinted blow → its hue given to the picture found, a variant for a tag included", () => {
+        const red = visual("slash", { coloration: [1, 0, 0] })
+        const found = resolveFx(shelf({ slash: SWEEP, slash_ghost: STAB }), red, ["ghost"])
+        expect(found).toMatchObject({ key: "slash_ghost", coloration: [1, 0, 0] })
+    })
+
+    test("a blow without a hue → its picture drawn as it is", () => {
+        expect(resolveFx(shelf({ slash: SWEEP }), visual("slash"), [])).toMatchObject({ coloration: null })
+    })
+
     test("a picture without any animation → drawn from the area, never an error", () => {
         expect(resolveFx(shelf({ slash: null }), visual("slash"), [])).toEqual({ kind: "vector", rank: 1 })
         expect(resolveFx(shelf({}), visual("slash"), ["fly"])).toEqual({ kind: "vector", rank: 2 })

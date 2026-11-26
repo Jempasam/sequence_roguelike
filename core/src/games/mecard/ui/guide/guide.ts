@@ -2,9 +2,12 @@ import { Label } from "../../../../engine/ui"
 import { concat } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import {
-    AGILITE, ALCHEMY, ALLONGE, CARTE, COMPOSITE, DECK, FIGHT, FORCE, FUSION, GOLD, HALT, HEAL, HEART, INVOCATION, ITEM,
+    AGILITE, ALCHEMY, ALLONGE, CARTE, COMPOSITE, DECK, FIGHT, FORCE, FUSION, GOLD, HALT, HEAL, HEART, ITEM,
     FLOOR, MONSTER, PORTEE, PRECISION, REWARD, SUMMON_STAT, SUPPRESSION, UNIT,
 } from "../../sim/base/keywords"
+import { VIOLENT_PUSH } from "../../sim/battle/mecanic/push/keyword"
+import { INVOCATION } from "../../sim/battle/mecanic/summon/keyword"
+import { TURN } from "../../sim/battle/mecanic/turn/keyword"
 import { HeartCount } from "../../sim/battle/words"
 import { LIGHTNING_ELEMENT } from "../../sim/element/subs/Lightning"
 import { FIRE_ELEMENT } from "../../sim/element/subs/Fire"
@@ -244,7 +247,7 @@ export const GUIDE: readonly GuideBlock[] = [
     heading("Tout est relatif à l'orientation"),
     paragraph(concat(
         "Les unités peuvent faire face à n'importe quelle direction. Toutes les actions sont relatives à cette ",
-        "orientation, au moment où elles se jouent. Si on te fait pivoter (charme, peur, poussée), tout le reste de ta ",
+        "orientation, au moment où elles se jouent. Si on te fait ", TURN, " (charme, peur), tout le reste de ta ",
         "chaîne part dans l'autre sens. C'est ce qui rend ", CHARMER, " et ", EFFRAYER, " si forts.",
     )),
     paragraph(concat(
@@ -277,6 +280,11 @@ export const GUIDE: readonly GuideBlock[] = [
         "Un déplacement va aussi loin qu'il peut : il s'arrête au premier mur, pilier ou corps. Les disques pâles au "
         + "sol montrent la taille réelle de chaque corps, pour juger les distances.",
     ),
+    paragraph(concat(
+        "Une ", VIOLENT_PUSH, " ne s'arrête pas là : l'", UNIT, " stoppée blesse celle qu'elle heurte, se blesse, ",
+        "et la pousse à son tour de la même distance, dans l'axe du choc. Heurtée de biais, elle part de biais : ",
+        "comme au billard.",
+    )),
 
     //// 7. Hearts ////
     heading("Les cœurs"),

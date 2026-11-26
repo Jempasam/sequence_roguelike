@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import {
     CHARGED_SHOT, CROSS_CUT, DEATH_SCYTHE, DEMON_SLASH, DEMONIC, DEMONIC_STRIKE, FISHING, GREAT_THRUST,
-    MACHINE_GUN, QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
+    MACHINE_GUN, POTENTIAL_COLOR, QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
 } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
@@ -98,6 +98,14 @@ describe("MACHINE_GUN and CHARGED_SHOT", () => {
         play(on, [[gunner, chain(MACHINE_GUN)]])
         expect(a.life).toBe(3)
         expect(b.life).toBeLessThan(4)
+    })
+
+    test("machine gun previewed with nobody around → a grey line in each of the eight directions", () => {
+        const on = battle()
+        const gunner = unit(on, 3.5, 3.5)
+        const [root] = chain(MACHINE_GUN).preview(on, gunner)
+        const lines = root.preview?.indicators.filter(indicator => indicator.color === POTENTIAL_COLOR)
+        expect(lines).toHaveLength(8)
     })
 
     test("a charged shot with nothing before it shoots once", () => {

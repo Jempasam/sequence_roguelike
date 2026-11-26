@@ -1,4 +1,5 @@
-import { DISTANCE, INVOCATION } from "../../../base/keywords"
+import { DISTANCE } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { Battle } from "../../../battle/Battle"

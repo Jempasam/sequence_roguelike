@@ -4,7 +4,11 @@ import { Color } from "../../../../engine/math"
 import { Box, Button, Component, EMPTY_HINT, Label, NineSlice, Panel, Slider } from "../../../../engine/ui"
 import type { Layer, SizeHint, Theme, UiRoot } from "../../../../engine/ui"
 import { visual } from "../../sim/base/Visual"
-import type { Visual } from "../../sim/base/Visual"
+import type { Visual, VisualColor } from "../../sim/base/Visual"
+import { spellLook } from "../../sim/card/subs/tools/bolt"
+import { DEMON_SWEEP_LOOK, SHADOW_THRUST_LOOK } from "../../sim/card/subs/tools/blowLooks"
+import { centeredSegment, cross } from "../../sim/card/subs/tools/areas"
+import { BASE_ELEMENTS } from "../../sim/element/reactions"
 import { Vector2 } from "../../sim/base/Vector2"
 import type { Area } from "../../sim/battle/Area"
 import * as Areas from "../../sim/battle/area/Areas"
@@ -50,16 +54,67 @@ const INFO_LINES = 4
 const HEROES = new Team("Bancs")
 const FOES = new Team("Cibles")
 
-/** The shapes of area a blow is tried with: the arc of a sword, a line, a circle around the attacker. */
-/** How an area is made from where the blow starts, where it goes and how far. */
-type AreaMaker = (from: Vector2, forward: Vector2, reach: number) => Area
+/** How the areas of a blow are made from where it starts, where it goes and how far. */
+type AreaMaker = (from: Vector2, forward: Vector2, reach: number) => readonly Area[]
 
-const SHAPES: readonly { readonly name: string, readonly area: AreaMaker }[] = [
-    { name: "Arc de 120°", area: (from, forward, reach) => Areas.arc(from, forward, reach, 0.5) },
-    { name: "Arc de 60°", area: (from, forward, reach) => Areas.arc(from, forward, reach, Math.cos(Math.PI / 6)) },
-    { name: "Ligne", area: (from, forward, reach) => Areas.line(from, from.plus(forward.times(reach)), 0.5) },
-    { name: "Cercle autour", area: (from, _forward, reach) => Areas.circle(from, reach) },
-    { name: "Croissant", area: (from, forward, reach) => Areas.crescent(from, forward, reach * 0.5, reach, 0.5) },
+/** A shape of area a blow is tried with. */
+interface Shape {
+    readonly name: string
+    readonly areas: AreaMaker
+
+    /** Whether each area is a blow of its own, which hurts on its own, or all of them a single one. */
+    readonly apart?: boolean
+}
+
+/** Where the center of the cross lies and how long its bars are, as shares of how far it goes. */
+const CROSS_CENTER = 0.6
+const CROSS_LENGTH = 0.8
+const CROSS_WIDTH = 0.5
+
+/** The width of the branches of the X cross, in meters. */
+const X_WIDTH = 0.4
+
+/** The two branches of an X ahead, each as long as twice the way to their crossing, ending at the reach. */
+function xCross(from: Vector2, forward: Vector2, reach: number): Area[] {
+    const ahead = reach / (1 + Math.SQRT1_2)
+    const center = from.plus(forward.times(ahead))
+    return [
+        centeredSegment(center, forward.eighth(1), 2 * ahead, X_WIDTH),
+        centeredSegment(center, forward.eighth(-1), 2 * ahead, X_WIDTH),
+    ]
+}
+
+/**
+ * The shapes of area a blow is tried with: the arc of a sword, a line, a circle around the attacker, and the
+ * crosses of the cards that strike in one.
+ */
+const SHAPES: readonly Shape[] = [
+    { name: "Arc de 120°", areas: (from, forward, reach) => [Areas.arc(from, forward, reach, 0.5)] },
+    {
+        name: "Arc de 60°",
+        areas: (from, forward, reach) => [Areas.arc(from, forward, reach, Math.cos(Math.PI / 6))],
+    },
+    { name: "Ligne", areas: (from, forward, reach) => [Areas.line(from, from.plus(forward.times(reach)), 0.5)] },
+    { name: "Cercle autour", areas: (from, _forward, reach) => [Areas.circle(from, reach)] },
+    {
+        name: "Croissant",
+        areas: (from, forward, reach) => [Areas.crescent(from, forward, reach * 0.5, reach, 0.5)],
+    },
+    {
+        name: "Croix",
+        areas: (from, forward, reach) => cross(
+            from.plus(forward.times(CROSS_CENTER * reach)), forward, CROSS_LENGTH * reach, CROSS_WIDTH,
+        ),
+    },
+    { name: "Croix en X", areas: xCross, apart: true },
+]
+
+/** The hues a blow is tried with: as it is, those of the cards, then that of each base element. */
+const TINTS: readonly { readonly name: string, readonly coloration: VisualColor|null }[] = [
+    { name: "aucune", coloration: null },
+    { name: "démon", coloration: DEMON_SWEEP_LOOK.coloration },
+    { name: "ombre", coloration: SHADOW_THRUST_LOOK.coloration },
+    ...BASE_ELEMENTS.map(element => ({ name: element.name, coloration: spellLook(element).coloration })),
 ]
 
 /** What the bench hears from the game. */
@@ -74,8 +129,8 @@ export interface AnimationBenchHost {
 /**
  * The bench of the animations of the blows: one blow struck again and again by a unit at another, on a real
  * battle played by the same animations as the game, drawn by the same board. The panel in the top left
- * corner chooses the picture of the blow (none for the area as it is), the units, the shape and the reach
- * of its area, and says which picture was found and how the blow was placed.
+ * corner chooses the picture of the blow (none for the area as it is) and its hue, the units, the shape and
+ * the reach of its area, and says which picture was found and how the blow was placed.
  *
  * @remarks
  * A tool, opened by the console. Nothing it sets is written.
@@ -155,10 +210,10 @@ export class AnimationBenchScreen {
         this.sprites.whenLoaded(() => this.#view.restart())
     }
 
-    /** The picture of the blow tried, none for the area as it is. */
+    /** The picture of the blow tried, in the hue chosen, none for the area as it is. */
     public get blow(): Visual|null {
         const key = this.#blows[this.#blow]
-        return key === null ? null : visual(key)
+        return key === null ? null : visual(key, { coloration: TINTS[this.#tint].coloration })
     }
 
     /** The unit that strikes. */
@@ -167,10 +222,21 @@ export class AnimationBenchScreen {
     /** The unit struck. */
     public get target(): Visual { return this.#units[this.#target] }
 
-    /** The area of the blow, from where the attacker stands. */
-    public areaFrom(from: Vector2, forward: Vector2): Area {
-        return SHAPES[this.#shape].area(from, forward, this.#reach.value)
+    /** Try the blow with a shape of area, named as the panel says it: no change for an unknown name. */
+    public showShape(name: string): void {
+        const index = SHAPES.findIndex(shape => shape.name === name)
+        if(index < 0) return
+        this.#shape = index
+        this.#changed()
     }
+
+    /** The areas of the blow, from where the attacker stands. */
+    public areasFrom(from: Vector2, forward: Vector2): readonly Area[] {
+        return SHAPES[this.#shape].areas(from, forward, this.#reach.value)
+    }
+
+    /** Whether each area of the blow is struck on its own. */
+    public get apart(): boolean { return SHAPES[this.#shape].apart ?? false }
 
     /** How far the target stands from the attacker, in meters. */
     public get distance(): number { return this.#distance.value }
@@ -195,10 +261,12 @@ export class AnimationBenchScreen {
     readonly #units: readonly Visual[]
     readonly #view: BenchView
     #blow = 0
+    #tint = 0
     #attacker = 0
     #target = 0
     #shape = 0
     #blowLabel!: Label
+    #tintLabel!: Label
     #attackerLabel!: Label
     #targetLabel!: Label
     #shapeLabel!: Label
@@ -245,6 +313,10 @@ export class AnimationBenchScreen {
         column.add(this.#state)
         this.#blowLabel = this.#cycle(column, this.#blows.length, () => this.#blow, index => {
             this.#blow = index
+            this.#changed()
+        })
+        this.#tintLabel = this.#cycle(column, TINTS.length, () => this.#tint, index => {
+            this.#tint = index
             this.#changed()
         })
         this.#attackerLabel = this.#cycle(column, this.#units.length, () => this.#attacker, index => {
@@ -328,6 +400,7 @@ export class AnimationBenchScreen {
     #refresh(): void {
         const name = (look: Visual) => look.visual.replace("units/", "")
         this.#blowLabel.text = this.#blows[this.#blow] ?? "(aucun)"
+        this.#tintLabel.text = `Teinte : ${TINTS[this.#tint].name}`
         this.#attackerLabel.text = `Attaque : ${name(this.attacker)}`
         this.#targetLabel.text = `Cible : ${name(this.target)}`
         this.#shapeLabel.text = SHAPES[this.#shape].name
@@ -373,14 +446,12 @@ class BenchView extends Component {
         }
         scene.resync(battle)
         animations.register(battle)
-        battle.strike(
-            attacker,
-            this.bench.areaFrom(from, Vector2.RIGHT),
-            1,
-            DamageType.PHYSICAL,
-            () => 1,
-            this.bench.blow,
-        )
+        const areas = this.bench.areasFrom(from, Vector2.RIGHT)
+        const { blow } = this.bench
+        if(this.bench.apart){
+            for(const area of areas) battle.strike(attacker, area, 1, DamageType.PHYSICAL, () => 1, blow)
+        }
+        else battle.strikeMany(attacker, areas, 1, DamageType.PHYSICAL, () => 1, blow)
         this.#battle = battle
         this.#scene = scene
         this.#board = new BoardView(this.theme.font, this.theme.white, scene, sprites)

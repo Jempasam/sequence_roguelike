@@ -1,6 +1,6 @@
 import { Sprite } from "../../../../engine/gpu"
 import { visual } from "../../sim/base/Visual"
-import type { Visual } from "../../sim/base/Visual"
+import type { Visual, VisualColor } from "../../sim/base/Visual"
 
 import type { FxAnimation } from "./fxAnimation"
 import type { SpriteLook, SpriteTag } from "./spriteLook"
@@ -24,6 +24,9 @@ export type FxResolved =
         readonly key: string
         readonly sprite: Sprite
         readonly animation: FxAnimation
+
+        /** The hue the picture is recolored with, as the blow says, none to draw it as it is. */
+        readonly coloration: VisualColor|null
 
         /** How far down the chain it was found: 0 for the picture of the first tag of the target. */
         readonly rank: number
@@ -57,7 +60,9 @@ export function resolveFx(looks: FxSource, blow: Visual|null, tags: readonly Spr
         const named = visual(fxKey(key))
         const sprite = looks.of(named)
         const animation = looks.look(named).animation ?? general
-        if(sprite !== null && animation !== null) return { kind: "sprite", key, sprite, animation, rank }
+        if(sprite !== null && animation !== null){
+            return { kind: "sprite", key, sprite, animation, coloration: blow.coloration, rank }
+        }
     }
     return { kind: "vector", rank: candidates.length }
 }

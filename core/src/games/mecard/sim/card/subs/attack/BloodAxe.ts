@@ -11,6 +11,7 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { MergedCard } from "../composite/MergedCard"
 import { SHOCK_WAVE, SUCTION } from "../combat/Shoves"
+import { SLASH_LOOK } from "../tools/blowLooks"
 
 /** How far the axe of the catalog reaches all around, in meters. */
 const AXE_RANGE = 1.2 - UNIT_RADIUS
@@ -21,6 +22,8 @@ const AXE_HEAL = 1
 /** A blow all around the unit, filling its hearts again for each unit hit. */
 export class BloodAxeCard extends BlowCard {
 
+
+    public override readonly look = SLASH_LOOK
 
     constructor(
         /** How far it reaches all around, in meters. */

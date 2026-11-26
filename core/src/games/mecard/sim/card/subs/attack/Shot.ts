@@ -8,7 +8,7 @@ import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
-import { SHOT_LOOK } from "../tools/blowLooks"
+import { ARROW_LOOK } from "../tools/blowLooks"
 import { BlowCard } from "./BlowCard"
 import { DISTANCE, PORTEE, PRECISION, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
@@ -37,7 +37,7 @@ function along(from: Vector2, to: Vector2, share: number): Vector2 {
 export class ShotCard extends BlowCard {
 
 
-    public override readonly look = SHOT_LOOK
+    public override readonly look = ARROW_LOOK
 
     constructor(
         name: string, description: Text, rarity: Rarity,

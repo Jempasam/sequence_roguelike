@@ -8,7 +8,9 @@ import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import type { Battle } from "../../../battle/Battle"
 
 import { ActionCard } from "../ActionCard"
-import { hold, turn, WORD_TIME } from "../tools/playing"
+import { hold, WORD_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -79,7 +81,7 @@ export class AimCard extends ActionCard {
                 const { battle, unit } = ctx
                 const way = toward({ battle, unit, pose: unit }, true)
                 if(way){
-                    turn(ctx, way)
+                    Turn.turnToward(ctx, way)
                     return
                 }
                 battle.events.push({ type: "skipped", unit, reason: "personne à viser" })
@@ -102,21 +104,21 @@ export class AimCard extends ActionCard {
 }
 
 export const AIM = new AimCard("Viser", [
-    "Se tourne droit vers l'ennemi le plus proche, aussi loin soit-il.",
+    TURN.as("Se tourne"), " droit vers l'ennemi le plus proche, aussi loin soit-il.",
 ], Rarity.COMMON, "nearest")
 
 export const RANDOM_AIM = new AimCard("Viser au hasard", [
-    "Se tourne droit vers un ennemi tiré au hasard.",
+    TURN.as("Se tourne"), " droit vers un ennemi tiré au hasard.",
 ], Rarity.COMMON, "random")
 
 export const FAR_AIM = new AimCard("Viser le plus loin", [
-    "Se tourne droit vers l'ennemi le plus éloigné.",
+    TURN.as("Se tourne"), " droit vers l'ennemi le plus éloigné.",
 ], Rarity.COMMON, "farthest")
 
 export const STURDY_AIM = new AimCard("Viser le plus robuste", [
-    "Se tourne droit vers l'ennemi qui a le plus de ", HEART.as("cœurs"), ".",
+    TURN.as("Se tourne"), " droit vers l'ennemi qui a le plus de ", HEART.as("cœurs"), ".",
 ], Rarity.RARE, "sturdiest")
 
 export const WEAK_AIM = new AimCard("Viser le plus blessé", [
-    "Se tourne droit vers l'ennemi le plus blessé.",
+    TURN.as("Se tourne"), " droit vers l'ennemi le plus blessé.",
 ], Rarity.RARE, "weakest")

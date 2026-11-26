@@ -5,6 +5,12 @@ import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 
 import { tieTo } from "./Links"
+import { SHOVED } from "../../battle/mecanic/push/signals"
+import { TURN } from "../../battle/mecanic/turn/keyword"
+import { TURNED } from "../../battle/mecanic/turn/signals"
+import { WALKED } from "../../battle/mecanic/walk/signals"
+import * as Leap from "../../battle/mecanic/leap"
+import * as Turn from "../../battle/mecanic/turn"
 
 /** How far a haunting unit stands behind its host, in meters, between the bodies. */
 const HAUNT_GAP = 0.1
@@ -26,7 +32,10 @@ export class Haunting extends AbstractProcess {
         public readonly host: Unit,
     ){
         super("hantise", visual("processes/haunting", { color: [0.65, 0.75, 1] }),
-            "Reste derrière l'unité à laquelle tu es connecté, la suit quand elle bouge ou se tourne, et joue tes cartes depuis sa place, comme elle est tournée.",
+            [
+                "Reste derrière l'unité à laquelle tu es connecté, la suit quand elle bouge ou ", TURN.as("se tourne"),
+                ", et joue tes cartes depuis sa place, comme elle est ", TURN.as("tournée"), ".",
+            ],
         )
     }
 
@@ -42,24 +51,26 @@ export class Haunting extends AbstractProcess {
         const settle = (): void => {
             busy = true
             try {
-                battle.leap(unit, behind())
-                battle.turn(unit, host.direction)
+                Leap.leap(battle, unit, behind())
+                Turn.turn(battle, unit, host.direction)
             } finally {
                 busy = false
             }
         }
         settle()
-        hold(battle.signals.moved.add(event => {
-            if(event.unit !== host || busy || casting || !unit.alive) return
-            settle()
-        }))
+        for(const key of [WALKED, SHOVED, TURNED]){
+            hold(battle.observers.of(key).add(event => {
+                if(event.unit !== host || busy || casting || !unit.alive) return
+                settle()
+            }))
+        }
         hold(unit.stepStarted.add(() => {
             if(!host.alive) return
             busy = true
             casting = true
             try {
-                battle.leap(unit, host.position)
-                battle.turn(unit, host.direction)
+                Leap.leap(battle, unit, host.position)
+                Turn.turn(battle, unit, host.direction)
             } finally {
                 busy = false
             }

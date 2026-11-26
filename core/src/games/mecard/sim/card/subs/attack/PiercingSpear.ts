@@ -13,6 +13,7 @@ import { Rarity } from "../../Rarity"
 import * as Areas from "../../../battle/area/Areas"
 import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
 
 /** How far the spear of the catalog flies, in meters, before the reach of the unit's blows. */
 const SPEAR_RANGE = 3 - UNIT_RADIUS
@@ -51,5 +52,5 @@ function throwing(range: number, amount: number): Action {
 export const PIERCING_SPEAR = new ActionCard("Lance perforante", [
     "Lance une lance droit devant, jusqu'à ", SPEAR_RANGE, "×", ALLONGE, " ", DISTANCE, " : ", SPEAR_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, " à la première cible. Elle reste plantée jusqu'à la fin du ", BATTLE_ROUND, " : tu suis cette cible quand ",
-    "elle bouge ou se tourne. Tout autre déplacement de ta part retire la lance.",
+    "elle bouge ou ", TURN.as("se tourne"), ". Tout autre déplacement de ta part retire la lance.",
 ], Rarity.RARE, throwing(SPEAR_RANGE, SPEAR_DAMAGE))

@@ -9,6 +9,7 @@ import { Rarity } from "../../Rarity"
 
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { SLASH_LOOK } from "../tools/blowLooks"
 
 /** How far the sweep of the catalog reaches all around, in meters. */
 const SWEEP_RANGE = 1.2 - UNIT_RADIUS
@@ -16,6 +17,8 @@ const SWEEP_RANGE = 1.2 - UNIT_RADIUS
 /** A blow all around the unit. */
 export class SweepCard extends BlowCard {
 
+
+    public override readonly look = SLASH_LOOK
 
     constructor(
         /** How far it reaches all around, in meters. */

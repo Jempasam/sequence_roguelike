@@ -22,8 +22,9 @@ import type { Battle } from "./Battle"
 import { Decks } from "./Decks"
 import type {
     ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent, DeathEvent, HitEvent,
-    IncomingShove, MoveEvent, PlanChangeEvent,
+    PlanChangeEvent,
 } from "./events"
+import { ObserverMap } from "./ObserverMap"
 import type { Area } from "./Area"
 import { Disk } from "./hitbox/Disk"
 import type { Hitbox } from "./hitbox/Hitbox"
@@ -228,14 +229,8 @@ export class Unit {
     /** Another unit's attack touched it. */
     public readonly struck: Observable<HitEvent>
 
-    /** It changed cell. */
-    public readonly moved: Observable<MoveEvent>
-
-    /** Another unit is about to move it: what it hears may shorten the way. */
-    public readonly incomingShove: Observable<IncomingShove>
-
-    /** Another unit moved it: where from and to. Told besides {@link Unit.moved}, which tells every move. */
-    public readonly shoved: Observable<MoveEvent>
+    /** The observers of the mechanics that concern it alone, by the key each mechanic declares. */
+    public readonly observers: ObserverMap
 
     /** Is another unit moving it right now? Its strides then are not its own. */
     public shoving = false
@@ -246,8 +241,11 @@ export class Unit {
     /** It died. */
     public readonly onDeath: Observable<DeathEvent>
 
-    /** One of its steps is about to play. */
+    /** One of its steps starts, before its cards are read. */
     public readonly stepStarted: Observable<Unit>
+
+    /** The action of the step it started is read: its cards are lit, and the action is among those played. */
+    public readonly actionRead: Observable<Unit>
 
     /** One of its steps was played. */
     public readonly stepEnded: Observable<Unit>
@@ -348,7 +346,17 @@ export class Unit {
     public readonly hand: Card[] = []
 
     /** The cards it plays as often as it wishes, with none in its hand: told from the others by identity. */
-    public readonly unlimited: readonly Card[]
+    public get unlimited(): readonly Card[] {
+        return this.#unlimited
+    }
+
+    /** Have it play some cards unlimited as well, from now on, each once in the list. */
+    public grantUnlimited(cards: readonly Card[]): void {
+        this.#unlimited = [...new Set([...this.#unlimited, ...cards])]
+    }
+
+    #unlimited: readonly Card[] = []
+
     public readonly decks: Decks
     public readonly stats = new UnitStats()
 
@@ -365,12 +373,11 @@ export class Unit {
         this.attacking = new Observable(report)
         this.hitting = new Observable(report)
         this.struck = new Observable(report)
-        this.moved = new Observable(report)
-        this.incomingShove = new Observable(report)
-        this.shoved = new Observable(report)
+        this.observers = new ObserverMap(report)
         this.killed = new Observable(report)
         this.onDeath = new Observable(report)
         this.stepStarted = new Observable(report)
+        this.actionRead = new Observable(report)
         this.stepEnded = new Observable(report)
         this.drawn = new Observable(report)
         this.onActivate = new Observable(report)
@@ -395,7 +402,7 @@ export class Unit {
         for(const [name, base] of Object.entries(spec.bases ?? {})){
             (this.stats[name as keyof UnitStats].base as number|boolean) = base
         }
-        this.unlimited = [...spec.unlimited ?? []]
+        this.#unlimited = [...spec.unlimited ?? []]
         this.decks = new Decks(spec.decks, rng, this.stats.ordered)
     }
 
@@ -561,20 +568,23 @@ export class Unit {
     }
 
     /**
-     * Start its next step, telling it does.
+     * Start its next step, telling it does, then read its action, telling it is read.
      *
      * @returns What plays it, none when it has none left, or when it died of being told.
      */
     public playTurn(): Action|null {
         const { battle } = this
-        if(!this.fillSteps()) return null
-        const action = this.steps.shift()
-        if(!action) return null
+        const left = this.stepsLeft
+        if(left === 0) return null
         battle.actor = this
-        this.stepsPlayed.push(action)
-        battle.signals.stepStarted.notify({ unit: this, left: this.stepsLeft })
+        battle.signals.stepStarted.notify({ unit: this, left: left - 1 })
         this.stepStarted.notify(this)
         battle.unitStepping.notify(this)
+        if(!this.alive || !this.fillSteps()) return null
+        const action = this.steps.shift()
+        if(!action) return null
+        this.stepsPlayed.push(action)
+        this.actionRead.notify(this)
         return this.alive ? action : null
     }
 

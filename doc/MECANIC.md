@@ -1,56 +1,60 @@
 # Titre : Mécanique
 
 # Description : la mécanique
-La mécanique regroupe les cartes qui construisent des machines : un module est une pièce qui porte une suite de cartes, un robot est un corps invoqué qui rejoue ces cartes à chaque round. Le module circule d'une carte à l'autre comme une valeur de type `MODULE` : un robot le consomme à sa droite, et des cartes modificatrices le transforment avant.
+Une mécanique est une règle de combat partagée par les cartes : une façon de se déplacer, de pousser, d'apparaître ou de se faire échanger. Chaque mécanique regroupe ses règles (agir et calculer), son mot clé, ses aperçus et les signaux qu'elle émet. Les cartes ne refont jamais ces règles : elles appellent la mécanique.
 
-Un module donne aussi une fonction `tune` qui règle le corps construit, et peut tirer au hasard ce qu'il joue, au moment où il est lu.
+`relocation/` est le socle commun des déplacements : tout changement de pose est raconté par son signal précis (`WALKED`, `SHOVED`...), puis par `RELOCATED`.
 
-# Exemple : Mécanique en jeu
-- Robot arc : module qui joue Viser puis Tir.
-- Robot improvisé : invoque à 0.65 m devant un robot à cœurs bouclier, qui joue les cartes du module juste après son invocateur, à chaque round.
-- Turbo : module modificateur, chaque Avancer devient une Charge d'estoc.
-- Huile de moteur : utilisable, ce round chaque robot joue sa chaîne deux fois de suite.
+# Exemple : Mécaniques en jeu
+- Avancer : l'unité fait un pas après l'autre, jusqu'à ce que quelque chose la bloque, et signale la butée.
+- Poussée violente : la poussée continue, ce qu'elle jette sur une unité blesse les deux et pousse l'autre à son tour.
+- Téléportation : l'unité apparaît au point visé ou juste à côté, c'est le seul déplacement qui peut échouer.
+- Invoquer : une unité entre dans l'arène devant celle qui l'appelle.
 
-# Mots clés associés : vocabulaire de la mécanique
+# Mots clés associés : vocabulaire des mécaniques
+- `WALK` : "avancer" : aller pas à pas dans une direction, jusqu'à ce que quelque chose gêne.
+- `TURN` : "pivoter" : changer la direction où regarde une unité.
+- `VIOLENT_PUSH` : "poussée violente" : une poussée qui continue sur ce qu'elle heurte.
+- `BLINKING` : "clignement" : aller droit à un point par-dessus tout, un peu à côté s'il est pris.
+- `LEAPING` : "saut" : bondir par-dessus tout, rejeté de côté si l'on retombe sans place.
+- `SWAPPING` : "échange de place" : deux unités prennent la place l'une de l'autre.
+- `TELEPORT` : "téléportation" : apparaître en un point, ou tout à côté.
 - `INVOCATION` : "invoquer" : amener une unité dans l'arène devant celle qui l'appelle.
-- `SUMMON_STAT` : "invocation" : le bonus de cœurs des unités invoquées.
-- `BATTLE_ROUND` : "round" : le robot joue ses cartes à chaque round.
-- `CARTE` : "carte" : un module est fait de cartes.
 
-# Classes associées : code de la mécanique
-- `Module` ([core/src/games/mecard/sim/card/CardType.ts](../core/src/games/mecard/sim/card/CardType.ts)) : la valeur d'un module, `cards(pick)` et `tune(body)`.
-- `MODULE` ([core/src/games/mecard/sim/card/CardType.ts](../core/src/games/mecard/sim/card/CardType.ts)) : le type de carte qui porte un module.
-- `ModuleCard` ([core/src/games/mecard/sim/card/subs/mechanic/ModuleCard.ts](../core/src/games/mecard/sim/card/subs/mechanic/ModuleCard.ts)) : un module fait d'une suite fixe de cartes.
-- `ModuleModifierCard` ([core/src/games/mecard/sim/card/subs/mechanic/ModuleModifiers.ts](../core/src/games/mecard/sim/card/subs/mechanic/ModuleModifiers.ts)) : une carte qui prend un module et en rend un autre.
-- `RobotCard` ([core/src/games/mecard/sim/card/subs/mechanic/RobotCard.ts](../core/src/games/mecard/sim/card/subs/mechanic/RobotCard.ts)) : une carte qui construit un robot à partir d'un module.
-- `PawnRobot` ([core/src/games/mecard/sim/card/subs/chess/PawnRobot.ts](../core/src/games/mecard/sim/card/subs/chess/PawnRobot.ts)) : le robot pion, qui est aussi une pièce d'échecs.
+# Classes associées : code des mécaniques
+- `Trip`, `travel`, `move` ([core/src/games/mecard/sim/battle/mecanic/walk/walk.ts](../core/src/games/mecard/sim/battle/mecanic/walk/walk.ts)) : le trajet d'une marche, et son calcul pas à pas.
+- `turn`, `Turning` ([core/src/games/mecard/sim/battle/mecanic/turn/turn.ts](../core/src/games/mecard/sim/battle/mecanic/turn/turn.ts)) : le pivotement d'une unité.
+- `shove`, `Shove` ([core/src/games/mecard/sim/battle/mecanic/push/shove.ts](../core/src/games/mecard/sim/battle/mecanic/push/shove.ts)) : la poussée simple.
+- `shoveViolently`, `ViolentShove` ([core/src/games/mecard/sim/battle/mecanic/push/violent.ts](../core/src/games/mecard/sim/battle/mecanic/push/violent.ts)) : la poussée qui se propage.
+- `blink` ([core/src/games/mecard/sim/battle/mecanic/blink/blink.ts](../core/src/games/mecard/sim/battle/mecanic/blink/blink.ts)) : le clignement.
+- `leap` ([core/src/games/mecard/sim/battle/mecanic/leap/leap.ts](../core/src/games/mecard/sim/battle/mecanic/leap/leap.ts)) : le saut.
+- `swap` ([core/src/games/mecard/sim/battle/mecanic/swap/swap.ts](../core/src/games/mecard/sim/battle/mecanic/swap/swap.ts)) : l'échange de place.
+- `teleport` ([core/src/games/mecard/sim/battle/mecanic/teleport/teleport.ts](../core/src/games/mecard/sim/battle/mecanic/teleport/teleport.ts)) : la téléportation.
+- `summon`, `Summon` ([core/src/games/mecard/sim/battle/mecanic/summon/summon.ts](../core/src/games/mecard/sim/battle/mecanic/summon/summon.ts)) : l'invocation.
+- `relocate`, `glide` ([core/src/games/mecard/sim/battle/mecanic/relocation/relocate.ts](../core/src/games/mecard/sim/battle/mecanic/relocation/relocate.ts)) : le socle des changements de pose.
+- `JumpSignal`, `GlideSignal`, `RELOCATED` ([core/src/games/mecard/sim/battle/mecanic/relocation/signals.ts](../core/src/games/mecard/sim/battle/mecanic/relocation/signals.ts)) : les signaux communs, un saut instantané, un glissement avec durée, et le bilan de tout déplacement.
+- `SignalKey`, `TriggerKey` ([core/src/games/mecard/sim/battle/ObserverMap.ts](../core/src/games/mecard/sim/battle/ObserverMap.ts)) : les clés d'observers des fichiers `signals.ts`, lues par `battle.observers.of(CLE)` ou `unit.observers.of(CLE)`.
 
 # Sous-dossier associé : emplacement du code
-- type : [core/src/games/mecard/sim/card/subs/mechanic/](../core/src/games/mecard/sim/card/subs/mechanic/)
-- carte : [core/src/games/mecard/sim/card/](../core/src/games/mecard/sim/card/), voir [CARD.md](CARD.md)
+- mécaniques : [core/src/games/mecard/sim/battle/mecanic/](../core/src/games/mecard/sim/battle/mecanic/)
+- cartes qui les jouent : [core/src/games/mecard/sim/card/](../core/src/games/mecard/sim/card/), voir [CARD.md](CARD.md)
 
-# Convention de nommage : individus de la mécanique
-- Constante : UPPER_SNAKE de l'anglais, par exemple `BOW_MODULE`, `IMPROVISED_ROBOT`.
-- Nom affiché : français, majuscule initiale, sans article, par exemple "Robot arc".
-- Fichier : `ModuleCard.ts`, `ModuleModifiers.ts`, `RobotCard.ts`, un par classe ou famille.
-- Les noms de cartes sont uniques : vérifier avec `npm run cli -- list cards`. `npm run cli -- convert monster:<nom> module` fabrique un module depuis une unité.
+# Convention de nommage : individus des mécaniques
+- Un dossier par mécanique, en camelCase, par exemple `walk/`, `teleport/`.
+- Fichiers : `index.ts`, `keyword.ts` (son mot clé, n'importe que `semantic`), `<nom>.ts` (ses règles), `shown.ts` (ses aperçus), `signals.ts` (ses clés d'observers).
+- Mot clé : UPPER_SNAKE de l'anglais, texte français en minuscules, par exemple `WALK` "avancer".
+- Les règles s'importent par espace de noms (`import * as Walk from ".../mecanic/walk"`), les descriptions importent le mot clé depuis `keyword.ts`.
+- Un texte nomme le mot clé de la règle réellement jouée, en effet comme en condition.
 
-# Énumération : individus de la mécanique
+# Énumération : individus des mécaniques
 | Nom affiché | Constante | Rôle |
 | --- | --- | --- |
-| Robot arc | `BOW_MODULE` | Module : Viser > Tir. |
-| Robot explosif | `BLAST_MODULE` | Module : Viser > Bombe. |
-| Robot taureau | `BULL_MODULE` | Module : Viser > Dash dégât. |
-| Missile | `MISSILE` | Module : Avancer > Estoc > Avancer > Estoc. |
-| Arme improvisée | `IMPROVISED_WEAPON` | Fin de préparation : se remplace par les cartes de son module. |
-| Robot improvisé | `IMPROVISED_ROBOT` | Invoque un robot à cœurs bouclier qui joue le module. |
-| Robot tank | `TANK_ROBOT` | Invoque un robot à 4 cœurs bouclier, qui attend entre chaque carte. |
-| Blindage | `ARMOR_PLATING` | Module : ajoute Blocage en fin de module, et 1 cœur bouclier au robot. |
-| Cœur de module | `MODULE_CORE` | Module : ajoute Blocage en tête. |
-| Inverseur | `INVERTER` | Module : inverse l'ordre des cartes. |
-| Mélangeur | `MODULE_MIXER` | Module : mélange l'ordre des cartes au hasard. |
-| Propulseurs | `THRUSTERS` | Module : ajoute Avancer en tête. |
-| Recyclage | `RECYCLING` | Module : retire la première carte. |
-| Répétiteur | `REPEATER` | Module : duplique la dernière carte. |
-| Tête chercheuse | `HOMING_HEAD` | Module : ajoute Viser avant chaque attaque. |
-| Turbo | `TURBO` | Module : chaque Avancer devient une Charge d'estoc. |
+| Avancer | `WALK` | Marche pas à pas jusqu'à un obstacle (`walk/`). |
+| Pivoter | `TURN` | Change la direction d'une unité (`turn/`). |
+| Poussée violente | `VIOLENT_PUSH` | Poussée qui blesse et se propage (`push/`). |
+| Clignement | `BLINKING` | Va à un point par-dessus tout (`blink/`). |
+| Saut | `LEAPING` | Bondit par-dessus tout, rejeté si pas de place (`leap/`). |
+| Échange de place | `SWAPPING` | Deux unités s'échangent (`swap/`). |
+| Téléportation | `TELEPORT` | Apparaît au point visé ou à côté, peut échouer (`teleport/`). |
+| Invoquer | `INVOCATION` | Amène une unité devant l'invocateur (`summon/`). |
+| Déplacement | aucune | Socle commun, sans mot clé : pose, glissement, `RELOCATED` (`relocation/`). |

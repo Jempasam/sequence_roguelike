@@ -120,8 +120,8 @@ Il n'y a **plus d'option `--def`** : un combattant à tester avant de l'impléme
 | Élément | Sens |
 |---|---|
 | `Carte`, `Carte*N` | cartes, dans l'ordre du deck |
-| `item:Nom[*N]` | objets de départ (kits seulement) |
-| `usable:Nom[*N]` | usables de départ (kits seulement) |
+| `item:Nom[*N]` | objets de départ, d'un kit ou d'un monstre |
+| `usable:Nom[*N]` | usables de départ, d'un kit ou d'un monstre (aucun monstre du jeu n'en a) |
 | `@Base` | part d'un kit ou monstre du jeu ; `@kit:X` / `@monster:X` si le nom est ambigu |
 | `-Carte`, `-item:Nom`, `-usable:Nom` (`*N` ok) | retire ce que `@Base` apporte |
 | `heart:Type[*N]` | N cœurs de ce type : `heart:rouge*4`, `heart:rose*3`, `heart:noir*2`. Un monstre n'a que des rouges ; un kit du jeu a ses propres cœurs (`list kits` les donne, et `@Kit` les reprend) ; un kit défini sans aucun `heart:` a 6 rouges, un kit qui en nomme a exactement ceux-là. Les types : `rouge`, `rose`, `noir`, `bouclier`, `bleu`, `verre`, `temps`… |
@@ -153,6 +153,7 @@ Casse, accents et blancs sont ignorés. Réservés : `, * = ( )`. Noms exacts : 
 | `smart4[:K]` | `smart3`, qui peut jouer moins de cartes que sa main |
 | `smart5[:K]` | `smart3` qui cherche sa main pas à pas au lieu de la tirer au hasard, et compte les statuts de toute unité selon leur durée |
 | `smart6` à `smart8` | suites de `smart5` ; `sim --help ai` donne la description de chacune |
+| `smart8_path` | `smart8` qui se tourne aussi vers le chemin contournant les obstacles, et départage ses chaînes par la longueur de ce chemin |
 | `smart9_2`, `smart9_1_2`, `smart9_1_2_3` | `smart8` qui prédit les autres unités aux depths de son nom et fait la moyenne des scores |
 | `smart10` | `smart9_1_2_3` |
 | `smart10_blind` | `smart10` qui ne compte que sur ses cartes en main : dans ses essais, pioches et défausses de toutes les unités sont des cartes cachées, qu'il ne joue jamais |
@@ -162,7 +163,7 @@ Casse, accents et blancs sont ignorés. Réservés : `, * = ( )`. Noms exacts : 
 | `smart10_safe`, `smart10_unsafe` | `smart10` qui garde le pire (safe) ou le meilleur (unsafe) de ses scores par niveau, au lieu de la moyenne |
 | `smart[:K]` | alias du dernier `smartN` : `smart8` aujourd'hui, redéfini à chaque nouvelle version. Le nom réel (`smart8:6`) reste celui des tableaux et des journaux |
 
-Comme dans le jeu, les héros (kits, recrues, définitions de kits) jouent gratuitement, une fois par round, `Avancer` et une rotation `Tourner`. Les monstres n'en ont pas. Ces cartes prennent une place dans la chaîne. Un monstre **adversaire** a le corps qu'une carte du jeu lui donne (cœurs du niveau `--level`, deck dans l'ordre) ; un monstre **allié** est joué comme un allié (le corps `allyOf`).
+Comme dans le jeu, les héros (kits, recrues, définitions de kits) jouent gratuitement, une fois par round, `Avancer` et une rotation `Tourner`. Les monstres n'en ont pas. Ces cartes prennent une place dans la chaîne. Un monstre **adversaire** a le corps qu'une carte du jeu lui donne (cœurs du niveau `--level`, deck dans l'ordre) ; un monstre **allié** a le même corps, au niveau 1 ; un familier allié a son deck mélangé. Des deux côtés, un monstre garde ses objets et ses usables.
 
 Les `smartN` approchent mieux un joueur qui réfléchit que `deck`, au prix de plusieurs fois plus de temps : le parallélisme compense. Le suffixe `-usables` (`deck-usables`) laisse les usables de côté ; les autres IA (sauf `smart3` et suivantes, qui ne les utilisent que quand ils servent) les utilisent à chaque round. Les objets agissent seuls.
 
@@ -173,7 +174,7 @@ Les `smartN` approchent mieux un joueur qui réfléchit que `deck`, au prix de p
 | `--match` | description `alliés/adversaires`, répétable | obligatoire |
 | `--out` | colonnes et `total` | `winrate` |
 | `--ai` | voir plus haut | `kit=smart`, `monster=deck`, `pet=deck` |
-| `--level` | entier ≥ 1 : niveau d'étage (PV des monstres, +1 monstre par niveau) | `1` |
+| `--level` | entier ≥ 1 : niveau d'étage des monstres adversaires : +1 PV par niveau, un exemplaire de Puissance tous les 2 niveaux, pioche, main et chaîne doublées tous les 4 (chaîne de 50 au plus) ; les kits adversaires restent au niveau 1 | `1` |
 | `--layer` | `n` ou `a-b` : couche(s) de la carte du biome où piocher les combats (0 = premiers, 11 = boss) | `0-3` |
 | `--fight` | sorte de combat piochée sur la carte : `battle`, `elite` (couche 4 au plus tôt), `boss` ; ou l'id d'un combat précis (`npm run cli -- list fights`), pris où la carte le pose, `--layer` ignoré | `battle` |
 | `--games` | combats **par ligne** | `30` |

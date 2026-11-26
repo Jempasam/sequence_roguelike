@@ -67,10 +67,24 @@ Pour un coup sur une unit taguée, l'UI cherche dans l'ordre :
 
 Une variante sans JSON reprend l'animation de `<nom>`.
 
+## Teinte
+
+La `coloration` du `Visual` recolore l'image : sa teinte remplace celle des pixels, leur luminosité et leur
+saturation restent. Le blanc reste donc blanc, et un bleu pâle teinté en rouge donne du rose : une image faite pour
+être teintée a des bords d'un bleu saturé. L'impact d'un coup prend la même teinte.
+
+Les looks teintés sont dans `blowLooks.ts` (démoniaque, assassin) et `spellLook` (`tools/bolt.ts`) teinte le sort
+avec la couleur de son élément.
+
+Les lames (`slash`, `thrust`, `claws`) et le sort n'ont pas de contour : leur chaîne de rendu est
+`alpha_thickness` puis un `gloom` léger, qui donnent un bord translucide. Une `light` forte les délave vers le blanc.
+
+Un coup qui ne blesse pas passe par `Battle.showBlow`.
+
 ## Les voir
 
-`debug anim [coup]` dans la console : le coup frappé en boucle d'une unit sur une autre, avec la forme de zone, la
-portée, la distance et la vitesse (jusqu'à 0,05) au choix. Le panneau dit quelle image a été trouvée et son rang
+`debug anim [coup]` dans la console : le coup frappé en boucle d'une unit sur une autre, avec la teinte, la forme de
+zone, la portée, la distance et la vitesse (jusqu'à 0,05) au choix. Le panneau dit quelle image a été trouvée et son rang
 dans la chaîne, et si le coup est en lecture, en pause ou terminé. `Jouer` relance le coup, `Pause` le fige,
 `Pas` avance d'une image (1/60 s), `Boucle : non` arrête la répétition automatique.
 Les tests `test/src/games/mecard/ui/look/fxAssets.test.ts` vérifient que chaque visuel déclaré existe, que chaque

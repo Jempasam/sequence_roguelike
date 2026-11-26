@@ -1,4 +1,8 @@
-import { DISTANCE, INVOCATION, UNIT } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../../battle/mecanic/summon/summon"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
@@ -18,9 +22,8 @@ import { AIM } from "../movement/Aim"
 import { ENERGETIC_AIM, SHOUT, TAUNT } from "../movement/Orientation"
 import { WAIT } from "../movement/Wait"
 import { SUCTION } from "../combat/Shoves"
-import { hold, SHORT_TIME, SUMMON_AHEAD, summonAt, summonShows, summonSpot } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { ring } from "../tools/targeting"
-import { summonedHearts } from "./SummonCard"
 import type { Visual } from "../../../base/Visual"
 import { visual } from "../../../base/Visual"
 import * as Areas from "../../../battle/area/Areas"
@@ -99,8 +102,8 @@ export class ChainSummonCard extends ActionCard {
                 hold(battle, SHORT_TIME)
             },
             preview: ({ battle, unit, pose }) => {
-                const spot = summonSpot(unit, pose, summon.ahead)
-                return Previews.still(pose, ...summonShows(battle, unit, [spot], summon.size, at => [
+                const spot = Summons.summonSpot(unit, pose, summon.ahead)
+                return Previews.still(pose, ...Summons.summonShows(battle, unit, [spot], summon.size, at => [
                     Previews.polygon(Areas.circle(at, summon.radius), RANGE_COLOR),
                     ...summon.targets(battle, unit, at).map(ring),
                 ]))
@@ -111,7 +114,7 @@ export class ChainSummonCard extends ActionCard {
 
 /** Set down the body of a summon a meter ahead of its owner, none when there is no room. */
 export function placeChainSummon(battle: Battle, owner: Unit, summon: ChainSummon): Unit|null {
-    const [body] = summonAt(battle, owner, [summonSpot(owner, owner, summon.ahead)], {
+    const [body] = Summons.summonAt(battle, owner, [Summons.summonSpot(owner, owner, summon.ahead)], {
         sprite: summon.sprite, name: summon.name, hearts: () => summon.hearts(owner), cards: summon.cards,
         ...summon.size === undefined ? {} : { size: summon.size },
     }, placed => summon.placed?.(placed))
@@ -148,10 +151,10 @@ export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
 })
 
 export const DECOY = new ChainSummonCard("Leurre", [
-    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un leurre d'", new HeartCount(1), " : Provocation, tourne chaque ", UNIT, " à ",
+    INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un leurre d'", new HeartCount(1), " : Provocation, ", TURN.as("tourne"), " chaque ", UNIT, " à ",
     frenchNumber(DECOY_RADIUS), " ", DISTANCE, " vers lui.",
 ], Rarity.COMMON, {
-    sprite: visual("units/puppeteer"), name: "Leurre", hearts: owner => summonedHearts(owner, 1), cards: [TAUNT],
+    sprite: visual("units/puppeteer"), name: "Leurre", hearts: owner => Summons.summonedHearts(owner, 1), cards: [TAUNT],
     radius: DECOY_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, DECOY_RADIUS),
 })
 

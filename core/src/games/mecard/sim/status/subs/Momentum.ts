@@ -5,6 +5,9 @@ import { ScalingStatus } from "../ScalingStatus"
 import type { StatGain } from "../ScalingStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { TURN } from "../../battle/mecanic/turn/keyword"
+import { TURNED } from "../../battle/mecanic/turn/signals"
+import { BUMPED } from "../../battle/mecanic/walk/signals"
 
 /** How much farther, as a factor, a round of momentum makes the moves go. */
 export const MOMENTUM_MOVE = 0.25
@@ -19,7 +22,8 @@ const TURN_COS = Math.cos(10 * Math.PI / 180)
 export const MOMENTUM = new StatusType("élan", statusVisual("momentum", 1, 0.7, 0.3), "positive", level => new Momentum(level), {
     description: [
         "Chaque déplacement va plus loin pour chaque ", BATTLE_ROUND, " restant (", STATUS_LEVEL, "). À partir de ", MOMENTUM_RAM_LEVEL,
-        " ", BATTLE_ROUND.as("rounds"), ", un déplacement arrêté par une unité lui inflige autant de dégâts, et l'élan est perdu. Tourner de plus de 10° le fait perdre.",
+        " ", BATTLE_ROUND.as("rounds"), ", un déplacement arrêté par une unité lui inflige autant de dégâts, et l'élan est perdu. ",
+        TURN.as("Tourner"), " de plus de 10° le fait perdre.",
     ],
 })
 
@@ -35,12 +39,12 @@ export class Momentum extends ScalingStatus {
 
     protected override watch({ battle, unit }: UnitContext): Observer[] {
         return [
-            battle.signals.bumped.add(({ unit: bumper, struck }) => {
+            battle.observers.of(BUMPED).add(({ unit: bumper, struck }) => {
                 if(bumper !== unit || this.level < MOMENTUM_RAM_LEVEL) return
                 struck.hearts.damage(this.level, DamageType.PHYSICAL, unit)
                 battle.removeStatus(unit, MOMENTUM)
             }),
-            battle.signals.moved.add(({ unit: mover, from, to }) => {
+            battle.observers.of(TURNED).add(({ unit: mover, from, to }) => {
                 if(mover !== unit || from.direction.dot(to.direction) >= TURN_COS) return
                 battle.removeStatus(unit, MOMENTUM)
             }),

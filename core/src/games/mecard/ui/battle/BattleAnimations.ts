@@ -1,4 +1,4 @@
-import type { Animation, AnimationChain, FrameClock } from "../../../../engine/ui"
+import type { UiAnimation, AnimationChain, FrameClock } from "../../../../engine/ui"
 import { rgba } from "../../sim/base/Rgba"
 import type { Rgba } from "../../sim/base/Rgba"
 import type { Observable, Observer } from "../../sim/base/Observable"
@@ -8,6 +8,13 @@ import type { Visual } from "../../sim/base/Visual"
 import type { Area } from "../../sim/battle/Area"
 import * as Areas from "../../sim/battle/area/Areas"
 import type { Battle } from "../../sim/battle/Battle"
+import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
+import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
+import { SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
+import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
+import { TURNED } from "../../sim/battle/mecanic/turn/signals"
+import { WALKED } from "../../sim/battle/mecanic/walk/signals"
 import type { Pose } from "../../sim/battle/Action"
 import { Heart } from "../../sim/heart/Heart"
 import type { Effect, HeartsSignal } from "../../sim/battle/signals"
@@ -118,7 +125,7 @@ export class BattleAnimations {
                 this.chain.add(this.#stopping(handle(event)))
             }))
         }
-        const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => Animation): void => {
+        const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => UiAnimation): void => {
             observers.push(observable.add(event => {
                 this.chain.add(animate(event))
             }))
@@ -166,19 +173,31 @@ export class BattleAnimations {
         }))
 
         //// MOVEMENT ////
-        // Unit Move : Glide Animation
-        onAnimated(signals.moved, ({ unit, from, to, duration }) => () => {
-            return this.#glide(unit, from, to, duration)
-        })
+        // Unit Walk, Turn, Shove : Glide Animation
+        for(const key of [WALKED, TURNED, SHOVED]){
+            onAnimated(battle.observers.of(key), ({ unit, from, to, duration }) => () => {
+                return this.#glide(unit, from, to, duration)
+            })
+        }
 
-        // Unit Blink : Fade Out, Move, Fade In Animation
-        onAnimated(signals.blinked, ({ unit, from, to }) => () => {
-            return this.clock.tween(2 * BLINK_FADE, share => scene.change(unit, shown => {
-                const there = share >= 0.5
-                shown.position = there ? to.position : from.position
-                shown.direction = there ? to.direction : from.direction
-                shown.opacity = share >= 1 ? 1 : Math.abs(1 - 2 * share)
-            }, false))
+        // Unit Blink, Leap, Teleport, Swap : Fade Out, Move, Fade In Animation
+        for(const key of [BLINKED, LEAPED, TELEPORTED, SWAPPED]){
+            onAnimated(battle.observers.of(key), ({ unit, from, to }) => () => {
+                return this.clock.tween(2 * BLINK_FADE, share => scene.change(unit, shown => {
+                    const there = share >= 0.5
+                    shown.position = there ? to.position : from.position
+                    shown.direction = there ? to.direction : from.direction
+                    shown.opacity = share >= 1 ? 1 : Math.abs(1 - 2 * share)
+                }, false))
+            })
+        }
+
+        // Unit Move, of Any Kind : Set Down Where It Is Without Animation, After the Precise One
+        onAnimated(signals.moved, ({ unit, now }) => async() => {
+            scene.change(unit, shown => {
+                shown.position = now.position
+                shown.direction = now.direction
+            }, false)
         })
 
         //// CARDS ////
@@ -418,7 +437,7 @@ export class BattleAnimations {
      *
      * @param draws - Is it part of a draw, so the view stays on the hand for it?
      */
-    #stopping(play: Play, draws = false): Animation {
+    #stopping(play: Play, draws = false): UiAnimation {
         return async() => {
             if(!draws) this.scene.watchDraw(null)
             const hold = play() ?? 0
@@ -462,10 +481,10 @@ export class BattleAnimations {
         if(impact) this.scene.impacts = this.scene.impacts.filter(each => each !== impact)
     }
 
-    /** The picture played on each unit a blow lands on, none when the blow has none. */
+    /** The picture, in the hue of the blow, played on each unit it lands on, none when it has none. */
     #impactOf(shown: FxResolved, target: Unit|null): Extract<FxResolved, { kind: "sprite" }>|null {
         if(shown.kind !== "sprite" || shown.animation.impact === null) return null
-        const found = this.resolveFx(visual(shown.animation.impact), target)
+        const found = this.resolveFx(visual(shown.animation.impact, { coloration: shown.coloration }), target)
         return found.kind === "sprite" ? found : null
     }
 

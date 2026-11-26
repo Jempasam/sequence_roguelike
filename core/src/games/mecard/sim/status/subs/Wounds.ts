@@ -27,7 +27,7 @@ export class Bleeding extends RoundStatus {
             battle.signals.notifyStatus.notify({ unit, target: this })
             unit.hearts.damage(BLEEDING_DAMAGE, DamageType.PHYSICAL, null)
         }
-        return [battle.signals.moved.add(bleed), battle.signals.blinked.add(bleed)]
+        return [battle.signals.moved.add(bleed)]
     }
 }
 

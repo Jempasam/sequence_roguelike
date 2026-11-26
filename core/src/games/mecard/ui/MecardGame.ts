@@ -50,6 +50,7 @@ import type { RunSave } from "../sim/save/runSave"
 import { RunSaver } from "../persist/RunSaver"
 import { PlayerCatalog } from "../persist/PlayerCatalog"
 import { RunHistorian } from "../persist/RunHistorian"
+import { RunUnitRules } from "../sim/run/RunUnitRules"
 import { ALL_FLOORS } from "../sim/catalog/floors"
 import type { CatalogSave } from "../sim/save/catalogSave"
 import { ghostOfEntry } from "../sim/save/historySave"
@@ -229,8 +230,10 @@ export class MecardGame {
         this.#network = network
         this.run = this.#newRun()
         this.#catalog.attach(this.run)
+        // Made first, so what hears of a battle gets its units already changed.
+        this.#unitRules = new RunUnitRules(this.run, text => this.#console.print(text))
         // Made before the screen, so it hears each battle before the screen starts its first round.
-        this.#broadcaster = viewers ? new RunBroadcaster(this.run, viewers) : null
+        this.#broadcaster =viewers ? new RunBroadcaster(this.run, viewers) : null
         const forwarded = new Forwarded(error => this.#console.print(String(error)))
         // Listens to the interface for as long as the game lives: nothing to let go of.
         const uiSound = sounds ? new UiSoundLink(ui, sounds) : null
@@ -292,7 +295,7 @@ export class MecardGame {
             this.#console.print(`Les sprites des unités n'ont pas pu être chargés : ${error.message}`)
         })
         void borders.load(ui.gpu, assets, ALL_FLOORS)
-        const actions: Omit<MecardHost, "run"|"battle"|"playing"> = {
+        const actions: Omit<MecardHost, "run"|"battle"|"playing"|"unitRules"> = {
             print: text => this.#console.print(text),
             refresh: () => {
                 const { battleScreen, travelScreen } = this.#screen
@@ -336,11 +339,16 @@ export class MecardGame {
             },
         }
         // The run shown, not the one played alone: a hosted table or a duel shows a run of its own.
+        const shownRules = (): RunUnitRules => {
+            this.#unitRules.engine = this.#screen.engine
+            return this.#unitRules
+        }
         const host = (): MecardHost => ({
             ...actions,
             playing: this.#playing,
             run: this.#screen.engine,
             battle: this.battle,
+            get unitRules(){ return shownRules() },
         })
         this.#console = new Console<MecardContext>(new LiveContext(host))
         registerCommands(this.#console)
@@ -561,6 +569,7 @@ export class MecardGame {
         this.#seed++
         this.run = this.#newRun(ghosts)
         this.#catalog.attach(this.run)
+        this.#unitRules.engine = this.run
         if(this.#host) this.#host.engine = this.run
         if(this.#broadcaster) this.#broadcaster.engine = this.run
         if(this.#hosted) this.#hosted.broadcaster.engine = this.run
@@ -589,6 +598,8 @@ export class MecardGame {
     readonly #library: LibraryScreen
     readonly #converter: ConverterScreen
     readonly #broadcaster: RunBroadcaster|null
+    /** The rules changing the units of each battle, of the player's run or of the table they last ran. */
+    readonly #unitRules: RunUnitRules
     readonly #view: { dispose(): void }
     readonly #particles: RunParticleLink
     readonly #console: Console<MecardContext>
@@ -715,6 +726,7 @@ export class MecardGame {
         this.#hideTable()
         this.#saver?.dispose()
         this.#historian?.dispose()
+        this.#unitRules.dispose()
         this.#broadcaster?.dispose()
         this.#view.dispose()
         this.#particles.dispose()
@@ -1015,6 +1027,7 @@ export class MecardGame {
         this.#quit.close()
         this.#shared = null
         controlRun(this.#screen, this.run, null)
+        this.#unitRules.engine = this.run
         this.#playing = false
         this.#screen.visible = false
         if(this.#lobby) this.#lobby.visible = true

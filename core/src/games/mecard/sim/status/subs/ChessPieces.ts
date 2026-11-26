@@ -7,6 +7,9 @@ import { BaseStatus } from "../BaseStatus"
 import { RoundStatus } from "../RoundStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { WALK } from "../../battle/mecanic/walk/keyword"
+import { WALKED } from "../../battle/mecanic/walk/signals"
+import * as Walk from "../../battle/mecanic/walk"
 
 /** How far a rook goes on after each of its moves, in meters: ahead, the way it went. */
 export const ROOK_EXTRA = 1
@@ -26,11 +29,11 @@ export const PAWN_PIECE = new StatusType("pion", statusVisual("chess_piece", ...
     cloned: false,
 })
 export const ROOK_PIECE = new StatusType("tour", statusVisual("chess_piece", ...IVORY), "positive", () => new RookPiece(), {
-    description: ["Une pièce d'échecs : son invocateur peut lui faire jouer ses actions. Après chaque déplacement, avance de ", ROOK_EXTRA, " m de plus."],
+    description: ["Une pièce d'échecs : son invocateur peut lui faire jouer ses actions. Après chaque déplacement, ", WALK.as("avance"), " de ", ROOK_EXTRA, " m de plus."],
     cloned: false,
 })
 export const KNIGHT_PIECE = new StatusType("cavalier", statusVisual("chess_piece", ...IVORY), "positive", () => new KnightPiece(), {
-    description: ["Une pièce d'échecs : son invocateur peut lui faire jouer ses actions. Après chaque déplacement, se décale de ", KNIGHT_EXTRA, " m à droite."],
+    description: ["Une pièce d'échecs : son invocateur peut lui faire jouer ses actions. Après chaque déplacement, ", WALK.as("se décale"), " de ", KNIGHT_EXTRA, " m à droite."],
     cloned: false,
 })
 export const BISHOP_PIECE = new StatusType("fou", statusVisual("chess_piece", ...IVORY), "positive", () => new BishopPiece(), {
@@ -86,14 +89,14 @@ abstract class SummonedPiece extends BaseStatus {
 /** After each move of its own, a piece goes on by a way worked out from the one it took. */
 function reacting({ battle, unit }: UnitContext, aside: (way: Vector2) => Vector2, extra: number): Observer {
     let going = false
-    return battle.signals.moved.add(({ unit: mover, from, to }) => {
-        // What others do to it, a push, is no move of its own, and what it does back is no new move to follow.
+    return battle.observers.of(WALKED).add(({ unit: mover, from, to }) => {
+        // What others do to it is no move of its own, and what it does back is no new move to follow.
         if(mover !== unit || unit.shoving || going) return
         const way = to.position.minus(from.position).normalized
         if(!way) return
         going = true
         try {
-            battle.move(unit, aside(way), extra)
+            Walk.move(battle, unit, aside(way), extra)
         } finally {
             going = false
         }

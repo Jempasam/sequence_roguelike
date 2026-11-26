@@ -3,6 +3,7 @@ import type { Unit } from "../../battle/Unit"
 import type { Element } from "../../element/Element"
 import type { ElementType } from "../../status/StatusVariants"
 import { HazardStatus } from "../Hazard"
+import { RELOCATED } from "../../battle/mecanic/relocation/signals"
 
 /** How far apart two bodies may stand and still touch, in meters: a body stops a stride short of another. */
 const CONTACT_SLACK = 0.08
@@ -37,7 +38,7 @@ export abstract class ContactHazard extends HazardStatus {
             touched.add(other)
             this.touch({ battle, unit: unit.owner ?? unit }, unit, other)
         }
-        this.hold(battle.unitMoved.add(({ unit: mover }) => {
+        this.hold(battle.observers.of(RELOCATED).add(({ unit: mover }) => {
             if(!unit.alive) return
             if(mover === unit) for(const other of battle.bodies) check(other)
             else check(mover)

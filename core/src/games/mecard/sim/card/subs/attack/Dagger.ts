@@ -11,7 +11,7 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
-import { visual } from "../../../base/Visual"
+import { THRUST_LOOK } from "../tools/blowLooks"
 
 /** How far the dagger of the catalog reaches, in meters: shorter than a thrust. */
 export const DAGGER_RANGE = 1.1 - UNIT_RADIUS
@@ -35,7 +35,7 @@ export function inTheBack(target: Unit, attacker: Unit): boolean {
 export class DaggerCard extends BlowCard {
 
 
-    public override readonly look = visual("thrust")
+    public override readonly look = THRUST_LOOK
 
     constructor(
         name: string, description: Text, rarity: Rarity,

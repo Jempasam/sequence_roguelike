@@ -8,6 +8,7 @@ import { Rarity } from "../../Rarity"
 import { BLOW_DAMAGE } from "./BlowCard"
 import { BACKSTAB, DAGGER_RANGE, DAGGER_WIDTH, DaggerCard } from "./Dagger"
 import { ALLONGE, DISTANCE, FORCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { SHADOW_THRUST_LOOK } from "../tools/blowLooks"
 
 /**
  * A stab that plays the round over when it kills: what the unit played so far, itself included, comes again
@@ -15,6 +16,8 @@ import { ALLONGE, DISTANCE, FORCE, UNIT, BATTLE_ROUND } from "../../../base/keyw
  */
 export class AssassinationCard extends DaggerCard {
 
+
+    public override readonly look = SHADOW_THRUST_LOOK
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         const hit = super.land(battle, unit, area)

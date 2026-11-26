@@ -5,7 +5,9 @@ import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
-import { hold, turn, WORD_TIME } from "../tools/playing"
+import { hold, WORD_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import { shadowImages } from "./ShadowStep"
 import * as Previews from "../../../battle/preview/Previews"
@@ -34,13 +36,13 @@ function wayOf(battle: Battle, unit: Unit, pose: Pose): Vector2|null {
 
 /** A turn at the closest enemy by the shortest way, the walls of the arena leading to the opposite ones. */
 export const SHADOW_AIM = new ActionCard("Viser de l'ombre", [
-    "Se tourne vers l'ennemi le plus proche, en comptant à travers les murs de l'arène, qui mènent au mur opposé.",
+    TURN.as("Se tourne"), " vers l'ennemi le plus proche, en comptant à travers les murs de l'arène, qui mènent au mur opposé.",
 ], Rarity.RARE, {
     use: function (ctx){
         const { battle, unit } = ctx
         const way = wayOf(battle, unit, unit)
         if(way){
-            turn(ctx, way)
+            Turn.turnToward(ctx, way)
             return
         }
         battle.events.push({ type: "skipped", unit, reason: NOBODY })

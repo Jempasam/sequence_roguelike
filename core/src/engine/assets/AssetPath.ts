@@ -2,6 +2,20 @@
 
 /** The path of a file shipped with the game, under assets/. */
 export type AssetPath =
+    | "mecard/ambient/bat.png"
+    | "mecard/ambient/bird.png"
+    | "mecard/ambient/bubble.png"
+    | "mecard/ambient/butterfly.png"
+    | "mecard/ambient/cloud.png"
+    | "mecard/ambient/crow.png"
+    | "mecard/ambient/fish.png"
+    | "mecard/ambient/fog.png"
+    | "mecard/ambient/goose.png"
+    | "mecard/ambient/lantern.png"
+    | "mecard/ambient/rock.png"
+    | "mecard/ambient/seagull.png"
+    | "mecard/ambient/snowflake.png"
+    | "mecard/ambient/streak.png"
     | "mecard/border/alchemist.png"
     | "mecard/border/altar.png"
     | "mecard/border/antiquarian.png"
@@ -140,10 +154,14 @@ export type AssetPath =
     | "mecard/floors/volcano/logo.png"
     | "mecard/floors/volcano/obsidian.png"
     | "mecard/floors/volcano/rock.png"
+    | "mecard/fx/arrow.json"
+    | "mecard/fx/arrow.png"
     | "mecard/fx/beam.json"
     | "mecard/fx/beam.png"
     | "mecard/fx/bomb.json"
     | "mecard/fx/bomb.png"
+    | "mecard/fx/bullet.json"
+    | "mecard/fx/bullet.png"
     | "mecard/fx/claws.json"
     | "mecard/fx/claws.png"
     | "mecard/fx/hammer.json"
@@ -165,6 +183,8 @@ export type AssetPath =
     | "mecard/fx/slash_ghost.png"
     | "mecard/fx/smash.json"
     | "mecard/fx/smash.png"
+    | "mecard/fx/spell.json"
+    | "mecard/fx/spell.png"
     | "mecard/fx/thrust.json"
     | "mecard/fx/thrust.png"
     | "mecard/halts/alchemist.png"
@@ -304,6 +324,7 @@ export type AssetPath =
     | "mecard/items/plaster.png"
     | "mecard/items/plumb_line.png"
     | "mecard/items/potion_bag.png"
+    | "mecard/items/power.png"
     | "mecard/items/reactor.png"
     | "mecard/items/rigged_coin.png"
     | "mecard/items/roller.png"
@@ -912,6 +933,7 @@ export type AssetPath =
     | "mecard/units/fisher.png"
     | "mecard/units/flamethrower.json"
     | "mecard/units/flamethrower.png"
+    | "mecard/units/footprint.png"
     | "mecard/units/fox.png"
     | "mecard/units/frog.png"
     | "mecard/units/frost_giant.png"
@@ -1059,6 +1081,7 @@ export type AssetPath =
     | "mecard/units/turret_engineer.png"
     | "mecard/units/vengeful_spirit.json"
     | "mecard/units/vengeful_spirit.png"
+    | "mecard/units/wagon.png"
     | "mecard/units/wall.json"
     | "mecard/units/wall.png"
     | "mecard/units/wandering_samurai.png"
@@ -1097,6 +1120,20 @@ export type AssetPath =
 
 /** Every file shipped with the game, sorted: what the interface looks up to know which exist. */
 export const ASSET_PATHS: readonly AssetPath[] = [
+    "mecard/ambient/bat.png",
+    "mecard/ambient/bird.png",
+    "mecard/ambient/bubble.png",
+    "mecard/ambient/butterfly.png",
+    "mecard/ambient/cloud.png",
+    "mecard/ambient/crow.png",
+    "mecard/ambient/fish.png",
+    "mecard/ambient/fog.png",
+    "mecard/ambient/goose.png",
+    "mecard/ambient/lantern.png",
+    "mecard/ambient/rock.png",
+    "mecard/ambient/seagull.png",
+    "mecard/ambient/snowflake.png",
+    "mecard/ambient/streak.png",
     "mecard/border/alchemist.png",
     "mecard/border/altar.png",
     "mecard/border/antiquarian.png",
@@ -1235,10 +1272,14 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/floors/volcano/logo.png",
     "mecard/floors/volcano/obsidian.png",
     "mecard/floors/volcano/rock.png",
+    "mecard/fx/arrow.json",
+    "mecard/fx/arrow.png",
     "mecard/fx/beam.json",
     "mecard/fx/beam.png",
     "mecard/fx/bomb.json",
     "mecard/fx/bomb.png",
+    "mecard/fx/bullet.json",
+    "mecard/fx/bullet.png",
     "mecard/fx/claws.json",
     "mecard/fx/claws.png",
     "mecard/fx/hammer.json",
@@ -1260,6 +1301,8 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/fx/slash_ghost.png",
     "mecard/fx/smash.json",
     "mecard/fx/smash.png",
+    "mecard/fx/spell.json",
+    "mecard/fx/spell.png",
     "mecard/fx/thrust.json",
     "mecard/fx/thrust.png",
     "mecard/halts/alchemist.png",
@@ -1399,6 +1442,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/items/plaster.png",
     "mecard/items/plumb_line.png",
     "mecard/items/potion_bag.png",
+    "mecard/items/power.png",
     "mecard/items/reactor.png",
     "mecard/items/rigged_coin.png",
     "mecard/items/roller.png",
@@ -2007,6 +2051,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/fisher.png",
     "mecard/units/flamethrower.json",
     "mecard/units/flamethrower.png",
+    "mecard/units/footprint.png",
     "mecard/units/fox.png",
     "mecard/units/frog.png",
     "mecard/units/frost_giant.png",
@@ -2154,6 +2199,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/units/turret_engineer.png",
     "mecard/units/vengeful_spirit.json",
     "mecard/units/vengeful_spirit.png",
+    "mecard/units/wagon.png",
     "mecard/units/wall.json",
     "mecard/units/wall.png",
     "mecard/units/wandering_samurai.png",

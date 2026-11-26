@@ -1,4 +1,9 @@
-import { AGILITE, DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
+import { AGILITE, DISTANCE, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
+import { BLINKING } from "../../../battle/mecanic/blink/keyword"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Blink from "../../../battle/mecanic/blink"
+import * as Walk from "../../../battle/mecanic/walk"
 import { visual } from "../../../base/Visual"
 import type { UnitContext } from "../../../battle/Action"
 import * as Areas from "../../../battle/area/Areas"
@@ -39,19 +44,19 @@ export class Spring extends AbstractUsable {
 
     constructor(){
         super("Ressort", visual("usables/spring"), [
-            "Te propulse de ", SPRING_LENGTH, "×", AGILITE, " ", DISTANCE, " en arrière. 3 utilisations, rechargées à chaque combat.",
+            WALK.as("Te propulse"), " de ", SPRING_LENGTH, "×", AGILITE, " ", DISTANCE, " en arrière. 3 utilisations, rechargées à chaque combat.",
         ], { charges: 3, refill: "battle" })
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
-        battle.move(unit, unit.direction.opposite, SPRING_LENGTH * unit.stats.move.value)
+        Walk.move(battle, unit, unit.direction.opposite, SPRING_LENGTH * unit.stats.move.value)
     }
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
         const length = SPRING_LENGTH * unit.stats.move.value
         const way = pose.direction.opposite
-        const gone = battle.moveSpot(unit, pose.position, way, length)
+        const gone = Walk.spot(battle, unit, pose.position, way, length)
         const full = pose.position.plus(way.times(length))
         return Previews.still(
             { ...pose, position: gone.to },
@@ -98,22 +103,18 @@ export class Kite extends AbstractUsable {
 
     constructor(){
         super("Cerf-volant", visual("usables/kite"), [
-            "Te téléporte de ", KITE_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. Une fois par combat.",
+            BLINKING.as("Cligne"), " de ", KITE_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. Une fois par combat.",
         ], { charges: 1, refill: "battle" })
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
-        battle.blink(unit, unit.position.plus(unit.direction.times(KITE_LENGTH * unit.stats.move.value)))
+        Blink.blink(battle, unit, unit.position.plus(unit.direction.times(KITE_LENGTH * unit.stats.move.value)))
     }
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
         const to = pose.position.plus(pose.direction.times(KITE_LENGTH * unit.stats.move.value))
-        const landing = battle.blinkSpot(unit, pose.position, to)
-        return Previews.still(
-            { ...pose, position: landing },
-            ...Previews.moving(unit, pose.position, to, landing, MOVE_WIDTH / 2),
-        )
+        return Blink.blinkShown(battle, unit, pose, to)
     }
 }
 
@@ -135,7 +136,7 @@ export class IronMagnet extends AbstractUsable {
         for(const body of battle.units){
             if(body.owner !== unit || !body.alive || body.position.distance(unit.position) > MAGNET_RANGE) continue
             const way = unit.position.minus(body.position).normalized
-            if(way) battle.move(body, way, MAGNET_PULL, true)
+            if(way) Walk.move(battle, body, way, MAGNET_PULL, true)
         }
     }
 

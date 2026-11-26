@@ -182,6 +182,15 @@ export const STRATEGIES: readonly StrategyKind[] = [
             return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart8)
         },
     },
+    {
+        name: "smart8_path",
+        description: "smart8 (smart8_path:K pour K), qui se tourne aussi vers le chemin contournant les obstacles, et départage ses chaînes par la longueur de ce chemin jusqu'à l'ennemi",
+        create: (argument, usables) => {
+            const candidates = argument ?? DEFAULT_CANDIDATES
+            const base = `smart8_path:${candidates}`
+            return lookahead(candidates, usables, usables ? base : `${base}-usables`, SMART_VARIANTS.smart8_path)
+        },
+    },
     ...(Object.keys(DEPTH_AIS) as (keyof typeof DEPTH_AIS)[]).map(depthKind),
     {
         name: SMART,
@@ -192,7 +201,8 @@ export const STRATEGIES: readonly StrategyKind[] = [
 
 /** The AIs that take a number of chains to try. */
 const COUNTED = new Set([
-    "smart1", "smart2", "smart3", "smart4", "smart5", "smart6", "smart7", "smart8", ...Object.keys(DEPTH_AIS), SMART,
+    "smart1", "smart2", "smart3", "smart4", "smart5", "smart6", "smart7", "smart8", "smart8_path",
+    ...Object.keys(DEPTH_AIS), SMART,
 ])
 
 /**

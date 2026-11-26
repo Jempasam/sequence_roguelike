@@ -46,6 +46,12 @@ const TINTED_ICONS: ReadonlySet<string> = new Set(["tiny_icon/heart", "tiny_icon
 const EYE_OPEN = "hud/eye_open"
 const EYE_CLOSED = "hud/eye_closed"
 
+/**
+ * The pictures that the ambient of the map draws as sprites, besides the units: every file under `ambient/`,
+ * and the mine cart a goblin pushes.
+ */
+const ambientKeys = (): string[] => [...shippedPictures("ambient"), "floors/mine/cart"]
+
 /** The key of the gold coin written beside an amount of gold. */
 const GOLD = "hud/icon/gold"
 
@@ -183,7 +189,7 @@ export class UnitSprites {
         const floors = ALL_FLOORS.map(floor => floor.icon.visual)
         const keys = [...new Set([
             ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...fxKeys(), ...tinyKeys(), ...statuses, ...things, ...halts, ...floors,
-            EYE_OPEN, EYE_CLOSED, GOLD,
+            EYE_OPEN, EYE_CLOSED, GOLD, ...ambientKeys(),
         ])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
         const [named, fixedPictures, bag, booster, wood] = await Promise.all([

@@ -1,11 +1,16 @@
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
+import { DamageType } from "../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../battle/mecanic/push/shove"
+import type { ViolentShove } from "../../battle/mecanic/push/violent"
+import * as Pushing from "../../battle/mecanic/push"
 import type { Battle } from "../../battle/Battle"
 import * as Areas from "../../battle/area/Areas"
 import type { Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
-import { MOVE_COLOR, MOVE_WIDTH, RANGE_COLOR } from "../../battle/previewColors"
+import { RANGE_COLOR } from "../../battle/previewColors"
 import type { Unit } from "../../battle/Unit"
 import type { Vector2 } from "../../base/Vector2"
 import { RoundStatus } from "../RoundStatus"
@@ -29,8 +34,10 @@ export function stenchRadius(level: number): number {
 /** A stench: after each step the unit plays, the units close to it are pushed away, for some rounds. */
 export const STINKING = new StatusType("puanteur", statusVisual("stench", 0.55, 0.65, 0.2), "negative", level => new Stench(level), {
     description: [
-        "Après chaque ", BATTLE_TURN.as("étape"), " qu'elle joue, repousse de ", STENCH_PUSH, " m les unités à moins de ", STENCH_BASE_RADIUS,
-        " m plus ", STENCH_RADIUS_PER_LEVEL, " m par ", BATTLE_ROUND, " restant, pendant ", STATUS_LEVEL, " ", BATTLE_ROUND.as("rounds"), ".",
+        "Après chaque ", BATTLE_TURN.as("étape"), " qu'elle joue, ", VIOLENT_PUSH.as("pousse violemment"), " de ", STENCH_PUSH,
+        " m les unités à moins de ", STENCH_BASE_RADIUS, " m plus ", STENCH_RADIUS_PER_LEVEL, " m par ", BATTLE_ROUND,
+        " restant (choc : ", PUSH_DAMAGE, " ", DamageType.PHYSICAL, "), pendant ", STATUS_LEVEL, " ",
+        BATTLE_ROUND.as("rounds"), ".",
     ],
 })
 
@@ -42,20 +49,23 @@ export class Stench extends RoundStatus {
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [unit.stepEnded.add(() => {
-            for(const { other, away } of this.#reached(battle, unit)){
-                battle.push(other, away, STENCH_PUSH, unit)
-            }
+            for(const push of this.#pushes(battle, unit)) Pushing.shoveViolently(push)
         })]
     }
 
     /** The zone of the stench from where its unit stands now, and the units it would push away. */
     public preview({ battle, unit, pose }: PreviewContext): Preview {
         const zone = Areas.circle(pose.position, stenchRadius(this.level))
-        const pushes = this.#reached(battle, unit).map(({ other, away }) => {
-            const to = other.position.plus(away.times(STENCH_PUSH))
-            return Previews.arrow([other.position, to], MOVE_WIDTH / 2, MOVE_COLOR)
-        })
+        const pushes = this.#pushes(battle, unit).flatMap(push => Pushing.violentShoveShown(battle, push))
         return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...pushes)
+    }
+
+
+    /** The violent push of each unit within its reach, away from its unit. */
+    #pushes(battle: Battle, unit: Unit): ViolentShove[] {
+        return this.#reached(battle, unit).map(({ other, away }) => ({
+            battle, by: unit, target: other, direction: away, distance: STENCH_PUSH, damage: PUSH_DAMAGE, atOnce: true,
+        }))
     }
 
 

@@ -1,4 +1,6 @@
-import { BATTLE_ROUND, INVOCATION } from "../../../base/keywords"
+import { BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
@@ -51,7 +53,7 @@ export class Cord extends AbstractItem {
 function nearestSummon(battle: Battle, unit: Unit): Unit|null {
     let nearest: Unit|null = null
     let best = Infinity
-    for(const body of battle.summonsOf(unit)){
+    for(const body of Summons.summonsOf(battle, unit)){
         const distance = body.position.distance(unit.position)
         if(!body.alive || distance >= best) continue
         nearest = body
@@ -80,7 +82,7 @@ export class ChewBone extends AbstractItem {
             if(body.owner === unit) summoned = true
         }))
         hold(battle.roundEnded.add(() => {
-            const oldest = battle.summonsOf(unit).find(body => body.alive)
+            const oldest = Summons.summonsOf(battle, unit).find(body => body.alive)
             if(!summoned && oldest) oldest.hearts.give(new Heart(BLUE_HEART))
             summoned = false
         }))

@@ -16,6 +16,9 @@ import { ALL_PETS } from "../sim/catalog/pets"
 import { Heart, insertHeart } from "../sim/heart/Heart"
 import { HEART_KINDS } from "../sim/save/catalogNames"
 import { deckName } from "../sim/run/deckName"
+import type { RunUnitRules } from "../sim/run/RunUnitRules"
+import { allRules, MOVES_RULE, SHUFFLE_RULE, smartRule, STRIP_PATH_RULE, STRIP_STEP_RULE } from "../sim/run/unitRules"
+import type { UnitRule } from "../sim/run/unitRules"
 import { allCards, allyOf, firstDeck, foeOf, hero, heroOf } from "../sim/run/Hero"
 import { ARENA_SCALE, arenaBattle, arenaPoint, dummy, duelBattle, enterBattle, teamOf } from "../sim/run/arena"
 import type { Side } from "../sim/run/arena"
@@ -23,9 +26,9 @@ import { loadBattle, saveBattle } from "../sim/save/battleSave"
 import type { BattleSave } from "../sim/save/battleSave"
 import type { Team } from "../sim/battle/Team"
 import { ALL_FLOORS } from "../sim/catalog/floors"
-import { AMBIENT_EFFECTS } from "./particles/ambient/ambientEffects"
-import type { AmbientOutcome } from "./particles/ambient/AmbientDirector"
-import type { AmbientEffect } from "./particles/ambient/AmbientEffect"
+import { AMBIENT_EFFECTS } from "./travel/ambient/pools"
+import type { AmbientOutcome, AmbientStatus } from "./travel/ambient/AmbientPool"
+import type { AmbientEffect } from "./travel/ambient/AmbientEffect"
 import { allFightTypes } from "../sim/catalog/fightTypes"
 import type { FightType } from "../sim/fight/FightType"
 import { GHOST_FIGHT, GHOST_REACH, ghostsFor, isGhostFight } from "../sim/fight/GhostFightType"
@@ -76,6 +79,9 @@ export interface MecardContext extends CommandContext {
 
     /** The battle being fought. */
     readonly battle: Battle
+
+    /** The rules changing the units of each battle of the run being played. */
+    readonly unitRules: RunUnitRules
 
     /** Build the screen again, after a command changed the battle. */
     refresh(): void
@@ -192,6 +198,7 @@ export class LiveContext implements MecardContext {
     public get playing(): boolean { return this.host().playing }
     public get run(): Run { return this.host().run }
     public get battle(): Battle { return this.host().battle }
+    public get unitRules(): RunUnitRules { return this.host().unitRules }
     public print(text: string): void { this.host().print(text) }
     public refresh(): void { this.host().refresh() }
     public handChanged(unit: Unit): void { this.host().handChanged(unit) }
@@ -362,6 +369,14 @@ function typeWord(type: PlaceType): string {
 const VISIT: Arg<MecardContext, HaltType> = named("la halte", allHalts, typeWord)
 const FLOOR: Arg<MecardContext, FloorType> = named("l'étage", () => ALL_FLOORS, type => wordOf(type.name))
 const EFFECT: Arg<MecardContext, AmbientEffect> = named("l'effet", () => AMBIENT_EFFECTS, effect => effect.id)
+
+/** What is told of an ambient effect asked to start. */
+const AMBIENT_STATUS_TEXT: Record<AmbientStatus, string> = {
+    started: "lancé",
+    unplayable: "impossible sur cette carte",
+    failed: "rien à jouer (sprites pas chargés ?)",
+}
+
 const FIGHT: Arg<MecardContext, FightType> =named("le combat", allFightTypes, type => type.id)
 const KIT: Arg<MecardContext, Kit> = named("le kit", () => ALL_KITS, kit => wordOf(kit.name))
 const PET: Arg<MecardContext, Monster> = named("le familier", () => ALL_PETS, pet => wordOf(pet.name))
@@ -373,6 +388,16 @@ const CONTROLLER: Arg<MecardContext, Controller> = named("le contrôle", () => [
 
 /** An AI of the catalog, as `battle bot` takes it. */
 const AI: Arg<MecardContext, AiName> = named("l'IA", () => AI_NAMES, name => name)
+
+/** A smart AI of the catalog, as the rule giving one takes it. */
+const SMART_AI: Arg<MecardContext, AiName> = named("l'IA smart",
+    () => AI_NAMES.filter(name => name.startsWith("smart")), name => name)
+
+/** The cards a rule takes out of the decks, with the rule that does. */
+const STRIPPED = named("la carte à retirer", () => [
+    { word: "avancer", rule: STRIP_STEP_RULE },
+    { word: "chemin", rule: STRIP_PATH_RULE },
+], each => each.word)
 
 /** What the others are given to play in a game hosted, none when they only watch. */
 const HOST_MODE = named("le mode", () => [
@@ -1217,7 +1242,7 @@ function runCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.print(`${hero.name} quitte l'équipe ${nextBattle}.`)
                 ctx.refresh()
             }),
-            bot: command("run bot <ia> : change l'IA de base qui joue les bots, dans ce combat dès le prochain round et dans tous les suivants (deck, random, smart1 à smart8, smart9_2, smart9_1_2, smart9_1_2_3, smart10, smart10_blind, smart10_position, smart10_future, smart10_smartfuture, smart10_safe, smart10_unsafe, smart).",
+            bot: command("run bot <ia> : change l'IA de base qui joue les bots, dans ce combat dès le prochain round et dans tous les suivants (deck, random, smart1 à smart8, smart8_path, smart9_2, smart9_1_2, smart9_1_2_3, smart10, smart10_blind, smart10_position, smart10_future, smart10_smartfuture, smart10_safe, smart10_unsafe, smart).",
                 [AI], (ctx, name) => {
                     const ai = aiNamed(name, new Rng(ctx.run.rng.state), 1)
                     if(ai instanceof LookaheadAi) ai.predicted.add(prediction => {
@@ -1239,8 +1264,38 @@ function runCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.restart()
                 ctx.print("Nouvelle run.")
             }),
+            rules: unitRuleCommands(),
         }),
     }
+}
+
+/** The commands giving the rules that change the units at the start of each battle, to try the game. */
+function unitRuleCommands(): Command<MecardContext, unknown> {
+    const give = (ctx: MecardContext, rules: readonly UnitRule[]): void => {
+        for(const rule of rules){
+            ctx.unitRules.set(rule)
+            ctx.print(`Règle ajoutée : ${rule.label} (au prochain combat).`)
+        }
+    }
+    return group("run rules", "les règles changeant, à chaque début de combat, les unités des bots sans IA smart.", {
+        smart: command("run rules smart [ia] : leur donne une IA smart.", [optional(SMART_AI, null)],
+            (ctx, name) => give(ctx, [smartRule(name ?? undefined)])),
+        moves: command("run rules moves : leur donne Avancer et Tourner en cartes permanentes.", [],
+            ctx => give(ctx, [MOVES_RULE])),
+        shuffle: command("run rules shuffle : mélange leur deck, qui n'est plus gardé en ordre.", [],
+            ctx => give(ctx, [SHUFFLE_RULE])),
+        strip: command("run rules strip <avancer|chemin> : retire ces cartes de leur deck.", [STRIPPED],
+            (ctx, stripped) => give(ctx, [stripped.rule])),
+        all: command("run rules all [ia] : toutes les règles à la fois, avec smart8_path par défaut.",
+            [optional(SMART_AI, null)], (ctx, name) => give(ctx, allRules(name ?? undefined))),
+        list: command("run rules list : liste les règles actives.", [], ctx => {
+            printNames(ctx, "Règles", ctx.unitRules.rules.map(rule => rule.label))
+        }),
+        clear: command("run rules clear : enlève toutes les règles.", [], ctx => {
+            ctx.unitRules.clear()
+            ctx.print("Plus de règles (au prochain combat).")
+        }),
+    })
 }
 
 /** The commands playing with others. */
@@ -1344,7 +1399,9 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                 [optional(EFFECT, null), optional(whole("le nombre", 1), 1)],
                 (ctx, effect, count) => {
                     const asked = effect ? Array<AmbientEffect>(count).fill(effect) : AMBIENT_EFFECTS
-                    for(const { effect: each, status } of ctx.ambient(asked)) ctx.print(`${each.id} : ${status}.`)
+                    for(const { effect: each, status } of ctx.ambient(asked)){
+                        ctx.print(`${each.id} : ${AMBIENT_STATUS_TEXT[status]}.`)
+                    }
                 },
             ),
         }),

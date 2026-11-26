@@ -21,7 +21,6 @@ import type { BattleSave, SaveOptions, SecretOptions } from "../save/battleSave"
 import { DeckAi } from "../ai/Bot"
 import { askAi } from "../ai/UnitController"
 import type { BattlePlan, UnitController } from "../ai/UnitController"
-import { FLEETING } from "../status/subs/Fleeting"
 import { Vanishing } from "../process/subs/Vanishing"
 
 import type { Action, PlugContext, Pose } from "./Action"
@@ -29,11 +28,12 @@ import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
 import { labelEffect, polygonEffect } from "./effects"
-import type { BattleEvent, DeathEvent, MoveEvent } from "./events"
+import type { BattleEvent, DeathEvent } from "./events"
+import { Glide } from "./mecanic/relocation/glide"
+import { ObserverMap } from "./ObserverMap"
 import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
 import { Team } from "./Team"
-import { BLINK_OVERSHOOT, COLLISION_SLACK, EIGHT_WAYS, PUSH_BLOCKED_DAMAGE, STRIDES_PER_SECOND } from "./rules"
 import type { Hitbox } from "./hitbox/Hitbox"
 import { Unit, UNIT_HITBOX, UNIT_RADIUS } from "./Unit"
 import type { Controller, StatBases, UnitSpec, UnitStats } from "./Unit"
@@ -64,20 +64,8 @@ const CLONE_SPOTS: readonly (readonly [number, number])[] = [
     [0.8, 0], [0.6, -0.6], [0.6, 0.6], [0, -0.8], [0, 0.8],
 ]
 
-/**
- * How far a moving unit goes between two checks of what is in its way, in meters. Small enough for a body
- * never to pass through another between two checks.
- */
-const TRAVEL_STEP = 0.05
-
 /** The name of the team of the scenery: its pillars and hazards. */
 const SCENERY_TEAM = "Décor"
-
-/** How many times a turn that brings a body into others moves it out of them before it gives up. */
-const TURN_PUSHES = 4
-
-/** How finely a body already in contact backs out of it, in meters. */
-const BACK_OUT_STEP = 0.01
 
 /** How many steps a round plays at most, so a broken chain never freezes the game. */
 const MAX_ROUND_STEPS = 100000
@@ -87,9 +75,6 @@ const WAIT_TIME = 0.3
 
 /** How long the flash of an explosion stays, in seconds. */
 const BLAST_TIME = 0.4
-
-/** How fast a unit moved in one go, a push, is shown going, in meters per second. */
-const SHOVE_SPEED = 9
 
 /** The color of the label of a wait. */
 const WAIT_COLOR = rgba(0.75, 0.75, 0.85)
@@ -107,18 +92,6 @@ export interface CardsEvent {
 export interface GoldEvent {
     readonly unit: Unit
     readonly amount: number
-}
-
-/** Where a move ended, or would end. */
-export interface Trip {
-    /** Where the unit stops. */
-    readonly to: Vector2
-
-    /** How far the unit went, in meters. */
-    readonly distance: number
-
-    /** The unit it ran into, none when none. */
-    readonly struck: Unit|null
 }
 
 /** Where a straight line from a unit stopped. */
@@ -172,9 +145,6 @@ export class Battle {
     /** A round ends, before the clones vanish. */
     public readonly roundEnded: Observable<number>
 
-    /** A unit moved, whichever it is. */
-    public readonly unitMoved: Observable<MoveEvent>
-
     /** One of the steps of a unit is about to play, whichever it is. */
     public readonly unitStepping: Observable<Unit>
 
@@ -198,6 +168,12 @@ export class Battle {
 
     /** What it tells whoever shows it, as it plays. */
     public readonly signals: BattleSignals
+
+    /** The observers of its mechanics, by the key each mechanic declares. */
+    public readonly observers: ObserverMap
+
+    /** The strides of the unit moving now, gathered to be told as one move. */
+    public readonly glide: Glide = new Glide(this)
 
     /**
      * The battle went into another phase: waiting for its next round, once one is played out; a
@@ -278,7 +254,6 @@ export class Battle {
         this.passStarted = new Observable(this.report)
         this.roundEnding = new Observable(this.report)
         this.roundEnded = new Observable(this.report)
-        this.unitMoved = new Observable(this.report)
         this.unitStepping = new Observable(this.report)
         this.unitStepped = new Observable(this.report)
         this.onGetGold = new Observable(this.report)
@@ -286,7 +261,8 @@ export class Battle {
         this.phaseChanged = new Observable(this.report)
         this.preparationEnding = new Observable(this.report)
         this.loaded = new Observable(this.report)
-        this.signals =new BattleSignals(this.report, () => this.#tellGlide())
+        this.observers = new ObserverMap(this.report, () => this.glide.tell())
+        this.signals = new BattleSignals(this.report, () => this.glide.tell())
     }
 
 
@@ -818,278 +794,12 @@ export class Battle {
 
     //// Rules ////
 
-    /**
-     * Turn a unit to face a direction, a meter long.
-     *
-     * @param duration - How long it took to turn, in seconds: at once by default.
-     * @param from - Where it faced before, as it does by default: what the turn is told as starting from.
-     */
-    public turn(unit: Unit, direction: Vector2, duration = 0, from: Vector2 = unit.direction): void {
-        const turned = this.turnSpot(unit, direction)
-        if(!turned){
-            this.events.push({ type: "blocked", unit })
-            return
-        }
-        unit.direction = direction
-        this.events.push({ type: "turned", unit })
-        const position = unit.position
-        this.signals.moved.notify({
-            unit, from: { position, direction: from }, to: { position, direction }, duration,
-        })
-        if(!turned.position.equals(position)) this.#relocate(unit, turned.position, 0)
-    }
-
-    /**
-     * Where a unit stands once turned to face a direction, none when it cannot turn. A shape that is not round
-     * takes other room turned: a turn that brings it into an obstacle, by more than the slack of the smaller
-     * obstacles a move is tried with, is refused; one that brings it in by less moves it out of the obstacle,
-     * to where the true ones leave it room. Only what the turn itself brings it into counts, so a round body,
-     * whose room never changes, always turns. Changes nothing: a turn and its preview both ask it.
-     */
-    public turnSpot(unit: Unit, direction: Vector2): Pose|null {
-        const { hitbox } = unit
-        const obstacles = this.#obstaclesOf(unit)
-        const before = { position: unit.position, direction: unit.direction }
-        const worsened = (at: Pose, body: Unit): number => {
-            const after = hitbox.gap(at, body.hitbox, body)
-            return after < hitbox.gap(before, body.hitbox, body) ? after : Infinity
-        }
-        const wallsWorsened = (at: Pose): boolean => {
-            return unit.bounded && hitbox.crossesWalls(at, this.arena) && !hitbox.crossesWalls(before, this.arena)
-        }
-        let at: Pose = { position: unit.position, direction }
-        if(obstacles.some(body => worsened(at, body) < -COLLISION_SLACK)) return null
-        for(let tries = 0; tries < TURN_PUSHES; tries++){
-            const crowding = obstacles.filter(body => worsened(at, body) < 0)
-            const shift = crowding.reduce((total, body) => {
-                return total.plus(hitbox.separation(at, body.hitbox, body))
-            }, Vector2.ZERO)
-            const inWall = wallsWorsened(at)
-            if(crowding.length === 0 && !inWall) return at
-            if(!unit.movable) return null
-            at = { position: at.position.plus(shift).plus(inWall ? this.#wallShift(unit, at) : Vector2.ZERO), direction }
-        }
-        return obstacles.some(body => worsened(at, body) < 0) || wallsWorsened(at) ? null : at
-    }
-
     /** Does the body of a unit lie wholly beyond a wall of the arena? */
     #outside(unit: Unit): boolean {
         const { x, y } = unit.position
         const { width, height } = this.arena
         const reach = unit.radius
         return x + reach < 0 || y + reach < 0 || x - reach > width || y - reach > height
-    }
-
-    /** The bodies a unit cannot overlap: all the tangible ones for a tangible unit, else only the scenery. */
-    #obstaclesOf(unit: Unit): Unit[] {
-        return this.bodies.filter(body => body !== unit && (unit.tangible || !body.touchable))
-    }
-
-    /** How far a unit crossing a wall must go to lie wholly within the arena, in meters. */
-    #wallShift(unit: Unit, at: Pose): Vector2 {
-        const outline = unit.hitbox.outline(at)
-        const left = Math.min(...outline.map(point => point.x))
-        const right = Math.max(...outline.map(point => point.x))
-        const top = Math.min(...outline.map(point => point.y))
-        const bottom = Math.max(...outline.map(point => point.y))
-        const { width, height } = this.arena
-        return new Vector2(Math.max(0, -left) - Math.max(0, right - width), Math.max(0, -top) - Math.max(0, bottom - height))
-    }
-
-
-    /**
-     * Have the strides of a unit, moved again and again until {@link Battle.endGlide}, told as one move: its
-     * start, and where it is when something else is told, or when the glide ends. The move is shown taking as
-     * long as its strides do at a speed.
-     *
-     * @param speed - How fast the unit goes, in meters per second.
-     */
-    public startGlide(unit: Unit, speed: number): void {
-        this.#tellGlide()
-        const from = { position: unit.position, direction: unit.direction }
-        this.#glide = { unit, from, speed, seconds: 0 }
-    }
-
-    /** Tell the move a glide made so far, and stop gathering its strides. */
-    public endGlide(): void {
-        this.#tellGlide()
-    }
-
-    /**
-     * Move a unit along a direction, as far as it goes before something is in the way: a wall, a pillar,
-     * another unit. A unit that cannot move on its own, rooted, does not move unless it is forced.
-     *
-     * @param forced - Is it moved by another, as a push is, whatever its mobility?
-     * @returns How far it went, and the unit it ran into, none when none.
-     */
-    public move(
-        unit: Unit, direction: Vector2, distance: number, forced = false, through: readonly Unit[] = [],
-    ): Trip {
-        if(!forced && !this.#canMove(unit)) return { to: unit.position, distance: 0, struck: null }
-        // What others move, a push, a wind, leaves the scenery where it stands.
-        if(forced && !unit.movable) return { to: unit.position, distance: 0, struck: null }
-        const travel = this.moveSpot(unit, unit.position, direction, distance, through)
-        if(travel.distance < distance) this.events.push({ type: "blocked", unit })
-        if(!forced && travel.struck) this.signals.bumped.notify({ unit, struck: travel.struck })
-        if(travel.struck) this.signals.collided.notify({ unit, struck: travel.struck })
-        if(travel.distance > 0) this.#relocate(unit, travel.to, travel.distance / SHOVE_SPEED)
-        return travel
-    }
-
-    /**
-     * Where the body of a unit would stop, going from a point along a direction: before the first wall,
-     * pillar or other body in its way, a body taking no room going through the bodies. Changes nothing: a
-     * move and its preview both ask it.
-     *
-     * @remarks
-     * What blocks the way is tested with obstacles a little smaller than they are, so a body brushing past
-     * one goes on, and a body against one can still leave it. Once blocked, the body is placed with the true
-     * obstacles: it stops at their contact, at the last point where it touched nothing.
-     *
-     * @param through - The bodies it goes through, none by default: walls and the other bodies still block.
-     */
-    public moveSpot(
-        unit: Unit, from: Vector2, direction: Vector2, distance: number, through: readonly Unit[] = [],
-    ): Trip {
-        // Nothing moves while the way is tried: what blocks it is read once.
-        const bodies = this.bodies
-        const scenery = bodies.filter(body => !body.touchable)
-        const { hitbox } = unit
-        const stands = (point: Vector2): Pose => ({ position: point, direction: unit.direction })
-        const overlaps = (body: Unit, point: Vector2, slack: number): boolean => {
-            return hitbox.gap(stands(point), body.hitbox, body) < -slack
-        }
-        const inWall = (point: Vector2): boolean => unit.bounded && hitbox.crossesWalls(stands(point), this.arena)
-        const clear = (point: Vector2, slack: number): boolean => unit.tangible
-            ? !inWall(point) && !bodies.some(body => {
-                return body !== unit && !through.includes(body) && overlaps(body, point, slack)
-            })
-            : !inWall(point) && !scenery.some(body => body !== unit && overlaps(body, point, slack))
-        const steps = Math.max(1, Math.ceil(distance / TRAVEL_STEP))
-        let reached = from
-        let travelled = 0
-        let contact = clear(from, 0) ? { to: from, distance: 0 } : null
-        for(let i = 1; i <= steps; i++){
-            const next = from.plus(direction.times(distance * i / steps))
-            if(!clear(next, COLLISION_SLACK)){
-                const struck = this.touchables.find(other => {
-                    return other !== unit && !through.includes(other) && overlaps(other, next, COLLISION_SLACK)
-                }) ?? null
-                return { ...contact ?? backedOut(from, direction, point => clear(point, 0)), struck }
-            }
-            reached = next
-            travelled = distance * i / steps
-            if(clear(next, 0)) contact = { to: next, distance: travelled }
-        }
-        return { to: reached, distance: travelled, struck: null }
-    }
-
-    /**
-     * Where a unit blinking from a point to another lands, a blink never failing: on the point when there is
-     * room there, else a little beyond it, else the farthest free point back toward where it blinks from,
-     * which is free at the worst. Changes nothing: a blink and its preview both ask it.
-     */
-    public blinkSpot(unit: Unit, from: Vector2, to: Vector2): Vector2 {
-        if(this.free(to, unit)) return to
-        const way = to.minus(from).normalized
-        if(!way) return from
-        const step = unit.radius / 2
-        for(let beyond = step; beyond <= BLINK_OVERSHOOT; beyond += step){
-            const spot = to.plus(way.times(beyond))
-            if(this.free(spot, unit)) return spot
-        }
-        for(let back = step; back < from.distance(to); back += step){
-            const spot = to.minus(way.times(back))
-            if(this.free(spot, unit)) return spot
-        }
-        return from
-    }
-
-    /** Move a unit straight to a point, over whatever lies between, to the spot {@link Battle.blinkSpot} gives. */
-    public blink(unit: Unit, to: Vector2): void {
-        if(!this.#canMove(unit)) return
-        this.#jump(unit, this.blinkSpot(unit, unit.position, to))
-    }
-
-    /**
-     * Where a unit leaping to a point ends up: the point when there is room there, else the free spot nearest
-     * to it, looked for ever farther, a leap never failing. Changes nothing.
-     */
-    public leapSpot(unit: Unit, to: Vector2): Vector2 {
-        if(this.free(to, unit)) return to
-        const farthest = this.arena.width + this.arena.height
-        for(let reach = 2 * unit.radius; reach <= farthest; reach += unit.radius){
-            const spot = this.#nearestFree(unit, to, reach)
-            if(spot) return spot
-        }
-        return to
-    }
-
-    /**
-     * Move a unit straight to a point, over whatever lies between, room there or not, even past a wall: a
-     * jump that lands where it may, followed by {@link Battle.unblock}.
-     */
-    public leap(unit: Unit, to: Vector2): boolean {
-        if(!this.#canMove(unit)) return false
-        this.#jump(unit, to)
-        return true
-    }
-
-    /**
-     * Get a unit out of where it has no room, after a move that went over everything, a jump: when its body
-     * lies in a wall, a pillar or another body, it is moved again to the free spot nearest to it, one that
-     * {@link Battle.leapSpot} gives, within the walls.
-     */
-    public unblock(unit: Unit): void {
-        if(!unit.alive || this.free(unit.position, unit)) return
-        this.events.push({ type: "blocked", unit })
-        this.#jump(unit, this.leapSpot(unit, unit.position))
-    }
-
-    /**
-     * Where a unit teleporting to a point ends up, none when it cannot: the point when there is room there,
-     * else the free spot nearest to it, within a single push, else nowhere. Changes nothing.
-     */
-    public teleportSpot(unit: Unit, to: Vector2): Vector2|null {
-        if(this.free(to, unit)) return to
-        return this.#nearestFree(unit, to, 2 * unit.radius)
-    }
-
-    /**
-     * Move a unit straight to a point, over whatever lies between, to the spot {@link Battle.teleportSpot}
-     * gives. The only move that can fail: with no spot the unit stays where it is.
-     *
-     * @returns Did it go?
-     */
-    public teleport(unit: Unit, to: Vector2): boolean {
-        if(!this.#canMove(unit)) return false
-        const spot = this.teleportSpot(unit, to)
-        if(!spot){
-            this.events.push({ type: "blocked", unit })
-            return false
-        }
-        this.#jump(unit, spot)
-        return true
-    }
-
-    /** The free spot nearest to a point among the eight around it at a reach, within the walls, none for none. */
-    #nearestFree(unit: Unit, around: Vector2, reach: number): Vector2|null {
-        let nearest: Vector2|null = null
-        for(const way of EIGHT_WAYS){
-            const spot = this.arena.clamped(around.plus(way.times(reach)), unit.radius)
-            if(!this.free(spot, unit)) continue
-            if(!nearest || spot.distance(around) < nearest.distance(around)) nearest = spot
-        }
-        return nearest
-    }
-
-    /**
-     * Push a unit along a direction, whatever its mobility. Stopped before the whole distance, it hits
-     * what was in the way, and takes a heart.
-     */
-    public push(unit: Unit, direction: Vector2, distance: number, source: Unit): void {
-        const travel = this.move(unit, direction, distance, true)
-        if(travel.distance < distance) unit.hearts.damage(PUSH_BLOCKED_DAMAGE, DamageType.PHYSICAL, source)
     }
 
     /**
@@ -1153,6 +863,16 @@ export class Battle {
             target.struck.notify({ attacker, target, amount: dealt })
         }
         return hit
+    }
+
+    /**
+     * Show a blow that wounds no one, such as a spell carrying an effect alone: whoever shows the battle plays
+     * it, and no rule hears of it.
+     *
+     * @param visual - How the blow looks.
+     */
+    public showBlow(attacker: Unit, area: Area, nature: DamageType, visual: Visual): void {
+        this.#tellStrike(attacker, area, nature, visual)
     }
 
     /** Give cards to a unit for good: told to whoever holds its decks. */
@@ -1541,20 +1261,6 @@ export class Battle {
     }
 
     /**
-     * Summon a body for a unit, of its team, where there is room: a body with no deck, out of the order of
-     * play, lasting as long as its hearts, which it loses one by one at the end of each round. Does nothing
-     * when the point is taken.
-     */
-    public summon(
-        owner: Unit, sprite: Visual, name: string, at: Vector2, hearts: readonly Heart[],
-        direction: Vector2 = owner.direction,
-    ): Unit|null {
-        const body = this.place(owner, { sprite, name, at, hearts, direction })
-        if(body) this.applyStatus(body, FLEETING, 1)
-        return body
-    }
-
-    /**
      * Leave a body in the arena for a unit, of its team: a body with no deck, out of the order of play,
      * lasting as long as its hearts. A tangible body needs room, and nothing is left when the point is
      * taken; one lying on the ground, a hazard, is left wherever it falls.
@@ -1617,11 +1323,6 @@ export class Battle {
         this.initiative.splice(at, 0, unit)
         // Coming before the unit about to play, the order shifts: that unit still plays next.
         if(at < this.#cursor) this.#cursor++
-    }
-
-    /** The bodies a unit summoned, the ones that are still in the battle. */
-    public summonsOf(owner: Unit): Unit[] {
-        return this.units.filter(unit => unit.owner === owner)
     }
 
     /**
@@ -1688,16 +1389,6 @@ export class Battle {
         return at
     }
 
-    /** Swap the places of two units, when the first can move. */
-    public swap(unit: Unit, other: Unit): boolean {
-        if(!this.#canMove(unit)) return false
-        const from = unit.position
-        this.#jump(unit, other.position)
-        this.#jump(other, from)
-        return true
-    }
-
-
     /** An action doing nothing for a moment, but saying why. */
     public static wait(reason: string): Action {
         return {
@@ -1734,13 +1425,8 @@ export class Battle {
     /** Where the execution is in the initiative: the next unit to play. */
     #cursor = 0
 
-    /**
-     * The strides of a unit being gathered as one move: where it started, how fast it goes, and how long its
-     * strides took so far, in seconds. None when none.
-     */
+    /** The team of the scenery made by this battle, none before the first body of the scenery comes. */
     #scenery: Team|null = null
-
-    #glide: { readonly unit: Unit, readonly from: Pose, readonly speed: number, seconds: number }|null = null
 
     #pass = 0
 
@@ -1947,7 +1633,7 @@ export class Battle {
         this.#activated.clear()
         this.#cursor = 0
         this.#pass = 0
-        this.#glide = null
+        this.glide.reset()
         this.actor = null
         this.effectDepth = 0
     }
@@ -2064,7 +1750,7 @@ export class Battle {
     }
 
     #finish(unit: Unit): void {
-        this.#tellGlide()
+        this.glide.tell()
         unit.stepEnded.notify(unit)
         this.unitStepped.notify(unit)
         this.#checkOver()
@@ -2099,19 +1785,6 @@ export class Battle {
         this.phaseChanged.notify(this.phase)
     }
 
-    /** Tell the move of the glide going on, as far as it went, then gather no more. */
-    #tellGlide(): void {
-        const glide = this.#glide
-        if(!glide) return
-        this.#glide = null
-        const { unit, from } = glide
-        if(from.position.equals(unit.position) && from.direction.equals(unit.direction)) return
-        const duration = Math.max(1 / STRIDES_PER_SECOND, glide.seconds)
-        this.signals.moved.notify({
-            unit, from, to: { position: unit.position, direction: unit.direction }, duration,
-        })
-    }
-
     #checkOver(): void {
         if(this.phase === "over") return
         const standing = new Set(this.living.filter(unit => unit.decisive && !unit.vanishing).map(unit => {
@@ -2141,12 +1814,6 @@ export class Battle {
         this.phaseChanged.notify(this.phase)
     }
 
-    #canMove(unit: Unit): boolean {
-        if(unit.stats.mobility.value > 0) return true
-        this.events.push({ type: "skipped", unit, reason: "immobilisé" })
-        return false
-    }
-
     /** How far a line from a point along a direction goes before a wall of the arena. */
     #wallDistance(from: Vector2, direction: Vector2): number {
         const { width, height } = this.arena
@@ -2155,46 +1822,6 @@ export class Battle {
         const alongY = direction.y > 0 ? (height - from.y) / direction.y
             : direction.y < 0 ? -from.y / direction.y : Infinity
         return Math.max(0, Math.min(alongX, alongY))
-    }
-
-    /**
-     * Move a unit to a point, told as a move unless a glide of it gathers its strides, then tell its
-     * listeners.
-     *
-     * @param duration - How long the move is shown taking, in seconds, when it is told alone.
-     */
-    #relocate(unit: Unit, to: Vector2, duration: number): void {
-        const from = unit.position
-        if(this.#glide && this.#glide.unit !== unit) this.#tellGlide()
-        unit.position = to
-        if(this.#glide){
-            this.#glide.seconds += from.distance(to) / this.#glide.speed
-        } else {
-            const { direction } = unit
-            this.signals.moved.notify({
-                unit, from: { position: from, direction }, to: { position: to, direction }, duration,
-            })
-        }
-        this.#moved(unit, from, to)
-    }
-
-    /** Move a unit to a point at once, over whatever lies between, told as a blink, then its listeners. */
-    #jump(unit: Unit, to: Vector2): void {
-        if(this.#glide?.unit === unit) this.#tellGlide()
-        const from = unit.position
-        unit.position = to
-        const { direction } = unit
-        this.signals.blinked.notify({
-            unit, from: { position: from, direction }, to: { position: to, direction },
-        })
-        this.#moved(unit, from, to)
-    }
-
-    /** Log a move, and tell its listeners. */
-    #moved(unit: Unit, from: Vector2, to: Vector2): void {
-        this.events.push({ type: "moved", unit, from, to })
-        unit.moved.notify({ unit, from, to })
-        this.unitMoved.notify({ unit, from, to })
     }
 }
 
@@ -2265,27 +1892,9 @@ interface Plug {
     readonly held: (() => void)[]
 }
 
-/** Where a body stopped, and how far from where it left. */
-interface StoppedAt {
-    readonly to: Vector2
-    readonly distance: number
-}
-
 /** A process going on for a unit: what it was given, and what it kept, to take back once it ends. */
 interface ProcessPlug {
     readonly process: Process
     readonly ctx: PlugContext
     readonly held: (() => void)[]
-}
-
-/**
- * Where a body overlapping an obstacle by less than the slack stops, blocked: backed along its way until it
- * touches nothing, or where it stood when it cannot be. Its distance is how far it backed.
- */
-function backedOut(from: Vector2, direction: Vector2, clear: (point: Vector2) => boolean): StoppedAt {
-    for(let back = BACK_OUT_STEP; back <= COLLISION_SLACK; back += BACK_OUT_STEP){
-        const to = from.minus(direction.times(back))
-        if(clear(to)) return { to, distance: back }
-    }
-    return { to: from, distance: 0 }
 }

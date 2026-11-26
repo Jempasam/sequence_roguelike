@@ -13,6 +13,7 @@ import { BlowCard } from "./BlowCard"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import { visual } from "../../../base/Visual"
+import { DEMON_SWEEP_LOOK, THRUST_LOOK } from "../tools/blowLooks"
 
 /** How many hearts the suplex of the catalog takes, before twice the strength of the unit. */
 const SUPLEX_DAMAGE = 4
@@ -154,6 +155,8 @@ export const GREAT_THRUST = new GreatThrustCard()
 export class DemonicStrikeCard extends BlowCard {
 
 
+    public override readonly look = DEMON_SWEEP_LOOK
+
     constructor(){
         super("Frappe démoniaque", [
             "Frappe en cercle de ", DEMONIC_RADIUS, "×", ALLONGE, " ", DISTANCE, " à ", DEMONIC_AHEAD, "×", ALLONGE, " ", DISTANCE, " devant : ",
@@ -197,6 +200,8 @@ export const QUAKE = new QuakeCard()
 /** A thrust that costs a heart to its unit, and hurts twice as much. */
 export class SacrificeCard extends BlowCard {
 
+
+    public override readonly look = THRUST_LOOK
 
     constructor(){
         super("Coup du sacrifice", [

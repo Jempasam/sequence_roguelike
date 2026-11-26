@@ -5,6 +5,7 @@ import { Rarity } from "../../Rarity"
 import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
 import type { Impact } from "./MoveCard"
 import { AGILITE, DISTANCE, UNIT, BATTLE_TURN } from "../../../base/keywords"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
 
 /** A dash ahead, stunning the unit it runs into. */
 export class StunningDashCard extends MoveCard {
@@ -12,7 +13,7 @@ export class StunningDashCard extends MoveCard {
 
     constructor(length: number, speed: number){
         super("Dash étourdissant", [
-            "Fonce de ", length, "×", AGILITE, " ", DISTANCE, ". L'", UNIT, " percutée est étourdie : sa prochaine ", BATTLE_TURN.as("étape"), " est perdue.",
+            WALK.as("Fonce"), " de ", length, "×", AGILITE, " ", DISTANCE, ". L'", UNIT, " percutée est étourdie : sa prochaine ", BATTLE_TURN.as("étape"), " est perdue.",
         ], Rarity.RARE, length, speed)
     }
 

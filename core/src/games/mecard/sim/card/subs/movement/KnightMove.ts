@@ -3,7 +3,9 @@ import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
-import { travel, wait } from "../tools/playing"
+import { wait } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { DASH_SPEED } from "./MoveCard"
 import * as Previews from "../../../battle/preview/Previews"
@@ -29,7 +31,7 @@ export class KnightMoveCard extends ActionCard {
         public readonly ahead: number,
     ){
         super("Pas de Cavalier", [
-            "Se décale de ", side, "×", AGILITE, " ", DISTANCE, " à droite, puis avance de ", ahead, "×", AGILITE, " ",
+            WALK.as("Se décale"), " de ", side, "×", AGILITE, " ", DISTANCE, " à droite, puis ", WALK.as("avance"), " de ", ahead, "×", AGILITE, " ",
             DISTANCE, ", sans se retourner.",
         ], Rarity.COMMON, KnightMoveCard.#moving(side, ahead))
     }
@@ -39,15 +41,15 @@ export class KnightMoveCard extends ActionCard {
         return {
             use: function (ctx){
                 const { unit } = ctx
-                travel(ctx, unit.direction.right, side * unit.stats.move.value, DASH_SPEED)
+                Walk.travel(ctx, unit.direction.right, side * unit.stats.move.value, DASH_SPEED)
                 wait(ctx.battle, TURN_TIME)
-                travel(ctx, unit.direction, ahead * unit.stats.move.value, DASH_SPEED)
+                Walk.travel(ctx, unit.direction, ahead * unit.stats.move.value, DASH_SPEED)
                 wait(ctx.battle, TURN_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const { move } = unit.stats
-                const first = battle.moveSpot(unit, pose.position, pose.direction.right, side * move.value)
-                const second = battle.moveSpot(unit, first.to, pose.direction, ahead * move.value)
+                const first = Walk.spot(battle, unit, pose.position, pose.direction.right, side * move.value)
+                const second = Walk.spot(battle, unit, first.to, pose.direction, ahead * move.value)
                 const path = Previews.arrow([pose.position, first.to, second.to], MOVE_WIDTH, MOVE_COLOR)
                 return Previews.still({ ...pose, position: second.to }, path, Previews.body(unit, second.to, pose.direction))
             },

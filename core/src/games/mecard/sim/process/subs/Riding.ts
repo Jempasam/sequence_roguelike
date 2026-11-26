@@ -6,6 +6,8 @@ import { MOVE_WIDTH } from "../../battle/previewColors"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { WALK } from "../../battle/mecanic/walk/keyword"
+import * as Walk from "../../battle/mecanic/walk"
 
 /** A ride for the round: the unit goes some way ahead before each of its steps, and once at the start. */
 export class Riding extends AbstractProcess {
@@ -16,14 +18,14 @@ export class Riding extends AbstractProcess {
         public readonly length: number,
     ){
         super("cheval", visual("processes/horse", { color: [0.75, 0.55, 0.35] }),
-            ["Avance tout droit au début du ", BATTLE_ROUND, ", puis avant chacun de ses pas."],
+            [WALK.as("Avance"), " tout droit au début du ", BATTLE_ROUND, ", puis avant chacun de ses pas."],
         )
     }
 
 
     public override init({ battle, unit, hold }: PlugContext): void {
         const ride = (): void => {
-            battle.move(unit, unit.direction, this.length * unit.stats.move.value)
+            Walk.move(battle, unit, unit.direction, this.length * unit.stats.move.value)
         }
         ride()
         hold(unit.stepStarted.add(ride))

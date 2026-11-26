@@ -1,5 +1,6 @@
 import type { Color } from "../../../../engine/math"
-import type { Vector2 } from "../../sim/base/Vector2"
+import { Vector2 } from "../../sim/base/Vector2"
+import type { Area } from "../../sim/battle/Area"
 import type { Battle } from "../../sim/battle/Battle"
 import type { Indicator } from "../../sim/battle/preview/Preview"
 import type { Unit } from "../../sim/battle/Unit"
@@ -8,6 +9,8 @@ import { Heart } from "../../sim/heart/Heart"
 import type { Process } from "../../sim/process/Process"
 import type { Tether } from "../../sim/battle/signals"
 import type { StatusType } from "../../sim/status/Status"
+import type { FxResolved } from "../look/FxSprites"
+import type { StrikePlacement } from "../look/placeStrike"
 
 /** How many cards a deck holds, as the screen shows it. */
 export interface SceneDeck {
@@ -123,6 +126,41 @@ export interface SceneUnit {
 
     /** How much of it is seen, from 0 to 1: it fades out and in when it blinks. */
     opacity: number
+
+    /** How far it is drawn from where it stands, in meters: a lunge, a shiver. */
+    offset: Vector2
+
+    /** How much of it is lit white, from 0 to 1: it flashes when hit. */
+    flash: number
+}
+
+/** A blow being played over the arena: how it is shown, where it lies, and how far it went. */
+export interface PlayedStrike {
+    readonly area: Area
+    readonly placement: StrikePlacement
+    readonly shown: FxResolved
+
+    /** What its random parts are drawn from: each blow played has its own. */
+    readonly seed: number
+
+    /** How far it went, from 0 to 1. */
+    share: number
+}
+
+/** The mark of a blow on a unit it landed on, being played. */
+export interface PlayedImpact {
+    /** Where the unit stands. */
+    readonly at: Vector2
+
+    /** The way of the blow, a meter long. */
+    readonly forward: Vector2
+
+    /** How many times larger than a unit of the base size the unit is. */
+    readonly scale: number
+    readonly shown: Extract<FxResolved, { kind: "sprite" }>
+
+    /** How far it went, from 0 to 1. */
+    share: number
 }
 
 /** Something to look at a moment, before it acts: what lights up, and the word said over its unit. */
@@ -145,6 +183,15 @@ export class BattleScene {
 
     /** What is drawn over the arena now, the oldest first. */
     public indicators: readonly Indicator[] = []
+
+    /** The blows being played over the arena now, the oldest first. */
+    public strikes: readonly PlayedStrike[] = []
+
+    /** How many blows were played: the seed of the next, so each is drawn differently. */
+    public strikeCount = 0
+
+    /** The impacts being played on units now, the oldest first. */
+    public impacts: readonly PlayedImpact[] = []
 
     /** The ties between units drawn now, the oldest first. */
     public tethers: readonly Tether[] = []
@@ -243,6 +290,8 @@ export class BattleScene {
         for(const [unit, shown] of kept.#units) this.#units.set(unit, shown)
         this.#order = kept.#order
         this.indicators = []
+        this.strikes = []
+        this.impacts = []
         this.notice = null
         this.#litCards = null
         this.#litHeart = null
@@ -263,7 +312,7 @@ export class BattleScene {
             steps: unit.stepsLeft,
             chain: { cards: [...unit.chain.cards], cursor: unit.chain.cursor, borrowed: [...unit.chain.borrowed] },
             hand: [...unit.hand], decks: decksOf(unit), cursor: unit.decks.cursor,
-            alive: unit.alive, opacity: 1,
+            alive: unit.alive, opacity: 1, offset: Vector2.ZERO, flash: 0,
         }
         this.#units.set(unit, shown)
         this.version++

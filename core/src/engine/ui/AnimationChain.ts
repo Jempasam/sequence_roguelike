@@ -1,8 +1,8 @@
 /** Something shown over a while, done once its promise settles. */
-export type Animation = () => Promise<void>
+export type UiAnimation = () => Promise<void>
 
 /** An animation taking no time: what it does, in its turn. */
-export function instant(act: () => void): Animation {
+export function instant(act: () => void): UiAnimation {
     return () => {
         act()
         return Promise.resolve()
@@ -42,7 +42,7 @@ export class AnimationChain {
     }
 
     /** Add an animation at the end: started at once when nothing is going on. */
-    public add(animation: Animation): void {
+    public add(animation: UiAnimation): void {
         this.#waiting.push(animation)
         if(!this.#playing) this.#playNext()
     }
@@ -53,7 +53,7 @@ export class AnimationChain {
     }
 
 
-    readonly #waiting: Animation[] = []
+    readonly #waiting: UiAnimation[] = []
 
     #playing = false
 
@@ -71,7 +71,7 @@ export class AnimationChain {
     }
 
     /** Start an animation, its failure to start told as any other. */
-    async #start(animation: Animation): Promise<void> {
+    async #start(animation: UiAnimation): Promise<void> {
         await animation()
     }
 }

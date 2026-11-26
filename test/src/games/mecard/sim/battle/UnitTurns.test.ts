@@ -26,6 +26,26 @@ describe("Unit, the turns", () => {
         expect(told).toEqual([`0-1 ${SPELL} ${FIRE}`, `2-2 ${STEP}`])
     })
 
+    test("a step → told started, then its cards lit, then its action read", () => {
+        const { on, hero } = facing()
+        const told: string[] = []
+        on.signals.stepStarted.add(({ unit, left }) => { if(unit === hero) told.push(`started ${left}`) })
+        on.signals.cardActivated.add(({ unit }) => { if(unit === hero) told.push("lit") })
+        hero.actionRead.add(() => told.push(`read ${hero.stepsPlayed.length}`))
+        play(on, [[hero, chain(WAIT)]])
+        expect(told.slice(0, 3)).toEqual(["started 0", "lit", "read 1"])
+    })
+
+    test("no step left → nothing told", () => {
+        const { on, hero } = facing()
+        const told: string[] = []
+        on.signals.stepStarted.add(() => told.push("started"))
+        on.startRound()
+        on.endPreparation()
+        expect(hero.playTurn()).toBeNull()
+        expect(told).toEqual([])
+    })
+
     test("a repeated action → one turn for all its plays, the others playing after", () => {
         const { on, hero, foe } = facing()
         const order: string[] = []

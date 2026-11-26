@@ -5,7 +5,9 @@ import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColor
 import type { Action } from "../../../battle/Action"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import { ActionCard } from "../ActionCard"
-import { hold, turn, WORD_TIME } from "../tools/playing"
+import { hold, WORD_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -35,7 +37,7 @@ export class PathAimCard extends ActionCard {
                 const { battle, unit } = ctx
                 const way = wayOf({ battle, unit, pose: unit })
                 if(way){
-                    turn(ctx, way[0].minus(unit.position).normalized ?? unit.direction)
+                    Turn.turnToward(ctx, way[0].minus(unit.position).normalized ?? unit.direction)
                     return
                 }
                 battle.events.push({ type: "skipped", unit, reason: "personne à viser" })
@@ -54,5 +56,5 @@ export class PathAimCard extends ActionCard {
 }
 
 export const PATH_AIM = new PathAimCard("Chemin", [
-    "Se tourne vers le chemin qui mène à l'ennemi le plus proche, en contournant les obstacles.",
+    TURN.as("Se tourne"), " vers le chemin qui mène à l'ennemi le plus proche, en contournant les obstacles.",
 ], Rarity.COMMON)

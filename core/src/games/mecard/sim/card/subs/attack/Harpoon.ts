@@ -1,4 +1,5 @@
 import { rgba } from "../../../base/Rgba"
+import { SHOT_LOOK } from "../tools/blowLooks"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
@@ -7,7 +8,7 @@ import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
-import { travel } from "../tools/playing"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
@@ -60,14 +61,15 @@ export class HarpoonCard extends ActionCard {
                 fly(battle, start, end, HARPOON_COLOR)
                 if(!target) return
                 const area = Areas.line(start, end, BOLT_WIDTH)
-                battle.strike(unit, area, amount + unit.stats.precision.value, DamageType.PHYSICAL)
-                if(target.alive) travel(ctx, unit.direction, pulled(unit), PULL_SPEED)
+                const damage = amount + unit.stats.precision.value
+                battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, SHOT_LOOK)
+                if(target.alive) Walk.travel(ctx, unit.direction, pulled(unit), PULL_SPEED)
             },
             preview: ({ battle, unit, pose }) => {
                 const { start, end, unit: target } = battle.ray(unit, reach(unit), pose)
                 const rope = Previews.arrow([start, end], MOVE_WIDTH / 2, HARPOON_COLOR)
                 if(!target) return Previews.still(pose, rope, Previews.label(end, "raté", NOTE_COLOR))
-                const gone = battle.moveSpot(unit, pose.position, pose.direction, pulled(unit))
+                const gone = Walk.spot(battle, unit, pose.position, pose.direction, pulled(unit))
                 const pull = Previews.arrow([pose.position, gone.to], MOVE_WIDTH, MOVE_COLOR)
                 return Previews.still({ ...pose, position: gone.to }, rope, pull, Previews.body(unit, gone.to, pose.direction), ...Previews.strike([], [target]))
             },

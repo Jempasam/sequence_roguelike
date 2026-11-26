@@ -6,6 +6,7 @@ import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
 import { AbstractItem } from "../AbstractItem"
 import { BATTLE_ROUND } from "../../../base/keywords"
+import { RELOCATED } from "../../../battle/mecanic/relocation/signals"
 
 /** How many shields the shell of the catalog holds at most. */
 const SHELL_MAX = 3
@@ -27,7 +28,7 @@ export class SnailShell extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         let moved = false
         let shells = 0
-        hold(unit.moved.add(() => {
+        hold(unit.observers.of(RELOCATED).add(() => {
             // What others do to it is no move of its own.
             if(unit.shoving) return
             moved = true

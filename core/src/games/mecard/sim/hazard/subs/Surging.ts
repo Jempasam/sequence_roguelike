@@ -12,6 +12,10 @@ import { elementVariants } from "../../status/StatusVariants"
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
+import { DamageType } from "../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../battle/mecanic/push/shove"
+import * as Pushing from "../../battle/mecanic/push"
 
 /** How many rounds a wave lasts. */
 const WAVE_ROUNDS = 2
@@ -23,7 +27,13 @@ const WAVE_SIZE = 2
 const WAVE_PUSH = 1.5
 
 /** A wave. */
-export const SURGING = familyType("vague", statusVisual("surging", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Un corps qui la touche subit un élément et est emporté." })
+export const SURGING = familyType("vague", statusVisual("surging", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", {
+    cloned: false,
+    description: [
+        "Un corps qui la touche subit un élément et est ", VIOLENT_PUSH.as("poussé violemment"), " (choc : ", PUSH_DAMAGE,
+        " ", DamageType.PHYSICAL, ").",
+    ],
+})
 
 /** The kinds of wave, one for each element. */
 export const WAVES = elementVariants(
@@ -36,7 +46,10 @@ export class Surging extends ContactHazard {
 
     protected touch(ctx: UnitContext, body: Unit, target: Unit): void {
         this.element.applyNegative(ctx, target)
-        ctx.battle.push(target, body.direction, WAVE_PUSH, ctx.unit)
+        Pushing.shoveViolently({
+            battle: ctx.battle, by: ctx.unit, target, direction: body.direction, distance: WAVE_PUSH,
+            damage: PUSH_DAMAGE, atOnce: true,
+        })
     }
 }
 

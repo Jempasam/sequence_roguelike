@@ -6,9 +6,13 @@ import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, travel, turn } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
+import * as Walk from "../../../battle/mecanic/walk"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the charm and the fear of the catalog reach, in meters. */
@@ -34,8 +38,9 @@ export class ControlCard extends ActionCard {
         super(
             toward ? "Charmer" : "Effrayer",
             [
-                "L'", UNIT, " en face, jusqu'à ", range, " ", DISTANCE, toward ? ", se tourne vers toi" : ", te tourne le dos",
-                " et avance de ", walk, " ", DISTANCE, ".",
+                "L'", UNIT, " en face, jusqu'à ", range, " ", DISTANCE, ", ",
+                ...toward ? [TURN.as("se tourne"), " vers toi"] : [TURN.as("te tourne le dos")],
+                " et ", WALK.as("avance"), " de ", walk, " ", DISTANCE, ".",
             ],
             Rarity.RARE, ControlCard.#controlling(toward, range, walk),
         )
@@ -60,14 +65,14 @@ export class ControlCard extends ActionCard {
                     return
                 }
                 const theirs = { battle, unit: controlling.target }
-                turn(theirs, controlling.facing)
-                travel(theirs, controlling.facing, walk)
+                Turn.turnToward(theirs, controlling.facing)
+                Walk.travel(theirs, controlling.facing, walk)
             },
             preview: ({ battle, unit, pose }) => {
                 const controlling = controlled(battle, unit, pose)
                 if(!controlling) return Previews.still(pose, Previews.label(pose.position, "personne en face", NOTE_COLOR))
                 const { target, facing } = controlling
-                const walked = battle.moveSpot(target, target.position, facing, walk)
+                const walked = Walk.spot(battle, target, target.position, facing, walk)
                 return Previews.still(pose, ...Previews.strike([], [target]), Previews.arrow([target.position, walked.to], MOVE_WIDTH, CONTROL_COLOR))
             },
         }

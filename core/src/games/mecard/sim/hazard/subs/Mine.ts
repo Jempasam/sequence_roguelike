@@ -11,6 +11,7 @@ import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
+import { RELOCATED } from "../../battle/mecanic/relocation/signals"
 
 /** How many rounds the mines of the catalog lie there. */
 export const MINE_ROUNDS = 3
@@ -28,7 +29,7 @@ export class Mined extends HazardStatus {
     public readonly type: StatusType = MINE_HAZARD
 
     protected plug({ battle, unit }: UnitContext): void {
-        this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
+        this.hold(battle.observers.of(RELOCATED).add(({ unit: mover, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             const zone = unit.zone ?? Areas.circle(unit.position, MINE_RADIUS)
             if(!mover.hitbox.touches({ position: to, direction: mover.direction }, zone)) return

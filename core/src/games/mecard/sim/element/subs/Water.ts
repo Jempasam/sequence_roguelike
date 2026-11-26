@@ -6,6 +6,8 @@ import { placeWave } from "../../hazard/subs/Surging"
 import { Slowness, SLOWED } from "../../status/subs/Slowness"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
+import { VIOLENT_PUSH } from "../../battle/mecanic/push/keyword"
+import { WALK } from "../../battle/mecanic/walk/keyword"
 
 /** How many rounds the water slows a unit for. */
 const WATER_SLOW = 2
@@ -19,7 +21,10 @@ export class Water extends AbstractElement {
             "Eau", rgba(0.3, 0.6, 1), "ralenti",
             new Slowness(WATER_SLOW),
             "retire les statuts négatifs",
-            "une vague large qui avance : le négatif à chaque corps, une fois, qu'elle repousse dans son sens",
+            [
+                "une vague large qui ", WALK.as("avance"), " : le négatif à chaque corps, une fois, qu'elle ",
+                VIOLENT_PUSH.as("pousse violemment"), " dans son sens",
+            ],
         )
     }
 

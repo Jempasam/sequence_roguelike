@@ -9,8 +9,9 @@ import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
-import { turn } from "../tools/playing"
 import { inOrder, repeated } from "../tools/sequence"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How much range and precision the telescope adds, as a factor and in hearts, while its action plays. */
@@ -85,7 +86,7 @@ export const ELEPHANT_CARD = new ModifierCard("Éléphant", [
 
 /** A half turn, as a step of its own. */
 export const HALF_TURN: Action = {
-    use: (ctx: UnitContext) => turn(ctx, ctx.unit.direction.opposite),
+    use: (ctx: UnitContext) => Turn.turnToward(ctx, ctx.unit.direction.opposite),
     preview: ({ pose }) => {
         const away = pose.direction.opposite
         const tip = pose.position.plus(away.times(TURN_LENGTH))
@@ -94,10 +95,10 @@ export const HALF_TURN: Action = {
 }
 
 /** A half turn alone. */
-export const TURN_AROUND = new ActionCard("Retournement", "Fait demi-tour.", Rarity.COMMON, HALF_TURN)
+export const TURN_AROUND = new ActionCard("Retournement", [TURN.as("Fait demi-tour"), "."], Rarity.COMMON, HALF_TURN)
 
 export const MIRROR = new ModifierCard("Miroir", [
-    "Joue l'action, fait demi-tour, puis la rejoue.",
+    "Joue l'action, ", TURN.as("fait demi-tour"), ", puis la rejoue.",
 ], Rarity.EPIC, action => inOrder([action, HALF_TURN, action]))
 
 

@@ -8,12 +8,15 @@ import type { Card } from "../../../card/Card"
 import { collageOf } from "../../../card/subs/composite/ChainRewrites"
 import { FISHING } from "../../../card/subs/attack/Crosses"
 import { placeChainSummon, DECOY, TURRET } from "../../../card/subs/summon/ChainSummons"
-import { turning, turnsIn, turnUnitsIn } from "../../../card/subs/tools/turning"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
+import * as Turn from "../../../battle/mecanic/turn"
 import type { Preview } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import * as Previews from "../../../battle/preview/Previews"
 import { RANGE_COLOR } from "../../../battle/previewColors"
-import { DISTANCE, INVOCATION, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
+import { DISTANCE, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { ModuleCard } from "../../../card/subs/mechanic/ModuleCard"
 import { FusionCard } from "../../../card/subs/composite/FusionCard"
 import { mergeableInChain, MergedCard, suppliedAfter } from "../../../card/subs/composite/MergedCard"
@@ -41,7 +44,7 @@ export class EngineOil extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        for(const body of battle.summonsOf(unit)) if(playsCards(battle, body)) battle.repeatChain(body)
+        for(const body of Summons.summonsOf(battle, unit)) if(playsCards(battle, body)) battle.repeatChain(body)
     }
 }
 
@@ -114,7 +117,7 @@ export class Whistle extends AbstractUsable {
         super(
             "Sifflet", visual("usables/energizer"),
             [
-                "Tourne chaque ", UNIT, " à ", frenchNumber(WHISTLE_RADIUS), " ", DISTANCE, " autour vers toi. 2 utilisations, rechargées à chaque combat.",
+                TURN.as("Tourne"), " chaque ", UNIT, " à ", frenchNumber(WHISTLE_RADIUS), " ", DISTANCE, " autour vers toi. 2 utilisations, rechargées à chaque combat.",
             ],
             { charges: 2, refill: "battle" },
         )
@@ -122,7 +125,7 @@ export class Whistle extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        turnUnitsIn(
+        Turn.turnUnitsIn(
             battle, Areas.circle(unit.position, WHISTLE_RADIUS), unit,
             other => unit.position.minus(other.position).normalized,
         )
@@ -130,8 +133,8 @@ export class Whistle extends AbstractUsable {
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
         const zone = Areas.circle(pose.position, WHISTLE_RADIUS)
-        const turned = turnsIn(battle, zone, unit, other => pose.position.minus(other.position).normalized)
-        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(turning))
+        const turned = Turn.turnsIn(battle, zone, unit, other => pose.position.minus(other.position).normalized)
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(Turn.turningShown))
     }
 }
 
@@ -197,7 +200,7 @@ export class Battery extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        for(const body of battle.summonsOf(unit)){
+        for(const body of Summons.summonsOf(battle, unit)){
             if(body.hearts.all.some(heart => heart.kind === TIME_HEART)) body.hearts.give(new Heart(TIME_HEART))
         }
     }

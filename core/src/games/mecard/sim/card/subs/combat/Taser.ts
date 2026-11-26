@@ -1,4 +1,5 @@
 import { CONTROL_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
+import { LIGHTNING_LOOK } from "../tools/blowLooks"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -47,7 +48,7 @@ export class TaserCard extends ActionCard {
         return {
             use: function ({ battle, unit }){
                 const area = zap(battle, unit, unit)
-                const struck = battle.strike(unit, area, amount, DamageType.PHYSICAL)
+                const struck = battle.strike(unit, area, amount, DamageType.PHYSICAL, () => 1, LIGHTNING_LOOK)
                 for(const target of struck) battle.shock(target)
                 hold(battle, SHORT_TIME, [Previews.polygon(area, CONTROL_COLOR)])
             },

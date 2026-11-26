@@ -27,7 +27,7 @@ export class Mimicking extends AbstractProcess {
         const { battle, unit, hold } = ctx
         const { target } = this
         tieTo(ctx, target, this, "tethers/grapple")
-        hold(unit.stepStarted.add(() => {
+        hold(unit.actionRead.add(() => {
             // The action starting is the last the unit played, put there before it is told.
             const action = unit.stepsPlayed[unit.stepsPlayed.length - 1]
             if(!action || isEcho(action) || !target.alive) return

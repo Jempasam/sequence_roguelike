@@ -3,7 +3,9 @@ import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
-import { travel, wait, WALK_SPEED } from "../tools/playing"
+import { wait } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { STEP_LENGTH } from "./Step"
 import * as Previews from "../../../battle/preview/Previews"
@@ -20,7 +22,7 @@ export class SidestepCard extends ActionCard {
         public readonly length: number,
     ){
         super("Pas de côté", [
-            "Se décale de ", length, "×", AGILITE, " ", DISTANCE, " à gauche ou à droite, au hasard, sans se retourner.",
+            WALK.as("Se décale"), " de ", length, "×", AGILITE, " ", DISTANCE, " à gauche ou à droite, au hasard, sans se retourner.",
         ], Rarity.COMMON, SidestepCard.#stepping(length))
     }
 
@@ -31,7 +33,7 @@ export class SidestepCard extends ActionCard {
                 const { battle, unit } = ctx
                 const right = unit.direction.right
                 const way = battle.rng.pick([right, right.opposite]) ?? right
-                travel(ctx, way, length * unit.stats.move.value, WALK_SPEED)
+                Walk.travel(ctx, way, length * unit.stats.move.value, Walk.WALK_SPEED)
                 wait(battle, SETTLE_TIME)
             },
             // The draw is not known yet: both sides show, and the unit stays where it stands.
@@ -39,7 +41,7 @@ export class SidestepCard extends ActionCard {
                 const distance = length * unit.stats.move.value
                 const right = pose.direction.right
                 const sides = [right, right.opposite].map(way => {
-                    const gone = battle.moveSpot(unit, pose.position, way, distance)
+                    const gone = Walk.spot(battle, unit, pose.position, way, distance)
                     const full = pose.position.plus(way.times(distance))
                     return Previews.moving(unit, pose.position, full, gone.to, MOVE_WIDTH)
                 })

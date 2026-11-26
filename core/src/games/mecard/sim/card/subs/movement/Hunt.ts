@@ -9,6 +9,10 @@ import { Rarity } from "../../Rarity"
 import { FEBRILE } from "../../../base/keywords"
 import { backOf } from "./AssassinStep"
 import * as Previews from "../../../battle/preview/Previews"
+import { LEAPING } from "../../../battle/mecanic/leap/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Leap from "../../../battle/mecanic/leap"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** What the hunt says when no enemy is feverish. */
 const NOBODY = "personne de fébrile"
@@ -23,8 +27,8 @@ function prey(battle: Battle, unit: Unit): Unit|null {
 
 /** A jump into the back of the frailest feverish enemy, however far: nobody feverish, nothing happens. */
 export const HUNT = new ActionCard("Traque", [
-    "Se téléporte dans le dos de l'ennemi ", FEBRILE, " qui a le moins de vie, ",
-    "à n'importe quelle distance, tourné comme lui. Aucun ", FEBRILE, " : raté.",
+    LEAPING.as("Saute"), " dans le dos de l'ennemi ", FEBRILE, " qui a le moins de vie, ",
+    "à n'importe quelle distance, ", TURN.as("tourné"), " comme lui. Aucun ", FEBRILE, " : raté.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const target = prey(battle, unit)
@@ -35,9 +39,9 @@ export const HUNT = new ActionCard("Traque", [
         }
         const { at, facing } = backOf(unit, target)
         hold(battle, JUMP_TIME, [Previews.arrow([unit.position, at], MOVE_WIDTH / 2, MOVE_COLOR)])
-        if(battle.leap(unit, at)){
-            battle.turn(unit, facing)
-            battle.unblock(unit)
+        if(Leap.leap(battle, unit, at)){
+            Turn.turn(battle, unit, facing)
+            Leap.unblock(battle, unit)
         }
         wait(battle, JUMP_TIME)
     },

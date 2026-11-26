@@ -1,4 +1,5 @@
 import { ALLONGE, DISTANCE, FEBRILE, FORCE, UNIT } from "../../../base/keywords"
+import { SHOCKWAVE_LOOK, SLASH_LOOK, THRUST_LOOK } from "../tools/blowLooks"
 import type { Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Area } from "../../../battle/Area"
@@ -10,6 +11,8 @@ import { frenchNumber } from "../../../battle/words"
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { centeredSegment, cross } from "../tools/areas"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import * as Teleport from "../../../battle/mecanic/teleport"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
@@ -38,7 +41,7 @@ export const CROSS_CUT = new ActionCard("Taille croisée", [
     use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
         const areas = xAreas(unit, unit)
-        for(const area of areas) battle.strike(unit, area, amount, DamageType.PHYSICAL)
+        for(const area of areas) battle.strike(unit, area, amount, DamageType.PHYSICAL, () => 1, THRUST_LOOK)
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
     },
     preview: ({ battle, unit, pose }) => {
@@ -67,8 +70,8 @@ function fishingCenter(pose: Pose, unit: Unit) {
  */
 export const FISHING: ActionCard = new ActionCard("Pêche", [
     "Frappe en croix à ", frenchNumber(FISHING_AHEAD), "×", ALLONGE, " ", DISTANCE, " devant : ", 1, "+", FORCE, " ",
-    DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : se téléporte au centre, gagne ",
-    FISHING_GOLD,
+    DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : ",
+    TELEPORT.as("se téléporte"), " au centre, gagne ", FISHING_GOLD,
     " or par mort, et reprend une Pêche en main.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
@@ -77,12 +80,12 @@ export const FISHING: ActionCard = new ActionCard("Pêche", [
         )
         const amount = 1 + unit.stats.strength.value
         const hit = battle.strikeMany(
-            unit, areas, amount, DamageType.PHYSICAL, target => target.feverish ? 2 : 1,
+            unit, areas, amount, DamageType.PHYSICAL, target => target.feverish ? 2 : 1, THRUST_LOOK,
         )
         const killed = hit.filter(target => !target.alive).length
         hold(battle, SHORT_TIME, areas.map(area => Previews.polygon(area, PHYSICAL_COLOR)))
         if(killed === 0) return
-        battle.teleport(unit, fishingCenter(unit, unit))
+        Teleport.teleport(battle, unit, fishingCenter(unit, unit))
         battle.giveGold(unit, FISHING_GOLD * killed)
         battle.giveCard(unit, FISHING)
     },
@@ -124,11 +127,11 @@ export const DEATH_SCYTHE = new ActionCard("Faux de la mort", [
 ], Rarity.LEGENDARY, {
     use: function ({ battle, unit }){
         const amount = 1 + unit.stats.strength.value
-        let hit = battle.strike(unit, reapArea(unit, unit), amount, DamageType.PHYSICAL)
+        let hit = battle.strike(unit, reapArea(unit, unit), amount, DamageType.PHYSICAL, () => 1, SLASH_LOOK)
         hold(battle, SHORT_TIME, [Previews.polygon(reapArea(unit, unit), PHYSICAL_COLOR)])
         for(let wave = 1; wave < WAVES && hit.some(target => !target.alive); wave++){
             const everyone: Area = Areas.circle(unit.position, EVERYWHERE)
-            hit = battle.strike(unit, everyone, amount, DamageType.PHYSICAL)
+            hit = battle.strike(unit, everyone, amount, DamageType.PHYSICAL, () => 1, SHOCKWAVE_LOOK)
             hold(battle, SHORT_TIME)
         }
     },

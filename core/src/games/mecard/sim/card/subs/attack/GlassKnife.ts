@@ -9,6 +9,7 @@ import { Rarity } from "../../Rarity"
 import { BlowCard } from "./BlowCard"
 import { THRUST_RANGE, THRUST_WIDTH } from "./Thrust"
 import * as Areas from "../../../battle/area/Areas"
+import { THRUST_LOOK } from "../tools/blowLooks"
 
 /** How many hearts the glass knife takes, before the strength of the unit: less than a thrust. */
 const GLASS_KNIFE_DAMAGE = 1
@@ -19,6 +20,8 @@ const GLASS_KNIFE_DAMAGE = 1
  */
 export class GlassKnifeCard extends BlowCard {
 
+
+    public override readonly look = THRUST_LOOK
 
     constructor(){
         super("Couteau de verre", [

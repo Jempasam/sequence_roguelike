@@ -75,6 +75,8 @@ export class ParticleSystem {
 
     readonly #data: Float32Array
     readonly #sprites: (Sprite|null)[]
+    readonly #ids: Int32Array
+    #nextId = 1
     readonly #vertices: Float32Array
     readonly #indices: Uint16Array
     readonly #textures: Texture[] = []
@@ -95,6 +97,7 @@ export class ParticleSystem {
         this.blend = options.blend ?? "alpha"
         this.#data = new Float32Array(maxParticles * STRIDE)
         this.#sprites = new Array<Sprite|null>(maxParticles).fill(null)
+        this.#ids = new Int32Array(maxParticles)
         const chunk = Math.min(CHUNK, maxParticles)
         this.#vertices = new Float32Array(chunk * 4 * RAW_VERTEX_SIZE)
         this.#indices = new Uint16Array(chunk * 6)
@@ -125,9 +128,12 @@ export class ParticleSystem {
     /**
      * Add a particle described by a spec, copied: the spec can be filled again right after.
      * Does nothing when the system is full.
+     *
+     * @returns The handle of the particle, that {@link steer} and {@link isAlive} take, which no other
+     * particle ever has, or 0 when the system is full.
      */
-    public emit(spec: ParticleSpec): void {
-        if(this.#count >= this.maxParticles) return
+    public emit(spec: ParticleSpec): number {
+        if(this.#count >= this.maxParticles) return 0
         const d = this.#data
         const o = this.#count * STRIDE
         d[o + X] = spec.x
@@ -153,8 +159,43 @@ export class ParticleSystem {
         d[o + SPIN] = spec.spin
         d[o + FACE] = spec.faceMotion ? 1 : 0
         this.#sprites[this.#count] = spec.sprite
+        const id = this.#nextId++ & 0x7fffffff || 1
+        this.#ids[this.#count] = id
         this.#grow(this.#count)
         this.#count++
+        return id
+    }
+
+    /** Is the particle of this handle still alive? */
+    public isAlive(handle: number): boolean {
+        return this.#indexOf(handle) >= 0
+    }
+
+    /**
+     * Drive a living particle: give it the speed that takes it to a point in a given time, and an opacity.
+     * Its acceleration and drag are cleared, so only the next steers act on it.
+     *
+     * @param handle - What {@link emit} returned.
+     * @param x - Where to be after `within` seconds, in pixels.
+     * @param y - Where to be after `within` seconds, in pixels.
+     * @param within - The time to get there, in seconds, above 0.
+     * @param opacity - The alpha of the particle from now on, from 0 to 1, kept for its whole life.
+     * @returns False when the particle is dead: it died of old age, or was never emitted.
+     */
+    public steer(handle: number, x: number, y: number, within: number, opacity: number): boolean {
+        const index = this.#indexOf(handle)
+        if(index < 0) return false
+        const d = this.#data
+        const o = index * STRIDE
+        const time = Math.max(within, 1e-6)
+        d[o + VX] = (x - d[o + X]) / time
+        d[o + VY] = (y - d[o + Y]) / time
+        d[o + AX] = 0
+        d[o + AY] = 0
+        d[o + DRAG] = 0
+        d[o + A0] = opacity
+        d[o + A1] = opacity
+        return true
     }
 
     /** The position of a living particle, written into `out`, or false when the index is not one. */
@@ -354,12 +395,20 @@ export class ParticleSystem {
 
     // INTERNALS //
 
+    /** Where the particle of a handle lies in the arrays, or -1 when it is not alive. */
+    #indexOf(handle: number): number {
+        if(handle <= 0) return -1
+        for(let i = 0; i < this.#count; i++) if(this.#ids[i] === handle) return i
+        return -1
+    }
+
     /** Replace a particle by the last living one. */
     #removeAt(index: number): void {
         const last = this.#count - 1
         if(index !== last){
             this.#data.copyWithin(index * STRIDE, last * STRIDE, last * STRIDE + STRIDE)
             this.#sprites[index] = this.#sprites[last]
+            this.#ids[index] = this.#ids[last]
         }
         this.#sprites[last] = null
         this.#count = last

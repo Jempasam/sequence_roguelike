@@ -180,12 +180,6 @@ export class Run {
     /** The journey of the party, between the fights. */
     public readonly travel: Travel
 
-    /**
-     * The games that ended before, which the fights against ghosts bring back: none by default. Set by whoever
-     * keeps the history, from the next map drawn on. Not saved.
-     */
-    public ghosts: readonly Ghost[] = []
-
     constructor(
         seed: number,
 
@@ -194,6 +188,12 @@ export class Run {
 
         /** The sort of floor the run starts on. */
         firstFloor: FloorType = FIRST_FLOOR,
+
+        /**
+         * The games that ended before, which the fights against ghosts bring back: none by default. Known from the
+         * first map drawn, so that one holds them too. Not saved.
+         */
+        public readonly ghosts: readonly Ghost[] = [],
     ){
         this.phaseChanged = new Observable(report)
         this.battleStarted = new Observable(report)

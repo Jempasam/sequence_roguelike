@@ -1,14 +1,17 @@
 import { visual } from "../../../base/Visual"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
+import * as Walk from "../../../battle/mecanic/walk"
 import { SummonedHearts } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
-import { summonAt, summonShown, travel, wait } from "../tools/playing"
+import { wait } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { summonedHearts } from "./SummonCard"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How many hearts the log of the catalog lives by, before the summoning of the unit. */
@@ -29,7 +32,7 @@ export class SubstitutionCard extends ActionCard {
         public readonly halves: number,
     ){
         super("Substitution", [
-            "Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner, et laisse à ta place un tronc de ",
+            WALK.as("Recule"), " de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner, et ", INVOCATION.as("laisse"), " à ta place un tronc de ",
             new SummonedHearts(halves),
             ", qui prend les coups qui t'étaient destinés.",
         ], Rarity.RARE, SubstitutionCard.#substituting(length, halves))
@@ -42,20 +45,21 @@ export class SubstitutionCard extends ActionCard {
                 const { battle, unit } = ctx
                 const from = unit.position
                 const distance = length * unit.stats.move.value
-                const gone = travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
+                const gone = Walk.travel(ctx, unit.direction.opposite, distance, DASH_SPEED)
                 if(gone.distance > 0){
-                    summonAt(battle, unit, [from], {
-                        sprite: visual("units/log"), name: "Tronc", hearts: () => summonedHearts(unit, halves), fleeting: true,
+                    Summons.summonAt(battle, unit, [from], {
+                        sprite: visual("units/log"), name: "Tronc",
+                        hearts: () => Summons.summonedHearts(unit, halves), fleeting: true,
                     })
                 }
                 wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = length * unit.stats.move.value
-                const travelled = battle.moveSpot(unit, pose.position, pose.direction.opposite, distance)
+                const travelled = Walk.spot(battle, unit, pose.position, pose.direction.opposite, distance)
                 const dash = Previews.arrow([pose.position, travelled.to], MOVE_WIDTH, MOVE_COLOR)
                 if(travelled.distance === 0) return Previews.still(pose, dash)
-                return Previews.still({ ...pose, position: travelled.to }, dash, Previews.body(unit, travelled.to, pose.direction), summonShown(pose.position))
+                return Previews.still({ ...pose, position: travelled.to }, dash, Previews.body(unit, travelled.to, pose.direction), Summons.summonShown(pose.position))
             },
         }
     }

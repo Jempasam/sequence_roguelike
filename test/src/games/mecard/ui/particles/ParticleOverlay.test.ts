@@ -20,6 +20,7 @@ describe("ParticleOverlay", () => {
             deckPile: () => at,
             heroPortrait: () => at,
             placePosition: () => at,
+            mapArea: () => null,
             pointer: () => at,
             center: () => at,
             size: () => ({ width: 320, height: 180 }),

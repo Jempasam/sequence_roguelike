@@ -2,7 +2,12 @@ import type { UnitContext } from "../../battle/Action"
 import { Guard } from "../Guard"
 import type { Parried } from "../Guard"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
-import {  } from "../../base/keywords"
+import { DamageType } from "../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../battle/mecanic/push/shove"
+import { SWAPPING } from "../../battle/mecanic/swap/keyword"
+import * as Pushing from "../../battle/mecanic/push"
+import * as Swap from "../../battle/mecanic/swap"
 
 /** What each guard tells, before what it does more. */
 const GUARDING = ["Annule les ", STATUS_LEVEL, " prochaines attaques physiques. −1 à chaque début de tour."]
@@ -40,7 +45,12 @@ export class Counter extends Guard {
 /** A wooden shield: the next physical attacks are stopped, but push it back a meter for each heart. */
 export const WOODEN_SHIELD = new StatusType(
     "bouclier en bois", statusVisual("wooden_shield", 0.7, 0.5, 0.3), "positive", level => new WoodenShield(level),
-    { description: [...GUARDING, " Recule d'un mètre par dégât annulé, à l'opposé de l'attaquant."] },
+    {
+        description: [
+            ...GUARDING, " Subit une ", VIOLENT_PUSH, " d'un mètre par dégât annulé, à l'opposé de l'attaquant (choc : ",
+            PUSH_DAMAGE, " ", DamageType.PHYSICAL, ").",
+        ],
+    },
 )
 
 /** Shielded by wood: pushed away from who struck, a meter for each heart stopped. */
@@ -51,14 +61,17 @@ export class WoodenShield extends Guard {
 
     protected react({ battle, unit }: UnitContext, { attacker, amount }: Parried): void {
         const away = unit.position.minus(attacker.position).normalized
-        if(away) battle.push(unit, away, amount, attacker)
+        if(!away) return
+        Pushing.shoveViolently({
+            battle, by: attacker, target: unit, direction: away, distance: amount, damage: PUSH_DAMAGE, atOnce: true,
+        })
     }
 }
 
 /** A sliding parry: the next physical attacks are stopped, and it swaps places with who struck. */
 export const SLIDING_PARRY = new StatusType(
     "parade glissante", statusVisual("sliding_parry", 0.6, 0.9, 0.8), "positive", level => new SlidingParry(level),
-    { description: [...GUARDING, " Échange de place avec l'attaquant."] },
+    { description: [...GUARDING, " ", SWAPPING.as("Échange de place"), " avec l'attaquant."] },
 )
 
 /** Parrying by sliding: it takes the place of who struck. */
@@ -68,7 +81,7 @@ export class SlidingParry extends Guard {
     public readonly type: StatusType = SLIDING_PARRY
 
     protected react({ battle, unit }: UnitContext, { attacker }: Parried): void {
-        battle.swap(unit, attacker)
+        Swap.swap(battle, unit, attacker)
     }
 }
 

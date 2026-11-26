@@ -1,19 +1,34 @@
-import type { Animation, AnimationChain, FrameClock } from "../../../../engine/ui"
+import type { UiAnimation, AnimationChain, FrameClock } from "../../../../engine/ui"
 import { rgba } from "../../sim/base/Rgba"
 import type { Rgba } from "../../sim/base/Rgba"
 import type { Observable, Observer } from "../../sim/base/Observable"
 import { Vector2 } from "../../sim/base/Vector2"
+import { visual } from "../../sim/base/Visual"
+import type { Visual } from "../../sim/base/Visual"
+import type { Area } from "../../sim/battle/Area"
+import * as Areas from "../../sim/battle/area/Areas"
 import type { Battle } from "../../sim/battle/Battle"
+import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
+import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
+import { SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
+import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
+import { TURNED } from "../../sim/battle/mecanic/turn/signals"
+import { WALKED } from "../../sim/battle/mecanic/walk/signals"
 import type { Pose } from "../../sim/battle/Action"
 import { Heart } from "../../sim/heart/Heart"
 import type { Effect, HeartsSignal } from "../../sim/battle/signals"
+import { UNIT_RADIUS } from "../../sim/battle/Unit"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Card } from "../../sim/card/Card"
 
 import type { PlayControl } from "../hud/PlayControl"
 import { Color } from "../../../../engine/math"
 import { ADDED_EDGE, FOCUS_EDGE, NOTICE_EDGE, REMOVED_EDGE } from "../look/colors"
-import type { BattleScene } from "./BattleScene"
+import { VECTOR_FX } from "../look/FxSprites"
+import type { FxResolved } from "../look/FxSprites"
+import { placeStrike } from "../look/placeStrike"
+import type { BattleScene, PlayedImpact, PlayedStrike } from "./BattleScene"
 
 /** The places of the cards of a chain that another chain has not. */
 function placesOf(chain: readonly Card[], without: readonly Card[]): number[] {
@@ -43,6 +58,18 @@ export const DRAW_TIME = 0.25
  */
 const BEAT = -1
 
+/** How long a blow drawn from its area lasts, in seconds. */
+export const VECTOR_STRIKE_TIME = 0.2
+
+/** How far an attacker lunges forward on its blow, in meters. */
+const LUNGE = 0.25
+
+/** How far a unit hit shivers, in meters. */
+const SHIVER = 0.06
+
+/** How long a unit hit flashes and shivers when its blow has no picture of impact, in seconds. */
+const FLINCH_TIME = 0.12
+
 /** How long a unit takes to fade out, then in, when it blinks, in seconds. */
 const BLINK_FADE = 0.08
 
@@ -65,6 +92,12 @@ export class BattleAnimations {
 
     /** Are the cards a unit draws shown going to its hand, one after the other? None by default. */
     public animates: (unit: Unit) => boolean = () => false
+
+    /** What each attacker did with its last blow: the way of it, the impact it leaves on those it hits. */
+    readonly #blows = new Map<Unit, { forward: Vector2, impact: Extract<FxResolved, { kind: "sprite" }>|null }>()
+
+    /** How a blow on a unit is shown, drawn from its area by default. */
+    public resolveFx: (visual: Visual|null, target: Unit|null) => FxResolved = () => VECTOR_FX
 
     /** What hears that the view goes to a unit, about to draw or play a card, nothing by default. */
     public onSelect: ((unit: Unit) => void)|null = null
@@ -92,7 +125,7 @@ export class BattleAnimations {
                 this.chain.add(this.#stopping(handle(event)))
             }))
         }
-        const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => Animation): void => {
+        const onAnimated = <T>(observable: Observable<T>, animate: (event: T) => UiAnimation): void => {
             observers.push(observable.add(event => {
                 this.chain.add(animate(event))
             }))
@@ -140,19 +173,31 @@ export class BattleAnimations {
         }))
 
         //// MOVEMENT ////
-        // Unit Move : Glide Animation
-        onAnimated(signals.moved, ({ unit, from, to, duration }) => () => {
-            return this.#glide(unit, from, to, duration)
-        })
+        // Unit Walk, Turn, Shove : Glide Animation
+        for(const key of [WALKED, TURNED, SHOVED]){
+            onAnimated(battle.observers.of(key), ({ unit, from, to, duration }) => () => {
+                return this.#glide(unit, from, to, duration)
+            })
+        }
 
-        // Unit Blink : Fade Out, Move, Fade In Animation
-        onAnimated(signals.blinked, ({ unit, from, to }) => () => {
-            return this.clock.tween(2 * BLINK_FADE, share => scene.change(unit, shown => {
-                const there = share >= 0.5
-                shown.position = there ? to.position : from.position
-                shown.direction = there ? to.direction : from.direction
-                shown.opacity = share >= 1 ? 1 : Math.abs(1 - 2 * share)
-            }, false))
+        // Unit Blink, Leap, Teleport, Swap : Fade Out, Move, Fade In Animation
+        for(const key of [BLINKED, LEAPED, TELEPORTED, SWAPPED]){
+            onAnimated(battle.observers.of(key), ({ unit, from, to }) => () => {
+                return this.clock.tween(2 * BLINK_FADE, share => scene.change(unit, shown => {
+                    const there = share >= 0.5
+                    shown.position = there ? to.position : from.position
+                    shown.direction = there ? to.direction : from.direction
+                    shown.opacity = share >= 1 ? 1 : Math.abs(1 - 2 * share)
+                }, false))
+            })
+        }
+
+        // Unit Move, of Any Kind : Set Down Where It Is Without Animation, After the Precise One
+        onAnimated(signals.moved, ({ unit, now }) => async() => {
+            scene.change(unit, shown => {
+                shown.position = now.position
+                shown.direction = now.direction
+            }, false)
         })
 
         //// CARDS ////
@@ -226,10 +271,30 @@ export class BattleAnimations {
             this.onSelect?.(unit)
         })
 
+        //// STRIKES ////
+        // Unit Struck an Area : The Blow Plays Over the Area, the Attacker Lunging, to its End
+        onAnimated(signals.struck, ({ attacker, origin, direction, area, visual }) => async() => {
+            const target = this.#nearestIn(area, attacker)
+            const shown = this.resolveFx(visual, target)
+            const placement = placeStrike(area, origin, direction, target?.hitbox ?? null)
+            const strike: PlayedStrike = { area, placement, shown, seed: this.scene.strikeCount++, share: 0 }
+            this.#blows.set(attacker, { forward: placement.forward, impact: this.#impactOf(shown, target) })
+            this.scene.strikes = [...this.scene.strikes, strike]
+            await this.clock.tween(shown.kind === "sprite" ? shown.animation.duration : VECTOR_STRIKE_TIME, share => {
+                strike.share = share
+                this.scene.change(attacker, each => {
+                    each.offset = placement.forward.times(LUNGE * Math.sin(Math.PI * share))
+                }, false)
+            })
+            this.scene.change(attacker, each => each.offset = Vector2.ZERO, false)
+            this.scene.strikes = this.scene.strikes.filter(each => each !== strike)
+        })
+
         //// HEARTS ////
         // Unit Damaged : Hearts Change, Red Number Floats Up
-        onAnimated(signals.damaged, ({ unit, amount, hearts }) => () => {
-            return this.#hurt(unit, hearts, `-${amount}`, DAMAGE_COLOR)
+        onAnimated(signals.damaged, ({ unit, amount, hearts, source }) => async() => {
+            await this.#flinch(unit, source)
+            await this.#hurt(unit, hearts, `-${amount}`, DAMAGE_COLOR)
         })
 
         // Unit Healed : Hearts Change, Green Number Floats Up
@@ -372,7 +437,7 @@ export class BattleAnimations {
      *
      * @param draws - Is it part of a draw, so the view stays on the hand for it?
      */
-    #stopping(play: Play, draws = false): Animation {
+    #stopping(play: Play, draws = false): UiAnimation {
         return async() => {
             if(!draws) this.scene.watchDraw(null)
             const hold = play() ?? 0
@@ -383,6 +448,60 @@ export class BattleAnimations {
             this.scene.notice = null
             this.scene.unlight()
         }
+    }
+
+    /**
+     * How the blow of an attacker marks a unit it hits: its impact picture where there is one, the unit
+     * flashing and shivering, to the end.
+     */
+    async #flinch(unit: Unit, source: Unit|null): Promise<void> {
+        const shown = this.scene.of(unit)
+        const blow = source ? this.#blows.get(source) : undefined
+        if(!shown?.alive || !blow) return
+        const impact: PlayedImpact|null = blow.impact && {
+            at: shown.position,
+            forward: blow.forward,
+            scale: unit.hitbox.reach / UNIT_RADIUS,
+            shown: blow.impact,
+            share: 0,
+        }
+        if(impact) this.scene.impacts = [...this.scene.impacts, impact]
+        const side = blow.forward.right
+        await this.clock.tween(impact ? impact.shown.animation.duration : FLINCH_TIME, share => {
+            if(impact) impact.share = share
+            this.scene.change(unit, each => {
+                each.flash = 1 - share
+                each.offset = side.times(SHIVER * Math.sin(share * Math.PI * 4) * (1 - share))
+            }, false)
+        })
+        this.scene.change(unit, each => {
+            each.flash = 0
+            each.offset = Vector2.ZERO
+        }, false)
+        if(impact) this.scene.impacts = this.scene.impacts.filter(each => each !== impact)
+    }
+
+    /** The picture, in the hue of the blow, played on each unit it lands on, none when it has none. */
+    #impactOf(shown: FxResolved, target: Unit|null): Extract<FxResolved, { kind: "sprite" }>|null {
+        if(shown.kind !== "sprite" || shown.animation.impact === null) return null
+        const found = this.resolveFx(visual(shown.animation.impact, { coloration: shown.coloration }), target)
+        return found.kind === "sprite" ? found : null
+    }
+
+    /** The living unit of the scene, but one, nearest to a point and inside an area, none when none is. */
+    #nearestIn(area: Area, except: Unit): Unit|null {
+        const origin = this.scene.of(except)?.position ?? except.position
+        let nearest: Unit|null = null
+        let best = Infinity
+        for(const shown of this.scene.living){
+            if(shown.unit === except || !Areas.checkPoint(area, shown.position)) continue
+            const gap = shown.position.distance(origin)
+            if(gap < best){
+                best = gap
+                nearest = shown.unit
+            }
+        }
+        return nearest
     }
 
     /** Bring the view to a unit about to draw, and stop on it, unless it is there already. */

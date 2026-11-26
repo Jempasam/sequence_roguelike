@@ -18,7 +18,7 @@
 
 export type { NavigationAxis } from "./Component"
 export { AnimationChain, instant } from "./AnimationChain"
-export type { Animation } from "./AnimationChain"
+export type { UiAnimation } from "./AnimationChain"
 export { Component } from "./Component"
 export { Container, ContentContainer } from "./Container"
 export { DirtyRegion, MAX_DIRTY_RECTS } from "./DirtyRegion"

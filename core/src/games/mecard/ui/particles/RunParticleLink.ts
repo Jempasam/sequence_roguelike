@@ -4,9 +4,22 @@ import type { Random } from "../../../../engine/particles"
 import { Scope } from "../../../../lifetime"
 import type { Observable, Observer } from "../../sim/base/Observable"
 import type { Battle } from "../../sim/battle/Battle"
+import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
+import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
+import { SHOCKED, SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
+import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
+import { TURNED } from "../../sim/battle/mecanic/turn/signals"
+import { BUMPED, WALKED } from "../../sim/battle/mecanic/walk/signals"
 import type { Hero } from "../../sim/run/Hero"
 import type { Run } from "../../sim/run/Run"
 import type { ForwardPhase, Forwarded } from "../forward/Forwarded"
+import type { Visual } from "../../sim/base/Visual"
+import type { AmbientEffect } from "../travel/ambient/AmbientEffect"
+import type { AmbientOutcome } from "../travel/ambient/AmbientPool"
+import { ambientPools } from "../travel/ambient/pools"
+import { RunAmbient } from "../travel/ambient/RunAmbient"
+import { TravelAmbientContext } from "../travel/ambient/TravelAmbientContext"
 import type { ParticleContext, ParticlePoint } from "./ParticleContext"
 import type { Look } from "./recipes"
 import {
@@ -54,6 +67,12 @@ export class RunParticleLink {
     /** The particles that glow: they add up. */
     public readonly additive = new ParticleSystem(MAX_PARTICLES, { blend: "additive" })
 
+    /** The particles of the ambient that blend normally: apart, so leaving the map removes them alone. */
+    public readonly ambientAlpha = new ParticleSystem(MAX_PARTICLES)
+
+    /** The particles of the ambient that glow. */
+    public readonly ambientAdditive = new ParticleSystem(MAX_PARTICLES, { blend: "additive" })
+
     constructor(
         engine: Run,
 
@@ -65,37 +84,81 @@ export class RunParticleLink {
 
         /** The randomness of the display, apart from the run. */
         public readonly random: Random = seededRandom(engine.rng.state),
+
+        /** The sprite of what the sim names by a visual, none before it is loaded. */
+        sprites: (visual: Visual|null) => Sprite|null = () => null,
     ){
         this.#engine = engine
         this.#follow(engine)
+        this.#ambient = new RunAmbient(ambientPools(random, error => forwarded.report(error)))
+        this.#ambientContext = new TravelAmbientContext(
+            this.ambientAlpha, this.ambientAdditive, random, () => this.#engine.travel, () => this.context,
+            sprites, coin,
+        )
     }
 
 
     /** Are there particles alive or waiting? */
     public get active(): boolean {
-        return this.alpha.count > 0 || this.additive.count > 0 || this.#pending.length > 0
+        return this.alpha.count > 0 || this.additive.count > 0 || this.ambientAlpha.count > 0
+            || this.ambientAdditive.count > 0 || this.#pending.length > 0
+    }
+
+    /** Is the map shown? The ambient then needs the time to pass, whether or not a particle is alive. */
+    public get onMap(): boolean {
+        return this.#onMap()
     }
 
     /** Move the particles on, and start the ones that waited for it. */
     public update(dt: number): void {
+
+        // AMBIENCE //
+        if(this.#onMap()){
+            this.#ambient.update(dt, this.#ambientContext)
+            this.#ambienting = true
+        }
+        else if(this.#ambienting){
+            this.#ambient.stop()
+            this.ambientAlpha.clear()
+            this.ambientAdditive.clear()
+            this.#ambienting = false
+        }
+
+        // WAITING //
         for(const pending of [...this.#pending]){
             pending.left -= dt
             if(pending.left > 0) continue
             this.#pending.splice(this.#pending.indexOf(pending), 1)
             pending.run()
         }
+        this.ambientAlpha.update(dt)
+        this.ambientAdditive.update(dt)
         this.alpha.update(dt)
         this.additive.update(dt)
     }
 
+    /**
+     * Start ambient effects of the map now, for a try, whatever the wait.
+     *
+     * @throws {@link Error} When the map is not shown.
+     */
+    public ambientNow(effects: readonly AmbientEffect[]): AmbientOutcome[] {
+        if(!this.#onMap()) throw new Error("La carte n'est pas affichée : reviens-y avec travel show.")
+        return this.#ambient.trigger(this.#ambientContext, effects)
+    }
+
     /** Draw the particles, in the interface. */
     public draw(painter: Painter): void {
+        this.ambientAlpha.draw(painter)
         this.alpha.draw(painter)
+        this.ambientAdditive.draw(painter)
         this.additive.draw(painter)
     }
 
     /** Remove every particle, alive or waiting. */
     public clear(): void {
+        this.ambientAlpha.clear()
+        this.ambientAdditive.clear()
         this.alpha.clear()
         this.additive.clear()
         this.#pending.length = 0
@@ -109,12 +172,20 @@ export class RunParticleLink {
 
 
     #engine: Run
+    readonly #ambient: RunAmbient
+    readonly #ambientContext: TravelAmbientContext
+    #ambienting = false
     #observers = new Scope()
     #battleObservers: Observer[] = []
     readonly #pending: Pending[] = []
 
     /** The gold the party held when the screen last showed a change of it. */
     #gold = 0
+
+    /** Is the map shown, and placed by a screen? */
+    #onMap(): boolean {
+        return this.context !== null && this.#engine.travel.phase === "map"
+    }
 
     #follow(run: Run): void {
         this.#engine = run
@@ -150,13 +221,19 @@ export class RunParticleLink {
             return (place && context.placePosition(place)) ?? context.center()
         }
         return [
+            
+            // Déplacement : Pouf sur la cible
             this.#on(travel.moved, ({ to }, context) => {
                 const at = context.placePosition(to)
                 if(at) ring(this.additive, this.random, at, 12, 4, { from: 0xe8f4ff, size: 3, life: 0.4 }, 50)
             }),
+
+            // Entrée dans une halte : pouf au milieu de l'écran
             this.#on(travel.visitStarted, (_halt, context) => {
                 rise(this.additive, this.random, here(context), 6, { from: 0xffffff, size: 2, life: 0.6 })
             }),
+
+            // On utilise une halte pour faire quelque chose
             this.#on(travel.haltImpacted, (_halt, context) => {
                 radial(
                     this.additive, this.random, here(context), 10, { from: 0xfff2b0, size: 3, life: 0.4 },
@@ -310,11 +387,6 @@ export class RunParticleLink {
                 const gone = { from: 0x9ad8ff, size: 3, life: 0.6 }
                 radial(this.additive, this.random, at, 6, gone, { speed: 40 })
             }),
-            this.#on(signals.cardActivated, ({ unit }, context) => {
-                const at = context.unitPosition(unit)
-                if(!at) return
-                ring(this.additive, this.random, at, 8, 6, { ...FLASH, size: 3, life: 0.4 }, 60)
-            }),
             this.#on(signals.cardInvalid, ({ unit }, context) => {
                 const at = context.unitPosition(unit)
                 if(!at) return
@@ -334,27 +406,38 @@ export class RunParticleLink {
                 const drawn = { from: 0xdff4ff, size: 2, life: 0.3 }
                 radial(this.additive, this.random, at, 3, drawn, { speed: 40 })
             }),
-            this.#on(signals.moved, ({ unit, from, to }, context) => {
-                if(from.position.equals(to.position)) return
-                const at = context.feetOf(unit)
-                if(!at) return
-                radial(
-                    this.alpha, this.random, at, 3, { from: 0x9a9aa8, size: 3, life: 0.3 },
-                    { speed: 20, angle: [-Math.PI, 0] },
-                )
+            ...[WALKED, TURNED, SHOVED].map(key => {
+                return this.#on(battle.observers.of(key), ({ unit, from, to }, context) => {
+                    if(from.position.equals(to.position)) return
+                    const at = context.feetOf(unit)
+                    if(!at) return
+                    radial(
+                        this.alpha, this.random, at, 3, { from: 0x9a9aa8, size: 3, life: 0.3 },
+                        { speed: 20, angle: [-Math.PI, 0] },
+                    )
+                })
             }),
-            this.#on(signals.blinked, ({ unit }, context) => {
-                const at = context.unitPosition(unit)
-                if(!at) return
-                const blink = { from: 0x6ae0ff, size: 3, life: 0.5 }
-                radial(this.additive, this.random, at, 12, blink, { speed: 110 })
+            ...[BLINKED, LEAPED, TELEPORTED, SWAPPED].map(key => {
+                return this.#on(battle.observers.of(key), ({ unit }, context) => {
+                    const at = context.unitPosition(unit)
+                    if(!at) return
+                    const blink = { from: 0x6ae0ff, size: 3, life: 0.5 }
+                    radial(this.additive, this.random, at, 12, blink, { speed: 110 })
+                })
             }),
-            this.#on(signals.bumped, ({ struck }, context) => {
+            this.#on(battle.observers.of(BUMPED), ({ struck }, context) => {
                 const at = context.unitPosition(struck)
                 if(!at) return
                 const spark = { from: 0xffffff, size: 3, life: 0.2 }
                 radial(this.additive, this.random, at, 8, spark, { speed: 90 })
-                radial(this.alpha, this.random, at, 4, { from: 0x9a9aa8, size: 3, life: 0.2 }, { speed: 50 })
+                const smoke = { from: 0xffffff, size: 4, life: 0.35 }
+                radial(this.alpha, this.random, at, 5, smoke, { speed: 40, drag: 2 })
+            }),
+            this.#on(battle.observers.of(SHOCKED), ({ struck }, context) => {
+                const at = context.unitPosition(struck)
+                if(!at) return
+                const smoke = { from: 0x9a9aa8, size: 4, life: 0.5 }
+                radial(this.alpha, this.random, at, 8, smoke, { speed: 50, drag: 2 })
             }),
         ]
     }

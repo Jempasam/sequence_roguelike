@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { UNLIMITED_CARDS } from "@game/core/mecard"
-import { fight, kitFighter, parseDefinition, parseStrategy, Roster } from "@game/command_line/sim"
-import type { Combatant, DefinedKit, Fighter, FightSpec } from "@game/command_line/sim"
+import { fight, kitFighter, monsterFighter, parseDefinition, parseStrategy, Roster } from "@game/command_line/sim"
+import type { Combatant, DefinedKit, DefinedMonster, Fighter, FightSpec } from "@game/command_line/sim"
 
 // --- Fixture builders ---
 
@@ -16,6 +16,12 @@ function fighterOf(name: string): Fighter {
 function kitOf(text: string): Fighter {
     const made = parseDefinition(text, "test") as DefinedKit
     return kitFighter(made.kit, made.hearts, made.bonus, true)
+}
+
+/** A monster defined from its text, as a description defines one in place. */
+function definedMonsterOf(text: string): Fighter {
+    const made = parseDefinition(text, "test") as DefinedMonster
+    return monsterFighter(made, "monster", true, made.usables)
 }
 
 /** A fighter as someone who takes part in a battle. */
@@ -150,6 +156,20 @@ describe("Fighter.body", () => {
         expect(second.decks[0]).not.toBe(first.decks[0])
         expect(second.usables[0]).not.toBe(first.usables[0])
         expect(second.usables[0].usable).toBe(first.usables[0].usable)
+    })
+
+    test("a monster with items as an ally → they are carried", () => {
+        const fighter = definedMonsterOf("M=Avancer,heart:rouge*3,draw:1,item:Grimoire")
+        expect(fighter.body().items.map(item => item.name)).toEqual(["Grimoire"])
+    })
+
+    test("a monster with usables as a foe → carried, with fresh charges in each battle", () => {
+        const fighter = definedMonsterOf("M=Avancer,heart:rouge*3,draw:1,usable:Cocaine")
+        const first = fighter.foeBody!(1)
+        const second = fighter.foeBody!(1)
+        expect(first.usables.map(carried => carried.usable.name)).toEqual(["Cocaïne"])
+        expect(second.usables[0]).not.toBe(first.usables[0])
+        expect(fighter.body().usables).toHaveLength(1)
     })
 
     test("a kit → plays the step and the turns unlimited, as a hero of the game; a monster → none", () => {

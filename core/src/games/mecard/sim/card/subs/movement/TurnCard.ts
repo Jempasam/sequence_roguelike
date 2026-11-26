@@ -7,7 +7,8 @@ import type { Unit } from "../../../battle/Unit"
 import type { Card } from "../../Card"
 
 import { ActionCard } from "../ActionCard"
-import { turn } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -48,7 +49,10 @@ export class TurnCard extends ActionCard {
         /** Which of the directions it turns to, from 0 straight up, clockwise. */
         public readonly step: number,
     ){
-        super("Tourner", "Se tourne vers la direction du trait.", Rarity.COMMON, TurnCard.#turning(DIRECTIONS[step]))
+        super(
+            "Tourner", [TURN.as("Se tourne"), " vers la direction du trait."], Rarity.COMMON,
+            TurnCard.#turning(DIRECTIONS[step]),
+        )
         this.direction = DIRECTIONS[step]
     }
 
@@ -68,7 +72,7 @@ export class TurnCard extends ActionCard {
 
     static #turning(direction: Vector2): Action {
         return {
-            use: ctx => turn(ctx, direction),
+            use: ctx => Turn.turnToward(ctx, direction),
             preview: ({ pose }) => {
                 const tip = pose.position.plus(direction.times(TURN_LENGTH))
                 return Previews.still({ ...pose, direction }, Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR))

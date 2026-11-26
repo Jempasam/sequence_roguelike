@@ -1,6 +1,6 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
-import { HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
+import { HAZARD_COLOR, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -8,7 +8,8 @@ import type { Unit } from "../../../battle/Unit"
 import { ACTION } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
-import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
+import { wait } from "../tools/playing"
+import * as Walk from "../../../battle/mecanic/walk"
 import type { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -84,9 +85,9 @@ export abstract class MoveCard extends AbstractCard<Action> {
         return {
             use: function (ctx){
                 const distance = card.length * ctx.unit.stats.move.value
-                const gone = travel(ctx, card.way(ctx.unit), distance, card.speed)
+                const gone = Walk.travel(ctx, card.way(ctx.unit), distance, card.speed)
                 const impact = card.impact()
-                const stopped = gone.distance < distance - TRAVEL_SLACK && ctx.unit.stats.mobility.value > 0
+                const stopped = gone.distance < distance - Walk.TRAVEL_SLACK && ctx.unit.stats.mobility.value > 0
                 if(impact && (gone.struck || (impact.anything && stopped))){
                     impact.strike(ctx.battle, gone.struck, ctx.unit)
                 }
@@ -94,20 +95,18 @@ export abstract class MoveCard extends AbstractCard<Action> {
             },
             preview: ({ battle, unit, pose }) => {
                 const distance = card.length * unit.stats.move.value
-                const travelled = battle.moveSpot(unit, pose.position, card.way(pose), distance)
+                const travelled = Walk.spot(battle, unit, pose.position, card.way(pose), distance)
                 const stop = { position: travelled.to, direction: pose.direction }
-                const blocked = travelled.distance < distance - TRAVEL_SLACK
+                const blocked = travelled.distance < distance - Walk.TRAVEL_SLACK
                 const impact = card.impact()
                 const stopped = travelled.struck !== null || (impact?.anything === true && blocked)
                 const hits = impact !== null && stopped
-                const potential = pose.position.plus(card.way(pose).times(distance))
-                const indicators = Previews.moving(unit, pose.position, potential, travelled.to, MOVE_WIDTH)
+                const indicators = Walk.walkShown(unit, pose.position, card.way(pose), distance, travelled)
                 // What it would reach shows even with nothing in the way yet: anyone may stand there by then.
                 if(impact?.area){
                     const color = hits ? HAZARD_COLOR : RANGE_COLOR
                     indicators.unshift(Previews.polygon(impact.area(unit, stop), color))
                 }
-                if(blocked) indicators.push(Previews.label(travelled.to, "bloqué", NOTE_COLOR))
                 if(hits){
                     const at = travelled.struck?.position ?? travelled.to
                     indicators.push(Previews.label(at, impact.word, NOTE_COLOR))

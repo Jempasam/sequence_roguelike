@@ -3,6 +3,13 @@ import type { Observable, Observer } from "../../sim/base/Observable"
 import { Rng } from "../../sim/base/Rng"
 import { Scope } from "../../../../lifetime"
 import type { Battle } from "../../sim/battle/Battle"
+import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
+import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
+import { SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
+import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
+import { TURNED } from "../../sim/battle/mecanic/turn/signals"
+import { BUMPED, WALKED } from "../../sim/battle/mecanic/walk/signals"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Run } from "../../sim/run/Run"
 import type { Forwarded } from "../forward/Forwarded"
@@ -197,9 +204,13 @@ export class RunSoundLink {
             )),
             this.#on(signals.cardInvalid, REFUSED),
             this.#on(signals.chainOverflowed, REFUSED),
-            this.#on(signals.moved, ({ from, to }) => from.position.equals(to.position) ? TURN : BOARD_STEP),
-            this.#on(signals.blinked, BLINK),
-            this.#on(signals.bumped, BUMP),
+            this.#on(battle.observers.of(WALKED), BOARD_STEP),
+            this.#on(battle.observers.of(SHOVED), BOARD_STEP),
+            this.#on(battle.observers.of(TURNED), ({ from, to }) => {
+                return from.position.equals(to.position) ? TURN : BOARD_STEP
+            }),
+            ...[BLINKED, LEAPED, TELEPORTED, SWAPPED].map(key => this.#on(battle.observers.of(key), BLINK)),
+            this.#on(battle.observers.of(BUMPED), BUMP),
             this.#on(signals.damaged, ({ amount }) => hurtCue(amount)),
             this.#on(signals.heartWounded, HEART_LOST),
             this.#on(signals.healed, HEAL),

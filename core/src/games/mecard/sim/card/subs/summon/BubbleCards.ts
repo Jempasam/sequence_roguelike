@@ -1,4 +1,12 @@
 import { DISTANCE, BATTLE_ROUND } from "../../../base/keywords"
+import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../../battle/mecanic/push/shove"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Pushing from "../../../battle/mecanic/push"
+import * as Summons from "../../../battle/mecanic/summon"
+import * as Turn from "../../../battle/mecanic/turn"
+import { DamageType } from "../../../battle/DamageType"
 import type { Unit } from "../../../battle/Unit"
 import { HeartCount } from "../../../battle/words"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
@@ -32,7 +40,7 @@ const PISTO_PUSH = 2
 
 /** The bubbles a unit commands as its own: the bodies it summoned that are bubbles. */
 function bubblesOf(battle: Battle, unit: Unit): Unit[] {
-    return battle.summonsOf(unit).filter(body => body.alive && body.statuses.has(BUBBLE))
+    return Summons.summonsOf(battle, unit).filter(body => body.alive && body.statuses.has(BUBBLE))
 }
 
 /** Soapiness to at least three rounds, at the end of the preparation. */
@@ -69,14 +77,18 @@ export const FIERY_BUBBLE = new FusionCard([ELEMENTAL_BUBBLE, FIRE], { name: "Bu
 
 /** The bubbles turn where the blower faces, gain momentum, and are pushed ahead. */
 export const PISTO_BUBBLE = new ActionCard("Pisto-bulle", [
-    "Tourne toutes tes ", BULLE.as("bulles"), " dans ta direction, leur donne de l'", MOMENTUM, " et les pousse de ", PISTO_PUSH,
-    " ", DISTANCE, ". Une bulle arrêtée par une unité éclate.",
+    TURN.as("Tourne"), " toutes tes ", BULLE.as("bulles"), " dans ta direction, leur donne de l'", MOMENTUM, " et les ",
+    VIOLENT_PUSH.as("pousse violemment"), " de ", PISTO_PUSH, " ", DISTANCE, " : choc, ", PUSH_DAMAGE, " ", DamageType.PHYSICAL,
+    ". Une bulle arrêtée par une unité éclate.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         for(const bubble of bubblesOf(battle, unit)){
-            battle.turn(bubble, unit.direction)
+            Turn.turn(battle, bubble, unit.direction)
             battle.applyStatus(bubble, MOMENTUM, 1)
-            battle.push(bubble, unit.direction, PISTO_PUSH, unit)
+            Pushing.shoveViolently({
+                battle, by: unit, target: bubble, direction: unit.direction, distance: PISTO_PUSH, damage: PUSH_DAMAGE,
+                atOnce: true,
+            })
         }
         hold(battle, SHORT_TIME)
     },
@@ -96,7 +108,7 @@ export const BURSTING = new ActionCard("Éclatement", [
 
 /** A bubble that plays the cards that follow in the chain of its blower, which plays none of them. */
 export const PROGRAMMED_BUBBLE = new ActionCard("Bulle programmée", [
-    "Invoque devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(2), " de ", TIME_HEART, ", qui joue les cartes qui suivent dans ta chaîne. ",
+    INVOCATION.as("Invoque"), " devant toi une ", BULLE.as("bulle"), " de ", new HeartCount(2), " de ", TIME_HEART, ", qui joue les cartes qui suivent dans ta chaîne. ",
     "Tu ne les joues pas : elles vont à la défausse.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){

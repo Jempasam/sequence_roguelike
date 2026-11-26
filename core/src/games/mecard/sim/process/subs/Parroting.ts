@@ -23,7 +23,7 @@ export class Parroting extends AbstractProcess {
 
     public override init({ battle, unit, hold }: PlugContext): void {
         const { target } = this
-        hold(target.stepStarted.add(() => {
+        hold(target.actionRead.add(() => {
             // The action starting is the last it has played, put there before it is told.
             const action = target.stepsPlayed[target.stepsPlayed.length - 1]
             if(action && !isEcho(action)){

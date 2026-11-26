@@ -11,6 +11,7 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -71,7 +72,7 @@ export const LASER_LINK = new ActionCard("Lien laser", [
 
 export const HOOK_ON = new ActionCard("Accroche", [
     "S'accroche à l'allié le plus proche, à ", HOOK_REACH, " ", DISTANCE, " au plus, jusqu'à la fin du ", BATTLE_ROUND, " : quand tu ",
-    "bouges ou tournes, il te suit en gardant sa place. L'accroche casse s'il se retrouve trop loin.",
+    "bouges ou ", TURN.as("tournes"), ", il te suit en gardant sa place. L'accroche casse s'il se retrouve trop loin.",
 ], Rarity.COMMON, linkAction(
     (battle, unit, pose) => battle.nearestAlly(unit, HOOK_REACH, pose.position),
     ally => new Hook(ally, HOOK_REACH), "accroche", HOOK_REACH,

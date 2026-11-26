@@ -12,7 +12,7 @@ import { Disk } from "../../sim/battle/hitbox/Disk"
 import type { Hitbox } from "../../sim/battle/hitbox/Hitbox"
 
 import { hitboxMetrics } from "./hitboxMetrics"
-import { SPRITE_MODE_HELP, SPRITE_MODES, writtenSpriteLook } from "./spriteLook"
+import { DEFAULT_LOOK, SPRITE_MODE_HELP, SPRITE_MODES, writtenSpriteLook } from "./spriteLook"
 import type { SpriteMode } from "./spriteLook"
 import { drawSprite, modeOf } from "./spriteModes"
 import type { SpriteView } from "./spriteModes"
@@ -224,14 +224,14 @@ export class SpriteBenchScreen {
         const sprite = this.sprites.of(visual(key))
         this.#spriteLabel.text = sprite ? key.replace("units/", "") : `${key.replace("units/", "")} (non chargé)`
         this.#shapeLabel.text = shape.name
-        this.#modeLabel.text = mode ?? `défaut (${modeOf({ mode: null, lift: 0 }, shape.hitbox)})`
+        this.#modeLabel.text = mode ?? `défaut (${modeOf(DEFAULT_LOOK, shape.hitbox)})`
         this.#view.set(sprite, shape.hitbox, mode, this.#lift.value)
     }
 
     /** Write the JSON of what is tried, to paste in the file of the picture. */
     #copy(): void {
         const key = this.#keys[this.#sprite]
-        const text = writtenSpriteLook({ mode: MODES[this.#mode], lift: this.#lift.value })
+        const text = writtenSpriteLook({ ...DEFAULT_LOOK, mode: MODES[this.#mode], lift: this.#lift.value })
         this.host.print(`mecard/${key}.json : ${text}`)
         const { clipboard } = this.host
         if(!clipboard) return
@@ -293,7 +293,7 @@ class BenchView extends Component {
         painter.rect(cx, 0, 1, height)
         if(this.#sprite){
             painter.setTint(WHITE)
-            const look = { mode: this.#mode, lift: this.#lift }
+            const look = { ...DEFAULT_LOOK, mode: this.#mode, lift: this.#lift }
             drawSprite(painter, this.#sprite, modeOf(look, this.#hitbox), look, metrics, view)
         }
         const along = pose.direction.times(metrics.length / 2)

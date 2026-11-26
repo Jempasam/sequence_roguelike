@@ -72,9 +72,6 @@ export const SUPPRESSION = new Keyword("suppression")
 
 export const DECK = new Keyword("deck")
 
-/** Bringing a unit into the arena, ahead of the one calling it. */
-export const INVOCATION = new Keyword("invoquer")
-
 /** A unit made the same as another. */
 export const PERFECT_CLONE = new Keyword("clone parfait")
 

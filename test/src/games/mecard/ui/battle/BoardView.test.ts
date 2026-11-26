@@ -76,7 +76,7 @@ describe("BoardView.draw, tactical", () => {
     /** Units with a picture each, and a shade. */
     const PICTURE = { width: 12, height: 12 }
     const WITH_SPRITES = {
-        of: () => PICTURE, look: () => ({ mode: null, lift: 0 }), shade: PICTURE, rope: null, tether: () => null,
+        of: () => PICTURE, look: () => ({ mode: null, lift: 0, tags: [], animation: null }), shade: PICTURE, rope: null, tether: () => null,
     } as unknown as ConstructorParameters<typeof BoardView>[3]
 
     /** Every call the board makes on a painter, by name. */

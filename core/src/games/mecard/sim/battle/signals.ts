@@ -1,15 +1,18 @@
 import { Observable } from "../base/Observable"
 import type { ErrorSink } from "../base/Observable"
+import { Signal } from "./ObserverMap"
 import type { ModifierKey } from "../base/Attribute"
 import type { Card } from "../card/Card"
 import type { Heart } from "../heart/Heart"
 import type { HeartKind } from "../heart/HeartKind"
 import type { Process } from "../process/Process"
+import type { Vector2 } from "../base/Vector2"
 import type { Visual } from "../base/Visual"
 import type { Status, StatusType } from "../status/Status"
 import type { Carried } from "../usable/Usable"
 
 import type { Pose } from "./Action"
+import type { Area } from "./Area"
 import type { Indicator } from "./preview/Preview"
 import type { ActivationEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent } from "./events"
 import type { DamageType } from "./DamageType"
@@ -31,27 +34,19 @@ export interface DeckSignal {
     readonly deck: number
 }
 
-/** A unit going from a pose to another: a step, a push, a turn on the spot. */
+/** The pose of a unit changed, whatever moved it: told after the signal of the precise move. */
 export interface MoveSignal {
     readonly unit: Unit
+
+    /** The move just told: where it left from, and where it went. */
     readonly from: Pose
     readonly to: Pose
 
-    /** How long it took, in seconds of the simulation. */
-    readonly duration: number
-}
-
-/** A unit stopped by another in its way, on a move of its own. */
-export interface BumpSignal {
-    readonly unit: Unit
-    readonly struck: Unit
-}
-
-/** A unit leaving a pose for another at once, over whatever lies between. */
-export interface BlinkSignal {
-    readonly unit: Unit
-    readonly from: Pose
-    readonly to: Pose
+    /**
+     * Where the unit stands and faces as this is told: not {@link MoveSignal.to} when what heard of the
+     * precise move moved it again, so a screen showing this alone never brings it back.
+     */
+    readonly now: Pose
 }
 
 /** The life bar of a unit, as it is once a signal is told: copies, which the battle never changes after. */
@@ -64,6 +59,25 @@ export interface HeartsSignal {
 export interface DamageSignal extends HeartsSignal {
     readonly amount: number
     readonly nature: DamageType
+
+    /** Who dealt it, null for what hurts on its own: a poison, a trap. */
+    readonly source: Unit | null
+}
+
+/** A unit lashing out at an area, told before the wounds it causes. */
+export interface StrikeSignal {
+    readonly attacker: Unit
+
+    /** Where the attacker stood, copied as the battle goes on. */
+    readonly origin: Vector2
+
+    /** Where the attacker looked. */
+    readonly direction: Vector2
+    readonly area: Area
+    readonly nature: DamageType
+
+    /** How the blow looks, null when it has no look of its own. */
+    readonly visual: Visual | null
 }
 
 /** A unit healed: how many hearts came back, and its bar after. */
@@ -196,14 +210,11 @@ export class BattleSignals {
 
     public readonly reshuffled: Observable<DeckSignal>
 
+    /**
+     * The pose of a unit changed, whatever moved it. Each way of moving tells its own signal first, among the
+     * observers of the battle: this one is what a screen falls back on, to show the unit where it is.
+     */
     public readonly moved: Observable<MoveSignal>
-    public readonly blinked: Observable<BlinkSignal>
-
-    /** A unit ran into another on a move of its own. */
-    public readonly bumped: Observable<BumpSignal>
-
-    /** A unit ran into another on any move, its own or forced: the two bodies in contact. */
-    public readonly collided: Observable<BumpSignal>
 
     /** A unit starts one of its steps. */
     public readonly stepStarted: Observable<StepSignal>
@@ -221,6 +232,9 @@ export class BattleSignals {
     public readonly chainOverflowed: Observable<ChainOverflowEvent>
 
     public readonly damaged: Observable<DamageSignal>
+
+    /** A unit lashed out at an area: once for each area of a blow. */
+    public readonly struck: Observable<StrikeSignal>
     public readonly healed: Observable<HealSignal>
     public readonly heartAdded: Observable<HeartSignal>
 
@@ -285,15 +299,13 @@ export class BattleSignals {
         this.fleetingSpent = signal()
         this.reshuffled = signal()
         this.moved = signal()
-        this.blinked = signal()
-        this.bumped = signal()
-        this.collided = signal()
         this.stepStarted = signal()
         this.cardActivated = signal()
         this.cardInvalid = signal()
         this.chainChanged = signal()
         this.chainOverflowed = signal()
         this.damaged = signal()
+        this.struck = signal()
         this.healed = signal()
         this.heartAdded = signal()
         this.heartRemoved = signal()
@@ -316,20 +328,5 @@ export class BattleSignals {
         this.notifyStatus = signal()
         this.notifyHeart = signal()
         this.notifyUnit = signal()
-    }
-}
-
-/** An observable running something before it tells its listeners. */
-class Signal<T> extends Observable<T> {
-
-
-    constructor(report: ErrorSink, private readonly before: () => void){
-        super(report)
-    }
-
-
-    public override notify(event: T): void {
-        this.before()
-        super.notify(event)
     }
 }

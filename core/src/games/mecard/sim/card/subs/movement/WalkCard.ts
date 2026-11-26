@@ -4,7 +4,8 @@ import { AGILITE, DISTANCE } from "../../../base/keywords"
 import type { Pose } from "../../../battle/Action"
 import type { Card } from "../../Card"
 
-import { WALK_SPEED } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import { WALK_SPEED } from "../../../battle/mecanic/walk/walk"
 import { Rarity } from "../../Rarity"
 import { MoveCard } from "./MoveCard"
 
@@ -22,7 +23,7 @@ export class WalkCard extends MoveCard {
 
 
     constructor(length: number){
-        super("Marche", ["Avance de ", length, "×", AGILITE, " ", DISTANCE, ", jusqu'au premier obstacle."], Rarity.COMMON, length, WALK_SPEED)
+        super("Marche", [WALK.as("Avance"), " de ", length, "×", AGILITE, " ", DISTANCE, ", jusqu'au premier obstacle."], Rarity.COMMON, length, WALK_SPEED)
     }
 
 

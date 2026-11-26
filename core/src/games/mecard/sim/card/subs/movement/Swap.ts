@@ -1,6 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
-import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
+import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 
@@ -9,6 +9,8 @@ import { hold, wait, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { UNIT } from "../../../base/keywords"
 import * as Previews from "../../../battle/preview/Previews"
+import { SWAPPING } from "../../../battle/mecanic/swap/keyword"
+import * as Swap from "../../../battle/mecanic/swap"
 
 /** How long a swap takes to fade out and back in, in seconds. */
 const SWAP_TIME = 0.15
@@ -38,20 +40,18 @@ function swapping(): Action {
             }
             const jump = Previews.arrow([unit.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
             hold(battle, SWAP_TIME, [jump])
-            battle.swap(unit, other)
+            Swap.swap(battle, unit, other)
             wait(battle, SWAP_TIME)
         },
         preview: ({ battle, unit, pose }) => {
             const other = closest(battle, unit, pose.position)
             if(!other) return Previews.still(pose, Previews.label(pose.position, "personne en vue", NOTE_COLOR))
-            const there = Previews.arrow([pose.position, other.position], MOVE_WIDTH / 2, MOVE_COLOR)
-            const back = Previews.arrow([other.position, pose.position], MOVE_WIDTH / 2, CONTROL_COLOR)
-            return Previews.still({ ...pose, position: other.position }, there, back, Previews.body(unit, other.position, pose.direction))
+            return Swap.swapShown(unit, pose, other)
         },
     }
 }
 
 /** A swap of places with the closest unit in vision, ally or enemy. */
 export const SWAP = new ActionCard("Échange", [
-    "Échange ta place avec l'", UNIT, " la plus proche, alliée ou ennemie.",
+    SWAPPING.as("Échange ta place"), " avec l'", UNIT, " la plus proche, alliée ou ennemie.",
 ], Rarity.RARE, swapping())

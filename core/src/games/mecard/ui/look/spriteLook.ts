@@ -1,3 +1,6 @@
+import { readAnimation, writtenAnimation } from "./fxAnimation"
+import type { FxAnimation } from "./fxAnimation"
+
 /** How a picture is drawn over the hitbox of its unit: the modes the file of data of a picture may name. */
 export const SPRITE_MODES = ["feet", "center", "cover", "wall", "repeat", "tile", "spin", "capped"] as const
 
@@ -16,6 +19,18 @@ export const SPRITE_MODE_HELP: Readonly<Record<SpriteMode, string>> = {
     capped: "un bout, un milieu répété et un bout, sur la longueur de la boîte",
 }
 
+/** How a unit moves, which a blow on it may look different for: dust on the ground, none in the air. */
+export const MOVE_TAGS = ["walk", "fly", "crawl", "float", "static"] as const
+
+/** What a unit is made of, which a blow on it may look different for. */
+export const MATTER_TAGS = ["soft", "hard", "ghost"] as const
+
+/** Every tag a picture may carry, see {@link MOVE_TAGS} and {@link MATTER_TAGS}. */
+export const SPRITE_TAGS = [...MOVE_TAGS, ...MATTER_TAGS] as const
+
+/** One of the tags of a picture, see {@link SPRITE_TAGS}. */
+export type SpriteTag = typeof SPRITE_TAGS[number]
+
 /** How the picture of a unit is drawn: written beside it, in the JSON file of its name. */
 export interface SpriteLook {
     /** Which way to draw it, none to draw it as its hitbox says: standing for a disc, covering for a box. */
@@ -23,13 +38,19 @@ export interface SpriteLook {
 
     /** How far over the ground it floats, in meters: its shade stays where the unit is. */
     readonly lift: number
+
+    /** What the picture says of its unit, none for a unit like any other: only those that differ are tagged. */
+    readonly tags: readonly SpriteTag[]
+
+    /** How the picture plays when it is the look of a blow, none when it is not one. */
+    readonly animation: FxAnimation|null
 }
 
 /** The look of a picture with no file of data. */
-export const DEFAULT_LOOK: SpriteLook = { mode: null, lift: 0 }
+export const DEFAULT_LOOK: SpriteLook = { mode: null, lift: 0, tags: [], animation: null }
 
 /** The keys of the JSON file of a picture that mean something. */
-const KEYS: readonly string[] = ["mode", "lift"]
+const KEYS: readonly string[] = ["mode", "lift", "tags", "animation"]
 
 /**
  * What the file of data of a picture says, checked.
@@ -46,14 +67,23 @@ export function readSpriteLook(data: unknown): SpriteLook {
     for(const key of Object.keys(fields)){
         if(!KEYS.includes(key)) throw new Error(`"${key}" n'est pas connu : écris ${KEYS.map(each => `"${each}"`).join(" ou ")}`)
     }
-    const { mode, lift } = fields
+    const { mode, lift, tags, animation } = fields
     if(mode !== undefined && !SPRITE_MODES.includes(mode as SpriteMode)){
         throw new Error(`"mode" vaut ${JSON.stringify(mode)} : écris l'un de ${SPRITE_MODES.join(", ")}`)
     }
     if(lift !== undefined && (typeof lift !== "number" || !Number.isFinite(lift))){
         throw new Error(`"lift" vaut ${JSON.stringify(lift)} : écris un nombre de mètres`)
     }
-    return { mode: (mode as SpriteMode|undefined) ?? null, lift: (lift as number|undefined) ?? 0 }
+    if(tags !== undefined){
+        const good = Array.isArray(tags) && tags.every(tag => SPRITE_TAGS.includes(tag as SpriteTag))
+        if(!good) throw new Error(`"tags" vaut ${JSON.stringify(tags)} : écris une liste de ${SPRITE_TAGS.join(", ")}`)
+    }
+    return {
+        mode: (mode as SpriteMode|undefined) ?? null,
+        lift: (lift as number|undefined) ?? 0,
+        tags: (tags as SpriteTag[]|undefined) ?? [],
+        animation: animation === undefined ? null : readAnimation(animation),
+    }
 }
 
 /** A look written as the JSON that gives it back, nothing for what is by default. */
@@ -61,5 +91,7 @@ export function writtenSpriteLook(look: SpriteLook): string {
     const fields: Record<string, unknown> = {}
     if(look.mode !== null) fields.mode = look.mode
     if(look.lift !== 0) fields.lift = look.lift
+    if(look.tags.length > 0) fields.tags = look.tags
+    if(look.animation !== null) fields.animation = writtenAnimation(look.animation)
     return JSON.stringify(fields)
 }

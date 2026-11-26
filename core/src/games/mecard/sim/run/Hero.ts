@@ -5,7 +5,7 @@ import type { Rgba } from "../base/Rgba"
 import { Arena } from "../battle/Arena"
 import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
-import { UnitStats } from "../battle/Unit"
+import { HAND_SIZE, UnitStats } from "../battle/Unit"
 import type { Controller, StatBases, UnitSpec } from "../battle/Unit"
 import type { Card } from "../card/Card"
 import { UNLIMITED_CARDS } from "../catalog/cards"
@@ -17,6 +17,8 @@ import { GREEN_HEART } from "../heart/subs/GreenHeartKind"
 import { RED_HEART } from "../heart/subs/RedHeartKind"
 import type { Item } from "../item/Item"
 import type { Visual } from "../base/Visual"
+
+import { orderedFactor, powerOf, unorderedFactor } from "./foeScaling"
 
 /** The color the names of the heroes and of their team are written in. */
 export const HERO_COLOR: Rgba = rgba(0.35, 0.6, 1)
@@ -87,19 +89,53 @@ export function allyOf(monster: Monster, name: string): Hero {
 }
 
 /**
- * A monster as a fighter, as the floors make it: more hearts at a higher level, its deck kept in order so it
- * plays the same loop each time.
+ * A monster as a fighter, as the floors make it: its deck kept in order so it plays the same loop each time.
+ * At a higher level it has more hearts, copies of the power, and plays several rounds of its loop at once
+ * (see {@link orderedFactor}), its deck holding its loop as many times.
  *
  * @param level - The level of the floor, 1 for none.
  */
 export function foeOf(monster: Monster, name: string, level = 1): Hero {
+    const factor = orderedFactor(level, monster.draw)
+    const draw = monster.draw * factor
     return hero({
-        name, sprite: monster.sprite, controller: "bot", decks: [[...monster.cards]],
+        name, sprite: monster.sprite, controller: "bot", decks: [repeated(monster.cards, factor)],
         unlimited: [], hearts: monsterHearts(monster.hearts + level - 1),
-        items: [...monster.items ?? []],
+        items: [...monster.items ?? [], ...powerOf(level)],
         usables: [],
-        bases: { draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true, size: monster.size ?? 1 },
+        bases: {
+            draw, firstDraw: draw, chainSize: draw, handSize: HAND_SIZE * factor, ordered: true,
+            size: monster.size ?? 1,
+        },
     })
+}
+
+/**
+ * A character the party fights, as strong as a floor makes it: it draws, holds and plays more cards (see
+ * {@link unorderedFactor}), each of its decks holding whole copies of itself for it, and carries copies of
+ * the power. The character given is left as it is.
+ *
+ * @param level - The level of the floor, 1 for none.
+ */
+export function scaledKit(character: Hero, level: number): Hero {
+    const factor = unorderedFactor(level, baseOf(character, "chainSize"))
+    const scaled = (name: "draw"|"firstDraw"|"handSize"|"chainSize"): number => {
+        return Math.round(baseOf(character, name) * factor)
+    }
+    return hero({
+        ...character,
+        decks: character.decks.map(deck => repeated(deck, Math.ceil(factor))),
+        items: [...character.items, ...powerOf(level)],
+        bases: {
+            ...character.bases, draw: scaled("draw"), firstDraw: scaled("firstDraw"),
+            handSize: scaled("handSize"), chainSize: scaled("chainSize"),
+        },
+    })
+}
+
+/** The cards of a deck, so many times over, one copy after the other. */
+function repeated(cards: readonly Card[], times: number): Card[] {
+    return Array.from({ length: times }, () => cards).flat()
 }
 
 /** A kind of monster the players plan, as a hero: the ally it would be, in their hands. */

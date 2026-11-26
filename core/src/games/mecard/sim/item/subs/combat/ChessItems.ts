@@ -6,7 +6,11 @@ import { DODGE } from "../../../status/subs/Dodge"
 import type { Unit } from "../../../battle/Unit"
 
 import { AbstractItem } from "../AbstractItem"
-import { BATTLE_ROUND, FORCE, INVOCATION } from "../../../base/keywords"
+import { BATTLE_ROUND, FORCE } from "../../../base/keywords"
+import { RELOCATED } from "../../../battle/mecanic/relocation/signals"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
 
 /** How far apart two bodies may stand and still touch, in meters: a body stops a stride short of another. */
 const CONTACT_SLACK = 0.08
@@ -30,7 +34,7 @@ export class Spurs extends AbstractItem {
 
 
     public init({ battle, unit, hold }: PlugContext): void {
-        hold(battle.unitMoved.add(({ unit: mover, to }) => {
+        hold(battle.observers.of(RELOCATED).add(({ unit: mover, to }) => {
             if(mover !== unit) return
             const touching = battle.touchables.some(other => {
                 return other !== unit && other.position.distance(to) <= unit.radius + other.radius + CONTACT_SLACK
@@ -87,7 +91,9 @@ export class Horseshoe extends AbstractItem {
 
 
     constructor(){
-        super("Fer à cheval", visual("items/horseshoe"), ["Chaque Esquive te fait avancer de ", HORSESHOE_STRIDE, " m."])
+        super("Fer à cheval", visual("items/horseshoe"), [
+            "Chaque Esquive te fait ", WALK.as("avancer"), " de ", HORSESHOE_STRIDE, " m.",
+        ])
     }
 
 
@@ -97,7 +103,9 @@ export class Horseshoe extends AbstractItem {
 
     #after(battle: PlugContext["battle"], unit: Unit): void {
         const last = unit.stepsPlayed[unit.stepsPlayed.length - 1]
-        if(last === DODGE_CARD.get()) battle.move(unit, unit.direction, HORSESHOE_STRIDE * unit.stats.move.value)
+        if(last === DODGE_CARD.get()){
+            Walk.move(battle, unit, unit.direction, HORSESHOE_STRIDE * unit.stats.move.value)
+        }
     }
 }
 

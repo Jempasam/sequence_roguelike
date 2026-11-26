@@ -4,6 +4,7 @@ import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import { MOMENTUM } from "../../../status/subs/Momentum"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
 
 import { AbstractItem } from "../AbstractItem"
 
@@ -30,7 +31,7 @@ export class PredatorEye extends AbstractItem {
 
     constructor(){
         super("Œil du prédateur", visual("items/scope"), [
-            "Après une action qui ne te déplace pas mais te tourne de plus de 90°, gagne +", EYE_STRENGTH, " ", FORCE,
+            "Après une action qui ne te déplace pas mais ", TURN.as("te tourne"), " de plus de 90°, gagne +", EYE_STRENGTH, " ", FORCE,
             " jusqu'à la fin du ", BATTLE_ROUND, ".",
         ])
     }

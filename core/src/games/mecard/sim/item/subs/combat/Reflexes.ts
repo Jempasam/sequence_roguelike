@@ -5,12 +5,15 @@ import type { Unit } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { BLEEDING } from "../../../status/subs/Wounds"
 import { CONCENTRATED } from "../../../status/subs/Calm"
-import { turning, turnsIn, turnUnitsIn } from "../../../card/subs/tools/turning"
+import { INCOMING_SHOVE } from "../../../battle/mecanic/push/signals"
+import { RELOCATED } from "../../../battle/mecanic/relocation/signals"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Pushing from "../../../battle/mecanic/push"
+import * as Turn from "../../../battle/mecanic/turn"
 import type { Preview } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import * as Previews from "../../../battle/preview/Previews"
 import { MOVE_COLOR, MOVE_WIDTH, RANGE_COLOR } from "../../../battle/previewColors"
-import { shoveNow } from "../../../card/subs/tools/shoving"
 import { WAIT } from "../../../card/subs/movement/Wait"
 
 import { AbstractItem } from "../AbstractItem"
@@ -40,7 +43,7 @@ export class BackEyes extends AbstractItem {
 
     constructor(){
         super("Yeux dans le dos", visual("items/scope"), [
-            "Frappée par une ", UNIT, " qui est derrière elle (plus de 130° de son avant), l'", UNIT, " se retourne.",
+            "Frappée par une ", UNIT, " qui est derrière elle (plus de 130° de son avant), l'", UNIT, " ", TURN.as("se retourne"), ".",
         ])
     }
 
@@ -48,7 +51,7 @@ export class BackEyes extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         hold(unit.struck.add(({ attacker }) => {
             const toward = attacker.position.minus(unit.position).normalized
-            if(toward && unit.direction.dot(toward) < BEHIND_COS) battle.turn(unit, unit.direction.opposite)
+            if(toward && unit.direction.dot(toward) < BEHIND_COS) Turn.turn(battle, unit, unit.direction.opposite)
         }))
     }
 }
@@ -71,7 +74,7 @@ export class ToreroCape extends AbstractItem {
         // A move is many strides: a unit is stunned once by the cape for each step it takes.
         const stunned = new Set<Unit>()
         hold(battle.unitStepped.add(() => stunned.clear()))
-        hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
+        hold(battle.observers.of(RELOCATED).add(({ unit: mover, from, to }) => {
             // What others make it do is not a pass: only its own moves.
             if(mover === unit || mover.shoving) return
             if(Areas.distanceToSegment(unit.position, from, to) > unit.radius + CAPE_REACH) return
@@ -91,14 +94,14 @@ export class ScaryMask extends AbstractItem {
     constructor(){
         super("Masque effrayant", visual("items/scary_mask"), [
             "Au début de chaque ", BATTLE_ROUND, ", les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
-            " autour lui tournent le dos.",
+            " autour lui ", TURN.as("tournent le dos"), ".",
         ])
     }
 
 
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.roundStarted.add(() => {
-            turnUnitsIn(
+            Turn.turnUnitsIn(
                 battle, Areas.circle(unit.position, MASK_RADIUS), unit,
                 other => other.position.minus(unit.position).normalized,
             )
@@ -107,8 +110,8 @@ export class ScaryMask extends AbstractItem {
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
         const zone = Areas.circle(pose.position, MASK_RADIUS)
-        const turned = turnsIn(battle, zone, unit, other => other.position.minus(pose.position).normalized)
-        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(turning))
+        const turned = Turn.turnsIn(battle, zone, unit, other => other.position.minus(pose.position).normalized)
+        return Previews.still(pose, Previews.polygon(zone, RANGE_COLOR), ...turned.map(Turn.turningShown))
     }
 }
 
@@ -126,7 +129,7 @@ export class StickySoles extends AbstractItem {
 
 
     public init({ unit, hold }: PlugContext): void {
-        hold(unit.incomingShove.add(incoming => {
+        hold(unit.observers.of(INCOMING_SHOVE).add(incoming => {
             incoming.distance /= SOLES_DIVISOR
         }))
     }
@@ -150,7 +153,10 @@ export class Magnet extends AbstractItem {
         hold(battle.roundStarted.add(() => {
             for(const other of battle.fetch(Areas.circle(unit.position, MAGNET_RADIUS), unit)){
                 const toward = unit.position.minus(other.position).normalized
-                if(toward) shoveNow(battle, unit, other, toward, MAGNET_PULL)
+                if(!toward) continue
+                Pushing.shove({
+                    battle, by: unit, target: other, direction: toward, distance: MAGNET_PULL, atOnce: true,
+                })
             }
         }))
     }

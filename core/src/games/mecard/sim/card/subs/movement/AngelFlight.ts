@@ -10,6 +10,10 @@ import { ActionCard } from "../ActionCard"
 import { hold, wait, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Teleport from "../../../battle/mecanic/teleport"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** How far around the unit the angel looks for an ally, in meters. */
 const FLIGHT_RADIUS = 6 - UNIT_RADIUS
@@ -58,20 +62,19 @@ function flying(): Action {
                 return
             }
             hold(battle, FLIGHT_TIME, [Previews.arrow([unit.position, found.at], MOVE_WIDTH / 2, MOVE_COLOR)])
-            if(battle.teleport(unit, found.at)) battle.turn(unit, found.facing)
+            if(Teleport.teleport(battle, unit, found.at)) Turn.turn(battle, unit, found.facing)
             wait(battle, FLIGHT_TIME)
         },
         preview: ({ battle, unit, pose }) => {
             const found = spot(battle, unit, pose)
             if(!found) return Previews.still(pose, Previews.label(pose.position, NOBODY, NOTE_COLOR))
-            const landing = battle.teleportSpot(unit, found.at)
-            if(!landing) return Previews.still(pose, Previews.label(found.at, "bloqué", NOTE_COLOR))
-            return Previews.still({ position: landing, direction: found.facing }, ...Previews.moving(unit, pose.position, found.at, landing, MOVE_WIDTH / 2))
+            return Teleport.teleportShown(battle, unit, pose, found.at, found.facing)
         },
     }
 }
 
 /** A jump before the farthest ally of a wide circle, facing its way. */
 export const ANGEL_FLIGHT = new ActionCard("Envol de l'ange", [
-    "Se téléporte devant l'allié le plus loin dans un rayon de ", FLIGHT_RADIUS, " ", DISTANCE, ", tourné comme lui. Aucun allié : raté.",
+    TELEPORT.as("Se téléporte"), " devant l'allié le plus loin dans un rayon de ", FLIGHT_RADIUS, " ", DISTANCE, ", ",
+    TURN.as("tourné"), " comme lui. Aucun allié : raté.",
 ], Rarity.RARE, flying())

@@ -11,6 +11,7 @@ import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
+import { RELOCATED } from "../../battle/mecanic/relocation/signals"
 
 /** How many rounds the bear traps of the catalog lie there. */
 export const BEAR_TRAP_ROUNDS = 3
@@ -31,7 +32,7 @@ export class Trapping extends HazardStatus {
     public readonly type: StatusType = BEAR_TRAP_HAZARD
 
     protected plug({ battle, unit }: UnitContext): void {
-        this.hold(battle.unitMoved.add(({ unit: mover, to }) => {
+        this.hold(battle.observers.of(RELOCATED).add(({ unit: mover, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             const zone = unit.zone ?? Areas.circle(unit.position, BEAR_TRAP_RADIUS)
             if(!mover.hitbox.touches({ position: to, direction: mover.direction }, zone)) return

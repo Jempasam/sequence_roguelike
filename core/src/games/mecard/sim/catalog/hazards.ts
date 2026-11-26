@@ -23,7 +23,9 @@ import { hazardType } from "../hazard/HazardType"
 import type { HazardType } from "../hazard/HazardType"
 import { EXPLOSIVE } from "../status/subs/Explosive"
 import { SHADOW_STEP } from "../card/subs"
-import {  } from "../base/keywords"
+import { VIOLENT_PUSH } from "../battle/mecanic/push/keyword"
+import { TURN } from "../battle/mecanic/turn/keyword"
+import { WALK } from "../battle/mecanic/walk/keyword"
 
 /** How far the belt of a conveyor carries, and how wide it is, in meters: what the card it plays covers. */
 const CONVEYOR_LENGTH = 4
@@ -132,7 +134,8 @@ export const CONVEYOR = hazardType({
 })
 
 export const PISTON = hazardType({
-    id: "piston", name: "Piston", description: ["Attend, puis projette ce qui est devant : ", PROJECTION, "."],
+    id: "piston", name: "Piston",
+    description: ["Attend, puis ", VIOLENT_PUSH.as("pousse violemment"), " ce qui est devant : ", PROJECTION, "."],
     icon: visual("units/piston"), direction: Vector2.DOWN,
     bodies: [{ body: { ...standing("Piston", "units/piston"), size: FIXTURE_SIZE, cards: [WAIT, PROJECTION] } }],
 })
@@ -152,7 +155,7 @@ export const GEYSER = hazardType({
 export const PATROL_ROBOT = hazardType({
     id: "patrol-robot",
     name: "Robot patrouilleur",
-    description: ["Fonce deux fois sur sa ligne, puis fait demi-tour : ", RAM, "."],
+    description: [WALK.as("Fonce"), " deux fois sur sa ligne, puis ", TURN.as("fait demi-tour"), " : ", RAM, "."],
     icon: visual("units/robot"), direction: Vector2.DOWN,
     bodies: [{
         body: {

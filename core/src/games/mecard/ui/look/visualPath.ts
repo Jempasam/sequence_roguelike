@@ -13,6 +13,24 @@ export function pathOf(visual: Visual|string): ImagePath {
     return `mecard/${key}.png` as ImagePath
 }
 
+/** The folder of the pictures of the blows: the root of the keys of the visuals that a blow names. */
+export const FX_ROOT = "fx"
+
+/**
+ * The picture of the blow a visual names, its key being a name under `mecard/fx/`: where that key becomes a
+ * path, the file may not exist.
+ */
+export function fxPath(visual: Visual|string): ImagePath {
+    const key = typeof visual === "string" ? visual : visual.visual
+    return `mecard/${FX_ROOT}/${key}.png` as ImagePath
+}
+
+/** The key under which a picture of a blow is loaded, from the key a visual names it with. */
+export function fxKey(visual: Visual|string): string {
+    const key = typeof visual === "string" ? visual : visual.visual
+    return `${FX_ROOT}/${key}`
+}
+
 /** The folder of the transitions: the root of the keys of the visuals that name one. */
 const TRANSITIONS_ROOT = "mecard/transitions"
 

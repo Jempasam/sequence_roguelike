@@ -2,6 +2,7 @@ import { Forced, ModifierKey } from "../../base/Attribute"
 import type { PlugContext } from "../../battle/Action"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import * as Leap from "../../battle/mecanic/leap"
 
 /**
  * An unsubstantial body until the end of the round: it takes no room, is aimed at by nobody, touched by no
@@ -30,7 +31,7 @@ export class Ethereal extends AbstractProcess {
             unit.stats.targetable.remove(key)
             unit.stats.touchable.remove(key)
             unit.stats.movable.remove(key)
-            battle.unblock(unit)
+            Leap.unblock(battle, unit)
         })
         hold(unit.hitting.add(() => {
             battle.events.push({ type: "status", unit, text: "prend corps" })

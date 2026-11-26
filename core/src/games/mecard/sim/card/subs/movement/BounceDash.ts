@@ -5,7 +5,10 @@ import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
-import { TRAVEL_SLACK, travel, wait } from "../tools/playing"
+import { wait } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
+import * as Walk from "../../../battle/mecanic/walk"
 import { reflected } from "../tools/reflection"
 import { Rarity } from "../../Rarity"
 import { DASH_SPEED } from "./MoveCard"
@@ -35,7 +38,8 @@ export class BounceDashCard extends ActionCard {
         public readonly bounces: number,
     ){
         super("Bounce Dash", [
-            "Fonce de ", frenchNumber(length), "×", AGILITE, " ", DISTANCE, ". Arrêté en route, tu rebondis et repars de ",
+            WALK.as("Fonce"), " de ", frenchNumber(length), "×", AGILITE, " ", DISTANCE, ". Arrêté en route, tu rebondis et ",
+            WALK.as("repars"), " de ",
             frenchNumber(length), "×", AGILITE, " ", DISTANCE, ", ", bounces, " rebonds au plus.",
         ], Rarity.RARE, BounceDashCard.#dashing(length, bounces))
     }
@@ -47,13 +51,13 @@ export class BounceDashCard extends ActionCard {
                 const { battle, unit } = ctx
                 const leg = length * unit.stats.move.value
                 for(let bounce = 0; bounce <= bounces && unit.alive; bounce++){
-                    const gone = travel(ctx, unit.direction, leg, DASH_SPEED)
-                    const stopped = gone.distance < leg - TRAVEL_SLACK && unit.stats.mobility.value > 0
+                    const gone = Walk.travel(ctx, unit.direction, leg, DASH_SPEED)
+                    const stopped = gone.distance < leg - Walk.TRAVEL_SLACK && unit.stats.mobility.value > 0
                     if(!stopped || bounce === bounces) break
                     const { position, direction, radius } = unit
                     const way = reflected(battle, position, direction, radius, STOP_SLACK, gone.struck)
                     if(!way) break
-                    battle.turn(unit, way)
+                    Turn.turn(battle, unit, way)
                 }
                 wait(battle, SETTLE_TIME)
             },
@@ -62,10 +66,10 @@ export class BounceDashCard extends ActionCard {
                 const points: Vector2[] = [pose.position]
                 let { position, direction } = pose
                 for(let bounce = 0; bounce <= bounces; bounce++){
-                    const gone = battle.moveSpot(unit, position, direction, leg)
+                    const gone = Walk.spot(battle, unit, position, direction, leg)
                     position = gone.to
                     points.push(position)
-                    if(gone.distance >= leg - TRAVEL_SLACK || bounce === bounces) break
+                    if(gone.distance >= leg - Walk.TRAVEL_SLACK || bounce === bounces) break
                     const way = reflected(battle, position, direction, unit.radius, STOP_SLACK, gone.struck)
                     if(!way) break
                     direction = way

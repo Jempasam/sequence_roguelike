@@ -6,6 +6,7 @@ import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
 import type { Impact } from "./MoveCard"
 import { AGILITE, DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
 
 /** How many hearts the ram of the catalog takes. */
 const RAM_DAMAGE = 2
@@ -21,7 +22,7 @@ export class RamCard extends MoveCard {
         public readonly amount: number,
     ){
         super("Dash dégât", [
-            "Fonce de ", length, "×", AGILITE, " ", DISTANCE, ". L'", UNIT, " percutée prend ", amount, " ",
+            WALK.as("Fonce"), " de ", length, "×", AGILITE, " ", DISTANCE, ". L'", UNIT, " percutée prend ", amount, " ",
             DamageType.PHYSICAL, ".",
         ], Rarity.RARE, length, speed)
     }

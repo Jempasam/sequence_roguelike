@@ -4,13 +4,14 @@ import type { Pose } from "../../../battle/Action"
 import { Rarity } from "../../Rarity"
 
 import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
 
 /** A dash backward, still facing ahead. */
 export class BackDashCard extends MoveCard {
 
 
     constructor(length: number, speed: number){
-        super("Dash arrière", ["Recule de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner."], Rarity.COMMON, length, speed)
+        super("Dash arrière", [WALK.as("Recule"), " de ", length, "×", AGILITE, " ", DISTANCE, " sans se retourner."], Rarity.COMMON, length, speed)
     }
 
 

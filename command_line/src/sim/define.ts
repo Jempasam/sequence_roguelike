@@ -23,6 +23,11 @@ export interface DefinedKit {
     readonly bonus: readonly HeartGroup[]
 }
 
+/** A monster defined on the command line: the monster, with the usables only the simulation gives one. */
+export interface DefinedMonster extends Monster {
+    readonly usables: readonly Usable[]
+}
+
 /**
  * The largest number of copies one element asks for: a typo like `Avancer*1000` is more likely than a deck
  * of that size.
@@ -83,7 +88,7 @@ function baseOf(text: string, where: string): Base {
     const monsterBase = (each: Monster): Base => ({
         name: each.name,
         cards: each.cards,
-        items: [],
+        items: each.items ?? [],
         usables: [],
         hearts: each.hearts,
         bonus: [],
@@ -173,7 +178,7 @@ interface Draft {
  * @param label - How an error names where it is written: `--match`.
  * @throws {@link UsageError} On whatever is wrong with it, said with the name and the thing at fault.
  */
-export function parseDefinition(text: string, label: string): DefinedKit|Monster {
+export function parseDefinition(text: string, label: string): DefinedKit|DefinedMonster {
     const equals = text.indexOf("=")
     if(equals < 0) throw new UsageError(`${label} « ${text} » : une définition s'écrit Nom=élément,élément (le = manque).`)
     const name = text.slice(0, equals).trim()
@@ -203,12 +208,14 @@ export function parseDefinition(text: string, label: string): DefinedKit|Monster
     if(monstrous){
         if(draft.hearts === null || draft.hearts < 1) throw new UsageError(`${where} : un monstre sans @Base a besoin de heart:rouge*N.`)
         if(draft.draw === null) throw new UsageError(`${where} : un monstre sans @Base a besoin de draw:N.`)
-        return monster({
+        const made = monster({
             name, sprite: base?.sprite ?? CUSTOM_SPRITE,
             hearts: draft.hearts, draw: draft.draw,
             ...draft.size === null ? {} : { size: draft.size },
             cards: draft.cards,
+            items: draft.items,
         })
+        return { ...made, usables: draft.usables }
     }
     // A kit that names no heart starts with the usual red ones; one that names some has exactly those.
     const hearts = draft.hearts ?? (draft.bonus.length === 0 ? KIT_HEARTS : 0)
@@ -293,9 +300,6 @@ function applyElement(
     const kind = prefixed?.[1].toLowerCase() ?? "card"
     const { name, count } = counted(prefixed?.[2] ?? body, where)
     if(name === "") throw new UsageError(`${where} : « ${element} » : nom manquant.`)
-    if((kind === "item" || kind === "usable") && monstrous){
-        throw new UsageError(`${where} : ${kind}: refusé sur un monstre (un monstre n'a ni objet ni usable).`)
-    }
     const space = kind === "item" ? ITEMS : kind === "usable" ? USABLES : CARDS
     const list: { name: string }[] = kind === "item" ? draft.items : kind === "usable" ? draft.usables : draft.cards
     if(removing){

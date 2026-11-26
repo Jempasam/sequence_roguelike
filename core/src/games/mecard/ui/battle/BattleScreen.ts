@@ -2,7 +2,7 @@ import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
 import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
-import type { Animation, Layer, Theme, UiRoot } from "../../../../engine/ui"
+import type { UiAnimation, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
 import { Scope } from "../../../../lifetime"
 import { eventText } from "../../sim/battle/events"
@@ -40,6 +40,7 @@ import { ArenaHearts } from "../hud/ArenaHearts"
 import { Detail } from "../hud/Detail"
 import { DetailTooltip } from "../hud/DetailTooltip"
 import { DIM_TEXT } from "../look/theme"
+import { resolveFx } from "../look/FxSprites"
 import type { UnitSprites } from "../look/UnitSprites"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import type { BattleAnchors } from "../particles/ParticleContext"
@@ -238,6 +239,9 @@ export class BattleScreen implements HudHost {
         this.#battleAnimations = new BattleAnimations(
             this.scene, this.animations, this.#clock, this.#playControl,
         )
+        this.#battleAnimations.resolveFx = (visual, target) => {
+            return resolveFx(sprites, visual, target ? sprites.look(target.sprite).tags : [])
+        }
         // Not told by being ready: the players still are when the next round draws.
         this.#battleAnimations.animates = unit => {
             return !this.#locks.isLocked(unit) && unit.team === this.viewpoint && unit.controller === "player"
@@ -525,7 +529,7 @@ export class BattleScreen implements HudHost {
         const battle = this.#engine
         this.#observers.remove()
         // The replay holds on a card played, or refused, while paused.
-        const holds: Holds = new Map<AnyObservable, Animation>([
+        const holds: Holds = new Map<AnyObservable, UiAnimation>([
             [battle.signals.cardActivated, this.#playControl.gate()],
             [battle.signals.cardInvalid, this.#playControl.gate()],
         ])

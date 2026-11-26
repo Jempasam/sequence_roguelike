@@ -1,4 +1,4 @@
-import { INVOCATION } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 

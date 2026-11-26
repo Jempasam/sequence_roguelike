@@ -10,6 +10,9 @@ import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import * as Previews from "../../../battle/preview/Previews"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
+
 /** How far around the unit the enemies copy its last action, in meters. */
 const REFLECTION_RADIUS = 3 - UNIT_RADIUS
 
@@ -62,7 +65,7 @@ function misdirected(action: Action): Action {
                 spent = false
             } else if(!spent){
                 spent = true
-                ctx.battle.turn(ctx.unit, ctx.unit.direction.opposite)
+                Turn.turn(ctx.battle, ctx.unit, ctx.unit.direction.opposite)
             }
             action.use(ctx)
         },
@@ -72,5 +75,5 @@ function misdirected(action: Action): Action {
 }
 
 export const MISDIRECTION = new ModifierCard("Fausse route", [
-    "Joue l'action. Le premier qui la copie la joue à l'envers : il tourne le dos avant de la jouer.",
+    "Joue l'action. Le premier qui la copie la joue à l'envers : il ", TURN.as("tourne le dos"), " avant de la jouer.",
 ], Rarity.RARE, misdirected)

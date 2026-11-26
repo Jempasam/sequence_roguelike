@@ -1,4 +1,5 @@
 import { DISTANCE, HEART, UNIT } from "../../../base/keywords"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
@@ -9,6 +10,8 @@ import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import * as Teleport from "../../../battle/mecanic/teleport"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -35,8 +38,8 @@ function preyOf(battle: Battle, unit: Unit, pose: Pose): Unit|null {
 export const POSSESSION = new ActionCard("Possession", [
     "Frappe l'", UNIT, " ennemie la plus faible, puis la plus proche, à ", POSSESSION_RADIUS, " ", DISTANCE,
     " autour, d'au plus ", POSSESSION_MAX_LIFE, " ", HEART.as("cœurs"), " : ", POSSESSION_DAMAGE, " ",
-    DamageType.PHYSICAL, ". Si elle meurt, tu prends sa place, tourné comme tu l'étais, et joues après ta chaîne ",
-    "ce qu'il restait de la sienne.",
+    DamageType.PHYSICAL, ". Si elle meurt, tu ", TELEPORT.as("te téléportes"), " à sa place, tourné comme tu l'étais, et joues ",
+    "après ta chaîne ce qu'il restait de la sienne.",
 ], Rarity.EPIC, {
     use: function ({ battle, unit }){
         const prey = preyOf(battle, unit, unit)
@@ -48,10 +51,11 @@ export const POSSESSION = new ActionCard("Possession", [
         // Read before the blow: dying, the prey keeps its chain, but what it holds may change.
         const left = prey.unplayed()
         const at = prey.position
-        battle.strike(unit, area, POSSESSION_DAMAGE, DamageType.PHYSICAL, target => target === prey ? 1 : 0)
+        const only = (target: Unit): number => target === prey ? 1 : 0
+        battle.strike(unit, area, POSSESSION_DAMAGE, DamageType.PHYSICAL, only, SMASH_LOOK)
         hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
         if(prey.alive || !unit.alive) return
-        battle.teleport(unit, at)
+        Teleport.teleport(battle, unit, at)
         battle.appendToChain(unit, left)
     },
     preview: ({ battle, unit, pose }) => {

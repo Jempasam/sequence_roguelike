@@ -9,18 +9,23 @@ import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, travel, WORD_TIME } from "../tools/playing"
-import { type Shove, shove, shoveAll } from "../tools/shoving"
+import { hold, SHORT_TIME, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
+import type { Shove } from "../../../battle/mecanic/push/shove"
+import type { ViolentShove } from "../../../battle/mecanic/push/violent"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Pushing from "../../../battle/mecanic/push"
+import * as Walk from "../../../battle/mecanic/walk"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the projection of the catalog throws, in meters, before the range of the unit. */
 const PROJECTION_DISTANCE = 2.5
 
-/** How many hearts a projection stopped short takes, before the strength of the unit. */
+/** How many hearts a collision of a projection takes, before the strength of the unit. */
 const IMPACT_DAMAGE = 2
 
 /** How far the projection reaches in front of the unit, in meters, and the cosine of half its angle. */
@@ -64,51 +69,63 @@ function behind(unit: Unit, pose: Pose, length: number, width: number): Area {
     return Areas.line(from, from.minus(pose.direction.times(length)), width)
 }
 
-/** What a shove would show: its zone is shown apart, here the way it goes and where it is stopped. */
-function shoveShown(battle: Battle, one: Shove): Indicator[] {
-    const trip = battle.moveSpot(one.target, one.target.position, one.direction, one.distance, one.through ?? [])
-    const shown: Indicator[] = [Previews.arrow([one.target.position, trip.to], MOVE_WIDTH, CONTROL_COLOR)]
-    if(trip.distance < one.distance && (one.impact ?? 0) > 0){
-        shown.push(Previews.label(trip.to, `impact ${one.impact}`, NOTE_COLOR))
-    }
-    return shown
-}
-
-/** An action shoving units of a zone, by the shoves it asks of a pose. */
-function shoving(
-    zone: (unit: Unit, pose: Pose) => Area, shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => Shove[],
+/**
+ * An action shoving units of a zone, one after the other, by the shoves it asks of a pose.
+ *
+ * @param play - How each shove is played: simply, or violently.
+ * @param shown - What each shove shows in a preview.
+ */
+function shoving<T extends Shove>(
+    zone: (unit: Unit, pose: Pose) => Area, shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => T[],
+    play: (one: T) => void, shown: (battle: Battle, one: T) => Indicator[],
 ): Action {
     return {
         use: function ({ battle, unit }){
             const hit = battle.fetch(zone(unit, unit), unit)
-            shoveAll(shovesOf(battle, unit, unit, hit))
+            for(const one of shovesOf(battle, unit, unit, hit)) play(one)
             hold(battle, SHORT_TIME)
         },
         preview: ({ battle, unit, pose }) => {
             const area = zone(unit, pose)
             const hit = battle.fetch(area, unit)
-            const shown = shovesOf(battle, unit, pose, hit).flatMap(one => shoveShown(battle, one))
-            return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...shown)
+            const shoves = shovesOf(battle, unit, pose, hit).flatMap(one => shown(battle, one))
+            return Previews.still(pose, Previews.polygon(area, RANGE_COLOR), ...shoves)
         },
     }
 }
 
-/** The impact of a shove of the catalog: a few hearts, the strength of the unit added. */
+/** An action shoving violently the units of a zone. */
+function shovingViolently(
+    zone: (unit: Unit, pose: Pose) => Area,
+    shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => ViolentShove[],
+): Action {
+    return shoving(zone, shovesOf, Pushing.shoveViolently, Pushing.violentShoveShown)
+}
+
+/** An action shoving the units of a zone, hurting nobody. */
+function shovingSimply(
+    zone: (unit: Unit, pose: Pose) => Area,
+    shovesOf: (battle: Battle, unit: Unit, pose: Pose, hit: Unit[]) => Shove[],
+): Action {
+    return shoving(zone, shovesOf, Pushing.shove, Pushing.shoveShown)
+}
+
+/** What a collision of a shove of the catalog takes: a few hearts, the strength of the unit added. */
 function impactOf(unit: Unit): number {
     return IMPACT_DAMAGE + unit.stats.strength.value
 }
 
 export const PROJECTION = new ActionCard("Projection", [
-    "Projette chaque ", UNIT, " dans le secteur devant, à ", frenchNumber(PROJECTION_RADIUS), " ", DISTANCE, ", sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE,
-    ". Si elle percute un mur ou une ", UNIT, ", elles prennent ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
-], Rarity.RARE, shoving(
+    VIOLENT_PUSH.as("Pousse violemment"), " chaque ", UNIT, " dans le secteur devant, à ", frenchNumber(PROJECTION_RADIUS), " ",
+    DISTANCE, ", sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, ".",
+], Rarity.RARE, shovingViolently(
     (unit, pose) => Areas.arc(unit.muzzle(pose), pose.direction, PROJECTION_RADIUS, PROJECTION_COS_HALF),
     (battle, unit, pose, hit) => hit.map(target => ({
         battle, by: unit, target,
         direction: pose.direction,
         distance: PROJECTION_DISTANCE * unit.stats.throwRange.value,
-        impact: impactOf(unit),
-        hurtsStruck: true,
+        damage: impactOf(unit),
     })),
 ))
 
@@ -119,7 +136,7 @@ function toward(from: Vector2, to: Vector2): Vector2|null {
 
 export const SUCTION = new ActionCard("Aspiration", [
     "Tire chaque ", UNIT, " à ", SUCTION_RADIUS, " ", DISTANCE, " autour jusqu'au contact. Aucun dégât.",
-], Rarity.RARE, shoving(
+], Rarity.RARE, shovingSimply(
     (unit, pose) => unit.around(SUCTION_RADIUS, pose),
     (battle, unit, pose, hit) => hit.flatMap(target => {
         const direction = toward(target.position, pose.position)
@@ -145,7 +162,7 @@ export const CATCH = new ActionCard("Attrapage", [
             target.hearts.damage(CATCH_DAMAGE, DamageType.PHYSICAL, unit)
             const direction = toward(target.position, spot)
             if(!direction) continue
-            shove({ battle, by: unit, target, direction, distance: target.position.distance(spot) })
+            Pushing.shove({ battle, by: unit, target, direction, distance: target.position.distance(spot) })
         }
         hold(battle, SHORT_TIME)
     },
@@ -157,44 +174,48 @@ export const CATCH = new ActionCard("Attrapage", [
     },
 })
 
+/** The violent push the battering ram gives what it runs into, from where it stops and the way it ran. */
+function rammed(battle: Battle, unit: Unit, target: Unit, stop: Pose): ViolentShove {
+    return {
+        battle, by: unit, target, direction: Pushing.knockedWay(target, stop.position, stop.direction),
+        distance: PROJECTION_DISTANCE * unit.stats.throwRange.value, damage: impactOf(unit),
+    }
+}
+
 export const BATTERING_RAM = new ActionCard("Bélier", [
-    "Fonce de ", RAM_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. La première ", UNIT, " rencontrée est projetée sur ", frenchNumber(PROJECTION_DISTANCE),
-    "×", PORTEE, " ", DISTANCE, ", avec ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à l'impact.",
+    WALK.as("Fonce"), " de ", RAM_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. La première ", UNIT, " rencontrée est ",
+    VIOLENT_PUSH.as("poussée violemment"), " sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE,
+    ", dans l'axe du choc. Choc : ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, {
     use: function (ctx){
         const { battle, unit } = ctx
         const length = RAM_LENGTH * unit.stats.move.value
-        const gone = travel(ctx, unit.direction, length)
+        const gone = Walk.travel(ctx, unit.direction, length)
         if(!gone.struck){
             hold(battle, WORD_TIME, [Previews.label(unit.position, "personne percutée", NOTE_COLOR)])
             return
         }
-        shove({
-            battle, by: unit, target: gone.struck, direction: unit.direction,
-            distance: PROJECTION_DISTANCE * unit.stats.throwRange.value, impact: impactOf(unit), hurtsStruck: true,
-        })
+        Pushing.shoveViolently(rammed(battle, unit, gone.struck, unit))
     },
     preview: ({ battle, unit, pose }) => {
         const length = RAM_LENGTH * unit.stats.move.value
-        const trip = battle.moveSpot(unit, pose.position, pose.direction, length)
+        const trip = Walk.spot(battle, unit, pose.position, pose.direction, length)
         const run = Previews.arrow([pose.position, trip.to], MOVE_WIDTH, CONTROL_COLOR)
         const landing = { position: trip.to, direction: pose.direction }
         const disc = Previews.body(unit, trip.to, pose.direction)
         if(!trip.struck) return Previews.still(landing, run, disc)
-        const one: Shove = {
-            battle, by: unit, target: trip.struck, direction: pose.direction,
-            distance: PROJECTION_DISTANCE * unit.stats.throwRange.value, impact: impactOf(unit), hurtsStruck: true,
-        }
-        return Previews.still(landing, run, disc, ...shoveShown(battle, one))
+        const pushed = Pushing.violentShoveShown(battle, rammed(battle, unit, trip.struck, landing))
+        return Previews.still(landing, run, disc, ...pushed)
     },
 })
 
 export const SLING_CARD = new ActionCard("Fronde", [
-    "Saisit la première ", UNIT, " devant, sur ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, ", et la lance derrière soi, ",
-    "en la faisant passer à travers soi, jusqu'à ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, " de l'", UNIT, ". Impact : ",
-    IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
+    "Saisit la première ", UNIT, " devant, sur ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, ", et la ",
+    VIOLENT_PUSH.as("pousse violemment"), " derrière soi, en la faisant passer à travers soi, jusqu'à ",
+    frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, " de l'", UNIT, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, ".",
 ], Rarity.EPIC, (() => {
-    const slung = (battle: Battle, unit: Unit, pose: Pose): Shove|null => {
+    const slung = (battle: Battle, unit: Unit, pose: Pose): ViolentShove|null => {
         const reach = SLING_LENGTH * unit.stats.throwRange.value
         const first = battle.ray(unit, reach, pose).unit
         if(!first) return null
@@ -203,7 +224,7 @@ export const SLING_CARD = new ActionCard("Fronde", [
         if(!direction) return null
         return {
             battle, by: unit, target: first, direction, distance: first.position.distance(end),
-            impact: impactOf(unit), hurtsStruck: true, through: [unit],
+            damage: impactOf(unit), through: [unit],
         }
     }
     return {
@@ -213,7 +234,7 @@ export const SLING_CARD = new ActionCard("Fronde", [
                 hold(battle, WORD_TIME, [Previews.label(unit.position, "personne à saisir", NOTE_COLOR)])
                 return
             }
-            shove(one)
+            Pushing.shoveViolently(one)
         },
         preview: ({ battle, unit, pose }) => {
             const reach = SLING_LENGTH * unit.stats.throwRange.value
@@ -222,22 +243,23 @@ export const SLING_CARD = new ActionCard("Fronde", [
                 Previews.polygon(behind(unit, pose, reach, SLING_BEHIND_WIDTH), HAZARD_COLOR),
             ]
             const one = slung(battle, unit, pose)
-            return Previews.still(pose, ...zones, ...one ? shoveShown(battle, one) : [])
+            return Previews.still(pose, ...zones, ...one ? Pushing.violentShoveShown(battle, one) : [])
         },
     } satisfies Action
 })())
 
 export const SHOCK_WAVE = new ActionCard("Onde de choc", [
-    "Projette chaque ", UNIT, " à ", frenchNumber(WAVE_RADIUS), " ", DISTANCE, " autour vers l'extérieur, sur ", frenchNumber(WAVE_DISTANCE),
-    "×", PORTEE, " ", DISTANCE, ". Impact : ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
-], Rarity.RARE, shoving(
+    VIOLENT_PUSH.as("Pousse violemment"), " vers l'extérieur chaque ", UNIT, " à ", frenchNumber(WAVE_RADIUS), " ", DISTANCE,
+    " autour, sur ", frenchNumber(WAVE_DISTANCE), "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    DamageType.PHYSICAL, ".",
+], Rarity.RARE, shovingViolently(
     (unit, pose) => unit.around(WAVE_RADIUS, pose),
     (battle, unit, pose, hit) => hit.flatMap(target => {
         const direction = toward(pose.position, target.position)
         if(!direction) return []
         return [{
             battle, by: unit, target, direction, distance: WAVE_DISTANCE * unit.stats.throwRange.value,
-            impact: impactOf(unit), hurtsStruck: true,
+            damage: impactOf(unit),
         }]
     }),
 ))
@@ -245,7 +267,7 @@ export const SHOCK_WAVE = new ActionCard("Onde de choc", [
 export const TIDE = new ActionCard("Marée", [
     "Fait avancer de ", TIDE_DISTANCE, " ", DISTANCE, " chaque ", UNIT, " du rectangle de ", TIDE_LENGTH, " ", DISTANCE, " sur ",
     TIDE_WIDTH, " ", DISTANCE, " devant. Aucun dégât.",
-], Rarity.RARE, shoving(
+], Rarity.RARE, shovingSimply(
     (unit, pose) => ahead(unit, pose, TIDE_LENGTH, TIDE_WIDTH),
     (battle, unit, pose, hit) => hit.map(target => ({
         battle, by: unit, target, direction: pose.direction, distance: TIDE_DISTANCE,

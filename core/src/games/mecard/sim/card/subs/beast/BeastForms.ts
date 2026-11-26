@@ -1,5 +1,6 @@
 import { visual } from "../../../base/Visual"
 import { CARTE, BATTLE_ROUND } from "../../../base/keywords"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
 import { HeartCount } from "../../../battle/words"
 import type { Element } from "../../../element/Element"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
@@ -73,7 +74,7 @@ export class FleshCurseCard extends AbstractCard<Beast, Module> {
 
     constructor(){
         super("Malédiction de chair", [
-            "Donne une bête qui avance, ne mord pas, et dont le corps est fait des ", CARTE.as("cartes"), " de son module (un hasard ",
+            "Donne une bête qui ", WALK.as("avance"), ", ne mord pas, et dont le corps est fait des ", CARTE.as("cartes"), " de son module (un hasard ",
             "du module est tiré une fois pour toutes).",
         ], Rarity.RARE)
     }
@@ -121,7 +122,7 @@ export class ElementalCard extends AbstractCard<Beast, Element> {
 
     constructor(){
         super("Élémentaire", [
-            "Donne une bête de son élément : elle avance, mord d'un petit sort de l'élément, et s'applique son aura avant de viser.",
+            "Donne une bête de son élément : elle ", WALK.as("avance"), ", mord d'un petit sort de l'élément, et s'applique son aura avant de viser.",
         ], Rarity.RARE)
     }
 

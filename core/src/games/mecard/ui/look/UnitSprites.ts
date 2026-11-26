@@ -19,7 +19,7 @@ import { loadWood } from "./wood"
 import type { Wood } from "./wood"
 import { DEFAULT_LOOK, readSpriteLook } from "./spriteLook"
 import type { SpriteLook } from "./spriteLook"
-import { dataPathOf, loadPictures, shippedPictures } from "./visualPath"
+import { dataPathOf, FX_ROOT, loadPictures, shippedPictures } from "./visualPath"
 
 /** The giant floating hand standing for a party of none on the map: it is no unit, so no kit names it. */
 export const HAND_VISUAL: Visual = visual("units/hand")
@@ -33,6 +33,9 @@ const iconKeys = (): string[] => shippedPictures("processes")
 /** The pictures stretched between two units tied together, by the visual of their tie: every file under `tethers/`. */
 const tetherKeys = (): string[] => shippedPictures("tethers")
 
+/** The pictures of the blows, played over the area they strike: every file under `fx/`. */
+const fxKeys = (): string[] => shippedPictures(FX_ROOT)
+
 /** The icons laid in the texts, as small as a letter: every file under `tiny_icon/`. */
 const tinyKeys = (): string[] => shippedPictures("tiny_icon")
 
@@ -42,6 +45,12 @@ const TINTED_ICONS: ReadonlySet<string> = new Set(["tiny_icon/heart", "tiny_icon
 /** The keys of the eyes of the button of the tactical view: the normal view, then the tactical one. */
 const EYE_OPEN = "hud/eye_open"
 const EYE_CLOSED = "hud/eye_closed"
+
+/**
+ * The pictures that the ambient of the map draws as sprites, besides the units: every file under `ambient/`,
+ * and the mine cart a goblin pushes.
+ */
+const ambientKeys = (): string[] => [...shippedPictures("ambient"), "floors/mine/cart"]
 
 /** The key of the gold coin written beside an amount of gold. */
 const GOLD = "hud/icon/gold"
@@ -179,8 +188,8 @@ export class UnitSprites {
         const halts = allHalts().map(halt => halt.icon.visual)
         const floors = ALL_FLOORS.map(floor => floor.icon.visual)
         const keys = [...new Set([
-            ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...tinyKeys(), ...statuses, ...things, ...halts, ...floors,
-            EYE_OPEN, EYE_CLOSED, GOLD,
+            ...unitKeys(), ...iconKeys(), ...tetherKeys(), ...fxKeys(), ...tinyKeys(), ...statuses, ...things, ...halts, ...floors,
+            EYE_OPEN, EYE_CLOSED, GOLD, ...ambientKeys(),
         ])]
         const fixed = [...CARD_BACK_PATHS, INVALID_CARD_PATH, PAPER_PATH, PATH_PICTURE, SHADE_PICTURE]
         const [named, fixedPictures, bag, booster, wood] = await Promise.all([

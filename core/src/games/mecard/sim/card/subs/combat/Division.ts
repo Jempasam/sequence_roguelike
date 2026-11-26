@@ -4,9 +4,11 @@ import { Heart } from "../../../heart/Heart"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, summonShown, WORD_TIME } from "../tools/playing"
+import { hold, SHORT_TIME, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { HEART, INVOCATION, PERFECT_CLONE } from "../../../base/keywords"
+import { HEART, PERFECT_CLONE } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
 import { DamageType } from "../../../battle/DamageType"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -42,7 +44,7 @@ export const DIVISION = new ActionCard("Division", [
     preview: ({ battle, unit, pose }) => {
         const spot = shareOf(unit) > 0 ? battle.cloneSpot(unit, pose) : null
         return Previews.still(
-            pose, Previews.label(pose.position, said(shareOf(unit)), NOTE_COLOR), ...spot ? [summonShown(spot)] : [],
+            pose, Previews.label(pose.position, said(shareOf(unit)), NOTE_COLOR), ...spot ? [Summons.summonShown(spot)] : [],
         )
     },
 })

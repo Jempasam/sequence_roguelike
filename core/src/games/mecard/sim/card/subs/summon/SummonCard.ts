@@ -3,19 +3,12 @@ import type { Vector2 } from "../../../base/Vector2"
 import type { Unit } from "../../../battle/Unit"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
-import { Heart } from "../../../heart/Heart"
 import type { HeartKind } from "../../../heart/HeartKind"
-import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 
 import { ActionCard } from "../ActionCard"
-import { summoning } from "../tools/playing"
+import * as Summons from "../../../battle/mecanic/summon"
 import type { Rarity } from "../../Rarity"
 import type { Visual } from "../../../base/Visual"
-
-/** The hearts of a body a unit summons, red ones unless a kind is named: its base ones, and the summoning of the unit on top. */
-export function summonedHearts(owner: Unit, count: number, kind: HeartKind = RED_HEART): Heart[] {
-    return Heart.many(kind, count + owner.stats.summon.value)
-}
 
 /** What a card summons, and how. */
 export interface SummonSpec {
@@ -57,8 +50,8 @@ export class SummonCard extends ActionCard {
 
     static #summoning(spec: SummonSpec): Action {
         const { sprite, name, halves, kind, thrown, equip } = spec
-        return summoning(spec.spots, unit => ({
-            sprite, name, hearts: () => summonedHearts(unit, halves, kind), fleeting: true,
+        return Summons.summoning(spec.spots, unit => ({
+            sprite, name, hearts: () => Summons.summonedHearts(unit, halves, kind), fleeting: true,
         }), { thrown: thrown ?? false, ...equip ? { equip } : {} })
     }
 }

@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
 import {
-    Add, BLINK, BURN, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART,
-    Vector2, WAIT,
+    Add, Areas, BLINK, BURN, DamageType, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART,
+    Vector2, visual, WAIT,
 } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
+import type { Battle, StrikeSignal, Unit, Visual } from "@game/core/mecard"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -87,6 +87,60 @@ describe("Battle signals", () => {
         expect(firstLoss).toBeGreaterThan(0)
         expect(story.slice(0, firstLoss).every(name => name === "effect")).toBe(true)
         expect(story.slice(firstLoss, firstLoss + 3)).toEqual(["heartWounded", "damaged", "died"])
+    })
+
+    test("a strike with a visual → struck told with the area, the origin, the direction and the visual", () => {
+        const on = battle()
+        const attacker = unit(on, 3, 3)
+        unit(on, 0, 0, { team: MONSTERS })
+        const area = Areas.arc(attacker.position, attacker.direction, 1, 0.5)
+        const look = visual("slash")
+        const struck: StrikeSignal[] = []
+        on.signals.struck.add(signal => struck.push(signal))
+        on.strike(attacker, area, 1, DamageType.PHYSICAL, () => 1, look)
+        expect(struck).toHaveLength(1)
+        expect(struck[0].attacker).toBe(attacker)
+        expect(struck[0].area).toBe(area)
+        expect(struck[0].origin).toEqual(attacker.position)
+        expect(struck[0].direction).toEqual(attacker.direction)
+        expect(struck[0].visual).toBe(look)
+    })
+
+    test("a strike without a visual → struck told with none", () => {
+        const on = battle()
+        const attacker = unit(on, 3, 3)
+        unit(on, 0, 0, { team: MONSTERS })
+        const visuals: (Visual | null)[] = []
+        on.signals.struck.add(({ visual: look }) => visuals.push(look))
+        on.strike(attacker, Areas.arc(attacker.position, attacker.direction, 1, 0.5), 1, DamageType.PHYSICAL)
+        expect(visuals).toEqual([null])
+    })
+
+    test("a strike on several areas → one struck for each, before any wound", () => {
+        const on = battle()
+        const attacker = unit(on, 3, 3)
+        unit(on, 3, 2, { team: MONSTERS })
+        const told: string[] = []
+        on.signals.struck.add(() => told.push("struck"))
+        on.signals.damaged.add(() => told.push("damaged"))
+        const areas = [
+            Areas.arc(attacker.position, attacker.direction, 1, 0.5),
+            Areas.arc(attacker.position, attacker.direction.times(-1), 1, 0.5),
+        ]
+        on.strikeMany(attacker, areas, 1, DamageType.PHYSICAL)
+        expect(told.filter(name => name === "struck")).toHaveLength(2)
+        expect(told.indexOf("damaged")).toBeGreaterThan(told.lastIndexOf("struck"))
+    })
+
+    test("a wound dealt by a unit → damaged told with it as its source, none for a wound of its own", () => {
+        const on = battle()
+        const attacker = unit(on, 3, 3)
+        const target = unit(on, 3, 2, { team: MONSTERS })
+        const sources: (Unit | null)[] = []
+        on.signals.damaged.add(({ source }) => sources.push(source))
+        target.hearts.damage(1, DamageType.PHYSICAL, attacker)
+        target.hearts.damage(1, DamageType.PHYSICAL, null)
+        expect(sources).toEqual([attacker, null])
     })
 
     test("the bar told → copies, which the battle changes no more", () => {

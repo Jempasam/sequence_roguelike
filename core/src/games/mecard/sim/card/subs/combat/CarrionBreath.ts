@@ -3,6 +3,7 @@ import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import { DISTANCE, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import { STINKING, stenchRadius } from "../../../status/subs/Stench"
+import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
 
 import { ActionCard } from "../ActionCard"
 import { coneFrom } from "../tools/cone"
@@ -39,5 +40,5 @@ function breathing(range: number, cosHalf: number, rounds: number): Action {
 export const CARRION_BREATH = new ActionCard("Haleine de charogne", [
     "Chaque ", UNIT, " dans un cône court devant, jusqu'à ", BREATH_RANGE, " ", DISTANCE, ", alliée ou ennemie, gagne ",
     STINKING, " pendant ", BREATH_ROUNDS, " ", BATTLE_ROUND.as("rounds"), " : après chaque ", BATTLE_TURN.as("étape"), " qu'elle joue, les unités à moins de ",
-    stenchRadius(BREATH_ROUNDS), " ", DISTANCE, " d'elle sont repoussées.",
+    stenchRadius(BREATH_ROUNDS), " ", DISTANCE, " d'elle sont ", VIOLENT_PUSH.as("poussées violemment"), ".",
 ], Rarity.EPIC, breathing(BREATH_RANGE, BREATH_COS_HALF, BREATH_ROUNDS))

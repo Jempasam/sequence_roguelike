@@ -8,6 +8,8 @@ import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
 import * as Areas from "../../battle/area/Areas"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { LEAPING } from "../../battle/mecanic/leap/keyword"
+import * as Leap from "../../battle/mecanic/leap"
 
 /** How many hearts a unit going back to its shadow takes from each body on the way, whatever its stats. */
 export const SHADOW_LINK_DAMAGE = 1
@@ -40,7 +42,7 @@ export class ShadowLink extends AbstractProcess {
         super("lien d'ombre", visual("processes/shadow_link", { color: [0.5, 0.4, 0.7] }),
             [
                 "À la fin du ", BATTLE_ROUND,
-                ", saute jusqu'à l'ombre la plus proche, qui disparaît, et blesse les unités sur le chemin.",
+                ", ", LEAPING.as("saute"), " jusqu'à l'ombre la plus proche, qui disparaît, et blesse les unités sur le chemin.",
             ],
         )
     }
@@ -66,12 +68,12 @@ export class ShadowLink extends AbstractProcess {
         if(!shadow) return
         const from = unit.position
         const to = shadow.position
-        if(!battle.leap(unit, to)) return
+        if(!Leap.leap(battle, unit, to)) return
         shadow.hearts.slay(null)
         const way = Areas.line(from, to, SHADOW_LINK_WIDTH)
         for(const target of battle.fetch(way, unit)){
             target.hearts.damage(SHADOW_LINK_DAMAGE, DamageType.PHYSICAL, unit)
         }
-        battle.unblock(unit)
+        Leap.unblock(battle, unit)
     }
 }

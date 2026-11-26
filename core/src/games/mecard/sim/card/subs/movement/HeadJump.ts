@@ -1,4 +1,5 @@
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
+import { HAMMER_LOOK } from "../tools/blowLooks"
 import { AGILITE, DISTANCE, FORCE } from "../../../base/keywords"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -7,7 +8,9 @@ import type { Unit } from "../../../battle/Unit"
 import { ActionCard } from "../ActionCard"
 import { hold, wait } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { LEAP_TIME, leapShown } from "./Leap"
+import { LEAPING } from "../../../battle/mecanic/leap/keyword"
+import { LEAP_TIME } from "../../../battle/mecanic/leap/shown"
+import * as Leap from "../../../battle/mecanic/leap"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
@@ -41,8 +44,8 @@ export class HeadJumpCard extends ActionCard {
         public readonly jumps: number,
     ){
         super("Saut sur tête", [
-            "Saute de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout. Sur un corps : ", amount, "+",
-            FORCE, " ", DamageType.PHYSICAL, ", et tu ressautes, ", jumps, " sauts au plus. Mal retombé, tu es éjecté à la place libre la plus proche.",
+            LEAPING.as("Saute"), " de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout. Sur un corps : ", amount, "+",
+            FORCE, " ", DamageType.PHYSICAL, ", et tu ", LEAPING.as("ressautes"), ", ", jumps, " sauts au plus. Mal retombé, tu es éjecté à la place libre la plus proche.",
         ], Rarity.RARE, HeadJumpCard.#jumping(length, amount, jumps))
     }
 
@@ -53,17 +56,18 @@ export class HeadJumpCard extends ActionCard {
                 for(let jump = 0; jump < jumps && unit.alive; jump++){
                     const to = unit.position.plus(unit.direction.times(length * unit.stats.move.value))
                     hold(battle, LEAP_TIME, [Previews.arrow([unit.position, to], MOVE_WIDTH / 2, MOVE_COLOR)])
-                    if(!battle.leap(unit, to)) return
+                    if(!Leap.leap(battle, unit, to)) return
                     const area = under(unit)
                     if(battle.fetch(area, unit).length === 0) break
-                    battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
+                    const damage = amount + unit.stats.strength.value
+                    battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, HAMMER_LOOK)
                 }
-                battle.unblock(unit)
+                Leap.unblock(battle, unit)
                 wait(battle, LEAP_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const to = pose.position.plus(pose.direction.times(length * unit.stats.move.value))
-                const indicators = leapShown(battle, unit, pose.position, to)
+                const indicators = Leap.leapShown(battle, unit, pose.position, to)
                 return { indicators, pose: { ...pose, position: to } }
             },
         }

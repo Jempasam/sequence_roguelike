@@ -4,7 +4,7 @@ import { Battle } from "../battle/Battle"
 import { Team } from "../battle/Team"
 import type { Monster } from "../catalog/monsters"
 import { ARENA_SIZE, partyStarts } from "../run/formation"
-import { monsterHearts } from "../run/Hero"
+import { foeOf, heroSpec } from "../run/Hero"
 import type { SavedUnit } from "../save/battleSave"
 
 /**
@@ -20,22 +20,18 @@ export function threatOf(monster: Monster): number {
  * The monsters as units a battle can be saved from, planned by whoever is given them rather than by a bot:
  * what a master brings to a duel, as the party of a run brings its heroes.
  *
- * @param level - How much its hearts grow: 1 for the monsters as they are.
+ * @param level - How strong they are, as on a floor of that level (see {@link foeOf}): 1 for the monsters
+ * as they are.
  */
 export function unitsOfMonsters(monsters: readonly Monster[], level = 1): readonly SavedUnit[] {
     const battle = new Battle(new Arena(ARENA_SIZE, ARENA_SIZE), 0)
     const starts = partyStarts(monsters.length)
     const team = new Team("Monstres")
     monsters.forEach((monster, index) => {
+        const foe = foeOf(monster, `${monster.name} ${index + 1}`, level)
         const unit = battle.add({
-            name: `${monster.name} ${index + 1}`, sprite: monster.sprite, team,
-            controller: "player", position: starts[index], direction: Vector2.DOWN,
-            hearts: monsterHearts(monster.hearts + level - 1), decks: [monster.cards],
-            items: [...monster.items ?? []],
-            bases: {
-                draw: monster.draw, firstDraw: monster.draw, chainSize: monster.draw, ordered: true,
-                size: monster.size ?? 1, showChain: false, showHand: true,
-            },
+            ...heroSpec(foe, team, starts[index], Vector2.DOWN),
+            controller: "player", bases: { ...foe.bases, showChain: false, showHand: true },
         })
         battle.refill(unit)
     })

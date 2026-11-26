@@ -12,6 +12,10 @@ import { elementVariants } from "../../status/StatusVariants"
 import { ContactHazard } from "./ContactHazard"
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
+import { DamageType } from "../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../battle/mecanic/push/shove"
+import * as Pushing from "../../battle/mecanic/push"
 
 /** How many rounds a whirlwind lasts. */
 const WHIRLWIND_ROUNDS = 2
@@ -23,7 +27,13 @@ const WHIRLWIND_STEPS = 4
 const WHIRLWIND_THROW = 1.5
 
 /** A whirlwind. */
-export const WHIRLING = familyType("tourbillon", statusVisual("whirling", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", { cloned: false, description: "Un corps qui le touche est projeté loin de lui et subit un élément." })
+export const WHIRLING = familyType("tourbillon", statusVisual("whirling", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", {
+    cloned: false,
+    description: [
+        "Un corps qui le touche est ", VIOLENT_PUSH.as("poussé violemment"), " loin de lui (choc : ", PUSH_DAMAGE, " ",
+        DamageType.PHYSICAL, ") et subit un élément.",
+    ],
+})
 
 /** The kinds of whirlwind, one for each element. */
 export const WHIRLWINDS = elementVariants(
@@ -36,7 +46,10 @@ export class Whirling extends ContactHazard {
 
     protected touch(ctx: UnitContext, body: Unit, target: Unit): void {
         const away = target.position.minus(body.position).normalized ?? target.direction.opposite
-        ctx.battle.push(target, away, WHIRLWIND_THROW, ctx.unit)
+        Pushing.shoveViolently({
+            battle: ctx.battle, by: ctx.unit, target, direction: away, distance: WHIRLWIND_THROW, damage: PUSH_DAMAGE,
+            atOnce: true,
+        })
         this.element.applyNegative(ctx, target)
     }
 }

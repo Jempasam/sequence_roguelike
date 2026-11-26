@@ -4,6 +4,7 @@ import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 
 import { AbstractItem } from "../AbstractItem"
+import { RELOCATED } from "../../../battle/mecanic/relocation/signals"
 
 /** How far a unit must walk for each step of the strength and the agility, in meters. */
 const STRIDE_PERIOD = 10
@@ -35,7 +36,7 @@ export class Pedometer extends AbstractItem {
         }
         const { strength, move, precision } = unit.stats
         let walked = 0
-        hold(unit.moved.add(({ from, to }) => {
+        hold(unit.observers.of(RELOCATED).add(({ from, to }) => {
             // Only the strides of its own: what others do to it is not walked.
             if(unit.shoving) return
             walked += from.distance(to)

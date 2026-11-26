@@ -1,0 +1,18 @@
+{
+  "palette": [
+    { "color": "#e8f6ff", "light": 0.3, "alpha": 0.95 },
+    { "color": "#6cbcff", "light": 0.25, "alpha": 0.9 },
+    { "color": "#1f6fff", "light": 0.2, "alpha": 0.85 }
+  ],
+  "pixels": {
+    "materials": [
+      "................",
+      "..........222...",
+      ".2222211100002..",
+      "..........222...",
+      "................"
+    ]
+  },
+  "filters": ["auto_depth"],
+  "render": { "steps": ["alpha_thickness", { "id": "gloom", "strength": 0.25 }], "light": 135 }
+}

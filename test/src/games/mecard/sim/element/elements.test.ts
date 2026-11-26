@@ -55,6 +55,15 @@ describe("SPELL", () => {
         expect(cast(SPELL, PLANT).foe.statusOf(POISONED)).toBeDefined()
     })
 
+    test("cast → the blow shown as a spell in the hue of its element", () => {
+        const { on, hero } = duel()
+        const shown: unknown[] = []
+        on.signals.struck.add(({ visual }) => shown.push([visual?.visual, visual?.coloration]))
+        play(on, [[hero, chain(SPELL, FIRE)]])
+        const { r, g, b } = FIRE_ELEMENT.color
+        expect(shown).toEqual([["spell", [r, g, b]]])
+    })
+
     test("stone → its two hearts on top of the wound", () => {
         expect(lost(cast(SPELL, STONE).foe)).toBe(3)
     })
@@ -73,6 +82,20 @@ describe("SMALL_SPELL", () => {
         play(on, [[hero, chain(SMALL_SPELL, WATER)]])
         expect(foe.statusOf(SLOWED)).toBeDefined()
         expect(lost(foe)).toBe(0)
+    })
+
+    test("cast → shown as a spell in the hue of its element, no attack told to the unit", () => {
+        const on = battle()
+        const hero = unit(on, 3, 6.5)
+        unit(on, 3, 1, { team: MONSTERS, hearts: sturdy() })
+        const shown: unknown[] = []
+        let attacks = 0
+        on.signals.struck.add(({ visual }) => shown.push([visual?.visual, visual?.coloration]))
+        hero.attacking.add(() => attacks++)
+        play(on, [[hero, chain(SMALL_SPELL, WATER)]])
+        const { r, g, b } = WATER_ELEMENT.color
+        expect(shown).toEqual([["spell", [r, g, b]]])
+        expect(attacks).toBe(0)
     })
 })
 

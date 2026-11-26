@@ -43,6 +43,7 @@ function contextOf(counter: boolean, over: Partial<ParticleContext> = {}): Parti
         deckPile: () => ({ x: 200, y: 100 }),
         heroPortrait: () => at,
         placePosition: () => at,
+        mapArea: () => null,
         pointer: () => at,
         center: () => ({ x: 160, y: 90 }),
         size: () => ({ width: 320, height: 180 }),

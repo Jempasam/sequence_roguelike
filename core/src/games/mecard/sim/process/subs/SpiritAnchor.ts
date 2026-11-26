@@ -7,6 +7,11 @@ import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { TELEPORT } from "../../battle/mecanic/teleport/keyword"
+import { TURN } from "../../battle/mecanic/turn/keyword"
+import * as Leap from "../../battle/mecanic/leap"
+import * as Teleport from "../../battle/mecanic/teleport"
+import * as Turn from "../../battle/mecanic/turn"
 
 /**
  * A unit anchored to a spirit: as the round ends, it blinks to where the spirit stands and faces it, and the
@@ -20,7 +25,10 @@ export class SpiritAnchor extends AbstractProcess {
         public readonly spirit: Unit,
     ){
         super("ancre spirituelle", visual("processes/spirit_anchor", { color: [0.6, 0.85, 1] }),
-            ["À la fin du ", BATTLE_ROUND, ", se téléporte à l'esprit et se tourne comme lui, puis l'esprit disparaît."],
+            [
+                "À la fin du ", BATTLE_ROUND, ", ", TELEPORT.as("se téléporte"), " à l'esprit et ", TURN.as("se tourne"),
+                " comme lui, puis l'esprit disparaît.",
+            ],
         )
     }
 
@@ -45,8 +53,9 @@ export class SpiritAnchor extends AbstractProcess {
     public dispose({ battle, unit }: UnitContext): void {
         const { spirit } = this
         if(unit.alive && battle.phase !== "over" && spirit.alive){
-            if(!battle.teleport(unit, spirit.position) && battle.leap(unit, spirit.position)) battle.unblock(unit)
-            battle.turn(unit, spirit.direction)
+            const there = spirit.position
+            if(!Teleport.teleport(battle, unit, there) && Leap.leap(battle, unit, there)) Leap.unblock(battle, unit)
+            Turn.turn(battle, unit, spirit.direction)
         }
         battle.vanish(spirit)
     }

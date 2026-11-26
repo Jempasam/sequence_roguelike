@@ -4,6 +4,7 @@ import type { Battle } from "../../../battle/Battle"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
 import { Ethereal } from "../../../process/subs/Ethereal"
 import { Haunting } from "../../../process/subs/Haunting"
 import type { Card } from "../../Card"
@@ -59,7 +60,7 @@ function haunting(range: number): Action {
 
 export const HAUNT = new ActionCard("Hantise", [
     "Te connecte derrière la première ", UNIT, " en face, jusqu'à ", HAUNT_RANGE, " ", DISTANCE, " : sans corps jusqu'à ",
-    "la fin du ", BATTLE_ROUND, ", tu la suis quand elle bouge ou se tourne, et tu joues tes cartes depuis sa place, comme elle est tournée.",
+    "la fin du ", BATTLE_ROUND, ", tu la suis quand elle bouge ou ", TURN.as("se tourne"), ", et tu joues tes cartes depuis sa place, comme elle est ", TURN.as("tournée"), ".",
 ], Rarity.EPIC, haunting(HAUNT_RANGE))
 
 /** The units of a circle around a pose that played a card, the closest first, the caster apart. */

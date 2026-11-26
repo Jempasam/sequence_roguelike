@@ -1,4 +1,5 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
+import { SHOCKWAVE_LOOK } from "../../../card/subs/tools/blowLooks"
 import { DISTANCE, FORCE, HEART, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
 import type { PlugContext } from "../../../battle/Action"
 import type { Preview } from "../../../battle/preview/Preview"
@@ -79,7 +80,8 @@ export class UnstableReactor extends AbstractItem {
     public init({ battle, unit, hold }: PlugContext): void {
         const burst = ({ kind }: { kind: unknown }): void => {
             if(kind !== BLUE_HEART && kind !== BLACK_HEART) return
-            battle.strike(unit, Areas.circle(unit.position, REACTOR_RADIUS), 1, DamageType.PHYSICAL)
+            const area = Areas.circle(unit.position, REACTOR_RADIUS)
+            battle.strike(unit, area, 1, DamageType.PHYSICAL, () => 1, SHOCKWAVE_LOOK)
         }
         hold(unit.hearts.onRemove.add(burst))
         hold(unit.hearts.onWound.add(burst))

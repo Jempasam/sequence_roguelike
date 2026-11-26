@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest"
 import { Console } from "@game/core"
-import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
+import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, RunUnitRules, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
 import type { Battle, HaltType, Unit } from "@game/core/mecard"
+import { AMBIENT_EFFECTS } from "@game/core/mecard/ambient-effects"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
 import { shippedTransitions } from "@game/core/mecard/visual-path"
@@ -41,6 +42,9 @@ interface Game {
 
     /** Whether a run is started, the main menu waiting when not. */
     readonly state: { playing: boolean }
+
+    /** The ids of the ambient effects asked to start, in order. */
+    readonly asked: string[]
 }
 
 /** A console over a run, its first battle started. */
@@ -56,9 +60,11 @@ function game(): Game {
     const board = { text: "" }
     const benches: string[] = []
     const state = { playing: true }
+    const asked: string[] = []
+    const unitRules = new RunUnitRules(run, text => made.print(text))
     const made: Console<MecardContext> = new Console<MecardContext>(new LiveContext(() => ({
         playing: state.playing,
-        run, battle,
+        run, battle, unitRules,
         print: text => made.print(text),
         refresh: () => {},
         handChanged: unit => changed.push(unit),
@@ -82,7 +88,12 @@ function game(): Game {
         clearCatalog: () => 0,
         showParallax: () => {},
         showSprites: () => {},
+        showAnim: blow => benches.push(`anim ${blow?.visual ?? "none"}`),
         playTransition: (transition, duration, reverse) => transitions.push([transition.visual, duration, reverse]),
+        ambient: effects => {
+            asked.push(...effects.map(effect => effect.id))
+            return effects.map(effect => ({ effect, status: "lancé" }))
+        },
         hostGame: (mode, policy) => hostings.push([mode, policy]),
         connect: (code, guest) => connections.push([code, guest]),
         openChat: (role, code, author) => chats.push([role, code, author.name, author.hue]),
@@ -91,7 +102,7 @@ function game(): Game {
     registerCommands(made)
     return {
         console: made, run, battle: () => battle, changed, visited, transitions, hostings, connections, chats, board,
-        state, benches,
+        state, benches, asked,
     }
 }
 
@@ -115,6 +126,27 @@ function copies(cards: readonly unknown[], card: unknown): number {
 // --- Tests ---
 
 describe("Mecard commands", () => {
+    test("travel ambient with no argument → every effect asked once", () => {
+        const { console, asked } = game()
+        console.submit("travel ambient")
+        expect(errors(console)).toEqual([])
+        expect(asked.length).toBe(AMBIENT_EFFECTS.length)
+    })
+
+    test("travel ambient with an effect and a number → that effect asked that many times", () => {
+        const { console, asked } = game()
+        console.submit("travel ambient bird-flock 3")
+        expect(errors(console)).toEqual([])
+        expect(asked).toEqual(["bird-flock", "bird-flock", "bird-flock"])
+    })
+
+    test("travel ambient with an unknown effect → an error, nothing asked", () => {
+        const { console, asked } = game()
+        console.submit("travel ambient nothing")
+        expect(errors(console).length).toBe(1)
+        expect(asked).toEqual([])
+    })
+
     test("help → a line for each command, no error", () => {
         const { console } = game()
         console.submit("help")
@@ -145,6 +177,14 @@ describe("Mecard commands", () => {
         state.playing = false
         console.submit("catalogue")
         console.submit("card list")
+        expect(errors(console)).toEqual([])
+    })
+
+    test("debug anim → the bench of the animations opened on the blow named, on none when none is", () => {
+        const { console, benches } = game()
+        console.submit("debug anim slash")
+        console.submit("debug anim")
+        expect(benches).toEqual(["anim slash", "anim none"])
         expect(errors(console)).toEqual([])
     })
 
@@ -483,6 +523,41 @@ describe("Mecard battle commands", () => {
         expect(arena.phase).not.toBe("over")
         expect(first.alive).toBe(false)
         expect(named(arena, "Mannequin")).not.toBe(first)
+    })
+
+    test("run rules → each rule given once, listed in the order they apply, then cleared", () => {
+        const { console } = game()
+        console.submit("run rules smart smart3")
+        console.submit("run rules strip chemin")
+        console.submit("run rules moves")
+        console.submit("run rules smart")
+        expect(errors(console)).toEqual([])
+        console.clear()
+        console.submit("run rules list")
+        const listed = console.lines.map(line => line.text).join(" ")
+        expect(listed.indexOf("Chemin")).toBeLessThan(listed.indexOf("permanentes"))
+        expect(listed.indexOf("permanentes")).toBeLessThan(listed.indexOf("« smart »"))
+        expect(listed).not.toContain("smart3")
+        console.submit("run rules clear")
+        console.clear()
+        console.submit("run rules list")
+        expect(console.lines.map(line => line.text).join(" ")).not.toContain("permanentes")
+    })
+
+    test("run rules all → every rule, the AI finding its way by default", () => {
+        const { console } = game()
+        console.submit("run rules all")
+        console.clear()
+        console.submit("run rules list")
+        const listed = console.lines.map(line => line.text).join(" ")
+        for(const word of ["Avancer", "Chemin", "mélange", "permanentes", "smart8_path"]) expect(listed).toContain(word)
+    })
+
+    test("run rules with an AI that is not smart or a card unknown → refused", () => {
+        const { console } = game()
+        console.submit("run rules smart deck")
+        console.submit("run rules strip tourner")
+        expect(errors(console)).toHaveLength(2)
     })
 
     test("run bot → the AI of the bots changed in this battle and the next ones, an unknown one refused", () => {

@@ -1,6 +1,7 @@
 import { Vector2 } from "../base/Vector2"
 
 import { COLLISION_SLACK } from "./rules"
+import { spot } from "./mecanic/walk/walk"
 import type { Battle } from "./Battle"
 import type { Unit } from "./Unit"
 
@@ -207,6 +208,6 @@ function walks(battle: Battle, unit: Unit, from: Vector2, to: Vector2, target: U
     const direction = to.minus(from).normalized
     if(!direction) return true
     const length = from.distance(to)
-    const gone = battle.moveSpot(unit, from, direction, length)
+    const gone = spot(battle, unit, from, direction, length)
     return gone.struck === target || gone.distance >= length - REACHED
 }

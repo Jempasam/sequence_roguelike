@@ -1,4 +1,5 @@
 import { AGILITE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
+import { DEMON_THRUST_LOOK, THRUST_LOOK } from "../tools/blowLooks"
 import type { Vector2 } from "../../../base/Vector2"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -7,7 +8,10 @@ import { MOVE_COLOR, MOVE_WIDTH, PHYSICAL_COLOR } from "../../../battle/previewC
 
 import { ActionCard } from "../ActionCard"
 import { DASH_LENGTH, DASH_SPEED } from "../movement/MoveCard"
-import { hold, SHORT_TIME, travel } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Leap from "../../../battle/mecanic/leap"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
@@ -41,7 +45,7 @@ function band(from: Vector2, to: Vector2, width: number): Area {
 
 /** A dash through the units on its way, each of which takes a blow along the way. */
 export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
-    "Fonce de ", DASH_LENGTH, "×", AGILITE, " ", DISTANCE, " devant en traversant les ", UNIT.as("unités"), " : ", 1,
+    WALK.as("Fonce"), " de ", DASH_LENGTH, "×", AGILITE, " ", DISTANCE, " devant en traversant les ", UNIT.as("unités"), " : ", 1,
     "+", FORCE, " ", DamageType.PHYSICAL, " à chacune de celles sur le chemin.",
 ], Rarity.RARE, {
     use: function (ctx){
@@ -49,19 +53,19 @@ export const THRUST_CHARGE = new ActionCard("Charge d'estoc", [
         const start = unit.position
         const length = DASH_LENGTH * unit.stats.move.value
         const through = battle.bodies.filter(body => body !== unit)
-        const gone = travel(ctx, unit.direction, length, DASH_SPEED, false, through)
+        const gone = Walk.travel(ctx, unit.direction, length, DASH_SPEED, false, through)
         // Rooted, it cuts where it stands: the whole length ahead.
         const to = gone.distance > 0 ? unit.position : start.plus(unit.direction.times(length))
         const area = band(start, to, CHARGE_WIDTH)
-        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL)
+        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL, () => 1, THRUST_LOOK)
         // Ending the dash inside a body, it is moved out of it, as the slash does.
-        battle.unblock(unit)
+        Leap.unblock(battle, unit)
         hold(battle, SHORT_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
         const length = DASH_LENGTH * unit.stats.move.value
         const through = battle.bodies.filter(body => body !== unit)
-        const trip = battle.moveSpot(unit, pose.position, pose.direction, length, through)
+        const trip = Walk.spot(battle, unit, pose.position, pose.direction, length, through)
         const area = band(pose.position, trip.to, CHARGE_WIDTH)
         return Previews.still(
             { position: trip.to, direction: pose.direction },
@@ -98,7 +102,7 @@ function slashReach(
 
 /** A dash through the units on its way, lengthened by the units it meets, and cutting twice when long enough. */
 export const DEMON_SLASH = new ActionCard("Demon Slash", [
-    "Fonce de ", SLASH_LENGTH, "×", AGILITE, " ", DISTANCE, " devant en traversant les ", UNIT.as("unités"),
+    WALK.as("Fonce"), " de ", SLASH_LENGTH, "×", AGILITE, " ", DISTANCE, " devant en traversant les ", UNIT.as("unités"),
     " et en tranchant sur ", SLASH_WIDTH, " ", DISTANCE, " de large : ", 1, "+", FORCE, " ", DamageType.PHYSICAL,
     " à chacune. Si une ", UNIT, " se trouve sur la distance ajoutée, le dash s'allonge encore de ", SLASH_EXTRA, "×",
     AGILITE, " ", DISTANCE, ", ", SLASH_MAX, "×", AGILITE, " ", DISTANCE, " au plus. Si le slash est allongé au moins ",
@@ -109,19 +113,20 @@ export const DEMON_SLASH = new ActionCard("Demon Slash", [
         const start = unit.position
         const { length, extensions } = slashReach(battle, unit, start, unit.direction)
         const through = battle.bodies.filter(body => body !== unit)
-        const gone = travel(ctx, unit.direction, length, DASH_SPEED, false, through)
+        const gone = Walk.travel(ctx, unit.direction, length, DASH_SPEED, false, through)
         // Rooted, it cuts where it stands: the whole length ahead.
         const to = gone.distance > 0 ? unit.position : start.plus(unit.direction.times(length))
         const area = band(start, to, SLASH_WIDTH)
         const times = extensions >= SLASH_DOUBLE ? 2 : 1
-        battle.strike(unit, area, 1 + unit.stats.strength.value, DamageType.PHYSICAL, () => times)
-        battle.unblock(unit)
+        const amount = 1 + unit.stats.strength.value
+        battle.strike(unit, area, amount, DamageType.PHYSICAL, () => times, DEMON_THRUST_LOOK)
+        Leap.unblock(battle, unit)
         hold(battle, SLASH_TIME, [Previews.polygon(area, PHYSICAL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
         const { length } = slashReach(battle, unit, pose.position, pose.direction)
         const through = battle.bodies.filter(body => body !== unit)
-        const trip = battle.moveSpot(unit, pose.position, pose.direction, length, through)
+        const trip = Walk.spot(battle, unit, pose.position, pose.direction, length, through)
         const area = band(pose.position, trip.to, SLASH_WIDTH)
         return Previews.still(
             { position: trip.to, direction: pose.direction },

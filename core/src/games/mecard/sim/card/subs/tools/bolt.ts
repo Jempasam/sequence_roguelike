@@ -1,8 +1,11 @@
 import type { Rgba } from "../../../base/Rgba"
 import type { Vector2 } from "../../../base/Vector2"
+import type { Visual } from "../../../base/Visual"
 import type { Battle } from "../../../battle/Battle"
+import type { Element } from "../../../element/Element"
 
-import { strides } from "./playing"
+import { SPELL_LOOK } from "./blowLooks"
+import { strides } from "../../../battle/mecanic/walk/walk"
 import { sampled } from "../../../battle/effects"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
@@ -16,7 +19,12 @@ const BOLT_SPEED = 16
 /** How many strides a bolt trails behind its head. */
 const BOLT_TAIL = 2
 
-/** A bolt flying from a point to another, at its speed: a spell, a harpoon. */
+/** How the spell of an element looks: in the hue of its color. */
+export function spellLook({ color }: Element): Visual {
+    return SPELL_LOOK.with({ coloration: [color.r, color.g, color.b] })
+}
+
+/** A bolt flying from a point to another, at its speed: a spit, a harpoon. */
 export function fly(battle: Battle, from: Vector2, to: Vector2, color: Rgba): void {
     const seconds = from.distance(to) / BOLT_SPEED
     const lag = BOLT_TAIL / strides(seconds)

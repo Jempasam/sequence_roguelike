@@ -3,6 +3,7 @@ import { CardChain } from "@game/core/mecard"
 import type { Battle, Unit } from "@game/core/mecard"
 import { ALL_BATTLE_LOCKS, BattleScreen, NO_BATTLE_LOCKS } from "@game/core/mecard/battle-screen"
 import type { BattleLocks, BattleScreenOptions } from "@game/core/mecard/battle-screen"
+import { DEFAULT_LOOK } from "@game/core/mecard/sprite-look"
 import type { Painter } from "@game/core"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
@@ -14,6 +15,7 @@ import { startedRun } from "../../../../fixtures/startedRun"
 /** Units with no pictures. */
 const NO_SPRITES = {
     of: () => null,
+    look: () => DEFAULT_LOOK,
     thing: () => null,
     eye: () => null,
     cardBack: () => null,

@@ -1,10 +1,11 @@
-import { INVOCATION } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { Heart } from "../../../heart/Heart"
 import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, summonShown } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -20,7 +21,7 @@ export const CLONE = new ActionCard(
         },
         preview: ({ battle, unit, pose }) => {
             const spot = battle.cloneSpot(unit, pose)
-            return Previews.still(pose, ...spot ? [summonShown(spot)] : [Previews.label(pose.position, "pas de place", NOTE_COLOR)])
+            return Previews.still(pose, ...spot ? [Summons.summonShown(spot)] : [Previews.label(pose.position, "pas de place", NOTE_COLOR)])
         },
     },
 )

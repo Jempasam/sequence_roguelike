@@ -38,7 +38,7 @@ describe("routeStrip", () => {
         setup.main.content.add(view)
         setup.ui.render()
         expect(details.length).toBe(2)
-        setup.port.send({ type: "pointer-move", x: 2, y: 2 })
+        setup.port.send({ type: "pointer-move", x: 10, y: 10 })
         setup.frame()
         expect(details[0].shown).not.toBeNull()
     })

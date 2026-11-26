@@ -5,6 +5,13 @@ import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 
 import { tieTo } from "./Links"
+import { SHOVED } from "../../battle/mecanic/push/signals"
+import type { GlideSignal } from "../../battle/mecanic/relocation/signals"
+import { TURN } from "../../battle/mecanic/turn/keyword"
+import { TURNED } from "../../battle/mecanic/turn/signals"
+import { WALKED } from "../../battle/mecanic/walk/signals"
+import * as Turn from "../../battle/mecanic/turn"
+import * as Walk from "../../battle/mecanic/walk"
 
 /** How far a unit has to be moved for it to have moved, in meters: what a rounding leaves is not a move. */
 const MOVED_SLACK = 1e-6
@@ -22,7 +29,10 @@ export class Skewering extends AbstractProcess {
         public readonly target: Unit,
     ){
         super("lance", visual("processes/skewer", { color: [0.75, 0.75, 0.85] }),
-            "Quand l'unité transpercée bouge ou tourne, tu la suis en gardant ta place et ton orientation par rapport à elle. Tout déplacement qui n'est pas ce suivi retire la lance.",
+            [
+                "Quand l'unité transpercée bouge ou ", TURN.as("tourne"), ", tu la suis en gardant ta place et ton ",
+                "orientation par rapport à elle. Tout déplacement qui n'est pas ce suivi retire la lance.",
+            ],
         )
     }
 
@@ -44,21 +54,21 @@ export class Skewering extends AbstractProcess {
             battle.endProcess(unit, this)
         }
         hold(battle.signals.moved.add(event => {
-            if(event.unit === unit) return pulledOut(event.from.position, event.to.position)
-            if(event.unit !== target || following || !unit.alive) return
+            if(event.unit === unit) pulledOut(event.from.position, event.to.position)
+        }))
+        const follow = ({ unit: moved }: GlideSignal): void => {
+            if(moved !== target || following || !unit.alive) return
             following = true
             try {
                 const wanted = target.position.plus(Vector2.relative(target.direction, ahead, side))
                 const way = wanted.minus(unit.position)
                 const toward = way.normalized
-                if(toward) battle.move(unit, toward, way.length, true)
-                battle.turn(unit, Vector2.relative(target.direction, facingAhead, facingSide))
+                if(toward) Walk.move(battle, unit, toward, way.length, true)
+                Turn.turn(battle, unit, Vector2.relative(target.direction, facingAhead, facingSide))
             } finally {
                 following = false
             }
-        }))
-        hold(battle.signals.blinked.add(event => {
-            if(event.unit === unit) pulledOut(event.from.position, event.to.position)
-        }))
+        }
+        for(const key of [WALKED, SHOVED, TURNED]) hold(battle.observers.of(key).add(follow))
     }
 }

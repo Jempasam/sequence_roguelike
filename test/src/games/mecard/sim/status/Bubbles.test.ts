@@ -72,7 +72,7 @@ describe("the bubbles", () => {
         on.applyStatus(bubble, BUBBLE, -(bubble.statuses.get(BUBBLE)!.level - 1))
         const before = bubble.chain.cards.length
         blower.lastTree = [WAIT]
-        blower.stepStarted.notify(blower)
+        blower.actionRead.notify(blower)
         expect(bubble.chain.cards.length).toBe(before)
     })
 

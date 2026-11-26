@@ -4,7 +4,7 @@ import type { Unit } from "../../battle/Unit"
 import { visual } from "../../base/Visual"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
-import { summonAt } from "../../card/subs/tools/playing"
+import * as Summons from "../../battle/mecanic/summon"
 import { AbstractProcess } from "../AbstractProcess"
 import { BATTLE_ROUND, HEART, UNIT } from "../../base/keywords"
 
@@ -27,7 +27,7 @@ export function stuffed(battle: Battle, owner: Unit, dead: Unit): Unit|null {
         ...dead.decks.all.flatMap(deck => [...deck.pile, ...deck.discard]), ...dead.hand, ...dead.chain.cards,
     ]
     const kind = dead.hearts.all[0]?.kind ?? RED_HEART
-    const [body] = summonAt(battle, owner, [dead.position], {
+    const [body] = Summons.summonAt(battle, owner, [dead.position], {
         name: `${dead.name} empaillé`, sprite: dead.sprite, direction: dead.direction, size: dead.stats.size.value, cards,
         hearts: () => Heart.many(kind, Math.max(1, Math.floor(dead.hearts.all.length / 2))),
     }, stuffedBody => STUFFED_BODIES.add(stuffedBody))

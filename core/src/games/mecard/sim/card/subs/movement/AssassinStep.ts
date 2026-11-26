@@ -8,6 +8,10 @@ import { ActionCard } from "../ActionCard"
 import { hold, wait, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import { TELEPORT } from "../../../battle/mecanic/teleport/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Teleport from "../../../battle/mecanic/teleport"
+import * as Turn from "../../../battle/mecanic/turn"
 
 /** How far behind its target the assassin lands, from center to center, in meters: just off its back. */
 const BEHIND_GAP = 0.05
@@ -37,20 +41,18 @@ function stepping(): Action {
                 return
             }
             hold(battle, JUMP_TIME, [Previews.arrow([unit.position, spot.at], MOVE_WIDTH / 2, MOVE_COLOR)])
-            if(battle.teleport(unit, spot.at)) battle.turn(unit, spot.facing)
+            if(Teleport.teleport(battle, unit, spot.at)) Turn.turn(battle, unit, spot.facing)
             wait(battle, JUMP_TIME)
         },
         preview: ({ battle, unit, pose }) => {
             const spot = behind(battle, unit, pose)
             if(!spot) return Previews.still(pose, Previews.label(pose.position, "personne en vue", NOTE_COLOR))
-            const landing = battle.teleportSpot(unit, spot.at)
-            if(!landing) return Previews.still(pose, Previews.label(spot.at, "bloqué", NOTE_COLOR))
-            return Previews.still({ position: landing, direction: spot.facing }, ...Previews.moving(unit, pose.position, spot.at, landing, MOVE_WIDTH / 2))
+            return Teleport.teleportShown(battle, unit, pose, spot.at, spot.facing)
         },
     }
 }
 
 /** A jump into the back of the closest enemy in vision, facing its way. */
 export const ASSASSIN_STEP = new ActionCard("Téléportation d'assassin", [
-    "Se téléporte dans le dos de l'ennemi le plus proche, tourné comme lui.",
+    TELEPORT.as("Se téléporte"), " dans le dos de l'ennemi le plus proche, ", TURN.as("tourné"), " comme lui.",
 ], Rarity.RARE, stepping())

@@ -9,7 +9,7 @@ import { BLUE_HEART } from "../../heart/subs/BlueHeartKind"
 import { levelOf } from "../../potion/Potion"
 import type { Potion } from "../../potion/Potion"
 import { soakOf } from "../../status/subs/Soaked"
-import { summonAt } from "../../card/subs/tools/playing"
+import * as Summons from "../../battle/mecanic/summon"
 import { AbstractElement } from "../AbstractElement"
 
 import type { Boon } from "./body/Boon"
@@ -69,7 +69,7 @@ export class BodyElement extends AbstractElement {
         const { battle, unit } = ctx
         const { monster } = this
         const dose = pouredDose(this.negative)
-        const [body] = summonAt(battle, unit, [at], {
+        const [body] = Summons.summonAt(battle, unit, [at], {
             sprite: monster.sprite,
             name: monster.name,
             direction,

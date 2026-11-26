@@ -7,7 +7,9 @@ import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 
 import { ActionCard } from "../ActionCard"
-import { hold, travel, wait, WALK_SPEED, WORD_TIME } from "../tools/playing"
+import { hold, wait, WORD_TIME } from "../tools/playing"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { STEP_LENGTH } from "./Step"
 import * as Previews from "../../../battle/preview/Previews"
@@ -44,7 +46,7 @@ export class FleeCard extends ActionCard {
         public readonly reach: number,
     ){
         super("Fuite", [
-            "Si un ennemi est à moins de ", reach, " ", DISTANCE, ", s'éloigne de ", length, "×", AGILITE, " ",
+            "Si un ennemi est à moins de ", reach, " ", DISTANCE, ", ", WALK.as("s'éloigne"), " de ", length, "×", AGILITE, " ",
             DISTANCE, " à l'opposé du plus proche, sans se retourner.",
         ], Rarity.COMMON, FleeCard.#fleeing(length, reach))
     }
@@ -60,14 +62,14 @@ export class FleeCard extends ActionCard {
                     hold(battle, WORD_TIME, [Previews.label(unit.position, NOBODY, NOTE_COLOR)])
                     return
                 }
-                travel(ctx, way, length * unit.stats.move.value, WALK_SPEED)
+                Walk.travel(ctx, way, length * unit.stats.move.value, Walk.WALK_SPEED)
                 wait(battle, SETTLE_TIME)
             },
             preview: ({ battle, unit, pose }) => {
                 const shown = Previews.polygon(unit.around(reach, pose), RANGE_COLOR)
                 const way = awayFrom(battle, unit, pose, reach)
                 if(!way) return Previews.still(pose, shown, Previews.label(pose.position, NOBODY, NOTE_COLOR))
-                const gone = battle.moveSpot(unit, pose.position, way, length * unit.stats.move.value)
+                const gone = Walk.spot(battle, unit, pose.position, way, length * unit.stats.move.value)
                 const full = pose.position.plus(way.times(length * unit.stats.move.value))
                 return Previews.still({ ...pose, position: gone.to }, shown, ...Previews.moving(unit, pose.position, full, gone.to, MOVE_WIDTH))
             },

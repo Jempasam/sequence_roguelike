@@ -3,6 +3,7 @@ import type { PlugContext } from "../../battle/Action"
 import { HeartCount } from "../../battle/words"
 import type { Area } from "../../battle/Area"
 import type { Battle } from "../../battle/Battle"
+import type { GlideSignal } from "../../battle/mecanic/relocation/signals"
 import type { Indicator, Preview } from "../../battle/preview/Preview"
 import type { PreviewContext } from "../../battle/preview/PreviewContext"
 import * as Previews from "../../battle/preview/Previews"
@@ -12,7 +13,12 @@ import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
 import { DamageType } from "../../battle/DamageType"
 import * as Areas from "../../battle/area/Areas"
-import {  } from "../../base/keywords"
+import { SHOVED } from "../../battle/mecanic/push/signals"
+import { TURN } from "../../battle/mecanic/turn/keyword"
+import { TURNED } from "../../battle/mecanic/turn/signals"
+import { WALKED } from "../../battle/mecanic/walk/signals"
+import * as Turn from "../../battle/mecanic/turn"
+import * as Walk from "../../battle/mecanic/walk"
 
 /** How wide the laser between two allies cuts, in meters. */
 const LASER_WIDTH = 0.3
@@ -76,7 +82,10 @@ export class Hook extends AbstractProcess {
         public readonly reach: number,
     ){
         super("accroche", visual("processes/hook", { color: [0.75, 0.65, 0.45] }),
-            "Quand l'unité bouge ou tourne, l'allié accroché garde sa place et son orientation par rapport à elle. L'accroche se brise s'il s'éloigne trop.",
+            [
+                "Quand l'unité bouge ou ", TURN.as("tourne"), ", l'allié accroché garde sa place et son orientation par ",
+                "rapport à elle. L'accroche se brise s'il s'éloigne trop.",
+            ],
         )
     }
 
@@ -92,15 +101,15 @@ export class Hook extends AbstractProcess {
         const facingAhead = ally.direction.dot(unit.direction)
         const facingSide = ally.direction.dot(unit.direction.right)
         let following = false
-        hold(battle.signals.moved.add(({ unit: moved }) => {
+        const follow = ({ unit: moved }: GlideSignal): void => {
             if(moved !== unit || following || !ally.alive) return
             following = true
             try {
                 const wanted = unit.position.plus(Vector2.relative(unit.direction, ahead, side))
                 const way = wanted.minus(ally.position)
                 const toward = way.normalized
-                if(toward) battle.move(ally, toward, way.length, true)
-                battle.turn(ally, Vector2.relative(unit.direction, facingAhead, facingSide))
+                if(toward) Walk.move(battle, ally, toward, way.length, true)
+                Turn.turn(battle, ally, Vector2.relative(unit.direction, facingAhead, facingSide))
             } finally {
                 following = false
             }
@@ -108,7 +117,8 @@ export class Hook extends AbstractProcess {
                 battle.events.push({ type: "status", unit, text: "accroche brisée" })
                 battle.endProcess(unit, this)
             }
-        }))
+        }
+        for(const key of [WALKED, SHOVED, TURNED]) hold(battle.observers.of(key).add(follow))
     }
 }
 
@@ -144,8 +154,8 @@ export class IronChain extends AbstractProcess {
             const toward = target.position.minus(unit.position).normalized
             if(!toward) return
             // Pulled as a push moves, but running into the other is no blow: neither is wounded by the pull.
-            battle.move(unit, toward, this.pull, true)
-            battle.move(target, toward.opposite, this.pull, true)
+            Walk.move(battle, unit, toward, this.pull, true)
+            Walk.move(battle, target, toward.opposite, this.pull, true)
         }))
     }
 

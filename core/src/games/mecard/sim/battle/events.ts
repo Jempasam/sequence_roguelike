@@ -136,19 +136,6 @@ export interface MoveEvent {
     readonly to: Vector2
 }
 
-/** A unit about to be moved by another: the listeners may shorten it. */
-export interface IncomingShove {
-    readonly target: Unit
-
-    /** Who moves it, none when nobody does. */
-    readonly by: Unit|null
-
-    readonly direction: Vector2
-
-    /** How far it will be moved, in meters. */
-    distance: number
-}
-
 /** A unit dying. */
 export interface DeathEvent {
     readonly unit: Unit

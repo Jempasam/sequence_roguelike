@@ -18,6 +18,7 @@ import { HazardStatus, placeHazard } from "../Hazard"
 import { HAZARD_TEXT } from "./hazardText"
 import { visual } from "../../base/Visual"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { RELOCATED } from "../../battle/mecanic/relocation/signals"
 
 /** How many rounds the puddles of the catalog last. */
 export const PUDDLE_ROUNDS = 3
@@ -60,7 +61,7 @@ export class Puddle extends HazardStatus {
     protected plug({ battle, unit }: UnitContext): void {
         unit.color = this.dose.potion.color
         const zone = (): Area => unit.zone ?? Areas.circle(unit.position, PUDDLE_RADIUS)
-        this.hold(battle.unitMoved.add(({ unit: mover, from, to }) => {
+        this.hold(battle.observers.of(RELOCATED).add(({ unit: mover, from, to }) => {
             if(!unit.alive || mover === unit || !mover.tangible) return
             if(mover.hitbox.touches({ position: to, direction: mover.direction }, zone()) && !mover.hitbox.touches({ position: from, direction: mover.direction }, zone())){
                 pour(battle, this.dose, mover, this.poured)

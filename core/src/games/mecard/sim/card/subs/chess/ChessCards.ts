@@ -1,4 +1,13 @@
 import { DISTANCE, FORCE, ITEM, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
+import { SUMMON_AHEAD } from "../../../battle/mecanic/summon/summon"
+import { SWAPPING } from "../../../battle/mecanic/swap/keyword"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Summons from "../../../battle/mecanic/summon"
+import * as Swap from "../../../battle/mecanic/swap"
+import * as Turn from "../../../battle/mecanic/turn"
+import { SMASH_LOOK } from "../tools/blowLooks"
 import type { Vector2 } from "../../../base/Vector2"
 import { visual } from "../../../base/Visual"
 import type { Action } from "../../../battle/Action"
@@ -16,8 +25,7 @@ import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
 import { ModifierCard } from "../ModifierCard"
-import { hold, SHORT_TIME, SUMMON_AHEAD, summonSpot, summoning } from "../tools/playing"
-import { summonedHearts } from "../summon/SummonCard"
+import { hold, SHORT_TIME } from "../tools/playing"
 import { EVERY_PIECE, LAST_PIECE, NEAREST_PIECE, piecesOf, playedBy } from "../tools/delegating"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import * as Areas from "../../../battle/area/Areas"
@@ -74,10 +82,11 @@ interface Piece {
 
 /** A card setting down a piece: a body with no deck, which plays what its owner has it play. */
 function pieceCard(piece: Piece): ActionCard {
-    const action: Action = summoning(
-        (unit, pose) => [summonSpot(unit, pose)],
+    const action: Action = Summons.summoning(
+        (unit, pose) => [Summons.summonSpot(unit, pose)],
         unit => ({
-            sprite: visual(`units/${piece.sprite}`), name: piece.name, hearts: () => summonedHearts(unit, piece.hearts),
+            sprite: visual(`units/${piece.sprite}`), name: piece.name,
+            hearts: () => Summons.summonedHearts(unit, piece.hearts),
         }),
         {
             equip: (battle, body, owner) => {
@@ -92,7 +101,7 @@ function pieceCard(piece: Piece): ActionCard {
 export const PAWN_CARD = pieceCard({
     name: "Pion", sprite: "pawn", status: PAWN_PIECE, hearts: PAWN_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un pion de ", new HeartCount(PAWN_HEARTS), ". Quand plusieurs pièces ",
         "jouent la même action, il la joue avant les autres.",
     ],
 })
@@ -100,23 +109,23 @@ export const PAWN_CARD = pieceCard({
 export const ROOK_CARD = pieceCard({
     name: "Tour", sprite: "rook", status: ROOK_PIECE, hearts: ROOK_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
-        "elle avance de ", ROOK_EXTRA, " ", DISTANCE, " de plus dans la même direction.",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tour de ", new HeartCount(ROOK_HEARTS), ". Après chaque déplacement, ",
+        "elle ", WALK.as("avance"), " de ", ROOK_EXTRA, " ", DISTANCE, " de plus dans la même direction.",
     ],
 })
 
 export const KNIGHT_PIECE_CARD = pieceCard({
     name: "Cavalier", sprite: "chess_knight", status: KNIGHT_PIECE, hearts: KNIGHT_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
-        "déplacement, il se décale de ", KNIGHT_EXTRA, " ", DISTANCE, " à droite.",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un cavalier de ", new HeartCount(KNIGHT_HEARTS), ". Après chaque ",
+        "déplacement, il ", WALK.as("se décale"), " de ", KNIGHT_EXTRA, " ", DISTANCE, " à droite.",
     ],
 })
 
 export const BISHOP_CARD = pieceCard({
     name: "Fou", sprite: "bishop", status: BISHOP_PIECE, hearts: BISHOP_HEARTS, rarity: Rarity.COMMON,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un fou de ", new HeartCount(BISHOP_HEARTS), ". Ses déplacements vont ",
         BISHOP_MOVE * 100, " % plus loin.",
     ],
 })
@@ -124,7 +133,7 @@ export const BISHOP_CARD = pieceCard({
 export const QUEEN_CARD = pieceCard({
     name: "Reine", sprite: "queen", status: QUEEN_PIECE, hearts: QUEEN_HEARTS, rarity: Rarity.EPIC,
     description: [
-        "Pose à ", SUMMON_AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
+        INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant une reine de ", new HeartCount(QUEEN_HEARTS), ", qui reçoit une copie ",
         "de tous tes ", ITEM.as("objets"), ".",
     ],
     equip: (battle, body, owner) => {
@@ -171,7 +180,7 @@ function nearestPiece(battle: Battle, unit: Unit, from: Vector2): Unit|null {
 
 /** A swap of places with the nearest piece. */
 export const CASTLING = new ActionCard("Roque", [
-    "Échange ta place avec la pièce la plus proche.",
+    SWAPPING.as("Échange ta place"), " avec la pièce la plus proche.",
 ], Rarity.COMMON, {
     use: function ({ battle, unit }){
         const piece = nearestPiece(battle, unit, unit.position)
@@ -181,7 +190,7 @@ export const CASTLING = new ActionCard("Roque", [
             return
         }
         hold(battle, SWAP_TIME, [Previews.arrow([unit.position, piece.position], MOVE_WIDTH / 2, MOVE_COLOR)])
-        battle.swap(unit, piece)
+        Swap.swap(battle, unit, piece)
         hold(battle, SWAP_TIME)
     },
     preview: ({ battle, unit, pose }) => {
@@ -203,7 +212,7 @@ function checkArea(piece: Unit, way: Vector2) {
 
 /** Every piece around turns to the nearest enemy and thrusts. */
 export const CHECK = new ActionCard("Échec", [
-    "Chaque pièce à ", CHECK_RADIUS, " ", DISTANCE, " autour de toi se tourne vers l'", UNIT, " ennemie la plus proche ",
+    "Chaque pièce à ", CHECK_RADIUS, " ", DISTANCE, " autour de toi ", TURN.as("se tourne"), " vers l'", UNIT, " ennemie la plus proche ",
     "et frappe : ", CHECK_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à ", CHECK_REACH, " ", DISTANCE, ".",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
@@ -212,8 +221,9 @@ export const CHECK = new ActionCard("Échec", [
             const enemy = battle.nearestEnemy(piece)
             const way = enemy ? enemy.position.minus(piece.position).normalized : null
             if(!way) continue
-            battle.turn(piece, way)
-            battle.strike(piece, checkArea(piece, way), CHECK_DAMAGE + piece.stats.strength.value, DamageType.PHYSICAL)
+            Turn.turn(battle, piece, way)
+            const damage = CHECK_DAMAGE + piece.stats.strength.value
+            battle.strike(piece, checkArea(piece, way), damage, DamageType.PHYSICAL, () => 1, SMASH_LOOK)
         }
         hold(battle, SHORT_TIME, [Previews.label(unit.position, "échec", NOTE_COLOR)])
     },

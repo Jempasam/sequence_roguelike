@@ -10,6 +10,7 @@ import { Rarity } from "../../Rarity"
 import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
+import { visual } from "../../../base/Visual"
 
 /** How far the thrust of the catalog goes through, in meters. */
 export const THRUST_RANGE = 2 - UNIT_RADIUS
@@ -20,6 +21,8 @@ export const THRUST_WIDTH = 0.5
 /** A blow through everything on a line ahead of the unit. */
 export class ThrustCard extends BlowCard {
 
+
+    public override readonly look = visual("thrust")
 
     constructor(
         /** How far it goes through, in meters. */

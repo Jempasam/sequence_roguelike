@@ -10,6 +10,7 @@ import { Rarity } from "../../Rarity"
 import { BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
+import { SLASH_LOOK } from "../tools/blowLooks"
 
 /** How many hearts the scythe of the catalog takes, before the strength of the unit. */
 const SCYTHE_DAMAGE = 1
@@ -26,6 +27,8 @@ const SCYTHE_COS_HALF = 0.5
 /** A blow in a crescent ahead of the unit, starting away from it: what stands close is not touched. */
 export class ScytheCard extends BlowCard {
 
+
+    public override readonly look = SLASH_LOOK
 
     constructor(
         /** How far from the unit its blade starts, in meters. */

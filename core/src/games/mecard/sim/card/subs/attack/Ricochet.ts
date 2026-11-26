@@ -1,5 +1,7 @@
 import type { Text } from "../../../../../../semantic"
 import type { Vector2 } from "../../../base/Vector2"
+import { ARROW_LOOK, BULLET_LOOK } from "../tools/blowLooks"
+import type { Visual } from "../../../base/Visual"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -101,12 +103,15 @@ export class RicochetCard extends ActionCard {
 
         /** Does each bounce give it its whole range back? */
         public readonly renewing: boolean,
+
+        /** What flies: an arrow, a bullet. */
+        public readonly look: Visual,
     ){
-        super(name, description, rarity, RicochetCard.#shooting(range, amount, bounces, renewing))
+        super(name, description, rarity, RicochetCard.#shooting(range, amount, bounces, renewing, look))
     }
 
 
-    static #shooting(range: number, amount: number, bounces: number, renewing: boolean): Action {
+    static #shooting(range: number, amount: number, bounces: number, renewing: boolean, look: Visual): Action {
         const bouncing = (unit: Unit): Bouncing => {
             return { range: range * unit.stats.throwRange.value, bounces, renewing }
         }
@@ -125,7 +130,8 @@ export class RicochetCard extends ActionCard {
                 })
                 for(const line of path){
                     const shot = amount + unit.stats.precision.value
-                    if(battle.strike(unit, segment(line), shot, DamageType.PHYSICAL).length > 0) break
+                    const hit = battle.strike(unit, segment(line), shot, DamageType.PHYSICAL, () => 1, look)
+                    if(hit.length > 0) break
                 }
                 hold(battle, RECOVERY_TIME, path.map(line => Previews.polygon(segment(line), PHYSICAL_COLOR)))
             },
@@ -143,10 +149,10 @@ export const RICOCHET = new RicochetCard("Ricochet", [
     "Tire droit devant : le tir rebondit une fois sur le premier mur ou pilier, ", RICOCHET_RANGE, "×", PORTEE, " ",
     DISTANCE, " en tout. ", RICOCHET_DAMAGE, "+", PRECISION, " ", DamageType.PHYSICAL, " à la première ", UNIT,
     " touchée.",
-], Rarity.RARE, RICOCHET_RANGE, RICOCHET_DAMAGE, 1, false)
+], Rarity.RARE, RICOCHET_RANGE, RICOCHET_DAMAGE, 1, false, BULLET_LOOK)
 
 export const BOUNCING_BOW = new RicochetCard("Arc à rebond", [
     "Tire droit devant, jusqu'à ", BOW_RANGE, "×", PORTEE, " ", DISTANCE, " : la flèche rebondit ", BOW_BOUNCES,
     " fois sur les murs et les piliers, et chaque rebond lui rend toute sa portée. ", RICOCHET_DAMAGE, "+",
     PRECISION, " ", DamageType.PHYSICAL, " à la première ", UNIT, " touchée.",
-], Rarity.RARE, BOW_RANGE, RICOCHET_DAMAGE, BOW_BOUNCES, true)
+], Rarity.RARE, BOW_RANGE, RICOCHET_DAMAGE, BOW_BOUNCES, true, ARROW_LOOK)

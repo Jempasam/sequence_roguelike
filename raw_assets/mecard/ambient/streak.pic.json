@@ -1,0 +1,12 @@
+{
+  "palette": [
+    { "color": "#ffffff", "alpha": 0.35 },
+    { "color": "#ffffff" }
+  ],
+  "pixels": {
+    "materials": [
+      "00001111"
+    ]
+  },
+  "render": { "preset": "color" }
+}

@@ -15,6 +15,7 @@ import { ScalingStatus } from "../ScalingStatus"
 import type { StatGain } from "../ScalingStatus"
 import { STATUS_LEVEL, StatusType, statusVisual } from "../Status"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { COLLIDED } from "../../battle/mecanic/walk/signals"
 
 /** The keyword of a bubble: a body of time that copies the actions of its blower. */
 export const BULLE = new Keyword("bulle")
@@ -59,7 +60,7 @@ export class BubbleStatus extends BaseStatus {
                 this.setLevel(this.level + 1)
                 if(this.#doomed) this.#burst(unit)
             }),
-            battle.signals.collided.add(({ unit: mover, struck }) => {
+            battle.observers.of(COLLIDED).add(({ unit: mover, struck }) => {
                 if(mover !== unit && struck !== unit) return
                 this.#doomed = true
                 if(!this.#playing) this.#burst(unit)
@@ -111,7 +112,7 @@ export class Soapy extends RoundStatus {
         const relink = (): void => this.#relink(ctx)
         relink()
         return [
-            unit.stepStarted.add(() => this.#copy(ctx)),
+            unit.actionRead.add(() => this.#copy(ctx)),
             battle.signals.moved.add(relink),
             battle.signals.spawned.add(relink),
             battle.signals.statusAdded.add(relink),

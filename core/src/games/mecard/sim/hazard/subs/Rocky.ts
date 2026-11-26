@@ -3,6 +3,7 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import type { Battle } from "../../battle/Battle"
 import type { Unit } from "../../battle/Unit"
+import * as Summons from "../../battle/mecanic/summon"
 import type { Element } from "../../element/Element"
 import { Heart } from "../../heart/Heart"
 import { RED_HEART } from "../../heart/subs/RedHeartKind"
@@ -37,7 +38,7 @@ export function placeBoulder(
     battle: Battle, owner: Unit, at: Vector2, direction: Vector2, element: Element,
 ): Unit|null {
     const hearts = Heart.many(RED_HEART, BOULDER_HEARTS + owner.stats.summon.value)
-    const body = battle.summon(owner, visual("units/rock"), "Rocher", at, hearts, direction)
+    const body = Summons.summon(battle, owner, visual("units/rock"), "Rocher", at, hearts, direction)
     if(body) battle.applyStatus(body, BOULDERS.of(element), 1)
     return body
 }

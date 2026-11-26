@@ -5,7 +5,7 @@ import type { Element } from "../../../element/Element"
 import { ACTION, ELEMENT } from "../../CardType"
 
 import { AbstractCard } from "../AbstractCard"
-import { BOLT_WIDTH, fly } from "../tools/bolt"
+import { BOLT_WIDTH, spellLook } from "../tools/bolt"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
@@ -54,9 +54,9 @@ export class SpellCard extends AbstractCard<Action, Element> {
                 const { battle, unit } = ctx
                 // The bolt stops on the first body it meets.
                 const { start, end } = battle.ray(unit, card.range)
-                fly(battle, start, end, color)
                 const area = Areas.line(start, end, BOLT_WIDTH)
-                const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL)
+                const look = spellLook(element)
+                const [hit] = battle.strike(unit, area, card.damage, DamageType.ELEMENTAL, () => 1, look)
                 if(hit) element.applyNegative(ctx, hit)
             },
             preview: ctx => {

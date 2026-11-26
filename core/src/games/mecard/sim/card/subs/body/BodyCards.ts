@@ -10,7 +10,11 @@ import { frenchNumber } from "../../../battle/words"
 import { BURN, Burn } from "../../../status/subs/Burn"
 
 import { ActionCard } from "../ActionCard"
-import { hold, SHORT_TIME, travel, WALK_SPEED } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import { WALK } from "../../../battle/mecanic/walk/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { AGILITE, DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
@@ -100,12 +104,12 @@ export const BLAZE = new ActionCard("Embrasement", [
 
 /** A step any way: what wanders, a whirlwind. */
 export const RANDOM_STEP = new ActionCard("Pas au hasard", [
-    "Se tourne au hasard et avance de ", WANDER_LENGTH, "×", AGILITE, " ", DISTANCE, ".",
+    TURN.as("Se tourne"), " au hasard et ", WALK.as("avance"), " de ", WANDER_LENGTH, "×", AGILITE, " ", DISTANCE, ".",
 ], Rarity.COMMON, {
     use: function (ctx){
         const { battle, unit } = ctx
-        battle.turn(unit, battle.rng.pick(EIGHT_WAYS) ?? unit.direction)
-        travel(ctx, unit.direction, WANDER_LENGTH * unit.stats.move.value, WALK_SPEED)
+        Turn.turn(battle, unit, battle.rng.pick(EIGHT_WAYS) ?? unit.direction)
+        Walk.travel(ctx, unit.direction, WANDER_LENGTH * unit.stats.move.value, Walk.WALK_SPEED)
     },
     preview: ({ pose }) => Previews.still(pose, Previews.label(pose.position, "au hasard", NOTE_COLOR)),
 })

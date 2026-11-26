@@ -1,12 +1,10 @@
 import type { Hero } from "../../sim/run/Hero"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Place } from "../../sim/run/Journey"
+import type { Area, Point } from "../../../../engine/math"
 
 /** A point of the interface, in virtual pixels. */
-export interface ParticlePoint {
-    readonly x: number
-    readonly y: number
-}
+export type ParticlePoint = Point
 
 /**
  * Where the particles of an event start and go, told by the screen that shows it: each method gives a point
@@ -35,6 +33,9 @@ export interface ParticleContext {
     /** A place of the map. */
     placePosition(place: Place): ParticlePoint|null
 
+    /** The part of the interface the map is shown in, none when it is not shown. */
+    mapArea(): Area|null
+
     /** The pointer of the player. */
     pointer(): ParticlePoint
 
@@ -49,4 +50,4 @@ export interface ParticleContext {
 export type BattleAnchors = Pick<ParticleContext, "unitPosition"|"heartsOf"|"feetOf"|"deckPile">
 
 /** What the screen of the journey places. */
-export type TravelAnchors = Pick<ParticleContext, "goldCounter"|"deckPile"|"heroPortrait"|"placePosition">
+export type TravelAnchors = Pick<ParticleContext, "goldCounter"|"deckPile"|"heroPortrait"|"placePosition"|"mapArea">

@@ -9,6 +9,7 @@ import type { StatusType } from "../Status"
 import { elementVariants } from "../StatusVariants"
 import type { ElementType } from "../StatusVariants"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { COLLIDED } from "../../battle/mecanic/walk/signals"
 
 /** An element coating: the body applies the negative of an element to what it touches. */
 export const ELEMENT_COATING = familyType("enrobage élémentaire", statusVisual("coated", 0.7, 0.75, 1), "positive", {
@@ -45,7 +46,7 @@ export class ElementCoatingStatus extends RoundStatus {
     protected plug(ctx: UnitContext): Observer[] {
         const { battle, unit } = ctx
         return [
-            battle.signals.collided.add(({ unit: mover, struck }) => {
+            battle.observers.of(COLLIDED).add(({ unit: mover, struck }) => {
                 const other = mover === unit ? struck : struck === unit ? mover : null
                 if(other?.alive) this.element.applyNegative(ctx, other)
             }),

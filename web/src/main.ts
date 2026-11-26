@@ -1,4 +1,6 @@
-import { Fault, NetSync, signalingAt, startGame } from "@game/core"
+import {
+    Fault, NetSync, signalingAt, startCosmos, startGame,
+} from "@game/core"
 import type { SyncPort } from "@game/core"
 
 import {
@@ -32,7 +34,10 @@ if(query.has("noreload")){
     }catch(_){}
 }
 
-startGame({
+// `?cosmos` runs the procedural universe instead of the game.
+const run = query.has("cosmos") ? startCosmos : startGame
+
+run({
     gfx: new WebGfx(canvas),
     loop: new WebLoop(),
     input: new WebInput(canvas),

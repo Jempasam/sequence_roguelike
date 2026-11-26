@@ -108,6 +108,17 @@ describe("MecardGame, its menu and its saves", () => {
         expect(await slot.load()).toBeNull()
     })
 
+    test("a game in the history → the next run holds it as a ghost from its first map", async() => {
+        const { game } = await keeping()
+        const storage = await new MemoryStorage().open()
+        game.keepHistory(new SaveSlot(storage!, HISTORY_SLOT_KEY, HISTORY_FORMAT))
+        game.run.defeated.notify(game.run)
+        await settle()
+        await game.restart()
+        expect(game.run.ghosts).toHaveLength(1)
+        expect(game.run.ghosts[0].party().length).toBeGreaterThan(0)
+    })
+
     test("the party fell → the game is in the history, shown from the menu with its party", async() => {
         const { game, ui } = await keeping()
         const storage = await new MemoryStorage().open()
@@ -236,14 +247,14 @@ describe("MecardGame.hostGame", () => {
         expect(viewer.battle?.round).toBe(0)
     })
 
-    test("a new run → told to the room, the seats given anew", () => {
+    test("a new run → told to the room, the seats given anew", async() => {
         const { game, channel, room } = playing()
         game.hostGame(COOP_SEATS, FIXED_SEATS)
         const viewer = startedRun(0)
         new RunReceiver(viewer, channel)
         const guest = new RunGuest(viewer, room.join("a"), () => {})
         game.run.gold = 999
-        game.restart()
+        await game.restart()
         expect(viewer.gold).toBe(game.run.gold)
         // The new run starts with nobody in the party, so nobody to play.
         expect(guest.units).toEqual([])

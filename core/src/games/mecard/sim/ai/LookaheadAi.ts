@@ -1,6 +1,7 @@
 import type { Rng } from "../base/Rng"
 import type { Vector2 } from "../base/Vector2"
 import type { Battle } from "../battle/Battle"
+import { pathTo } from "../battle/pathfinding"
 import type { Unit } from "../battle/Unit"
 import { playedUnlimited } from "../card/Card"
 import type { Card } from "../card/Card"
@@ -116,6 +117,22 @@ export interface Variant {
      * how close the enemy stands in front of it, see {@link lineCloseness}. Nothing when not told.
      */
     readonly positions?: { readonly exposed: number, readonly aim: number }
+
+    /**
+     * Does it look for a way around what stands between it and its enemy? It then also turns along that way,
+     * as a path card does, and tells how far it ends from its enemy by the length of that way. No when not
+     * told.
+     */
+    readonly paths?: boolean
+}
+
+/**
+ * How far a unit has to walk to reach another: along the way around what stands between them, then straight
+ * on from where that way stops, in a straight line when there is no way.
+ */
+function walkingDistance(battle: Battle, from: Unit, to: Unit): number {
+    const way = [from.position, ...pathTo(battle, from, from.position, to), to.position]
+    return way.slice(1).reduce((sum, point, index) => sum + point.distance(way[index]), 0)
 }
 
 /** The hands of the order of a hand and how many of its cards play, changed once: two cards swapped, one moved, one more or less. */
@@ -282,6 +299,10 @@ function stepsBefore(cards: readonly Card[]): number {
  * of any unit, gained while an ally acts, weighs {@link lasting} of its level, as a bonus or a cost by its
  * polarity and whose unit it is ({@link STATUS_SIDES}); a process started weighs nothing.
  *
+ * With `paths` (`smart8_path`), the turn pass also turns along the way to the enemy around what stands
+ * between, with the step first or last: the step may have been left out while the unit faced an obstacle. How
+ * far from its enemy a chain ends is then the length of that way.
+ *
  * With several {@link LookaheadOptions.depths}, each chain tried is played against the others guessed at
  * each level, the levels guessing the same played once, and is worth the mean of what it gives; how far
  * from its enemy it ends, and where they stood, are read off the deepest level.
@@ -358,6 +379,7 @@ export class LookaheadAi implements PredictingController {
         const valid = this.#variant.valid ?? false
         const aheadChains = this.#variant.aheadChains ?? AHEAD_CHAINS
         const positions = this.#variant.positions ?? null
+        const paths = this.#variant.paths ?? false
         // A battle is not saved while a process goes on: the view could not be made then, and the AI is not asked.
         const save = saveBattle(battle)
         const groups = guessLevels(battle, unit, levels, memo)
@@ -486,7 +508,11 @@ export class LookaheadAi implements PredictingController {
             for(const observer of observers) observer.remove()
             if(track && foe) track.end = foe.position
             const nearest = copy.nearestEnemy(mine)
-            const distance = mine.alive && nearest ? nearest.position.distance(mine.position) : 0
+            let distance = 0
+            if(mine.alive && nearest){
+                const straight = nearest.position.distance(mine.position)
+                distance = paths ? walkingDistance(copy, mine, nearest) : straight
+            }
             if(heuristics) nudges += NUDGE * Math.min(mine.hand.length, mine.stats.handSize.value)
             if(positions && mine.alive){
                 // Standing in front of an enemy costs, an enemy standing in front of us pays: each enemy, summed.
@@ -590,6 +616,14 @@ export class LookaheadAi implements PredictingController {
                 for(const target of targets){
                     const card = turnToward(target, from)
                     if(card) attempt(withManeuver(bestRoots, { step: bestStep, turn: { card, root } }, stepCard, size), false)
+                }
+                if(!paths || !enemy) continue
+                const waypoint = pathTo(battle, unit, from, enemy)[0]
+                const along = waypoint ? turnToward(waypoint, from) : null
+                if(!along) continue
+                for(const placed of ["first", "last"] as const){
+                    const maneuver: Maneuver = { step: placed, turn: { card: along, root } }
+                    attempt(withManeuver(bestRoots, maneuver, stepCard, size), false)
                 }
             }
         }

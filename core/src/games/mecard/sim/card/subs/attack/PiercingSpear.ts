@@ -11,13 +11,18 @@ import { ActionCard } from "../ActionCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
 import { Rarity } from "../../Rarity"
 import * as Areas from "../../../battle/area/Areas"
+import { visual } from "../../../base/Visual"
 import * as Previews from "../../../battle/preview/Previews"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
 
 /** How far the spear of the catalog flies, in meters, before the reach of the unit's blows. */
 const SPEAR_RANGE = 3 - UNIT_RADIUS
 
 /** How many hearts the spear of the catalog takes, before the strength of the unit. */
 const SPEAR_DAMAGE = 1
+
+/** How the blow of a spear looks. */
+const THRUST = visual("thrust")
 
 /** The color of a spear flying out. */
 const SPEAR_COLOR = rgba(0.85, 0.85, 0.95, 0.9)
@@ -31,7 +36,8 @@ function throwing(range: number, amount: number): Action {
             fly(battle, start, end, SPEAR_COLOR)
             if(!target) return
             const area = Areas.line(start, end, BOLT_WIDTH)
-            battle.strike(unit, area, amount + unit.stats.strength.value, DamageType.PHYSICAL)
+            const damage = amount + unit.stats.strength.value
+            battle.strike(unit, area, damage, DamageType.PHYSICAL, () => 1, THRUST)
             if(target.alive) battle.startProcess(unit, new Skewering(target))
         },
         preview: ({ battle, unit, pose }) => {
@@ -46,5 +52,5 @@ function throwing(range: number, amount: number): Action {
 export const PIERCING_SPEAR = new ActionCard("Lance perforante", [
     "Lance une lance droit devant, jusqu'à ", SPEAR_RANGE, "×", ALLONGE, " ", DISTANCE, " : ", SPEAR_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, " à la première cible. Elle reste plantée jusqu'à la fin du ", BATTLE_ROUND, " : tu suis cette cible quand ",
-    "elle bouge ou se tourne. Tout autre déplacement de ta part retire la lance.",
+    "elle bouge ou ", TURN.as("se tourne"), ". Tout autre déplacement de ta part retire la lance.",
 ], Rarity.RARE, throwing(SPEAR_RANGE, SPEAR_DAMAGE))

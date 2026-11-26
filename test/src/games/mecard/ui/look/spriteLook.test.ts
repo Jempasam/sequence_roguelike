@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest"
 import { ASSET_PATHS } from "@game/core"
 import { Box, Disk, Vector2 } from "@game/core/mecard"
 import { hitboxMetrics } from "@game/core/mecard/hitbox-metrics"
+import { readAnimation } from "@game/core/mecard/fx-animation"
 import { DEFAULT_LOOK, readSpriteLook, SPRITE_MODES, writtenSpriteLook } from "@game/core/mecard/sprite-look"
 
 // --- Tests ---
@@ -15,8 +16,35 @@ describe("readSpriteLook", () => {
     })
 
     test("every mode, and a lift → read as written", () => {
-        for(const mode of SPRITE_MODES) expect(readSpriteLook({ mode })).toEqual({ mode, lift: 0 })
-        expect(readSpriteLook({ lift: 0.4 })).toEqual({ mode: null, lift: 0.4 })
+        for(const mode of SPRITE_MODES) expect(readSpriteLook({ mode })).toEqual({ ...DEFAULT_LOOK, mode })
+        expect(readSpriteLook({ lift: 0.4 })).toEqual({ ...DEFAULT_LOOK, lift: 0.4 })
+    })
+
+    test("tags → read as written, an unknown tag refused", () => {
+        expect(readSpriteLook({ tags: ["fly", "ghost"] }).tags).toEqual(["fly", "ghost"])
+        expect(readSpriteLook({}).tags).toEqual([])
+        expect(() => readSpriteLook({ tags: ["flying"] })).toThrow(/"tags"/)
+        expect(() => readSpriteLook({ tags: "fly" })).toThrow(/"tags"/)
+    })
+
+    test("an animation → its form with the defaults of the form, the fields written over them", () => {
+        const look = readSpriteLook({ animation: { form: "claw", duration: 0.5, trail: 2 } })
+        expect(look.animation?.form).toBe("claw")
+        expect(look.animation?.count).toBe(3)
+        expect(look.animation?.duration).toBe(0.5)
+        expect(look.animation?.trail).toBe(2)
+        expect(look.animation?.size).toBe("area")
+        expect(readSpriteLook({ animation: { form: "hit" } }).animation?.size).toBe("target")
+    })
+
+    test("a bad animation → an error saying where and what to write", () => {
+        expect(() => readSpriteLook({ animation: [] })).toThrow(/"animation"/)
+        expect(() => readSpriteLook({ animation: {} })).toThrow(/"animation.form"/)
+        expect(() => readSpriteLook({ animation: { form: "wave", speed: 1 } })).toThrow(/"animation.speed" n'est pas connu/)
+        expect(() => readSpriteLook({ animation: { form: "stab", ease: "bumpy" } })).toThrow(/"animation.ease"/)
+        expect(() => readSpriteLook({ animation: { form: "stab", frames: 1.5 } })).toThrow(/entier/)
+        expect(() => readSpriteLook({ animation: { form: "stab", fade: 2 } })).toThrow(/"animation.fade"/)
+        expect(() => readSpriteLook({ animation: { form: "stab", anchor: [1] } })).toThrow(/deux nombres/)
     })
 
     test("something that is not an object, an unknown key or a bad value → an error saying what to write", () => {
@@ -28,8 +56,16 @@ describe("readSpriteLook", () => {
 
     test("writtenSpriteLook → the JSON that reads back as the same look, nothing for the default", () => {
         expect(writtenSpriteLook(DEFAULT_LOOK)).toBe("{}")
-        const look = { mode: "wall", lift: 0.25 } as const
+        const look = { ...DEFAULT_LOOK, mode: "wall", lift: 0.25 } as const
         expect(readSpriteLook(JSON.parse(writtenSpriteLook(look)))).toEqual(look)
+    })
+
+    test("writtenSpriteLook with tags and an animation → reads back as the same look, defaults left out", () => {
+        const animation = readAnimation({ form: "sweep", trail: 3, anchor: [0, 4], impact: "impact", flip: true })
+        const look = { ...DEFAULT_LOOK, tags: ["fly"], animation } as const
+        const written = JSON.parse(writtenSpriteLook(look))
+        expect(written.animation).toEqual({ form: "sweep", trail: 3, anchor: [0, 4], impact: "impact", flip: true })
+        expect(readSpriteLook(written)).toEqual(look)
     })
 })
 

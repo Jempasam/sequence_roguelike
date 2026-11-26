@@ -2,19 +2,26 @@ import type { Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Unit } from "../../../battle/Unit"
 import type { Battle } from "../../../battle/Battle"
-import { NOTE_COLOR } from "../../../battle/previewColors"
+import { MOVE_WIDTH, NOTE_COLOR, POTENTIAL_COLOR } from "../../../battle/previewColors"
 import { DISTANCE, PORTEE, PRECISION, BATTLE_ROUND } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 
 import { ActionCard } from "../ActionCard"
-import { hold, turn, WORD_TIME } from "../tools/playing"
+import { hold, WORD_TIME } from "../tools/playing"
+import { TURN } from "../../../battle/mecanic/turn/keyword"
+import * as Turn from "../../../battle/mecanic/turn"
 import { fireShot, shotLine } from "../tools/volley"
+import { ARROW_LOOK, BULLET_LOOK } from "../tools/blowLooks"
 import { SHOT_DAMAGE, SHOT_RANGE } from "./Shot"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import * as Areas from "../../../battle/area/Areas"
 
 /** How many shots the machine gun of the catalog fires at most. */
 const BURST = 10
+
+/** How many directions a unit turning an eighth at a time goes through before facing the first again. */
+const DIRECTIONS = 8
 
 /** How many shots a charged shot fires per this many actions its unit played before it. */
 const CHARGE_EVERY = 2
@@ -32,22 +39,34 @@ function burst(battle: Battle, unit: Unit, pose: Pose): Indicator[] {
     return shots
 }
 
+/** A grey line for each shot a burst from a pose may fire, as far as the first body or wall on its way. */
+function aims(battle: Battle, unit: Unit, pose: Pose): Indicator[] {
+    const lines: Indicator[] = []
+    let direction = pose.direction
+    for(let count = 0; count < DIRECTIONS; count++){
+        const { start, end } = shotLine(battle, unit, { position: pose.position, direction })
+        lines.push(Previews.polygon(Areas.line(start, end, MOVE_WIDTH / 2), POTENTIAL_COLOR))
+        direction = direction.eighth(1)
+    }
+    return lines
+}
+
 /** A shot that turns an eighth and shoots again after each hit. */
 export const MACHINE_GUN = new ActionCard("Mitraillette", [
     "Tire comme Tir (", SHOT_RANGE, "×", PORTEE, " ", DISTANCE, ", ", SHOT_DAMAGE, "+", PRECISION, " ",
-    DamageType.PHYSICAL, "). Si le tir touche, se tourne d'un huitième de tour et tire de nouveau, ", BURST,
+    DamageType.PHYSICAL, "). Si le tir touche, ", TURN.as("se tourne"), " d'un huitième de tour et tire de nouveau, ", BURST,
     " tirs au plus.",
 ], Rarity.EPIC, {
     use: function (ctx){
         const { battle, unit } = ctx
         for(let count = 0; count < BURST && unit.alive; count++){
-            const hit = fireShot(battle, unit)
+            const hit = fireShot(battle, unit, BULLET_LOOK)
             if(hit.length === 0) return
-            turn(ctx, unit.direction.eighth(1))
+            Turn.turnToward(ctx, unit.direction.eighth(1))
         }
     },
     preview: ({ battle, unit, pose }) => {
-        return Previews.still(pose, ...burst(battle, unit, pose))
+        return Previews.still(pose, ...burst(battle, unit, pose), ...aims(battle, unit, pose))
     },
 })
 
@@ -65,7 +84,7 @@ export const CHARGED_SHOT = new ActionCard("Tir chargé", [
     use: function ({ battle, unit }){
         const times = charge(unit)
         for(let count = 0; count < times && unit.alive; count++){
-            fireShot(battle, unit)
+            fireShot(battle, unit, ARROW_LOOK)
             if(count < times - 1) hold(battle, WORD_TIME / 4)
         }
     },

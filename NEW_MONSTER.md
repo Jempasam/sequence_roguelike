@@ -1,157 +1,133 @@
-# Plan : nouveaux monstres (Dungeon of the Mecard)
+# Nouveaux monstres (Dungeon of the Mecard) : base des essais
 
-## Context
-15 monstres communs (`LOOT_MONSTERS`) + 4 boss. Les communs se ressemblent : beaucoup de « Chemin, Avancer, Estoc ». Le catalogue de cartes est très riche et sous-utilisé par les monstres. Objectif : ajouter ~30 monstres communs qui jouent chacun un « truc » lisible, en réutilisant les cartes existantes, plus une nouvelle carte (« Envol de l'ange »). Ils comblent un manque : trop de builds « gros bourrin » de mêlée sont trop forts, donc ajout de colosses de mêlée (forts de près, lents, faibles de loin), de combos de mêlée, de buffeurs/contrôleurs d'alliés.
+## Où on en est
+- **41 monstres à l'essai**, absents du jeu, réglés en simulation. Leurs définitions exactes sont dans [command_line/new_monsters.def](command_line/new_monsters.def), qui fait foi (`monster:Gobelin` en tête comme repère).
+- Les 20 monstres de la base précédente déjà dans `monsters.ts` ne figurent plus ici.
+- Rien n'est encore écrit dans `monsters.ts` : ni sprites, ni combats d'étage.
+- Aucune carte ni objet nouveau : tout se joue avec l'existant.
+- `sim` accepte `item:` et `usable:` sur un monstre, des deux côtés du `/` (voir [command_line/SIM.md](command_line/SIM.md)).
 
-## Fichiers
-- `core/src/games/mecard/sim/catalog/monsters.ts` : nouvelles constantes `monster({...})` + ajout à `LOOT_MONSTERS` (pas aux boss). Même style : doc-comment d'une ligne, `cards` écrites round par round.
-- Nouvelle carte Envol de l'ange : dans `core/.../card/subs/movement/` + `ALL_CARDS`.
-- `assets/mecard/units/*.png` (ou `generated_assets/` s'il vient de `raw_assets/` via `npm run art`) : un sprite par monstre (`Visual.test.ts` vérifie l'existence). Réutiliser les sprites orphelins quand ils collent, sinon générer via le skill pixel-art.
-- Tests : `catalogs.test.ts`, `index.test.ts`, `newContent.test.ts`, `Visual.test.ts` itèrent sur les catalogues ; un test pour Envol de l'ange.
+## Reste à faire
+1. Faire choisir les monstres à garder.
+2. Retravailler les faibles et les concepts qui se voient mal : Orc mitrailleur, Robot-Flinge, Robot arpenteur (laser), les potions lancées, les invocations sans place (voir « Remarques »).
+3. Pour les retenus : constantes dans `core/src/games/mecard/sim/catalog/monsters.ts` (objets par le champ `items`, déjà appliqué aux adversaires par `foeOf`), ajout à `LOOT_MONSTERS`, sprites (`Visual.test.ts` vérifie qu'ils existent, skill pixel-art), combats d'étage dans `floor/fights/`, tests.
 
-## Nommage
-Noms uniques face aux monstres, kits (Artificière, Chaman, Martyr, Pêcheur, Saigneur, Spectre, Tempétiste, Samurai de l'ombre…) et pets. On précise avec une espèce/lieu (« Gobelin artificier », « Orc chaman »), pas systématiquement.
+## Règles de conception
+- Doublons et hasard permis, pas de plafond d'équilibrage, mécanismes simples.
+- Une carte qui prend les suivantes (`Potion jetable`, `Petit sort`, `Hypnose`, `Robot improvisé`, `Par toutes les pièces`...) est suivie, dans le même round, de ce qu'elle prend.
+- Taille 2 réservée aux gros.
+- Chaînes de 3 à 5 pour la plupart, quelques exceptions de 6 à 8. Aujourd'hui : 7 monstres à 3, 16 à 4, 14 à 5, 2 à 6, 1 à 7, 1 à 8.
+- Noms uniques face aux monstres, kits et familiers (vérifié pour les 41).
 
-## Lecture des decks
-Un deck = les rounds mis bout à bout, `|` sépare les rounds (longueur d'un round = pioche). Convention du jeu : une carte « preneuse » prend ce qui la suit (livraison d'abord, contenu ensuite : `Petit sort, Feu`, `Potion jetable, Poison`, `Combo, Coup`, `Synchronisation, Coup`). Les noms sont ceux de `list cards` ; les noms exacts des constantes TypeScript seront vérifiés à l'écriture.
+## Ce qui a marché pour régler un deck
+- Allonger la chaîne et placer le déplacement juste avant le coup (`Chemin, Avancer, coup` ou `Viser, Tir`).
+- Donner une attaque aux soutiens : sans elle, ils ne gagnent presque jamais.
+- Se déplacer avant d'invoquer, sinon l'invocation précédente prend la place.
+- Ne pas tirer juste après avoir posé une mine devant soi : le tir la touche.
 
-## Protocole de test sim
-Deux situations par monstre, contre les kits Chevalier, Pêcheur et Archère, 100 combats par case, `--soft-win`, niveau 1, IA par défaut :
-- **Solo** : `{monstre}/kit:X`.
-- **+Gobelin×2** : `{monstre}+monster:Gobelin*2/kit:X` (le monstre avec deux Gobelins ; pour le Gobelin lui-même, trois Gobelins).
+## Mesure
+- Winrate **du monstre** contre les kits Chevalier, Pêcheur et Archère, noté `C / P / A (moyenne)`, seul puis avec deux Gobelins. 100 combats par case, `--soft-win`, niveau 1, monstres `deck`, kits `smart8`. Marge de ±10 points.
+- Repère, le Gobelin : seul `0 / 0 / 0 (0)`, à trois `3 / 13 / 28 (15)`.
+- Cible tenue : au moins le Gobelin en équipe, environ 40 au plus seul.
+- Ces chiffres viennent d'une copie temporaire du simulateur qui portait déjà les objets. Un contrôle avec l'outil du projet sur trois monstres à objets donne 5 points d'écart au plus, et aucun effet en erreur.
 
-Les monstres du plan sont définis dans [command_line/new_monsters.def](command_line/new_monsters.def) (liste `[monster(...), ...]`, plus `monster:Gobelin` en tête). Un monstre ajouté ou changé s'y écrit au même format ; les noms de cartes sont ceux de `list cards`.
+## Monstres
+Deck : les rounds sont séparés par `/`, la pioche est la longueur d'un round.
 
-### Commande
-Depuis la racine du dépôt. **Ne pas mettre `--quiet`** : il coupe la progression, on ne sait plus où en est la sim. IA explicites : monstres `deck`, kits `smart8` (= `smart` aujourd'hui). Toujours `--soft-win`. Une seule commande teste tous les cas (le coût fixe de ~5 s de lancement n'est payé qu'une fois) ; compter ~0,08 s par combat sur 12 threads, soit ~20 min pour 18 600 combats.
+### Orientation et position
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Gorgone | 7/4 | Étourdit qui la regarde : lui tourner le dos ou la prendre de côté. Un `Viser` du joueur devient un piège. | Chemin, Avancer, Regard glaçant, Estoc / Viser, Regard glaçant, Avancer, Estoc / Viser, Regard glaçant, Estoc, Pas de côté |  | 0 / 2 / 0 (1) | 11 / 47 / 59 (39) |  | |
+| Mule rétive | 9/5 | Ne frappe que derrière elle (ruade, volte-face qui étourdit) : l'attaquer de face. | Chemin, Avancer, Avancer, Volte-face, Ruade / Viser, Retournement, Dash arrière, Ruade, Ruade / Chemin, Avancer, Volte-face, Ruade, Ruade |  | 22 / 55 / 42 (40) | 43 / 52 / 80 (58) |  | |
+| Épouvantail | 10/3 | Tourne le dos à qui est près de lui au début du round, puis poignarde (×2 dans le dos) : finir le round loin de lui. | Chemin, Avancer, Dague / Attendre, Dague, Dague / Viser, Dague, Attendre | Masque effrayant | 38 / 37 / 1 (25) | 30 / 45 / 21 (32) | Masque vérifié ; il retourne aussi ses alliés | |
+| Bouffon | 6/5 | Pose une mine, échange place et orientation avec le joueur, tire et poignarde. | Viser, Tir, Chemin, Avancer, Estoc / Viser, Mine, Pas de deux, Viser, Tir / Chemin, Avancer, Dague, Pas de deux, Dague |  | 3 / 2 / 0 (2) | 40 / 38 / 52 (43) | Très faible seul | |
 
-**Manière de tester** : `X` est une source qui renvoie plusieurs monstres (`@new_monsters.def`, `monsters`, `[monster:A,monster:B]`…). Chaque monstre de `X` est testé solo, puis avec deux Gobelins, contre les trois kits (6 lignes par monstre) :
+### Gêner le tour du joueur
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Mime | 8/5 | Rejoue les cartes du joueur : jouer des cartes inoffensives devant lui. | Chemin, Avancer, Perroquet, Viser, Estoc / Viser, Perroquet, Attendre, Viser, Tir / Chemin, Avancer, Plagiat, Coup circulaire, Perroquet |  | 1 / 15 / 0 (5) | 24 / 58 / 49 (44) |  | |
+| Mangeur de songes | 6/5 | Fait oublier un tour entier : rester hors de sa ligne (3,65 m). | Chemin, Avancer, Viser, Trou de mémoire, Dague / Viser, Trou de mémoire, Téléportation d'assassin, Dague, Dague / Chemin, Avancer, Trou de mémoire, Estoc, Fuite |  | 3 / 68 / 4 (25) | 32 / 71 / 45 (49) |  | |
+| Geôlier | 9/4 | Muselle puis enchaîne : impossible de s'éloigner pendant qu'il frappe. | Viser, Muselière, Avancer, Coup d'épée / Chemin, Avancer, Chaîne de fer, Coup d'épée / Viser, Chaîne de fer, Coup circulaire, Coup d'épée |  | 20 / 47 / 1 (23) | 24 / 56 / 44 (41) |  | |
+| Araignée tisseuse | 8/5 | Immobilise à la liane, empoisonne et lie les héros (toute blessure se répète) : se disperser. | Viser, Liane, Coup circulaire, Dague, Fuite / Viser, Potion jetable, Lien d'âme, Viser, Tir / Viser, Potion jetable, Poison, Viser, Tir |  | 18 / 29 / 4 (17) | 34 / 66 / 24 (41) | Les potions touchent rarement | |
+
+### Mort et héritage
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Gobelin notaire | 5/3 | Lègue sa chaîne à l'allié le plus proche en mourant : le tuer isolé ou en dernier. | Viser, Tir, Tir / Pas de côté, Viser, Tir / Fuite, Viser, Tir | Testament | 0 / 0 / 0 (0) | 19 / 37 / 29 (28) | Testament visible dans 2 morts sur 45 | |
+| Porteur d'urne | 4/7 | Cumule des bonus et les donne à ses alliés en mourant : le tuer tôt. | Grande bouteille, Vigueur, Chemin, Avancer, Coup d'épée, Viser, Tir / Grande bouteille, Hirondelle, Viser, Tir, Chemin, Avancer, Estoc / Bouteille, Célérité, Esquive, Contre, Chemin, Avancer, Coup circulaire | Urne, Sablier | 17 / 25 / 0 (14) | 40 / 68 / 36 (48) | Urne visible dans 10 morts sur 33 | |
+| Porte-fanion | 5/4 | Après deux invocations mortes, double sa chaîne : épargner les leurres. | Leurre, Chemin, Avancer, Estoc / Viser, Tir, Viser, Tir / Boulet de canon, Dash arrière, Viser, Tir | Fanion | 1 / 7 / 18 (9) | 26 / 54 / 83 (54) | Fanion déclenché dans 57 combats d'équipe sur 60 : la parade du joueur pèse peu | |
+| Embaumeur | 9/4 | Relève contre toi ceux qu'il tue : protéger les fragiles et les invocations. | Chemin, Avancer, Empaillage, Faux / Viser, Avancer, Autopsie, Coup d'épée / Empaillage, Chemin, Avancer, Autopsie |  | 1 / 31 / 0 (11) | 9 / 20 / 63 (31) |  | |
+
+### Compte à rebours
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Robot en surchauffe | 8/4 | Surpuissant, mais meurt au bout de 3 rounds (+1 par victime) : fuir et tenir. | Surchauffe, Chemin, Avancer, Attendre / Chemin, Avancer, Coup circulaire, Attendre / Chemin, Avancer, Dash dégât, Coup d'épée / Chemin, Avancer, Coup circulaire, Attendre |  | 0 / 11 / 6 (6) | 24 / 56 / 62 (47) | Blesse beaucoup ses alliés | |
+| Usurier gobelin | 4/3 | Commence avec 3 cartes de plus, en perd une par round : survivre au début. | Chemin, Avancer, Estoc / Viser, Tir, Tir / Chemin, Avancer, Coup d'épée | Reconnaissance de dette | 2 / 15 / 0 (6) | 29 / 39 / 40 (36) |  | |
+| Flagellant | 8/4 | Gagne en force à chaque cœur perdu : l'achever d'un coup plutôt que l'effriter. | Chemin, Avancer, Coup du sacrifice, Coup circulaire / Chemin, Avancer, Coup d'épée, Scarification / Viser, Avancer, Estoc, Coup du sacrifice | Pacte de sang | 3 / 66 / 0 (23) | 18 / 69 / 57 (48) |  | |
+
+### Zone et distance
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Escargot géant | 10/4 | Se blinde tant qu'il ne bouge pas, ralentit et tire : frapper au round où il rampe. | Viser, Crachat, Attendre, Attendre / Flaque, Lenteur, Viser, Tir / Attendre, Attendre, Viser, Tir / Chemin, Avancer, Coup circulaire, Attendre | Coquille d'escargot | 0 / 26 / 0 (9) | 9 / 52 / 30 (30) | Taille 2. Une poussée ne retire pas la coquille | |
+| Golem aimanté | 11/4 | Attire tout le monde puis frappe autour : rester loin. | Chemin, Avancer, Aspiration, Tremblement / Attendre, Séisme, Chemin, Avancer / Chemin, Avancer, Attendre, Séisme | Aimant | 7 / 43 / 2 (17) | 20 / 40 / 46 (35) | Taille 2 | |
+| Putois fétide | 9/4 | Empuantit les héros, qui se bousculent entre eux, et tire de loin : se séparer. | Chemin, Avancer, Estoc, Haleine de charogne / Viser, Tir, Viser, Tir / Viser, Haleine de charogne, Viser, Tir |  | 5 / 11 / 0 (5) | 29 / 31 / 68 (43) |  | |
+| Lépreux | 9/5 | S'inflige des maux qui le renforcent et les refile : le tenir à distance. | Inoculation, Chemin, Avancer, Fièvre de combat, Coup d'épée / Scarification, Viser, Transfusion, Chemin, Estoc / Inoculation, Viser, Tir, Viser, Tir | Verre d'eau salée | 27 / 36 / 2 (22) | 52 / 62 / 47 (54) | Son coup d'épée touche plus ses alliés que le joueur | |
+| Jongleur | 5/3 | Couteau aller-retour : sortir de la ligne avant la fin du round. | Viser, Couteau magique, Pas de côté / Pas de côté, Viser, Couteau magique / Viser, Couteau magique, Fuite |  | 5 / 35 / 6 (15) | 48 / 39 / 30 (39) | Timeouts (60 sur 600) | |
+| Robot arpenteur | 8/5 | Tend un laser vers un allié et le balaie en bougeant : ne pas rester entre eux. | Lien laser, Viser, Tir, Viser, Tir / Lien laser, Chemin, Blink, Viser, Estoc / Lien laser, Chemin, Avancer, Coup circulaire, Pas de côté |  | 4 / 12 / 2 (6) | 43 / 63 / 60 (55) | Le laser touche rarement : concept à revoir | |
+
+### Engins et armées
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Ferrailleur gobelin | 4/6 | Bricole des robots à programme : détruire les robots ou leur créateur. | Pas de côté, Robot improvisé, Missile, Dash arrière, Viser, Tir / Pas de côté, Viser, Tir, Viser, Tir, Fuite / Pas de côté, Robot improvisé, Robot arc, Dash arrière, Viser, Tir |  | 54 / 29 / 40 (41) | 44 / 54 / 56 (52) | Timeouts (62 sur 600) ; beaucoup d'invocations ratées faute de place | |
+| Gobelin tonnelier | 7/5 | Pose des tonneaux de potion et les projette : choisir où les casser. | Chemin, Avancer, Tonneau, Poison, Projection / Viser, Potion jetable, Poison, Viser, Tir / Chemin, Avancer, Tonneau, Vulnérabilité, Projection |  | 30 / 20 / 1 (17) | 26 / 36 / 11 (24) | Les potions touchent rarement | |
+| Roi déchu | 6/8 | Commande ses pièces d'échecs : les nettoyer avant qu'elles s'accumulent. | Pion, Pas de côté, Pion, Pas de côté, Tour, Pas de côté, Échec, Échec / Par toutes les pièces, Avancer, Échec, Fuite, Visée des pions, Échec, Pas de côté, Échec / Cavalier, Pas de côté, Par toutes les pièces, Viser, Par toutes les pièces, Estoc, Échec, Fuite |  | 34 / 18 / 33 (28) | 57 / 24 / 65 (49) | Invocations souvent ratées faute de place | |
+| Gobelin catapulté | 9/5 | Se propulse en fin de round sur une trajectoire annoncée : s'en écarter. | Viser, Lance-pierre, Dash arrière, Attendre, Attendre / Chemin, Avancer, Coup circulaire, Viser, Catapulte / Viser, Lance-pierre, Dash arrière, Viser, Tir |  | 0 / 27 / 33 (20) | 11 / 34 / 36 (27) | La propulsion semble aussi le blesser (à vérifier) | |
+
+### Embuscade et tir
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Gobelin démineur | 6/4 | Mines, pièges et tirs : ne pas foncer en ligne droite. | Viser, Tir, Viser, Tir / Chemin, Piège à ours, Viser, Tir / Viser, Mine, Dash arrière, Tir |  | 19 / 5 / 0 (8) | 44 / 10 / 14 (23) |  | |
+| Gobelin artificier | 6/4 | Dash explosif qui l'épargne, bombes et grenades. | Viser, Dash explosif, Dash arrière, Tir / Viser, Bombe, Viser, Tir / Chemin, Dash explosif, Viser, Grenade flash |  | 2 / 5 / 1 (3) | 37 / 50 / 28 (38) |  | |
+| Esprit d'orage | 4/3 | Plasma et tempête : étourdit, brûle et pousse. | Viser, Petit sort, Plasma / Pas de côté, Viser, Conjuration / Viser, Grand sort, Tempête |  | 10 / 10 / 6 (9) | 46 / 42 / 41 (43) |  | |
+| Orc mitrailleur | 4/5 | Tireur lourd, mitraillette qui pivote à chaque touche. | Chemin, Avancer, Viser, Mitraillette, Fuite / Tir de couverture, Viser, Mitraillette, Viser, Tir / Pas de côté, Viser, Pluie de balles, Fuite, Tir de couverture |  | 0 / 4 / 0 (1) | 18 / 18 / 22 (19) | Faible : à retravailler | |
+
+### Mêlée
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Chauve-souris | 5/5 | Saute dans le dos, fait saigner et repart. | Téléportation d'assassin, Dague, Enchaînement sanglant, Dague, Dash arrière / Chemin, Blink, Dague, Viser, Dague / Téléportation d'assassin, Saignement, Dague, Fuite, Pas de côté |  | 8 / 16 / 1 (8) | 25 / 58 / 47 (43) |  | |
+| Rôdeur des ombres | 4/3 | Assassin qui frappe dans le dos et passe à travers les murs. | Téléportation d'assassin, Dague, Dash arrière / Viser de l'ombre, Pas de l'ombre, Dague / Téléportation d'assassin, Dague, Dague |  | 2 / 16 / 1 (6) | 18 / 36 / 41 (32) |  | |
+| Golem kamikaze | 8/4 | Bombe lente qui finit par exploser. | Carapace explosive, Chemin, Avancer, Avancer / Chemin, Avancer, Avancer, Coup circulaire / Chemin, Dash dégât, Chemin, Kamikaze |  | 0 / 0 / 39 (13) | 11 / 27 / 63 (34) |  | |
+| Gladiateur à la hache | 9/3 | Hache buveuse de sang, peu mobile : le tenir à distance. | Chemin, Avancer, Fureur contenue / Hache buveuse de sang, Attendre, Hache buveuse de sang / Chemin, Brisage de crâne, Attendre |  | 35 / 17 / 0 (17) | 65 / 47 / 31 (48) |  | |
+
+### Soutien et contrôle
+| Monstre | PV/pioche | Concept et réaction demandée | Deck exact | Objets | Seul C / P / A | +2 Gobelins C / P / A | Remarques | State |
+|---|---|---|---|---|---|---|---|---|
+| Orc chaman | 7/4 | Totems et soins. | Totem, Dash arrière, Viser allié, Bandage / Chemin, Avancer, Totem de cri, Coup d'épée / Chemin, Avancer, Coup d'épée, Estoc |  | 2 / 6 / 25 (11) | 12 / 39 / 34 (28) |  | |
+| Troll en armure | 11/4 | Va vers ses alliés, les protège et provoque. | Viser allié, Avancer, Rempart, Provocation / Chemin, Avancer, Provocation, Coup circulaire / Blocage, Chemin, Avancer, Coup d'épée |  | 0 / 39 / 2 (14) | 9 / 84 / 48 (47) |  | |
+| Gobelin brasseur | 8/5 | Potions de vigueur aux alliés, de poison aux héros. | Viser, Potion jetable, Poison, Viser, Tir / Viser allié, Potion jetable, Vigueur, Viser, Tir / Bouteille, Vigueur, Chemin, Avancer, Coup d'épée |  | 1 / 1 / 0 (1) | 31 / 35 / 28 (31) | Les potions touchent rarement | |
+| Gobelin tambourineur | 6/5 | Fait bégayer ses alliés, tire et provoque. | Viser allié, Bégaiement, Viser, Tir, Tir / Chemin, Avancer, Estoc, Provocation, Coup circulaire / Viser allié, Bégaiement, Viser, Estoc, Fuite |  | 0 / 3 / 0 (1) | 11 / 55 / 27 (31) |  | |
+| Prêtre des os | 6/4 | Prière, remparts et blessures partagées entre les liés. | Prière, Viser, Potion jetable, Bouclier d'âme / Viser allié, Rempart, Viser, Tir / Fuite, Viser, Tir, Blocage |  | 3 / 8 / 0 (4) | 23 / 51 / 22 (32) | Les potions touchent rarement | |
+| Robot-Flinge | 7/4 | Rejoint son allié le plus loin et tire. | Envol de l'ange, Viser, Tir, Tir / Dash arrière, Viser, Tir, Tir / Envol de l'ange, Viser, Arbalète, Dash arrière |  | 3 / 1 / 2 (2) | 17 / 18 / 22 (19) | Faible : à retravailler. Envol de l'ange rate sans allié | |
+| Gobelin hypnotiseur | 7/6 | Fait jouer au héros des actions contre lui (Coup du sacrifice, Coup circulaire). | Chemin, Avancer, Viser, Hypnose, Coup du sacrifice, Estoc / Viser, Tir, Viser, Hypnose, Coup circulaire, Dash arrière / Chemin, Avancer, Viser, Estoc, Hypnose, Attendre |  | 0 / 0 / 0 (0) | 6 / 34 / 51 (30) | Nul seul | |
+| Cheval zombie | 8/5 | Charge, rue et déplace ses alliés. | Charge de cavalerie, Chemin, Dash dégât, Viser allié, Accroche / Cheval, Chemin, Avancer, Ruade, Attendre / Viser, Lasso, Charge de cavalerie, Volte-face, Ruade |  | 0 / 0 / 4 (1) | 12 / 36 / 61 (36) | Charges souvent bloquées, Accroche trouve rarement un allié | |
+
+Colonne **State** : vide (à l'essai), `🟦 Ajouté` (écrit dans `monsters.ts`), `🟩 Validé` (testé en jeu, sprite et comportement vérifiés).
+
+## Protocole de test
+Depuis la racine du dépôt. Chaque monstre de `X` (`@new_monsters.def`, ou une liste de `monster(...)`) est testé seul puis avec deux Gobelins contre les trois kits :
 
 ```
-npm run cli --silent -- sim --match "{X}/kit:Chevalier" --match "{X}/kit:Pêcheur" --match "{X}/kit:Archère" --match "{X}+monster:Gobelin*2/kit:Chevalier" --match "{X}+monster:Gobelin*2/kit:Pêcheur" --match "{X}+monster:Gobelin*2/kit:Archère" --games 100 --ai monster=deck,kit=smart8 --soft-win --out winrate,rounds,timeouts,errors,n
+npm run cli --silent -- sim --match "{X}/kit:Chevalier" --match "{X}/kit:Pêcheur" --match "{X}/kit:Archère" --match "{X}+monster:Gobelin*2/kit:Chevalier" --match "{X}+monster:Gobelin*2/kit:Pêcheur" --match "{X}+monster:Gobelin*2/kit:Archère" --games 100 --ai monster=deck,kit=smart8 --soft-win --out winrate,timeouts,errors
 ```
 
-Pour le CSV de tout le plan, remplacer `--out …` par `--out winrate,timeouts,errors --format csv > res.csv 2> err.txt`.
+Le fichier entier fait 25 200 combats (environ 25 minutes sur 12 threads) : au-delà de 20 000 la commande demande confirmation. Pour régler un deck, `--games 40` suffit.
 
-Sortie : une ligne CSV `nom,winrate,timeouts,errors` par combat décrit (31 monstres × 6 = 186 lignes), `nom` valant `Monstre/kit:X` (solo) ou `Monstre+monster:Gobelin*2/kit:X`. Au dernier passage, aucun avertissement « effets échoués » (le dernier passage complet n'en génère aucun).
-
-### Combat individuel avec journal (comprendre pourquoi un monstre ne marche pas)
-Un monstre + 2 Gobelins contre Chevalier, Pêcheur et Archère, **un combat par kit**, avec le journal complet (`--log`) : pioches, chaînes jouées, mouvements, vie, statuts. Depuis la racine du dépôt, en bash ; remplacer `PretreDesOs` par le nom du monstre dans le `.def` (sans espaces ni accents) :
+### Combat journalisé
+Un combat par kit avec le journal complet, en bash ; remplacer `GladiateurHache` par le nom voulu :
 
 ```
-M=$(grep -m1 "^monster(PretreDesOs=" command_line/new_monsters.def | sed 's/[[:space:]]*#.*//; s/,[[:space:]]*$//')
+M=$(grep -m1 "^monster(GladiateurHache=" command_line/new_monsters.def | sed 's/,$//')
 npm run cli --silent -- sim --match "{$M}+monster:Gobelin*2/kit:Chevalier" --match "{$M}+monster:Gobelin*2/kit:Pêcheur" --match "{$M}+monster:Gobelin*2/kit:Archère" --games 1 --seed 1 --ai monster=deck,kit=smart8 --soft-win --out winrate,rounds,timeouts,errors --log combat.txt
 ```
 
-- La 1re ligne extrait la définition du monstre du `.def` (le `.def` ne permet pas de choisir un monstre par son nom). On peut aussi coller directement le `monster(...)` à la place de `$M`.
-- Le dossier du fichier `--log` doit exister ; `combat.txt` est écrasé à chaque lancement. Les trois combats y sont, dans l'ordre des `--match`, chacun commençant par une ligne `########## smart8:6 | Monstre+monster:Gobelin*2/kit:X | partie 1 | graine N ##########`.
-- Lire le journal par round : `[Rn.0] … pioche …` (ce que chacun tire), `… chaîne : > …` (ce qu'il joue), puis les mouvements et la vie. Chercher si le monstre joue ses cartes dans le bon ordre, s'il reste sans cible, s'il fuit ou attend alors que ses alliés se battent.
-- Pour un autre combat du même cas : changer `--seed` ; `--games 3` joue trois combats par kit (chacun a son en-tête dans le journal).
-- Solo : retirer `+monster:Gobelin*2`.
-
-### Remplir les colonnes « Max solo » et « Max +Gobelin×2 »
-Pour chaque monstre et chaque situation (solo, puis +Gobelin×2), prendre ses trois winrates (Chevalier, Pêcheur, Archère) et écrire :
-
-`<meilleur winrate> % <kit(s) qui le donnent> (+<écart avec le deuxième meilleur>)`
-
-- Winrate en pourcentage avec une décimale, virgule française ; kits à égalité reliés par « et » (écart +0,0).
-- Si les trois valent 0 : `0 % (tous)`.
-- « Envol de l'ange » existe (`AngelFlight.ts`, dans `ALL_CARDS`) et les decks Robot-Flinge et Garde au bouclier du `.def` l'utilisent. Leurs colonnes « Max » ont été refaites avec Envol de l'ange.
-- Dernier passage complet (36 monstres, 22 200 combats, 0 effet en erreur) : seuls des timeouts, hors winrate (jusqu'à ~40 % des combats pour Gobelin démineur, Orc mitrailleur, Chevalier de fer contre le Pêcheur). Les winrates ont été recalculés, et plusieurs ont beaucoup bougé depuis le passage précédent (le Gobelin de référence passe de 38 % à 25 % avec deux Gobelins) : le moteur et l'IA ont changé entre-temps, les anciennes valeurs ne sont plus comparables.
-
-### Colonne « Force (solo / équipe / support) »
-Calculée à partir des winrates maximaux des colonnes « Max » (meilleur des trois kits) ; le Gobelin sert de référence (solo : son Max solo ; équipe : son Max +Gobelin×2, c'est-à-dire avec deux Gobelins) :
-- Force Solo = WinRate − WinRateGobelinSolo
-- Force Équipe = WinRate − WinRateGobelinÉquipe
-- Supportness = ForceÉquipe − ForceSolo
-
-Affichée `solo / équipe / support`, en points de pourcentage. Un supportness élevé = le monstre gagne beaucoup à être accompagné ; négatif = il est meilleur seul qu'en équipe, relativement au Gobelin.
-
-Grand écart = taillé contre cet adversaire. Marge d'erreur de ±3 à ±10 points avec 100 combats : seuls les grands écarts comptent.
-
-## Monstres communs
-Colonne **State** : vide (à l'essai dans le `.def`), `🟦 Ajouté` (écrit dans `monsters.ts`), `🟩 Validé` (testé en jeu, sprite et comportement vérifiés). Les couleurs sont des pastilles, le Markdown n'a pas de texte coloré.
-
-| Monstre | PV/pioche | Concept et comportement | Deck exact | Max solo | Max +Gobelin×2 | Force (solo / équipe / support) | State |
-|---|---|---|---|---|---|---|---|
-| Gobelin (référence, existant) | | | | 0 % (tous) | 25,0 % Archère (+8,0) | +0,0 / +0,0 / +0,0 |  |
-| Lézard de feu | 5/3 | Bête de contact. Fonce vers le joueur, crache une gerbe de flammes qui laisse des brûlures, puis recule d'un pas. Dangereux en groupe : le terrain devient brûlant. | Chemin, Avancer, Avancer \| Chemin, Lance-flammes, Fuite \| Viser, Lance-flammes, Lance-flammes | 7,0 % Pêcheur (+6,0) | 46,0 % Archère (+8,0) | +7,0 / +21,0 / +14,0 | 🟦 Ajouté |
-| Gobelin démineur | 4/3 | Contrôle de zone. Pose une mine, recule, tire de loin : oblige à ne pas avancer en ligne droite. | Viser, Mine, Dash arrière \| Viser, Tir, Tir \| Pas de côté, Mine, Fuite | 8,9 % Pêcheur (+8,9) | 19,6 % Pêcheur (+15,6) | +8,9 / −5,4 / −14,3 |  |
-| Gobelin artificier | 4/3 | Explosifs. Bombe en croix, s'éloigne, grenade flash qui étourdit : prépare la mêlée de ses alliés. Fragile. | Viser, Bombe en croix, Fuite \| Viser, Grenade flash, Fuite \| Viser, Bombe en croix, Pas de côté | 0 % (tous) | 2,0 % Pêcheur (+1,0) | +0,0 / −23,0 / −23,0 |  |
-| Pirate au harpon | 5/3 | Tire le joueur vers lui au lasso, puis frappe à l'épée ; le harpon le propulse sur sa cible. Punit les tireurs. | Viser, Lasso, Coup d'épée \| Viser, Harpon, Coup d'épée \| Chemin, Avancer, Coup d'épée | 1,0 % Pêcheur (+1,0) | 29,0 % Pêcheur (+15,0) | +1,0 / +4,0 / +3,0 | 🟦 Ajouté |
-| Crapaud toxique | 4/3 | Harceleur. Crache pour ralentir, empoisonne à distance, garde ses distances. | Viser, Crachat, Fuite \| Viser, Petit sort, Plante \| Fuite, Viser, Crachat | 7,1 % Pêcheur (+6,1) | 23,7 % Pêcheur (+14,7) | +7,1 / −1,3 / −8,4 | 🟦 Ajouté |
-| Esprit d'orage | 4/3 | Mage erratique. Alterne Vent (pousse au hasard) et Électricité (étourdit), esquive de côté. | Viser, Petit sort, Électricité \| Pas de côté, Conjuration, Vent \| Viser, Petit sort, Vent | 2,0 % Chevalier (+2,0) | 14,0 % Pêcheur (+8,0) | +2,0 / −11,0 / −13,0 |  |
-| Orc mitrailleur | 4/4 | Tireur lourd. Mitraillette qui tourne à chaque touche ; recule en tirant. Fort face à un groupe serré. | Chemin, Avancer, Viser, Mitraillette \| Tir de couverture, Viser, Mitraillette, Fuite \| Viser, Pluie de balles, Pas de côté, Tir de couverture | 3,2 % Pêcheur (+2,1) | 29,3 % Pêcheur (+19,3) | +3,2 / +4,3 / +1,1 |  |
-| Squelette faucheur | 6/3 | Avance au hasard, puis fauche en arc (touche à 1-2 m seulement). | Chemin, Avancer, Faux \| Pas au hasard, Chemin, Faux \| Viser, Coup d'assassin, Faux | 3,0 % Pêcheur (+2,0) | 44,0 % Pêcheur (+28,0) | +3,0 / +19,0 / +16,0 | 🟦 Ajouté |
-| Chauve-souris | 3/3 | Mord pour faire saigner, double le saignement, puis s'éloigne. | Chemin, Dague, Enchaînement sanglant \| Dash arrière, Viser, Dague \| Chemin, Enchaînement sanglant, Dash arrière | 0 % (tous) | 14,0 % Pêcheur (+7,0) | +0,0 / −11,0 / −11,0 |  |
-| Rôdeur des ombres | 3/3 | Assassin mobile. Se téléporte, vise à travers les murs, poignarde dans le dos. | Viser de l'ombre, Pas de l'ombre, Dague \| Viser, Ombre fulgurante, Dague \| Voie de l'ombre, Viser, Dague | 0 % (tous) | 23,0 % Pêcheur (+5,0) | +0,0 / −2,0 / −2,0 |  |
-| Gobelin de garnison | 4/3 | Poseur de défenses : tourelle, leurre, sentinelle à estoc long, puis recule. | Tourelle, Fuite, Attendre \| Leurre, Viser, Tir \| Sentinelle, Fuite, Attendre | 33,7 % Archère (+4,3) | 37,0 % Pêcheur (+6,0) | +33,7 / +12,0 / −21,7 | 🟦 Ajouté |
-| Orc chaman | 5/3 | Soutien. Totem de soin, Bandage, cri qui retourne les unités autour. | Totem, Viser allié, Bandage \| Totem de cri, Fuite, Attendre \| Chemin, Viser, Coup d'épée | 2,3 % Chevalier (+2,3) | 17,0 % Pêcheur (+9,0) | +2,3 / −8,0 / −10,3 |  |
-| Loup-garou | 7/3 | Brute rapide. Bounce Dash, morsure à l'épée qui saigne. | Viser, Bounce Dash, Coup d'épée \| Viser, Saignement, Coup d'épée \| Chemin, Bounce Dash, Coup d'épée | 0 % (tous) | 19,0 % Pêcheur (+6,0) | +0,0 / −6,0 / −6,0 | 🟦 Ajouté |
-| Alchimiste fou | 4/3 | Statuts de zone : potions (poison, faiblesse), flaques, évite le contact. | Viser, Potion jetable, Poison \| Fuite, Flaque, Poison \| Viser, Potion jetable, Faiblesse | 44,2 % Chevalier (+30,4) | 42,9 % Chevalier (+14,8) | +44,2 / +17,9 / −26,3 | 🟦 Ajouté |
-| Golem kamikaze | 6/3 | Bombe lente. Cœur explosif et boucliers, avance, puis explose. | Carapace explosive, Blocage, Rancune \| Chemin, Avancer, Avancer \| Chemin, Avancer, Kamikaze | 0 % (tous) | 19,0 % Pêcheur (+9,0) | +0,0 / −6,0 / −6,0 |  |
-
-### Colosses de mêlée (contre les builds « gros bourrin »)
-Très forts au corps à corps, mais lents, peu mobiles, sans attaque à distance : le joueur qui reste loin ou kite les bat, celui qui fonce dans le tas est puni.
-
-| Monstre | PV/pioche | Concept et comportement | Deck exact | Max solo | Max +Gobelin×2 | Force (solo / équipe / support) | State |
-|---|---|---|---|---|---|---|---|
-| Ogre écraseur | 14/3, taille 2 | Avance d'un pas, attend, puis Tremblement et Onde de choc : zone énorme mais aucune portée. Ne fuit jamais. | Chemin, Avancer, Attendre \| Chemin, Tremblement, Attendre \| Chemin, Onde de choc, Suplex | 13,0 % Pêcheur (+6,0) | 36,0 % Pêcheur (+15,0) | +13,0 / +11,0 / −2,0 | 🟦 Ajouté |
-| Chevalier de fer | 10/3 | Tank à contre-attaque : cœurs bleus, Contre, Rempart, puis coups d'épée quand on est collé. On le contourne. | Blocage, Contre, Avancer \| Rempart, Chemin, Avancer \| Chemin, Avancer, Coup circulaire | 2,0 % Pêcheur (+2,0) | 50,0 % Pêcheur (+18,0) | +2,0 / +25,0 / +23,0 | 🟦 Ajouté |
-| Gladiateur à la hache | 12/3 | Hache buveuse de sang : se soigne en frappant plusieurs cibles, mais un pas par round et le dos exposé. | Chemin, Avancer, Fureur contenue \| Hache buveuse de sang, Attendre, Hache buveuse de sang \| Chemin, Brisage de crâne, Attendre | 78,0 % Chevalier (+21,0) | 96,0 % Chevalier (+3,0) | +78,0 / +71,0 / −7,0 |  |
-| Gobelin catcheur | 9/4 | Collé à vous : agrippe (Attrapage), Surprise Suplex, Combo qui rejoue le coup tant qu'il blesse, Brisage de crâne. Aucune portée. | Chemin, Avancer, Attrapage, Surprise Suplex \| Combo, Brisage de crâne, Attendre, Chemin \| Chemin, Attrapage, Combo, Suplex | 20,0 % Pêcheur (+5,0) | 62,0 % Pêcheur (+11,0) | +20,0 / +37,0 / +17,0 | 🟦 Ajouté |
-| Samouraï errant | 8/4 | Duelliste patient : charge son allonge en attendant (Concentration), puis une seule frappe très longue et précise, Contre pour punir qui l'approche. Très peu de déplacement. | Viser, Avancer, Concentration, Attendre \| Attendre, Viser, Méga-Estoc, Contre \| Viser, Concentration, Attendre, Grande estoc | 19,3 % Archère (+19,3) | 14,0 % Pêcheur et Archère (+0,0) | +19,3 / −11,0 / −30,3 | 🟦 Ajouté |
-
-Fort contre : mêlée qui se laisse agripper, builds à faible PV, groupes serrés, joueurs qui avancent en ligne droite (samouraï). Faible contre : tireurs, kite, mobilité, étourdissement avant le combo.
-
-### Buffeurs et contrôleurs d'alliés
-| Monstre | PV/pioche | Concept et comportement | Deck exact | Max solo | Max +Gobelin×2 | Force (solo / équipe / support) | State |
-|---|---|---|---|---|---|---|---|
-| Troll en armure | 10/3 | Support tank. Va au contact de ses alliés, Rempart (cœur bleu aux alliés à 1,5 m, lui compris), Blocage, Provocation (retourne les ennemis à 1,5 m vers lui). Les Gobelins ne sont presque jamais à 1,5 m : en pratique il ne se donne un cœur bleu qu'à lui. | Viser allié, Avancer, Rempart \| Viser, Avancer, Rempart \| Blocage, Provocation, Attendre | 0 % (tous) | 22,0 % Pêcheur (+13,9) | +0,0 / −3,0 / −3,0 |  |
-| Gobelin brasseur | 5/4 | Support potions. Vise un allié et lui jette une potion (Potion jetable) de Vigueur, Célérité ou Hirondelle, puis avance ou fuit. Contrairement à la Pluie de potion, ne buffe pas l'ennemi. Sans allié vivant : « personne à viser ». | Viser allié, Potion jetable, Vigueur, Avancer \| Viser allié, Potion jetable, Célérité, Fuite \| Viser allié, Potion jetable, Hirondelle, Fuite | 0 % (tous) | 10,0 % Pêcheur (+4,0) | +0,0 / −15,0 / −15,0 |  |
-| Gobelin tambourineur | 4/5 | Bégaiement (le Gobelin visé rejoue ses dernières cartes, surtout utile après un Estoc, mais il rejoue aussi un déplacement, ou touche l'ennemi s'il est devant), Provocation (retourne les ennemis à 1,5 m vers lui), Fuite. Se déplace vers ses alliés, reste derrière eux. | Viser allié, Avancer, Viser allié, Fuite, Bégaiement \| Viser allié, Avancer, Viser allié, Fuite, Bégaiement \| Viser, Avancer, Provocation, Fuite, Attendre | 0 % (tous) | 20,0 % Pêcheur (+7,0) | +0,0 / −5,0 / −5,0 |  |
-| Prêtre des os | 5/3 | Prière, Rempart, Bouclier d'âme : blessures partagées entre alliés liés. Fuit le contact. | Prière, Viser allié, Rempart \| Viser allié, Potion jetable, Bouclier d'âme \| Fuite, Blocage, Attendre | 0 % (tous) | 19,2 % Pêcheur (+4,4) | +0,0 / −5,8 / −5,8 |  |
-| Gobelin pilote de robot | 4/4 | Contrôleur à distance façon Marionnettiste, pour ses alliés (robots surtout) : Exo-nerf, Bégaiement. Avance avec eux, se replie, et frappe d'un Estoc en fin de cycle. | Avancer, Viser allié, Exo-nerf, Avancer \| Fuite, Viser allié, Bégaiement, Viser allié \| Exo-nerf, Viser, Avancer, Estoc | 5,0 % Archère (+5,0) | 31,0 % Pêcheur (+17,0) | +5,0 / +6,0 / +1,0 | 🟦 Ajouté |
-| Orc shaman combattant | 7/3 | Se synchronise avec l'allié le plus proche, puis joue des cartes utiles au combat : buff de soi, Avancer, attaque. Les deux frappent ensemble. | Viser allié, Synchronisation, Fureur contenue \| Chemin, Avancer, Coup d'épée \| Viser allié, Synchronisation, Coup circulaire | 2,0 % Archère (+2,0) | 49,0 % Pêcheur (+29,0) | +2,0 / +24,0 / +22,0 | 🟦 Ajouté |
-| Fantôme hanteur | 4/3 | Hante ses ALLIÉS : forme éthérée, Viser allié puis Hantise ; joue les cartes depuis la place de l'hôte sans être ciblable. | Forme éthérée, Viser allié, Hantise \| Coup d'épée, Attendre, Coup d'épée \| Viser allié, Hantise, Coup circulaire | 1,5 % Pêcheur (+1,5) | 50,0 % Pêcheur (+27,0) | +1,5 / +25,0 / +23,5 | 🟦 Ajouté |
-| Contrôleur mental | 5/3 | Fait s'entre-tuer le groupe du joueur : Frénésie lancée, Hypnose, Charmer, Rage. Fuit. Inoffensif contre un joueur seul. | Viser, Frénésie lancée, Fuite \| Viser, Hypnose, Charmer \| Viser, Potion jetable, Rage | 0 % (tous) | 20,0 % Pêcheur (+12,0) | +0,0 / −5,0 / −5,0 | 🟦 Ajouté |
-| Robot-Flinge | 6/3 | S'envole vers l'allié le plus lointain (Envol de l'ange), tire, puis se sauve. Échoue sans allié. | Envol de l'ange, Viser, Tir \| Dash arrière, Viser, Tir \| Envol de l'ange, Viser, Dash arrière | 0 % (tous) | 14,0 % Pêcheur (+13,0) | +0,0 / −11,0 / −11,0 |  |
-| Garde au bouclier | 10/3 | Tank qui se téléporte devant l'allié le plus loin pour le protéger, puis boucliers, Contre et Coup d'épée. | Envol de l'ange, Blocage, Rempart \| Bouclier en bois, Contre, Attendre \| Chemin, Coup d'épée, Coup d'épée | 38,0 % Pêcheur (+32,9) | 77,0 % Pêcheur (+25,0) | +38,0 / +52,0 / +14,0 | 🟦 Ajouté |
-| Tank épineux provocateur | 12/3 | Attire les coups : Provocation, Leurre, puis ronces / Carapace explosive : cœurs épineux qui blessent qui le frappe. Presque aucune attaque propre. | Provocation, Bouclier de ronces, Blocage \| Leurre, Rempart, Attendre \| Provocation, Carapace explosive, Coup circulaire | 26,2 % Pêcheur (+19,2) | 63,6 % Pêcheur (+17,6) | +26,2 / +38,6 / +12,4 | 🟦 Ajouté |
-
-Fort contre : joueurs seuls face à un groupe, builds sans burst, groupes alliés (contrôleur mental). Faible contre : assassins, tireurs lointains, zones, Lasso/Grappin pour les isoler.
-
-Points à vérifier à l'écriture : la livraison de potions (« Bouclier d'âme » après « Potion jetable » lie-t-il les éclaboussés ?), l'interaction Hantise + Forme éthérée, et que toute carte « preneuse » soit suivie d'une carte compatible.
-
-### Longues chaînes
-Une longue chaîne permet de jouer plusieurs actions APRÈS que le joueur ne peut plus rien faire : il doit se protéger d'une suite d'actions (se cacher, Esquive…) au lieu de l'esquiver en se déplaçant. Pioche haute, déplacement et préparation d'abord, coup à la fin. Chaque round contient du déplacement. Colonnes de sim à remplir après passage.
-
-| Monstre | PV/pioche | Concept et comportement | Deck exact | Max solo | Max +Gobelin×2 | Force (solo / équipe / support) | State |
-|---|---|---|---|---|---|---|---|
-| Sniper | 3/7 | Se place, se concentre, puis vise et tire en fin de chaîne : inesquivable une fois visé. Son 2e round est entièrement Attendre (chaque Attendre ajoute de la concentration pour le tir suivant). Tir chargé : un tir de plus par 2 actions jouées avant. | Chemin, Avancer, Concentration, Attendre, Viser, Lunette, Tir \| Attendre ×7 \| Dash arrière, Chemin, Pas de côté, Concentration, Attendre, Viser, Tir chargé | 11,1 % Pêcheur (+0,7) | 48,0 % Pêcheur (+5,0) | +11,1 / +23,0 / +11,9 | 🟦 Ajouté |
-| Hypnotiseur | 4/5 | Fait jouer aux unités du joueur des actions qui les handicapent (Attendre, Fuite, Viser allié + coup) ; Pensée unique transforme les cartes autour selon un mot-clé. | Chemin, Avancer, Viser, Hypnose, Attendre \| Viser, Hypnose, Viser allié, Estoc, Dash arrière \| Pas de côté, Pensée unique, Tir, Fuite, Viser | 1,1 % Archère (+1,1) | 22,0 % Pêcheur (+10,0) | +1,1 / −3,0 / −4,1 |  |
-| Esprit vengeur | 3/4 | Assassin qui achève les faibles : Traque (fébrile le moins vivant, rate sinon), Possession (frappe le plus faible, prend sa place s'il meurt). | Forme éthérée, Viser de l'ombre, Pas de l'ombre, Avancer \| Traque, Possession, Fuite, Pas de côté \| Viser le plus blessé, Chemin, Avancer, Possession | 0 % (tous) | 34,0 % Archère (+13,0) | +0,0 / +9,0 / +9,0 | 🟦 Ajouté |
-| Fantôme | 4/4 | Hante les unités du JOUEUR (≠ Fantôme hanteur, qui hante ses alliés) : Hantise, puis la carte suivante se joue depuis la place de l'hôte et frappe son entourage. Hantise rend déjà sans corps. | Viser, Hantise, Coup circulaire, Attendre \| Pas au hasard, Chemin, Avancer, Attendre \| Pas de côté, Viser, Hantise, Dague | 3,0 % Pêcheur et Archère (+0,0) | 44,0 % Pêcheur (+20,0) | +3,0 / +19,0 / +16,0 | 🟦 Ajouté |
-| Cheval zombie | 6/5 | Monture de monstres : beaucoup de déplacement (Cheval), déplace ses alliés (Lasso allié, Accroche, Foulée, Échange). | Cheval, Chemin, Avancer, Lasso allié \| Cheval, Chemin, Viser allié, Accroche, Avancer \| Cheval, Foulée, Avancer, Viser allié, Échange | 0 % (tous) | 13,0 % Archère (+4,0) | +0,0 / −12,0 / −12,0 |  |
-
-À vérifier à l'écriture : Hypnose ne prend peut-être que la carte suivante (pas `Viser allié, Estoc`) ; Échange ne vise pas (le `Viser allié` devant est peut-être inutile) ; Traque rate sans ennemi fébrile ; Pensée unique est « preneuse ».
-
-### Nouvelle carte : Envol de l'ange (disponible)
-Écrite dans `core/src/games/mecard/sim/card/subs/movement/AngelFlight.ts` (`ANGEL_FLIGHT`, rareté RARE, ajoutée à `ALL_CARDS`). Reste : test d'unité si absent.
-- Effet prévu : se téléporte devant l'allié le plus lointain dans un cercle (rayon à fixer, ex. 6 m), orienté comme lui. Alliés seulement : sans allié dans le cercle, la carte échoue.
-- Calquée sur `Blink` (`card/subs/movement/Blink.ts`, avec `battle.blink`/`blinkSpot`) et sur `Viser allié` (`movement/Orientation.ts`, tri inversé : le plus loin) ; placement « devant lui » comme `Traque`/`Téléportation d'assassin`.
-- À repérer : `ALL_CARDS`, mots-clés dans `base/keywords`. Description française dans le style des autres. Test d'unité.
-
-Règles de conception (mémoire) : doublons/hasard OK ; pas de plafond d'équilibrage ; mécanismes simples ; une carte « preneuse » est suivie de ce qu'elle prend ; taille 2 seulement pour les gros.
-
-## Étapes
-1. Valider noms exacts et imports des cartes (CLI `list cards --desc` + grep des constantes).
-2. ~~Créer la carte Envol de l'ange~~ (faite ; vérifier le test).
-3. Écrire les monstres dans `monsters.ts`.
-4. Sprites : assigner/générer, vérifier l'existence des fichiers.
-5. Sim CLI (`npm run cli -- sim`, voir `command_line/SIM.md`) pour repérer un monstre ridiculement fort ou inerte ; ajuster. Passage complet refait avec Envol de l'ange (186 cas, 18 600 combats, 566 s) ; colonnes « Max » à jour.
-
-## Vérification
-- `npm run cli --silent -- list monsters --desc` : les nouveaux apparaissent.
-- `npm test` (catalogues, Visual, newContent).
-- Lancer le jeu et affronter 2-3 nouveaux monstres pour vérifier sprites et comportements.
+Le journal montre chaque pioche, chaîne, déplacement, blessure et statut. Chercher : cartes ratées ou sans cible, coups hors de portée, mécanique qui ne se déclenche jamais, monstre qui blesse surtout les siens.

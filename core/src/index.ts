@@ -45,13 +45,20 @@ export {
 export type {
     Arg, Command, CommandContext, ConsoleLine, ConsoleLineKind, GroupParsed, LineCheck, ValuesOf,
 } from "./engine/console"
-export { Color, Mat4, Quat, Vec3 } from "./engine/math"
 export {
-    burst, emitAlong, emitInside, emitOutline, MAX_BURST_PARTICLES, motionAt, ParticleBurst, ParticleSpec,
-    ParticleSystem, Rate, reachOf, seededRandom,
+    Color, fractalNoise3, hash32, hashText, hashUnit, jagged, lerp, Mat4, octaveNoise3, outsidePoint, Quat,
+    valueNoise3, Vec3,
+} from "./engine/math"
+export {
+    after, Animator, animationFn, effectFn, once, queue, timed, together,
+} from "./engine/animation"
+export type { Animation, Effect } from "./engine/animation"
+export {
+    burst, emitAlong, emitInside, emitOutline, follow, MAX_BURST_PARTICLES, motionAt, ParticleBurst,
+    ParticleSpec, ParticleSystem, pick, pickTwo, Rate, reachOf, rigid, seededRandom,
 } from "./engine/particles"
 export type {
-    BurstOptions, Fill, Motion, ParticleBounds, ParticleDrawOptions, Random,
+    BurstOptions, Fill, Follower, Motion, Part, ParticleBounds, ParticleDrawOptions, Random,
 } from "./engine/particles"
 export {
     BadSecretFault, ClientSocket, ConnectionLostFault, DEFAULT_CAPACITY, DEFAULT_OPEN_TIMEOUT,
@@ -88,7 +95,7 @@ export {
 export type {
     BubbleOutline, BubbleSide, BubbleSize, BubblePlacement, PopupBubbleFrame, PopupBubbleOptions,
     PopupBubbleTarget,
-    Align, Animation, ArrowScrollOptions, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
+    Align, UiAnimation, ArrowScrollOptions, BoxDirection, BoxOptions, BoxSlot, BubbleOptions, BubbleTarget, ButtonOptions,
     ChoiceOptions, DialLook,
     DropdownOption, ChoiceStep, FitMode, ImageOptions, LabelOptions, MenuEntry, NavigationAxis, NineSliceMargins,
     NineSliceOptions, NumberInputOptions, OverflowContainerOptions, PanelOptions, ParagraphOptions, ParallaxAxes, ParallaxLayer, ParallaxOptions, ParallaxPlace, PopupAnchor, Pose,
@@ -104,7 +111,7 @@ export type {
     ColoredText, ContourPoint, LinkedText, Semantic, Stringable, SvgPath, Text, TextColor, TextDisplay,
     TextSpan,
 } from "./semantic"
-export { startGame } from "./game"
+export { startCosmos, startGame } from "./game"
 export { GAMEPAD_BUTTONS } from "./platform"
 export type {
     AssetsPort, AudioPort, AudioStage, BiquadKind, ClipboardPort, FilterContext, PlayOptions, Sound, GamepadAxis, GamepadButton, GamepadState, GfxPort, InputPort, LoopPort,

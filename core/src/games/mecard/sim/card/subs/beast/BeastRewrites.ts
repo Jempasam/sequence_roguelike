@@ -1,5 +1,6 @@
 import type { Unit } from "../../../battle/Unit"
-import { FUSION, INVOCATION, BATTLE_ROUND } from "../../../base/keywords"
+import { FUSION, BATTLE_ROUND } from "../../../base/keywords"
+import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { Heart } from "../../../heart/Heart"
 import type { Card, RewriteSpot } from "../../Card"
 import { ACTION, BEAST } from "../../CardType"

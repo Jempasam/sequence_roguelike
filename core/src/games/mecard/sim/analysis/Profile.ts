@@ -1,5 +1,6 @@
 import type { Keyword } from "../../../../semantic"
-import { ALLONGE, DISTANCE, FORCE, HEAL, INVOCATION, PORTEE } from "../base/keywords"
+import { ALLONGE, DISTANCE, FORCE, HEAL, PORTEE } from "../base/keywords"
+import { INVOCATION } from "../battle/mecanic/summon/keyword"
 import type { Card } from "../card/Card"
 
 import { featuresOf } from "./CardFeatures"

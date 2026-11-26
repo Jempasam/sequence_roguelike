@@ -9,6 +9,7 @@ import type { StatusType } from "../Status"
 import { doseVariants } from "../StatusVariants"
 import type { DoseType } from "../StatusVariants"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { COLLIDED } from "../../battle/mecanic/walk/signals"
 
 /** A potion coating: the body pours a potion on what it touches. */
 export const POTION_COATING = familyType("enrobage de potion", statusVisual("coated", 0.6, 0.85, 0.75), "positive", {
@@ -44,7 +45,7 @@ export class PotionCoatingStatus extends RoundStatus {
 
     protected plug({ battle, unit }: UnitContext): Observer[] {
         return [
-            battle.signals.collided.add(({ unit: mover, struck }) => {
+            battle.observers.of(COLLIDED).add(({ unit: mover, struck }) => {
                 const other = mover === unit ? struck : struck === unit ? mover : null
                 if(other?.alive) pour(battle, this.dose, other, levelOf(this.dose, unit.owner ?? unit))
             }),

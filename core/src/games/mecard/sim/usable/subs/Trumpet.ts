@@ -2,7 +2,8 @@ import { visual } from "../../base/Visual"
 import type { UnitContext } from "../../battle/Action"
 
 import { AbstractUsable } from "./AbstractUsable"
-import { BATTLE_TURN, INVOCATION } from "../../base/keywords"
+import { BATTLE_TURN } from "../../base/keywords"
+import { INVOCATION } from "../../battle/mecanic/summon/keyword"
 
 /** A trumpet: each ally and summon of its unit plays its next step at once, before its turn. */
 export class Trumpet extends AbstractUsable {

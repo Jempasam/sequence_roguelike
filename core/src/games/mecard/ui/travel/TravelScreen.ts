@@ -390,6 +390,12 @@ export class TravelScreen {
             if(!view || !view.layerRectOf(view.tokenRect(place, this.#anchorArea), this.#anchorArea)) return null
             return this.#centerOfRect(this.#anchorArea)
         },
+        mapArea: () => {
+            const scroll = this.#mapScroll
+            if(!this.visible || !scroll.areaOnLayer(this.#anchorArea)) return null
+            const { x, y, width, height } = this.#anchorArea
+            return { x, y, width, height }
+        },
     }
 
     /** The middle of a component in the interface, none when it is not shown. */

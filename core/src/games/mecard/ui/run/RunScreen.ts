@@ -260,6 +260,7 @@ export class RunScreen {
             },
             heroPortrait: hero => travel.heroPortrait(hero),
             placePosition: place => travel.placePosition(place),
+            mapArea: () => travel.mapArea(),
             pointer: () => ({ x: ui.pointerX, y: ui.pointerY }),
             center: () => ({ x: ui.width / 2, y: ui.height / 2 }),
             size: () => ({ width: ui.width, height: ui.height }),

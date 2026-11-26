@@ -1,4 +1,5 @@
 import type { Vector2 } from "../../../base/Vector2"
+import type { Visual } from "../../../base/Visual"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -26,10 +27,11 @@ export function shotHearts(unit: Unit): number {
 /**
  * Fire one shot of the catalog straight ahead, flying then landing.
  *
+ * @param look - What flies: an arrow, a bullet.
  * @returns The units it hit.
  */
-export function fireShot(battle: Battle, unit: Unit): Unit[] {
+export function fireShot(battle: Battle, unit: Unit, look: Visual): Unit[] {
     const { area, start, end } = shotLine(battle, unit, unit)
     fly(battle, start, end, PHYSICAL_COLOR)
-    return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL)
+    return battle.strike(unit, area, shotHearts(unit), DamageType.PHYSICAL, () => 1, look)
 }

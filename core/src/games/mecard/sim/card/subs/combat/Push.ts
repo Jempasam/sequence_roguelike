@@ -1,14 +1,15 @@
-import { PUSH_BLOCKED_DAMAGE } from "../../../battle/rules"
-import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
+import { NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
-import { shove } from "../tools/shoving"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
+import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
+import { PUSH_DAMAGE } from "../../../battle/mecanic/push/shove"
+import * as Pushing from "../../../battle/mecanic/push"
 import * as Previews from "../../../battle/preview/Previews"
 
 /** How far the push of the catalog moves its target, in meters: a step. */
@@ -17,7 +18,7 @@ const PUSH_DISTANCE = 2
 /** How fast a unit pushed by the push of the catalog goes, in meters per second. */
 const PUSH_SPEED = 6
 
-/** A push of the unit just ahead, hurting it when something stops it. */
+/** A violent push of the unit just ahead. */
 export class PushCard extends ActionCard {
 
 
@@ -29,8 +30,8 @@ export class PushCard extends ActionCard {
         public readonly speed: number,
     ){
         super("Pousser", [
-            "Repousse de ", distance, " ", DISTANCE, " l'", UNIT, " juste devant, à ", TOUCH_RANGE, " ", DISTANCE,
-            ". Arrêtée en route, elle prend ", PUSH_BLOCKED_DAMAGE, " ", DamageType.PHYSICAL, ".",
+            VIOLENT_PUSH.as("Pousse violemment"), " de ", distance, " ", DISTANCE, " l'", UNIT, " juste devant, à ",
+            TOUCH_RANGE, " ", DISTANCE, ". Choc : ", PUSH_DAMAGE, " ", DamageType.PHYSICAL, ".",
         ], Rarity.COMMON, PushCard.#pushing(distance, speed))
     }
 
@@ -44,17 +45,18 @@ export class PushCard extends ActionCard {
                     hold(battle, SHORT_TIME, [Previews.label(unit.position, "personne à pousser", NOTE_COLOR)])
                     return
                 }
-                // Pushed into something before the whole distance, it takes the damage of a blocked push.
-                shove({
-                    battle, by: unit, target, direction: unit.direction, distance, speed, impact: PUSH_BLOCKED_DAMAGE,
+                Pushing.shoveViolently({
+                    battle, by: unit, target, direction: unit.direction, distance, speed, damage: PUSH_DAMAGE,
                 })
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
                 const zone = touchZone(unit, pose)
                 if(!target) return Previews.still(pose, zone, Previews.label(pose.position, "personne à pousser", NOTE_COLOR))
-                const pushed = battle.moveSpot(target, target.position, pose.direction, distance)
-                return Previews.still(pose, zone, ...Previews.strike([], [target]), Previews.arrow([target.position, pushed.to], MOVE_WIDTH, CONTROL_COLOR))
+                const pushed = Pushing.violentShoveShown(battle, {
+                    battle, by: unit, target, direction: pose.direction, distance, damage: PUSH_DAMAGE,
+                })
+                return Previews.still(pose, zone, ...pushed)
             },
         }
     }

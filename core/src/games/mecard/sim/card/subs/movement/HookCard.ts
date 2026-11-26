@@ -11,7 +11,8 @@ import { ROOTED } from "../../../status/subs/Rooted"
 
 import { ActionCard } from "../ActionCard"
 import { BOLT_WIDTH, fly } from "../tools/bolt"
-import { hold, SHORT_TIME, travel } from "../tools/playing"
+import { hold, SHORT_TIME } from "../tools/playing"
+import * as Walk from "../../../battle/mecanic/walk"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT, BATTLE_TURN } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
@@ -109,7 +110,7 @@ export class HookCard extends ActionCard {
                 }
                 const forced = caught.pulled !== unit
                 const theirs = { battle, unit: caught.pulled }
-                travel(theirs, caught.way, caught.distance, PULL_SPEED, forced)
+                Walk.travel(theirs, caught.way, caught.distance, PULL_SPEED, forced)
                 if(forced && roots > 0) battle.applyStatus(caught.pulled, ROOTED, roots)
             },
             preview: ({ battle, unit, pose }) => {
@@ -120,7 +121,7 @@ export class HookCard extends ActionCard {
                 const reached = Previews.strike([area], pulled && pulled !== unit ? [pulled] : [])
                 if(!pulled) return Previews.still(pose, ...reached, rope, Previews.label(pose.position, "rien à accrocher", NOTE_COLOR))
                 const from = pulled === unit ? pose.position : pulled.position
-                const pull = battle.moveSpot(pulled, from, caught.way, caught.distance)
+                const pull = Walk.spot(battle, pulled, from, caught.way, caught.distance)
                 if(pulled !== unit){
                     return Previews.still(pose, ...reached, rope, Previews.arrow([from, pull.to], MOVE_WIDTH, CONTROL_COLOR))
                 }

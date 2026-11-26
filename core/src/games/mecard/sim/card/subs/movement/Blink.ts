@@ -8,6 +8,8 @@ import { ActionCard } from "../ActionCard"
 import { hold, wait } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import { BLINKING } from "../../../battle/mecanic/blink/keyword"
+import * as Blink from "../../../battle/mecanic/blink"
 
 /** How far the blink of the catalog jumps, in meters, before the move factor of the unit: a dash. */
 const BLINK_LENGTH = 3
@@ -23,7 +25,7 @@ export class BlinkCard extends ActionCard {
         /** How far it jumps, in meters, before the move factor of the unit. */
         public readonly length: number,
     ){
-        super("Blink", ["Se téléporte de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout."], Rarity.RARE, BlinkCard.#blink(length))
+        super("Blink", [BLINKING.as("Cligne"), " de ", length, "×", AGILITE, " ", DISTANCE, " devant, par-dessus tout."], Rarity.RARE, BlinkCard.#blink(length))
     }
 
 
@@ -35,14 +37,10 @@ export class BlinkCard extends ActionCard {
             use: function ({ battle, unit }){
                 const to = target(unit, unit)
                 hold(battle, BLINK_TIME, [Previews.arrow([unit.position, to], MOVE_WIDTH / 2, MOVE_COLOR)])
-                battle.blink(unit, to)
+                Blink.blink(battle, unit, to)
                 wait(battle, BLINK_TIME)
             },
-            preview: ({ battle, unit, pose }) => {
-                const to = target(unit, pose)
-                const landing = battle.blinkSpot(unit, pose.position, to)
-                return Previews.still({ ...pose, position: landing }, ...Previews.moving(unit, pose.position, to, landing, MOVE_WIDTH / 2))
-            },
+            preview: ({ battle, unit, pose }) => Blink.blinkShown(battle, unit, pose, target(unit, pose)),
         }
     }
 }

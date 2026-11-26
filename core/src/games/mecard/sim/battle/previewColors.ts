@@ -6,7 +6,10 @@ import { rgba } from "../base/Rgba"
 /** A move, a turn. */
 export const MOVE_COLOR = rgba(0.15, 0.5, 0.9, 0.9)
 
-/** How far a move would go with nothing in the way, under the move itself: a grey arrow. */
+/**
+ * How far a move would go with nothing in the way, under the move itself: a grey arrow. Also where a shot
+ * may go: a grey line.
+ */
 export const POTENTIAL_COLOR = rgba(0.5, 0.5, 0.55, 0.6)
 
 /** Where a unit stands after a move: its body, a blue disc. */

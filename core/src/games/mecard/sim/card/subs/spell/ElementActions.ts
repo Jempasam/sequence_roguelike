@@ -11,21 +11,19 @@ import { ACTION, ELEMENT } from "../../CardType"
 import { enchantmentOf } from "../../../status/subs/EnchantedBlade"
 
 import { AbstractCard } from "../AbstractCard"
-import { BOLT_WIDTH, fly } from "../tools/bolt"
+import { BOLT_WIDTH, spellLook } from "../tools/bolt"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { DISTANCE, PORTEE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
+import { DamageType } from "../../../battle/DamageType"
 
 /** How far the small spell of the catalog reaches, in meters, before the reach of the unit. */
 const SMALL_SPELL_RANGE = 6 - UNIT_RADIUS
 
 /** How far ahead of the edge of the unit the conjuration of the catalog calls its element, in meters. */
 const CONJURATION_AHEAD = 1.5 - UNIT_RADIUS
-
-/** How opaque a bolt of an element shows. */
-const BOLT_OPACITY = 0.5
 
 /** How opaque the spot of a conjuration shows. */
 const SPOT_OPACITY = 0.3
@@ -81,25 +79,22 @@ export const ELEMENT_ON_BLADE = new ElementActionCard("Élément sur lame", [
 /** The negative of the element on the first body far ahead, without a wound. */
 export const SMALL_SPELL = new ElementActionCard("Petit sort", [
     "Tire l'élément jusqu'à ", SMALL_SPELL_RANGE, "×", PORTEE, " ", DISTANCE, " devant : son négatif à la première ", UNIT, ".",
-], Rarity.COMMON, element => {
-    const color = { ...element.color, a: BOLT_OPACITY }
-    return {
-        use: function (ctx){
-            const { battle, unit } = ctx
-            const { start, end, unit: hit } = battle.ray(unit, SMALL_SPELL_RANGE * unit.stats.throwRange.value)
-            fly(battle, start, end, color)
-            if(hit) element.applyNegative(ctx, hit)
-        },
-        preview: ({ battle, unit, pose }) => {
-            const range = SMALL_SPELL_RANGE * unit.stats.throwRange.value
-            const { start, end, unit: target } = battle.ray(unit, range, pose)
-            const path: Area = Areas.line(start, end, BOLT_WIDTH)
-            const reached = Previews.strike([path], target ? [target] : [])
-            if(!target) return Previews.still(pose, ...reached)
-            return Previews.still(pose, ...reached, Previews.label(target.position, element.word, NOTE_COLOR))
-        },
-    }
-})
+], Rarity.COMMON, element => ({
+    use: function (ctx){
+        const { battle, unit } = ctx
+        const { start, end, unit: hit } = battle.ray(unit, SMALL_SPELL_RANGE * unit.stats.throwRange.value)
+        battle.showBlow(unit, Areas.line(start, end, BOLT_WIDTH), DamageType.ELEMENTAL, spellLook(element))
+        if(hit) element.applyNegative(ctx, hit)
+    },
+    preview: ({ battle, unit, pose }) => {
+        const range = SMALL_SPELL_RANGE * unit.stats.throwRange.value
+        const { start, end, unit: target } = battle.ray(unit, range, pose)
+        const path: Area = Areas.line(start, end, BOLT_WIDTH)
+        const reached = Previews.strike([path], target ? [target] : [])
+        if(!target) return Previews.still(pose, ...reached)
+        return Previews.still(pose, ...reached, Previews.label(target.position, element.word, NOTE_COLOR))
+    },
+}))
 
 /** What the element calls, a little ahead. */
 export const CONJURATION = new ElementActionCard("Conjuration", [

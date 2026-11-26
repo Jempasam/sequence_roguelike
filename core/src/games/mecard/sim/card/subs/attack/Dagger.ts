@@ -11,6 +11,7 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
+import { THRUST_LOOK } from "../tools/blowLooks"
 
 /** How far the dagger of the catalog reaches, in meters: shorter than a thrust. */
 export const DAGGER_RANGE = 1.1 - UNIT_RADIUS
@@ -33,6 +34,8 @@ export function inTheBack(target: Unit, attacker: Unit): boolean {
 /** A short stab ahead, through everything on its line, twice as hard in the back. */
 export class DaggerCard extends BlowCard {
 
+
+    public override readonly look = THRUST_LOOK
 
     constructor(
         name: string, description: Text, rarity: Rarity,
@@ -58,7 +61,8 @@ export class DaggerCard extends BlowCard {
 
     protected override land(battle: Battle, unit: Unit, area: Area): Unit[] {
         const amount = this.damage + this.bonus(unit.stats)
-        return battle.strike(unit, area, amount, DamageType.PHYSICAL, target => this.scale(target, unit))
+        const scale = (target: Unit): number => this.scale(target, unit)
+        return battle.strike(unit, area, amount, DamageType.PHYSICAL, scale, this.look)
     }
 
     /** How many times it hurts a unit: more in the back. */

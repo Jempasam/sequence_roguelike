@@ -7,6 +7,7 @@ import type { ChainSummonCard } from "../../card/subs/summon/ChainSummons"
 
 import { AbstractUsable } from "./AbstractUsable"
 import { BATTLE_ROUND } from "../../base/keywords"
+import { INVOCATION } from "../../battle/mecanic/summon/keyword"
 
 /** Every beast as a body it summons by itself, made once. */
 const BEASTS: readonly ChainSummonCard[] = BEAST_CARDS.map(({ beast }) => summonCardOf(beast, beast, beast))
@@ -18,7 +19,7 @@ export class MagicHat extends AbstractUsable {
     constructor(){
         super(
             "Chapeau magique", visual("usables/magic_hat"),
-            ["Invoque devant toi une bête tirée au hasard, qui joue chaque ", BATTLE_ROUND, ". 6 utilisations."],
+            [INVOCATION.as("Invoque"), " devant toi une bête tirée au hasard, qui joue chaque ", BATTLE_ROUND, ". 6 utilisations."],
             { charges: 6 },
         )
     }

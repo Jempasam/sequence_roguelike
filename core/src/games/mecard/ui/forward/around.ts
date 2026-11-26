@@ -1,10 +1,10 @@
 import { instant } from "../../../../engine/ui"
-import type { Animation, AnimationChain } from "../../../../engine/ui"
+import type { UiAnimation, AnimationChain } from "../../../../engine/ui"
 import type { Observer } from "../../sim/base/Observable"
 import type { AnyObservable, ForwardPhase, Forwarded } from "./Forwarded"
 
 /** What holds the animations of the events of some observables, before they are forwarded. */
-export type Holds = ReadonlyMap<AnyObservable, Animation>
+export type Holds = ReadonlyMap<AnyObservable, UiAnimation>
 
 /**
  * Forward each event of some observables to a chain, an animation of its own before what a screen adds for
@@ -57,6 +57,6 @@ function telling(
     observable: AnyObservable,
     value: unknown,
     phase: ForwardPhase,
-): Animation {
+): UiAnimation {
     return instant(() => forwarded.forward(observable, value, phase))
 }

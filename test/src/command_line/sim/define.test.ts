@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest"
 import { ALL_KITS, GOBLIN, KIT_HEARTS } from "@game/core/mecard"
-import type { Monster } from "@game/core/mecard"
 import { parseDefinition, UsageError } from "@game/command_line/sim"
-import type { DefinedKit } from "@game/command_line/sim"
+import type { DefinedKit, DefinedMonster } from "@game/command_line/sim"
 
 // --- Fixture builders ---
 
@@ -14,7 +13,7 @@ function kitOf(text: string): DefinedKit {
 }
 
 /** The monster a definition makes. */
-function monsterOf(text: string): Monster {
+function monsterOf(text: string): DefinedMonster {
     const made = parseDefinition(text, "--match")
     if("kit" in made) throw new Error("A kit was made, not a monster.")
     return made
@@ -109,6 +108,18 @@ describe("parseDefinition", () => {
         expect(refused("M=Avancer,heart:rouge*3,size:2")).toContain("draw:N")
     })
 
+    test("item and usable on a monster → carried, with counts", () => {
+        const made = monsterOf("M=Avancer,heart:rouge*3,draw:1,item:Grimoire,usable:Cocaine*2")
+        expect(made.items?.map(item => item.name)).toEqual(["Grimoire"])
+        expect(made.usables.map(usable => usable.name)).toEqual(["Cocaïne", "Cocaïne"])
+    })
+
+    test("a monster base with items → kept, and one can be removed", () => {
+        const kept = monsterOf("H+=@Hydre phénix,item:Grimoire")
+        expect(kept.items?.map(item => item.name)).toEqual(["Cœur de phénix", "Grimoire"])
+        expect(monsterOf("H-=@Hydre phénix,-item:Cœur de phénix").items).toEqual([])
+    })
+
     test("a name of the game → a definition of its own, it does not replace the one of the game", () => {
         expect(kitOf("Piquier=Avancer,Estoc").kit.cards).toHaveLength(2)
         expect(ALL_KITS.find(kit => kit.name === "Piquier")?.cards.length).toBeGreaterThan(2)
@@ -119,7 +130,6 @@ describe("parseDefinition", () => {
         expect(refused("T=Avancer,item:Grimiore")).toContain("« Grimoire »")
         expect(refused("T=Avancer,usable:Cocane")).toContain("« Cocaïne »")
         expect(refused("T=@Piquer")).toContain("« Piquier »")
-        expect(refused("T=@Gobelin,item:Grimoire")).toContain("item: refusé sur un monstre")
         expect(refused("T=Avancer*0")).toContain("après * un nombre entre 1 et 99")
         expect(refused("T=Avancer,,Estoc")).toContain("élément vide")
         expect(refused("T=@Piquier,@Mage")).toContain("une seule base @")

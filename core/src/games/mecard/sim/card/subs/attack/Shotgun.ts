@@ -2,6 +2,7 @@ import { frenchNumber } from "../../../battle/words"
 import { DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Vector2 } from "../../../base/Vector2"
+import { BULLET_LOOK } from "../tools/blowLooks"
 import type { Action } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import { UNIT_RADIUS } from "../../../battle/Unit"
@@ -85,7 +86,7 @@ export class ShotgunCard extends ActionCard {
                 })
                 for(const line of lines){
                     const pellet = pelletDamage + unit.stats.precision.value
-                    battle.strike(unit, segment(line, 1), pellet, DamageType.PHYSICAL)
+                    battle.strike(unit, segment(line, 1), pellet, DamageType.PHYSICAL, () => 1, BULLET_LOOK)
                 }
                 const landed = lines.map(line => Previews.polygon(segment(line, 1), PHYSICAL_COLOR))
                 hold(battle, RECOVERY_TIME, landed)

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { Atlas, Gpu, Painter, ScreenSurface } from "@game/core"
-import type { AtlasOptions, PixelData } from "@game/core"
+import { Atlas } from "@game/core-src/engine/atlas/Atlas"
+import { Gpu } from "@game/core-src/engine/gpu/Gpu"
+import { Painter } from "@game/core-src/engine/gpu/Painter"
+import { ScreenSurface } from "@game/core-src/engine/gpu/ScreenSurface"
+import type { AtlasOptions } from "@game/core-src/engine/atlas/PagedAtlas"
+import type { PixelData } from "@game/core-src/engine/image/PixelData"
 
 import { fakeGfx, fakeGl } from "../../fixtures/fakeGl"
 import type { FakeGl } from "../../fixtures/fakeGl"

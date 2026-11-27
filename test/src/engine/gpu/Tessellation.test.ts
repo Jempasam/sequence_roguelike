@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { arcShape, curveSegmentsOf, multiLineShape, polygonShape, Shape, thickLineShape } from "@game/core"
+import {
+    arcShape,
+    curveSegmentsOf,
+    multiLineShape,
+    polygonShape,
+    Shape,
+    thickLineShape,
+} from "@game/core-src/engine/gpu/Tessellation"
 
 // --- Fixture builders ---
 

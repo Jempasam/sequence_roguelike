@@ -1,12 +1,26 @@
 import { describe, expect, test } from "vitest"
+import { analysisOf } from "@game/core-src/games/mecard/sim/analysis/analysisOf"
+import { explain, readCard } from "@game/core-src/games/mecard/sim/analysis/explain"
 import {
-    AIM, ALL_CARDS, ALL_MONSTERS, analysisOf, BEAST_KIND, convert, ELEMENT_TARGET, explain, FUSION_TARGET,
-    GOBLIN, KINDS, MAIN_PROFILE, MODULE_KIND, MONSTER_KIND, PET_KIND, PROFILES, readCard, STEP, TARGETS,
-    THRUST, WOLF,
-} from "@game/core/mecard"
-import type { Card, Kind } from "@game/core/mecard"
+    BEAST_KIND,
+    convert,
+    KINDS,
+    MODULE_KIND,
+    MONSTER_KIND,
+    PET_KIND,
+} from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { MAIN_PROFILE, PROFILES } from "@game/core-src/games/mecard/sim/analysis/Profile"
+import { ELEMENT_TARGET, FUSION_TARGET, TARGETS } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_MONSTERS, GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { WOLF } from "@game/core-src/games/mecard/sim/catalog/pets"
+import type { Kind } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 import { bestRun, windows } from "@game/core/mecard/ordered-chains"
-import { featuresOf } from "@game/core/mecard"
+import { featuresOf } from "@game/core-src/games/mecard/sim/analysis/CardFeatures"
 
 // --- Fixture builders ---
 

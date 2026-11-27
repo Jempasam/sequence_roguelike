@@ -12,8 +12,24 @@ const SIDE = 12
 /** How far past the sides what falls from the top may be born. */
 const OVERHANG = 20
 
+/** The most times more things are born than at scale 1, however far the space is seen from. */
+export const MAX_DENSITY = 2
+
+/**
+ * How many times more things are born at a scale, for a spot to look the same: much fewer seen close, more
+ * seen from far, up to {@link MAX_DENSITY}.
+ *
+ * @param dimensions - The ones of the {@link Spot} they are born in.
+ */
+export function densityAt(scale: number, dimensions: Spot["dimensions"]): number {
+    return Math.min(MAX_DENSITY, scale ** -dimensions)
+}
+
 /** Where the things of a scene are born. */
 export interface Spot {
+    /** How it spreads over the space: 0 for the point of a place, 1 for an edge, 2 for a surface. */
+    readonly dimensions: 0|1|2
+
     /** Whether the map holds what the spot needs. */
     playable(context: AmbientContext): boolean
 
@@ -22,8 +38,9 @@ export interface Spot {
 }
 
 /** A spot of the screen alone, which every map holds. */
-function anywhere(point: (context: AmbientContext) => Point): Spot {
+function anywhere(dimensions: Spot["dimensions"], point: (context: AmbientContext) => Point): Spot {
     return {
+        dimensions,
         playable: () => true,
         open: context => () => point(context),
     }
@@ -31,7 +48,7 @@ function anywhere(point: (context: AmbientContext) => Point): Spot {
 
 /** Above the screen, all along its width. */
 export function topEdge(): Spot {
-    return anywhere(context => {
+    return anywhere(1, context => {
         const { width } = context.size()
         return { x: context.random() * (width + OVERHANG * 2) - OVERHANG, y: -TOP }
     })
@@ -39,14 +56,14 @@ export function topEdge(): Spot {
 
 /** Past the left side of the screen, between two shares of its height. */
 export function sideEdge(low = 0, high = 1): Spot {
-    return anywhere(context => {
+    return anywhere(1, context => {
         return { x: -SIDE, y: context.size().height * between(context.random, [low, high]) }
     })
 }
 
 /** Anywhere on the screen. */
 export function screen(): Spot {
-    return anywhere(context => {
+    return anywhere(2, context => {
         const { width, height } = context.size()
         return { x: context.random() * width, y: context.random() * height }
     })
@@ -55,7 +72,7 @@ export function screen(): Spot {
 /** A band of the map shown, between two shares of its height. */
 export function band(low: number, high: number): Spot {
     const share: Range = [low, high]
-    return anywhere(context => {
+    return anywhere(2, context => {
         const area = context.area()
         return {
             x: area.x + context.random() * area.width,
@@ -76,6 +93,7 @@ export interface PlaceOffset {
 /** Beside one of the places, drawn once for a play. */
 export function atPlace(places: Places, offset: PlaceOffset = {}): Spot {
     return {
+        dimensions: 0,
         playable: context => places(context).length > 0,
         open(context){
             const stops = places(context)

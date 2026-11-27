@@ -1,6 +1,7 @@
 import { KeywordWord } from "../../../../semantic"
 import type { Picture, Semantic, Shown, TextColor } from "../../../../semantic"
 import { DISTANCE, GOLD, HEART } from "../../sim/base/keywords"
+import { numberText } from "../../sim/base/text"
 import { DamageType } from "../../sim/battle/DamageType"
 import { AbstractProcess } from "../../sim/process/AbstractProcess"
 import { StatusType } from "../../sim/status/Status"
@@ -54,9 +55,10 @@ function namedBy(value: object): Shown|undefined {
 /**
  * How the interface reads the texts of the simulation, which only say what they mean: a heart, a damage and
  * gold are drawn, a keyword stands out, and what has an explanation links to itself. Anything else tells
- * itself.
+ * itself. A number is written rounded, its decimals after a comma, `1,3`.
  */
-export function mecardDisplay(value: object): Shown|undefined {
+export function mecardDisplay(value: object|number): Shown|undefined {
+    if(typeof value === "number") return numberText(value).replace(".", ",")
     if(value instanceof DamageType){
         const color = DAMAGE_COLORS.get(value) ?? KEYWORD_TEXT
         return { link: value, text: { color, text: icon(DAMAGE_ICON, value.label) } }

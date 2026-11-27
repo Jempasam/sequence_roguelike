@@ -1,9 +1,28 @@
 import { describe, expect, test } from "vitest"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { CHARGED_SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Volleys"
+import { BOW_MODULE, ModuleCard } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
 import {
-    ARMOR_PLATING, BOW_MODULE, CHARGED_SHOT, DELAYED_CHARGE, HOMING_HEAD, IMPROVISED_ROBOT, INVERTER, MIRROR,
-    MODULE_CORE, MODULE_MIXER, ModuleCard, RECYCLING, REPEATER, SPYGLASS_CARD, THRUST, THRUSTERS, TURBO, WAIT,
-} from "@game/core/mecard"
-import type { Card, Module, Unit } from "@game/core/mecard"
+    ARMOR_PLATING,
+    HOMING_HEAD,
+    INVERTER,
+    MODULE_CORE,
+    MODULE_MIXER,
+    RECYCLING,
+    REPEATER,
+    THRUSTERS,
+    TURBO,
+} from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleModifiers"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import {
+    DELAYED_CHARGE,
+    MIRROR,
+    SPYGLASS_CARD,
+} from "@game/core-src/games/mecard/sim/card/subs/modifier/Wrappers"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Module } from "@game/core-src/games/mecard/sim/card/CardType"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

@@ -1,4 +1,4 @@
-import { signalingAt } from "@game/core"
+import { signalingAt } from "@game/core-src/engine/net/signalingAt"
 import { describe, expect, test } from "vitest"
 
 import { nodeNet } from "../../fixtures/netServer"

@@ -4,8 +4,9 @@ import { RED_HEART } from "../../../heart/subs/RedHeartKind"
 import { concat } from "../../../../../../semantic"
 import type { Hero } from "../../../run/Hero"
 import { distinct, INVENTED_COUNTS } from "../../../run/offers"
-import { heartLootText, SPENT_LOOT_HEARTS } from "../../../run/Run"
-import type { HeartLoot, Run } from "../../../run/Run"
+import { heartLootText, SPENT_LOOT_HEARTS } from "../../../run/heartLoot"
+import type { HeartLoot } from "../../../run/heartLoot"
+import type { Run } from "../../../run/Run"
 import type { HaltContext } from "../../HaltContext"
 import type { HaltType } from "../../HaltType"
 import { sceneLook } from "../../SceneLook"
@@ -28,7 +29,7 @@ export class GreatHospitalHalt extends AbstractHalt {
                 "Allongez-vous : je soigne vos ", HEART.as("cœurs"), " ", RED_HEART, ", et chacun repart avec trois fois le ",
                 HEART, " qu'il choisit.",
             ],
-            sceneLook(18, 33, 41, "hospital", { coloration: [1, 0.88, 0.62] }),
+            sceneLook(18, 41, 40, "hospital", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.9, 0.95, 1),

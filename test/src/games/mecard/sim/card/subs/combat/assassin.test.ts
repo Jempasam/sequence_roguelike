@@ -1,9 +1,17 @@
 import { describe, expect, test } from "vitest"
-import {
-    BLOODLUST, BLOODLUST_CARD, BLOODLUST_STRIDE, Heart, LEAP, loadBattle, MINE, placeMine,
-    RED_HEART, saveBattle, SHADOW,
-    STEP, TURNS, Vector2, WAIT,
-} from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { BLOODLUST_CARD } from "@game/core-src/games/mecard/sim/card/subs/combat/Bloodlust"
+import { MINE } from "@game/core-src/games/mecard/sim/card/subs/combat/Bomb"
+import { SHADOW } from "@game/core-src/games/mecard/sim/card/subs/combat/Shadow"
+import { LEAP } from "@game/core-src/games/mecard/sim/card/subs/movement/Leap"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { placeMine } from "@game/core-src/games/mecard/sim/hazard/subs/Mine"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { loadBattle, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { BLOODLUST, BLOODLUST_STRIDE } from "@game/core-src/games/mecard/sim/status/subs/Bloodlust"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
 

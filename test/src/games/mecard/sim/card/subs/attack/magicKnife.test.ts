@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { MAGIC_KNIFE } from "@game/core/mecard"
+import { MAGIC_KNIFE } from "@game/core-src/games/mecard/sim/card/subs/attack/MagicKnife"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

@@ -1,8 +1,23 @@
-import {
-    BitmapFont, Color, Component, Gpu, InputSystem, NineSlice, Rect, ScreenSurface, sizeHint, Sprite, Stack,
-    Texture, UiRoot,
-} from "@game/core"
-import type { InputFrame, Layer, Painter, SizeHint, StateLooks, Theme, UiEvent, UiRootOptions } from "@game/core"
+import { Gpu } from "@game/core-src/engine/gpu/Gpu"
+import { ScreenSurface } from "@game/core-src/engine/gpu/ScreenSurface"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
+import { InputSystem } from "@game/core-src/engine/input/InputSystem"
+import { Color } from "@game/core-src/engine/math/Color"
+import { BitmapFont } from "@game/core-src/engine/text/BitmapFont"
+import { Component } from "@game/core-src/engine/ui/Component"
+import { Stack } from "@game/core-src/engine/ui/layout/Stack"
+import { NineSlice } from "@game/core-src/engine/ui/NineSlice"
+import { Rect } from "@game/core-src/engine/ui/Rect"
+import { sizeHint } from "@game/core-src/engine/ui/SizeHint"
+import { UiRoot } from "@game/core-src/engine/ui/UiRoot"
+import type { Painter } from "@game/core-src/engine/gpu/Painter"
+import type { InputFrame } from "@game/core-src/engine/input/InputFrame"
+import type { UiEvent } from "@game/core-src/engine/ui/input/UiEvent"
+import type { Layer } from "@game/core-src/engine/ui/Layer"
+import type { SizeHint } from "@game/core-src/engine/ui/SizeHint"
+import type { StateLooks, Theme } from "@game/core-src/engine/ui/Theme"
+import type { UiRootOptions } from "@game/core-src/engine/ui/UiRoot"
 
 import { fakeGfx, fakeGl } from "./fakeGl"
 import type { FakeGl } from "./fakeGl"
@@ -30,6 +45,13 @@ export interface UiSetup {
 
     /** Read the port into a frame, and give it to the interface. */
     frame(): InputFrame
+}
+
+/** An interface on a fake GPU with no layer, for a game that makes its own, and its theme. */
+export function bareUiSetup(width = 320, height = 180): { readonly ui: UiRoot, readonly theme: Theme } {
+    painted.length = 0
+    const gpu = new Gpu(fakeGfx(fakeGl().gl, width, height))
+    return { ui: new UiRoot(gpu, new ScreenSurface(gpu), { scale: 1 }), theme: testTheme(gpu) }
 }
 
 export function uiSetup(options: UiRootOptions = {}, width = 320, height = 180): UiSetup {

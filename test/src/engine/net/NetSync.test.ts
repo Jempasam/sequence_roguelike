@@ -1,7 +1,10 @@
-import {
-    Fault, ManualScheduler, NetSync, NotHostFault, PTPClientSocket, RoomNotFoundFault, SessionClient,
-} from "@game/core"
-import type { SyncPeer } from "@game/core"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { NotHostFault, RoomNotFoundFault } from "@game/core-src/engine/net/NetFaults"
+import { NetSync } from "@game/core-src/engine/net/NetSync"
+import { PTPClientSocket } from "@game/core-src/engine/net/PTPClientSocket"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { SessionClient } from "@game/core-src/engine/net/SessionClient"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
 import { nextMessage, nodeNet, signalingOf, startNetServer } from "../../fixtures/netServer"

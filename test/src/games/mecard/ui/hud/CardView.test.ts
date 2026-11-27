@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { STEP, TURNS, UNIVERSAL_ELEMENTS, WALKS } from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WALKS } from "@game/core-src/games/mecard/sim/card/subs/movement/WalkCard"
+import { UNIVERSAL_ELEMENTS } from "@game/core-src/games/mecard/sim/card/subs/spell/UniversalElementCard"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 import { CardView } from "@game/core/mecard/card-view"
 import type { CardPlace } from "@game/core/mecard/card-view"
 

@@ -1,8 +1,18 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { SHADOW } from "@game/core-src/games/mecard/sim/card/subs/combat/Shadow"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 import {
-    BLUE_HEART, Hook, IronChain, LaserLink, SHADOW, SPIRIT_ANCHOR, SPIRIT_PROJECTION, STEP, Vector2,
-} from "@game/core/mecard"
-import type { Battle, Tether, Unit } from "@game/core/mecard"
+    SPIRIT_ANCHOR,
+    SPIRIT_PROJECTION,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/SpiritCards"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { Hook, IronChain, LaserLink } from "@game/core-src/games/mecard/sim/process/subs/Links"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import * as Turn from "@game/core-src/games/mecard/sim/battle/mecanic/turn"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Tether } from "@game/core-src/games/mecard/sim/battle/signals"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../fixtures"
 
@@ -67,9 +77,9 @@ describe("Hook", () => {
         unit(on, 1, 1, { team: MONSTERS })
         executing(on)
         on.startProcess(hero, new Hook(ally, 1.5))
-        on.move(hero, Vector2.UP, 1)
+        Walk.move(on, hero, Vector2.UP, 1)
         expectAt(ally, 4, 4)
-        on.turn(hero, Vector2.RIGHT)
+        Turn.turn(on, hero, Vector2.RIGHT)
         expectAt(ally, 3, 5)
         // It faced as the unit did: it faces as the unit does.
         expect(ally.direction.x).toBeCloseTo(1)
@@ -83,7 +93,7 @@ describe("Hook", () => {
         unit(on, 1, 1, { team: MONSTERS })
         executing(on)
         on.startProcess(hero, new Hook(ally, 1.5))
-        on.move(hero, Vector2.UP, 2)
+        Walk.move(on, hero, Vector2.UP, 2)
         expect(hero.processes).toEqual([])
     })
 })

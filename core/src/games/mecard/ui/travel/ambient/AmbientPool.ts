@@ -57,17 +57,27 @@ export class AmbientPool {
         this.#countdown = this.#wait()
 
         // DRAW //
-        if(this.#animator.playing >= this.maxPlaying) return
+        this.draw(context)
+    }
+
+    /**
+     * Start one of the effects that may, drawn by weight, whatever the wait: the limit and the spacings are
+     * kept.
+     *
+     * @returns Did one start?
+     */
+    public draw(context: AmbientContext): boolean {
+        if(this.#animator.playing >= this.maxPlaying) return false
         const candidates = this.effects.filter(effect => {
             return this.#available(effect) && effect.isPlayable(context)
         })
         const weights = candidates.map(effect => Math.max(0, effect.weight(context)))
         const total = weights.reduce((sum, weight) => sum + weight, 0)
-        if(total <= 0) return
+        if(total <= 0) return false
         let pick = this.random() * total
         let chosen = weights.findIndex(weight => (pick -= weight) < 0)
         if(chosen < 0) chosen = weights.length - 1
-        this.#start(candidates[chosen], context)
+        return this.#start(candidates[chosen], context)
     }
 
     /**
@@ -82,11 +92,15 @@ export class AmbientPool {
         })
     }
 
-    /** End what plays and forget the spacings. */
+    /**
+     * End what plays.
+     *
+     * @remarks
+     * The wait left and the spacings are kept: they only run out while the pool is updated, so a rare effect
+     * still comes in a run of short visits of a space.
+     */
     public stop(): void {
         this.#animator.stop()
-        this.#ready.clear()
-        this.#countdown = this.#wait()
     }
 
 

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { OVERHEATED, OVERHEAT_CARD } from "@game/core/mecard"
+import { OVERHEAT_CARD } from "@game/core-src/games/mecard/sim/card/subs/combat/OverheatCard"
+import { OVERHEATED } from "@game/core-src/games/mecard/sim/status/subs/Overheat"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 

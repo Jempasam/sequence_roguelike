@@ -1,4 +1,4 @@
-import { BATTLE_ROUND } from "../../../base/keywords"
+import { BATTLE_ROUND, ITEM } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 import { HeartCount } from "../../../battle/words"
@@ -71,7 +71,7 @@ export class PlumbLine extends AbstractItem {
     constructor(){
         super("Fil à plomb", visual("items/plumb_line"), [
             "Début du combat : si tu avais moins de ", new HeartCount(1), " ", SHIELD_HEART,
-            " avant l'exécution des objets, gagne ", new HeartCount(1), " ", SHIELD_HEART, ".",
+            " avant l'exécution des ", ITEM.as("objets"), ", gagne ", new HeartCount(1), " ", SHIELD_HEART, ".",
         ])
     }
 

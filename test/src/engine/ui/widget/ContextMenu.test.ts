@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { ActionMap, ContextMenu, key, mouse } from "@game/core"
-import type { InputFrame } from "@game/core"
+import { ActionMap } from "@game/core-src/engine/input/ActionMap"
+import { key, mouse } from "@game/core-src/engine/input/Binding"
+import { ContextMenu } from "@game/core-src/engine/ui/widget/ContextMenu"
+import type { InputFrame } from "@game/core-src/engine/input/InputFrame"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

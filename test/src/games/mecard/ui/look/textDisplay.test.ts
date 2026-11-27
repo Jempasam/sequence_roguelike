@@ -1,14 +1,72 @@
 import { describe, expect, test } from "vitest"
-import { plainText, spansOf } from "@game/core"
-import type { Text } from "@game/core"
+import { plainText, spansOf } from "@game/core-src/semantic/Text"
+import type { Text } from "@game/core-src/semantic/Text"
 import {
-    AGILITE, ALLONGE, FEBRILE, ALL_CARDS, CARTE, FUSION, CHARGE, DamageType, DECK, DISTANCE, FORCE, FusionCard, allHalts, HEART,
-    HeartCount, ALL_ITEMS, MERGE, PORTEE, PRECISION, RED_HEART, SLASH, SUPPRESSION, THRUST, UNIT, ALL_USABLES,
-    UNSTABLE_THRUST, STATUS_TYPES, ALL_BOOSTERS, ALL_HAZARDS, GOLD, GoldCount, BATTLE_ROUND, BATTLE_TURN,
-    TRAVEL_STEP, BURN, BASE_ELEMENTS, ACTION, PREPARATION, ELEMENT, POTION, CARD, SECRET, MODULE, BEAST,
-    ALL_FLOORS, ALL_KITS, ALL_UPGRADES, ALL_MONSTERS, ALL_FIGHT_CATEGORIES, HALT, MONSTER, PET, ADVENTURER,
-    UPGRADE, ITEM, USABLE, BOOSTER, FIGHT, FLOOR, REWARD, HEAL, SUMMON_STAT, ALCHEMY, ELEMENT_CARDS,
-} from "@game/core/mecard"
+    AGILITE,
+    ALLONGE,
+    FEBRILE,
+    CARTE,
+    FUSION,
+    DECK,
+    DISTANCE,
+    FORCE,
+    HEART,
+    MERGE,
+    PORTEE,
+    PRECISION,
+    SUPPRESSION,
+    UNIT,
+    GOLD,
+    BATTLE_ROUND,
+    BATTLE_TURN,
+    TRAVEL_STEP,
+    HALT,
+    MONSTER,
+    PET,
+    ADVENTURER,
+    UPGRADE,
+    ITEM,
+    USABLE,
+    BOOSTER,
+    FIGHT,
+    FLOOR,
+    REWARD,
+    HEAL,
+    SUMMON_STAT,
+    ALCHEMY,
+} from "@game/core-src/games/mecard/sim/base/keywords"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import { HeartCount, GoldCount } from "@game/core-src/games/mecard/sim/battle/words"
+import {
+    ACTION,
+    PREPARATION,
+    ELEMENT,
+    POTION,
+    CARD,
+    SECRET,
+    MODULE,
+    BEAST,
+} from "@game/core-src/games/mecard/sim/card/CardType"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard, UNSTABLE_THRUST } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { CHARGE } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { ELEMENT_CARDS } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { ALL_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { allHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { ALL_HAZARDS } from "@game/core-src/games/mecard/sim/catalog/hazards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_UPGRADES } from "@game/core-src/games/mecard/sim/catalog/upgrades"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { BASE_ELEMENTS } from "@game/core-src/games/mecard/sim/element/reactions"
+import { ALL_FIGHT_CATEGORIES } from "@game/core-src/games/mecard/sim/fight/fights"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { STATUS_TYPES } from "@game/core-src/games/mecard/sim/status/statusTypes"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
 import { explanationOf } from "@game/core/mecard/explanations"
 import { mecardDisplay } from "@game/core/mecard/text-display"
 
@@ -40,6 +98,10 @@ const ALL_TEXTS: readonly (readonly [string, Text])[] = [
 // --- Tests ---
 
 describe("mecardDisplay", () => {
+    test("a decimal number → rounded, its decimals after a comma", () => {
+        expect(plainText(["Force +", 1.3, ", ", 0.456, " et ", 2], mecardDisplay)).toBe("Force +1,3, 0,46 et 2")
+    })
+
     test("a type of damage → its icon in its color, the name kept as its plain string", () => {
         const text = [2, " ", DamageType.PHYSICAL]
         expect(spans(text).at(-1)).toMatchObject({

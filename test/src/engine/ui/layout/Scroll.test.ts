@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Box, Scroll, WHEEL_STEP } from "@game/core"
+import { Box } from "@game/core-src/engine/ui/layout/Box"
+import { Scroll, WHEEL_STEP } from "@game/core-src/engine/ui/layout/Scroll"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

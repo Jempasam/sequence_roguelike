@@ -1,13 +1,42 @@
 import { describe, expect, test } from "vitest"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Team } from "@game/core-src/games/mecard/sim/battle/Team"
+import { signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { ACTION, POTION, PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { BeastCard } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastCard"
 import {
-    ACTION, Arena, Battle, COMPOUNDS, CROSSED_SPELL, DrawnCard, ELEMENT_CARDS, FusionCard, GRAND_RITUAL_CARD,
-    Heart, IMPROVISED_WEAPON, LOOT_CARDS, loadBattle, MISSILE, DeckAi, POTION, POTION_POUCH,
-    PREPARATION,
-    REACTION, RED_HEART, RITUAL, saveBattle, signatureOf, SPELL, Team, Vector2,
-    ADAPTATION, BEAST_CARDS, BEAST_USES, BeastCard, BITE, CYBERNETIC_BEAST, ELEMENTAL, HYBRIDIZATION, REVERSED_ADAPTATION,
-    TOTAL_HYBRID,
-} from "@game/core/mecard"
-import type { Card, CardType } from "@game/core/mecard"
+    CYBERNETIC_BEAST,
+    ELEMENTAL,
+    HYBRIDIZATION,
+} from "@game/core-src/games/mecard/sim/card/subs/beast/BeastForms"
+import { BEAST_USES, BITE, TOTAL_HYBRID } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastRewrites"
+import { BEAST_CARDS } from "@game/core-src/games/mecard/sim/card/subs/beast/beasts"
+import {
+    ADAPTATION,
+    REVERSED_ADAPTATION,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/Adaptations"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { DrawnCard, POTION_POUCH } from "@game/core-src/games/mecard/sim/card/subs/composite/RewriteCards"
+import { MISSILE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_WEAPON } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { ELEMENT_CARDS } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import {
+    CROSSED_SPELL,
+    GRAND_RITUAL_CARD,
+    REACTION,
+    RITUAL,
+} from "@game/core-src/games/mecard/sim/card/subs/spell/ElementRewrites"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { COMPOUNDS } from "@game/core-src/games/mecard/sim/element/reactions"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { loadBattle, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { CardType } from "@game/core-src/games/mecard/sim/card/CardType"
 
 import { withPillars } from "../fixtures"
 

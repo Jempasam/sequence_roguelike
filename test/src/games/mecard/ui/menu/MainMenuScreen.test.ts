@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { AssetError } from "@game/core"
-import type { Assets } from "@game/core"
+import { AssetError } from "@game/core-src/engine/assets/AssetError"
+import type { Assets } from "@game/core-src/engine/assets/Assets"
 import { MainMenuScreen } from "@game/core/mecard/menu"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"

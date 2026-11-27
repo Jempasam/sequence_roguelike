@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { ACTION, BEAST, CardType, ELEMENT, MODULE, POTION, PREPARATION } from "@game/core/mecard"
+import {
+    ACTION,
+    BEAST,
+    CardType,
+    ELEMENT,
+    MODULE,
+    POTION,
+    PREPARATION,
+} from "@game/core-src/games/mecard/sim/card/CardType"
 import { typeColorOf } from "@game/core/mecard/colors"
 
 // --- Tests ---

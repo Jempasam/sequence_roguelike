@@ -1,10 +1,14 @@
-import { ManualScheduler } from "@game/core"
-import { Rng } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
-import { LocalGame, NoAnswerFault, randomDuelMode } from "@game/core/mecard/sync"
-import type {
-    GameMember, GameMode, GameModeContext, GameModeManager, GameModeShareable, LocalOptions,
-} from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { NoAnswerFault } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import { LocalGame } from "@game/core-src/games/mecard/sim/mode/local/LocalGame"
+import { randomDuelMode } from "@game/core-src/games/mecard/sim/mode/subs/randomDuel/RandomDuelMode"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameMode, GameModeManager } from "@game/core-src/games/mecard/sim/mode/GameMode"
+import type { GameModeContext } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
+import type { LocalOptions } from "@game/core-src/games/mecard/sim/mode/local/LocalManager"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

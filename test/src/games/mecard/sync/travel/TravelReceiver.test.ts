@@ -1,11 +1,20 @@
 import { describe, expect, test } from "vitest"
-import { CAVE_FLOOR, CHEST_HALT, EXIT_HALT, Run } from "@game/core/mecard"
-import type { ConfirmDialog, Place, PlaceMove, PlaceType, Travel } from "@game/core/mecard"
-import {
-    BATTLE_TOPIC, BattleBroadcaster, BattleReceiver, LocalSync, TRAVEL_TOPIC, TravelBroadcaster,
-    TravelReceiver, writeTravelMessage,
-} from "@game/core/mecard/sync"
-import type { SyncSender, TravelDesync } from "@game/core/mecard/sync"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
+import type { ConfirmDialog } from "@game/core-src/games/mecard/sim/travel/dialogs"
+import type { PlaceMove, Travel } from "@game/core-src/games/mecard/sim/travel/Travel"
+import { BattleBroadcaster } from "@game/core-src/games/mecard/sync/battle/BattleBroadcaster"
+import { BattleReceiver } from "@game/core-src/games/mecard/sync/battle/BattleReceiver"
+import { BATTLE_TOPIC, LocalSync, TRAVEL_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
+import { TravelBroadcaster } from "@game/core-src/games/mecard/sync/travel/TravelBroadcaster"
+import { writeTravelMessage } from "@game/core-src/games/mecard/sync/travel/TravelMessage"
+import { TravelReceiver } from "@game/core-src/games/mecard/sync/travel/TravelReceiver"
+import type { SyncSender } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { TravelDesync } from "@game/core-src/games/mecard/sync/travel/TravelReceiver"
 import { started } from "../../sim/fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 

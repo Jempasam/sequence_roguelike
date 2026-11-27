@@ -1,7 +1,9 @@
-import { ManualScheduler } from "@game/core"
-import type { Fault } from "@game/core"
-import { Deadline, DeadlineReceiver, LocalSync, UnreadableFault } from "@game/core/mecard/sync"
-import { DEADLINE_TOPIC } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { Deadline, DeadlineReceiver } from "@game/core-src/games/mecard/sync/Deadline"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import { DEADLINE_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { describe, expect, test } from "vitest"
 
 /** A deadline on a channel, with what is heard from it. */

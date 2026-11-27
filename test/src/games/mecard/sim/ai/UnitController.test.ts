@@ -1,9 +1,24 @@
 import { describe, expect, test } from "vitest"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { LOOKAHEAD_COUNTS, LookaheadAi } from "@game/core-src/games/mecard/sim/ai/LookaheadAi"
 import {
-    AIM, askAi, CardChain, combine, DeckAi, guessKey, lineCloseness, LOOKAHEAD_COUNTS, LookaheadAi, RandomAi, Rng, SECRET_CARD,
-    ShuffleAi, SLASH, STEP, Vector2, viewFor, withoutDecks,
-} from "@game/core/mecard"
-import type { Battle, Card } from "@game/core/mecard"
+    combine,
+    guessKey,
+    lineCloseness,
+    withoutDecks,
+} from "@game/core-src/games/mecard/sim/ai/lookaheadHelpers"
+import { RandomAi } from "@game/core-src/games/mecard/sim/ai/RandomAi"
+import { ShuffleAi } from "@game/core-src/games/mecard/sim/ai/ShuffleAi"
+import { askAi, viewFor } from "@game/core-src/games/mecard/sim/ai/UnitController"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { SECRET_CARD } from "@game/core-src/games/mecard/sim/card/subs/SecretCard"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, HEROES, MONSTERS, unit } from "../fixtures"
 

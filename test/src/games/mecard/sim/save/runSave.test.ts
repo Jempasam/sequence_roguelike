@@ -1,8 +1,13 @@
 import { describe, expect, test } from "vitest"
-import {
-    allCards, FusionCard, ALL_ITEMS, loadRun, RED_HEART, Run, RUN_SAVE_VERSION, saveRun, splitDeck, ALL_USABLES,
-} from "@game/core/mecard"
-import type { RunSave } from "@game/core/mecard"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { allCards } from "@game/core-src/games/mecard/sim/run/Hero"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { splitDeck } from "@game/core-src/games/mecard/sim/run/visits"
+import { loadRun, RUN_SAVE_VERSION, saveRun } from "@game/core-src/games/mecard/sim/save/runSave"
+import type { RunSave } from "@game/core-src/games/mecard/sim/save/runSave"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, GOBLIN, loadTravel, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core/mecard"
-import type { Travel, TravelSave } from "@game/core/mecard"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { loadTravel, saveTravel, TRAVEL_SAVE_VERSION } from "@game/core-src/games/mecard/sim/save/travelSave"
+import type { TravelSave } from "@game/core-src/games/mecard/sim/save/travelSave"
+import type { Travel } from "@game/core-src/games/mecard/sim/travel/Travel"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 

@@ -1,9 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { Heart, PINK_HEART, RED_HEART, SHIELD_HEART } from "@game/core/mecard"
-import type { Battle, HeartKind, Unit } from "@game/core/mecard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { PINK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/PinkHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { HeartKind } from "@game/core-src/games/mecard/sim/heart/HeartKind"
 
 import { battle, MONSTERS, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** A unit holding hearts in a battle, an enemy across so the battle goes on. */
 function holding(hearts: Heart[]): { on: Battle, target: Unit } {

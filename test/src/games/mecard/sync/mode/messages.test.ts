@@ -1,9 +1,30 @@
 import {
-    ACT_TOPIC, ANSWER_TOPIC, ASK_TOPIC, CLOSE_TOPIC, FOLLOW_TOPIC, OPEN_RUN_TOPIC, ORDER_TOPIC,
-    REPLY_TOPIC, ROUTE_ASK_TOPIC, ROUTE_TOPIC, STATE_TOPIC, UNFOLLOW_TOPIC, instanceTopic, readActMessage,
-    readAnswerMessage, readAskMessage, readIdMessage, readOpenMessage, readOrderMessage, readReplyMessage,
-    readRouteAskMessage, readRouteMessage, readStateMessage, upTopic, write,
-} from "@game/core/mecard/sync"
+    ACT_TOPIC,
+    ANSWER_TOPIC,
+    ASK_TOPIC,
+    CLOSE_TOPIC,
+    FOLLOW_TOPIC,
+    OPEN_RUN_TOPIC,
+    ORDER_TOPIC,
+    REPLY_TOPIC,
+    ROUTE_ASK_TOPIC,
+    ROUTE_TOPIC,
+    STATE_TOPIC,
+    UNFOLLOW_TOPIC,
+    instanceTopic,
+    readActMessage,
+    readAnswerMessage,
+    readAskMessage,
+    readIdMessage,
+    readOpenMessage,
+    readOrderMessage,
+    readReplyMessage,
+    readRouteAskMessage,
+    readRouteMessage,
+    readStateMessage,
+    upTopic,
+    write,
+} from "@game/core-src/games/mecard/sync/mode/messages"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

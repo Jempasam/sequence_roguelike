@@ -26,7 +26,7 @@ export class TrainerHalt extends AbstractHalt {
     constructor(run: Run){
         super(TRAINER_HALT, run,
             "Une de mes trois bêtes, te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, "trainer"),
+            sceneLook(28, 24, 15, "trainer"),
             {
                 hat: "huntingHat",
                 clothes: rgba(0.55, 0.75, 0.3),

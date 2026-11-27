@@ -1,9 +1,20 @@
 import { describe, expect, test } from "vitest"
-import {
-    ALL_FIGHT_CATEGORIES, BATTLE, BOSS, CAVE_FLOOR, ELITE, EXIT_HALT, FOREST_FLOOR, FORGE_HALT, GOBLIN, HOSPITAL_HALT, Journey, LAYERS, MINE_FLOOR, Rng,
-    SHOP_HALT, TAVERN_HALT, zipped,
-} from "@game/core/mecard"
-import type { FightCategory, Place, PlaceType } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_FIGHT_CATEGORIES, BATTLE, BOSS, ELITE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { LAYERS, zipped } from "@game/core-src/games/mecard/sim/floor/subs/AbstractFloor"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { FOREST_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/ForestFloor"
+import { MINE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/MineFloor"
+import { FORGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/ForgeHalt"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { SHOP_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ShopHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { HOSPITAL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/party/HospitalHalt"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 
 /** The sort of fight or of halt a place holds, the fight first. */

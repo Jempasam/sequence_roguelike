@@ -1,15 +1,22 @@
-import { ManualScheduler } from "@game/core"
-import type { Run } from "@game/core/mecard"
-import { Rng } from "@game/core/mecard"
-import { LocalGame, reacting } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { reacting } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import { LocalGame } from "@game/core-src/games/mecard/sim/mode/local/LocalGame"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
 import type {
-    GameMember, GameMode, GameModeContext, GameModeManager, GameModeOwner, GameModeShareable, HandleChannel,
-    InstanceView, RunHandle,
-} from "@game/core/mecard/sync"
+    GameMode,
+    GameModeManager,
+    GameModeOwner,
+    InstanceView,
+} from "@game/core-src/games/mecard/sim/mode/GameMode"
+import type { GameModeContext, RunHandle } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
+import type { HandleChannel } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
 import { describe, expect, test } from "vitest"
 
 import { startedRun } from "../../../../fixtures/startedRun"
-import type { Removable } from "@game/core"
+import type { Removable } from "@game/core-src/lifetime/Removable"
 
 async function settle(): Promise<void> {
     for(let turn = 0; turn < 40; turn++) await Promise.resolve()

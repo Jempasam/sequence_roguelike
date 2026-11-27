@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Toggle } from "@game/core"
+import { Toggle } from "@game/core-src/engine/ui/widget/Toggle"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

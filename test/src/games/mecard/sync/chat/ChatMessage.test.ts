@@ -1,4 +1,9 @@
-import { HUE_TURN, readChatMessage, wrapHue, writeChatMessage } from "@game/core/mecard/sync"
+import {
+    HUE_TURN,
+    readChatMessage,
+    wrapHue,
+    writeChatMessage,
+} from "@game/core-src/games/mecard/sync/chat/ChatMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

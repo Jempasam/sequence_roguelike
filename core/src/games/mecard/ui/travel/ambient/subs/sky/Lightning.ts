@@ -34,9 +34,10 @@ const LIGHTNING_EFFECT: Effect<AmbientContext> = {
 /** Lightning strikes the map from the top of the screen, with a flash, sometimes twice. */
 export const LIGHTNING = new AmbientEffect({
     id: "lightning",
+    category: "signature",
     spacing: 20,
     stackable: false,
-    isPlayable: context => STORM_FLOORS.includes(context.floor()),
+    isPlayable: context => context.outdoors() && STORM_FLOORS.includes(context.floor()),
     weight: () => 4,
     effect: LIGHTNING_EFFECT,
 })

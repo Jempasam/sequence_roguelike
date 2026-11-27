@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { visual } from "@game/core/mecard"
-import type { Visual } from "@game/core/mecard"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import type { Visual } from "@game/core-src/games/mecard/sim/base/Visual"
 import { defaultAnimation } from "@game/core/mecard/fx-animation"
 import { resolveFx } from "@game/core/mecard/fx-sprites"
 import type { FxSource } from "@game/core/mecard/fx-sprites"

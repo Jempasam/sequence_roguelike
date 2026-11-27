@@ -18,7 +18,7 @@ export class NecroChestHalt extends CardGiftHalt {
     constructor(run: Run){
         super(NECRO_CHEST_HALT, run,
             ["Un ", FUSION.as("collage"), " arraché à un ", MONSTER, ", parmi trois, gratuit."],
-            sceneLook(31, 23, 13, "chest", { coloration: [0.72, 0.56, 0.78] }),
+            sceneLook(13, 20, 31, "chest", { coloration: [0.72, 0.56, 0.78] }),
             // A dark one keeps this chest, who tore its cards from the monsters.
             {
                 hat: "skullHood",

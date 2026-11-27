@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { historyEntry } from "@game/core/mecard"
-import type { HistoryEntry } from "@game/core/mecard"
+import { historyEntry } from "@game/core-src/games/mecard/sim/save/historySave"
+import type { HistoryEntry } from "@game/core-src/games/mecard/sim/save/historySave"
 import { FloorBorders } from "@game/core/mecard/floor-borders"
 import { HistoryScreen } from "@game/core/mecard/history-screen"
 import { UnitSprites } from "@game/core/mecard/unit-sprites"

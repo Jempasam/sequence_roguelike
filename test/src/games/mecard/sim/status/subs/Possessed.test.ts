@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Battle, POSSESSED } from "@game/core/mecard"
-import type { Unit } from "@game/core/mecard"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { POSSESSED } from "@game/core-src/games/mecard/sim/status/subs/Possessed"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 import { startedRun } from "../../../../../fixtures/startedRun"
 
 // --- Fixture builders ---

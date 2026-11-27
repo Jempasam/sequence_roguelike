@@ -1,5 +1,5 @@
-import { LocalRoom, LocalSync, SyncTopic } from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+import { LocalRoom, LocalSync, SyncTopic } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 describe("SyncTopic", () => {

@@ -1,10 +1,15 @@
 import { describe, expect, test } from "vitest"
-import {
-    DARK_COLOR, DARK_MASK, darkHalts, DEFAULT_CUES, allHalts, CHEST_HALT, EXIT_HALT, ALL_FLOORS, PNJ_HATS,
-    SHOP_HALT, rewardHalts, scenePnj, visual,
-} from "@game/core/mecard"
-import type { HaltMoment, PnjCue } from "@game/core/mecard"
-import { PNJ_ANIMATIONS } from "@game/core/mecard/pnj"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { darkHalts, allHalts, rewardHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { PNJ_HATS } from "@game/core-src/games/mecard/sim/halt/PnjHats"
+import { DEFAULT_CUES, scenePnj } from "@game/core-src/games/mecard/sim/halt/SceneLook"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { SHOP_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ShopHalt"
+import { DARK_COLOR, DARK_MASK } from "@game/core-src/games/mecard/sim/halt/subs/halt_common"
+import type { HaltMoment, PnjCue } from "@game/core-src/games/mecard/sim/halt/SceneLook"
+import { PNJ_ANIMATIONS } from "@game/core-src/games/mecard/ui/pnj/PnjAnimation"
 import { CUE_ANIMATIONS } from "@game/core/mecard/travel-looks"
 import { startedRun } from "../../../../fixtures/startedRun"
 

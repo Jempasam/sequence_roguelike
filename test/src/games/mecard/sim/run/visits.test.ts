@@ -1,9 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { LANCER_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
 import {
-    AIM, cutFusions, FIRE, forge, FusionCard, heroOf, LANCER_KIT, possess, readsWhole, removeCards,
-    REPEAT_2, Rng, sacrifice, SPELL, splitDeck, STEP, swapCards, THRUST, transmute,
-} from "@game/core/mecard"
-import type { Card, Hero } from "@game/core/mecard"
+    cutFusions,
+    forge,
+    possess,
+    removeCards,
+    sacrifice,
+    splitDeck,
+    swapCards,
+    transmute,
+} from "@game/core-src/games/mecard/sim/run/visits"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Hero } from "@game/core-src/games/mecard/sim/run/Hero"
 
 // --- Fixture builders ---
 

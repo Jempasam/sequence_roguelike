@@ -1,10 +1,38 @@
 import { describe, expect, test } from "vitest"
+import { analysisOf } from "@game/core-src/games/mecard/sim/analysis/analysisOf"
 import {
-    ALL_BOOSTERS, ALL_MONSTERS, analysisOf, BOOSTER_KIND, BURN, convert, convertMany, DODGE, ELEMENT_TARGET,
-    ENRAGED, FRENZIED, FUSION_TARGET, HeartsBoon, KIT_KIND, KINDS, MERGED_TARGET, MONSTER_KIND, NoResultError,
-    POISON_POTION, POISONED, potionOfStatus, PotionBoon, RED_HEART, SLOWNESS_POTION, TARGETS,
-} from "@game/core/mecard"
-import type { BodyElement, ElementCard, Target } from "@game/core/mecard"
+    BOOSTER_KIND,
+    convert,
+    convertMany,
+    KIT_KIND,
+    KINDS,
+    MONSTER_KIND,
+} from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { NoResultError } from "@game/core-src/games/mecard/sim/analysis/NoResult"
+import {
+    ELEMENT_TARGET,
+    FUSION_TARGET,
+    MERGED_TARGET,
+    TARGETS,
+} from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { ALL_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { HeartsBoon } from "@game/core-src/games/mecard/sim/element/subs/body/HeartsBoon"
+import { PotionBoon } from "@game/core-src/games/mecard/sim/element/subs/body/PotionBoon"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import {
+    POISON_POTION,
+    potionOfStatus,
+    SLOWNESS_POTION,
+} from "@game/core-src/games/mecard/sim/potion/subs/potions"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { FRENZIED } from "@game/core-src/games/mecard/sim/status/subs/Frenzy"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ENRAGED } from "@game/core-src/games/mecard/sim/status/subs/Rage"
+import type { Target } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import type { ElementCard } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import type { BodyElement } from "@game/core-src/games/mecard/sim/element/subs/BodyElement"
 
 const SOURCES = KINDS.flatMap(source => source.all().map(value => ({ source, value })))
 

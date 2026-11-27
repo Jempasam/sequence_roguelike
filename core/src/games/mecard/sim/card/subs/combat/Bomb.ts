@@ -14,9 +14,9 @@ import { BLAST_RADIUS, BOMB_DAMAGE, FLASH_RADIUS } from "../body/BodyCards"
 import { ActionCard } from "../ActionCard"
 import { flight } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { DISTANCE, PORTEE, UNIT, BATTLE_TURN } from "../../../base/keywords"
+import { DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
+import { STUNNED } from "../../../status/subs/Stunned"
 import { DamageType } from "../../../battle/DamageType"
-import { frenchNumber } from "../../../battle/words"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
 
@@ -82,21 +82,21 @@ export class BombCard extends ActionCard {
 
 export const BOMB = new BombCard("Bombe", [
     "Lance une bombe à ", BOMB_THROW, "×", PORTEE, " ", DISTANCE, " devant. Elle joue juste après toi, attend, puis explose : ",
-    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ", DISTANCE, " autour, toi compris.",
+    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", BLAST_RADIUS, " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, BOMB_THROW, BLAST_RADIUS, placeBomb)
 
 export const FLASH_GRENADE = new BombCard("Grenade flash", [
-    "Lance une grenade à ", BOMB_THROW, "×", PORTEE, " ", DISTANCE, " devant. Elle joue juste après toi, attend, puis étourdit chaque ", UNIT, " à ",
-    frenchNumber(FLASH_RADIUS), " ", DISTANCE, " autour, toi compris.",
+    "Lance une grenade à ", BOMB_THROW, "×", PORTEE, " ", DISTANCE, " devant. Elle joue juste après toi, attend, puis chaque ", UNIT, " à ",
+    FLASH_RADIUS, " ", DISTANCE, " autour gagne ", STUNNED, " ", 1, ", toi compris.",
 ], Rarity.RARE, BOMB_THROW, FLASH_RADIUS, placeFlashBomb)
 
 export const MINE = new BombCard("Mine", [
     "Pose une mine à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(MINE_ROUNDS, "round"), ". Au premier contact, elle explose : ",
-    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(BLAST_RADIUS), " ", DISTANCE, " autour, toi compris.",
+    BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", BLAST_RADIUS, " ", DISTANCE, " autour, toi compris.",
 ], Rarity.RARE, MINE_THROW, BLAST_RADIUS, placeMine)
 
 export const BEAR_TRAP = new BombCard("Piège à ours", [
     "Pose un piège à ours à ", MINE_THROW, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(BEAR_TRAP_ROUNDS, "round"),
-    ". Au premier contact : ", BEAR_TRAP_DAMAGE, " ", DamageType.PHYSICAL, " et la prochaine ", BATTLE_TURN.as("étape"), " de l'", UNIT,
-    " est perdue.",
+    ". Au premier contact : ", BEAR_TRAP_DAMAGE, " ", DamageType.PHYSICAL, " et l'", UNIT,
+    " gagne ", STUNNED, " ", 1, ".",
 ], Rarity.RARE, MINE_THROW, BEAR_TRAP_RADIUS, placeBearTrap)

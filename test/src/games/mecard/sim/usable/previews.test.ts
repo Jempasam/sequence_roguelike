@@ -1,9 +1,23 @@
 import { describe, expect, test } from "vitest"
+import { WEATHER_VANE } from "@game/core-src/games/mecard/sim/item/subs/combat/Gadgets"
+import { MAGNET, SCARY_MASK } from "@game/core-src/games/mecard/sim/item/subs/combat/Reflexes"
+import { FIRE_FLASK } from "@game/core-src/games/mecard/sim/usable/subs/flask/FireFlask"
+import { FOLDING_CACTUS } from "@game/core-src/games/mecard/sim/usable/subs/FoldingCactus"
 import {
-    FIRE_FLASK, FOLDING_CACTUS, FOLDING_TURRET, INFLATABLE_DECOY, IRON_MAGNET, KITE, MAGNET, PARCEL, PAWN_POWDER,
-    SCARY_MASK, SILENCE_JAR, SPRING, WEATHER_VANE, WHISTLE, WOOL_BALL,
-} from "@game/core/mecard"
-import type { Indicator, Preview } from "@game/core/mecard"
+    FOLDING_TURRET,
+    INFLATABLE_DECOY,
+    WHISTLE,
+} from "@game/core-src/games/mecard/sim/usable/subs/hand/ChainUsables"
+import {
+    IRON_MAGNET,
+    KITE,
+    PAWN_POWDER,
+    SILENCE_JAR,
+    SPRING,
+} from "@game/core-src/games/mecard/sim/usable/subs/hand/ChessUsables"
+import { PARCEL } from "@game/core-src/games/mecard/sim/usable/subs/Parcel"
+import { WOOL_BALL } from "@game/core-src/games/mecard/sim/usable/subs/WoolBall"
+import type { Indicator, Preview } from "@game/core-src/games/mecard/sim/battle/preview/Preview"
 
 import { battle, MONSTERS, unit } from "../fixtures"
 

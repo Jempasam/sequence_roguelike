@@ -1,5 +1,7 @@
-import { NetError, PeerJsConnection } from "@game/core"
-import type { Cancel, PeerJsRelayed, TimerPort } from "@game/core"
+import { NetError } from "@game/core-src/engine/net/NetError"
+import { PeerJsConnection } from "@game/core-src/engine/net/PeerJsConnection"
+import type { PeerJsRelayed } from "@game/core-src/engine/net/PeerJsConnection"
+import type { Cancel, TimerPort } from "@game/core-src/platform/TimerPort"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
 import { nodeNet } from "../../fixtures/netServer"

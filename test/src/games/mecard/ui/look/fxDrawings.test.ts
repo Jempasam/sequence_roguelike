@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Areas, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
 import { defaultAnimation, readAnimation } from "@game/core/mecard/fx-animation"
 import { eased, fadeOf, frameOf, impactDrawing, strikeDrawings } from "@game/core/mecard/fx-drawings"
 import { placeStrike } from "@game/core/mecard/place-strike"

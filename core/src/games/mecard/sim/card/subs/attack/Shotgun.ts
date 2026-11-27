@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DISTANCE, PORTEE, PRECISION } from "../../../base/keywords"
 import { PHYSICAL_COLOR } from "../../../battle/previewColors"
 import type { Vector2 } from "../../../base/Vector2"
@@ -59,7 +58,7 @@ export class ShotgunCard extends ActionCard {
         public readonly spread: number,
     ){
         super("Pompe", [
-            "Tire ", pellets, " plombs devant, chacun dans un angle tiré au hasard, jusqu'à ", frenchNumber(range),
+            "Tire ", pellets, " plombs devant, chacun dans un angle tiré au hasard, jusqu'à ", range,
             "×", PORTEE, " ", DISTANCE, " : ", pelletDamage, "+", PRECISION, " ", DamageType.PHYSICAL, " chacun.",
         ], Rarity.RARE, ShotgunCard.#firing(range, pellets, pelletDamage, spread))
     }

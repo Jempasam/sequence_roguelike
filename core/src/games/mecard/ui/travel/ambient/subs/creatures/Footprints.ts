@@ -1,4 +1,4 @@
-import { visual } from "../../../../../sim"
+import { visual } from "../../../../../sim/base/Visual"
 import { optional } from "../../trip/Cast"
 import { crossing, enter, leave, oneOf, swap } from "../../trip/Itinerary"
 import { everywhere } from "../../trip/places"
@@ -8,6 +8,7 @@ import { tripEffect } from "../../trip/tripEffect"
 /** Footprints appear one by one along a way from a place or a side of the screen to another, then fade. */
 export const FOOTPRINTS = tripEffect({
     id: "footprints",
+    category: "traffic",
     itinerary: oneOf(swap(everywhere), leave(everywhere), enter(everywhere), crossing()),
     cast: optional(visual("units/footprint")),
     traveler: PRINTS,

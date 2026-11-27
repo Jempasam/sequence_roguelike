@@ -1,9 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { composable } from "@game/core-src/games/mecard/sim/card/Card"
+import { CardChain, readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { collageOf } from "@game/core-src/games/mecard/sim/card/subs/composite/ChainRewrites"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
 import {
-    ALL_CARDS, BASE_ELEMENTS, CardChain, canWeave, CARD_CODECS, collageOf, composable, FIRE, FusionCard, Heart, mergeable,
-    mergeableInChain, MergedCard, RandomCard, readsWhole, RED_HEART, STEP, TURNS, UNIVERSAL_ELEMENTS, VARIANT_CARDS, Vector2, WALKS,
-} from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+    mergeable,
+    mergeableInChain,
+    MergedCard,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { RandomCard } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WALKS } from "@game/core-src/games/mecard/sim/card/subs/movement/WalkCard"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { UNIVERSAL_ELEMENTS } from "@game/core-src/games/mecard/sim/card/subs/spell/UniversalElementCard"
+import { ALL_CARDS, VARIANT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { BASE_ELEMENTS } from "@game/core-src/games/mecard/sim/element/reactions"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { canWeave } from "@game/core-src/games/mecard/sim/run/visits"
+import { CARD_CODECS } from "@game/core-src/games/mecard/sim/save/catalogNames"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, HEROES } from "../fixtures"
 

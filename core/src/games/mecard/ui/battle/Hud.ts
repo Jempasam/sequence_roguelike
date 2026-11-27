@@ -37,6 +37,7 @@ import { colorOf } from "../look/colors"
 import { CHOSEN_TEXT, DIM_INK_TEXT, DIM_TEXT, INK_TEXT, STAT_DOWN, STAT_UP, WARNING_TEXT } from "../look/theme"
 import { PAPER_MARGIN, paperFrame } from "../look/paper"
 import { FRAME_THICKNESS } from "../look/wood"
+import type { Wood } from "../look/wood"
 import { decksOf } from "./BattleScene"
 import type { BattleScene, Flight, SceneDeck } from "./BattleScene"
 import { BagView, SLOT_SIZE } from "../hud/BagView"
@@ -111,6 +112,9 @@ export interface HudHost {
 
     /** How deep the run went. */
     readonly depth: number
+
+    /** The wood of the panels, none before it is loaded. */
+    readonly wood: Wood|null
 
     /** May the players still launch the round, or say they are ready? */
     readonly launchable: boolean
@@ -433,7 +437,7 @@ export class Hud {
 
     /** A panel around what a zone shows. */
     #panel(content: Component): Panel {
-        const wood = this.host.sprites.wood
+        const wood = this.host.wood
         const panel = new Panel(this.theme, wood ? { background: wood.frame, padding: FRAME_THICKNESS + 1 } : {})
         panel.content = content
         return panel
@@ -441,7 +445,7 @@ export class Hud {
 
     /** The space between the edge of a panel and what it holds: the wood of its frame, once loaded. */
     #panelPadding(): number {
-        return this.host.sprites.wood ? FRAME_THICKNESS + 1 : this.theme.panel.padding
+        return this.host.wood ? FRAME_THICKNESS + 1 : this.theme.panel.padding
     }
 
     /** The card being drawn, over everything, from the pile built with the hand to its place in it. */

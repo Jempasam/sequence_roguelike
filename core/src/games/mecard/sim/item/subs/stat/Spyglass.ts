@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +10,7 @@ export const SPYGLASS = new StatItem("Longue-vue", visual("items/spyglass"), [
     {
         stat: stats => stats.throwRange,
         amount: SPYGLASS_RANGE,
-        shown: [frenchNumber(SPYGLASS_RANGE * 100), " %"],
+        shown: [SPYGLASS_RANGE * 100, " %"],
         text: "de portée",
     },
 ])

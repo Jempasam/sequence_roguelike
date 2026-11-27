@@ -1,5 +1,5 @@
-import { Fault } from "@game/core"
-import { HostDirectory } from "@game/core/mecard/sync"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { HostDirectory } from "@game/core-src/games/mecard/sync/hosts/HostDirectory"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { nodeNet, signalingOf, startNetServer } from "../../../../fixtures/netServer"

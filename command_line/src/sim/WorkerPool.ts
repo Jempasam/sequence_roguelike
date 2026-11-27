@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url"
 import { Worker } from "node:worker_threads"
 
 import type { CellResult, Slice } from "./cells"
@@ -109,9 +110,10 @@ export class WorkerPool {
     static #entry(): string {
         const api = import.meta.resolve("tsx/esm/api")
         const worker = new URL("./worker.ts", import.meta.url).href
+        const tsconfig = fileURLToPath(new URL("../../tsconfig.json", import.meta.url))
         return `
             const { register } = await import(${JSON.stringify(api)})
-            register()
+            register({ tsconfig: ${JSON.stringify(tsconfig)} })
             await import(${JSON.stringify(worker)})
         `
     }

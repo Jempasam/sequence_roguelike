@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { OverflowContainer } from "@game/core"
+import { OverflowContainer } from "@game/core-src/engine/ui/layout/OverflowContainer"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

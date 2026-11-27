@@ -33,7 +33,7 @@ export class NecroRecruitHalt extends AbstractHalt {
     constructor(run: Run){
         super(NECRO_RECRUIT_HALT, run,
             ["Choisis le ", MONSTER, " qui rejoindra ton armée."],
-            sceneLook(34, 40, 20, "monster-park"),
+            sceneLook(28, 40, 20, "monster-park"),
             {
                 hat: "huntingHat",
                 clothes: rgba(0.35, 0.2, 0.45),

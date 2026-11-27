@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest"
-import {
-    burst, emitAlong, emitInside, emitOutline, ParticleSystem, Rate, seededRandom,
-} from "@game/core"
-import type { Fill } from "@game/core"
+import { burst, emitAlong, emitInside, emitOutline, Rate } from "@game/core-src/engine/particles/emitters"
+import { ParticleSystem } from "@game/core-src/engine/particles/ParticleSystem"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import type { Fill } from "@game/core-src/engine/particles/emitters"
 
 const keepPlace: Fill = spec => {
     spec.life = 100

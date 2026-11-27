@@ -1,12 +1,14 @@
-import { signalingAt } from "@game/core"
-import type { ChannelKind, Connection, NetPort, SignalingConnector } from "@game/core"
+import { signalingAt } from "@game/core-src/engine/net/signalingAt"
+import type { ChannelKind, Connection } from "@game/core-src/engine/net/Connection"
+import type { SignalingConnector } from "@game/core-src/engine/net/Signaling"
+import type { NetPort } from "@game/core-src/platform/NetPort"
 import { IceConfig, SignalingServer } from "@game/server/signaling"
 import { StunServer } from "@game/server/stun"
 import { RelayPolicy, TurnCredentials, TurnServer } from "@game/server/turn"
 import { RTCPeerConnection as DataChannelPeer } from "node-datachannel/polyfill"
 
 import { REAL_TIMER } from "./peerServer"
-import type { Removable } from "@game/core"
+import type { Removable } from "@game/core-src/lifetime/Removable"
 
 /** The servers of the network, on free ports of this host: signaling, STUN and TURN. */
 export interface NetServer {

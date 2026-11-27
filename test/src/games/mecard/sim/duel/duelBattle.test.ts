@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { duelSave, loadBattle, partyUnits } from "@game/core/mecard"
-import type { DuelParty } from "@game/core/mecard"
+import { duelSave, partyUnits } from "@game/core-src/games/mecard/sim/duel/duelBattle"
+import { loadBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { DuelParty } from "@game/core-src/games/mecard/sim/duel/duelBattle"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---

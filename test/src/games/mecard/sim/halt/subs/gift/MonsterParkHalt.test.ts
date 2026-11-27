@@ -1,7 +1,16 @@
 import { describe, expect, test } from "vitest"
 import {
-    allHalts, darkHalts, greatHalts, haltById, lootHalts, masterHalts, modeHalts, MONSTER_PARK_HALT, rewardHalts, simpleHalts,
-} from "@game/core/mecard"
+    allHalts,
+    darkHalts,
+    greatHalts,
+    haltById,
+    lootHalts,
+    masterHalts,
+    modeHalts,
+    rewardHalts,
+    simpleHalts,
+} from "@game/core-src/games/mecard/sim/catalog/halts"
+import { MONSTER_PARK_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/MonsterParkHalt"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../../../fixtures/startedRun"

@@ -1,6 +1,9 @@
 import type { Painter } from "../../../../engine/gpu"
 import type { InputFrame } from "../../../../engine/input"
 import { Color } from "../../../../engine/math"
+import type { Wood } from "../look/wood"
+import type { Area } from "../../../../engine/math"
+import type { AmbientUnit } from "../travel/ambient/AmbientContext"
 import { AnimationChain, Box, Button, FrameClock, Image, instant, NineSlice, Panel } from "../../../../engine/ui"
 import type { UiAnimation, Layer, Theme, UiRoot } from "../../../../engine/ui"
 import type { Text } from "../../../../semantic"
@@ -10,6 +13,7 @@ import { NOTE_COLOR } from "../../sim/battle/previewColors"
 import type { Indicator } from "../../sim/battle/preview/Preview"
 import type { Previewable } from "../../sim/battle/preview/Previewable"
 import type { Battle, Phase } from "../../sim/battle/Battle"
+import { STEP_DISABLED } from "../../sim/battle/mecanic/step/signals"
 import type { Team } from "../../sim/battle/Team"
 import type { Unit } from "../../sim/battle/Unit"
 import type { Process } from "../../sim/process/Process"
@@ -107,6 +111,9 @@ export interface BattleScreenOptions {
     /** How deep the run went. */
     depth(): number
 
+    /** The color of the place of the battle, the hue of the wood of the panels, none for plain wood. */
+    placeColor?(): Color|null
+
     /** The battle shown is over, and was shown to its end. */
     over(battle: Battle): void
 
@@ -195,6 +202,13 @@ export class BattleScreen implements HudHost {
     }
 
     public get depth(): number { return this.options.depth() }
+
+    /** The wood of the panels, in the hue of the place of the battle when it says one, none before it is loaded. */
+    public get wood(): Wood|null {
+        const color = this.options.placeColor?.()
+        const wood = this.sprites.wood
+        return wood && color ? wood.tinted(color) : wood
+    }
 
     /** May the players still launch the round, or say they are ready? */
     public get launchable(): boolean {
@@ -305,6 +319,43 @@ export class BattleScreen implements HudHost {
         for(const layer of this.#layers) layer.content.visible = visible
     }
 
+    /** The battle whose arena is shown, none while the screen is hidden. */
+    public get shownBattle(): Battle|null {
+        return this.visible ? this.#engine : null
+    }
+
+    /** Is the arena of the battle shown laid out and fitted to it? */
+    public get arenaSettled(): boolean {
+        return this.visible && this.#arenaRoom !== null && this.#fitted === this.#engine
+    }
+
+    /** The ground of the arena shown, in the interface, none while it is not settled. */
+    public get terrain(): Area|null {
+        const room = this.#arenaRoom
+        if(!room || !this.arenaSettled) return null
+        const { x, y, width, height } = this.#board.terrain
+        return { x: room.left + x, y: room.top + y, width, height }
+    }
+
+    /** How many pixels of the interface a meter of the arena takes. */
+    public get meter(): number { return this.#board.meter }
+
+    /** The living units shown on the arena, as they are shown, in the interface. */
+    public get shownUnits(): AmbientUnit[] {
+        const room = this.#arenaRoom
+        if(!room || !this.arenaSettled) return []
+        return this.scene.living.map(({ unit, direction, hearts }) => {
+            const { x, y } = this.#board.positionOf(unit)
+            const [headX, headY] = this.#board.heartsAnchor(unit)
+            return {
+                unit, hearts,
+                position: { x: room.left + x, y: room.top + y },
+                head: { x: room.left + headX, y: room.top + headY + 1 },
+                facing: { x: direction.x, y: direction.y },
+            }
+        })
+    }
+
     /** Are the panels around the arena shown? What comes after a battle goes in their place. */
     public get panels(): boolean { return this.#layers[2].content.visible }
 
@@ -344,6 +395,7 @@ export class BattleScreen implements HudHost {
         const room = this.#placeArena()
         const { left, top } = room
         this.#board.fit(this.#engine, this.#arenaView.roomIn(room.right - left, room.bottom - top))
+        this.#fitted = this.#engine
         this.#arenaHearts.place(unit => {
             const [x, y] = this.#board.heartsAnchor(unit)
             return [left + x, top + y] as const
@@ -468,6 +520,9 @@ export class BattleScreen implements HudHost {
     /** Where the arena lies in the interface, as last placed. */
     #arenaRoom: UiRect|null = null
 
+    /** The battle the arena was last fitted to, none before it was. */
+    #fitted: Battle|null = null
+
     #engine: Battle
 
     #locks: BattleLocks
@@ -528,10 +583,11 @@ export class BattleScreen implements HudHost {
     #registerObservers(): void {
         const battle = this.#engine
         this.#observers.remove()
-        // The replay holds on a card played, or refused, while paused.
+        // The replay holds on a card played, refused or disabled, while paused.
         const holds: Holds = new Map<AnyObservable, UiAnimation>([
             [battle.signals.cardActivated, this.#playControl.gate()],
             [battle.signals.cardInvalid, this.#playControl.gate()],
+            [battle.observers.of(STEP_DISABLED), this.#playControl.gate()],
         ])
         this.#observers = new Scope(...forwardAround(
             this.animations, this.options.forwarded ?? null, battleForwardables(battle),

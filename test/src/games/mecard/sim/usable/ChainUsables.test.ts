@@ -1,9 +1,23 @@
 import { describe, expect, test } from "vitest"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { ModuleCard } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { CARD_CODECS } from "@game/core-src/games/mecard/sim/save/catalogNames"
 import {
-    CARD_CODECS, COCAINE, FIRE, FusionCard, GLUE_TUBE, MECHANICAL_CLONE, MergedCard, ModuleCard, SPELL, STEP,
-    THRUST, TIME_POCKET, TURNS,
-} from "@game/core/mecard"
-import type { Battle, Card, Unit, Usable, UsableSlot } from "@game/core/mecard"
+    COCAINE,
+    GLUE_TUBE,
+    MECHANICAL_CLONE,
+    TIME_POCKET,
+} from "@game/core-src/games/mecard/sim/usable/subs/hand/ChainUsables"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Usable, UsableSlot } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
 

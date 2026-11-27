@@ -1,5 +1,5 @@
 import { ALCHEMY, ALLONGE, FORCE, HEAL, PORTEE, PRECISION, SUMMON_STAT } from "../../../base/keywords"
-import { HeartCount, frenchNumber } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +11,7 @@ const POWER_BONUS = 1
 const POWER_REACH = 0.1
 
 /** The reach of one copy of the power, as said in its text. */
-const SHOWN_REACH = [frenchNumber(POWER_REACH * 100), " %"]
+const SHOWN_REACH = [POWER_REACH * 100, " %"]
 
 /**
  * The strength the foes gather floor after floor, one copy after the other: every stat of their blows and

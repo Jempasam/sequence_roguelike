@@ -1,10 +1,28 @@
+import { LobbyRoom } from "@game/core-src/games/mecard/sync/lobby/LobbyRoom"
 import {
-    cleanName, hueOfName, DEFAULT_NAME, HOST_ID, LOBBY_VERSION, LobbyRoom, LocalRoom, LocalSync, NAME_LENGTH,
-    PROFILE_REFUSED_TOPIC, PROFILE_TOPIC, Roster, RosterView, uniqueName, writeProfileMessage, writeRefusedMessage,
-} from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
-import { VersionMismatchFault } from "@game/core"
-import type { Fault } from "@game/core"
+    cleanName,
+    hueOfName,
+    DEFAULT_NAME,
+    HOST_ID,
+    LOBBY_VERSION,
+    NAME_LENGTH,
+    uniqueName,
+} from "@game/core-src/games/mecard/sync/lobby/Profile"
+import { Roster } from "@game/core-src/games/mecard/sync/lobby/Roster"
+import {
+    writeProfileMessage,
+    writeRefusedMessage,
+} from "@game/core-src/games/mecard/sync/lobby/RosterMessage"
+import { RosterView } from "@game/core-src/games/mecard/sync/lobby/RosterView"
+import {
+    LocalRoom,
+    LocalSync,
+    PROFILE_REFUSED_TOPIC,
+    PROFILE_TOPIC,
+} from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
+import { VersionMismatchFault } from "@game/core-src/engine/net/NetFaults"
+import type { Fault } from "@game/core-src/engine/net/Fault"
 import { describe, expect, test } from "vitest"
 
 /** A lobby with its roster, the way the host keeps it. */

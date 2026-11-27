@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
-import type { Container } from "@game/core"
-import { ALL_KITS, heroOf } from "@game/core/mecard"
+import type { Container } from "@game/core-src/engine/ui/Container"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
 import { AbsItemIcon } from "@game/core/mecard/abs-item-icon"
 import { stuffRow } from "@game/core/mecard/stuff-row"
-import type { Hero } from "@game/core/mecard"
+import type { Hero } from "@game/core-src/games/mecard/sim/run/Hero"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 

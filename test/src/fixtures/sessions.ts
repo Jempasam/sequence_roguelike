@@ -1,7 +1,12 @@
-import { MemoryConnection, signal, writeSession } from "@game/core"
-import type { Connection, NetError, SessionInfo, SessionLink, SessionSocket } from "@game/core"
+import { MemoryConnection } from "@game/core-src/engine/net/MemoryConnection"
+import { writeSession } from "@game/core-src/engine/net/Session"
+import { signal } from "@game/core-src/lifetime/Observable"
+import type { Connection } from "@game/core-src/engine/net/Connection"
+import type { NetError } from "@game/core-src/engine/net/NetError"
+import type { SessionInfo } from "@game/core-src/engine/net/Session"
+import type { SessionLink, SessionSocket } from "@game/core-src/engine/net/SessionHost"
 import type { JsonValue, Member } from "@game/server/protocol"
-import type { Removable } from "@game/core"
+import type { Removable } from "@game/core-src/lifetime/Removable"
 
 /** Let what waits in microtasks and soon-after callbacks run, as a network would deliver it. */
 export function settle(): Promise<void> {

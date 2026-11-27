@@ -1,9 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { colored, rgba, STEP, TURNS, UNIVERSAL_ELEMENTS, WALKS } from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+import { colored, rgba } from "@game/core-src/games/mecard/sim/base/Rgba"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WALKS } from "@game/core-src/games/mecard/sim/card/subs/movement/WalkCard"
+import { UNIVERSAL_ELEMENTS } from "@game/core-src/games/mecard/sim/card/subs/spell/UniversalElementCard"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 import { keyColorOf, MAX_CHIPS, variantEntries, variantKindOf } from "@game/core/mecard/variant-kind"
 import type { VariantEntry } from "@game/core/mecard/variant-kind"
-import type { Text } from "@game/core"
+import type { Text } from "@game/core-src/semantic/Text"
 
 // --- Fixture builders ---
 

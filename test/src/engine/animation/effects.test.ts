@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { effectFn } from "@game/core"
+import { effectFn } from "@game/core-src/engine/animation/effects"
 
 describe("an effect written as a generator", () => {
 

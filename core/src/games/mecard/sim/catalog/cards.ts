@@ -60,7 +60,7 @@ import {
     ROOK_ARRIVAL,
 } from "../card/subs"
 import { CARTE, UPGRADE } from "../base/keywords"
-import { keywordsOf } from "../card/describe"
+import * as Family from "../battle/mecanic/family"
 import { RewriteCard } from "../card/subs/composite/RewriteCards"
 import { upgradedWith, upgradesFor } from "./upgrades"
 
@@ -93,21 +93,23 @@ export const ENCHANTMENT: Card = new RewriteCard("Enchantement", [
     return { cards: [upgradedWith(ctx.pick(fitting), next, ctx.pick)], consumed: 1, acting: false }
 })
 
+/** The kinship a moult looks for, then the one it settles for. */
+const MOULT_KINSHIP = 2
+const MOULT_FALLBACK_KINSHIP = 1
+
 /**
- * The card on its right become another of the deck of its unit sharing notions with it: two if any shares as
- * many, else one. Left as it is when none shares any.
+ * The card on its right become another of the deck of its unit akin to it, as akin as it looks for if any is,
+ * else as it settles for. Left as it is when none is.
  */
 export const MOULT: Card = new RewriteCard("Mue", [
     "Fin de préparation : la ", CARTE, " qui la suit devient une ", CARTE, " de ta main, ta défausse ou ta chaîne ",
-    "qui partage deux mots-clés avec elle, à défaut un.",
+    ...Family.kinText(MOULT_KINSHIP), " avec elle, à défaut ", ...Family.kinText(MOULT_FALLBACK_KINSHIP), ".",
 ], Rarity.RARE, (ctx, spot) => {
     const next = spot.next
     if(!next || spot.trial) return { cards: [], consumed: 0, acting: false }
-    const own = keywordsOf(next)
-    const shared = (card: Card): number => [...keywordsOf(card)].filter(keyword => own.has(keyword)).length
     const others = [...new Set(spot.deck)].filter(card => card !== next && spot.fits(card))
-    for(const least of [2, 1]){
-        const close = others.filter(card => shared(card) >= least)
+    for(const least of [MOULT_KINSHIP, MOULT_FALLBACK_KINSHIP]){
+        const close = Family.kinOf(others, next, least)
         if(close.length > 0) return { cards: [ctx.pick(close)], consumed: 1, acting: false }
     }
     return { cards: [], consumed: 0, acting: false }

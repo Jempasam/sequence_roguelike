@@ -1,10 +1,28 @@
-import { ManualScheduler } from "@game/core"
-import { CAVE_FLOOR, DUEL_HALT, GOBLIN, LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
-import type { FloorType } from "@game/core/mecard"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 import {
-    BUILDER_OVER_LINGER_MS, gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, monsterBuilderMode,
-} from "@game/core/mecard/sync"
-import type { DuelAccess, DuelRacePlayer, RaceScreen, RaceTableBench } from "@game/core/mecard/sync"
+    BUILDER_OVER_LINGER_MS,
+} from "@game/core-src/games/mecard/sim/mode/subs/monsterBuilder/MonsterBuilderManager"
+import {
+    monsterBuilderMode,
+} from "@game/core-src/games/mecard/sim/mode/subs/monsterBuilder/MonsterBuilderMode"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type {
+    RaceScreen,
+    RaceTableBench,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelRaceOwner"
+import type {
+    DuelRacePlayer,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/DuelRacePlayer"
+import type { DuelAccess } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/HubPort"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

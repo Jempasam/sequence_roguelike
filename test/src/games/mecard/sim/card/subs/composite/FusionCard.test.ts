@@ -1,8 +1,16 @@
 import { describe, expect, test } from "vitest"
+import { PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { CLONE } from "@game/core-src/games/mecard/sim/card/subs/combat/Clone"
+import { cardCount, cut, heldCards } from "@game/core-src/games/mecard/sim/card/subs/composite/CompositeCard"
 import {
-    cardCount, CLONE, cut, FusionCard, heldCards, isFusion, PREPARATION, REPEAT_2, STEP, THRUST, Rarity,
+    FusionCard,
+    isFusion,
     UNSTABLE_THRUST,
-} from "@game/core/mecard"
+} from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 
 // --- Tests ---
 

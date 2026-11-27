@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { BURN, DEMONIC, DODGE, POISONED, ROOTED, STEP, WAIT } from "@game/core/mecard"
-import type { StatusType, Unit } from "@game/core/mecard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { DEMONIC } from "@game/core-src/games/mecard/sim/status/subs/DemonEnergy"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { StatusType } from "@game/core-src/games/mecard/sim/status/Status"
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
 // --- Fixture builders ---

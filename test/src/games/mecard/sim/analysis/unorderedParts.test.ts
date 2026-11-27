@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest"
-import {
-    AIM, BITE_PROFILE, BOW_MODULE, IMPROVISED_ROBOT, readsWhole, RUN_PROFILE, SHOT, STEP, THRUST,
-} from "@game/core/mecard"
+import { BITE_PROFILE, RUN_PROFILE } from "@game/core-src/games/mecard/sim/analysis/Profile"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BOW_MODULE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 import {
     arranged, bestSet, comboPossible, completion, partition, ranked, without,
 } from "@game/core/mecard/unordered-parts"

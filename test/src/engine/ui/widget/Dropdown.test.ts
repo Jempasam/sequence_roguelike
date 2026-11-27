@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Dropdown } from "@game/core"
+import { Dropdown } from "@game/core-src/engine/ui/widget/Dropdown"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

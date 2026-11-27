@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Mat4, Quat, Vec3 } from "@game/core"
+import { Mat4 } from "@game/core-src/engine/math/Mat4"
+import { Quat } from "@game/core-src/engine/math/Quat"
+import { Vec3 } from "@game/core-src/engine/math/Vec3"
 
 // --- Fixture builders ---
 

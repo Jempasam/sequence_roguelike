@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { TileRun } from "@game/core"
-import type { Tiling } from "@game/core"
+import { TileRun } from "@game/core-src/engine/ui/TileRun"
+import type { Tiling } from "@game/core-src/engine/ui/TileRun"
 
 // --- Fixture builders ---
 

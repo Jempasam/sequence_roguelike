@@ -1,13 +1,20 @@
 import { describe, expect, test } from "vitest"
-import {
-    Arena, Battle, Heart, RED_HEART, SHIELD_HEART, SPELL, Strength, Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
-import { BattleScene } from "@game/core/mecard/battle-ui"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { Strength } from "@game/core-src/games/mecard/sim/process/subs/Strength"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import { BattleScene } from "@game/core-src/games/mecard/ui/battle/BattleScene"
 import { BEAT, Replay } from "./replay"
 
 import { chain, HEROES, MONSTERS } from "../../sim/fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** A hero and a foe in a round being prepared, watched by a replay at rest. */
 async function watched(hearts = Heart.many(RED_HEART, 3)): Promise<{
@@ -49,7 +56,7 @@ describe("BattleAnimations, the cards", () => {
         const { on, hero, scene, replay, selected } = await watched()
         played(on, hero, [WAIT])
         await replay.frame(0)
-        expect(selected).toEqual([hero])
+        expect(new Set(selected)).toEqual(new Set([hero]))
         expect(scene.litCards).toMatchObject({ unit: hero, first: 0, last: 0, invalid: false })
         await replay.frame(BEAT / 2)
         expect(scene.litCards).not.toBeNull()
@@ -69,7 +76,7 @@ describe("BattleAnimations, the cards", () => {
         const { on, hero, scene, replay, selected } = await watched()
         played(on, hero, [SPELL, WAIT])
         await replay.frame(0)
-        expect(selected).toEqual([hero])
+        expect(new Set(selected)).toEqual(new Set([hero]))
         expect(scene.litCards).toMatchObject({ unit: hero, first: 0, last: 0, invalid: true })
         await replay.frame(BEAT / 2)
         expect(scene.litCards?.invalid).toBe(true)

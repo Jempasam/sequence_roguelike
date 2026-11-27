@@ -12,6 +12,7 @@ import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { TURN } from "../../../battle/mecanic/turn/keyword"
 import * as Summons from "../../../battle/mecanic/summon"
 import * as Turn from "../../../battle/mecanic/turn"
+import * as Steps from "../../../battle/mecanic/step"
 import type { Preview } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import * as Previews from "../../../battle/preview/Previews"
@@ -23,7 +24,7 @@ import { mergeableInChain, MergedCard, suppliedAfter } from "../../../card/subs/
 
 import { AbstractUsable } from "../AbstractUsable"
 import { visual } from "../../../base/Visual"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import * as Areas from "../../../battle/area/Areas"
 
 /** How far around its unit the whistle reaches, in meters. */
@@ -87,7 +88,7 @@ export class MagicWatch extends AbstractUsable {
 
 
     protected act({ battle, unit }: UnitContext): void {
-        battle.duplicateLastStep(unit)
+        Steps.doubleLast(battle, unit)
     }
 }
 
@@ -117,7 +118,7 @@ export class Whistle extends AbstractUsable {
         super(
             "Sifflet", visual("usables/energizer"),
             [
-                TURN.as("Tourne"), " chaque ", UNIT, " à ", frenchNumber(WHISTLE_RADIUS), " ", DISTANCE, " autour vers toi. 2 utilisations, rechargées à chaque combat.",
+                TURN.as("Tourne"), " chaque ", UNIT, " à ", WHISTLE_RADIUS, " ", DISTANCE, " autour vers toi. 2 utilisations, rechargées à chaque combat.",
             ],
             { charges: 2, refill: "battle" },
         )

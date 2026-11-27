@@ -1,8 +1,16 @@
 import { describe, expect, test } from "vitest"
-import {
-    Arena, Battle, FIRE, GAMBLE, PREPARATION, RandomCard, REPEAT_2, signatureOf, SPELL, STEP, THRUST, WATER,
-} from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { RandomCard } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { GAMBLE } from "@game/core-src/games/mecard/sim/card/subs/modifier/GambleCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { FIRE, WATER } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { chain } from "../../../fixtures"
 

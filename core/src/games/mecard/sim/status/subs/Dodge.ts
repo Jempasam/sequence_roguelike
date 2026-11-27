@@ -8,6 +8,7 @@ import { PUSH_DAMAGE } from "../../battle/mecanic/push/shove"
 import { SWAPPING } from "../../battle/mecanic/swap/keyword"
 import * as Pushing from "../../battle/mecanic/push"
 import * as Swap from "../../battle/mecanic/swap"
+import { STUNNED } from "./Stunned"
 
 /** What each guard tells, before what it does more. */
 const GUARDING = ["Annule les ", STATUS_LEVEL, " prochaines attaques physiques. −1 à chaque début de tour."]
@@ -28,7 +29,7 @@ export class Dodge extends Guard {
 
 /** A counter: the next physical attacks are stopped, and stun who struck. */
 export const COUNTER = new StatusType("contre", statusVisual("counter", 1, 0.75, 0.3), "positive", level => new Counter(level), {
-    description: [...GUARDING, " L'attaquant est étourdi."],
+    description: [...GUARDING, " L'attaquant gagne ", STUNNED, " ", 1, "."],
 })
 
 /** Countering: who struck is stunned. */
@@ -38,7 +39,7 @@ export class Counter extends Guard {
     public readonly type: StatusType = COUNTER
 
     protected react({ battle }: UnitContext, { attacker }: Parried): void {
-        battle.stun(attacker)
+        battle.applyStatus(attacker, STUNNED, 1)
     }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { PUSH } from "@game/core/mecard"
+import { PUSH } from "@game/core-src/games/mecard/sim/card/subs/combat/Push"
 
 import { battle, chain, MONSTERS, unit } from "../../../fixtures"
 
@@ -18,6 +18,6 @@ describe("PUSH.preview", () => {
         const pusher = unit(on, 3, 5)
         unit(on, 3, 4.2, { team: MONSTERS })
         const [root] = chain(PUSH).preview(on, pusher)
-        expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["polygon", "polygon", "arrow"])
+        expect(root.preview?.indicators.map(indicator => indicator.kind)).toEqual(["polygon", "arrow"])
     })
 })

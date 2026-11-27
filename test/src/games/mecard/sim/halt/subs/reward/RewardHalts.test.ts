@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest"
+import { rewardHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { GOBLIN, GOLEM } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE_REWARD_HALT } from "@game/core-src/games/mecard/sim/halt/subs/reward/BattleRewardHalt"
+import { BOSS_REWARD_HALT } from "@game/core-src/games/mecard/sim/halt/subs/reward/BossRewardHalt"
+import { ELITE_REWARD_HALT } from "@game/core-src/games/mecard/sim/halt/subs/reward/EliteRewardHalt"
 import {
-    BATTLE_REWARD_HALT, BOSS_REWARD_HALT, ELITE_REWARD_HALT, GOBLIN, GOLEM, MONSTER_LOOTING_REWARD_HALT,
-    rewardHalts,
-} from "@game/core/mecard"
-import type { Card, Fight, HaltContext, HaltType, Shown } from "@game/core/mecard"
+    MONSTER_LOOTING_REWARD_HALT,
+} from "@game/core-src/games/mecard/sim/halt/subs/reward/MonsterLootingRewardHalt"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Fight } from "@game/core-src/games/mecard/sim/fight/Fight"
+import type { HaltContext, Shown } from "@game/core-src/games/mecard/sim/halt/HaltContext"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../../../fixtures/startedRun"
 

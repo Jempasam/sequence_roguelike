@@ -1,9 +1,18 @@
 import { describe, expect, test } from "vitest"
-import {
-    AbstractCard, CARD, CardChain, CardType, FIRE, PRAYER, GAMBLE, ModifierCard, Rarity, read, readsWhole, REPEAT_2,
-    SPELL, STEP, supplied, THRUST,
-} from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+import { CardChain, readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { CARD, CardType } from "@game/core-src/games/mecard/sim/card/CardType"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { read, supplied } from "@game/core-src/games/mecard/sim/card/Reading"
+import { AbstractCard } from "@game/core-src/games/mecard/sim/card/subs/AbstractCard"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { GAMBLE } from "@game/core-src/games/mecard/sim/card/subs/modifier/GambleCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { ModifierCard } from "@game/core-src/games/mecard/sim/card/subs/ModifierCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { PRAYER } from "@game/core-src/games/mecard/sim/card/subs/preparation/Prayer"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 /** A card taking the cards on its right as they are, and giving them back as what it saw. */
 class SeerCard extends AbstractCard<readonly Card[], readonly Card[]> {

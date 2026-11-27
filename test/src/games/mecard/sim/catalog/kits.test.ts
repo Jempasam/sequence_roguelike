@@ -1,9 +1,22 @@
 import { describe, expect, test } from "vitest"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
 import {
-    ALL_CARDS, ALL_ITEMS, ALL_USABLES, BLACK_HEART, BLACK_KNIGHT_KIT, BRAWLER_KIT, closestKit, heroOf, ALL_KITS,
-    kitScore, LANCER_KIT, MAGE_KIT, PINK_HEART, RED_HEART, SWORDSMAN_KIT,
-} from "@game/core/mecard"
-import type { Kit } from "@game/core/mecard"
+    BLACK_KNIGHT_KIT,
+    BRAWLER_KIT,
+    closestKit,
+    ALL_KITS,
+    kitScore,
+    LANCER_KIT,
+    MAGE_KIT,
+    SWORDSMAN_KIT,
+} from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { BLACK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlackHeartKind"
+import { PINK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/PinkHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
+import type { Kit } from "@game/core-src/games/mecard/sim/catalog/kits"
 
 // --- Helpers ---
 
@@ -54,7 +67,7 @@ describe("ALL_KITS", () => {
     test("some kits → the hearts of the table", () => {
         expect(heartsOf(LANCER_KIT)).toEqual(["rouge×4"])
         expect(heartsOf(BRAWLER_KIT)).toEqual(["rouge×5", "rose×1"])
-        expect(heartsOf(BLACK_KNIGHT_KIT)).toEqual(["noir×10"])
+        expect(heartsOf(BLACK_KNIGHT_KIT)).toEqual(["noir×8"])
     })
 })
 

@@ -28,7 +28,7 @@ export class AltarHalt extends DeckHalt {
     constructor(run: Run){
         super(ALTAR_HALT, run,
             ["Offre deux ", CARTE.as("cartes"), ", et je copie une troisième de ton ", DECK, "."],
-            sceneLook(36, 13, 18, "altar"),
+            sceneLook(22, 13, 36, "altar"),
             {
                 hat: "mitre",
                 clothes: rgba(0.9, 0.2, 0.25),

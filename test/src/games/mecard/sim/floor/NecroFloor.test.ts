@@ -1,8 +1,14 @@
-import {
-    BATTLE_REWARD_HALT, CAVE_FLOOR, DUEL_HALT, DuelHalt, exitsOf, Journey, NECRO_FLOOR,
-    NECRO_RECRUIT_HALT, necroHalts, Rng, Run,
-} from "@game/core/mecard"
-import { DuelConversion, setUpNecro } from "@game/core/mecard/sync"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { exitsOf } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { NECRO_FLOOR, necroHalts } from "@game/core-src/games/mecard/sim/floor/subs/NecroFloor"
+import { DUEL_HALT, DuelHalt } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { NECRO_RECRUIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/necro/NecroRecruitHalt"
+import { BATTLE_REWARD_HALT } from "@game/core-src/games/mecard/sim/halt/subs/reward/BattleRewardHalt"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { DuelConversion } from "@game/core-src/games/mecard/sim/mode/subs/monsterBuilder/DuelConversion"
+import { setUpNecro } from "@game/core-src/games/mecard/sim/mode/subs/monsterBuilder/NecroSetup"
 import { describe, expect, test } from "vitest"
 
 describe("the floor of a necromancer", () => {

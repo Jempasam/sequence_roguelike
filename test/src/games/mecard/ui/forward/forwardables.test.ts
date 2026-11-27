@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Arena, Battle, BattleSignals, Observable } from "@game/core/mecard"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { BattleSignals } from "@game/core-src/games/mecard/sim/battle/signals"
+import { Observable } from "@game/core-src/lifetime/Observable"
 import {
     BATTLE_FORWARDED, BATTLE_NOT_FORWARDED, RUN_FORWARDED, RUN_NOT_FORWARDED, TRAVEL_FORWARDED,
     TRAVEL_NOT_FORWARDED, battleForwardables, runForwardables, travelForwardables,

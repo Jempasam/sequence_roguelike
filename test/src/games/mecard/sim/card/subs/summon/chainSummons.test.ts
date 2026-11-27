@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { BLACK_HOLE, DECOY, SENTINEL, SHOUT_TOTEM, TURRET } from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+import {
+    BLACK_HOLE,
+    DECOY,
+    SENTINEL,
+    SHOUT_TOTEM,
+    TURRET,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/ChainSummons"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

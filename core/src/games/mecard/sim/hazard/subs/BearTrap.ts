@@ -7,6 +7,7 @@ import type { Unit } from "../../battle/Unit"
 import { Heart } from "../../heart/Heart"
 import { TIME_HEART } from "../../heart/subs/TimeHeartKind"
 import { StatusType, statusVisual } from "../../status/Status"
+import { STUNNED } from "../../status/subs/Stunned"
 import { HazardStatus, placeHazard } from "../Hazard"
 
 import { HAZARD_TEXT } from "./hazardText"
@@ -23,7 +24,11 @@ export const BEAR_TRAP_RADIUS = 0.3
 export const BEAR_TRAP_DAMAGE = 2
 
 /** A bear trap. */
-export const BEAR_TRAP_HAZARD = new StatusType("piège à ours", statusVisual("mine", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral", level => new Trapping(level), { cloned: false, description: "Le premier corps qui la touche est blessé et perd sa prochaine étape." })
+export const BEAR_TRAP_HAZARD = new StatusType(
+    "piège à ours", statusVisual("mine", HAZARD_TEXT.r, HAZARD_TEXT.g, HAZARD_TEXT.b), "neutral",
+    level => new Trapping(level),
+    { cloned: false, description: ["Le premier corps qui la touche est blessé et gagne ", STUNNED, " ", 1, "."] },
+)
 
 /** A bear trap: the first body to touch it is wounded and stunned, and the trap is gone. */
 export class Trapping extends HazardStatus {
@@ -37,7 +42,7 @@ export class Trapping extends HazardStatus {
             const zone = unit.zone ?? Areas.circle(unit.position, BEAR_TRAP_RADIUS)
             if(!mover.hitbox.touches({ position: to, direction: mover.direction }, zone)) return
             mover.hearts.damage(BEAR_TRAP_DAMAGE, DamageType.PHYSICAL, unit.owner ?? unit)
-            battle.stun(mover)
+            battle.applyStatus(mover, STUNNED, 1)
             unit.hearts.slay(null)
         }))
     }

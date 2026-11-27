@@ -8,7 +8,6 @@ import { DASH_LENGTH, DASH_SPEED, MoveCard } from "./MoveCard"
 import type { Impact } from "./MoveCard"
 import { AGILITE, DISTANCE, PORTEE, UNIT } from "../../../base/keywords"
 import { DamageType } from "../../../battle/DamageType"
-import { frenchNumber } from "../../../battle/words"
 import { WALK } from "../../../battle/mecanic/walk/keyword"
 import * as Areas from "../../../battle/area/Areas"
 
@@ -33,7 +32,7 @@ export class ExplosiveDashCard extends MoveCard {
     ){
         super("Dash explosif", [
             WALK.as("Fonce"), " de ", length, "×", AGILITE, " ", DISTANCE, ". S'il percute quoi que ce soit, tout explose à ",
-            frenchNumber(radius), "×", PORTEE, " ", DISTANCE, " autour : ", blast, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
+            radius, "×", PORTEE, " ", DISTANCE, " autour : ", blast, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
             ", sauf toi.",
         ], Rarity.RARE, length, speed)
     }

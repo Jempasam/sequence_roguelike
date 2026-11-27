@@ -1,4 +1,6 @@
-import { LifeBook, LivesReceiver, LocalSync, LOSERS_LOSE_ONE } from "@game/core/mecard/sync"
+import { LOSERS_LOSE_ONE } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelOutcome"
+import { LifeBook, LivesReceiver } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/LifeBook"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

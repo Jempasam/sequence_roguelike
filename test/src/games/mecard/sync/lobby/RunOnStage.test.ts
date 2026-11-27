@@ -1,7 +1,11 @@
-import {
-    COOP_SEATS, FIXED_SEATS, HostStage, LobbyRoom, LocalRoom, LocalSync, RunBroadcaster, RunGuest, RunHost,
-    RunReceiver,
-} from "@game/core/mecard/sync"
+import { LobbyRoom } from "@game/core-src/games/mecard/sync/lobby/LobbyRoom"
+import { HostStage } from "@game/core-src/games/mecard/sync/lobby/Stage"
+import { RunBroadcaster } from "@game/core-src/games/mecard/sync/run/RunBroadcaster"
+import { RunGuest } from "@game/core-src/games/mecard/sync/run/RunGuest"
+import { RunHost } from "@game/core-src/games/mecard/sync/run/RunHost"
+import { RunReceiver } from "@game/core-src/games/mecard/sync/run/RunReceiver"
+import { COOP_SEATS, FIXED_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { describe, expect, test } from "vitest"
 
 import { startedRun } from "../../../../fixtures/startedRun"

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { BACK_DASH, SLINGSHOT } from "@game/core/mecard"
+import { BACK_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BackDash"
+import { SLINGSHOT } from "@game/core-src/games/mecard/sim/card/subs/summon/Slingshot"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

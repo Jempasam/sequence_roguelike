@@ -1,11 +1,49 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { DAGGER } from "@game/core-src/games/mecard/sim/card/subs/attack/Dagger"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
 import {
-    Carried, DAGGER, DEBT, EPIDEMIC, Heart, HEALING_POTION, LOADED_DIE, LUCIDITY, MergedCard, POISONED, RED_HEART,
-    SCAVENGER_NOSE, SLASH, SLOWED, SNAIL_SHELL, TAMING_MARK, TESTAMENT, TRANSFUSION, UNSURE_BLOW, Vector2, WAIT, CLOVER,
-    COOLER, PEDOMETER, BLEEDING, SCARIFICATION, PLAGUE_MASK, PURGE, AGGRAVATION, AUTOPSY, NATURALIZATION, isStuffed,
-    MUZZLE, ROOTED, TREAT, DODGE, WHIP,
-} from "@game/core/mecard"
-import type { Battle, Item, Unit } from "@game/core/mecard"
+    AUTOPSY,
+    NATURALIZATION,
+    MUZZLE,
+    TREAT,
+    WHIP,
+} from "@game/core-src/games/mecard/sim/card/subs/attack/TamerCards"
+import { MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { UNSURE_BLOW } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { TAMING_MARK } from "@game/core-src/games/mecard/sim/card/subs/process/TaxidermyCards"
+import { EPIDEMIC, TRANSFUSION } from "@game/core-src/games/mecard/sim/card/subs/status/ContagionCards"
+import {
+    SCARIFICATION,
+    PLAGUE_MASK,
+    PURGE,
+    AGGRAVATION,
+} from "@game/core-src/games/mecard/sim/card/subs/status/PlagueCards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { LOADED_DIE } from "@game/core-src/games/mecard/sim/item/subs/combat/LoadedDie"
+import { PEDOMETER } from "@game/core-src/games/mecard/sim/item/subs/combat/Pedometer"
+import { SCAVENGER_NOSE } from "@game/core-src/games/mecard/sim/item/subs/combat/Scavenger"
+import { TESTAMENT } from "@game/core-src/games/mecard/sim/item/subs/combat/Testament"
+import { CLOVER } from "@game/core-src/games/mecard/sim/item/subs/hand/Clover"
+import { COOLER } from "@game/core-src/games/mecard/sim/item/subs/hand/Cooler"
+import { SNAIL_SHELL } from "@game/core-src/games/mecard/sim/item/subs/heal/SnailShell"
+import { DEBT } from "@game/core-src/games/mecard/sim/item/subs/stat/Debt"
+import { isStuffed } from "@game/core-src/games/mecard/sim/process/subs/Taxidermy"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { LUCIDITY } from "@game/core-src/games/mecard/sim/status/subs/Lucidity"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import { BLEEDING } from "@game/core-src/games/mecard/sim/status/subs/Wounds"
+import { HealingPotion } from "@game/core-src/games/mecard/sim/usable/subs/HealingPotion"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import * as Summon from "@game/core-src/games/mecard/sim/battle/mecanic/summon"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Item } from "@game/core-src/games/mecard/sim/item/Item"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../fixtures"
 
@@ -49,7 +87,7 @@ describe("the clover and the cooler", () => {
 
     test("the cooler → one more charge for each usable at the first round", () => {
         const on = battle()
-        const potion = new Carried(HEALING_POTION)
+        const potion = new Carried(new HealingPotion(3))
         carrier(on, 3.5, 5.5, [COOLER], [potion])
         bystander(on)
         on.startRound()
@@ -81,14 +119,14 @@ describe("the pedometer", () => {
         bystander(on)
         on.startRound()
         for(let leg = 0; leg < 2; leg++){
-            on.move(hero, Vector2.UP, 3)
-            on.move(hero, Vector2.DOWN, 3)
+            Walk.move(on, hero, Vector2.UP, 3)
+            Walk.move(on, hero, Vector2.DOWN, 3)
         }
         expect(hero.stats.strength.value).toBe(1)
         expect(hero.stats.precision.value).toBe(0)
         for(let leg = 0; leg < 4; leg++){
-            on.move(hero, Vector2.UP, 3)
-            on.move(hero, Vector2.DOWN, 3)
+            Walk.move(on, hero, Vector2.UP, 3)
+            Walk.move(on, hero, Vector2.DOWN, 3)
         }
         expect(hero.stats.strength.value).toBeGreaterThanOrEqual(3)
         expect(hero.stats.precision.value).toBe(1)
@@ -105,7 +143,7 @@ describe("the snail shell", () => {
         expect(shields()).toBe(1)
         play(on, [[hero, chain(WAIT)]])
         expect(shields()).toBe(2)
-        on.move(hero, Vector2.UP, 1)
+        Walk.move(on, hero, Vector2.UP, 1)
         expect(shields()).toBe(0)
     })
 })
@@ -217,7 +255,7 @@ describe("the cards of the kits", () => {
         unit(on, 0.5, 0.5, { team: MONSTERS })
         play(on, [[hero, chain(AUTOPSY)]])
         expect(prey.alive).toBe(false)
-        const bodies = on.summonsOf(hero).filter(isStuffed)
+        const bodies = Summon.summonsOf(on, hero).filter(isStuffed)
         expect(bodies).toHaveLength(1)
         play(on, [[hero, chain(NATURALIZATION)]])
         expect(bodies[0].hearts.all.some(heart => heart.kind.name === "bouclier")).toBe(true)

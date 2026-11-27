@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +10,7 @@ export const SLING = new StatItem("Fronde", visual("items/sling"), [
     {
         stat: stats => stats.throwRange,
         amount: SLING_REACH,
-        shown: [frenchNumber(SLING_REACH * 100), " %"],
+        shown: [SLING_REACH * 100, " %"],
         text: "de portée",
     },
 ])

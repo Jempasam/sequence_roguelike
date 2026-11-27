@@ -1,5 +1,4 @@
 import { Add, ModifierKey } from "../../../base/Attribute"
-import { frenchNumber } from "../../../battle/words"
 import type { Unit } from "../../../battle/Unit"
 
 import { RoundElixir } from "./RoundElixir"
@@ -19,7 +18,7 @@ export class HasteElixir extends RoundElixir {
 
         charges = 1,
     ){
-        super("Élixir de hâte", visual("usables/haste_elixir"), ["Tes déplacements vont ", frenchNumber(move * 100), " % plus loin ce ", BATTLE_ROUND, "."], { charges })
+        super("Élixir de hâte", visual("usables/haste_elixir"), ["Tes déplacements vont ", move * 100, " % plus loin ce ", BATTLE_ROUND, "."], { charges })
     }
 
 

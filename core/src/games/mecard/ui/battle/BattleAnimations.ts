@@ -11,6 +11,7 @@ import type { Battle } from "../../sim/battle/Battle"
 import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
 import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
 import { SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { STEP_DISABLED, STEPS_CHANGED } from "../../sim/battle/mecanic/step/signals"
 import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
 import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
 import { TURNED } from "../../sim/battle/mecanic/turn/signals"
@@ -24,7 +25,7 @@ import type { Card } from "../../sim/card/Card"
 
 import type { PlayControl } from "../hud/PlayControl"
 import { Color } from "../../../../engine/math"
-import { ADDED_EDGE, FOCUS_EDGE, NOTICE_EDGE, REMOVED_EDGE } from "../look/colors"
+import { ADDED_EDGE, DISABLED_EDGE, FOCUS_EDGE, NOTICE_EDGE, REMOVED_EDGE } from "../look/colors"
 import { VECTOR_FX } from "../look/FxSprites"
 import type { FxResolved } from "../look/FxSprites"
 import { placeStrike } from "../look/placeStrike"
@@ -201,9 +202,11 @@ export class BattleAnimations {
         })
 
         //// CARDS ////
-        const litCards = (unit: Unit, first: number, last: number, invalid: boolean): number => {
+        const litCards = (
+            unit: Unit, first: number, last: number, invalid: boolean, edge = FOCUS_EDGE,
+        ): number => {
             this.onSelect?.(unit)
-            scene.lightCards({ unit, first, last, invalid, edge: FOCUS_EDGE })
+            scene.lightCards({ unit, first, last, invalid, edge })
             return BEAT
         }
 
@@ -270,6 +273,16 @@ export class BattleAnimations {
             scene.change(unit, shown => shown.steps = left)
             this.onSelect?.(unit)
         })
+
+        // Step Disabled : Light its Cards in Grey, a step read before having none left to show
+        observers.push(battle.observers.of(STEP_DISABLED).add(({ unit, cards }) => {
+            if(!cards) return
+            const { first, last } = cards
+            this.chain.add(this.#stopping(() => litCards(unit, first, last, false, DISABLED_EDGE)))
+        }))
+
+        // Steps Changed : Steps Left Updated
+        on(battle.observers.of(STEPS_CHANGED), ({ unit, left }) => () => scene.change(unit, shown => shown.steps = left))
 
         //// STRIKES ////
         // Unit Struck an Area : The Blow Plays Over the Area, the Attacker Lunging, to its End

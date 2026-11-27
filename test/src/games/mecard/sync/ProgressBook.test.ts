@@ -1,9 +1,11 @@
-import type { Fault } from "@game/core"
-import {
-    LAST_STATE, LocalRoom, LocalSync, ProgressBook, ProgressReceiver, PROGRESS_TOPIC, Relay,
-    writeProgressMessage,
-} from "@game/core/mecard/sync"
-import type { Progress } from "@game/core/mecard/sync"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { PROGRESS_TOPIC } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/raceTopics"
+import { ProgressBook } from "@game/core-src/games/mecard/sync/progress/ProgressBook"
+import { writeProgressMessage } from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
+import { ProgressReceiver } from "@game/core-src/games/mecard/sync/progress/ProgressReceiver"
+import { LAST_STATE, Relay } from "@game/core-src/games/mecard/sync/Relay"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { Progress } from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

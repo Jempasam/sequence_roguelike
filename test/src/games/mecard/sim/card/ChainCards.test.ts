@@ -1,9 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import * as Family from "@game/core-src/games/mecard/sim/battle/mecanic/family"
+import { PIERCING_SPEAR } from "@game/core-src/games/mecard/sim/card/subs/attack/PiercingSpear"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { MEMORY_GAP } from "@game/core-src/games/mecard/sim/card/subs/chain/MemoryGap"
+import { PARROT } from "@game/core-src/games/mecard/sim/card/subs/chain/Parrot"
+import { STUTTER } from "@game/core-src/games/mecard/sim/card/subs/chain/Stutter"
+import { CARRION_BREATH } from "@game/core-src/games/mecard/sim/card/subs/combat/CarrionBreath"
+import { SYNCHRONISATION } from "@game/core-src/games/mecard/sim/card/subs/modifier/Synchronisation"
+import { PAS_DE_DEUX } from "@game/core-src/games/mecard/sim/card/subs/movement/PasDeDeux"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { EXO_NERF } from "@game/core-src/games/mecard/sim/card/subs/process/ExoNerf"
 import {
-    CARRION_BREATH, ETHEREAL_FORM, EXO_NERF, HAUNT, PIERCING_SPEAR, PLAGIARISM, keywordsOf, LOOT_CARDS, MEMORY_GAP, STINKING, PARROT, PAS_DE_DEUX, SHOT, SLASH, STEP, STUTTER, SYNCHRONISATION,
-    Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+    ETHEREAL_FORM,
+    HAUNT,
+    PLAGIARISM,
+} from "@game/core-src/games/mecard/sim/card/subs/spectre/SpectreCards"
+import { LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { STINKING } from "@game/core-src/games/mecard/sim/status/subs/Stench"
+import * as Push from "@game/core-src/games/mecard/sim/battle/mecanic/push"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
 
@@ -184,7 +202,7 @@ describe("Piercing spear", () => {
         play(on, [[caster, chain(PIERCING_SPEAR, WAIT)], [target, chain(WAIT, STEP)]])
         const x = caster.position.x
         // Pushed after the round, by something else: nothing follows any more.
-        on.push(caster, Vector2.RIGHT, 1, target)
+        Push.shove({ battle: on, by: target, target: caster, direction: Vector2.RIGHT, distance: 1 })
         expect(caster.position.x).toBeGreaterThanOrEqual(x)
     })
 
@@ -340,8 +358,7 @@ describe("One mind", () => {
         for(const first of LOOT_CARDS){
             for(const second of LOOT_CARDS){
                 if(first === second || first.input !== second.input || first.output !== second.output) continue
-                const others = keywordsOf(second)
-                if([...keywordsOf(first)].filter(keyword => others.has(keyword)).length >= 2) pairs.push([first, second])
+                if(Family.isKin(first, second, 2)) pairs.push([first, second])
             }
         }
         return pairs

@@ -1,5 +1,5 @@
+import { numberText } from "../../../base/text"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 import { ACTION } from "../../CardType"
 
@@ -26,8 +26,8 @@ export class GambleCard extends AbstractCard<Action, Action> {
         public readonly miss: number,
     ){
         super(
-            `${frenchNumber(miss * 100)} %`,
-            ["Chaque action a ", frenchNumber(miss * 100), " % de chances d'être perdue."], Rarity.COMMON,
+            `${numberText(miss * 100)} %`,
+            ["Chaque action a ", miss * 100, " % de chances d'être perdue."], Rarity.COMMON,
         )
     }
 

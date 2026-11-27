@@ -1,5 +1,5 @@
-import { FeedRoom } from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+import { FeedRoom } from "@game/core-src/games/mecard/sync/session/FeedRoom"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 const PEER: SyncPeer = { id: "p", send: () => {}, listen: () => ({ remove: () => {} }) }

@@ -1,5 +1,11 @@
-import { GAMEPAD_BUTTONS } from "@game/core"
-import type { GamepadAxis, GamepadButton, GamepadState, InputPort, RawInputEvent } from "@game/core"
+import { GAMEPAD_BUTTONS } from "@game/core-src/platform/InputPort"
+import type {
+    GamepadAxis,
+    GamepadButton,
+    GamepadState,
+    InputPort,
+    RawInputEvent,
+} from "@game/core-src/platform/InputPort"
 
 /**
  * An input port the test drives: the events it queues come out at the next poll, and the gamepads it

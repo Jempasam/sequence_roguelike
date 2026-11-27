@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { spansOf } from "@game/core"
+import { spansOf } from "@game/core-src/semantic/Text"
 
 import { battle, rgbaOf, unit } from "../fixtures"
 

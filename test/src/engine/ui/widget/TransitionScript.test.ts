@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { readTransition } from "@game/core"
-import type { OraImage, OraLayer } from "@game/core"
+import { readTransition } from "@game/core-src/engine/ui/widget/TransitionScript"
+import type { OraImage, OraLayer } from "@game/core-src/engine/image/decodeOra"
 
 // --- Fixture builders ---
 

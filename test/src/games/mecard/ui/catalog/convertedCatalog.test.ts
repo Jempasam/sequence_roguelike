@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { plainText, Toggle } from "@game/core"
-import { ALL_MONSTERS, KINDS, TARGETS } from "@game/core/mecard"
-import { PlayerCatalog } from "@game/core/mecard/persist"
+import { Toggle } from "@game/core-src/engine/ui/widget/Toggle"
+import { plainText } from "@game/core-src/semantic/Text"
+import { KINDS } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { TARGETS } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { PlayerCatalog } from "@game/core-src/games/mecard/persist/PlayerCatalog"
 import { ConvertedCatalog } from "@game/core/mecard/converted-catalog"
 import type { LibraryLook } from "@game/core/mecard/entries"
 

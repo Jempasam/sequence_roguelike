@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { MIRROR, REPEAT_2, REPEAT_3, STEP, TORNADO, Vector2, WAIT } from "@game/core/mecard"
-import type { Action } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { REPEAT_2, REPEAT_3 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { TORNADO } from "@game/core-src/games/mecard/sim/card/subs/modifier/Tornado"
+import { MIRROR } from "@game/core-src/games/mecard/sim/card/subs/modifier/Wrappers"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { ELECTROCUTED } from "@game/core-src/games/mecard/sim/status/subs/Electrocuted"
+import type { Action } from "@game/core-src/games/mecard/sim/battle/Action"
 
 import { battle, chain, expectAt, MONSTERS, unit } from "../../../fixtures"
 
@@ -40,14 +46,14 @@ describe("a card playing its action more than once", () => {
         expect(walker.stepsLeft).toBe(0)
     })
 
-    test("repeat shocked → all its plays lost with the step", () => {
+    test("repeat electrocuted → all its plays lost with the step", () => {
         const on = battle()
         const walker = unit(on, 3, 6, { hand: [REPEAT_2, STEP, WAIT] })
         unit(on, 0, 0, { team: MONSTERS })
         on.startRound()
         on.commit(walker, chain(REPEAT_2, STEP, WAIT))
         on.endPreparation()
-        on.shock(walker)
+        on.applyStatus(walker, ELECTROCUTED, 1)
         on.playRound()
         expectAt(walker, 3, 6)
     })

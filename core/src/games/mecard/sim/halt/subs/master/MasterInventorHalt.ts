@@ -18,7 +18,7 @@ export class MasterInventorHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MASTER_INVENTOR_HALT, run,
             ["Trois ", FUSION.as("collages"), ", chacun amélioré. Choisis le tien."],
-            sceneLook(28, 26, 23, "inventor", { coloration: [0.82, 0.9, 1] }),
+            sceneLook(28, 24, 20, "inventor", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "goggles",
                 mask: MASTER_MASK,

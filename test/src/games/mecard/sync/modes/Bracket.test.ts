@@ -1,5 +1,5 @@
-import { Rng } from "@game/core/mecard"
-import { Bracket } from "@game/core/mecard/sync"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { Bracket } from "@game/core-src/games/mecard/sim/mode/subs/tournament/Bracket"
 import { describe, expect, test } from "vitest"
 
 /** Play a bracket to its end, the first of each match winning: who won, and how many matches were played. */

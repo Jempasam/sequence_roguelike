@@ -64,10 +64,10 @@ export interface Stringable {
 export type Text = string|number|ColoredText|LinkedText|SvgPath|Semantic|Stringable|readonly Text[]
 
 /**
- * How a reader shows some objects its own way: what it shows for an object, a text with pictures maybe, none
- * to let it tell itself.
+ * How a reader shows some values its own way: what it shows for an object or a number, a text with pictures
+ * maybe, none to let it tell itself.
  */
-export type TextDisplay = (value: object) => Shown|undefined
+export type TextDisplay = (value: object|number) => Shown|undefined
 
 /**
  * One piece of a text once read: a string or a picture, in a color, none for the color of the reader, and
@@ -164,8 +164,14 @@ function read(
     if(depth > MAX_DEPTH){
         throw new Error(`A text holds itself more than ${MAX_DEPTH} deep: an object tells itself in its own text.`)
     }
-    if(typeof text === "string" || typeof text === "number"){
-        spans.push({ kind: "string", text: String(text), ...context })
+    if(typeof text === "string"){
+        spans.push({ kind: "string", text, ...context })
+        return
+    }
+    if(typeof text === "number"){
+        const shown = display?.(text)
+        if(shown !== undefined) read(shown, context, display, spans, depth + 1)
+        else spans.push({ kind: "string", text: String(text), ...context })
         return
     }
     if(isArray(text)){

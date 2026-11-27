@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { COLLISION, DRAFT, STEP } from "@game/core/mecard"
+import { COLLISION, DRAFT } from "@game/core-src/games/mecard/sim/card/subs/modifier/Impacts"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

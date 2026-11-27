@@ -1,9 +1,21 @@
 import { describe, expect, test } from "vitest"
+import { Assets } from "@game/core-src/engine/assets/Assets"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
 import {
-    AllPass, Assets, BandPass, Compressor, Delay, Distortion, Gain, HighPass, HighShelf, LowPass, LowShelf,
-    MemoryAssets, Notch, Pan, Peaking, Reverb, SOUND_SETTINGS_FORMAT, SoundPlayer, SoundSettings,
-} from "@game/core"
-import type { SoundFilter } from "@game/core"
+    AllPass,
+    BandPass,
+    HighPass,
+    HighShelf,
+    LowPass,
+    LowShelf,
+    Notch,
+    Peaking,
+} from "@game/core-src/engine/audio/BiquadFilters"
+import { Compressor, Delay, Distortion, Gain, Pan, Reverb } from "@game/core-src/engine/audio/Filters"
+import { SoundPlayer } from "@game/core-src/engine/audio/SoundPlayer"
+import { SoundSettings } from "@game/core-src/engine/audio/SoundSettings"
+import { SOUND_SETTINGS_FORMAT } from "@game/core-src/engine/audio/soundSlot"
+import type { SoundFilter } from "@game/core-src/engine/audio/SoundFilter"
 import { FakeAudio } from "../../fixtures/fakeAudio"
 import { ManualTimer } from "../../fixtures/manualTimer"
 

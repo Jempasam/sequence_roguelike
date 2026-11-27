@@ -1,5 +1,5 @@
-import { MemoryConnection } from "@game/core"
-import type { NetError } from "@game/core"
+import { MemoryConnection } from "@game/core-src/engine/net/MemoryConnection"
+import type { NetError } from "@game/core-src/engine/net/NetError"
 import { describe, expect, test } from "vitest"
 
 import { nextMessage, nextOnChannel, once } from "../../fixtures/netServer"

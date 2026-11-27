@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { DamageType, EXPLOSIVE, HEALING, Heart, RED_HEART, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { EXPLOSIVE } from "@game/core-src/games/mecard/sim/status/subs/Explosive"
+import { HEALING } from "@game/core-src/games/mecard/sim/status/subs/Healing"
 
 import { battle, MONSTERS, unit } from "../fixtures"
 
@@ -44,7 +49,7 @@ describe("the statuses of a unit that dies", () => {
         const before = hero.life
         healer.hearts.damage(1, DamageType.PHYSICAL, null)
         on.startRound()
-        for(const unitOf of on.units) unitOf.steps.length = 0
+        for(const unitOf of on.units) unitOf.clearSteps()
         expect(hero.life).toBeLessThanOrEqual(before)
     })
 })

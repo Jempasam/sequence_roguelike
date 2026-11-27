@@ -1,4 +1,4 @@
-import { visual } from "../../../../../sim"
+import { visual } from "../../../../../sim/base/Visual"
 import type { AmbientEffect } from "../../AmbientEffect"
 import type { Grain } from "../../scene/Grain"
 import { sceneEffect } from "../../scene/sceneEffect"
@@ -23,7 +23,7 @@ const STREAK = visual("ambient/streak")
 
 /** Leaves drift across the map in the wind. */
 const LEAVES = sceneEffect({
-    id: "leaves", floors: LEAF_FLOORS, weight: 4, spacing: 15,
+    id: "leaves", category: "backdrop", floors: LEAF_FLOORS, outdoors: true, weight: 4,
     scene: drift({
         spot: sideEdge(0, 0.5), duration: 5,
         layers: [{
@@ -35,7 +35,7 @@ const LEAVES = sceneEffect({
 
 /** Cherry petals fall slowly over the map, swaying as they drift. */
 const CHERRY_PETALS = sceneEffect({
-    id: "cherry-petals", floors: PETAL_FLOORS, weight: 4, spacing: 15,
+    id: "cherry-petals", category: "backdrop", floors: PETAL_FLOORS, outdoors: true, weight: 4,
     scene: drift({
         spot: topEdge(), duration: 7,
         layers: [{
@@ -47,7 +47,7 @@ const CHERRY_PETALS = sceneEffect({
 
 /** Embers rise from a fight. */
 const EMBERS = sceneEffect({
-    id: "embers", floors: EMBER_FLOORS, weight: 4, spacing: 15,
+    id: "embers", category: "signature", floors: EMBER_FLOORS, weight: 4,
     scene: drift({
         spot: atPlace(fightsWhere()), duration: 4,
         layers: [{
@@ -60,7 +60,7 @@ const EMBERS = sceneEffect({
 
 /** A campfire burns beside a place of rest, its smoke rising. */
 const CAMPFIRE = sceneEffect({
-    id: "campfire", weight: 3,
+    id: "campfire", category: "surprise", weight: 3,
     scene: drift({
         spot: atPlace(haltsAmong(REST_HALTS), { x: 14, y: 6 }), duration: 8, swell: 1,
         layers: [
@@ -84,7 +84,7 @@ const CAMPFIRE = sceneEffect({
 
 /** A gust of wind: long pale streaks cross the map at a slant, carrying dust and a few leaves. */
 const GUST = sceneEffect({
-    id: "gust", weight: 2, spacing: 25,
+    id: "gust", category: "weather", outdoors: true, weight: 2,
     scene: drift({
         spot: sideEdge(), duration: 2.4, mirrored: true,
         layers: [
@@ -108,7 +108,7 @@ const GUST = sceneEffect({
 
 /** Snow falls slowly over the map, swaying. */
 const SNOWFALL = sceneEffect({
-    id: "snowfall", floors: SNOW_FLOORS, weight: 5, spacing: 15,
+    id: "snowfall", category: "backdrop", floors: SNOW_FLOORS, outdoors: true, weight: 5,
     scene: drift({
         spot: topEdge(), duration: 8,
         layers: [{
@@ -119,7 +119,7 @@ const SNOWFALL = sceneEffect({
 
 /** A blizzard sweeps the map: snow blown flat, with pale trails. */
 const BLIZZARD = sceneEffect({
-    id: "blizzard", floors: SNOW_FLOORS, weight: 2, spacing: 30,
+    id: "blizzard", category: "weather", floors: SNOW_FLOORS, outdoors: true, weight: 2,
     scene: drift({
         spot: sideEdge(-0.2, 1), duration: 4, mirrored: true, swell: 1,
         layers: [
@@ -134,7 +134,7 @@ const BLIZZARD = sceneEffect({
 
 /** Sparks of frost twinkle here and there. */
 const ICE_GLITTER = sceneEffect({
-    id: "ice-glitter", floors: SNOW_FLOORS, weight: 3,
+    id: "ice-glitter", category: "backdrop", floors: SNOW_FLOORS, weight: 3,
     scene: drift({
         spot: screen(), duration: 6, swell: 1,
         layers: [{
@@ -146,7 +146,7 @@ const ICE_GLITTER = sceneEffect({
 
 /** Drops of water fall from the vault. */
 const CAVE_DRIPS = sceneEffect({
-    id: "cave-drips", floors: CAVE_FLOORS, weight: 4, spacing: 15,
+    id: "cave-drips", category: "backdrop", floors: CAVE_FLOORS, weight: 4,
     scene: drift({
         spot: topEdge(), duration: 6,
         layers: [{
@@ -158,7 +158,7 @@ const CAVE_DRIPS = sceneEffect({
 
 /** Dust trickles down from the rock. */
 const ROCK_DUST = sceneEffect({
-    id: "rock-dust", floors: ROCK_FLOORS, weight: 3,
+    id: "rock-dust", category: "backdrop", floors: ROCK_FLOORS, weight: 3,
     scene: drift({
         spot: topEdge(), duration: 6, swell: 1,
         layers: [{
@@ -170,7 +170,7 @@ const ROCK_DUST = sceneEffect({
 
 /** A slanting shower falls on the map. */
 const RAIN = sceneEffect({
-    id: "rain", floors: RAIN_FLOORS, weight: 3, spacing: 30,
+    id: "rain", category: "weather", floors: RAIN_FLOORS, outdoors: true, weight: 3,
     scene: drift({
         spot: topEdge(), duration: 6, swell: 1.5,
         layers: [{
@@ -182,7 +182,7 @@ const RAIN = sceneEffect({
 
 /** Grey ash falls, a few flakes still glowing. */
 const ASH_FALL = sceneEffect({
-    id: "ash-fall", floors: ASH_FLOORS, weight: 4,
+    id: "ash-fall", category: "backdrop", floors: ASH_FLOORS, outdoors: true, weight: 4,
     scene: drift({
         spot: topEdge(), duration: 9,
         layers: [
@@ -200,7 +200,7 @@ const ASH_FALL = sceneEffect({
 
 /** Green bubbles rise from the water, swell and pop. */
 const MARSH_BUBBLES = sceneEffect({
-    id: "marsh-bubbles", floors: MARSH_FLOORS, weight: 4,
+    id: "marsh-bubbles", category: "backdrop", floors: MARSH_FLOORS, weight: 4,
     scene: drift({
         spot: band(0.7, 0.95), duration: 7,
         layers: [{
@@ -212,7 +212,7 @@ const MARSH_BUBBLES = sceneEffect({
 
 /** Golden grains float in the air of the woods. */
 const POLLEN = sceneEffect({
-    id: "pollen", floors: WOOD_FLOORS, weight: 3,
+    id: "pollen", category: "backdrop", floors: WOOD_FLOORS, outdoors: true, weight: 3,
     scene: drift({
         spot: screen(), duration: 8, swell: 2,
         layers: [{
@@ -224,7 +224,7 @@ const POLLEN = sceneEffect({
 
 /** Paper lanterns rise from a halt into the sky. */
 const SKY_LANTERNS = sceneEffect({
-    id: "sky-lanterns", floors: LANTERN_FLOORS, weight: 3, spacing: 30,
+    id: "sky-lanterns", category: "signature", floors: LANTERN_FLOORS, outdoors: true, weight: 3,
     scene: drift({
         spot: atPlace(allHaltPlaces, { y: -8 }), duration: 8,
         layers: [{
@@ -236,7 +236,7 @@ const SKY_LANTERNS = sceneEffect({
 
 /** Smoke pours out above a fight. */
 const CHIMNEY_SMOKE = sceneEffect({
-    id: "chimney-smoke", floors: FACTORY_FLOORS, weight: 4,
+    id: "chimney-smoke", category: "signature", floors: FACTORY_FLOORS, weight: 4,
     scene: drift({
         spot: atPlace(fightsWhere(), { x: 10, y: -8, eitherSide: true }), duration: 8, swell: 1.5,
         layers: [{
@@ -249,7 +249,7 @@ const CHIMNEY_SMOKE = sceneEffect({
 
 /** Black soot falls back from the chimneys. */
 const SOOT = sceneEffect({
-    id: "soot", floors: FACTORY_FLOORS, weight: 2,
+    id: "soot", category: "backdrop", floors: FACTORY_FLOORS, outdoors: true, weight: 2,
     scene: drift({
         spot: topEdge(), duration: 6,
         layers: [{

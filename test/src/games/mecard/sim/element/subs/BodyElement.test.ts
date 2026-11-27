@@ -1,11 +1,40 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 import {
-    AURA, BLUE_HEART, BodyElement, BURN, CARD_CODECS, CONJURATION, ELEMENT_CODECS, ElementCard, FIRE,
-    firstRound, GOBLIN, Heart, HeartsBoon, monster, POISON_POTION, POISONED, POTIONS, potionOfStatus,
-    PotionBoon, Rarity, RED_HEART, RITUAL_STATUSES, SHIELD_HEART, SMALL_SPELL, SOAPY, soakOf, STATUS_CODECS,
-    STEP, THRUST, VIGOR_POTION, VIGOROUS, Vector2, visual,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+    AURA,
+    CONJURATION,
+    SMALL_SPELL,
+} from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { ElementCard, FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { firstRound } from "@game/core-src/games/mecard/sim/catalog/monsterRounds"
+import { GOBLIN, monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { HeartsBoon } from "@game/core-src/games/mecard/sim/element/subs/body/HeartsBoon"
+import { PotionBoon } from "@game/core-src/games/mecard/sim/element/subs/body/PotionBoon"
+import { BodyElement } from "@game/core-src/games/mecard/sim/element/subs/BodyElement"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import {
+    POISON_POTION,
+    POTIONS,
+    potionOfStatus,
+    VIGOR_POTION,
+} from "@game/core-src/games/mecard/sim/potion/subs/potions"
+import { CARD_CODECS, ELEMENT_CODECS } from "@game/core-src/games/mecard/sim/save/catalogNames"
+import { STATUS_CODECS } from "@game/core-src/games/mecard/sim/save/statusCodecs"
+import { SOAPY } from "@game/core-src/games/mecard/sim/status/subs/BubbleStatuses"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { RITUAL_STATUSES } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
+import { soakOf } from "@game/core-src/games/mecard/sim/status/subs/Soaked"
+import { VIGOROUS } from "@game/core-src/games/mecard/sim/status/subs/Vigor"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, play, unit } from "../../fixtures"
 

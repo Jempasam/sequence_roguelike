@@ -1,9 +1,17 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { openBooster } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import { BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { monsterBooster } from "@game/core-src/games/mecard/sim/halt/subs/dark/DarkMagicianHalt"
 import {
-    BOSS_MONSTERS, LOOT_MONSTERS, GOBLIN, boosterOfMonster, Rng, TAMED_BOSS_WEAKENING, allCards,
-    monsterBooster,
-    offeredMonsters, openBooster, possessBy, readsWhole, tamedBoss,
-} from "@game/core/mecard"
+    TAMED_BOSS_WEAKENING,
+    tamedBoss,
+} from "@game/core-src/games/mecard/sim/halt/subs/dark/DarkTrainerHalt"
+import { offeredMonsters } from "@game/core-src/games/mecard/sim/halt/subs/dark/monster_pool"
+import { boosterOfMonster } from "@game/core-src/games/mecard/sim/halt/subs/monster/monsterCards"
+import { allCards } from "@game/core-src/games/mecard/sim/run/Hero"
+import { possessBy } from "@game/core-src/games/mecard/sim/run/visits"
 import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Tests ---

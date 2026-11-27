@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import type { Painter } from "@game/core"
-import { CosmosView, defaultLevels, Space, World } from "@game/core/cosmos"
+import type { Painter } from "@game/core-src/engine/gpu/Painter"
+import { defaultLevels } from "@game/core-src/games/cosmos/level/defaultLevels"
+import { World } from "@game/core-src/games/cosmos/level/World"
+import { CosmosView } from "@game/core-src/games/cosmos/render/CosmosView"
+import { Space } from "@game/core-src/games/cosmos/space/Space"
 
 // --- Fixture builders ---
 

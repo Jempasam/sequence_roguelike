@@ -15,12 +15,18 @@ import type { UnitSprites } from "../look/UnitSprites"
 import { CHOSEN_TEXT, WARNING_TEXT } from "../look/theme"
 import { NO_TRAVEL_LOCKS, TravelScreen } from "../travel/TravelScreen"
 import type { TravelLocks } from "../travel/TravelScreen"
+import { placeColorOf } from "../travel/TravelScenes"
 import { LoadingOverlay } from "./LoadingOverlay"
 import { PlaceTransitions } from "./PlaceTransitions"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import type { ParticleContext } from "../particles/ParticleContext"
 import type { RunParticleLink } from "../particles/RunParticleLink"
 import { ParticleOverlay } from "../particles/ParticleOverlay"
+import { BattleAmbientContext } from "../battle/BattleAmbientContext"
+import type { Ambient } from "../travel/ambient/Ambient"
+import type { AmbientContext } from "../travel/ambient/AmbientContext"
+import { AmbientOverlay } from "../travel/ambient/AmbientOverlay"
+import { TravelAmbientContext } from "../travel/ambient/TravelAmbientContext"
 import { forwardAround } from "../forward/around"
 import { runForwardables } from "../forward/forwardables"
 import type { Forwarded } from "../forward/Forwarded"
@@ -69,6 +75,9 @@ export interface RunScreenOptions {
 
     /** What holds the particles of the run, laid over the interface by the screen, none by default. */
     readonly particles?: RunParticleLink|null
+
+    /** What decorates the map and the arena, laid over the interface by the screen, none by default. */
+    readonly ambient?: Ambient|null
 
     /** Where a point of the interface, in virtual pixels, lies in the world, in its pixels. */
     toWorld(x: number, y: number): readonly [number, number]
@@ -173,6 +182,7 @@ export class RunScreen {
             forwarded: options.forwarded,
             locks: this.#locks.battle,
             depth: () => this.#engine.travel.depth,
+            placeColor: () => placeColorOf(this.#engine.travel.floor.type.look.parallax),
             over: battle => this.#seeOut(battle),
             ready: () => options.ready?.(),
         })
@@ -190,7 +200,12 @@ export class RunScreen {
         this.transitions = new PlaceTransitions(ui, theme, assets, report)
         // Made after the transitions, so it lies over them.
         this.loading = new LoadingOverlay(ui, theme)
-        // Over everything, the tooltips apart.
+        // Over everything, the tooltips apart: the ambient, then the particles of the run over it.
+        if(options.ambient){
+            options.ambient.contexts = this.#ambientContexts(options.ambient)
+            const layer = ui.addLayer("ambient")
+            layer.content.add(new AmbientOverlay(options.ambient), { x: "stretch", y: "stretch" })
+        }
         if(options.particles){
             options.particles.context = this.#particleContext()
             const layer = ui.addLayer("particles")
@@ -242,6 +257,24 @@ export class RunScreen {
         }
         if(this.#visible) this.travelScreen.frame(input, world, dt)
         this.ui.update(dt)
+    }
+
+    /** The spaces the ambient decorates: the map of the journey and the arena of the battle. */
+    #ambientContexts({ alpha, additive, random }: Ambient): AmbientContext[] {
+        const { ui, battleScreen, travelScreen } = this
+        const { sprites } = this.options
+        const size = () => ({ width: ui.width, height: ui.height })
+        const sprite = (visual: Visual|null) => sprites.of(visual)
+        const coin = () => sprites.gold
+        return [
+            new TravelAmbientContext(
+                alpha, additive, random, () => this.#engine.travel, travelScreen, size, sprite, coin,
+            ),
+            new BattleAmbientContext(
+                alpha, additive, random, battleScreen, () => this.#engine.travel.floor.type,
+                size, sprite, coin,
+            ),
+        ]
     }
 
     /** Where the particles start and go: the screen shown answers, the other one when it cannot. */

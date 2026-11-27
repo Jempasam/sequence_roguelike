@@ -37,9 +37,10 @@ const WHIRL_EFFECT: Effect<AmbientContext> = {
 /** A whirl of dust and leaves turns around a middle that crosses the map in a zigzag. */
 export const WHIRL = new AmbientEffect({
     id: "whirl",
-    spacing: 25,
+    category: "weather",
+    spacing: 20,
     stackable: false,
-    isPlayable: () => true,
+    isPlayable: context => context.outdoors(),
     weight: () => 2,
     effect: WHIRL_EFFECT,
 })

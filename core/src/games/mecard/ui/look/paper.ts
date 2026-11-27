@@ -1,5 +1,5 @@
 import { Color } from "../../../../engine/math"
-import type { Sprite } from "../../../../engine/gpu"
+import type { ColorMode, Sprite } from "../../../../engine/gpu"
 import { NineSlice } from "../../../../engine/ui"
 import type { ImagePath } from "../../../../engine/assets"
 
@@ -25,9 +25,10 @@ export const PAPER_MARGIN = 10
  * @param paper - The sprite of {@link PAPER_PATH}.
  * @param scale - The whole factor it is drawn at.
  * @param color - What it is multiplied by, white by default: a darker paper.
+ * @param colorMode - How the color mixes with the paper, "modulate" by default: "hue" for a paper in another hue.
  */
-export function paperFrame(paper: Sprite, scale: number, color?: Color): NineSlice {
-    return paperBordered(paper, PAPER_MARGIN * scale, color)
+export function paperFrame(paper: Sprite, scale: number, color?: Color, colorMode?: ColorMode): NineSlice {
+    return paperBordered(paper, PAPER_MARGIN * scale, color, colorMode)
 }
 
 /**
@@ -36,12 +37,14 @@ export function paperFrame(paper: Sprite, scale: number, color?: Color): NineSli
  * @param paper - The sprite of {@link PAPER_PATH}.
  * @param drawn - The width of the border as drawn, in virtual pixels.
  * @param color - What it is multiplied by, white by default.
+ * @param colorMode - How the color mixes with the paper, "modulate" by default.
  */
-export function paperBordered(paper: Sprite, drawn: number, color?: Color): NineSlice {
+export function paperBordered(paper: Sprite, drawn: number, color?: Color, colorMode?: ColorMode): NineSlice {
     const margin = PAPER_MARGIN
     return new NineSlice(paper, { left: margin, top: margin, right: margin, bottom: margin }, {
         opaqueCenter: true,
         ...color ? { color } : {},
+        ...colorMode ? { colorMode } : {},
         border: { left: drawn, top: drawn, right: drawn, bottom: drawn },
         tiling: { mirror: true },
     })

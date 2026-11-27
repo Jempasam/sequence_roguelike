@@ -18,7 +18,7 @@ export class GreatChestHalt extends CardGiftHalt {
     constructor(run: Run){
         super(GREAT_CHEST_HALT, run,
             ["Une ", CARTE, " légendaire parmi trois, gratuite."],
-            sceneLook(31, 23, 13, "chest", { coloration: [1, 0.88, 0.62] }),
+            sceneLook(13, 20, 31, "chest", { coloration: [1, 0.88, 0.62] }),
             // A great one keeps this chest, crowned as they all are.
             {
                 hat: GREAT_HAT,

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Paragraph, PopupBubble } from "@game/core"
-import type { Panel } from "@game/core"
+import { Paragraph } from "@game/core-src/engine/ui/widget/Paragraph"
+import { PopupBubble } from "@game/core-src/engine/ui/widget/PopupBubble"
+import type { Panel } from "@game/core-src/engine/ui/widget/Panel"
 
 import { ADVANCE, LINE, Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { Add, Attribute, CLAMP_ORDER, Clamp, Forced, ModifierKey, Multiply } from "@game/core/mecard"
+import {
+    Add,
+    Attribute,
+    CLAMP_ORDER,
+    Clamp,
+    Forced,
+    ModifierKey,
+    Multiply,
+} from "@game/core-src/games/mecard/sim/base/Attribute"
 
 // --- Tests ---
 

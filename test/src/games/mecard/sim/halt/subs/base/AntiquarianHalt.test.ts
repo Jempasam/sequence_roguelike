@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { AIM, appraisal, CHARGE, FusionCard, Rarity, RandomCard, sell, SHOT, SLASH, STEP, THRUST } from "@game/core/mecard"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { CHARGE } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { RandomCard } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { appraisal, sell } from "@game/core-src/games/mecard/sim/halt/subs/deck/AntiquarianHalt"
 import { startedRun } from "../../../../../../fixtures/startedRun"
 
 // --- Tests ---

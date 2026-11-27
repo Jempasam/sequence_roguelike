@@ -1,12 +1,30 @@
-import { ManualScheduler } from "@game/core"
-import type { Fault } from "@game/core"
-import { DUEL_HALT, LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
-import type { FloorType } from "@game/core/mecard"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 import {
-    duelRaceTable, gameModeAsLobbyMode, JOIN_WAIT_MS, Lobby, LobbyGuest, LocalRoom, LocalSync,
-    NotEnoughPlayersFault, RACE_OVER_LINGER_MS, versusTable,
-} from "@game/core/mecard/sync"
-import type { DuelAccess, DuelRacePlayer, RaceScreen, RaceTableBench } from "@game/core/mecard/sync"
+    JOIN_WAIT_MS,
+    RACE_OVER_LINGER_MS,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelRaceManager"
+import {
+    duelRaceTable,
+    versusTable,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelRaceTableMode"
+import { NotEnoughPlayersFault } from "@game/core-src/games/mecard/sync/faults"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type {
+    RaceScreen,
+    RaceTableBench,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelRaceOwner"
+import type {
+    DuelRacePlayer,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/DuelRacePlayer"
+import type { DuelAccess } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/HubPort"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

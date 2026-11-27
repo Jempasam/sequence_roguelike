@@ -12,6 +12,7 @@ import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import { inOrder } from "../tools/sequence"
 import * as Previews from "../../../battle/preview/Previews"
+import * as Steps from "../../../battle/mecanic/step"
 
 /** How far the synchronisation of the catalog reaches around its caster, in meters: a wide circle. */
 const SYNCHRONISATION_RANGE = 6 - UNIT_RADIUS
@@ -59,7 +60,7 @@ export class SynchronisationCard extends ModifierCard {
                 const target = targetOf(battle, unit, unit)
                 if(!target) battle.events.push({ type: "skipped", unit, reason: NOBODY })
                 hold(battle, SHORT_TIME, aimed(unit, unit, target))
-                if(target) battle.inject(target, action, tree)
+                if(target) Steps.insert(battle, target, [action], { cards: tree, word: "hypnotisé" })
             },
             // The action is shown from where the ally stands, as it plays it.
             preview: ctx => {

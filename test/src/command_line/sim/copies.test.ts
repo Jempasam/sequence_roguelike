@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, Rng } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { BATTLE } from "@game/core-src/games/mecard/sim/fight/fights"
 import { checkSizes, fightsFinder, parseMatch, Roster, rowsOf, UsageError } from "@game/command_line/sim"
 import type { Row, SourceDraw, SourceWorld } from "@game/command_line/sim"
 

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, GOBLIN } from "@game/core/mecard"
-import type { Observable, Place, Run } from "@game/core/mecard"
+import { BLINKED } from "@game/core-src/games/mecard/sim/battle/mecanic/blink/signals"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE } from "@game/core-src/games/mecard/sim/fight/fights"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Observable } from "@game/core-src/lifetime/Observable"
 import { Forwarded } from "@game/core/mecard/forwarded"
 import { RunParticleLink } from "@game/core/mecard/run-particle-link"
 import { fightOf } from "../../../../fixtures/fightFixtures"
@@ -183,7 +187,7 @@ describe("RunParticleLink, the battle", () => {
         expect(counts[2]).toBeGreaterThan(counts[1])
     })
 
-    test.each(["healed", "died", "spawned", "statusAdded", "cardActivated", "blinked"] as const)(
+    test.each(["healed", "died", "spawned", "statusAdded"] as const)(
         "%s → particles on the unit",
         name => {
             const { link, run, forwarded } = linkOf()
@@ -194,6 +198,14 @@ describe("RunParticleLink, the battle", () => {
         },
     )
 
+    test("blinked → particles on the unit", () => {
+        const { link, run, forwarded } = linkOf()
+        link.context = contextOf(false)
+        const [unit] = run.battle!.units
+        forwarded.forward(run.battle!.observers.of(BLINKED), { unit } as never, "start")
+        expect(alive(link)).toBeGreaterThan(0)
+    })
+
     test("a unit not shown → no particle of the signals", () => {
         const { link, run, forwarded } = linkOf()
         link.context = contextOf(false, {
@@ -202,7 +214,7 @@ describe("RunParticleLink, the battle", () => {
             heartsOf: () => null,
         })
         const [unit] = run.battle!.units
-        for(const name of ["healed", "died", "spawned", "cardActivated"] as const){
+        for(const name of ["healed", "died", "spawned"] as const){
             forwarded.forward(run.battle!.signals[name] as Observable<unknown>, { unit }, "start")
         }
         expect(link.active).toBe(false)

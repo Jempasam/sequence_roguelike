@@ -1,9 +1,15 @@
 import { describe, expect, test } from "vitest"
-import {
-    BLOOD_TRAIL, BLEEDING, EXPLOSIVE, HEALING, IronChain, KnifeReturn, Riding, SALT_GLASS, STINKING,
-    TESTAMENT,
-} from "@game/core/mecard"
-import type { Indicator, Preview } from "@game/core/mecard"
+import { BLOOD_TRAIL } from "@game/core-src/games/mecard/sim/item/subs/combat/BloodTrail"
+import { SALT_GLASS } from "@game/core-src/games/mecard/sim/item/subs/combat/SaltGlass"
+import { TESTAMENT } from "@game/core-src/games/mecard/sim/item/subs/combat/Testament"
+import { KnifeReturn } from "@game/core-src/games/mecard/sim/process/subs/KnifeReturn"
+import { IronChain } from "@game/core-src/games/mecard/sim/process/subs/Links"
+import { Riding } from "@game/core-src/games/mecard/sim/process/subs/Riding"
+import { EXPLOSIVE } from "@game/core-src/games/mecard/sim/status/subs/Explosive"
+import { HEALING } from "@game/core-src/games/mecard/sim/status/subs/Healing"
+import { STINKING } from "@game/core-src/games/mecard/sim/status/subs/Stench"
+import { BLEEDING } from "@game/core-src/games/mecard/sim/status/subs/Wounds"
+import type { Indicator, Preview } from "@game/core-src/games/mecard/sim/battle/preview/Preview"
 
 import { battle, MONSTERS, unit } from "../fixtures"
 

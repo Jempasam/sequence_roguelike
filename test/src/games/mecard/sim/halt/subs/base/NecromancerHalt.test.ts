@@ -1,7 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { KEPT_LOOT_HEARTS, NECROMANCER_HALT, NECROMANCER_OFFER_SIZE, SPENT_LOOT_HEARTS } from "@game/core/mecard"
-import type { Text } from "@game/core"
-import type { HeartLoot, Shown, Way } from "@game/core/mecard"
+import {
+    NECROMANCER_HALT,
+    NECROMANCER_OFFER_SIZE,
+} from "@game/core-src/games/mecard/sim/halt/subs/party/NecromancerHalt"
+import { KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "@game/core-src/games/mecard/sim/run/heartLoot"
+import type { Text } from "@game/core-src/semantic/Text"
+import type { Shown, Way } from "@game/core-src/games/mecard/sim/halt/HaltContext"
+import type { HeartLoot } from "@game/core-src/games/mecard/sim/run/heartLoot"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../../../fixtures/startedRun"

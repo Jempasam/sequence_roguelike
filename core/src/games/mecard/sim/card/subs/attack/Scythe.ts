@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -41,7 +40,7 @@ export class ScytheCard extends BlowCard {
         public readonly cosHalf: number,
     ){
         super("Faux", [
-            "Fauche en arc devant, de ", frenchNumber(inner), " à ", frenchNumber(outer), " ", DISTANCE, " ×", ALLONGE, " : ",
+            "Fauche en arc devant, de ", inner, " à ", outer, " ", DISTANCE, " ×", ALLONGE, " : ",
             SCYTHE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ". Ce qui est plus près n'est pas touché.",
         ], Rarity.RARE, SCYTHE_DAMAGE)
     }

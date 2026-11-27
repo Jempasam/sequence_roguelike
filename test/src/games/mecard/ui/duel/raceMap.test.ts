@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest"
-import type { Progress } from "@game/core/mecard/sync"
+import type { Progress } from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
 import { floorTicks, mapPosition, mapScale, scaleRatio } from "@game/core/mecard/duel-map"
 import { COLUMN_CARD_MAX, friezeCards, friezeHit, friezeMarks } from "@game/core/mecard/duel-frieze"
 import type { FriezeEntry } from "@game/core/mecard/duel-frieze"
-import { Color } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
 
 /** The progress of a player on a floor, with the row it stands on and the rows of the floor. */
 function at(floor: number, layer: number, rows: number): Progress {

@@ -74,7 +74,7 @@ export class EnchanterHalt extends AbstractHalt {
     constructor(run: Run){
         super(ENCHANTER_HALT, run,
             ["Je ", FUSION.as("colle"), " à ta ", CARTE, " l'un de mes trois enchantements."],
-            sceneLook(15, 23, 43, "enchanter"),
+            sceneLook(25, 15, 43, "enchanter"),
             {
                 hat: "starCone",
                 clothes: rgba(0.3, 0.45, 1),

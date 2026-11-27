@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { ALL_FIGHT_CATEGORIES, BATTLE, BOSS } from "@game/core/mecard"
+import { ALL_FIGHT_CATEGORIES, BATTLE, BOSS } from "@game/core-src/games/mecard/sim/fight/fights"
 import { FIGHT_CUES, soundOfFight } from "@game/core/mecard/fight-sounds"
 
 const GENERATED = join(__dirname, "../../../../../../generated_assets")

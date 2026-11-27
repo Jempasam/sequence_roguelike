@@ -1,5 +1,6 @@
-import { PTPHostSocket, PTPSymSocket } from "@game/core"
-import type { Peer } from "@game/core"
+import { PTPHostSocket } from "@game/core-src/engine/net/PTPHostSocket"
+import { PTPSymSocket } from "@game/core-src/engine/net/PTPSymSocket"
+import type { Peer } from "@game/core-src/engine/net/Room"
 import type { Member } from "@game/server/protocol"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 

@@ -1,12 +1,19 @@
-import { ManualScheduler } from "@game/core"
-import type { Fault } from "@game/core"
-import { CHEST_HALT, DUEL_HALT, Run as RunClass, UPGRADE_FLOOR } from "@game/core/mecard"
-import type { Run } from "@game/core/mecard"
-import {
-    ArrivalWatch, Contestant, Deadline, DuelLayerFault, DuelLayers, KICK_TO_DUEL, LifeBook, LocalSync,
-    NoDuelAheadFault,
-} from "@game/core/mecard/sync"
-import type { Progress } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { UPGRADE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/UpgradeFloor"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { Run as RunClass } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { ArrivalWatch } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/ArrivalWatch"
+import { Contestant } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/Contestant"
+import { DuelLayers } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelLayers"
+import { KICK_TO_DUEL } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/LatePenalty"
+import { LifeBook } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/LifeBook"
+import { Deadline } from "@game/core-src/games/mecard/sync/Deadline"
+import { DuelLayerFault, NoDuelAheadFault } from "@game/core-src/games/mecard/sync/faults"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { Progress } from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
 import { describe, expect, test, vi } from "vitest"
 
 import { startedRun } from "../../../../fixtures/startedRun"

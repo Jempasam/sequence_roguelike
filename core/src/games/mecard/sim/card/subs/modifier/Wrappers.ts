@@ -1,7 +1,6 @@
 import { Add, ModifierKey, Multiply } from "../../../base/Attribute"
 import type { Attribute, Modifier } from "../../../base/Attribute"
 import { ALLONGE, PORTEE, PRECISION, BATTLE_ROUND } from "../../../base/keywords"
-import { frenchNumber } from "../../../battle/words"
 import type { Action, UnitContext } from "../../../battle/Action"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
@@ -64,7 +63,7 @@ const SCOPE: Boost = stats => [
 ]
 
 export const SPYGLASS_CARD = new ModifierCard("Lunette", [
-    "L'action est jouée avec +", frenchNumber(SCOPE_RANGE), " ", PORTEE, " et +", frenchNumber(SCOPE_PRECISION), " ", PRECISION, ".",
+    "L'action est jouée avec +", SCOPE_RANGE, " ", PORTEE, " et +", SCOPE_PRECISION, " ", PRECISION, ".",
 ], Rarity.RARE, action => boosted(action, "lunette", SCOPE))
 
 /** What the elephant adds to the reaches, before it multiplies them. */

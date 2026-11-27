@@ -1,9 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { SWEEP } from "@game/core-src/games/mecard/sim/card/subs/attack/Sweep"
+import { TACKLE } from "@game/core-src/games/mecard/sim/card/subs/attack/Tackle"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BITE } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastRewrites"
+import { BEAST_CARDS } from "@game/core-src/games/mecard/sim/card/subs/beast/beasts"
+import { BATTERING_RAM } from "@game/core-src/games/mecard/sim/card/subs/combat/Shoves"
+import { DOUBLE_DIAGONAL } from "@game/core-src/games/mecard/sim/card/subs/modifier/DoubleDiagonal"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { BLINK } from "@game/core-src/games/mecard/sim/card/subs/movement/Blink"
+import { BOUNCE_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BounceDash"
+import { LASSO } from "@game/core-src/games/mecard/sim/card/subs/movement/HookCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { STUNNING_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/StunningDash"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { BLEED, WEAKENING_BLOWS } from "@game/core-src/games/mecard/sim/card/subs/status/StatusCards"
 import {
-    AIM, BEAST_CARDS, BITE, BLEED, BLINK, BLUE_HEART, BOUNCE_DASH, BATTERING_RAM, DOUBLE_DIAGONAL, LASSO, PINK_HEART,
-    SLASH, SPIRIT_ANCHOR, SPIRIT_PROJECTION, STEP, STUNNING_DASH, SWEEP, TACKLE, THRUST, WAIT, WEAKENING_BLOWS,
-} from "@game/core/mecard"
-import type { BeastHearts, BodyPart } from "@game/core/mecard"
+    SPIRIT_ANCHOR,
+    SPIRIT_PROJECTION,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/SpiritCards"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { PINK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/PinkHeartKind"
+import type { BeastHearts, BodyPart } from "@game/core-src/games/mecard/sim/card/CardType"
 
 // --- Fixtures ---
 

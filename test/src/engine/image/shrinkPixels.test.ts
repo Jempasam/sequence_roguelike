@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { shrinkPixels } from "@game/core"
+import { shrinkPixels } from "@game/core-src/engine/image/shrinkPixels"
 
 // --- Tests ---
 

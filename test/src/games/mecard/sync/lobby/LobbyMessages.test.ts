@@ -1,7 +1,14 @@
+import { readModeState, writeModeState } from "@game/core-src/games/mecard/sync/lobby/LobbyMessage"
 import {
-    readModeState, readProfileMessage, readRefusedMessage, readRosterMessage, readSelfMessage,
-    writeModeState, writeProfileMessage, writeRefusedMessage, writeRosterMessage, writeSelfMessage,
-} from "@game/core/mecard/sync"
+    readProfileMessage,
+    readRefusedMessage,
+    readRosterMessage,
+    readSelfMessage,
+    writeProfileMessage,
+    writeRefusedMessage,
+    writeRosterMessage,
+    writeSelfMessage,
+} from "@game/core-src/games/mecard/sync/lobby/RosterMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf, expectUnreadable } from "../messageFixtures"

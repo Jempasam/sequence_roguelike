@@ -1,14 +1,55 @@
 import type { FloorType } from "../../../sim/floor/Floor"
 import type { HaltType } from "../../../sim/halt/HaltType"
-import {
-    CASTLE_FLOOR, CAVE_FLOOR, DOJO_FLOOR, FACTORY_FLOOR, FOREST_FLOOR, GRAVEYARD_FLOOR, HARBOR_FLOOR,
-    HELL_FLOOR, MINE_FLOOR, SWAMP_FLOOR, TUNDRA_FLOOR, VOLCANO_FLOOR,
-    ALCHEMIST_HALT, ANTIQUARIAN_HALT, CHEST_HALT, DARK_DEMON_HALT, DARK_MAD_DOCTOR_HALT, DARK_MAGICIAN_HALT,
-    DARK_STRATEGIST_HALT, DARK_TAVERN_HALT, DARK_TRAINER_HALT, GREAT_CHEST_HALT, GREAT_HOSPITAL_HALT,
-    GREAT_MERCHANT_HALT, GREAT_SHOP_HALT, GREAT_WITCH_HALT, HOSPITAL_HALT, MASTER_CHEST_HALT, MERCHANT_HALT,
-    MONSTER_MAGE_HALT, MONSTER_MECHANIC_HALT, MONSTER_PARK_HALT, MONSTER_SHAMAN_HALT, NECRO_CHEST_HALT,
-    NECRO_RECRUIT_HALT, SHOP_HALT, TAVERN_HALT, WEAVER_HALT, WITCH_HALT,
-} from "../../../sim"
+import { CASTLE_FLOOR } from "../../../sim/floor/subs/CastleFloor"
+import { CAVE_FLOOR } from "../../../sim/floor/subs/CaveFloor"
+import { DOJO_FLOOR } from "../../../sim/floor/subs/DojoFloor"
+import { FACTORY_FLOOR } from "../../../sim/floor/subs/FactoryFloor"
+import { FOREST_FLOOR } from "../../../sim/floor/subs/ForestFloor"
+import { GRAVEYARD_FLOOR } from "../../../sim/floor/subs/GraveyardFloor"
+import { HARBOR_FLOOR } from "../../../sim/floor/subs/HarborFloor"
+import { HELL_FLOOR } from "../../../sim/floor/subs/HellFloor"
+import { MINE_FLOOR } from "../../../sim/floor/subs/MineFloor"
+import { SWAMP_FLOOR } from "../../../sim/floor/subs/SwampFloor"
+import { TUNDRA_FLOOR } from "../../../sim/floor/subs/TundraFloor"
+import { VOLCANO_FLOOR } from "../../../sim/floor/subs/VolcanoFloor"
+import { DARK_DEMON_HALT } from "../../../sim/halt/subs/dark/DarkDemonHalt"
+import { DARK_MAD_DOCTOR_HALT } from "../../../sim/halt/subs/dark/DarkMadDoctorHalt"
+import { DARK_MAGICIAN_HALT } from "../../../sim/halt/subs/dark/DarkMagicianHalt"
+import { DARK_STRATEGIST_HALT } from "../../../sim/halt/subs/dark/DarkStrategistHalt"
+import { DARK_TAVERN_HALT } from "../../../sim/halt/subs/dark/DarkTavernHalt"
+import { DARK_TRAINER_HALT } from "../../../sim/halt/subs/dark/DarkTrainerHalt"
+import { NECRO_CHEST_HALT } from "../../../sim/halt/subs/dark/NecroChestHalt"
+import { ALCHEMIST_HALT } from "../../../sim/halt/subs/deck/AlchemistHalt"
+import { ANTIQUARIAN_HALT } from "../../../sim/halt/subs/deck/AntiquarianHalt"
+import { WEAVER_HALT } from "../../../sim/halt/subs/deck/WeaverHalt"
+import { CHEST_HALT } from "../../../sim/halt/subs/gift/ChestHalt"
+import { MERCHANT_HALT } from "../../../sim/halt/subs/gift/MerchantHalt"
+import { MONSTER_PARK_HALT } from "../../../sim/halt/subs/gift/MonsterParkHalt"
+import { SHOP_HALT } from "../../../sim/halt/subs/gift/ShopHalt"
+import { TAVERN_HALT } from "../../../sim/halt/subs/gift/TavernHalt"
+import { WITCH_HALT } from "../../../sim/halt/subs/gift/WitchHalt"
+import { GREAT_CHEST_HALT } from "../../../sim/halt/subs/great/GreatChestHalt"
+import { GREAT_HOSPITAL_HALT } from "../../../sim/halt/subs/great/GreatHospitalHalt"
+import { GREAT_MERCHANT_HALT } from "../../../sim/halt/subs/great/GreatMerchantHalt"
+import { GREAT_SHOP_HALT } from "../../../sim/halt/subs/great/GreatShopHalt"
+import { GREAT_WITCH_HALT } from "../../../sim/halt/subs/great/GreatWitchHalt"
+import { MASTER_CHEST_HALT } from "../../../sim/halt/subs/master/MasterChestHalt"
+import { MONSTER_MAGE_HALT } from "../../../sim/halt/subs/monster/MonsterMageHalt"
+import { MONSTER_MECHANIC_HALT } from "../../../sim/halt/subs/monster/MonsterMechanicHalt"
+import { MONSTER_SHAMAN_HALT } from "../../../sim/halt/subs/monster/MonsterShamanHalt"
+import { NECRO_RECRUIT_HALT } from "../../../sim/halt/subs/necro/NecroRecruitHalt"
+import { HOSPITAL_HALT } from "../../../sim/halt/subs/party/HospitalHalt"
+
+/**
+ * The floors under a roof or under the ground, with no sky. A sort of floor with the same look as one of
+ * them, such as a workshop dug like a cave, is one too.
+ */
+export const INDOOR_FLOORS: readonly FloorType[] = [CAVE_FLOOR, MINE_FLOOR]
+
+/** Is a sort of floor indoors, see {@link INDOOR_FLOORS}? */
+export function isIndoors(floor: FloorType): boolean {
+    return INDOOR_FLOORS.some(each => each.look === floor.look)
+}
 
 /** Floors where bats fly. */
 export const BAT_FLOORS: readonly FloorType[] = [CAVE_FLOOR, GRAVEYARD_FLOOR, CASTLE_FLOOR]
@@ -73,6 +114,9 @@ export const FACTORY_FLOORS: readonly FloorType[] = [FACTORY_FLOOR]
 /** Floors where steam escapes from the ground or the pipes. */
 export const STEAM_FLOORS: readonly FloorType[] = [FACTORY_FLOOR, VOLCANO_FLOOR]
 
+/** Floors where fireflies shine. */
+export const FIREFLY_FLOORS: readonly FloorType[] = [FOREST_FLOOR, SWAMP_FLOOR]
+
 /** Floors with butterflies. */
 export const BUTTERFLY_FLOORS: readonly FloorType[] = [FOREST_FLOOR, DOJO_FLOOR]
 
@@ -98,7 +142,8 @@ export const HARBOR_FLOORS: readonly FloorType[] = [HARBOR_FLOOR]
 
 /** Halts a cart goes to and from: the ones that sell and the ones that deal in goods. */
 export const CART_HALTS: readonly HaltType[] = [
-    WEAVER_HALT, ANTIQUARIAN_HALT, SHOP_HALT, MERCHANT_HALT, GREAT_SHOP_HALT, GREAT_MERCHANT_HALT, TAVERN_HALT,
+    WEAVER_HALT, ANTIQUARIAN_HALT, SHOP_HALT, MERCHANT_HALT, GREAT_SHOP_HALT, GREAT_MERCHANT_HALT,
+    TAVERN_HALT,
 ]
 
 /** Halts that work with monsters or take them in: the monsters of the map come and go from them too. */

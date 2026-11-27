@@ -141,9 +141,9 @@ export interface MecardContext extends CommandContext {
     playTransition(transition: Visual, duration: number, reverse: boolean): void
 
     /**
-     * Start ambient effects of the map at once, for a try.
+     * Start ambient effects at once on the map or the arena shown, for a try.
      *
-     * @throws {@link Error} When the map is not shown.
+     * @throws {@link Error} When neither is shown.
      */
     ambient(effects: readonly AmbientEffect[]): AmbientOutcome[]
 
@@ -373,7 +373,7 @@ const EFFECT: Arg<MecardContext, AmbientEffect> = named("l'effet", () => AMBIENT
 /** What is told of an ambient effect asked to start. */
 const AMBIENT_STATUS_TEXT: Record<AmbientStatus, string> = {
     started: "lancé",
-    unplayable: "impossible sur cette carte",
+    unplayable: "impossible ici",
     failed: "rien à jouer (sprites pas chargés ?)",
 }
 
@@ -1395,7 +1395,7 @@ function travelCommands(): Record<string, Command<MecardContext, unknown>> {
                 ctx.showMap()
             }),
             ambient: command(
-                "travel ambient [effet] [nombre] : lance les effets d'ambiance de la carte, tous par défaut.",
+                "travel ambient [effet] [nombre] : lance les effets d'ambiance sur ce qui est affiché, tous par défaut.",
                 [optional(EFFECT, null), optional(whole("le nombre", 1), 1)],
                 (ctx, effect, count) => {
                     const asked = effect ? Array<AmbientEffect>(count).fill(effect) : AMBIENT_EFFECTS

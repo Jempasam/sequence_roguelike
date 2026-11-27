@@ -1,9 +1,15 @@
-import { ManualScheduler } from "@game/core"
-import type { Battle } from "@game/core/mecard"
-import {
-    DraftBoard, draftMode, gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, TOURNAMENT_PAUSE_MS,
-} from "@game/core/mecard/sync"
-import type { BracketView, DraftBench, Prompt } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { DraftBoard } from "@game/core-src/games/mecard/sim/mode/subs/draft/DraftBoard"
+import { draftMode } from "@game/core-src/games/mecard/sim/mode/subs/draft/DraftMode"
+import { TOURNAMENT_PAUSE_MS } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentManager"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { Prompt } from "@game/core-src/games/mecard/sim/mode/subs/choose/Picker"
+import type { DraftBench } from "@game/core-src/games/mecard/sim/mode/subs/draft/DraftMode"
+import type { BracketView } from "@game/core-src/games/mecard/sim/mode/subs/tournament/Bracket"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { Color, spansOf, TextLayout } from "@game/core"
-import type { Painter, Sprite } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { TextLayout } from "@game/core-src/engine/text/TextLayout"
+import { spansOf } from "@game/core-src/semantic/Text"
+import type { Painter } from "@game/core-src/engine/gpu/Painter"
+import type { Sprite } from "@game/core-src/engine/gpu/Sprite"
 
 import { ADVANCE, LINE, testTheme, uiSetup } from "../../fixtures/uiFixtures"
 

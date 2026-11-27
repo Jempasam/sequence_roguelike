@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { AIM, AIM_PROFILE, BITE_PROFILE, RUN_PROFILE, STEP, THRUST } from "@game/core/mecard"
+import { AIM_PROFILE, BITE_PROFILE, RUN_PROFILE } from "@game/core-src/games/mecard/sim/analysis/Profile"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 import {
     around, bestRun, locate, marked, remaining, rounds, segments, without,
 } from "@game/core/mecard/ordered-chains"

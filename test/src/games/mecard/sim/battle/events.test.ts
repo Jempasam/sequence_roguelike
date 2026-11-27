@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { plainText } from "@game/core"
-import { eventText } from "@game/core/mecard"
+import { plainText } from "@game/core-src/semantic/Text"
+import { eventText } from "@game/core-src/games/mecard/sim/battle/events"
 
 import { battle, unit } from "../fixtures"
 

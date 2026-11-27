@@ -1,6 +1,7 @@
 import { strToU8, zipSync } from "fflate"
 import { describe, expect, test } from "vitest"
-import { decodeOra, OraError } from "@game/core"
+import { decodeOra } from "@game/core-src/engine/image/decodeOra"
+import { OraError } from "@game/core-src/engine/image/OraError"
 
 import { png, RGBA } from "../../fixtures/png"
 

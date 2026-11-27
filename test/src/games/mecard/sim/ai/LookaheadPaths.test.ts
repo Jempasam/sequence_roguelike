@@ -1,6 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { aiNamed, askAi, Heart, pathTo, RED_HEART, Rng, UNLIMITED_CARDS, Vector2 } from "@game/core/mecard"
-import type { AiName, Battle, Unit } from "@game/core/mecard"
+import { aiNamed } from "@game/core-src/games/mecard/sim/ai/catalog"
+import { askAi } from "@game/core-src/games/mecard/sim/ai/UnitController"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { pathTo } from "@game/core-src/games/mecard/sim/battle/pathfinding"
+import { UNLIMITED_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import type { AiName } from "@game/core-src/games/mecard/sim/ai/catalog"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, HEROES, MONSTERS, unit, withPillars } from "../fixtures"
 

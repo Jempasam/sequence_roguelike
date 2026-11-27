@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 
 import { StatItem } from "./StatItem"
 import { visual } from "../../../base/Visual"
@@ -11,7 +10,7 @@ export const BOOTS = new StatItem("Bottes de sept lieues", visual("items/boots")
     {
         stat: stats => stats.move,
         amount: BOOTS_MOVE,
-        shown: [frenchNumber(BOOTS_MOVE * 100), " %"],
+        shown: [BOOTS_MOVE * 100, " %"],
         text: "de portée de déplacement",
     },
 ])

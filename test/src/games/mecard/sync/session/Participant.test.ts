@@ -1,5 +1,6 @@
-import { LocalRoom, Participant, SyncTopic } from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+import { Participant } from "@game/core-src/games/mecard/sync/session/Participant"
+import { LocalRoom, SyncTopic } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 const TOPIC = new SyncTopic("t")

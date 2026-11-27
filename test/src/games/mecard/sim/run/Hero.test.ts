@@ -1,8 +1,22 @@
 import { describe, expect, test } from "vitest"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN, SHIELD_GUARD } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { GREEN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GreenHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { AMULET } from "@game/core-src/games/mecard/sim/item/subs/heal/Amulet"
+import { POWER } from "@game/core-src/games/mecard/sim/item/subs/stat/Power"
+import { WHETSTONE } from "@game/core-src/games/mecard/sim/item/subs/stat/Whetstone"
 import {
-    allyOf, AMULET, baseOf, foeOf, GOBLIN, GREEN_HEART, Heart, heroOf, LANCER_KIT, merged, monsterHearts,
-    POWER, RED_HEART, SHIELD_GUARD, SHIELD_HEART, statsOf, SWORDSMAN_KIT, WHETSTONE,
-} from "@game/core/mecard"
+    allyOf,
+    baseOf,
+    foeOf,
+    heroOf,
+    merged,
+    monsterHearts,
+    statsOf,
+} from "@game/core-src/games/mecard/sim/run/Hero"
 
 // --- Tests ---
 

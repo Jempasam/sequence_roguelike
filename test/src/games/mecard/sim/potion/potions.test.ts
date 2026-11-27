@@ -1,14 +1,47 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
 import {
-    ANTIDOTE, Arena, Battle, BIG_BOTTLE, BOTTLE, COATED_BLADE, CONFUSED, CONFUSION, DISTILLATION, ENRAGED,
-    Heart, POISON, POISONED, POTION_LEVEL, POTION_RAIN, PUDDLE, RAGE, RAGE_FIT,
-    RED_HEART, SLASH, SLOWED, SLOWNESS, STEP, THORN_HEART, THROWN_POTION, Vector2, VULNERABILITY,
-    VULNERABLE, WAIT, POISONED_BLADE, SWALLOWED, SWIFTNESS, VIGOR, VIGOROUS,
-} from "@game/core/mecard"
-import type { StatusType, Unit } from "@game/core/mecard"
+    BIG_BOTTLE,
+    BOTTLE,
+    COATED_BLADE,
+    POTION_RAIN,
+    PUDDLE,
+    THROWN_POTION,
+} from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import {
+    ANTIDOTE,
+    CONFUSION,
+    DISTILLATION,
+    POISON,
+    RAGE,
+    SLOWNESS,
+    VULNERABILITY,
+    SWIFTNESS,
+    VIGOR,
+} from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { RAGE_FIT } from "@game/core-src/games/mecard/sim/card/subs/potion/RageFit"
+import { POISONED_BLADE } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
+import { POTION_LEVEL } from "@game/core-src/games/mecard/sim/potion/Potion"
+import { CONFUSED } from "@game/core-src/games/mecard/sim/status/subs/Confusion"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ENRAGED } from "@game/core-src/games/mecard/sim/status/subs/Rage"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import { SWALLOWED } from "@game/core-src/games/mecard/sim/status/subs/Swallow"
+import { VIGOROUS } from "@game/core-src/games/mecard/sim/status/subs/Vigor"
+import { VULNERABLE } from "@game/core-src/games/mecard/sim/status/subs/Vulnerability"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { StatusType } from "@game/core-src/games/mecard/sim/status/Status"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** Hearts enough to count every half lost. */
 function sturdy(): Heart[] {

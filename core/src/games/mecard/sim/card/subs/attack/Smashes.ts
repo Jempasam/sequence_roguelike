@@ -6,7 +6,8 @@ import type { Battle } from "../../../battle/Battle"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit, UnitStats } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { STUNNED } from "../../../status/subs/Stunned"
+import { HeartCount } from "../../../battle/words"
 import { Rarity } from "../../Rarity"
 
 import { BlowCard } from "./BlowCard"
@@ -96,9 +97,10 @@ export class SuplexCard extends SingleBlow {
 
     constructor(){
         super("Suplex", [
-            "Projette l'", UNIT, " la plus proche derrière, sur ", frenchNumber(SUPLEX_REACH), "×", ALLONGE, " ", DISTANCE,
+            "Projette l'", UNIT, " la plus proche derrière, sur ", SUPLEX_REACH, "×", ALLONGE, " ", DISTANCE,
             " de profondeur et ", SUPLEX_SIDE, " ", DISTANCE, " de large : ",
-            SUPLEX_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, ", et elle est étourdie.",
+            SUPLEX_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL,
+            ", et elle gagne ", STUNNED, " ", 1, ".",
         ], Rarity.RARE, SUPLEX_DAMAGE)
     }
 
@@ -115,7 +117,7 @@ export class SuplexCard extends SingleBlow {
     protected scaleOf(): number { return 1 }
 
     protected override after(battle: Battle, _unit: Unit, hit: Unit[]): void {
-        for(const target of hit) battle.stun(target)
+        for(const target of hit) battle.applyStatus(target, STUNNED, 1)
     }
 }
 
@@ -127,8 +129,8 @@ export class GreatThrustCard extends SingleBlow {
 
     constructor(){
         super("Grande estoc", [
-            "Perce sur ", frenchNumber(GREAT_THRUST_REACH), "×", ALLONGE, " ", DISTANCE, " devant, sauf les ",
-            frenchNumber(GREAT_THRUST_START), " premiers : ", 1, " ",
+            "Perce sur ", GREAT_THRUST_REACH, "×", ALLONGE, " ", DISTANCE, " devant, sauf les ",
+            GREAT_THRUST_START, " premiers : ", 1, " ",
             DamageType.PHYSICAL, " à l'", UNIT, " la plus proche, et un de plus tous les ", GREAT_THRUST_PER, " ",
             DISTANCE, " de distance.",
         ], Rarity.RARE, 1)
@@ -185,7 +187,7 @@ export class QuakeCard extends BlowCard {
 
     constructor(){
         super("Tremblement", [
-            "Fait trembler le sol à ", frenchNumber(QUAKE_RADIUS), "×", ALLONGE, " ", DISTANCE, " autour : ", 1, "+", FORCE, " ",
+            "Fait trembler le sol à ", QUAKE_RADIUS, "×", ALLONGE, " ", DISTANCE, " autour : ", 1, "+", FORCE, " ",
             DamageType.PHYSICAL, " à chaque ", UNIT, ".",
         ], Rarity.COMMON, 1)
     }
@@ -205,7 +207,7 @@ export class SacrificeCard extends BlowCard {
 
     constructor(){
         super("Coup du sacrifice", [
-            "Perd ", new HeartCount(SACRIFICE_COST), " pour frapper sur ", frenchNumber(SACRIFICE_REACH), "×", ALLONGE, " ",
+            "Perd ", new HeartCount(SACRIFICE_COST), " pour frapper sur ", SACRIFICE_REACH, "×", ALLONGE, " ",
             DISTANCE, " devant : ",
             SACRIFICE_DAMAGE, "+", FORCE, "×", 2, " ", DamageType.PHYSICAL, " à chaque ", UNIT, ".",
         ], Rarity.RARE, SACRIFICE_DAMAGE)

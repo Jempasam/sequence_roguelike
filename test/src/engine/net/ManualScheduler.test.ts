@@ -1,4 +1,4 @@
-import { ManualScheduler } from "@game/core"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
 import { describe, expect, test } from "vitest"
 
 describe("ManualScheduler", () => {

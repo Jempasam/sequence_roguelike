@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { UNLIMITED_CARDS } from "@game/core/mecard"
+import { UNLIMITED_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
 import { fight, kitFighter, monsterFighter, parseDefinition, parseStrategy, Roster } from "@game/command_line/sim"
 import type { Combatant, DefinedKit, DefinedMonster, Fighter, FightSpec } from "@game/command_line/sim"
 

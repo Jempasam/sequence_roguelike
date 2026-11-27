@@ -1,8 +1,14 @@
-import { plainText } from "@game/core"
-import type { Text } from "@game/core"
-import {
-    allFightTypes, ALL_BOOSTERS, ALL_CARDS, ALL_HAZARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES,
-} from "@game/core/mecard"
+import { plainText } from "@game/core-src/semantic/Text"
+import type { Text } from "@game/core-src/semantic/Text"
+import { ALL_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { allFightTypes } from "@game/core-src/games/mecard/sim/catalog/fightTypes"
+import { ALL_HAZARDS } from "@game/core-src/games/mecard/sim/catalog/hazards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
 import { mecardDisplay } from "@game/core/mecard/text-display"
 
 /** One entry of a catalog, as the command line shows it. */

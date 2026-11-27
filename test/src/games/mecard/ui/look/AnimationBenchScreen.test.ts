@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Vector2, visual } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
 import { AnimationBenchScreen } from "@game/core/mecard/animation-bench"
 import { DEFAULT_LOOK } from "@game/core/mecard/sprite-look"
 import type { UnitSprites } from "@game/core/mecard/unit-sprites"

@@ -1,9 +1,22 @@
 import { describe, expect, test } from "vitest"
-import {
-    Arena, Areas, Battle, Box, Disk, Heart, loadedHitbox, PROJECTION, SLASH, SOLID_HEART, STEP, SWEEP, UNIT_RADIUS, Vector2,
-    visual,
-} from "@game/core/mecard"
-import type { Pose } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Box } from "@game/core-src/games/mecard/sim/battle/hitbox/Box"
+import { Disk } from "@game/core-src/games/mecard/sim/battle/hitbox/Disk"
+import { loadedHitbox } from "@game/core-src/games/mecard/sim/battle/hitbox/loadedHitbox"
+import { UNIT_RADIUS } from "@game/core-src/games/mecard/sim/battle/Unit"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { SWEEP } from "@game/core-src/games/mecard/sim/card/subs/attack/Sweep"
+import { PROJECTION } from "@game/core-src/games/mecard/sim/card/subs/combat/Shoves"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { SOLID_HEART } from "@game/core-src/games/mecard/sim/heart/subs/SolidHeartKind"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import * as Turn from "@game/core-src/games/mecard/sim/battle/mecanic/turn"
+import type { Pose } from "@game/core-src/games/mecard/sim/battle/Action"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -92,7 +105,7 @@ describe("A wall of the scenery", () => {
         const on = battle()
         wall(on, 3.5, 3)
         const walker = unit(on, 3.5, 5)
-        const gone = on.moveSpot(walker, walker.position, UP, 3)
+        const gone = Walk.spot(on, walker, walker.position, UP, 3)
         // The wall is 0.4 thick: its face is at y = 3.2, and the walker stops a radius below.
         expect(gone.to.y).toBeGreaterThanOrEqual(3.2 + UNIT_RADIUS - 1e-9)
         expect(gone.to.y).toBeLessThan(3.2 + UNIT_RADIUS + 0.06)
@@ -104,14 +117,14 @@ describe("A wall of the scenery", () => {
         wall(on, 3.5, 3)
         // The wall spans x in 1.5..5.5: the walker passes the end at 6.2.
         const walker = unit(on, 6.2, 5)
-        expect(on.moveSpot(walker, walker.position, UP, 3).distance).toBeCloseTo(3)
+        expect(Walk.spot(on, walker, walker.position, UP, 3).distance).toBeCloseTo(3)
     })
 
     test("a walker along its length, touching → slides along without stopping", () => {
         const on = battle()
         wall(on, 3.5, 3)
         const walker = unit(on, 1, 3.6)
-        expect(on.moveSpot(walker, walker.position, RIGHT, 2).distance).toBeCloseTo(2)
+        expect(Walk.spot(on, walker, walker.position, RIGHT, 2).distance).toBeCloseTo(2)
     })
 
     test("room → refused inside the wall, given beside it", () => {
@@ -290,7 +303,7 @@ describe("Turning a body that is not round", () => {
         const on = battle()
         const body = rod(on, 3.5, 3.5)
         unit(on, 0.5, 0.5)
-        on.turn(body, UP)
+        Turn.turn(on, body, UP)
         expect(body.direction.equals(UP)).toBe(true)
         expect(body.position.equals(new Vector2(3.5, 3.5))).toBe(true)
     })
@@ -300,7 +313,7 @@ describe("Turning a body that is not round", () => {
         const body = rod(on, 3.5, 3.5)
         // Facing up the rod would reach 1.5 m above its middle: a unit there is in its way.
         const blocker = unit(on, 3.5, 2.3)
-        on.turn(body, UP)
+        Turn.turn(on, body, UP)
         expect(body.direction.equals(RIGHT)).toBe(true)
         expect(blocker.position.equals(new Vector2(3.5, 2.3))).toBe(true)
     })
@@ -309,7 +322,7 @@ describe("Turning a body that is not round", () => {
         const on = battle()
         const body = rod(on, 3.5, 0.6)
         // Facing up it is 3 m long: it would reach 0.9 m beyond the top wall.
-        on.turn(body, UP)
+        Turn.turn(on, body, UP)
         expect(body.direction.equals(UP)).toBe(true)
         expect(body.position.y).toBeGreaterThanOrEqual(1.5 - 1e-9)
     })
@@ -318,7 +331,7 @@ describe("Turning a body that is not round", () => {
         const on = battle()
         const walker = unit(on, 0.35, 0.35)
         unit(on, 0.9, 0.35, { team: MONSTERS })
-        on.turn(walker, RIGHT)
+        Turn.turn(on, walker, RIGHT)
         expect(walker.direction.equals(RIGHT)).toBe(true)
         expect(walker.position.equals(new Vector2(0.35, 0.35))).toBe(true)
     })
@@ -342,6 +355,6 @@ describe("A body that is not bounded", () => {
     test("a bounded body → stops at the wall as before", () => {
         const on = battle()
         const walker = unit(on, 0.35, 3, { direction: Vector2.LEFT })
-        expect(on.moveSpot(walker, walker.position, Vector2.LEFT, 2).distance).toBeCloseTo(0)
+        expect(Walk.spot(on, walker, walker.position, Vector2.LEFT, 2).distance).toBeCloseTo(0)
     })
 })

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Box, Label, Tabs } from "@game/core"
-import type { Component } from "@game/core"
+import { Box } from "@game/core-src/engine/ui/layout/Box"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import { Tabs } from "@game/core-src/engine/ui/widget/Tabs"
+import type { Component } from "@game/core-src/engine/ui/Component"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

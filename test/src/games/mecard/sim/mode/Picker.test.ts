@@ -1,6 +1,10 @@
-import { Rng } from "@game/core/mecard"
-import { NoAnswerFault, Picker, PickerClient } from "@game/core/mecard/sync"
-import type { GameMember, GameModeContext, GameModeShareable, Prompt, PromptBench } from "@game/core/mecard/sync"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { NoAnswerFault } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import { Picker, PickerClient } from "@game/core-src/games/mecard/sim/mode/subs/choose/Picker"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameModeContext } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
+import type { Prompt, PromptBench } from "@game/core-src/games/mecard/sim/mode/subs/choose/Picker"
 import { describe, expect, test } from "vitest"
 
 const ana: GameMember = { id: "a", name: "Ana", connected: true, options: {} }

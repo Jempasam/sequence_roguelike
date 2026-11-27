@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { after, animationFn, once, queue, timed, together } from "@game/core"
-import type { Animation } from "@game/core"
+import { after, animationFn, once, queue, timed, together } from "@game/core-src/engine/animation/animations"
+import type { Animation } from "@game/core-src/engine/animation/Animation"
 
 /** Play an animation to its end in frames of one second, as an animator does. */
 function playOut(animation: Animation, limit = 100): number {

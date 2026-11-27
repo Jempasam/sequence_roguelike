@@ -1,5 +1,9 @@
-import { ACT_TOPIC, NoAnswerFault, StatePublisher, StateSource } from "@game/core/mecard/sync"
-import type { GameMember, GameModeContext, GameModeShareable, RunHandle } from "@game/core/mecard/sync"
+import { NoAnswerFault } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import { ACT_TOPIC } from "@game/core-src/games/mecard/sync/mode/messages"
+import { StatePublisher, StateSource } from "@game/core-src/games/mecard/sync/mode/stateBridge"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameModeContext, RunHandle } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
 import { describe, expect, test } from "vitest"
 
 import { game, settle } from "./toys"

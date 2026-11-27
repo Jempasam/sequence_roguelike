@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { AssetError } from "@game/core"
-import type { Assets } from "@game/core"
+import { AssetError } from "@game/core-src/engine/assets/AssetError"
+import type { Assets } from "@game/core-src/engine/assets/Assets"
 
-import { LocalSync, RunBroadcaster } from "@game/core/mecard/sync"
+import { RunBroadcaster } from "@game/core-src/games/mecard/sync/run/RunBroadcaster"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { MecardViewer } from "@game/core/mecard/viewer"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"

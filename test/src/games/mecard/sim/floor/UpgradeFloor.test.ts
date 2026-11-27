@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
 import {
-    DUEL_HALT, Journey, Rng, Run, TAVERN_HALT, UPGRADE_FLOOR, upgradeFloorType, upgradeHalts,
-} from "@game/core/mecard"
+    UPGRADE_FLOOR,
+    upgradeFloorType,
+    upgradeHalts,
+} from "@game/core-src/games/mecard/sim/floor/subs/UpgradeFloor"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
 
 /** The map a floor of upgrades draws from a seed. */
 function mapOf(seed: number, rows?: number): Journey {

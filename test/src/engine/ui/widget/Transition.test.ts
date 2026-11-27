@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Transition } from "@game/core"
-import type { OraImage, OraLayer } from "@game/core"
+import { Transition } from "@game/core-src/engine/ui/widget/Transition"
+import type { OraImage, OraLayer } from "@game/core-src/engine/image/decodeOra"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

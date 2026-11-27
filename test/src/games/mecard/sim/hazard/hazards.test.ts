@@ -1,9 +1,21 @@
 import { describe, expect, test } from "vitest"
-import { Areas, visual } from "@game/core/mecard"
-import {
-    BOMB, BOMB_DAMAGE, Heart, loadBattle, placeBomb, placeFlames, placePuddle, POTION_LEVEL,
-    saveBattle, SHIELD_HEART, SLOWED, SLOWNESS_POTION, STEP, TIME_HEART, Vector2, WAIT,
-} from "@game/core/mecard"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { BOMB_DAMAGE } from "@game/core-src/games/mecard/sim/card/subs/body/BodyCards"
+import { BOMB } from "@game/core-src/games/mecard/sim/card/subs/combat/Bomb"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { placeBomb } from "@game/core-src/games/mecard/sim/hazard/subs/Bomb"
+import { placeFlames } from "@game/core-src/games/mecard/sim/hazard/subs/Flames"
+import { placePuddle } from "@game/core-src/games/mecard/sim/hazard/subs/Puddle"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { TIME_HEART } from "@game/core-src/games/mecard/sim/heart/subs/TimeHeartKind"
+import { POTION_LEVEL } from "@game/core-src/games/mecard/sim/potion/Potion"
+import { SLOWNESS_POTION } from "@game/core-src/games/mecard/sim/potion/subs/potions"
+import { loadBattle, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 

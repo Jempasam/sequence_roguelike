@@ -11,7 +11,6 @@ import { CONTROL_COLOR, HAZARD_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME, WORD_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import { VIOLENT_PUSH } from "../../../battle/mecanic/push/keyword"
 import type { Shove } from "../../../battle/mecanic/push/shove"
@@ -116,8 +115,8 @@ function impactOf(unit: Unit): number {
 }
 
 export const PROJECTION = new ActionCard("Projection", [
-    VIOLENT_PUSH.as("Pousse violemment"), " chaque ", UNIT, " dans le secteur devant, à ", frenchNumber(PROJECTION_RADIUS), " ",
-    DISTANCE, ", sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    VIOLENT_PUSH.as("Pousse violemment"), " chaque ", UNIT, " dans le secteur devant, à ", PROJECTION_RADIUS, " ",
+    DISTANCE, ", sur ", PROJECTION_DISTANCE, "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shovingViolently(
     (unit, pose) => Areas.arc(unit.muzzle(pose), pose.direction, PROJECTION_RADIUS, PROJECTION_COS_HALF),
@@ -151,7 +150,7 @@ function catchSpot(unit: Unit, pose: Pose): Vector2 {
 }
 
 export const CATCH = new ActionCard("Attrapage", [
-    "Ramène au contact devant chaque ", UNIT, " du couloir devant, sur ", frenchNumber(CATCH_LENGTH), "×", PORTEE, " ", DISTANCE, ". ",
+    "Ramène au contact devant chaque ", UNIT, " du couloir devant, sur ", CATCH_LENGTH, "×", PORTEE, " ", DISTANCE, ". ",
     CATCH_DAMAGE, " ", DamageType.PHYSICAL, " fixes.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
@@ -184,7 +183,7 @@ function rammed(battle: Battle, unit: Unit, target: Unit, stop: Pose): ViolentSh
 
 export const BATTERING_RAM = new ActionCard("Bélier", [
     WALK.as("Fonce"), " de ", RAM_LENGTH, "×", AGILITE, " ", DISTANCE, " devant. La première ", UNIT, " rencontrée est ",
-    VIOLENT_PUSH.as("poussée violemment"), " sur ", frenchNumber(PROJECTION_DISTANCE), "×", PORTEE, " ", DISTANCE,
+    VIOLENT_PUSH.as("poussée violemment"), " sur ", PROJECTION_DISTANCE, "×", PORTEE, " ", DISTANCE,
     ", dans l'axe du choc. Choc : ", IMPACT_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
 ], Rarity.RARE, {
     use: function (ctx){
@@ -210,9 +209,9 @@ export const BATTERING_RAM = new ActionCard("Bélier", [
 })
 
 export const SLING_CARD = new ActionCard("Fronde", [
-    "Saisit la première ", UNIT, " devant, sur ", frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, ", et la ",
+    "Saisit la première ", UNIT, " devant, sur ", SLING_LENGTH, "×", PORTEE, " ", DISTANCE, ", et la ",
     VIOLENT_PUSH.as("pousse violemment"), " derrière soi, en la faisant passer à travers soi, jusqu'à ",
-    frenchNumber(SLING_LENGTH), "×", PORTEE, " ", DISTANCE, " de l'", UNIT, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    SLING_LENGTH, "×", PORTEE, " ", DISTANCE, " de l'", UNIT, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, ".",
 ], Rarity.EPIC, (() => {
     const slung = (battle: Battle, unit: Unit, pose: Pose): ViolentShove|null => {
@@ -249,8 +248,8 @@ export const SLING_CARD = new ActionCard("Fronde", [
 })())
 
 export const SHOCK_WAVE = new ActionCard("Onde de choc", [
-    VIOLENT_PUSH.as("Pousse violemment"), " vers l'extérieur chaque ", UNIT, " à ", frenchNumber(WAVE_RADIUS), " ", DISTANCE,
-    " autour, sur ", frenchNumber(WAVE_DISTANCE), "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
+    VIOLENT_PUSH.as("Pousse violemment"), " vers l'extérieur chaque ", UNIT, " à ", WAVE_RADIUS, " ", DISTANCE,
+    " autour, sur ", WAVE_DISTANCE, "×", PORTEE, " ", DISTANCE, ". Choc : ", IMPACT_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, ".",
 ], Rarity.RARE, shovingViolently(
     (unit, pose) => unit.around(WAVE_RADIUS, pose),

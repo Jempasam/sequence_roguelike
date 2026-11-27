@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest"
-import { FIRE, PRAYER, REPEAT_2, REPETITION, SPELL, STEP, WAIT } from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
+import { REPETITION } from "@game/core-src/games/mecard/sim/card/subs/composite/RewriteCards"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { PRAYER } from "@game/core-src/games/mecard/sim/card/subs/preparation/Prayer"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** A hero and a foe far from each other. */
 function facing(): { on: Battle, hero: Unit, foe: Unit } {

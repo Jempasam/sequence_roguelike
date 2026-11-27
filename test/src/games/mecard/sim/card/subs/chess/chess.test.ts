@@ -1,9 +1,22 @@
 import { describe, expect, test } from "vitest"
 import {
-    BISHOP_CARD, CASTLING, CHECK, CHESS_PIECE, isChessPiece, isPawn, KNIGHT_PIECE_CARD, PAWN_CARD, PLAYED_BY_ALL,
-    PLAYED_BY_LAST, PLAYED_BY_NEAREST, PROMOTION, QUEEN_CARD, ROOK_CARD, STEP, WALKS,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+    BISHOP_CARD,
+    CASTLING,
+    CHECK,
+    KNIGHT_PIECE_CARD,
+    PAWN_CARD,
+    PLAYED_BY_ALL,
+    PLAYED_BY_LAST,
+    PLAYED_BY_NEAREST,
+    PROMOTION,
+    QUEEN_CARD,
+    ROOK_CARD,
+} from "@game/core-src/games/mecard/sim/card/subs/chess/ChessCards"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WALKS } from "@game/core-src/games/mecard/sim/card/subs/movement/WalkCard"
+import { CHESS_PIECE, isChessPiece, isPawn } from "@game/core-src/games/mecard/sim/status/subs/ChessPieces"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { ALL_KITS, ALL_MONSTERS, allyOf, foeOf, heroOf } from "@game/core/mecard"
-import type { Hero } from "@game/core/mecard"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { allyOf, foeOf, heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
+import type { Hero } from "@game/core-src/games/mecard/sim/run/Hero"
 import { unitDeckShown } from "@game/core/mecard/unit-view"
 
 // --- Fixture builders ---
@@ -57,14 +59,14 @@ describe("unitDeckShown", () => {
     })
 
     test("monster whose deck is one round of what it draws → always the same chain", () => {
-        const monster = ALL_MONSTERS.find(each => each.cards.length === each.draw)!
+        const monster = { ...GOBLIN, cards: GOBLIN.cards.slice(0, GOBLIN.draw) }
         const shown = unitDeckShown(foeOf(monster, monster.name))
         expect(shown.cards).toEqual(monster.cards)
         expect(shown.count).toBe(false)
     })
 
     test("the same monster as an ally, its deck shuffled → one of each card", () => {
-        const monster = ALL_MONSTERS.find(each => each.cards.length === each.draw)!
+        const monster = { ...GOBLIN, cards: GOBLIN.cards.slice(0, GOBLIN.draw) }
         const shown = unitDeckShown(allyOf(monster, monster.name))
         expect(shown.cards).toEqual([...new Set(monster.cards)])
     })

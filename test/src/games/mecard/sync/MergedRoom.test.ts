@@ -1,4 +1,5 @@
-import { LocalRoom, LocalSync, MergedRoom, MergedSender } from "@game/core/mecard/sync"
+import { MergedRoom, MergedSender } from "@game/core-src/games/mecard/sync/MergedRoom"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

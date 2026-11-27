@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { command, Console, group, named, optional, whole } from "@game/core"
-import type { Arg, Command, CommandContext } from "@game/core"
+import { command, group, named, optional, whole } from "@game/core-src/engine/console/commands"
+import { Console } from "@game/core-src/engine/console/Console"
+import type { Command, CommandContext } from "@game/core-src/engine/console/Command"
+import type { Arg } from "@game/core-src/engine/console/commands"
 
 // --- Fixture builders ---
 

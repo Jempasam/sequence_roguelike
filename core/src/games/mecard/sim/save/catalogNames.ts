@@ -13,13 +13,11 @@ import { FusionCard } from "../card/subs/composite/FusionCard"
 import { MergedCard } from "../card/subs/composite/MergedCard"
 import { ModuleCard } from "../card/subs/mechanic/ModuleCard"
 import { RandomCard } from "../card/subs/composite/RandomCard"
-import { ALL_FLOORS } from "../catalog/floors"
 import { ALL_CARDS, ALL_USABLES, ALL_ITEMS, VARIANT_CARDS } from "../catalog/index"
 import { ALL_MONSTERS, monster as monsterOf } from "../catalog/monsters"
 import type { Monster } from "../catalog/monsters"
 import { ALL_PETS } from "../catalog/pets"
 import type { Element } from "../element/Element"
-import type { FloorType } from "../floor/Floor"
 import { BASE_ELEMENTS, COMPOUNDS } from "../element/reactions"
 import { BodyElement } from "../element/subs/BodyElement"
 import { HeartsBoon } from "../element/subs/body/HeartsBoon"
@@ -71,7 +69,7 @@ export function potionNamed(name: string): Potion {
  * Values found by their name, as a save writes them down: a name names one value of its kind, which the
  * catalog guarantees and a test checks.
  */
-class Names<T extends { readonly name: string }> {
+export class Names<T extends { readonly name: string }> {
 
 
     constructor(
@@ -326,4 +324,3 @@ export const ITEM_NAMES = new Names<Item>("item", ALL_ITEMS)
 export const USABLE_NAMES = new Names<Usable>("usable", ALL_USABLES)
 export const HEART_NAMES = new Names<HeartKind>("heart", HEART_KINDS)
 export const MONSTER_NAMES = new Names<Monster>("monster", [...ALL_MONSTERS, ...ALL_PETS])
-export const FLOOR_NAMES = new Names<FloorType>("floor", ALL_FLOORS)

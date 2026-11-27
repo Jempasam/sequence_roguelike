@@ -34,6 +34,7 @@ const BOSS_EYE_EFFECT: Effect<AmbientContext> = {
 /** The place of a boss opens a red eye for a moment. */
 export const BOSS_EYE = new AmbientEffect({
     id: "boss-eye",
+    category: "surprise",
     spacing: 30,
     stackable: false,
     isPlayable: context => bossesOf(context).length > 0,

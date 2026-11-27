@@ -1,8 +1,16 @@
 import { describe, expect, test } from "vitest"
 import { AssetError, Button, Label, plainText, Tabs, WrapBox } from "@game/core"
 import type { Assets, ChoiceOption, Component, Painter } from "@game/core"
-import { CatalogDialog, CHEST_HALT, HeroDialog, OfferDialog, Run, TellDialog, THRUST } from "@game/core/mecard"
-import type { CatalogPick } from "@game/core/mecard"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import {
+    CatalogDialog,
+    HeroDialog,
+    OfferDialog,
+    TellDialog,
+} from "@game/core-src/games/mecard/sim/travel/dialogs"
+import type { CatalogPick } from "@game/core-src/games/mecard/sim/halt/HaltContext"
 import { CardView } from "@game/core/mecard/card-view"
 import { CatalogBrowser } from "@game/core/mecard/catalog-browser"
 import { JourneyView } from "@game/core/mecard/journey-view"
@@ -39,12 +47,12 @@ interface Shown {
     readonly enters: (() => void)[]
 }
 
-function shown(): Shown {
+function shown(sprites = NO_SPRITES): Shown {
     const setup = uiSetup({}, 620, 348)
     const run = startedRun(1)
     const enters: (() => void)[] = []
     const screen = new TravelScreen(setup.ui, run.travel, {
-        theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES,
+        theme: setup.theme, assets: NO_ASSETS, sprites,
         enter: () => new Promise(arrive => enters.push(arrive)),
         leave: () => Promise.resolve(),
         ready: () => Promise.resolve(),
@@ -72,14 +80,42 @@ async function play({ setup, screen }: Shown, seconds: number, step = 1 / 60): P
 }
 
 /** A screen whose panels are built: it reads the whole of the travel once its host is done building. */
-async function builtScreen(): Promise<Shown> {
-    const game = shown()
+async function builtScreen(sprites = NO_SPRITES): Promise<Shown> {
+    const game = shown(sprites)
     await settled()
     // The first frame lays the panels out for the size of the interface.
     game.screen.frame(game.setup.frame(), NO_WORLD, 0)
     game.setup.ui.render()
     return game
 }
+
+describe("what a travel screen tells it shows", () => {
+
+    test("the map laid out → its journey, settled once done scrolling", async() => {
+        const game = await builtScreen()
+        await play(game, 1)
+        expect(game.screen.shownMap).toBe(game.run.travel.journey)
+        expect(game.screen.mapSettled).toBe(true)
+    })
+
+    test("the screen hidden → no map", async() => {
+        const game = await builtScreen()
+        game.screen.visible = false
+        expect(game.screen.shownMap).toBeNull()
+        expect(game.screen.mapSettled).toBe(false)
+        expect(game.screen.shownUnits).toEqual([])
+    })
+
+    test("sprites loaded → the heroes of the party stand on the map", async() => {
+        const sprites = { ...NO_SPRITES } as unknown as { of: () => unknown }
+        const game = await builtScreen(sprites as unknown as typeof NO_SPRITES)
+        // Any picture will do: the white texel of the theme.
+        sprites.of = () => game.setup.theme.white
+        game.screen.refresh()
+        await play(game, 1)
+        expect(game.screen.shownUnits.map(each => each.unit)).toEqual(game.run.heroes)
+    })
+})
 
 /** Every component under another, itself included. */
 function allUnder(root: Component): Component[] {
@@ -377,10 +413,11 @@ describe("TravelScreen", () => {
         const game = shown()
         const { run, screen, enters } = game
         run.travel.visit(CHEST_HALT)
-        await play(game, 1 / 60)
+        await play(game, 1)
         run.travel.leave()
         enters[0]()
         await settled()
+        await play(game, 1)
         expect(run.travel.phase).toBe("map")
         expect(screen.animations.busy).toBe(false)
     })

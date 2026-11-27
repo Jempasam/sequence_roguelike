@@ -1,8 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Box } from "@game/core-src/games/mecard/sim/battle/hitbox/Box"
 import {
-    ALL_HAZARDS, Battle, Box, CONVEYOR, EXPLOSIVE, EXPLOSIVE_BARREL, FLAMETHROWER_TURRET, GEYSER, hazardTypeById,
-    HOLE, PATROL_ROBOT, PILLAR, PIRATE_CANNON, PIRATE_SHIP, PISTON, PUDDLE_ZONE, SLOWED, TORII, Vector2, WALL,
-} from "@game/core/mecard"
+    ALL_HAZARDS,
+    CONVEYOR,
+    EXPLOSIVE_BARREL,
+    FLAMETHROWER_TURRET,
+    GEYSER,
+    hazardTypeById,
+    HOLE,
+    PATROL_ROBOT,
+    PILLAR,
+    PIRATE_CANNON,
+    PIRATE_SHIP,
+    PISTON,
+    PUDDLE_ZONE,
+    TORII,
+    WALL,
+} from "@game/core-src/games/mecard/sim/catalog/hazards"
+import { EXPLOSIVE } from "@game/core-src/games/mecard/sim/status/subs/Explosive"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -57,7 +76,7 @@ describe("the hazards that stand", () => {
         const { on, hero } = stage(new Vector2(3.5, 5))
         const [wall] = WALL.lay(on, new Vector2(3.5, 3), RIGHT)
         expect(wall.hitbox).toEqual(new Box(3, 0.5))
-        expect(on.moveSpot(hero, hero.position, UP, 3).to.y).toBeGreaterThan(3.25)
+        expect(Walk.spot(on, hero, hero.position, UP, 3).to.y).toBeGreaterThan(3.25)
         expect(on.ray(hero, 6, hero).end.y).toBeCloseTo(3.25)
     })
 
@@ -66,7 +85,7 @@ describe("the hazards that stand", () => {
         const posts = TORII.lay(on, new Vector2(3.5, 3), DOWN)
         expect(posts).toHaveLength(2)
         const walker = unit(on, 3.5, 5, { team: MONSTERS })
-        expect(on.moveSpot(walker, walker.position, UP, 3).distance).toBeCloseTo(3)
+        expect(Walk.spot(on, walker, walker.position, UP, 3).distance).toBeCloseTo(3)
     })
 
     test("a pillar, a tree → the same disk of the scenery as a pillar of old", () => {

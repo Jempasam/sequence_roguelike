@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { MemoryStorage, SaveSlot } from "@game/core"
-import { HISTORY_FORMAT, HISTORY_SLOT_KEY, loadedHeroes } from "@game/core/mecard"
-import { RunHistorian } from "@game/core/mecard/persist"
+import { MemoryStorage } from "@game/core-src/engine/save/MemoryStorage"
+import { SaveSlot } from "@game/core-src/engine/save/SaveSlot"
+import { HISTORY_FORMAT, HISTORY_SLOT_KEY } from "@game/core-src/games/mecard/sim/save/historySave"
+import { loadedHeroes } from "@game/core-src/games/mecard/sim/save/runSave"
+import { RunHistorian } from "@game/core-src/games/mecard/persist/RunHistorian"
 
 import { startedRun } from "../../../fixtures/startedRun"
 

@@ -1,13 +1,26 @@
 import { describe, expect, test } from "vitest"
-import { Console } from "@game/core"
-import { BURN, CardChain, DeckAi, FORGE_HALT, LookaheadAi, RandomAi, Run, RunUnitRules, STEP, THRUST, WHETSTONE } from "@game/core/mecard"
-import type { Battle, HaltType, Unit } from "@game/core/mecard"
+import { Console } from "@game/core-src/engine/console/Console"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { LookaheadAi } from "@game/core-src/games/mecard/sim/ai/LookaheadAi"
+import { RandomAi } from "@game/core-src/games/mecard/sim/ai/RandomAi"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { FORGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/ForgeHalt"
+import { WHETSTONE } from "@game/core-src/games/mecard/sim/item/subs/stat/Whetstone"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { RunUnitRules } from "@game/core-src/games/mecard/sim/run/RunUnitRules"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
 import { AMBIENT_EFFECTS } from "@game/core/mecard/ambient-effects"
 import { LiveContext, registerCommands } from "@game/core/mecard/commands"
 import type { MecardContext } from "@game/core/mecard/commands"
 import { shippedTransitions } from "@game/core/mecard/visual-path"
-import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, hueOfName } from "@game/core/mecard/sync"
-import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
+import { hueOfName } from "@game/core-src/games/mecard/sync/lobby/Profile"
+import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
+import type { SeatMode, SeatPolicy } from "@game/core-src/games/mecard/sync/run/Seats"
 import { startedRun } from "../../../fixtures/startedRun"
 
 // --- Fixture builders ---
@@ -501,13 +514,13 @@ describe("Mecard battle commands", () => {
         return unit
     }
 
-    test("battle arena → the party and a dummy of ten hearts, an endless battle", () => {
+    test("battle arena → the party and a dummy of ten life packed in six hearts, an endless battle", () => {
         const { console, battle, run } = game()
         console.submit("battle arena")
         expect(errors(console)).toEqual([])
         expect(battle().endless).toBe(true)
         expect(battle().living.filter(unit => unit.team === run.heroesTeam)).toHaveLength(run.heroes.length)
-        expect(named(battle(), "Mannequin").life).toBe(10)
+        expect(named(battle(), "Mannequin").life).toBe(6)
     })
 
     test("a dummy killed in an arena → the battle goes on, a dummy back at the end of the round", () => {

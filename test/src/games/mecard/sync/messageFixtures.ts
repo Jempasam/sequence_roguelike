@@ -1,4 +1,4 @@
-import { UnreadableFault } from "@game/core/mecard/sync"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
 import { expect } from "vitest"
 
 /** Texts no message is: not JSON, or JSON of a shape no message has. */

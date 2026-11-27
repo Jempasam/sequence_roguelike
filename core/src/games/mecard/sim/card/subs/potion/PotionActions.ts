@@ -5,7 +5,7 @@ import type { Vector2 } from "../../../base/Vector2"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { counted, frenchNumber, SummonedHearts } from "../../../battle/words"
+import { counted, SummonedHearts } from "../../../battle/words"
 import type { Action, Pose, UnitContext } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import type { Battle } from "../../../battle/Battle"
@@ -253,18 +253,18 @@ export const BIG_BOTTLE = new BottleCard("Grande bouteille", [
 ], Rarity.RARE, STRONG)
 
 export const THROWN_POTION = new ThrownPotionCard("Potion jetable", [
-    "Lance la potion à ", frenchNumber(POTION_THROW), "×", PORTEE, " ", DISTANCE, " devant : elle éclabousse chaque ",
+    "Lance la potion à ", POTION_THROW, "×", PORTEE, " ", DISTANCE, " devant : elle éclabousse chaque ",
     UNIT, " à ", POTION_SPLASH, " ", DISTANCE, " autour, ", levelText(), ".",
 ], Rarity.COMMON, POTION_THROW, POTION_SPLASH)
 
 export const POTION_RAIN = new PotionRainCard("Pluie de potion", [
-    "Fait pleuvoir la potion sur chaque ", UNIT, " à ", frenchNumber(RAIN_RADIUS), "×", PORTEE, " ", DISTANCE, " autour, toi compris, ",
+    "Fait pleuvoir la potion sur chaque ", UNIT, " à ", RAIN_RADIUS, "×", PORTEE, " ", DISTANCE, " autour, toi compris, ",
     levelText(), ".",
 ], Rarity.RARE, RAIN_RADIUS)
 
 export const BARREL = new BarrelCard("Tonneau", [
     INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un tonneau de ", new SummonedHearts(BARREL_HALVES),
-    ", plein de la potion. Quand il casse, il l'éclabousse à ", frenchNumber(SPLASH_RADIUS), " ",
+    ", plein de la potion. Quand il casse, il l'éclabousse à ", SPLASH_RADIUS, " ",
     DISTANCE, " autour, ", levelText(STRONG), ".",
 ], Rarity.RARE, STRONG)
 
@@ -273,6 +273,6 @@ export const COATED_BLADE = new CoatCard("Lame enduite", [
 ], Rarity.RARE, 1)
 
 export const PUDDLE = new PuddleCard("Flaque", [
-    "Répand la potion à ", frenchNumber(PUDDLE_AHEAD), "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(PUDDLE_ROUNDS, "round"),
+    "Répand la potion à ", PUDDLE_AHEAD, "×", PORTEE, " ", DISTANCE, " devant, pour ", counted(PUDDLE_ROUNDS, "round"),
     " : elle s'applique à qui y entre, puis en fin de ", BATTLE_ROUND, " à qui s'y tient, ", levelText(), ".",
 ], Rarity.RARE, PUDDLE_ROUNDS)

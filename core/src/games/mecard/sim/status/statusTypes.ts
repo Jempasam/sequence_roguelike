@@ -18,6 +18,7 @@ import { POTION_COATING } from "./subs/PotionCoating"
 import { CONFUSED } from "./subs/Confusion"
 import { DEMONIC } from "./subs/DemonEnergy"
 import { COUNTER, DISARM, DODGE, SLIDING_PARRY, WOODEN_SHIELD } from "./subs/Dodge"
+import { ELECTROCUTED } from "./subs/Electrocuted"
 import { EXPLOSIVE } from "./subs/Explosive"
 import { FLEETING } from "./subs/Fleeting"
 import { FRENZIED } from "./subs/Frenzy"
@@ -35,6 +36,7 @@ import { SLOWED } from "./subs/Slowness"
 import { SOAKED } from "./subs/Soaked"
 import { SPLASHING } from "./subs/Splashing"
 import { STINKING } from "./subs/Stench"
+import { STUNNED } from "./subs/Stunned"
 import { SWALLOWED } from "./subs/Swallow"
 import { SWIFT } from "./subs/Swiftness"
 import { VIGOROUS } from "./subs/Vigor"
@@ -51,7 +53,8 @@ export const STATUS_TYPES: readonly StatusType[] = [
     SWALLOWED, SWIFT, VIGOROUS, OVERHEATED, LUCIDITY, MOMENTUM, RESURRECTED, BUBBLE, SOAPY, GIANT,
     CHESS_PIECE, PAWN_PIECE, ROOK_PIECE, KNIGHT_PIECE, BISHOP_PIECE, QUEEN_PIECE,
     ENRAGED, EXPLOSIVE, FLEETING, FRENZIED, POSSESSED, SOUL_LINKED,
-    BLEEDING, BURN, CONFUSED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, STINKING, VULNERABLE, WEAKENED,
+    BLEEDING, BURN, CONFUSED, ELECTROCUTED, FRAGILE, MARKED, POISONED, ROOTED, SLOWED, STINKING, STUNNED,
+    VULNERABLE, WEAKENED,
     MINE_HAZARD, BEAR_TRAP_HAZARD,
 ]
 

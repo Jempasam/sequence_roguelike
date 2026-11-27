@@ -1,12 +1,45 @@
 import { describe, expect, test, vi } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { resolve } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { ELEMENT } from "@game/core-src/games/mecard/sim/card/CardType"
+import { POSSESSION } from "@game/core-src/games/mecard/sim/card/subs/attack/Possession"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { RELOCATED } from "@game/core-src/games/mecard/sim/battle/mecanic/relocation"
+import { summonCardOf } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastRewrites"
+import { WOLF_CARD } from "@game/core-src/games/mecard/sim/card/subs/beast/beasts"
 import {
-    AIM, AimCard, ARC_DISTANCE, ARC_STEP, BLINK, BLEED, BLUE_HEART, BOUNCE_DASH, cardMentions, CHARGE, ChainSummonCard, COMBO,
-    DamageType, ELEMENT, ELEMENT_ON_BLADE, ELEPHANT_CARD, ENCHANTED_BLADE, FIRE, FORCE, FusionCard, Heart,
-    LIGHTNING, LIGHTNING_ELEMENT, fusionOfMonster, LOOT_MONSTERS, MergedCard, nearestTurn, POSSESSION,
-    PREPARATION_CARD, RED_HEART, REPEAT_2, REPETITION, resolve, SLASH, SPELL, STEP, TRANSMUTATION, THRUST, TIME_MANIPULATION, TURN_STEPS,
-    TURNS, Vector2, WAIT, WINGS, WOLF_CARD,
-} from "@game/core/mecard"
-import type { Action, Card, RewriteSpot } from "@game/core/mecard"
+    PREPARATION_CARD,
+    TIME_MANIPULATION,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/ChainRewrites"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { CHARGE, MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { REPETITION } from "@game/core-src/games/mecard/sim/card/subs/composite/RewriteCards"
+import { COMBO } from "@game/core-src/games/mecard/sim/card/subs/modifier/Combo"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { ELEPHANT_CARD } from "@game/core-src/games/mecard/sim/card/subs/modifier/Wrappers"
+import { AIM, AimCard } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { ARC_DISTANCE, ARC_STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/ArcStep"
+import { BLINK } from "@game/core-src/games/mecard/sim/card/subs/movement/Blink"
+import { BOUNCE_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BounceDash"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { nearestTurn, TURN_STEPS, TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { ELEMENT_ON_BLADE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { FIRE, LIGHTNING } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { BLEED } from "@game/core-src/games/mecard/sim/card/subs/status/StatusCards"
+import { ChainSummonCard } from "@game/core-src/games/mecard/sim/card/subs/summon/ChainSummons"
+import { ENCHANTED_BLADE } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { LOOT_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { LIGHTNING_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Lightning"
+import { fusionOfMonster } from "@game/core-src/games/mecard/sim/halt/subs/monster/monsterCards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { WINGS } from "@game/core-src/games/mecard/sim/item/subs/combat/ChainItems"
+import type { Action } from "@game/core-src/games/mecard/sim/battle/Action"
+import type { Card, RewriteSpot } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../fixtures"
 
@@ -53,7 +86,7 @@ describe("the arc", () => {
         const hero = unit(on, 3.5, 5.5)
         unit(on, 0.5, 0.5, { team: MONSTERS })
         let widest = 0
-        hero.moved.add(() => { widest = Math.max(widest, Math.abs(hero.position.x - 3.5)) })
+        hero.observers.of(RELOCATED).add(() => { widest = Math.max(widest, Math.abs(hero.position.x - 3.5)) })
         play(on, [[hero, chain(ARC_STEP)]])
         expect(hero.position.x).toBeCloseTo(3.5, 5)
         expect(5.5 - hero.position.y).toBeCloseTo(ARC_DISTANCE * hero.stats.move.value, 5)
@@ -204,8 +237,8 @@ describe("the possession", () => {
 
 describe("the spirits of nature", () => {
     test("the summoning of a wolf → a body of four blue hearts, aiming, running, then biting twice", () => {
-        const rewrite = TRANSMUTATION.get(WOLF_CARD.beast).rewrite(FIRST, spotOf())
-        const summoned = rewrite.cards[0]
+        const { beast } = WOLF_CARD
+        const summoned = summonCardOf(beast, beast, beast)
         expect(summoned).toBeInstanceOf(ChainSummonCard)
         if(!(summoned instanceof ChainSummonCard)) return
         expect(summoned.summon.cards).toEqual([AIM, BOUNCE_DASH, BLEED, SLASH, BLEED, SLASH])
@@ -253,13 +286,6 @@ describe("the wings", () => {
         on.endPreparation()
         expect(hero.chain.cards[0]).toBe(BLINK)
         expect(hero.chain.cards[1].contents).toEqual([BLINK, THRUST])
-    })
-})
-
-describe("what the descriptions tell", () => {
-    test("a merge → it tells what its cards tell", () => {
-        expect(cardMentions(CHARGE, DamageType.PHYSICAL, FORCE)).toBe(true)
-        expect(cardMentions(STEP, DamageType.PHYSICAL)).toBe(false)
     })
 })
 

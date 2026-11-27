@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest"
-import {
-    ActionMap, gamepad, InputSystem, key, KEYBOARD, keys, mouse, MOUSE, pad, stick,
-} from "@game/core"
-import type { ActionBindings, InputFrame } from "@game/core"
+import { ActionMap } from "@game/core-src/engine/input/ActionMap"
+import { key, keys, mouse, pad, stick } from "@game/core-src/engine/input/Binding"
+import { gamepad, KEYBOARD, MOUSE } from "@game/core-src/engine/input/InputEvent"
+import { InputSystem } from "@game/core-src/engine/input/InputSystem"
+import type { ActionBindings } from "@game/core-src/engine/input/ActionMap"
+import type { InputFrame } from "@game/core-src/engine/input/InputFrame"
 
 import { FakeInput } from "../../fixtures/fakeInput"
 

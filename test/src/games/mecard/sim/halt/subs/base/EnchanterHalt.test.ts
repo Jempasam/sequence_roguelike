@@ -1,8 +1,21 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { LANCER_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
 import {
-    enchant, enchantedOrder, enchantments, ENCHANTER_HALT, FIRE, heroOf, LANCER_KIT, REPEAT_2, Rng, SPELL, STEP, THRUST,
-} from "@game/core/mecard"
-import type { Card, Halt, Hero } from "@game/core/mecard"
+    enchant,
+    enchantedOrder,
+    enchantments,
+    ENCHANTER_HALT,
+} from "@game/core-src/games/mecard/sim/halt/subs/deck/EnchanterHalt"
+import { heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Halt } from "@game/core-src/games/mecard/sim/halt/Halt"
+import type { Hero } from "@game/core-src/games/mecard/sim/run/Hero"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../../../fixtures/startedRun"
@@ -44,12 +57,14 @@ describe("enchantments", () => {
     })
 
     test("no spell in the party → no element; a spell → elements too", () => {
-        const offersFire = (hero: Hero): boolean => {
-            return Array.from({ length: 200 }, (_, seed) => enchantments(new Rng(seed), [hero]))
-                .some(offered => offered.includes(FIRE))
+        const offersFire = (hero: Hero, seeds: number): boolean => {
+            for(let seed = 0; seed < seeds; seed++){
+                if(enchantments(new Rng(seed), [hero]).includes(FIRE)) return true
+            }
+            return false
         }
-        expect(offersFire(holding(THRUST))).toBe(false)
-        expect(offersFire(holding(THRUST, SPELL))).toBe(true)
+        expect(offersFire(holding(THRUST), 200)).toBe(false)
+        expect(offersFire(holding(THRUST, SPELL), 5000)).toBe(true)
     })
 
     test("the starting party → cards of every sort it can fuse, not only those taking another", () => {

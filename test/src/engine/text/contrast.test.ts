@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Color, contrastRatio, luminance, MIN_CONTRAST, outlineAgainst } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { contrastRatio, luminance, MIN_CONTRAST, outlineAgainst } from "@game/core-src/engine/text/contrast"
 
 // --- Fixture builders ---
 

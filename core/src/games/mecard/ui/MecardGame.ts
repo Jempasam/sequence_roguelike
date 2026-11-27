@@ -72,6 +72,8 @@ import { NO_RUN_LOCKS, RunScreen } from "./run/RunScreen"
 import { controlRun, seatRun, viewRun } from "./run/runWiring"
 import { Forwarded } from "./forward/Forwarded"
 import { RunParticleLink } from "./particles/RunParticleLink"
+import { Ambient } from "./travel/ambient/Ambient"
+import { seededRandom } from "../../../engine/particles"
 import { UiSoundLink } from "./sound/UiSoundLink"
 import { QuitPopup } from "./hud/QuitPopup"
 import { ArmScreen } from "./travel/ArmScreen"
@@ -240,9 +242,8 @@ export class MecardGame {
         const sprites = new UnitSprites()
         const borders = new FloorBorders()
         lendPictures(theme, sprites.picture)
-        this.#particles = new RunParticleLink(
-            this.run, forwarded, () => sprites.gold, undefined, visual => sprites.of(visual),
-        )
+        this.#particles = new RunParticleLink(this.run, forwarded, () => sprites.gold)
+        this.#ambient = new Ambient(seededRandom(seed), error => this.#console.print(String(error)))
         // Made before the screen, so the transitions it lays lie over them.
         this.#pnj = new PnjScreen(theme, ui, {
             report: text => this.#console.print(text),
@@ -275,6 +276,7 @@ export class MecardGame {
         this.#screen = new RunScreen(ui, this.run, {
             theme, assets, sprites, toWorld, toUi, sounds: uiSound, forwarded,
             particles: this.#particles,
+            ambient: this.#ambient,
             // The party fell: its save is gone, back to the menu to start again.
             restart: () => {
                 if(this.#shared) this.#shared.onOver?.()
@@ -328,7 +330,7 @@ export class MecardGame {
             connect: (code, guest) => this.#connect(code, guest),
             openChat: (role, code, author) => this.openChat(role, code, author),
             leaveChat: () => this.leaveChat(),
-            ambient: effects => this.#particles.ambientNow(effects),
+            ambient: effects => this.#ambient.trigger(effects),
             playTransition: (transition, duration, reverse) => {
                 void this.#screen.transitions.play(transition, {
                     duration,
@@ -602,6 +604,7 @@ export class MecardGame {
     readonly #unitRules: RunUnitRules
     readonly #view: { dispose(): void }
     readonly #particles: RunParticleLink
+    readonly #ambient: Ambient
     readonly #console: Console<MecardContext>
 
     /** Tell the player of a fault in the game console, and the JavaScript console too. */

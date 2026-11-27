@@ -1,5 +1,9 @@
-import { FIXED_SEATS, LocalRoom, SEAT_TOPIC, SeatDealer, Seats, readSeatMessage } from "@game/core/mecard/sync"
-import type { SeatMode, SyncPeer } from "@game/core/mecard/sync"
+import { SeatDealer } from "@game/core-src/games/mecard/sync/run/SeatDealer"
+import { readSeatMessage } from "@game/core-src/games/mecard/sync/run/SeatMessage"
+import { FIXED_SEATS, Seats } from "@game/core-src/games/mecard/sync/run/Seats"
+import { LocalRoom, SEAT_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SeatMode } from "@game/core-src/games/mecard/sync/run/Seats"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 /** Seats that are plain names, from a list the test changes: no run is needed to give them. */

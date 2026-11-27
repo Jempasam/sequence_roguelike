@@ -52,6 +52,9 @@ export class ParticleSpec {
      */
     public sprite: Sprite|null = null
 
+    /** Is the sprite drawn mirrored, its left on the right? */
+    public mirrored = false
+
     /** Does the particle turn toward its speed? The rotation and the spin are then ignored. */
     public faceMotion = false
 
@@ -77,6 +80,7 @@ export class ParticleSpec {
         this.colorStart.set(1, 1, 1, 1)
         this.colorEnd.set(1, 1, 1, 1)
         this.sprite = null
+        this.mirrored = false
         this.faceMotion = false
         this.rotation = 0
         this.spin = 0

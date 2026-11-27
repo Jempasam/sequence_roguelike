@@ -1,8 +1,18 @@
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
 import {
-    AHEAD_CHAINS, DeckAi, DEFAULT_CANDIDATES, DEPTH_AIS, depthAi, LATEST_SMART, LookaheadAi, RandomAi, ShuffleAi,
+    DEFAULT_CANDIDATES,
+    DEPTH_AIS,
+    depthAi,
+    LATEST_SMART,
     SMART_VARIANTS,
-} from "@game/core/mecard"
-import type { DepthAi, Rng, UnitController, Variant } from "@game/core/mecard"
+} from "@game/core-src/games/mecard/sim/ai/catalog"
+import { AHEAD_CHAINS, LookaheadAi } from "@game/core-src/games/mecard/sim/ai/LookaheadAi"
+import { RandomAi } from "@game/core-src/games/mecard/sim/ai/RandomAi"
+import { ShuffleAi } from "@game/core-src/games/mecard/sim/ai/ShuffleAi"
+import type { DepthAi } from "@game/core-src/games/mecard/sim/ai/catalog"
+import type { Variant } from "@game/core-src/games/mecard/sim/ai/LookaheadAi"
+import type { UnitController } from "@game/core-src/games/mecard/sim/ai/UnitController"
+import type { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
 
 import { UsageError } from "./errors"
 

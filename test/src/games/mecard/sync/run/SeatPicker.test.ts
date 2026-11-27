@@ -1,9 +1,19 @@
-import type { Fault } from "@game/core"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
 import {
-    LocalRoom, LocalSync, SEAT_OFFER_TOPIC, SEAT_RELEASE_TOPIC, SEAT_TAKE_TOPIC, SeatPicker, UnreadableFault,
-    readSeatWishMessage, writeSeatOfferMessage,
-} from "@game/core/mecard/sync"
-import type { SeatOffer, SyncPeer } from "@game/core/mecard/sync"
+    readSeatWishMessage,
+    writeSeatOfferMessage,
+} from "@game/core-src/games/mecard/sync/run/SeatOfferMessage"
+import { SeatPicker } from "@game/core-src/games/mecard/sync/run/SeatPicker"
+import {
+    LocalRoom,
+    LocalSync,
+    SEAT_OFFER_TOPIC,
+    SEAT_RELEASE_TOPIC,
+    SEAT_TAKE_TOPIC,
+} from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SeatOffer } from "@game/core-src/games/mecard/sync/run/SeatOfferMessage"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 /** A picker, the channel the host offers on, and what the host hears of the client on its side. */

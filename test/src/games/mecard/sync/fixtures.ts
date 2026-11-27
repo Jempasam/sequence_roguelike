@@ -1,9 +1,14 @@
-import { Run } from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
-import {
-    COOP_SEATS, FIXED_SEATS, LocalRoom, LocalSync, RunBroadcaster, RunGuest, RunHost, RunReceiver,
-} from "@game/core/mecard/sync"
-import type { SeatMode, SeatPolicy, SyncLink } from "@game/core/mecard/sync"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import { RunBroadcaster } from "@game/core-src/games/mecard/sync/run/RunBroadcaster"
+import { RunGuest } from "@game/core-src/games/mecard/sync/run/RunGuest"
+import { RunHost } from "@game/core-src/games/mecard/sync/run/RunHost"
+import { RunReceiver } from "@game/core-src/games/mecard/sync/run/RunReceiver"
+import { COOP_SEATS, FIXED_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SeatMode, SeatPolicy } from "@game/core-src/games/mecard/sync/run/Seats"
+import type { SyncLink } from "@game/core-src/platform/SyncPort"
 import { startedRun } from "../../../fixtures/startedRun"
 
 /** A run hosted, told on a channel, with how many times everyone was ready. */

@@ -1,8 +1,12 @@
 import { describe, expect, test } from "vitest"
-import {
-    CAVE_FLOOR, DOJO_FLOOR, GRAVEYARD_FLOOR, HARBOR_FLOOR, MERCHANT_HALT, SWAMP_FLOOR, TUNDRA_FLOOR,
-} from "@game/core/mecard"
-import type { FloorType } from "@game/core/mecard"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { DOJO_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/DojoFloor"
+import { GRAVEYARD_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/GraveyardFloor"
+import { HARBOR_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/HarborFloor"
+import { SWAMP_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/SwampFloor"
+import { TUNDRA_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/TundraFloor"
+import { MERCHANT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/MerchantHalt"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 import {
     contextOf, effectOf, fightAt, haltAt, playOut, startedAnimation,
 } from "../../../../../../../fixtures/ambientFixtures"

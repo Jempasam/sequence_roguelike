@@ -24,6 +24,7 @@ import type {
     ActivationEvent, AttackEvent, CardInvalidEvent, ChainChangeEvent, ChainOverflowEvent, DeathEvent, HitEvent,
     PlanChangeEvent,
 } from "./events"
+import * as Steps from "./mecanic/step"
 import { ObserverMap } from "./ObserverMap"
 import type { Area } from "./Area"
 import { Disk } from "./hitbox/Disk"
@@ -337,8 +338,30 @@ export class Unit {
     /** All the cards of the last tree of its chain it started playing, the first one included, none before. */
     public lastTree: readonly Card[] = []
 
-    /** The steps ready to play, the next one first, before what its chain has left to give. */
-    public readonly steps: Action[] = []
+    /**
+     * The steps ready to play, the next one first, before what its chain has left to give. Changed by the
+     * rules of {@link Steps}, which tell what they do.
+     */
+    public get steps(): readonly Action[] {
+        return this.#steps
+    }
+
+    /** Make actions ready to play, in order, before the steps it has ready. Tells nothing. */
+    public queueNext(actions: readonly Action[]): void {
+        this.#steps.unshift(...actions)
+    }
+
+    /** Make actions ready to play, in order, after the steps it has ready. Tells nothing. */
+    public queueLast(actions: readonly Action[]): void {
+        this.#steps.push(...actions)
+    }
+
+    /** Take away the steps it has ready, what its chain has left to give untouched. */
+    public clearSteps(): void {
+        this.#steps.length = 0
+    }
+
+    readonly #steps: Action[] = []
 
     /** What it played this round, in order, the step being played last: gone with the round. */
     public readonly stepsPlayed: Action[] = []
@@ -543,11 +566,22 @@ export class Unit {
         this.onPrep.notify(this)
     }
 
-    /** Have the next step ready, read from its chain when none is. Is there one? */
-    public fillSteps(): boolean {
-        if(this.steps.length > 0) return true
-        this.readOne()
-        return this.steps.length > 0
+    /** Take its next step to play it, read from its chain when none is ready. None when it has none left. */
+    public takeStep(): Action|null {
+        if(this.#steps.length === 0) this.readOne()
+        return this.#steps.shift() ?? null
+    }
+
+    /**
+     * Throw its next step away, never to be played: the first ready, else the next of its chain, read without
+     * being told activated, so it does not count as played. Tells nothing else.
+     *
+     * @returns The cards it came from, none for one ready already; none at all when it had no step left.
+     */
+    public discardStep(): { readonly cards: { readonly first: number, readonly last: number }|null }|null {
+        if(this.#steps.shift()) return { cards: null }
+        const cards = this.#guarded(() => this.chain.skip(ACTION), null)
+        return cards && { cards }
     }
 
     /** The cards of its chain it has not started reading yet, in order: what it has yet to play. */
@@ -558,7 +592,7 @@ export class Unit {
     /** Read the next tree of its chain, its step made ready after those it has. */
     public readOne(): void {
         const action = this.#guarded(() => this.chain.next(ACTION), null)
-        if(action) this.steps.push(action)
+        if(action) this.#steps.push(action)
     }
 
     /** Read what is left of its chain: every step it gives made ready, each card that cannot play told. */
@@ -580,8 +614,8 @@ export class Unit {
         battle.signals.stepStarted.notify({ unit: this, left: left - 1 })
         this.stepStarted.notify(this)
         battle.unitStepping.notify(this)
-        if(!this.alive || !this.fillSteps()) return null
-        const action = this.steps.shift()
+        if(!this.alive) return null
+        const action = Steps.next(battle, this)
         if(!action) return null
         this.stepsPlayed.push(action)
         this.actionRead.notify(this)
@@ -596,7 +630,7 @@ export class Unit {
         const { battle } = this
         this.hearts.unplug()
         battle.endProcesses(this)
-        this.steps.length = 0
+        this.clearSteps()
         battle.events.push({ type: "died", unit: this })
         this.onDeath.notify({ unit: this, source })
         source?.killed.notify({ unit: this, source })

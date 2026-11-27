@@ -1,4 +1,4 @@
-import type { AudioPort, AudioStage, BiquadKind, PlayOptions, Sound } from "@game/core"
+import type { AudioPort, AudioStage, BiquadKind, PlayOptions, Sound } from "@game/core-src/platform/AudioPort"
 
 /** A stage that records how it was asked for, as text. */
 export type FakeStage = { readonly made: string }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Stack } from "@game/core"
+import { Stack } from "@game/core-src/engine/ui/layout/Stack"
 
 import { Probe, uiSetup } from "../../fixtures/uiFixtures"
 import type { UiSetup } from "../../fixtures/uiFixtures"

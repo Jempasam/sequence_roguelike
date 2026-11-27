@@ -1,6 +1,6 @@
 # Outil en ligne de commande
 
-Sous-projet `command_line/`, dépend de `core` (`@game/core/mecard`). Sert à consulter les catalogues de Dungeon of the Mecard pendant le développement de nouvelles cartes, kits, monstres, objets : voir ce qui existe avant d'ajouter, éviter les doublons de nom, reprendre le ton des descriptions.
+Sous-projet `command_line/`, dépend de `core` (`@game/core`). Sert à consulter les catalogues de Dungeon of the Mecard pendant le développement de nouvelles cartes, kits, monstres, objets : voir ce qui existe avant d'ajouter, éviter les doublons de nom, reprendre le ton des descriptions.
 
 ## Commandes
 

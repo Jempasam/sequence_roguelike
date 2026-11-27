@@ -6,6 +6,7 @@ import type { Battle } from "../../sim/battle/Battle"
 import { BLINKED } from "../../sim/battle/mecanic/blink/signals"
 import { LEAPED } from "../../sim/battle/mecanic/leap/signals"
 import { SHOVED } from "../../sim/battle/mecanic/push/signals"
+import { STEP_DISABLED } from "../../sim/battle/mecanic/step/signals"
 import { SWAPPED } from "../../sim/battle/mecanic/swap/signals"
 import { TELEPORTED } from "../../sim/battle/mecanic/teleport/signals"
 import { TURNED } from "../../sim/battle/mecanic/turn/signals"
@@ -76,7 +77,7 @@ const DEATH: Cue = { path: "mecard/sounds/death.ogg", volume: 1 }
 /** Two units run into each other. */
 const BUMP: Cue = { path: "mecard/sounds/bump.ogg", volume: 1 }
 
-/** The chain of a unit cannot go on: too long, or a card cannot be built. */
+/** The chain of a unit cannot go on: too long, a card cannot be built, or a step is disabled. */
 const REFUSED: Cue = { path: "mecard/sounds/chain_overflow.ogg", volume: 1 }
 
 /** A round starts: a light gong. */
@@ -204,6 +205,7 @@ export class RunSoundLink {
             )),
             this.#on(signals.cardInvalid, REFUSED),
             this.#on(signals.chainOverflowed, REFUSED),
+            this.#on(battle.observers.of(STEP_DISABLED), REFUSED),
             this.#on(battle.observers.of(WALKED), BOARD_STEP),
             this.#on(battle.observers.of(SHOVED), BOARD_STEP),
             this.#on(battle.observers.of(TURNED), ({ from, to }) => {

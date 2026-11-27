@@ -7,7 +7,7 @@ const COVER = 0.35
 const SPOT_STEP = 4
 
 /** How much of its size a piece keeps away from the tokens and the paths: the larger, the farther. */
-const MARGIN_RATE = 0.2
+const MARGIN_RATE = 0.05
 
 /** How far apart the edges of two pieces stay at least, in virtual pixels. */
 const CLEARANCE = 2
@@ -51,36 +51,70 @@ interface Spot extends MapPoint {
     readonly room: number
 }
 
-/** A piece laid on the map, by its top left corner. */
+/** The smallest and the largest factor a piece is drawn at, over its own size. */
+const MIN_SCALE = 0.85
+const MAX_SCALE = 1.1
+
+/** The farthest a piece is turned either way, in radians: a slight lean. */
+const MAX_ANGLE = 6 * Math.PI / 180
+
+/** How much room a piece is given over its own size: enough for its largest scale and its widest lean. */
+const RESERVE = MAX_SCALE * (Math.cos(MAX_ANGLE) + Math.sin(MAX_ANGLE))
+
+/** A piece laid on the map, by the top left corner of its picture as it is by default. */
 export interface ScatteredPiece extends MapPoint {
     /** Its rank among the pieces given. */
+    readonly piece: number
+
+    /** Is it drawn mirrored? */
+    readonly flip: boolean
+
+    /** The factor it is drawn at over its size, around its middle. */
+    readonly scale: number
+
+    /** How far it is turned around its middle, clockwise, in radians. */
+    readonly angle: number
+}
+
+/** A piece laid, by the top left corner of the room it is given. */
+interface Placed extends MapPoint {
     readonly piece: number
 }
 
 /**
  * Pieces laid at random over a map, away from its tokens and its paths, and from each other: the largest
  * first, then the smaller ones in the holes left. Each comes as many times as {@link quantities} says, as
- * long as a spot is left for it.
+ * long as a spot is left for it. Each is mirrored, scaled and turned a little at random, and given room for
+ * it: it stays inside the map and away from the others as it is drawn.
  */
 export function scatter(seed: number, pieces: readonly PieceSize[], map: MapLayout): ScatteredPiece[] {
     if(pieces.length === 0) return []
     const rng = new Rng(seed)
+    const rooms = pieces.map(({ width, height }) => ({ width: width * RESERVE, height: height * RESERVE }))
     const field = spotsOf(map)
-    const spots = pieces.map(piece => clearSpots(piece, field, map.size))
+    const spots = rooms.map((room, piece) => clearSpots(pieces[piece], room, field, map.size))
     const free = Math.max(...spots.map(each => each.length)) * SPOT_STEP ** 2
-    const counts = quantities(pieces, free)
-    const laid: ScatteredPiece[] = []
-    const largestFirst = pieces.map((_, piece) => piece).sort((a, b) => sizeOf(pieces[b]) - sizeOf(pieces[a]))
+    const counts = quantities(rooms, free)
+    const laid: Placed[] = []
+    const largestFirst = rooms.map((_, piece) => piece).sort((a, b) => sizeOf(rooms[b]) - sizeOf(rooms[a]))
     for(const piece of largestFirst){
         rng.shuffle(spots[piece])
         const wanted = laid.length + counts[piece]
         for(const spot of spots[piece]){
             if(laid.length === wanted) break
             const candidate = { piece, ...spot }
-            if(laid.every(other => apart(candidate, other, pieces))) laid.push(candidate)
+            if(laid.every(other => apart(candidate, other, rooms))) laid.push(candidate)
         }
     }
-    return laid
+    // VARIATION //
+    return laid.map(({ piece, x, y }) => ({
+        piece,
+        x: Math.round(x + (rooms[piece].width - pieces[piece].width) / 2),
+        y: Math.round(y + (rooms[piece].height - pieces[piece].height) / 2),
+        flip: rng.chance(0.5),
+        scale: MIN_SCALE + rng.next() * (MAX_SCALE - MIN_SCALE),
+        angle: (rng.next() * 2 - 1) * MAX_ANGLE,
+    }))
 }
 
 /**
@@ -115,25 +149,28 @@ function spotsOf({ size, tokens, paths }: MapLayout): Spot[] {
     return spots
 }
 
-/** Where a piece may lie, by its top left corner: inside the map, far enough from the tokens and the paths. */
-function clearSpots(piece: PieceSize, field: readonly Spot[], size: PieceSize): MapPoint[] {
+/**
+ * Where a piece may lie, by the top left corner of its room: the room inside the map, the piece itself far
+ * enough from the tokens and the paths.
+ */
+function clearSpots(piece: PieceSize, room: PieceSize, field: readonly Spot[], size: PieceSize): MapPoint[] {
     const margin = sizeOf(piece) * (0.5 + MARGIN_RATE)
-    const corners = field.filter(({ room }) => room >= margin).map(({ x, y }) => {
-        return { x: Math.floor(x - piece.width / 2), y: Math.floor(y - piece.height / 2) }
+    const corners = field.filter(spot => spot.room >= margin).map(({ x, y }) => {
+        return { x: Math.floor(x - room.width / 2), y: Math.floor(y - room.height / 2) }
     })
     return corners.filter(({ x, y }) => {
-        return x >= 0 && y >= 0 && x + piece.width <= size.width && y + piece.height <= size.height
+        return x >= 0 && y >= 0 && x + room.width <= size.width && y + room.height <= size.height
     })
 }
 
 /** Whether two pieces laid stay clear of each other. */
-function apart(one: ScatteredPiece, other: ScatteredPiece, pieces: readonly PieceSize[]): boolean {
+function apart(one: Placed, other: Placed, pieces: readonly PieceSize[]): boolean {
     const reach = (sizeOf(pieces[one.piece]) + sizeOf(pieces[other.piece])) / 2 + CLEARANCE
     return distance(centerOf(one, pieces), centerOf(other, pieces)) >= reach
 }
 
 /** The middle of a piece laid. */
-function centerOf({ piece, x, y }: ScatteredPiece, pieces: readonly PieceSize[]): MapPoint {
+function centerOf({ piece, x, y }: Placed, pieces: readonly PieceSize[]): MapPoint {
     return { x: x + pieces[piece].width / 2, y: y + pieces[piece].height / 2 }
 }
 

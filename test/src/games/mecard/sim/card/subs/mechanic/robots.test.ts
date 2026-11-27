@@ -1,11 +1,25 @@
 import { describe, expect, test } from "vitest"
+import { resolve } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BOW_MODULE, MISSILE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { REPEATER } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleModifiers"
 import {
-    AIM, BOW_MODULE, BULL, Heart, IMPROVISED_ROBOT, IMPROVISED_WEAPON, KAMIKAZE_ROBOT, MECHANIC_KIT,
-    PATH_AIM,
-    MISSILE, RAM, REPEATER,
-    RED_HEART, resolve, saveBattle, loadBattle, SHIELD_HEART, SHOT, STONE_GOLEM, TANK_ROBOT, THRUST, WAIT,
-} from "@game/core/mecard"
-import type { Unit } from "@game/core/mecard"
+    IMPROVISED_ROBOT,
+    IMPROVISED_WEAPON,
+    TANK_ROBOT,
+} from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { PATH_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/PathAim"
+import { RAM } from "@game/core-src/games/mecard/sim/card/subs/movement/Ram"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { MECHANIC_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { BULL, KAMIKAZE_ROBOT, STONE_GOLEM } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { saveBattle, loadBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

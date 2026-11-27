@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { ALL_FLOORS, Rng } from "@game/core/mecard"
-import type { FloorType, Monster } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 
 import { parseDefinition } from "./define"
 import { closest, normalize, UsageError } from "./errors"

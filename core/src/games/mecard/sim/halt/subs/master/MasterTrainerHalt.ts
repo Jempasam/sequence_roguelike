@@ -23,7 +23,7 @@ export class MasterTrainerHalt extends AbstractHalt {
     constructor(run: Run){
         super(MASTER_TRAINER_HALT, run,
             "Une de mes trois bêtes améliorées, te suivra, et se battra seul.",
-            sceneLook(23, 28, 15, "trainer", { coloration: [0.82, 0.9, 1] }),
+            sceneLook(28, 24, 15, "trainer", { coloration: [0.82, 0.9, 1] }),
             {
                 hat: "huntingHat",
                 mask: MASTER_MASK,

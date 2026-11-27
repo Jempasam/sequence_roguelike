@@ -11,12 +11,14 @@ import { ALL_FLOORS } from "../../sim/catalog/floors"
 import type { Decoration } from "../../sim/floor/Floor"
 import type { Journey, Place } from "../../sim/run/Journey"
 
+import { averageColor, mixHues } from "../look/hue"
 import { PAPER_PATH, PATH_PICTURE, paperFrame, SHADE_PICTURE } from "../look/paper"
 import { TEXT_OUTLINE } from "../look/theme"
 import { distinctPictures, loadPictures } from "../look/visualPath"
 import { allPlaceTypes } from "../../sim/catalog/places"
 import { scatter } from "./scatter"
 import type { ScatteredPiece } from "./scatter"
+import { spreadAcross } from "./spread"
 import type { ShownParty } from "./ShownParty"
 
 /** The whole factor the logos of the places are drawn at. */
@@ -103,8 +105,11 @@ export interface MapArt {
     /** The circle drawn under the place hovered. */
     readonly circle: Sprite
 
-    /** The worn paper the map lies on, repeating so its edges keep their grain at any size. */
-    readonly paper: NineSlice
+    /**
+     * The worn paper the map lies on, repeating so its edges keep their grain at any size, in the hue halfway
+     * between its own and the one of a color: the one of the floor.
+     */
+    paperIn(color: Color): NineSlice
 }
 
 /**
@@ -150,13 +155,23 @@ export class JourneyView extends Component {
             const sprite = spriteOf.get(each.visual)
             return sprite ? [[each.visual, sprite]] : []
         }
+        const worn = averageColor(fixedPictures[0])
+        const papers = new Map<string, NineSlice>()
         return {
             logos: new Map(logos.flatMap(known)),
             decorations: new Map(decorations.flatMap(known)),
             path: new Rope(path),
             shade,
             circle,
-            paper: paperFrame(paper, PAPER_SCALE),
+            paperIn: color => {
+                const key = `${color.r},${color.g},${color.b}`
+                let frame = papers.get(key)
+                if(!frame){
+                    frame = paperFrame(paper, PAPER_SCALE, mixHues(worn, color), "hue")
+                    papers.set(key, frame)
+                }
+                return frame
+            },
         }
     }
 
@@ -226,7 +241,7 @@ export class JourneyView extends Component {
         }
         this.#paintStart(painter)
         for(const layer of this.journey.layers) for(const place of layer) this.#paintToken(painter, place)
-        this.#paintParty(painter, this.#partyCenter())
+        this.#paintParty(painter)
         painter.pop()
     }
 
@@ -254,6 +269,9 @@ export class JourneyView extends Component {
 
     /** The place the pointer is over, none when none. */
     #hovered: Place|null = null
+
+    /** How far across the rows the places go, for how many places. */
+    #reached: { readonly count: number, readonly lowest: number, readonly highest: number }|null = null
 
     /** What lies on the map, and the size of the map it was laid for. */
     #scattered: { readonly size: string, readonly pieces: readonly ScatteredPiece[] }|null = null
@@ -286,14 +304,18 @@ export class JourneyView extends Component {
     #paintDecorations(painter: Painter): void {
         if(!this.#art) return
         painter.setTint(DECORATION_TINT)
-        for(const { piece, x, y } of this.#piecesLaid()){
+        for(const { piece, x, y, flip, scale, angle } of this.#piecesLaid()){
             const { picture, size } = this.decorations[piece]
             const sprite = this.#art.decorations.get(picture.visual)
             if(!sprite) continue
+            const width = sprite.width * size
+            const height = sprite.height * size
             painter.push()
-            painter.translate(x, y)
+            painter.translate(x + width / 2, y + height / 2)
+            painter.rotate(angle)
+            painter.scale(flip ? -scale : scale, scale)
             painter.scale(size)
-            painter.sprite(sprite, 0, 0)
+            painter.sprite(sprite, -sprite.width / 2, -sprite.height / 2)
             painter.pop()
         }
     }
@@ -307,7 +329,18 @@ export class JourneyView extends Component {
 
     /** Where the token of a place lies, its center, in the coordinates of the map. */
     #center(place: Place): { readonly x: number, readonly y: number } {
-        return this.#at(place.layer + 1, place.across)
+        const { lowest, highest } = this.#reach()
+        return this.#at(place.layer + 1, spreadAcross(place.across, lowest, highest))
+    }
+
+    /** How far across the rows the places of the journey go, measured again when places come. */
+    #reach(): { readonly count: number, readonly lowest: number, readonly highest: number } {
+        const { places } = this.journey
+        if(this.#reached?.count !== places.length){
+            const acrosses = places.map(place => place.across)
+            this.#reached = { count: places.length, lowest: Math.min(...acrosses), highest: Math.max(...acrosses) }
+        }
+        return this.#reached
     }
 
     /** Where the token of a place, or the start when none, lies, its center. */
@@ -362,17 +395,29 @@ export class JourneyView extends Component {
         }
     }
 
-    /** The characters of the party side by side, their feet just under the middle of where it stands. */
-    #paintParty(painter: Painter, at: { readonly x: number, readonly y: number }): void {
-        const party = this.#party
-        if(party.length === 0) return
-        const width = party.reduce((sum, sprite) => sum + sprite.width, 0)
+    /**
+     * Where the feet of each character of the party are, in the order of {@link party}, in the coordinates of
+     * the map: side by side, just under the middle of where it stands, sliding with it.
+     */
+    public partyFeet(): { readonly x: number, readonly y: number }[] {
+        const at = this.#partyCenter()
+        const width = this.#party.reduce((sum, sprite) => sum + sprite.width, 0)
         let left = Math.round(at.x - width / 2)
-        painter.setTint(new Color(1, 1, 1))
-        for(const sprite of party){
-            painter.sprite(sprite, left, at.y + PARTY_FEET - sprite.height)
+        return this.#party.map(sprite => {
+            const x = left + sprite.width / 2
             left += sprite.width
-        }
+            return { x, y: at.y + PARTY_FEET }
+        })
+    }
+
+    /** The characters of the party side by side where it stands. */
+    #paintParty(painter: Painter): void {
+        if(this.#party.length === 0) return
+        const feet = this.partyFeet()
+        painter.setTint(new Color(1, 1, 1))
+        this.#party.forEach((sprite, index) => {
+            painter.sprite(sprite, feet[index].x - sprite.width / 2, feet[index].y - sprite.height)
+        })
     }
 
     /**

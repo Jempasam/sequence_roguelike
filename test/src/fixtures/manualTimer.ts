@@ -1,4 +1,4 @@
-import type { Cancel, TimerPort } from "@game/core"
+import type { Cancel, TimerPort } from "@game/core-src/platform/TimerPort"
 
 /** A timer whose time moves only when a test says so, and runs what is due as it moves. */
 export class ManualTimer implements TimerPort {

@@ -1,8 +1,18 @@
 import { describe, expect, test } from "vitest"
-import {
-    AIM, ALL_ITEMS, ALL_USABLES, BLUE_HEART, Heart, MOMENTUM, PREDATOR_EYE, REACTION_BOOTS, RED_HEART, ROLLER, STEP, Vector2,
-} from "@game/core/mecard"
-import type { Battle, Item, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { PREDATOR_EYE, ROLLER } from "@game/core-src/games/mecard/sim/item/subs/combat/Stride"
+import { MOMENTUM } from "@game/core-src/games/mecard/sim/status/subs/Momentum"
+import { REACTION_BOOTS } from "@game/core-src/games/mecard/sim/usable/subs/elixir/StatusElixirs"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Item } from "@game/core-src/games/mecard/sim/item/Item"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../fixtures"
 

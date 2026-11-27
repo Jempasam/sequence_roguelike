@@ -3,12 +3,14 @@ import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
 
 import { AbstractItem } from "../AbstractItem"
-import { BATTLE_ROUND } from "../../../base/keywords"
+import { BATTLE_ROUND, UNIT } from "../../../base/keywords"
+import { INFLICTED } from "../../../battle/mecanic/inflict/keyword"
+import * as Inflict from "../../../battle/mecanic/inflict"
 
 /** How much strength and precision a compass gives at most, for a round. */
 const COMPASS_MAX = 3
 
-/** A mad compass: each unit hurt during an action of its unit adds a point of strength and of precision, for the round. */
+/** A mad compass: each wound its unit inflicts adds a point of strength and of precision, for the round. */
 export class MadCompass extends AbstractItem {
 
 
@@ -17,7 +19,8 @@ export class MadCompass extends AbstractItem {
         public readonly most: number,
     ){
         super("Boussole affolée", visual("items/mad_compass"), [
-            "Chaque fois qu'une unité subit des dégâts pendant une de tes actions : +1 force et +1 précision jusqu'à la fin du ", BATTLE_ROUND, " (", most, " au plus).",
+            "Chaque fois que tu ", INFLICTED.as("infliges"), " des dégâts à une ", UNIT,
+            " : +1 force et +1 précision jusqu'à la fin du ", BATTLE_ROUND, " (", most, " au plus).",
         ])
     }
 
@@ -32,7 +35,7 @@ export class MadCompass extends AbstractItem {
             precision.remove(key)
         }
         hold(battle.signals.damaged.add(() => {
-            if(battle.actor !== unit || points >= this.most) return
+            if(!Inflict.isInflictedBy(battle, unit) || points >= this.most) return
             points++
             strength.add(key, new Add(points))
             precision.add(key, new Add(points))

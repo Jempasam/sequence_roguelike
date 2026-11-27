@@ -1,5 +1,5 @@
-import { Audience } from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+import { Audience } from "@game/core-src/games/mecard/sync/mode/Audience"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 /** A client that keeps what it is told. */

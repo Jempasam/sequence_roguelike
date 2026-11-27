@@ -1,4 +1,4 @@
-import { Scope } from "@game/core"
+import { Scope } from "@game/core-src/lifetime/Scope"
 import { describe, expect, test } from "vitest"
 
 /** A handle that notes in `log` when it is taken back. */

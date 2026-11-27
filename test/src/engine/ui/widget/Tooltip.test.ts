@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { ActionMap, key, mouse, Tooltip, TOOLTIP_DELAY } from "@game/core"
+import { ActionMap } from "@game/core-src/engine/input/ActionMap"
+import { key, mouse } from "@game/core-src/engine/input/Binding"
+import { Tooltip, TOOLTIP_DELAY } from "@game/core-src/engine/ui/widget/Tooltip"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

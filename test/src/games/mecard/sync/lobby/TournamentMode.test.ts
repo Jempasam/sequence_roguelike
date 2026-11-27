@@ -1,10 +1,16 @@
-import { ManualScheduler } from "@game/core"
-import type { Battle } from "@game/core/mecard"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
 import {
-    gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, TOURNAMENT_LINGER_MS, TOURNAMENT_PAUSE_MS,
-    tournamentMode,
-} from "@game/core/mecard/sync"
-import type { BracketView, TournamentBench } from "@game/core/mecard/sync"
+    TOURNAMENT_LINGER_MS,
+    TOURNAMENT_PAUSE_MS,
+} from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentManager"
+import { tournamentMode } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentMode"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { BracketView } from "@game/core-src/games/mecard/sim/mode/subs/tournament/Bracket"
+import type { TournamentBench } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentOwner"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

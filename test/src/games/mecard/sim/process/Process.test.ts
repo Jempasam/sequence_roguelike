@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { visual } from "@game/core/mecard"
-import {
-    HORSE, saveBattle, STEP, Strength, STRENGTH_CARD, Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Process } from "@game/core/mecard"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { HORSE, STRENGTH_CARD } from "@game/core-src/games/mecard/sim/card/subs/process/ProcessCards"
+import { Strength } from "@game/core-src/games/mecard/sim/process/subs/Strength"
+import { saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Process } from "@game/core-src/games/mecard/sim/process/Process"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
 

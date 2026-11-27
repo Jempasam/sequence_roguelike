@@ -5,6 +5,7 @@ import type { Unit } from "../../../battle/Unit"
 import { DEMONIC } from "../../../status/subs/DemonEnergy"
 import { BLEEDING } from "../../../status/subs/Wounds"
 import { CONCENTRATED } from "../../../status/subs/Calm"
+import { STUNNED } from "../../../status/subs/Stunned"
 import { INCOMING_SHOVE } from "../../../battle/mecanic/push/signals"
 import { RELOCATED } from "../../../battle/mecanic/relocation/signals"
 import { TURN } from "../../../battle/mecanic/turn/keyword"
@@ -18,7 +19,6 @@ import { WAIT } from "../../../card/subs/movement/Wait"
 
 import { AbstractItem } from "../AbstractItem"
 import { visual } from "../../../base/Visual"
-import { frenchNumber } from "../../../battle/words"
 
 /** How far from the unit an attacker must stand behind it, in angle, to be seen by the eyes in the back: the cosine of 130°. */
 const BEHIND_COS = Math.cos(130 * Math.PI / 180)
@@ -64,8 +64,8 @@ export class ToreroCape extends AbstractItem {
 
     constructor(){
         super("Cape de torero", visual("items/doll"), [
-            "Étourdit chaque ", UNIT, " qui traverse son corps, ou passe à moins de ", frenchNumber(CAPE_REACH), " ", DISTANCE,
-            ", en se déplaçant d'elle-même : dash, charge, blink.",
+            "Chaque ", UNIT, " qui traverse son corps, ou passe à moins de ", CAPE_REACH, " ", DISTANCE,
+            ", en se déplaçant d'elle-même (dash, charge, blink) gagne ", STUNNED, " ", 1, ".",
         ])
     }
 
@@ -80,7 +80,7 @@ export class ToreroCape extends AbstractItem {
             if(Areas.distanceToSegment(unit.position, from, to) > unit.radius + CAPE_REACH) return
             if(stunned.has(mover)) return
             stunned.add(mover)
-            battle.stun(mover)
+            battle.applyStatus(mover, STUNNED, 1)
         }))
     }
 }
@@ -93,7 +93,7 @@ export class ScaryMask extends AbstractItem {
 
     constructor(){
         super("Masque effrayant", visual("items/scary_mask"), [
-            "Au début de chaque ", BATTLE_ROUND, ", les ", UNIT.as("unités"), " à ", frenchNumber(MASK_RADIUS), " ", DISTANCE,
+            "Au début de chaque ", BATTLE_ROUND, ", les ", UNIT.as("unités"), " à ", MASK_RADIUS, " ", DISTANCE,
             " autour lui ", TURN.as("tournent le dos"), ".",
         ])
     }
@@ -143,7 +143,7 @@ export class Magnet extends AbstractItem {
 
     constructor(){
         super("Aimant", visual("items/magnet"), [
-            "Au début de chaque ", BATTLE_ROUND, ", tire de ", frenchNumber(MAGNET_PULL), " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
+            "Au début de chaque ", BATTLE_ROUND, ", tire de ", MAGNET_PULL, " ", DISTANCE, " vers lui chaque ", UNIT, " à ",
             MAGNET_RADIUS, " ", DISTANCE, ". Aucun dégât.",
         ])
     }

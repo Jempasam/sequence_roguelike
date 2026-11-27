@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest"
-import {
-    ALL_MONSTERS, ALL_PETS, analysisOf, combineAnatomies, convert, convertMany, FUSION_TARGET, MergedAnalysis,
-    MONSTER_KIND, PET_KIND,
-} from "@game/core/mecard"
+import { analysisOf } from "@game/core-src/games/mecard/sim/analysis/analysisOf"
+import { combineAnatomies } from "@game/core-src/games/mecard/sim/analysis/combine"
+import { convert, convertMany, MONSTER_KIND, PET_KIND } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { MergedAnalysis } from "@game/core-src/games/mecard/sim/analysis/MergedAnalysis"
+import { FUSION_TARGET } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
 
 const [first, second] = ALL_MONSTERS
 const [pet] = ALL_PETS

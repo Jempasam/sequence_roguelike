@@ -1,7 +1,12 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { BURN, FIRE_ELEMENT, ritualType, SOAKED, STATUS_FAMILIES, STATUS_TYPES, StatusType, statusVisual } from "@game/core/mecard"
+import { FIRE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Fire"
+import { StatusType, statusVisual } from "@game/core-src/games/mecard/sim/status/Status"
+import { STATUS_FAMILIES, STATUS_TYPES } from "@game/core-src/games/mecard/sim/status/statusTypes"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { ritualType } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
+import { SOAKED } from "@game/core-src/games/mecard/sim/status/subs/Soaked"
 import { soundOfStatus, STATUS_CUES } from "@game/core/mecard/status-sounds"
 
 const GENERATED = join(__dirname, "../../../../../../generated_assets")

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { DirtyRegion, MAX_DIRTY_RECTS, Rect } from "@game/core"
+import { DirtyRegion, MAX_DIRTY_RECTS } from "@game/core-src/engine/ui/DirtyRegion"
+import { Rect } from "@game/core-src/engine/ui/Rect"
 
 // --- Fixture builders ---
 

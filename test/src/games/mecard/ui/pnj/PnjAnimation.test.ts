@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { PNJ_ANIMATIONS, shiver, trackAt } from "@game/core/mecard/pnj"
-import type { PnjAnimation } from "@game/core/mecard/pnj"
+import { PNJ_ANIMATIONS, shiver, trackAt } from "@game/core-src/games/mecard/ui/pnj/PnjAnimation"
+import type { PnjAnimation } from "@game/core-src/games/mecard/ui/pnj/PnjAnimation"
 
 // --- Fixture builders ---
 

@@ -1,10 +1,23 @@
 import {
-    ChoiceSetting, LockedFault, Lobby, LobbyGuest, LocalRoom, LocalSync, RangeSetting, UnknownModeFault,
-    InvalidSettingFault, writeModeState, LOBBY_MODE_TOPIC, QUIT_ROOM_TOPIC,
-} from "@game/core/mecard/sync"
-import type { GuestStage, HostStage, LobbyMode, LobbyRole, ModeRun, SettingValues } from "@game/core/mecard/sync"
-import { Observable } from "@game/core/mecard"
-import type { Fault } from "@game/core"
+    ChoiceSetting,
+    RangeSetting,
+    InvalidSettingFault,
+} from "@game/core-src/games/mecard/sim/mode/Setting"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { writeModeState } from "@game/core-src/games/mecard/sync/lobby/LobbyMessage"
+import { LockedFault, UnknownModeFault } from "@game/core-src/games/mecard/sync/lobby/ModeSelection"
+import {
+    LocalRoom,
+    LocalSync,
+    LOBBY_MODE_TOPIC,
+    QUIT_ROOM_TOPIC,
+} from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SettingValues } from "@game/core-src/games/mecard/sim/mode/Setting"
+import type { LobbyMode, LobbyRole, ModeRun } from "@game/core-src/games/mecard/sync/lobby/LobbyMode"
+import type { GuestStage, HostStage } from "@game/core-src/games/mecard/sync/lobby/Stage"
+import { Observable } from "@game/core-src/lifetime/Observable"
+import type { Fault } from "@game/core-src/engine/net/Fault"
 import { describe, expect, test } from "vitest"
 
 /** A game that does nothing but record how it was played. */

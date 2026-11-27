@@ -1,5 +1,9 @@
-import { NetError, PTPClientSocket, PTPHostSocket, Room } from "@game/core"
-import type { NetPort, Peer } from "@game/core"
+import { NetError } from "@game/core-src/engine/net/NetError"
+import { PTPClientSocket } from "@game/core-src/engine/net/PTPClientSocket"
+import { PTPHostSocket } from "@game/core-src/engine/net/PTPHostSocket"
+import { Room } from "@game/core-src/engine/net/Room"
+import type { Peer } from "@game/core-src/engine/net/Room"
+import type { NetPort } from "@game/core-src/platform/NetPort"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 import { WebSocket as NodeWebSocket } from "ws"
 

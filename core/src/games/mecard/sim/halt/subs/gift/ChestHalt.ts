@@ -18,7 +18,7 @@ export class ChestHalt extends CardGiftHalt {
             // No character stands there, so it is only told.
             ["Une ", CARTE, " parmi trois, gratuite."],
             // Nobody standing there.
-            sceneLook(31, 23, 13, "chest"),
+            sceneLook(13, 20, 31, "chest"),
         )
         this.#cards = lootCards(run.rng, INVENTED_COUNTS)
     }

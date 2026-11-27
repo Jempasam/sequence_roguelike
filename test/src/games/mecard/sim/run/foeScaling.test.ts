@@ -1,8 +1,11 @@
 import { describe, expect, test } from "vitest"
-import {
-    baseOf, GOBLIN, heroOf, LANCER_KIT, LOOT_ITEMS, MAX_CHAIN_CARDS, orderedFactor, POWER, powerOf, scaledKit,
-    statsOf, unorderedFactor,
-} from "@game/core/mecard"
+import { MAX_CHAIN_CARDS } from "@game/core-src/games/mecard/sim/battle/Unit"
+import { LOOT_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { LANCER_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { POWER } from "@game/core-src/games/mecard/sim/item/subs/stat/Power"
+import { orderedFactor, powerOf, unorderedFactor } from "@game/core-src/games/mecard/sim/run/foeScaling"
+import { baseOf, heroOf, scaledKit, statsOf } from "@game/core-src/games/mecard/sim/run/Hero"
 
 // --- Tests ---
 

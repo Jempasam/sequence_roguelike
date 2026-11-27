@@ -1,4 +1,5 @@
 import { FRAME_THICKNESS } from "../look/wood"
+import type { Wood } from "../look/wood"
 import { AssetError } from "../../../../engine/assets"
 import type { Assets } from "../../../../engine/assets"
 import type { Visual } from "../../sim/base/Visual"
@@ -21,7 +22,7 @@ import type { Shown } from "../../sim/halt/HaltContext"
 import type { HaltMoment } from "../../sim/halt/SceneLook"
 import { deckLine } from "../../sim/halt/subs/shown"
 import type { Hero } from "../../sim/run/Hero"
-import type { Place } from "../../sim/run/Journey"
+import type { Journey, Place } from "../../sim/run/Journey"
 import { BACK_VISUAL } from "../../sim/run/PlaceType"
 import type { Run } from "../../sim/run/Run"
 import type {
@@ -62,10 +63,11 @@ import {
 } from "../look/theme"
 import { JourneyView } from "./JourneyView"
 import type { MapArt } from "./JourneyView"
+import type { AmbientUnit } from "./ambient/AmbientContext"
 import { PointingArm } from "./PointingArm"
 import { ShownParty } from "./ShownParty"
 import { CUE_ANIMATIONS } from "./travelLooks"
-import { TravelScenes } from "./TravelScenes"
+import { TravelScenes, placeColorOf } from "./TravelScenes"
 import type { TravelScene } from "./TravelScenes"
 import type { UiSoundLink } from "../sound/UiSoundLink"
 import { forwardAround } from "../forward/around"
@@ -93,6 +95,13 @@ const PICKED_WIDTH = 2
 
 /** The space between the edge of the paper of the map and the map, in virtual pixels: past its worn rim. */
 const PAPER_PADDING = 16
+
+/**
+ * How much room the map keeps free on each side, for the scene behind it to show, in virtual pixels, and the
+ * width under which it takes that room back, the map and its margins together.
+ */
+const MAP_GUTTER = 40
+const MIN_MAP_WIDTH = 190
 
 /** How opaque the panels are, letting the scene show through. */
 const VEIL_ALPHA = 0.62
@@ -314,6 +323,32 @@ export class TravelScreen {
         this.#foregroundLayer.content.visible = visible
     }
 
+    /** The journey whose map is shown, none while the screen is hidden or shows a halt. */
+    public get shownMap(): Journey|null {
+        return this.visible && !this.#visiting ? this.#mapView?.journey ?? null : null
+    }
+
+    /** Is the map shown laid out and done scrolling, so its places stay where they are? */
+    public get mapSettled(): boolean {
+        if(!this.shownMap || !this.anchors.mapArea()) return false
+        return !this.#mapScroll.overflows || (!this.#mapFocus && this.#mapSliding === 0)
+    }
+
+    /** The characters of the party seen on the map, as they are shown, in the interface. They face right. */
+    public get shownUnits(): AmbientUnit[] {
+        const view = this.#mapView
+        if(!view || !this.shownMap) return []
+        const feet = view.partyFeet()
+        return this.#walkers.flatMap((hero, index) => {
+            const { x, y } = feet[index]
+            const area = this.#anchorArea
+            if(!view.layerRectOf(area.set(x, y - 1, 1, 1), area)) return []
+            const position = { x: area.x, y: area.y + 1 }
+            const head = { x: position.x, y: position.y - view.party[index].height }
+            return [{ unit: hero, position, head, facing: { x: 1, y: 0 }, hearts: hero.hearts }]
+        })
+    }
+
     /** Show the map, what was being walked over at once, the party to go on from where it stands. */
     public showMap(): void {
         this.#clock.finish()
@@ -394,7 +429,8 @@ export class TravelScreen {
             const scroll = this.#mapScroll
             if(!this.visible || !scroll.areaOnLayer(this.#anchorArea)) return null
             const { x, y, width, height } = this.#anchorArea
-            return { x, y, width, height }
+            const gutter = this.#mapGutter
+            return { x: x - gutter, y, width: width + 2 * gutter, height }
         },
     }
 
@@ -409,6 +445,9 @@ export class TravelScreen {
     }
 
     readonly #anchorArea = new Rect()
+
+    /** The room kept free on each side of the map, where the effects of the ambient still play. */
+    #mapGutter = 0
     readonly #tiles = new Map<Hero, Component>()
     #goldRow: Component|null = null
 
@@ -429,6 +468,7 @@ export class TravelScreen {
         const look = visiting?.look ?? this.engine.floor.type.look
         const { r, g, b } = look.color
         this.#veil = NineSlice.flat(this.theme.white, new Color(r, g, b, VEIL_ALPHA))
+        this.#placeColor = placeColorOf(look.parallax)
         const failed = (error: AssetError): void => this.#sceneFailed(visiting?.title ?? this.engine.floor.type.name, error)
         const scene = visiting
             ? this.#scenes.haltScene(look, () => this.refresh(), failed)
@@ -443,10 +483,18 @@ export class TravelScreen {
         this.#mapView = null
         const dialog = this.#shownDialog
         const middle = dialog ? dialog() : this.#map()
-        const right = new Box("column", { gap: MARGIN, align: "stretch" })
-        right.add(middle, { grow: 1 })
         const frame = scene?.border.border
         const thickness = frame ? Math.max(frame.left, frame.right, frame.top, frame.bottom) / 2 : 0
+        const column = new Box("column", { gap: MARGIN, align: "stretch" })
+        column.add(middle, { grow: 1 })
+        // GUTTERS //
+        const room = this.ui.width - this.#sideWidth - 3 * MARGIN - 2 * thickness
+        const gutter = dialog ? 0 : Math.max(0, Math.min(MAP_GUTTER, Math.floor((room - MIN_MAP_WIDTH) / 2)))
+        this.#mapGutter = gutter
+        const right = new Box("row", { align: "stretch" })
+        if(gutter > 0) right.add(this.#gutter(gutter))
+        right.add(column, { grow: 1 })
+        if(gutter > 0) right.add(this.#gutter(gutter))
         const row = new Box("row", { gap: MARGIN, padding: MARGIN + thickness, align: "stretch" })
         row.fixedSize = { width: this.ui.width, height: this.ui.height }
         row.add(this.#side())
@@ -543,6 +591,12 @@ export class TravelScreen {
     /** Is the map to be scrolled to where the party stands, once laid out? */
     #mapFocus = false
 
+    /** How many scrolls of the map to the party are going on. */
+    #mapSliding = 0
+
+    /** The characters drawn on the map shown, in the order they stand. */
+    #walkers: readonly Hero[] = []
+
     /** The forearm over a halt, pointing at the pointer: it rises when a halt is visited, and sinks after. */
     readonly #arm: PointingArm
 
@@ -554,6 +608,9 @@ export class TravelScreen {
 
     /** The face of the panels, in the color of the place. */
     #veil: NineSlice
+
+    /** The color of the place shown, the hue of its wood and of its paper. */
+    #placeColor = new Color(1, 1, 1)
 
     /** The character shown in full, none before one is selected: then the first of the party. */
     #selected: Hero|null = null
@@ -1083,7 +1140,7 @@ export class TravelScreen {
             const block = new Box("column", { gap: 1 })
             block.add(this.#label(hero.name, hero === shown ? CHOSEN_TEXT : undefined))
             block.add(this.#hearts(hero))
-            const wood = this.sprites.wood
+            const wood = this.#wood
             const tile = new HoverPanel(this.theme, wood
                 ? { background: hero === shown ? wood.frameActive : wood.frame, padding: 2 + FRAME_THICKNESS }
                 : { background: NineSlice.flat(this.theme.white, hero === shown ? SELECTED_TILE : TILE), padding: 2 })
@@ -1180,12 +1237,14 @@ export class TravelScreen {
         const { decorations } = travel.floor.type
         const view = new JourneyView(this.theme, travel.journey, shown, open, decorations)
         view.art = this.#mapArt
-        // A party of none is a giant hand floating where the party would stand.
-        const looks = this.run.heroes.length > 0 ? this.run.heroes.map(hero => hero.sprite) : [HAND_VISUAL]
-        view.party = looks.flatMap(look => {
-            const sprite = this.sprites.of(look)
-            return sprite ? [sprite] : []
+        const walkers = this.run.heroes.flatMap(hero => {
+            const sprite = this.sprites.of(hero.sprite)
+            return sprite ? [{ hero, sprite }] : []
         })
+        this.#walkers = walkers.map(walker => walker.hero)
+        // A party of none is a giant hand floating where the party would stand.
+        const hand = this.run.heroes.length > 0 ? null : this.sprites.of(HAND_VISUAL)
+        view.party = hand ? [hand] : walkers.map(walker => walker.sprite)
         this.#mapView = view
         this.#connectInputs(view)
         view.onHover = place => {
@@ -1232,7 +1291,7 @@ export class TravelScreen {
         }))
         this.#mapScroll.content = view
         this.#mapFocus = true
-        const paper = this.#mapArt?.paper
+        const paper = this.#mapArt?.paperIn(this.#placeColor)
         if(!paper) return this.#panel(this.#mapScroll)
         this.#mapScroll.parent?.remove(this.#mapScroll)
         const panel = new Panel(this.theme, { background: paper, padding: PAPER_PADDING })
@@ -1252,9 +1311,13 @@ export class TravelScreen {
         const scroll = this.#mapScroll
         const from = scroll.offset
         const to = view.partyRowBottom() - scroll.bounds.height
+        if(from === to) return
         // Slid there with a gentle start and stop, not jumped to.
+        this.#mapSliding++
         void this.#clock.tween(MAP_SCROLL_TIME, share => {
             scroll.offset = from + (to - from) * (share * share * (3 - 2 * share))
+        }).then(() => {
+            this.#mapSliding--
         })
     }
 
@@ -1417,10 +1480,22 @@ export class TravelScreen {
         return view
     }
 
+    /** Empty room of a width, where the scene behind shows. */
+    #gutter(width: number): Component {
+        const space = new Box("row")
+        space.fixedSize = { width, height: 0 }
+        return space
+    }
+
+    /** The wood in the hue of the place shown, none before it is loaded. */
+    get #wood(): Wood|null {
+        return this.sprites.wood?.tinted(this.#placeColor) ?? null
+    }
+
     /** A wooden panel, or one in the color of the place when there is no wood; its inside lets the scene show through when asked. */
     #panel(content: Component, transparent = false, squeezable = false): Panel {
         content.parent?.remove(content)
-        const wood = this.sprites.wood
+        const wood = this.#wood
         const panel = new Panel(this.theme, wood
             ? {
                 background: transparent ? wood.frameTransparent : wood.frame,

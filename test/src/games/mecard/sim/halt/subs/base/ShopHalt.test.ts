@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { plainText } from "@game/core"
-import { Rng, shopGoods, SHOP_HALT } from "@game/core/mecard"
-import type { OfferDialog } from "@game/core/mecard"
+import { plainText } from "@game/core-src/semantic/Text"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { shopGoods, SHOP_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ShopHalt"
+import type { OfferDialog } from "@game/core-src/games/mecard/sim/travel/dialogs"
 
 import { startedRun } from "../../../../../../fixtures/startedRun"
 

@@ -8,7 +8,6 @@ import { handIndexOf, playedUnlimited } from "../card/Card"
 import type { Card } from "../card/Card"
 
 import { CardChain } from "../card/CardChain"
-import { ACTION } from "../card/CardType"
 import type { Carried, UsableSlot } from "../usable/Usable"
 import { Heart } from "../heart/Heart"
 import { SHIELD_HEART } from "../heart/subs/ShieldHeartKind"
@@ -23,13 +22,15 @@ import { askAi } from "../ai/UnitController"
 import type { BattlePlan, UnitController } from "../ai/UnitController"
 import { Vanishing } from "../process/subs/Vanishing"
 
-import type { Action, PlugContext, Pose } from "./Action"
+import type { Action, PlugContext, Pose, UnitContext } from "./Action"
 import type { Area } from "./Area"
 import type { Arena } from "./Arena"
 import type { BattleState, UnitState } from "./BattleState"
-import { labelEffect, polygonEffect } from "./effects"
+import { polygonEffect } from "./effects"
 import type { BattleEvent, DeathEvent } from "./events"
+import * as Inflict from "./mecanic/inflict"
 import { Glide } from "./mecanic/relocation/glide"
+import * as Steps from "./mecanic/step"
 import { ObserverMap } from "./ObserverMap"
 import { BattleSignals } from "./signals"
 import type { Effect, Tether } from "./signals"
@@ -70,14 +71,8 @@ const SCENERY_TEAM = "Décor"
 /** How many steps a round plays at most, so a broken chain never freezes the game. */
 const MAX_ROUND_STEPS = 100000
 
-/** How long a wait lasts, in seconds. */
-const WAIT_TIME = 0.3
-
 /** How long the flash of an explosion stays, in seconds. */
 const BLAST_TIME = 0.4
-
-/** The color of the label of a wait. */
-const WAIT_COLOR = rgba(0.75, 0.75, 0.85)
 
 /** The color of the flash of an explosion. */
 const BLAST_COLOR = rgba(1, 0.35, 0.1, 0.6)
@@ -232,6 +227,9 @@ export class Battle {
 
     /** The unit whose action plays, or played last this round, none before the first. */
     public actor: Unit|null = null
+
+    /** The units whose action plays right now, the innermost last: none between two actions. */
+    public readonly acting: Unit[] = []
 
     /** How deep the damage being dealt was set off by other damage. */
     public effectDepth = 0
@@ -689,7 +687,7 @@ export class Battle {
         if(!plan || plan.cards.length === 0) return
         // Read to its end rather than laid twice: a last card taking an input would take the copy's first.
         unit.readChain()
-        unit.steps.push(...unit.steps)
+        Steps.append(this, unit, [...unit.steps])
         const doubled = new CardChain([...plan.cards, ...plan.cards])
         this.#plans.set(unit, doubled)
         unit.setPlan(doubled)
@@ -727,7 +725,7 @@ export class Battle {
         this.preparationEnding.notify(this)
         this.phase = "execution"
         // The queues are all emptied first, so a preparation may act on the queue of anyone.
-        for(const unit of this.initiative) unit.steps.length = 0
+        for(const unit of this.initiative) unit.clearSteps()
         // Every chain is given first, so whoever shows them sees them all from the first preparation on.
         for(const unit of this.initiative) this.#giveChain(unit)
         for(const unit of this.initiative){
@@ -755,7 +753,8 @@ export class Battle {
         const next = this.#startNext()
         if(!next) return false
         try {
-            next.action.use({ battle: this, unit: next.unit })
+            const ctx: UnitContext = { battle: this, unit: next.unit }
+            Inflict.act(ctx, () => next.action.use(ctx))
         } catch(error){
             this.report(error)
         }
@@ -773,7 +772,8 @@ export class Battle {
         const action = unit.playTurn()
         if(!action) return false
         try {
-            action.use({ battle: this, unit })
+            const ctx: UnitContext = { battle: this, unit }
+            Inflict.act(ctx, () => action.use(ctx))
         } catch(error){
             this.report(error)
         }
@@ -1022,35 +1022,6 @@ export class Battle {
         this.signals.statusRemoved.notify({ unit, type })
     }
 
-    /** Stun a unit: everything it has left to play is put off by one step. */
-    public stun(unit: Unit): void {
-        if(!unit.alive) return
-        unit.steps.unshift(Battle.wait("étourdi"))
-        this.events.push({ type: "status", unit, text: "étourdi" })
-    }
-
-    /** Shock a unit: its next step is lost for good. */
-    public shock(unit: Unit): void {
-        if(!unit.alive) return
-        unit.fillSteps()
-        unit.steps.shift()
-        this.events.push({ type: "status", unit, text: "électrocuté" })
-    }
-
-    /**
-     * Put an action at the head of the queue of a unit, played in its place and facing, and the cards it comes
-     * from in its chain, where its reading stands, lit as they are given.
-     */
-    public inject(unit: Unit, action: Action, cards: readonly Card[] = []): void {
-        if(!unit.alive) return
-        unit.steps.unshift(action)
-        if(cards.length > 0){
-            const at = unit.chain.insert(unit.chain.cursor, cards)
-            unit.chain.watcher?.activated(at, at + cards.length - 1)
-        }
-        this.events.push({ type: "status", unit, text: "hypnotisé" })
-    }
-
     /**
      * Make a clone of a unit next to it, which plays what the unit has left this round right after it, then
      * vanishes. Does nothing when there is no room around.
@@ -1121,7 +1092,7 @@ export class Battle {
 
     /** Have a clone play what is left of the chain of its maker, right after it, and tell it came. */
     #followUp(unit: Unit, clone: Unit): void {
-        clone.steps.push(...unit.steps)
+        clone.queueLast(unit.steps)
         clone.takeChain(unit.chain.copy())
         this.initiative.splice(this.initiative.indexOf(unit) + 1, 0, clone)
         this.events.push({ type: "spawned", unit: clone })
@@ -1191,51 +1162,6 @@ export class Battle {
         if(cards.length === 0) return
         unit.chain.cards.push(...cards)
         unit.chain.watcher?.changed()
-    }
-
-    /**
-     * Make a unit play again the last tree of its chain it started: a copy of its cards is put in its chain
-     * where its reading stands, lit, and the action they give is queued after what the unit has ready.
-     *
-     * @returns Did it have one to play again?
-     */
-    public repeatLast(unit: Unit): boolean {
-        if(!unit.alive || unit.lastTree.length === 0) return false
-        const cards = [...unit.lastTree]
-        const action = new CardChain([...cards]).next(ACTION)
-        if(!action) return false
-        unit.steps.push(action)
-        const at = unit.chain.insert(unit.chain.cursor, cards)
-        unit.chain.watcher?.activated(at, at + cards.length - 1)
-        this.events.push({ type: "status", unit, text: "bégaie" })
-        return true
-    }
-
-    /**
-     * Take the next trees of the chain of a unit away, unread: it loses its turns, the cards it was to play
-     * played by nobody. What it already has ready stays.
-     *
-     * @param count - How many trees it loses at most.
-     * @returns How many it lost.
-     */
-    public skipCards(unit: Unit, count: number): number {
-        if(!unit.alive) return 0
-        const { chain } = unit
-        const kept = { played: unit.lastPlayed, tree: unit.lastTree }
-        let lost = 0
-        const steps = unit.steps.length
-        while(lost < count && chain.cursor < chain.cards.length){
-            const before = chain.cursor
-            unit.readOne()
-            if(chain.cursor === before) break
-            lost++
-        }
-        // What was read is thrown away, not played: the steps it gave are lost, those ready stay.
-        unit.steps.length = steps
-        unit.lastPlayed = kept.played
-        unit.lastTree = kept.tree
-        if(lost > 0) this.events.push({ type: "status", unit, text: "trou de mémoire" })
-        return lost
     }
 
     /**
@@ -1326,18 +1252,6 @@ export class Battle {
     }
 
     /**
-     * Play the last step of a unit once more, at the end: its chain is read to its end first. For after the
-     * preparation, before the execution.
-     */
-    public duplicateLastStep(unit: Unit): void {
-        unit.readChain()
-        const last = unit.steps[unit.steps.length - 1]
-        if(!last) return
-        unit.steps.push(last)
-        this.events.push({ type: "status", unit, text: "dernière étape doublée" })
-    }
-
-    /**
      * Take the cards of the chain of a unit out of it, from a place to its end: they play no more this round, and
      * go to the discard with the others at its end.
      *
@@ -1388,21 +1302,6 @@ export class Battle {
         while(at < this.initiative.length && this.initiative[at].owner === owner) at++
         return at
     }
-
-    /** An action doing nothing for a moment, but saying why. */
-    public static wait(reason: string): Action {
-        return {
-            use: ({ battle, unit }) => {
-                battle.events.push({ type: "skipped", unit, reason })
-                battle.post(labelEffect(unit.position, reason, WAIT_COLOR, WAIT_TIME))
-            },
-            preview: ({ pose }) => ({
-                indicators: [{ kind: "label", at: pose.position, text: reason, color: WAIT_COLOR }],
-                pose,
-            }),
-        }
-    }
-
 
     /** The chains committed this round. */
     readonly #plans = new Map<Unit, CardChain>()
@@ -1472,7 +1371,8 @@ export class Battle {
                 if(!unit.usables.includes(carried) || carried.spent) continue
                 this.events.push({ type: "status", unit, text: ["utilise ", carried.usable] })
                 try {
-                    carried.usable.use({ battle: this, unit }, this.#slotOf(unit, carried))
+                    const ctx: UnitContext = { battle: this, unit }
+                    Inflict.act(ctx, () => carried.usable.use(ctx, this.#slotOf(unit, carried)))
                     this.signals.usableUsed.notify({ unit, carried })
                 } catch(error){
                     this.report(error)
@@ -1559,7 +1459,7 @@ export class Battle {
         unit.onChainChange.add(event => signals.chainChanged.notify(event))
         unit.onChainOverflow.add(event => {
             signals.chainOverflowed.notify(event)
-            unit.steps.length = 0
+            unit.clearSteps()
             this.cutChain(unit, 0)
         })
         unit.onPrep.add(prepared => this.unitPrepared.notify(prepared))

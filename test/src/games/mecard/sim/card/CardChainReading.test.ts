@@ -1,9 +1,17 @@
 import { describe, expect, test } from "vitest"
-import {
-    AbstractCard, ACTION, CardChain, FIRE, PREPARATION, Rarity, REPEAT_2, resolve, signatureOf, SPELL, STEP,
-    THRUST,
-} from "@game/core/mecard"
-import type { Action, Card, ChainWatcher, Preparation, RewriteContext } from "@game/core/mecard"
+import { CardChain, resolve, signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { ACTION, PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { AbstractCard } from "@game/core-src/games/mecard/sim/card/subs/AbstractCard"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { Action } from "@game/core-src/games/mecard/sim/battle/Action"
+import type { Card, RewriteContext } from "@game/core-src/games/mecard/sim/card/Card"
+import type { ChainWatcher } from "@game/core-src/games/mecard/sim/card/CardChain"
+import type { Preparation } from "@game/core-src/games/mecard/sim/card/CardType"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
 

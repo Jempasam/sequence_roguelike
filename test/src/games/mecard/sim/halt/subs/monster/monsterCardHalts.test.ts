@@ -1,12 +1,34 @@
 import { describe, expect, test } from "vitest"
+import { BOOSTER_KIND, convert, MONSTER_KIND } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { FUSION_TARGET } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole, signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { BEAST, ELEMENT, MODULE } from "@game/core-src/games/mecard/sim/card/CardType"
+import { BeastCard } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastCard"
+import { FURY } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastRewrites"
+import { ModuleCard } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { CONJURATION } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { ElementCard } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { darkHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { ALL_MONSTERS, GOBLIN, LOOT_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
 import {
-    ALL_MONSTERS, BEAST, BeastCard, BOOSTER_KIND, boosterOfMonster, CARD_CODECS, CONJURATION, convert,
-    ELEMENT, elementCardOfMonsters, ElementCard, FURY, FUSION_TARGET, fusionOfMonster, GOBLIN,
-    IMPROVISED_ROBOT, LOOT_MONSTERS, MODULE, ModuleCard, MONSTER_KIND, MONSTER_MAGE_HALT,
-    MONSTER_MECHANIC_HALT, MONSTER_SHAMAN_HALT, darkHalts, offeredElements, RED_HEART, Rng,
-    beastCardOfMonster, giveKeyIfLacking, moduleOfMonster, readsWhole, signatureOf, STEP,
-} from "@game/core/mecard"
-import type { Card, HaltType } from "@game/core/mecard"
+    boosterOfMonster,
+    elementCardOfMonsters,
+    fusionOfMonster,
+    offeredElements,
+    beastCardOfMonster,
+    moduleOfMonster,
+} from "@game/core-src/games/mecard/sim/halt/subs/monster/monsterCards"
+import { MONSTER_MAGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/monster/MonsterMageHalt"
+import { MONSTER_MECHANIC_HALT } from "@game/core-src/games/mecard/sim/halt/subs/monster/MonsterMechanicHalt"
+import { MONSTER_SHAMAN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/monster/MonsterShamanHalt"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { giveKeyIfLacking } from "@game/core-src/games/mecard/sim/run/visits"
+import { CARD_CODECS } from "@game/core-src/games/mecard/sim/save/catalogNames"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
 
 import { ScriptedPlayer } from "../../../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../../../fixtures/startedRun"

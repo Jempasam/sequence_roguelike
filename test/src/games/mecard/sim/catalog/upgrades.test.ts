@@ -1,9 +1,26 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole, signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { ACTION, POTION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { isFusion } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { THROWN_POTION } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { DISTILLATION } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { FIRE, WATER } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { REACTION } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementRewrites"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
 import {
-    ACTION, DISTILLATION, FIRE, isFusion, LOOT_CARDS, lootUpgraded, POTION, readsWhole, REACTION, REPEAT_2, Rng,
-    signatureOf, SLASH, SPELL, STEP, THROWN_POTION, THRUST, ALL_UPGRADES, upgrade, upgradeMatches, upgraded, WATER,
-} from "@game/core/mecard"
-import type { CardUpgrade } from "@game/core/mecard"
+    lootUpgraded,
+    ALL_UPGRADES,
+    upgrade,
+    upgradeMatches,
+    upgraded,
+} from "@game/core-src/games/mecard/sim/catalog/upgrades"
+import type { CardUpgrade } from "@game/core-src/games/mecard/sim/catalog/upgrades"
 
 // --- Fixtures ---
 

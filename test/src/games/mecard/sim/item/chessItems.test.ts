@@ -1,9 +1,27 @@
 import { describe, expect, test } from "vitest"
+import { PAWN_CARD } from "@game/core-src/games/mecard/sim/card/subs/chess/ChessCards"
+import { DODGE_CARD } from "@game/core-src/games/mecard/sim/card/subs/combat/DodgeCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { GLASS_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GlassHeartKind"
 import {
-    ASHTRAY, CHESS_PIECE, DODGE, DODGE_CARD, GLASS_FLASK, GLASS_HEART, HORSESHOE, IRON_MAGNET, KING_CROWN, KITE, PAWN_CARD,
-    PAWN_POWDER, SILENCE_JAR, SPRING, SPURS, STEP, SWIFT,
-} from "@game/core/mecard"
-import type { Usable } from "@game/core/mecard"
+    ASHTRAY,
+    HORSESHOE,
+    KING_CROWN,
+    SPURS,
+} from "@game/core-src/games/mecard/sim/item/subs/combat/ChessItems"
+import { CHESS_PIECE } from "@game/core-src/games/mecard/sim/status/subs/ChessPieces"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { SWIFT } from "@game/core-src/games/mecard/sim/status/subs/Swiftness"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import {
+    GLASS_FLASK,
+    IRON_MAGNET,
+    KITE,
+    PAWN_POWDER,
+    SILENCE_JAR,
+    SPRING,
+} from "@game/core-src/games/mecard/sim/usable/subs/hand/ChessUsables"
+import type { Usable } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -75,12 +93,12 @@ describe("usables of chess and glass", () => {
         expect(hero.position.y).toBeGreaterThan(4)
     })
 
-    test("the silence jar takes the next step of the nearest enemy", () => {
+    test("the silence jar stuns the nearest enemy", () => {
         const on = battle()
         const hero = unit(on, 3.5, 6)
         const foe = unit(on, 3.5, 4, { team: MONSTERS })
         using(on, hero, SILENCE_JAR)
-        expect(foe.steps.length).toBeGreaterThan(0)
+        expect(foe.statusOf(STUNNED)?.level).toBe(1)
     })
 
     test("the kite carries its user over everything", () => {

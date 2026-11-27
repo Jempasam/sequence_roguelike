@@ -1,11 +1,35 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { phaseOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
 import {
-    ADAPTATION, AIM, ALL_UPGRADES, BEAST_ARMOR, BITE, BLEED, BLUE_HEART, BOUNCE_DASH, CYBERNETIC_BEAST,
-    ELEMENTAL, FIRE, FLESH_CURSE, FusionCard, HAWK_CARD, HYBRIDIZATION, IMPROVISED_WEAPON, MISSILE, phaseOf,
-    REPETITION, REVERSED_ADAPTATION, Rng, SLASH, SMALL_SPELL, STEP, THRUST, upgradeMatches, upgraded,
-    WOLF_CARD,
-} from "@game/core/mecard"
-import type { ChainWatcher, Card } from "@game/core/mecard"
+    BEAST_ARMOR,
+    CYBERNETIC_BEAST,
+    ELEMENTAL,
+    FLESH_CURSE,
+    HYBRIDIZATION,
+} from "@game/core-src/games/mecard/sim/card/subs/beast/BeastForms"
+import { BITE } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastRewrites"
+import { HAWK_CARD, WOLF_CARD } from "@game/core-src/games/mecard/sim/card/subs/beast/beasts"
+import {
+    ADAPTATION,
+    REVERSED_ADAPTATION,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/Adaptations"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { REPETITION } from "@game/core-src/games/mecard/sim/card/subs/composite/RewriteCards"
+import { MISSILE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_WEAPON } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { BOUNCE_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BounceDash"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { SMALL_SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { BLEED } from "@game/core-src/games/mecard/sim/card/subs/status/StatusCards"
+import { ALL_UPGRADES, upgradeMatches, upgraded } from "@game/core-src/games/mecard/sim/catalog/upgrades"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { ChainWatcher } from "@game/core-src/games/mecard/sim/card/CardChain"
 
 import { chain } from "../fixtures"
 

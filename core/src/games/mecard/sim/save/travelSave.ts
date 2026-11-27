@@ -1,5 +1,6 @@
-import type { Floor } from "../floor/Floor"
+import type { Floor, FloorType } from "../floor/Floor"
 import { EXIT_HALT } from "../halt/subs/ExitHalt"
+import { ALL_FLOORS } from "../catalog/floors"
 import { haltById } from "../catalog/halts"
 import { fightTypeById } from "../catalog/fightTypes"
 import { Journey } from "../run/Journey"
@@ -7,7 +8,13 @@ import type { Place } from "../run/Journey"
 import type { Run } from "../run/Run"
 import type { Travel } from "../travel/Travel"
 
-import { FLOOR_NAMES } from "./catalogNames"
+import { Names } from "./catalogNames"
+
+/**
+ * The sorts of floor, found by the name a journey saved holds. Here and not with the other names, so a saved
+ * battle does not load the floors.
+ */
+const FLOOR_NAMES = new Names<FloorType>("floor", ALL_FLOORS)
 
 /** The version of the shape of a journey saved, raised when it changes, so an old one is refused clearly. */
 export const TRAVEL_SAVE_VERSION = 3

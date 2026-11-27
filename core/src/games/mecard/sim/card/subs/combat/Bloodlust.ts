@@ -1,5 +1,5 @@
 import { NOTE_COLOR } from "../../../battle/previewColors"
-import { counted, frenchNumber } from "../../../battle/words"
+import { counted } from "../../../battle/words"
 import { BLOODLUST, BLOODLUST_STRIDE } from "../../../status/subs/Bloodlust"
 
 import { ActionCard } from "../ActionCard"
@@ -14,7 +14,7 @@ const BLOODLUST_ROUNDS = 3
 /** A lasting thirst, driving each step closer to the frailest enemy a stride further. */
 export const BLOODLUST_CARD = new ActionCard("Soif de sang", [
     "Pendant ", counted(BLOODLUST_ROUNDS, "round"), ", chaque étape qui te rapproche de l'ennemi qui a le moins de vie ",
-    "t'emporte de ", frenchNumber(BLOODLUST_STRIDE), "×", AGILITE, " ", DISTANCE, " de plus devant toi.",
+    "t'emporte de ", BLOODLUST_STRIDE, "×", AGILITE, " ", DISTANCE, " de plus devant toi.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         battle.applyStatus(unit, BLOODLUST, BLOODLUST_ROUNDS)

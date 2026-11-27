@@ -1,6 +1,8 @@
 import { follow, pick } from "../../../../../../../engine/particles"
-import { ALL_ITEMS, ALL_USABLES } from "../../../../../sim"
-import type { HaltType, Visual } from "../../../../../sim"
+import { ALL_ITEMS } from "../../../../../sim/catalog/items"
+import { ALL_USABLES } from "../../../../../sim/catalog/usables"
+import type { Visual } from "../../../../../sim/base/Visual"
+import type { HaltType } from "../../../../../sim/halt/HaltType"
 import { AmbientEffect } from "../../AmbientEffect"
 import { ITEM_HALTS, USABLE_HALTS } from "../../themes"
 import { haltsAmong } from "../../trip/places"
@@ -34,6 +36,7 @@ function ejection(id: string, givers: readonly HaltType[], things: readonly Thin
     const places = haltsAmong(givers)
     return new AmbientEffect({
         id,
+        category: "surprise",
         spacing: 25,
         stackable: false,
         isPlayable: context => places(context).length > 0,

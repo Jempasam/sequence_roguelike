@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { BOUNCING_BALL, CANNONBALL } from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+import { BOUNCING_BALL, CANNONBALL } from "@game/core-src/games/mecard/sim/card/subs/summon/Cannonballs"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

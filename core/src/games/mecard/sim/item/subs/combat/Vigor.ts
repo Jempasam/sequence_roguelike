@@ -16,6 +16,7 @@ import { AbstractItem } from "../AbstractItem"
 import { visual } from "../../../base/Visual"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
+import * as Steps from "../../../battle/mecanic/step"
 
 /** How many glass hearts the glass heart gives, and how far around the reactor wounds. */
 const GLASS_HEARTS = 2
@@ -130,7 +131,7 @@ export class EchoItem extends AbstractItem {
 
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.prepEnded.add(() => {
-            if(unit.alive) battle.duplicateLastStep(unit)
+            if(unit.alive) Steps.doubleLast(battle, unit)
         }))
     }
 }

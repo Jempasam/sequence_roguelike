@@ -1,13 +1,43 @@
+import { visual } from "../../../../../sim/base/Visual"
 import {
-    ALCHEMIST_HALT, ALL_PETS, APOTHECARY_KIT, BLEEDER_KIT, BOSS, BOSS_MONSTERS, BUTCHER_HALT, DARK_DEMON_HALT,
-    DARK_MAD_DOCTOR_HALT, DARK_MAGICIAN_HALT, DARK_TRAINER_HALT, DEMON_HALT, DEVIL, ENCHANTER_HALT,
-    GREAT_MAGICIAN_HALT, GREAT_WITCH_HALT, INVENTOR_HALT, MAD_DOCTOR_HALT, MAGE_KIT, MAGICIAN_HALT,
-    MASTER_INVENTOR_HALT, MASTER_MAGICIAN_HALT, MASTER_TRAINER_HALT, MECHANIC_KIT, MONSTER_MAGE_HALT,
-    MONSTER_MECHANIC_HALT, MONSTER_SHAMAN_HALT, NECRO_RECRUIT_HALT, NECROMANCER_HALT, PLAGUE_DOCTOR_KIT,
-    PRESTIDIGITATOR_KIT, SHAMAN_KIT, SKELETON_REAPER, SPELLBLADE_KIT, SWAMP_SORCERER_KIT, TAMER_KIT,
-    TRAINER_HALT, visual, WITCH_HALT,
-} from "../../../../../sim"
-import type { Kit } from "../../../../../sim"
+    APOTHECARY_KIT,
+    BLEEDER_KIT,
+    MAGE_KIT,
+    MECHANIC_KIT,
+    PLAGUE_DOCTOR_KIT,
+    PRESTIDIGITATOR_KIT,
+    SHAMAN_KIT,
+    SPELLBLADE_KIT,
+    SWAMP_SORCERER_KIT,
+    TAMER_KIT,
+} from "../../../../../sim/catalog/kits"
+import { BOSS_MONSTERS, DEVIL, SKELETON_REAPER } from "../../../../../sim/catalog/monsters"
+import { ALL_PETS } from "../../../../../sim/catalog/pets"
+import { BOSS } from "../../../../../sim/fight/fights"
+import { DARK_DEMON_HALT } from "../../../../../sim/halt/subs/dark/DarkDemonHalt"
+import { DARK_MAD_DOCTOR_HALT } from "../../../../../sim/halt/subs/dark/DarkMadDoctorHalt"
+import { DARK_MAGICIAN_HALT } from "../../../../../sim/halt/subs/dark/DarkMagicianHalt"
+import { DARK_TRAINER_HALT } from "../../../../../sim/halt/subs/dark/DarkTrainerHalt"
+import { ALCHEMIST_HALT } from "../../../../../sim/halt/subs/deck/AlchemistHalt"
+import { BUTCHER_HALT } from "../../../../../sim/halt/subs/deck/ButcherHalt"
+import { DEMON_HALT } from "../../../../../sim/halt/subs/deck/DemonHalt"
+import { ENCHANTER_HALT } from "../../../../../sim/halt/subs/deck/EnchanterHalt"
+import { INVENTOR_HALT } from "../../../../../sim/halt/subs/gift/InventorHalt"
+import { MAGICIAN_HALT } from "../../../../../sim/halt/subs/gift/MagicianHalt"
+import { TRAINER_HALT } from "../../../../../sim/halt/subs/gift/TrainerHalt"
+import { WITCH_HALT } from "../../../../../sim/halt/subs/gift/WitchHalt"
+import { GREAT_MAGICIAN_HALT } from "../../../../../sim/halt/subs/great/GreatMagicianHalt"
+import { GREAT_WITCH_HALT } from "../../../../../sim/halt/subs/great/GreatWitchHalt"
+import { MASTER_INVENTOR_HALT } from "../../../../../sim/halt/subs/master/MasterInventorHalt"
+import { MASTER_MAGICIAN_HALT } from "../../../../../sim/halt/subs/master/MasterMagicianHalt"
+import { MASTER_TRAINER_HALT } from "../../../../../sim/halt/subs/master/MasterTrainerHalt"
+import { MONSTER_MAGE_HALT } from "../../../../../sim/halt/subs/monster/MonsterMageHalt"
+import { MONSTER_MECHANIC_HALT } from "../../../../../sim/halt/subs/monster/MonsterMechanicHalt"
+import { MONSTER_SHAMAN_HALT } from "../../../../../sim/halt/subs/monster/MonsterShamanHalt"
+import { NECRO_RECRUIT_HALT } from "../../../../../sim/halt/subs/necro/NecroRecruitHalt"
+import { MAD_DOCTOR_HALT } from "../../../../../sim/halt/subs/party/MadDoctorHalt"
+import { NECROMANCER_HALT } from "../../../../../sim/halt/subs/party/NecromancerHalt"
+import type { Kit } from "../../../../../sim/catalog/kits"
 import type { AmbientEffect } from "../../AmbientEffect"
 import { CART_HALTS, MONSTER_HALTS } from "../../themes"
 import { byHalt, enemyOfMap, firstLoaded, fixed, manyOf, party, randomOf } from "../../trip/Cast"
@@ -62,6 +92,7 @@ export function familyEffects(family: Family): AmbientEffect[] {
     const itineraries = names.map(name => ({ name, itinerary: ITINERARIES[name](family.places) }))
     return itineraries.map(({ name, itinerary }) => tripEffect({
         id: `${name}-${family.name}`,
+        category: "traffic",
         itinerary,
         cast: family.cast,
         traveler: family.traveler,

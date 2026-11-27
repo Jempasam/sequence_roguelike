@@ -1,7 +1,21 @@
 import {
-    readDuelFightMessage, readDuelWatchMessage, readLifeMessage, readProgressMessage, readRaceEndMessage,
-    writeDuelFightMessage, writeDuelWatchMessage, writeLifeMessage, writeProgressMessage, writeRaceEndMessage,
-} from "@game/core/mecard/sync"
+    readDuelFightMessage,
+    readDuelWatchMessage,
+    writeDuelFightMessage,
+    writeDuelWatchMessage,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelMessage"
+import {
+    readLifeMessage,
+    writeLifeMessage,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/LifeMessage"
+import {
+    readRaceEndMessage,
+    writeRaceEndMessage,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/RaceEndMessage"
+import {
+    readProgressMessage,
+    writeProgressMessage,
+} from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

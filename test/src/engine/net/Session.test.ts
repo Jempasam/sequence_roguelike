@@ -1,9 +1,22 @@
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { MemoryConnection } from "@game/core-src/engine/net/MemoryConnection"
+import { NetError } from "@game/core-src/engine/net/NetError"
 import {
-    BadSecretFault, ConnectionLostFault, Fault, HostLostServerFault, ManualScheduler, MemoryConnection,
-    NetError, RefusedFault, RoomNotFoundFault, SessionClient, SessionExpiredFault, SessionHost,
-    VersionMismatchFault, writeSession,
-} from "@game/core"
-import type { Connection, SessionInfo, SessionPeer } from "@game/core"
+    BadSecretFault,
+    ConnectionLostFault,
+    HostLostServerFault,
+    RefusedFault,
+    RoomNotFoundFault,
+    SessionExpiredFault,
+    VersionMismatchFault,
+} from "@game/core-src/engine/net/NetFaults"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { writeSession } from "@game/core-src/engine/net/Session"
+import { SessionClient } from "@game/core-src/engine/net/SessionClient"
+import { SessionHost } from "@game/core-src/engine/net/SessionHost"
+import type { Connection } from "@game/core-src/engine/net/Connection"
+import type { SessionInfo } from "@game/core-src/engine/net/Session"
+import type { SessionPeer } from "@game/core-src/engine/net/SessionPeer"
 import { describe, expect, test } from "vitest"
 
 import { FakeHostSocket, settle } from "../../fixtures/sessions"

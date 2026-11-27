@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { RAW_VERTEX_SIZE, Rope, Sprite } from "@game/core"
-import type { Painter } from "@game/core"
+import { RAW_VERTEX_SIZE } from "@game/core-src/engine/gpu/Geometry"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Rope } from "@game/core-src/engine/ui/Rope"
+import type { Painter } from "@game/core-src/engine/gpu/Painter"
 
 import { uiSetup } from "../../fixtures/uiFixtures"
 import { recordingPainter } from "./fixtures"

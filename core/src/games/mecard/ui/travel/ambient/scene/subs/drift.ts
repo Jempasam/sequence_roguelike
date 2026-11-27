@@ -2,7 +2,9 @@ import { timed } from "../../../../../../../engine/animation"
 import type { Sprite } from "../../../../../../../engine/gpu"
 import type { Point } from "../../../../../../../engine/math"
 import { burst, Rate } from "../../../../../../../engine/particles"
-import type { ParticleSpec, Random } from "../../../../../../../engine/particles"
+import type { ParticleSpec, ParticleSystem, Random } from "../../../../../../../engine/particles"
+import type { Visual } from "../../../../../sim/base/Visual"
+import type { AmbientContext } from "../../AmbientContext"
 import { between, colorOf, pictureOf, systemOf } from "../Grain"
 import type { Grain, Range } from "../Grain"
 import type { Scene } from "../Scene"
@@ -55,6 +57,18 @@ export interface Layer {
 
     /** Where it is born from the point of the spot. */
     readonly offset?: Point
+
+    /**
+     * The pictures drawn over each grain, which move as it does: drawn for each one, the last on top. They
+     * are as large as the grain.
+     */
+    readonly over?: (random: Random) => readonly Overlay[]
+}
+
+/** A picture drawn over a grain, tinted by a color as `0xRRGGBB`. */
+export interface Overlay {
+    readonly sprite: Visual
+    readonly color: number
 }
 
 /** What makes a drift. */
@@ -67,6 +81,9 @@ export interface DriftSpec {
 
     /** Is it as likely to go the other way, from right to left? Drawn once for a play. */
     readonly mirrored?: boolean
+
+    /** Does it go from right to left, always? */
+    readonly reversed?: boolean
 
     /** The seconds it takes to swell at its start and to die down at its end: at once by default. */
     readonly swell?: number
@@ -108,6 +125,23 @@ function dress(
     paint(spec.colorEnd, layer.turns ?? color, layer.fades ? 0 : opacity)
 }
 
+/**
+ * Emit a grain once for each picture over it, then leave its spec dressed as the last one, which is emitted
+ * after: the same motion, the pictures drawn in order.
+ */
+function stack(
+    context: AmbientContext, system: ParticleSystem, spec: ParticleSpec, overlays: readonly Overlay[],
+): void {
+    for(const overlay of overlays){
+        const sprite = context.sprite(overlay.sprite)
+        if(!sprite) continue
+        system.emit(spec)
+        spec.sprite = sprite
+        paint(spec.colorStart, overlay.color, spec.colorStart.a)
+        paint(spec.colorEnd, overlay.color, spec.colorEnd.a)
+    }
+}
+
 /** Things born one after another that fall, rise or are blown by the wind: weather, smoke, sparks. */
 export function drift(spec: DriftSpec): Scene {
     const { spot, layers, duration, swell = 0 } = spec
@@ -120,7 +154,7 @@ export function drift(spec: DriftSpec): Scene {
             if(!point) return null
             const { random } = context
             const { width } = context.size()
-            const flipped = spec.mirrored === true && random() < 0.5
+            const flipped = spec.reversed === true || spec.mirrored === true && random() < 0.5
             const rates = layers.map(() => new Rate())
             return timed(duration, (dt, age) => {
                 const swelling = Math.min(1, age / swell, (duration - age) / swell)
@@ -133,12 +167,15 @@ export function drift(spec: DriftSpec): Scene {
                     const count = rates[index].take(layer.rate * strength * density, dt)
                     for(let n = 0; n < count; n++){
                         const born = point()
-                        burst(systemOf(context, layer.grain), random, born.x, born.y, 1, particle => {
+                        const system = systemOf(context, layer.grain)
+                        burst(system, random, born.x, born.y, 1, particle => {
                             dress(particle, random, layer, pictures[index] ?? null, width * scale, lasting)
-                            if(!flipped) return
-                            particle.x = width - particle.x
-                            particle.vx = -particle.vx
-                            particle.ax = -particle.ax
+                            if(flipped){
+                                particle.x = width - particle.x
+                                particle.vx = -particle.vx
+                                particle.ax = -particle.ax
+                            }
+                            if(layer.over) stack(context, system, particle, layer.over(random))
                         })
                     }
                 })

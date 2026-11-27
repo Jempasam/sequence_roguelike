@@ -9,6 +9,9 @@ export interface Follower {
     readonly system: ParticleSystem
     readonly sprite?: Sprite|null
 
+    /** Is the sprite drawn mirrored, its left on the right? */
+    readonly mirrored?: boolean
+
     /** The color as `0xRRGGBB`, white by default. */
     readonly color?: number
 
@@ -61,6 +64,7 @@ export function follow(spec: Follower): Animation {
             scratch.rotation = spec.rotation ?? 0
             scratch.spin = spec.spin ?? 0
             scratch.sprite = spec.sprite ?? null
+            scratch.mirrored = spec.mirrored ?? false
             const hex = spec.color ?? 0xffffff
             scratch.colorStart.set((hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255, 0)
             scratch.colorEnd.set((hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255, 0)

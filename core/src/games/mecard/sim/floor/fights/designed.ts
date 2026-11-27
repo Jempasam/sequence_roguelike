@@ -1,4 +1,4 @@
-import { Rng } from "../../base/Rng"
+import type { Rng } from "../../base/Rng"
 import type { Visual } from "../../base/Visual"
 import type { Text } from "../../../../../semantic"
 import type { Vector2 } from "../../base/Vector2"
@@ -9,6 +9,7 @@ import { KitFightType } from "../../fight/KitFightType"
 import type { FightStage } from "../../fight/Fight"
 import type { FightCategory } from "../../fight/FightCategory"
 import { AMBUSH } from "../../fight/fights"
+import { monstersOf } from "../../fight/monstersOf"
 import { fightType, NO_FIGHT_CONTEXT } from "../../fight/FightType"
 import type { FightContext, FightType, Laying } from "../../fight/FightType"
 import type { HazardType } from "../../hazard/HazardType"
@@ -45,11 +46,7 @@ export interface Design {
 
 /** The picture of a fight: the sprite of its sturdiest monster, the first of them when several are as sturdy. */
 function pictureOf(design: Design): Visual {
-    const monsters: Monster[] = []
-    design.populate({
-        rng: new Rng(0), level: 1, layer: design.layers[0],
-        add: monster => { monsters.push(monster) }, addKit: () => {}, addHero: () => {},
-    })
+    const monsters = monstersOf(design, design.layers[0])
     const lead = monsters.reduce((best, each) => each.hearts > best.hearts ? each : best)
     return lead.sprite
 }

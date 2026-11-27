@@ -132,6 +132,26 @@ export const CROW_FLOORS: readonly FloorType[] = [GRAVEYARD_FLOOR, CASTLE_FLOOR]
 /** Floors where clouds of bats fly. */
 export const BAT_CLOUD_FLOORS: readonly FloorType[] = [CAVE_FLOOR, CASTLE_FLOOR]
 
+/** Floors where hail falls. */
+export const HAIL_FLOORS: readonly FloorType[] = [SWAMP_FLOOR, HARBOR_FLOOR, TUNDRA_FLOOR]
+
+/** Floors under northern lights. */
+export const AURORA_FLOORS: readonly FloorType[] = [TUNDRA_FLOOR, HARBOR_FLOOR]
+
+/** Floors where fireworks are set off. */
+export const FIREWORK_FLOORS: readonly FloorType[] = [CASTLE_FLOOR, FACTORY_FLOOR, DOJO_FLOOR]
+
+/** Floors a whale flies over. */
+export const WHALE_FLOORS: readonly FloorType[] = [HARBOR_FLOOR, SWAMP_FLOOR, TUNDRA_FLOOR]
+
+/** Floors a dragon casts its shadow on. */
+export const DRAGON_FLOORS: readonly FloorType[] = [
+    DOJO_FLOOR, CASTLE_FLOOR, CAVE_FLOOR, VOLCANO_FLOOR, FOREST_FLOOR, HELL_FLOOR,
+]
+
+/** Floors where witches fly. */
+export const WITCH_FLOORS: readonly FloorType[] = [CASTLE_FLOOR, SWAMP_FLOOR, FOREST_FLOOR]
+
 /** Halts where the party rests. */
 export const REST_HALTS: readonly HaltType[] = [
     TAVERN_HALT, HOSPITAL_HALT, GREAT_HOSPITAL_HALT, DARK_TAVERN_HALT,

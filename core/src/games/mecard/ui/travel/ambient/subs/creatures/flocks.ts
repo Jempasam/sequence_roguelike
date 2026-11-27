@@ -4,7 +4,7 @@ import { sceneEffect } from "../../scene/sceneEffect"
 import { flock } from "../../scene/subs/flock"
 import { BAT_CLOUD_FLOORS, CROW_FLOORS, HARBOR_FLOORS, SNOW_FLOORS } from "../../themes"
 
-/** A flock of birds crosses the map from left to right, in a V. */
+/** A flock of birds crosses the map in a V. */
 const BIRD_FLOCK = sceneEffect({
     id: "bird-flock", category: "surprise", outdoors: true, weight: 2, spacing: 30,
     scene: flock({

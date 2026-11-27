@@ -81,6 +81,33 @@ export function band(low: number, high: number): Spot {
     })
 }
 
+/** One point alone, such as where something landed. */
+export function fixed(at: Point): Spot {
+    return {
+        dimensions: 0,
+        playable: () => true,
+        open: () => () => at,
+    }
+}
+
+/**
+ * Above the screen, in a few narrow stretches of its width drawn once for a play.
+ *
+ * @param count - How many stretches.
+ * @param width - How wide each is, in pixels.
+ */
+export function curtains(count: number, width: number): Spot {
+    return {
+        dimensions: 1,
+        playable: () => true,
+        open(context){
+            const { random } = context
+            const middles = Array.from({ length: count }, () => random() * context.size().width)
+            return () => ({ x: pick(random, middles) + (random() - 0.5) * width, y: -TOP })
+        },
+    }
+}
+
 /** How a spot lies from its place. */
 export interface PlaceOffset {
     readonly x?: number

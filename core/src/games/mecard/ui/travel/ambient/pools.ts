@@ -2,19 +2,30 @@ import type { Random } from "../../../../../engine/particles"
 import type { AmbientCategory, AmbientEffect } from "./AmbientEffect"
 import { AmbientPool } from "./AmbientPool"
 import { RunAmbient } from "./RunAmbient"
+import { DARK_EYES } from "./subs/creatures/DarkEyes"
 import { DEFEATED_GHOST } from "./subs/creatures/DefeatedGhost"
+import { DRAGON_SHADOW } from "./subs/creatures/DragonShadow"
 import { FLOCK_EFFECTS } from "./subs/creatures/flocks"
 import { FOOTPRINTS } from "./subs/creatures/Footprints"
+import { GIANT_MONSTER_SHADOW } from "./subs/creatures/GiantShadow"
 import { LEAP_EFFECTS } from "./subs/creatures/leaps"
+import { SKY_WHALE } from "./subs/creatures/SkyWhale"
 import { SWARM_EFFECTS } from "./subs/creatures/swarms"
+import { WITCH_FLIGHT } from "./subs/creatures/WitchFlight"
 import { DRIFT_EFFECTS } from "./subs/ground/drifts"
 import { ERUPTION_EFFECTS } from "./subs/ground/eruptions"
 import { GLIDE_EFFECTS } from "./subs/ground/glides"
+import { SHOWER_EFFECTS } from "./subs/ground/showers"
 import { WHIRL } from "./subs/ground/Whirl"
 import { LOST_COIN } from "./subs/places/LostCoin"
 import { MINE_CART } from "./subs/places/MineCart"
+import { AURORA } from "./subs/sky/Aurora"
 import { BOSS_EYE } from "./subs/sky/BossEye"
+import { COMET } from "./subs/sky/Comet"
+import { CONSTELLATION } from "./subs/sky/Constellation"
+import { ECLIPSE } from "./subs/sky/Eclipse"
 import { LIGHTNING } from "./subs/sky/Lightning"
+import { METEOR_SHOWER } from "./subs/sky/MeteorShower"
 import { SHOOTING_STAR } from "./subs/sky/ShootingStar"
 import { BOAT_CROSSING, EDGE_TO_EDGE, FISHER_BOAT_CROSSING } from "./subs/traffic/crossings"
 import { ITEM_EJECT, USABLE_EJECT } from "./subs/traffic/Ejection"
@@ -30,6 +41,8 @@ export const AMBIENT_EFFECTS: readonly AmbientEffect[] = [
     ...DRIFT_EFFECTS, ...GLIDE_EFFECTS, ...SWARM_EFFECTS, WHIRL,
     ...FLOCK_EFFECTS, ...LEAP_EFFECTS, ...ERUPTION_EFFECTS, LIGHTNING, SHOOTING_STAR, BOSS_EYE,
     MINE_CART, LOST_COIN, DEFEATED_GHOST, FOOTPRINTS,
+    ...SHOWER_EFFECTS, ECLIPSE, AURORA, METEOR_SHOWER, COMET, CONSTELLATION, SKY_WHALE, DRAGON_SHADOW,
+    WITCH_FLIGHT, DARK_EYES, GIANT_MONSTER_SHADOW,
     ...FAMILY_EFFECTS, ...ENEMY_QUEUES, ...TAVERN_PARTIES, ...ALL_MONSTER_PARTIES,
     EDGE_TO_EDGE, BOAT_CROSSING, FISHER_BOAT_CROSSING, ITEM_EJECT, USABLE_EJECT,
     ...UNIT_CLIMATE_EFFECTS, ...UNIT_VISITOR_EFFECTS, ...UNIT_MOOD_EFFECTS, ...UNIT_BOND_EFFECTS,

@@ -1,9 +1,15 @@
+import type { Color } from "../../../../../../../engine/math"
+import { pick } from "../../../../../../../engine/particles"
+import type { Random } from "../../../../../../../engine/particles"
 import { visual } from "../../../../../sim/base/Visual"
+import { ALL_CARDS } from "../../../../../sim/catalog/cards"
+import { typeColorOf } from "../../../../look/colors"
 import type { AmbientEffect } from "../../AmbientEffect"
 import type { Grain } from "../../scene/Grain"
 import { sceneEffect } from "../../scene/sceneEffect"
 import { atPlace, band, screen, sideEdge, topEdge } from "../../scene/Spot"
 import { drift } from "../../scene/subs/drift"
+import type { Overlay } from "../../scene/subs/drift"
 import {
     ASH_FLOORS, CAVE_FLOORS, EMBER_FLOORS, FACTORY_FLOORS, LANTERN_FLOORS, LEAF_FLOORS, MARSH_FLOORS,
     PETAL_FLOORS, RAIN_FLOORS, REST_HALTS, ROCK_FLOORS, SNOW_FLOORS, WOOD_FLOORS,
@@ -17,6 +23,14 @@ const FLAKE: Grain = { sprite: visual("ambient/snowflake"), colors: [0xffffff], 
 
 /** A streak turned along its motion: a drop of water, a trail of snow. */
 const STREAK = visual("ambient/streak")
+
+
+// COLORS //
+
+/** A color as `0xRRGGBB`. */
+function hexOf({ r, g, b }: Color): number {
+    return Math.round(r * 255) << 16 | Math.round(g * 255) << 8 | Math.round(b * 255)
+}
 
 
 // EFFECTS //
@@ -259,8 +273,52 @@ const SOOT = sceneEffect({
     }),
 })
 
+/** The band on the top of a card and the strip down its right side, white to be tinted. */
+const CARD_BAND = visual("ambient/card_band")
+const CARD_STRIP = visual("ambient/card_strip")
+
+/**
+ * The colors of a card of the game drawn at random, so those of a rain follow the cards of the game: the band
+ * of what it gives, and the strip of what it takes when it takes something.
+ */
+function cardColors(random: Random): readonly Overlay[] {
+    const { output, input } = pick(random, ALL_CARDS)
+    const band = { sprite: CARD_BAND, color: hexOf(typeColorOf(output)) }
+    return input ? [band, { sprite: CARD_STRIP, color: hexOf(typeColorOf(input)) }] : [band]
+}
+
+/** Cards of the game rain down, tumbling and swaying. */
+const CARD_RAIN = sceneEffect({
+    id: "card-rain", category: "weather", outdoors: true, weight: 0.025, spacing: 180,
+    scene: drift({
+        spot: topEdge(), duration: 5, swell: 0.8,
+        layers: [{
+            grain: { sprite: visual("ambient/card"), colors: [0xffffff], size: [9, 13] },
+            rate: 9, life: 8, vx: [-16, 16], vy: [40, 62], ax: [-8, 8], spin: [-4, 4], over: cardColors,
+        }],
+    }),
+})
+
+/** A storm of petals whirls across the map, one way or the other. */
+const PETAL_STORM = sceneEffect({
+    id: "petal-storm", category: "weather", floors: PETAL_FLOORS, outdoors: true, weight: 2,
+    scene: drift({
+        spot: sideEdge(-0.2, 1), duration: 4.5, mirrored: true, swell: 1,
+        layers: [
+            {
+                grain: { colors: [0xffc7d4, 0xffd6e3, 0xff9fbd, 0xfff5ff], size: [2, 4], opacity: 0.95 },
+                rate: 45, life: 2.8, cross: [1.2, 2.2], vy: [-10, 40], ay: [-60, 60], spin: [-8, 8],
+            },
+            {
+                grain: { colors: [0xffd6e3], size: [10, 18], opacity: 0.2, glow: true },
+                rate: 7, life: 2, cross: [0.9, 1.4], vy: [5, 25], grows: 4, fades: true, stretched: true,
+            },
+        ],
+    }),
+})
+
 /** What is born bit by bit and falls, rises or is blown: weather, dust, smoke. */
 export const DRIFT_EFFECTS: readonly AmbientEffect[] = [
     LEAVES, CHERRY_PETALS, EMBERS, CAMPFIRE, GUST, SNOWFALL, BLIZZARD, ICE_GLITTER, CAVE_DRIPS, ROCK_DUST,
-    RAIN, ASH_FALL, MARSH_BUBBLES, POLLEN, SKY_LANTERNS, CHIMNEY_SMOKE, SOOT,
+    RAIN, ASH_FALL, MARSH_BUBBLES, POLLEN, SKY_LANTERNS, CHIMNEY_SMOKE, SOOT, CARD_RAIN, PETAL_STORM,
 ]

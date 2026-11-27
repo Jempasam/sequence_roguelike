@@ -22,15 +22,23 @@ Chaque scène est la configuration d'une brique : où elle naît (point de naiss
 - `drift` : des grains émis en continu, qui tombent, montent ou filent au vent.
 - `glide` : quelques grandes formes qui glissent d'un côté à l'autre.
 - `swarm` : des êtres qui tournent autour d'un lieu.
-- `flock` : un vol qui traverse le ciel de gauche à droite, en V ou dispersé.
+- `flock` : un vol qui traverse le ciel, dans un sens ou l'autre, en V ou dispersé.
+- `wayAcross` ([ui/travel/ambient/scene/Way.ts](../core/src/games/mecard/ui/travel/ambient/scene/Way.ts)) : le sens d'une traversée, tiré au hasard. Tout passage de bêtes le prend.
 - `leap` : un être qui bondit en arc, une fois ou plusieurs.
 - `eruption` : des gerbes à un point, précédées ou accompagnées de formes qui tombent ou montent.
+- `shower` : des choses qui partent l'une après l'autre et arrivent chacune à un point, où elles éclatent, rebondissent ou laissent une autre scène (grêle, fusées, bulles, météorite). Vu de loin, il y en a plus.
+- `layered` : plusieurs scènes jouées ensemble.
+- Une scène qu'aucune brique ne couvre s'écrit dans son propre fichier et passe aussi par `sceneEffect`. Elle suit l'[échelle](#échelle).
+
+# Échelle
+Une scène reçoit un espace déjà divisé par son échelle : ses longueurs et ses vitesses s'écrivent telles quelles. Restent à sa charge : le nombre de choses (`densityAt`), la durée d'un trajet (tirée de la distance et d'une vitesse), la vie de ce qui doit traverser, et la taille des grandes images (bornée par une part de l'espace).
 
 # Sous-dossier associé
 - base : [core/src/games/mecard/ui/travel/ambient/scene/](../core/src/games/mecard/ui/travel/ambient/scene/)
 - briques : [core/src/games/mecard/ui/travel/ambient/scene/subs/](../core/src/games/mecard/ui/travel/ambient/scene/subs/)
 - tables du sol et de l'air : [core/src/games/mecard/ui/travel/ambient/subs/ground/](../core/src/games/mecard/ui/travel/ambient/subs/ground/)
 - tables des êtres : [core/src/games/mecard/ui/travel/ambient/subs/creatures/](../core/src/games/mecard/ui/travel/ambient/subs/creatures/)
+- scènes du ciel : [core/src/games/mecard/ui/travel/ambient/subs/sky/](../core/src/games/mecard/ui/travel/ambient/subs/sky/)
 
 # Convention de nommage
 - Un identifiant nomme ce qu'on voit, en anglais : `snowfall`, `snow-geese`.
@@ -39,7 +47,10 @@ Chaque scène est la configuration d'une brique : où elle naît (point de naiss
 - Dans la console du jeu, `travel floor <étage>` puis `travel ambient <effet>` lance un effet.
 
 # Énumération
-- drift : leaves, cherry-petals, embers, campfire, gust, snowfall, blizzard, ice-glitter, cave-drips, rock-dust, rain, ash-fall, marsh-bubbles, pollen, sky-lanterns, chimney-smoke, soot.
+- drift : leaves, cherry-petals, embers, campfire, gust, snowfall, blizzard, ice-glitter, cave-drips, rock-dust, rain, ash-fall, marsh-bubbles, pollen, sky-lanterns, chimney-smoke, soot, card-rain, petal-storm.
+- shower : hail, giant-bubbles, fire-rain, cave-tremor (avec un drift), meteorite, fireworks.
+- scènes à part : eclipse, aurora, meteor-shower, comet, constellation, sky-whale, dragon-shadow, witch-flight, dark-eyes, giant-monster-shadow.
+- ombres portées : sky-whale et witch-flight en laissent une loin sous eux (`castShadow`).
 - glide : fog, cloud-shadow, volcano-smoke, sea-mist.
 - swarm : bats, fireflies, butterflies, flies, wisps.
 - flock : bird-flock, seagulls, crows, bat-cloud, snow-geese.

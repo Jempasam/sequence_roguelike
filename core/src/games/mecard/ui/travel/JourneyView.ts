@@ -11,7 +11,6 @@ import { ALL_FLOORS } from "../../sim/catalog/floors"
 import type { Decoration } from "../../sim/floor/Floor"
 import type { Journey, Place } from "../../sim/run/Journey"
 
-import { averageColor, mixHues } from "../look/hue"
 import { PAPER_PATH, PATH_PICTURE, paperFrame, SHADE_PICTURE } from "../look/paper"
 import { TEXT_OUTLINE } from "../look/theme"
 import { distinctPictures, loadPictures } from "../look/visualPath"
@@ -155,7 +154,6 @@ export class JourneyView extends Component {
             const sprite = spriteOf.get(each.visual)
             return sprite ? [[each.visual, sprite]] : []
         }
-        const worn = averageColor(fixedPictures[0])
         const papers = new Map<string, NineSlice>()
         return {
             logos: new Map(logos.flatMap(known)),
@@ -167,7 +165,7 @@ export class JourneyView extends Component {
                 const key = `${color.r},${color.g},${color.b}`
                 let frame = papers.get(key)
                 if(!frame){
-                    frame = paperFrame(paper, PAPER_SCALE, mixHues(worn, color), "hue")
+                    frame = paperFrame(paper, PAPER_SCALE, color, "hue")
                     papers.set(key, frame)
                 }
                 return frame

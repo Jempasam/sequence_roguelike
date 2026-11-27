@@ -7,13 +7,13 @@
             "occlusion",
             "shadow",
             "reflection",
-            {"id": "contrast", "between": 0.7, "towards": "#2a4a60"},
+            {"id": "contrast", "between": 0.7, "towards": "#1a4a80"},
             "alpha_thickness",
             {"id": "outer_outline", "different_mat": true},
             "casted_shadow",
             "gloom",
             "smooth",
-            {"id": "tint", "color": "#4a8ab0", "amount": 0.12}
+            {"id": "tint", "color": "#2a7ad0", "amount": 0.4}
         ]
     },
     "layers": [

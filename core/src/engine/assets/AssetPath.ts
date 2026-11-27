@@ -6,9 +6,15 @@ export type AssetPath =
     | "mecard/ambient/bird.png"
     | "mecard/ambient/bubble.png"
     | "mecard/ambient/butterfly.png"
+    | "mecard/ambient/card.png"
+    | "mecard/ambient/card_band.png"
+    | "mecard/ambient/card_strip.png"
     | "mecard/ambient/cloud.png"
     | "mecard/ambient/crow.png"
     | "mecard/ambient/dead_eye.png"
+    | "mecard/ambient/disc.png"
+    | "mecard/ambient/dragon_down.png"
+    | "mecard/ambient/dragon_up.png"
     | "mecard/ambient/exclaim.png"
     | "mecard/ambient/fish.png"
     | "mecard/ambient/fog.png"
@@ -17,11 +23,14 @@ export type AssetPath =
     | "mecard/ambient/lantern.png"
     | "mecard/ambient/note.png"
     | "mecard/ambient/pat_hand.png"
+    | "mecard/ambient/ray.png"
     | "mecard/ambient/rock.png"
     | "mecard/ambient/seagull.png"
     | "mecard/ambient/snowflake.png"
     | "mecard/ambient/streak.png"
     | "mecard/ambient/talk.png"
+    | "mecard/ambient/whale.png"
+    | "mecard/ambient/witch.png"
     | "mecard/ambient/z.png"
     | "mecard/border/alchemist.png"
     | "mecard/border/altar.png"
@@ -1135,9 +1144,15 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/ambient/bird.png",
     "mecard/ambient/bubble.png",
     "mecard/ambient/butterfly.png",
+    "mecard/ambient/card.png",
+    "mecard/ambient/card_band.png",
+    "mecard/ambient/card_strip.png",
     "mecard/ambient/cloud.png",
     "mecard/ambient/crow.png",
     "mecard/ambient/dead_eye.png",
+    "mecard/ambient/disc.png",
+    "mecard/ambient/dragon_down.png",
+    "mecard/ambient/dragon_up.png",
     "mecard/ambient/exclaim.png",
     "mecard/ambient/fish.png",
     "mecard/ambient/fog.png",
@@ -1146,11 +1161,14 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/ambient/lantern.png",
     "mecard/ambient/note.png",
     "mecard/ambient/pat_hand.png",
+    "mecard/ambient/ray.png",
     "mecard/ambient/rock.png",
     "mecard/ambient/seagull.png",
     "mecard/ambient/snowflake.png",
     "mecard/ambient/streak.png",
     "mecard/ambient/talk.png",
+    "mecard/ambient/whale.png",
+    "mecard/ambient/witch.png",
     "mecard/ambient/z.png",
     "mecard/border/alchemist.png",
     "mecard/border/altar.png",

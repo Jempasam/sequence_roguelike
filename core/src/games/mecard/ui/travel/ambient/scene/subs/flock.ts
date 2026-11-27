@@ -5,6 +5,7 @@ import type { Point } from "../../../../../../../engine/math"
 import { between, colorOf, countIn, pictureOf, systemOf } from "../Grain"
 import type { Grain, Range } from "../Grain"
 import type { Scene } from "../Scene"
+import { wayAcross } from "../Way"
 
 /** How far past the sides of the map the leader starts and the last one ends. */
 const MARGIN = 14
@@ -43,7 +44,7 @@ const FORMATIONS: Record<Formation, (random: Random, index: number, size: number
     },
 }
 
-/** Beings that cross the sky of the map together from the left side to the right one: birds, bats. */
+/** Beings that cross the sky of the map together, one way or the other: birds, bats. */
 export function flock(spec: FlockSpec): Scene {
     const { grain, duration, bob } = spec
     const place = FORMATIONS[spec.formation]
@@ -61,12 +62,13 @@ export function flock(spec: FlockSpec): Scene {
                 return { size, offset: place(random, index, size), phase: random() * Math.PI * 2 }
             })
             const trail = Math.max(0, ...members.map(member => -member.offset.x))
-            const way = area.width + MARGIN * 2 + trail
+            const length = area.width + MARGIN * 2 + trail
+            const way = wayAcross(random, area.x, area.width)
             return together(members.map(({ size, offset, phase }) => follow({
                 system: systemOf(context, grain), sprite, size, color: colorOf(random, grain),
-                opacity: grain.opacity, duration,
+                mirrored: way.reversed, opacity: grain.opacity, duration,
                 path: (progress, age) => ({
-                    x: area.x - MARGIN + offset.x + way * progress,
+                    x: way.x(offset.x + length * progress - MARGIN),
                     y: y + offset.y + climb * progress + Math.sin(age * 4 + phase) * bob,
                 }),
             })))

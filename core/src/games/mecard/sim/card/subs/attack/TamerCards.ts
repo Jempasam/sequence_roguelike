@@ -5,7 +5,7 @@ import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import { NOTE_COLOR, PHYSICAL_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
 import * as Previews from "../../../battle/preview/Previews"
 import { Heart } from "../../../heart/Heart"
@@ -14,6 +14,7 @@ import { Strength } from "../../../process/subs/Strength"
 import { isStuffed, stuffed } from "../../../process/subs/Taxidermy"
 import { DODGE } from "../../../status/subs/Dodge"
 import { ROOTED } from "../../../status/subs/Rooted"
+import { STUNNED } from "../../../status/subs/Stunned"
 
 import { Rarity } from "../../Rarity"
 import { ActionCard } from "../ActionCard"
@@ -69,17 +70,17 @@ function stuffedBodies(battle: Battle, owner: Unit): Unit[] {
 }
 
 export const AUTOPSY = new ActionCard("Autopsie", [
-    "Poignarde la première ", UNIT, " sur ", frenchNumber(AUTOPSY_LENGTH), " ", DISTANCE, " devant : 2+force dégâts physiques. ",
+    "Poignarde la première ", UNIT, " sur ", AUTOPSY_LENGTH, " ", DISTANCE, " devant : 2+force dégâts physiques. ",
     "Si elle meurt, elle est empaillée : elle combat pour toi avec la moitié de ses ", HEART.as("cœurs"), ".",
 ], Rarity.RARE, blowing(AUTOPSY_LENGTH, (battle, unit, target) => {
     if(!target.alive) stuffed(battle, unit, target)
 }, "autopsie"))
 
 export const WHIP = new ActionCard("Coup de fouet", [
-    "Frappe la première ", UNIT, " sur ", frenchNumber(WHIP_LENGTH), " ", DISTANCE, " devant : 2+force dégâts physiques. ",
-    "Si elle était fébrile, elle est étourdie.",
+    "Frappe la première ", UNIT, " sur ", WHIP_LENGTH, " ", DISTANCE, " devant : 2+force dégâts physiques. ",
+    "Si elle était fébrile, elle gagne ", STUNNED, " ", 1, ".",
 ], Rarity.COMMON, blowing(WHIP_LENGTH, (battle, _unit, target, wasFeverish) => {
-    if(wasFeverish && target.alive) battle.stun(target)
+    if(wasFeverish && target.alive) battle.applyStatus(target, STUNNED, 1)
 }, "coup de fouet"))
 
 export const LURE = new ActionCard("Appeau", [
@@ -98,13 +99,13 @@ export const LURE = new ActionCard("Appeau", [
 }, "appeau"))
 
 export const MUZZLE = new ActionCard("Muselière", [
-    "La première ", UNIT, " touchée sur ", frenchNumber(MUZZLE_LENGTH), " ", DISTANCE, " devant a ses 2 prochains pas immobilisés.",
+    "La première ", UNIT, " touchée sur ", MUZZLE_LENGTH, " ", DISTANCE, " devant a ses 2 prochains pas immobilisés.",
 ], Rarity.RARE, onFirstAhead(MUZZLE_LENGTH, MUZZLE_WIDTH, (battle, _unit, target) => {
     battle.applyStatus(target, ROOTED, 2)
 }, "muselière"))
 
 export const TREAT = new ActionCard("Friandise", [
-    "Soigne de ", new HeartCount(2), " + ", HEAL, " l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
+    "Soigne de ", new HeartCount(2), " + ", HEAL, " l'allié le plus proche, à ", TENDING_RANGE, " ", DISTANCE,
     " au plus, et lui donne esquive 1.",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     const friend = battle.nearestAlly(unit, TENDING_RANGE)
@@ -114,7 +115,7 @@ export const TREAT = new ActionCard("Friandise", [
 }, "friandise"))
 
 export const STUFFING_PAD = new ActionCard("Rembourrage", [
-    "Soigne de ", new HeartCount(3), " + ", HEAL, " l'allié le plus proche, à ", frenchNumber(TENDING_RANGE), " ", DISTANCE,
+    "Soigne de ", new HeartCount(3), " + ", HEAL, " l'allié le plus proche, à ", TENDING_RANGE, " ", DISTANCE,
     " au plus, et lui donne ", new HeartCount(1), " ", SHIELD_HEART, ".",
 ], Rarity.COMMON, onSelf((battle, unit) => {
     const friend = battle.nearestAlly(unit, TENDING_RANGE)

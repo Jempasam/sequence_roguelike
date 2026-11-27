@@ -1,5 +1,8 @@
-import { MemoryConnection, OutboxFullFault, QueuedPeer, SessionPeer } from "@game/core"
-import type { Fault } from "@game/core"
+import { MemoryConnection } from "@game/core-src/engine/net/MemoryConnection"
+import { OutboxFullFault } from "@game/core-src/engine/net/NetFaults"
+import { QueuedPeer } from "@game/core-src/engine/net/QueuedPeer"
+import { SessionPeer } from "@game/core-src/engine/net/SessionPeer"
+import type { Fault } from "@game/core-src/engine/net/Fault"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

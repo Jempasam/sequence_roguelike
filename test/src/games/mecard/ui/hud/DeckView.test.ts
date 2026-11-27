@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import type { Component } from "@game/core"
-import { AIM, STEP, THRUST } from "@game/core/mecard"
+import type { Component } from "@game/core-src/engine/ui/Component"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
 import { DeckView } from "@game/core/mecard/deck-view"
 import type { DeckViewOptions } from "@game/core/mecard/deck-view"
 

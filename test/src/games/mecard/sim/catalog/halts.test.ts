@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { allHalts, DUEL_HALT, haltById, lootHalts, placeTypeById } from "@game/core/mecard"
+import { allHalts, haltById, lootHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { placeTypeById } from "@game/core-src/games/mecard/sim/catalog/places"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
 import { preparedRun, ScriptedPlayer, stateOf } from "../../../../fixtures/haltFixtures"
 
 // --- Fixture builders ---

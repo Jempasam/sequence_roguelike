@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { seededRandom, timed } from "@game/core"
-import type { Animation } from "@game/core"
+import { timed } from "@game/core-src/engine/animation/animations"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import type { Animation } from "@game/core-src/engine/animation/Animation"
 import { AmbientEffect } from "@game/core/mecard/ambient-effect"
 import { AmbientPool } from "@game/core/mecard/ambient-pool"
 import { RunAmbient } from "@game/core/mecard/ambient"
@@ -19,6 +20,7 @@ type Options = Partial<ConstructorParameters<typeof AmbientEffect>[0]>
 function lasting(id: string, duration: number, lived: Lived, options: Options = {}): AmbientEffect {
     return new AmbientEffect({
         id,
+        category: "backdrop",
         spacing: 0,
         stackable: false,
         isPlayable: () => true,
@@ -111,9 +113,9 @@ describe("a pool of ambient effects", () => {
         expect(lived.starts).toEqual([])
     })
 
-    test("stop → what plays ends, once, and the spacings are forgotten", () => {
+    test("stop → what plays ends, once", () => {
         const lived = livedOf()
-        const pool = new AmbientPool([lasting("a", 1000, lived, { spacing: 100 })], seededRandom(1), [1, 1], 2, REPORT)
+        const pool = new AmbientPool([lasting("a", 1000, lived)], seededRandom(1), [1, 1], 2, REPORT)
         run(pool, lived, 5)
         expect(pool.playing).toBe(1)
         pool.stop()
@@ -122,10 +124,29 @@ describe("a pool of ambient effects", () => {
         expect(lived.ends).toHaveLength(1)
     })
 
+    test("stop in the middle of a wait → only what is left of it is waited", () => {
+        const lived = livedOf()
+        const pool = new AmbientPool([lasting("a", 1, lived)], seededRandom(1), [10, 10], 1, REPORT)
+        run(pool, lived, 7)
+        pool.stop()
+        run(pool, lived, 3)
+        expect(lived.starts).toEqual([3])
+    })
+
+    test("stop while an effect plays → its spacing is still waited", () => {
+        const lived = livedOf()
+        const pool = new AmbientPool([lasting("a", 1000, lived, { spacing: 100 })], seededRandom(1), [1, 1], 2, REPORT)
+        run(pool, lived, 5)
+        pool.stop()
+        run(pool, lived, 50)
+        expect(lived.starts).toHaveLength(1)
+    })
+
     test("an animation that fails → its error is reported and the pool goes on", () => {
         const errors: unknown[] = []
         const failing = new AmbientEffect({
-            id: "failing", spacing: 0, stackable: false, isPlayable: () => true, weight: () => 1,
+            id: "failing", category: "backdrop", spacing: 0, stackable: false, isPlayable: () => true,
+            weight: () => 1,
             effect: { create: () => ({ start(){}, update(){ throw new Error("broken") }, end(){} }) },
         })
         const pool = new AmbientPool([failing], seededRandom(1), [1, 1], 1, error => errors.push(error))
@@ -157,7 +178,8 @@ describe("effects started at once", () => {
     test("an effect that finally cannot → told failed, not started", () => {
         const pool = new AmbientPool([], seededRandom(1), [100, 100], 1, REPORT)
         const cannot = new AmbientEffect({
-            id: "cannot", spacing: 0, stackable: false, isPlayable: () => true, weight: () => 1,
+            id: "cannot", category: "backdrop", spacing: 0, stackable: false, isPlayable: () => true,
+            weight: () => 1,
             effect: { create: () => null },
         })
         expect(pool.trigger(contextOf(), [cannot])[0].status).toBe("failed")

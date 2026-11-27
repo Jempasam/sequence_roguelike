@@ -1,8 +1,15 @@
 import { describe, expect, test } from "vitest"
-import {
-    BLUE_HEART, Carried, DamageType, EXPLOSIVE, explosiveRadius, Heart, HEART_BOMB, PHOENIX_HEART, PLASTER,
-    RED_HEART, RESURRECTED, RESURRECTION, Vector2,
-} from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { HEART_BOMB, PHOENIX_HEART } from "@game/core-src/games/mecard/sim/item/subs/combat/HeartItems"
+import { PLASTER } from "@game/core-src/games/mecard/sim/item/subs/heal/Plaster"
+import { EXPLOSIVE, explosiveRadius } from "@game/core-src/games/mecard/sim/status/subs/Explosive"
+import { RESURRECTED } from "@game/core-src/games/mecard/sim/status/subs/Resurrection"
+import { RESURRECTION } from "@game/core-src/games/mecard/sim/usable/subs/ResurrectionUsable"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { battle, MONSTERS, play, unit } from "../fixtures"
 

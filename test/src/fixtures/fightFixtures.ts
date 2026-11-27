@@ -1,5 +1,7 @@
-import { fightType } from "@game/core/mecard"
-import type { FightCategory, FightType, Monster } from "@game/core/mecard"
+import { fightType } from "@game/core-src/games/mecard/sim/fight/FightType"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { FightType } from "@game/core-src/games/mecard/sim/fight/FightType"
 
 /** How many fights {@link fightOf} made, for each to have an id of its own. */
 let made = 0

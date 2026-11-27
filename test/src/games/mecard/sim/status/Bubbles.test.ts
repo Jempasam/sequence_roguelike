@@ -1,11 +1,43 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { KAMIKAZE } from "@game/core-src/games/mecard/sim/card/subs/body/BodyCards"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
 import {
-    allyOf, BEAST_BUBBLE, BLUE_BUBBLE, BUBBLE, BUBBLE_BODY, BUBBLE_PET, BUBBLE_CARDS, BUBBLE_MAGE_KIT, BUBBLER_KIT,
-    ALL_BOOSTERS, ALL_CARDS, ALL_KITS, EXPLOSIVE_BUBBLE, FIRE_ELEMENT, GIANT, GIANT_BUBBLE, Heart,
-    ELEMENT_COATINGS, KAMIKAZE, MOMENTUM, RED_BUBBLE, RED_HEART, SOAPY, STATUS_CODECS, VIOLET_BUBBLE, Vector2, WAIT,
-    STEP, AIM, INFLATE, INSPIRATION, BATH, SURPRISE_BUBBLE, PROGRAMMED_BUBBLE, ORANGE_BUBBLE, saveBattle, loadBattle,
-} from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
+    INFLATE,
+    INSPIRATION,
+    BATH,
+    SURPRISE_BUBBLE,
+    PROGRAMMED_BUBBLE,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/BubbleCards"
+import {
+    BEAST_BUBBLE,
+    BLUE_BUBBLE,
+    EXPLOSIVE_BUBBLE,
+    GIANT_BUBBLE,
+    RED_BUBBLE,
+    VIOLET_BUBBLE,
+    ORANGE_BUBBLE,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/Bubbles"
+import { ALL_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import { BUBBLE_CARDS, ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { BUBBLE_MAGE_KIT, BUBBLER_KIT, ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { BUBBLE_PET } from "@game/core-src/games/mecard/sim/catalog/pets"
+import { FIRE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Fire"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { BUBBLE_BODY } from "@game/core-src/games/mecard/sim/item/subs/summon/BubbleBody"
+import { allyOf } from "@game/core-src/games/mecard/sim/run/Hero"
+import { saveBattle, loadBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { STATUS_CODECS } from "@game/core-src/games/mecard/sim/save/statusCodecs"
+import { BUBBLE, GIANT, SOAPY } from "@game/core-src/games/mecard/sim/status/subs/BubbleStatuses"
+import { ELEMENT_COATINGS } from "@game/core-src/games/mecard/sim/status/subs/ElementCoating"
+import { MOMENTUM } from "@game/core-src/games/mecard/sim/status/subs/Momentum"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import * as Summon from "@game/core-src/games/mecard/sim/battle/mecanic/summon"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -28,7 +60,7 @@ function counting(on: Battle): Map<Unit, number> {
 }
 
 function bubblesOf(on: Battle, owner: Unit): Unit[] {
-    return on.summonsOf(owner).filter(body => body.statuses.has(BUBBLE))
+    return Summon.summonsOf(on, owner).filter(body => body.statuses.has(BUBBLE))
 }
 
 describe("the bubbles", () => {
@@ -47,7 +79,7 @@ describe("the bubbles", () => {
         play(on, [[blower, chain(VIOLET_BUBBLE)]])
         const [bubble] = bubblesOf(on, blower)
         const other = unit(on, bubble.position.x + 1.5, bubble.position.y, { hearts: Heart.many(RED_HEART, 4) })
-        on.move(other, bubble.position.minus(other.position).normalized!, 3, true)
+        Walk.move(on, other, bubble.position.minus(other.position).normalized!, 3, true)
         expect(bubble.alive).toBe(false)
         expect(other.alive).toBe(true)
     })
@@ -128,7 +160,7 @@ describe("the bubbles", () => {
         const { on, blower } = arena()
         const steps = counting(on)
         play(on, [[blower, chain(PROGRAMMED_BUBBLE, WAIT, WAIT)]])
-        const [bubble] = on.summonsOf(blower)
+        const [bubble] = Summon.summonsOf(on, blower)
         expect(bubble).toBeDefined()
         expect(steps.get(bubble)).toBe(2)
         expect(steps.get(blower)).toBe(1)

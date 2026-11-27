@@ -1,9 +1,21 @@
 import { describe, expect, test } from "vitest"
-import { plainText } from "@game/core"
-import {
-    ALL_CARDS, BOMB, FLAMETHROWER, GLASS_HEART, ALL_ITEMS, ALL_MONSTERS, PUSH, RED_HEART, SHIELD_HEART, SHOT, SLASH,
-    SPELL, SWEEP, TASER, THORN_HEART, THRUST,
-} from "@game/core/mecard"
+import { plainText } from "@game/core-src/semantic/Text"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { SWEEP } from "@game/core-src/games/mecard/sim/card/subs/attack/Sweep"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BOMB } from "@game/core-src/games/mecard/sim/card/subs/combat/Bomb"
+import { FLAMETHROWER } from "@game/core-src/games/mecard/sim/card/subs/combat/Flamethrower"
+import { PUSH } from "@game/core-src/games/mecard/sim/card/subs/combat/Push"
+import { TASER } from "@game/core-src/games/mecard/sim/card/subs/combat/Taser"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { GLASS_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GlassHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
 
 // --- Fixture builders ---
 

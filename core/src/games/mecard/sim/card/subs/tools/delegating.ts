@@ -1,5 +1,6 @@
 import type { Action, UnitContext } from "../../../battle/Action"
 import type { Battle } from "../../../battle/Battle"
+import * as Inflict from "../../../battle/mecanic/inflict"
 import type { Unit } from "../../../battle/Unit"
 import { isChessPiece, isPawn } from "../../../status/subs/ChessPieces"
 
@@ -47,7 +48,10 @@ export function playedBy(action: Action, select: PieceSelector): Action {
     const players = ({ battle, unit }: UnitContext): Unit[] => inPlayOrder(battle, select(battle, unit))
     return {
         use: ctx => {
-            for(const piece of players(ctx)) action.use({ battle: ctx.battle, unit: piece })
+            for(const piece of players(ctx)){
+                const played: UnitContext = { battle: ctx.battle, unit: piece }
+                Inflict.act(played, () => action.use(played))
+            }
         },
         preview: ctx => {
             const shown = players(ctx).flatMap(piece => action.preview({

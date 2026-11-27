@@ -1,6 +1,7 @@
-import { TRAVEL_SAVE_VERSION } from "@game/core/mecard"
-import { UnreadableFault, readTravelMessage, writeTravelMessage } from "@game/core/mecard/sync"
-import type { TravelMessage } from "@game/core/mecard/sync"
+import { TRAVEL_SAVE_VERSION } from "@game/core-src/games/mecard/sim/save/travelSave"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { readTravelMessage, writeTravelMessage } from "@game/core-src/games/mecard/sync/travel/TravelMessage"
+import type { TravelMessage } from "@game/core-src/games/mecard/sync/travel/TravelMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

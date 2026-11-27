@@ -1,12 +1,20 @@
 import { describe, expect, test } from "vitest"
+import { alternated, everyDrawReads } from "@game/core-src/games/mecard/sim/analysis/draws"
+import { BOOSTER_KIND, convert, KINDS, MONSTER_KIND } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
 import {
-    AIM, alternated, ALL_BOOSTERS, BOOSTER_KIND, BOW_MODULE, BULL_MODULE, convert, everyDrawReads,
-    IMPROVISED_ROBOT,
-    KINDS, MISSILE, MONSTER_KIND, STEP, TANK_ROBOT, THRUST,
-} from "@game/core/mecard"
-import type { Booster, Card } from "@game/core/mecard"
+    BOW_MODULE,
+    BULL_MODULE,
+    MISSILE,
+} from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_ROBOT, TANK_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { ALL_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Booster } from "@game/core-src/games/mecard/sim/catalog/boosters"
 import { interchangeable } from "@game/core/mecard/unordered-parts"
-import { PROFILES } from "@game/core/mecard"
+import { PROFILES } from "@game/core-src/games/mecard/sim/analysis/Profile"
 
 // --- Fixture builders ---
 

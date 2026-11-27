@@ -1,5 +1,5 @@
-import type { SavedUnit } from "@game/core/mecard"
-import type { DuelView } from "@game/core/mecard/sync"
+import type { SavedUnit } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { DuelView } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/DuelView"
 
 /** Wait for the promises of the sync to settle: nothing in the sync waits for a real timer. */
 export async function settle(): Promise<void> {

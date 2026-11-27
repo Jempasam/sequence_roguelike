@@ -1,8 +1,9 @@
-import { Fault, ManualScheduler } from "@game/core"
-import {
-    Answerer, Asker, LocalRoom, PeerGoneFault, SyncTopic, TimeoutFault, UnreadableFault,
-} from "@game/core/mecard/sync"
-import type { SyncLink, SyncPeer } from "@game/core/mecard/sync"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Answerer, Asker } from "@game/core-src/games/mecard/sync/Asker"
+import { PeerGoneFault, TimeoutFault, UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { LocalRoom, SyncTopic } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SyncLink, SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

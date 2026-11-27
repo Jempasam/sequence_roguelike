@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Color, Parallax, Sprite, Texture, WARP_FLOOR, warpedSpans } from "@game/core"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Parallax, WARP_FLOOR, warpedSpans } from "@game/core-src/engine/ui/widget/Parallax"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

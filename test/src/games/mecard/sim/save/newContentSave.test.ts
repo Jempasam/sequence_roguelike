@@ -1,10 +1,24 @@
 import { describe, expect, test } from "vitest"
-import {
-    BARRELS, BOULDERS, BURNING_GROUNDS, ALL_CARDS, Codecs, COATED, COATS, FIRE_ELEMENT, RITUAL_STATUSES, ALL_ITEMS,
-    LEGENDARY_CARDS, LOOT_CARDS, POISON_POTION, POTIONS, PUDDLES, savedCard, STATUS_CODECS, STATUS_TYPES,
-    ALL_USABLES, WATER_ELEMENT, WAVES, WHIRLWINDS, WIND_ELEMENT,
-} from "@game/core/mecard"
-import { CARD_CODECS, ITEM_NAMES, USABLE_NAMES } from "@game/core/mecard"
+import { Codecs } from "@game/core-src/games/mecard/sim/base/Codec"
+import { ALL_CARDS, LEGENDARY_CARDS, LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { FIRE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Fire"
+import { WATER_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Water"
+import { WIND_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Wind"
+import { BURNING_GROUNDS } from "@game/core-src/games/mecard/sim/hazard/subs/BurningGround"
+import { PUDDLES } from "@game/core-src/games/mecard/sim/hazard/subs/Puddle"
+import { BOULDERS } from "@game/core-src/games/mecard/sim/hazard/subs/Rocky"
+import { WAVES } from "@game/core-src/games/mecard/sim/hazard/subs/Surging"
+import { WHIRLWINDS } from "@game/core-src/games/mecard/sim/hazard/subs/Whirling"
+import { POISON_POTION, POTIONS } from "@game/core-src/games/mecard/sim/potion/subs/potions"
+import { savedCard } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { STATUS_CODECS } from "@game/core-src/games/mecard/sim/save/statusCodecs"
+import { STATUS_TYPES } from "@game/core-src/games/mecard/sim/status/statusTypes"
+import { COATED, COATS } from "@game/core-src/games/mecard/sim/status/subs/Coated"
+import { RITUAL_STATUSES } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
+import { BARRELS } from "@game/core-src/games/mecard/sim/status/subs/Splashing"
+import { CARD_CODECS, ITEM_NAMES, USABLE_NAMES } from "@game/core-src/games/mecard/sim/save/catalogNames"
 
 // --- Tests ---
 

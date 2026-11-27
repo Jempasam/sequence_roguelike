@@ -8,14 +8,21 @@ export type AssetPath =
     | "mecard/ambient/butterfly.png"
     | "mecard/ambient/cloud.png"
     | "mecard/ambient/crow.png"
+    | "mecard/ambient/dead_eye.png"
+    | "mecard/ambient/exclaim.png"
     | "mecard/ambient/fish.png"
     | "mecard/ambient/fog.png"
     | "mecard/ambient/goose.png"
+    | "mecard/ambient/halo.png"
     | "mecard/ambient/lantern.png"
+    | "mecard/ambient/note.png"
+    | "mecard/ambient/pat_hand.png"
     | "mecard/ambient/rock.png"
     | "mecard/ambient/seagull.png"
     | "mecard/ambient/snowflake.png"
     | "mecard/ambient/streak.png"
+    | "mecard/ambient/talk.png"
+    | "mecard/ambient/z.png"
     | "mecard/border/alchemist.png"
     | "mecard/border/altar.png"
     | "mecard/border/antiquarian.png"
@@ -630,6 +637,7 @@ export type AssetPath =
     | "mecard/sounds/statuses/demonic.ogg"
     | "mecard/sounds/statuses/disarm.ogg"
     | "mecard/sounds/statuses/dodge.ogg"
+    | "mecard/sounds/statuses/electrocuted.ogg"
     | "mecard/sounds/statuses/element_coating.ogg"
     | "mecard/sounds/statuses/enchanted.ogg"
     | "mecard/sounds/statuses/enraged.ogg"
@@ -668,6 +676,7 @@ export type AssetPath =
     | "mecard/sounds/statuses/soul_shielded.ogg"
     | "mecard/sounds/statuses/splashing.ogg"
     | "mecard/sounds/statuses/stinking.ogg"
+    | "mecard/sounds/statuses/stunned.ogg"
     | "mecard/sounds/statuses/surging.ogg"
     | "mecard/sounds/statuses/swallowed.ogg"
     | "mecard/sounds/statuses/swift.ogg"
@@ -827,6 +836,7 @@ export type AssetPath =
     | "mecard/statuses/demonic.png"
     | "mecard/statuses/disarm.png"
     | "mecard/statuses/dodge.png"
+    | "mecard/statuses/electrocuted.png"
     | "mecard/statuses/explosive.png"
     | "mecard/statuses/fleeting.png"
     | "mecard/statuses/fragile.png"
@@ -853,6 +863,7 @@ export type AssetPath =
     | "mecard/statuses/soul_link.png"
     | "mecard/statuses/soul_shield.png"
     | "mecard/statuses/stench.png"
+    | "mecard/statuses/stunned.png"
     | "mecard/statuses/surging.png"
     | "mecard/statuses/swallow.png"
     | "mecard/statuses/swift.png"
@@ -1126,14 +1137,21 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/ambient/butterfly.png",
     "mecard/ambient/cloud.png",
     "mecard/ambient/crow.png",
+    "mecard/ambient/dead_eye.png",
+    "mecard/ambient/exclaim.png",
     "mecard/ambient/fish.png",
     "mecard/ambient/fog.png",
     "mecard/ambient/goose.png",
+    "mecard/ambient/halo.png",
     "mecard/ambient/lantern.png",
+    "mecard/ambient/note.png",
+    "mecard/ambient/pat_hand.png",
     "mecard/ambient/rock.png",
     "mecard/ambient/seagull.png",
     "mecard/ambient/snowflake.png",
     "mecard/ambient/streak.png",
+    "mecard/ambient/talk.png",
+    "mecard/ambient/z.png",
     "mecard/border/alchemist.png",
     "mecard/border/altar.png",
     "mecard/border/antiquarian.png",
@@ -1748,6 +1766,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/sounds/statuses/demonic.ogg",
     "mecard/sounds/statuses/disarm.ogg",
     "mecard/sounds/statuses/dodge.ogg",
+    "mecard/sounds/statuses/electrocuted.ogg",
     "mecard/sounds/statuses/element_coating.ogg",
     "mecard/sounds/statuses/enchanted.ogg",
     "mecard/sounds/statuses/enraged.ogg",
@@ -1786,6 +1805,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/sounds/statuses/soul_shielded.ogg",
     "mecard/sounds/statuses/splashing.ogg",
     "mecard/sounds/statuses/stinking.ogg",
+    "mecard/sounds/statuses/stunned.ogg",
     "mecard/sounds/statuses/surging.ogg",
     "mecard/sounds/statuses/swallowed.ogg",
     "mecard/sounds/statuses/swift.ogg",
@@ -1945,6 +1965,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/statuses/demonic.png",
     "mecard/statuses/disarm.png",
     "mecard/statuses/dodge.png",
+    "mecard/statuses/electrocuted.png",
     "mecard/statuses/explosive.png",
     "mecard/statuses/fleeting.png",
     "mecard/statuses/fragile.png",
@@ -1971,6 +1992,7 @@ export const ASSET_PATHS: readonly AssetPath[] = [
     "mecard/statuses/soul_link.png",
     "mecard/statuses/soul_shield.png",
     "mecard/statuses/stench.png",
+    "mecard/statuses/stunned.png",
     "mecard/statuses/surging.png",
     "mecard/statuses/swallow.png",
     "mecard/statuses/swift.png",

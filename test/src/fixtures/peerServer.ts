@@ -1,7 +1,7 @@
 import type { Server as HttpServer } from "node:http"
 import type { AddressInfo } from "node:net"
 
-import type { Cancel, TimerPort } from "@game/core"
+import type { Cancel, TimerPort } from "@game/core-src/platform/TimerPort"
 import { PeerServer } from "peer"
 
 /** Real time, for the signaling of a relay that keeps its own. */

@@ -18,7 +18,7 @@ export class MasterChestHalt extends CardGiftHalt {
     constructor(run: Run){
         super(MASTER_CHEST_HALT, run,
             ["Une ", CARTE, " améliorée parmi trois, gratuite."],
-            sceneLook(31, 23, 13, "chest", { coloration: [0.82, 0.9, 1] }),
+            sceneLook(13, 20, 31, "chest", { coloration: [0.82, 0.9, 1] }),
             // A master keeps this chest, who improved what it holds.
             {
                 hat: "beret",

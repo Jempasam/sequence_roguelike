@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { Arena, Battle, DAGGER, Heart, RED_HEART, RICOCHET, SHOTGUN, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { DAGGER } from "@game/core-src/games/mecard/sim/card/subs/attack/Dagger"
+import { RICOCHET } from "@game/core-src/games/mecard/sim/card/subs/attack/Ricochet"
+import { SHOTGUN } from "@game/core-src/games/mecard/sim/card/subs/attack/Shotgun"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

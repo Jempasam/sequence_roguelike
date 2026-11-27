@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest"
-import {
-    BEAR_TRAP, BEAR_TRAP_HAZARD, DODGE, GLASS_KNIFE, KICK, MISDIRECTION, REFLECTION, SHY_AWAY, STEP, STRIDE,
-} from "@game/core/mecard"
+import { GLASS_KNIFE } from "@game/core-src/games/mecard/sim/card/subs/attack/GlassKnife"
+import { BEAR_TRAP } from "@game/core-src/games/mecard/sim/card/subs/combat/Bomb"
+import { MISDIRECTION, REFLECTION } from "@game/core-src/games/mecard/sim/card/subs/modifier/Mimicry"
+import { KICK, SHY_AWAY, STRIDE } from "@game/core-src/games/mecard/sim/card/subs/movement/HorseCards"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { BEAR_TRAP_HAZARD } from "@game/core-src/games/mecard/sim/hazard/subs/BearTrap"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

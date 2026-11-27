@@ -31,6 +31,7 @@ const LOST_COIN_EFFECT: Effect<AmbientContext> = {
 /** A coin rolls from a fight to another and glints. */
 export const LOST_COIN = new AmbientEffect({
     id: "lost-coin",
+    category: "surprise",
     spacing: 30,
     stackable: false,
     isPlayable: context => fightsOf(context).length >= 2 && context.coin() !== null,

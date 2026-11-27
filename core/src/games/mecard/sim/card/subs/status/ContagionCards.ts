@@ -3,7 +3,6 @@ import * as Areas from "../../../battle/area/Areas"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import type { Battle } from "../../../battle/Battle"
-import { frenchNumber } from "../../../battle/words"
 import type { StatusType } from "../../../status/Status"
 import { BISHOP_PIECE, CHESS_PIECE, KNIGHT_PIECE, PAWN_PIECE, QUEEN_PIECE, ROOK_PIECE } from "../../../status/subs/ChessPieces"
 import { RESURRECTED } from "../../../status/subs/Resurrection"
@@ -45,17 +44,17 @@ function passing(unit: Unit): [StatusType, number][] {
 function spread(battle: Battle, victim: Unit): void {
     const carried = passing(victim)
     for(const other of battle.fetch(Areas.circle(victim.position, EPIDEMIC_RADIUS + UNIT_RADIUS), victim)){
-        for(const [type, level] of carried) battle.applyStatus(other, type, level - EPIDEMIC_LOSS)
+        for(const [type, level] of carried) battle.applyStatus(other, type, Math.max(1,level - EPIDEMIC_LOSS))
     }
 }
 
 export const EPIDEMIC = new ActionCard("Épidémie", [
-    "Tous les statuts de la première ", UNIT, " touchée sur ", frenchNumber(EPIDEMIC_LENGTH), " ", DISTANCE,
-    " sont copiés, d'un niveau de moins, sur les ", UNIT.as("unités"), " à ", EPIDEMIC_RADIUS, " ", DISTANCE, " autour d'elle.",
+    "Tous les statuts de la première ", UNIT, " touchée sur ", EPIDEMIC_LENGTH, " ", DISTANCE,
+    " sont copiés, d'un niveau de moins (minimum 1), sur les ", UNIT.as("unités"), " à ", EPIDEMIC_RADIUS, " ", DISTANCE, " autour d'elle.",
 ], Rarity.EPIC, onFirstAhead(EPIDEMIC_LENGTH, EPIDEMIC_WIDTH, (battle, _unit, victim) => spread(battle, victim), "épidémie"))
 
 export const TRANSFUSION = new ActionCard("Transfusion", [
-    "Tous tes status négatifs passent sur la première ", UNIT, " touchée sur ", frenchNumber(TRANSFUSION_LENGTH), " ", DISTANCE, " devant.",
+    "Tous tes status négatifs passent sur la première ", UNIT, " touchée sur ", TRANSFUSION_LENGTH, " ", DISTANCE, " devant.",
 ], Rarity.RARE, onFirstAhead(TRANSFUSION_LENGTH, TRANSFUSION_WIDTH, (battle, unit, target) => {
     for(const [type, level] of passing(unit)){
         if(type.polarity !== "negative") continue

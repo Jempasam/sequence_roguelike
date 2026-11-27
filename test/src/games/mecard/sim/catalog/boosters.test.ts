@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { ALL_BOOSTERS, boosterFit, FIRE, SLASH, SPELL, THRUST } from "@game/core/mecard"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { ALL_BOOSTERS, boosterFit } from "@game/core-src/games/mecard/sim/catalog/boosters"
 
 // --- Tests ---
 

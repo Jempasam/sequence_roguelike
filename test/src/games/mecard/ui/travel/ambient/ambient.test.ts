@@ -1,19 +1,27 @@
 import { describe, expect, test } from "vitest"
-import { follow, ParticleSystem, seededRandom } from "@game/core"
-import { AMBIENT_EFFECTS, ambientPools } from "@game/core/mecard/ambient-effects"
-import { BATTLE, GOBLIN } from "@game/core/mecard"
-import type { Place } from "@game/core/mecard"
-import { Forwarded } from "@game/core/mecard/forwarded"
-import { RunParticleLink } from "@game/core/mecard/run-particle-link"
-import { fightOf } from "../../../../../fixtures/fightFixtures"
-import { startedRun } from "../../../../../fixtures/startedRun"
-import { ParticleOverlay } from "@game/core/mecard/particle-overlay"
+import { follow } from "@game/core-src/engine/particles/followers"
+import { ParticleSystem } from "@game/core-src/engine/particles/ParticleSystem"
+import { seededRandom } from "@game/core-src/engine/particles/random"
 import {
-    contextOf, effectOf, fightAt, playOut, SPRITE, startedAnimation,
+    AMBIENT_EFFECTS, ambientPools, runAmbient,
+} from "@game/core/mecard/ambient-effects"
+import { MINE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/MineFloor"
+import { SWAMP_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/SwampFloor"
+import { UPGRADE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/UpgradeFloor"
+import { Ambient } from "@game/core/mecard/ambient-system"
+import { AmbientOverlay } from "@game/core/mecard/ambient-overlay"
+import { roundedScale, scaledContext } from "@game/core/mecard/ambient-scale"
+import { densityAt, MAX_DENSITY } from "@game/core/mecard/ambient-spot"
+import { isIndoors } from "@game/core/mecard/ambient-themes"
+import { TravelAmbientContext } from "@game/core/mecard/travel-ambient-context"
+import type { Travel } from "@game/core-src/games/mecard/sim/travel/Travel"
+import {
+    contextOf, effectOf, fightAt, playOut, startedAnimation,
 } from "../../../../../fixtures/ambientFixtures"
+import type { Context } from "../../../../../fixtures/ambientFixtures"
 
 /** Run one tick of a component the way the interface does. */
-function tick(overlay: ParticleOverlay, dt: number): void {
+function tick(overlay: AmbientOverlay, dt: number): void {
     ;(overlay as unknown as { tick(dt: number): void }).tick(dt)
 }
 
@@ -49,27 +57,27 @@ describe("a followed particle", () => {
     })
 })
 
-describe("the traveling monster", () => {
+describe("a monster going from a fight to another", () => {
 
     test("a single fight → it cannot play", () => {
-        expect(effectOf("traveling-monster").isPlayable(contextOf([fightAt(1, 1)]))).toBe(false)
+        expect(effectOf("swap-enemy").isPlayable(contextOf([fightAt(1, 1)]))).toBe(false)
     })
 
     test("two fights → it emits one particle at the first fight, the sprite of its monster", () => {
         const context = contextOf([fightAt(10, 20), fightAt(200, 20)])
-        expect(effectOf("traveling-monster").isPlayable(context)).toBe(true)
-        expect(startedAnimation("traveling-monster", context)).not.toBeNull()
+        expect(effectOf("swap-enemy").isPlayable(context)).toBe(true)
+        expect(startedAnimation("swap-enemy", context)).not.toBeNull()
         expect(context.alpha.count).toBe(1)
     })
 
     test("sprites not loaded → it does not start", () => {
         const context = contextOf([fightAt(10, 20), fightAt(200, 20)], { sprite: () => null })
-        expect(effectOf("traveling-monster").effect.create(context)).toBeNull()
+        expect(effectOf("swap-enemy").effect.create(context)).toBeNull()
     })
 
     test("its time is over → it arrived on the other fight, and the animation ends", () => {
         const context = contextOf([fightAt(10, 20), fightAt(210, 20)])
-        expect(playOut("traveling-monster", context)).toBeLessThan(200)
+        expect(playOut("swap-enemy", context)).toBeLessThan(200)
     })
 })
 
@@ -125,78 +133,211 @@ describe("the pools of the game", () => {
     })
 })
 
-/** A link on the map of a started run, every place of the map shown, and no particle yet. */
-function linkOnTheMap(): RunParticleLink {
-    const run = startedRun(1)
-    const forwarded = new Forwarded(error => { throw error })
-    const link = new RunParticleLink(run, forwarded, () => null, seededRandom(4), () => SPRITE)
-    const places = new Map(
-        run.travel.journey.places.map((place, index) => [place, { x: 40 + index * 30, y: 80 }]),
-    )
-    link.context = {
-        placePosition: place => places.get(place) ?? null,
-        mapArea: () => ({ x: 20, y: 30, width: 280, height: 190 }),
-        size: () => ({ width: 320, height: 240 }),
-    } as NonNullable<RunParticleLink["context"]>
-    return link
+/** What the test changes of a space shown. */
+interface Space {
+    shown: boolean
+    laidOut: boolean
+    scene: object
+    scale: number
 }
 
-describe("the ambient on the map, with no particle alive", () => {
+/** An ambient over a space the test drives, holding two fights, and the space. */
+function ambientOver(over: Partial<Context> = {}): { ambient: Ambient, space: Space, context: Context } {
+    const ambient = new Ambient(seededRandom(4), error => { throw error })
+    const space: Space = { shown: true, laidOut: true, scene: {}, scale: 1 }
+    const base = contextOf([fightAt(40, 80), fightAt(200, 100)], over)
+    const context: Context = {
+        ...base,
+        alpha: ambient.alpha,
+        additive: ambient.additive,
+        get scale(){ return space.scale },
+        enabled: () => space.shown,
+        settled: () => space.laidOut,
+        scene: () => space.scene,
+    }
+    ambient.contexts = [context]
+    return { ambient, space, context }
+}
+
+/** Move an ambient on, frame after frame of 50 ms. */
+function frames(ambient: Ambient, count: number): void {
+    for(let frame = 0; frame < count; frame++) ambient.update(0.05)
+}
+
+function particlesOf(ambient: Ambient): number {
+    return ambient.alpha.count + ambient.additive.count
+}
+
+describe("an ambient over a space", () => {
+
+    test("the space appears → an effect starts at once", () => {
+        const { ambient } = ambientOver()
+        frames(ambient, 40)
+        expect(particlesOf(ambient)).toBeGreaterThan(0)
+    })
+
+    test("the space not laid out yet → nothing starts", () => {
+        const { ambient, space } = ambientOver()
+        space.laidOut = false
+        frames(ambient, 100)
+        expect(particlesOf(ambient)).toBe(0)
+    })
+
+    test("a flock in the air, then the space hidden → no particle stays", () => {
+        const { ambient, space } = ambientOver()
+        ambient.trigger([effectOf("bird-flock")])
+        frames(ambient, 10)
+        expect(particlesOf(ambient)).toBeGreaterThan(0)
+        space.shown = false
+        ambient.update(0.05)
+        expect(particlesOf(ambient)).toBe(0)
+    })
+
+    test("another scene → what played is removed, then another effect starts", () => {
+        const { ambient, space } = ambientOver()
+        ambient.trigger([effectOf("bird-flock")])
+        frames(ambient, 10)
+        space.scene = {}
+        space.laidOut = false
+        ambient.update(0.05)
+        expect(particlesOf(ambient)).toBe(0)
+        space.laidOut = true
+        frames(ambient, 40)
+        expect(particlesOf(ambient)).toBeGreaterThan(0)
+    })
+
+    test("a frame of 10 seconds → the effects move on by 50 ms only", () => {
+        const after = (dt: number): { count: number, first: { x: number, y: number } } => {
+            const { ambient } = ambientOver()
+            ambient.update(0.05)
+            ambient.trigger([effectOf("bird-flock")])
+            ambient.update(0.05)
+            ambient.update(dt)
+            const first = { x: 0, y: 0 }
+            ambient.alpha.positionOf(0, first)
+            return { count: ambient.alpha.count, first }
+        }
+        expect(after(10).count).toBeGreaterThan(0)
+        expect(after(10)).toEqual(after(0.05))
+    })
+
+    test("no space enabled → effects asked are refused", () => {
+        const { ambient, space } = ambientOver()
+        space.shown = false
+        expect(() => ambient.trigger([effectOf("bird-flock")])).toThrow()
+    })
 
     test("a line of several sprites started by hand → it plays, though it emits nothing at its start", () => {
-        const link = linkOnTheMap()
-        expect(link.active).toBe(false)
-        const outcome = link.ambientNow([effectOf("enemy-queue-edge-to-edge")])
-        expect(outcome[0].status).toBe("started")
-        const overlay = new ParticleOverlay(link)
+        const { ambient, space } = ambientOver()
+        space.laidOut = false
+        expect(ambient.trigger([effectOf("enemy-queue-edge-to-edge")])[0].status).toBe("started")
+        space.laidOut = true
+        const overlay = new AmbientOverlay(ambient)
         for(let frame = 0; frame < 40; frame++) tick(overlay, 0.05)
-        expect(link.ambientAlpha.count).toBeGreaterThan(0)
-    })
-
-    test("the footprints started by hand → they appear, nothing being alive before", () => {
-        const link = linkOnTheMap()
-        expect(link.ambientNow([effectOf("footprints")])[0].status).toBe("started")
-        const overlay = new ParticleOverlay(link)
-        for(let frame = 0; frame < 40; frame++) tick(overlay, 0.05)
-        expect(link.ambientAlpha.count).toBeGreaterThan(0)
-    })
-
-    test("a flock in the air, then the map left → no ambient particle stays", () => {
-        const link = linkOnTheMap()
-        link.ambientNow([effectOf("bird-flock")])
-        const overlay = new ParticleOverlay(link)
-        for(let frame = 0; frame < 10; frame++) tick(overlay, 0.05)
-        expect(link.ambientAlpha.count).toBeGreaterThan(0)
-        link.context = null
-        tick(overlay, 0.05)
-        expect(link.ambientAlpha.count + link.ambientAdditive.count).toBe(0)
-    })
-
-    test("long enough on the map → an effect starts by itself", () => {
-        const link = linkOnTheMap()
-        const overlay = new ParticleOverlay(link)
-        let seen = false
-        for(let frame = 0; frame < 4000 && !seen; frame++){
-            tick(overlay, 0.05)
-            seen = link.ambientAlpha.count + link.ambientAdditive.count > 0
-        }
-        expect(seen).toBe(true)
+        expect(ambient.alpha.count).toBeGreaterThan(0)
     })
 })
 
-describe("the link of a run to the ambient", () => {
+describe("the opening of a space", () => {
 
-    test("the party in a fight → the link refuses to start effects", () => {
-        const run = startedRun(1)
-        const place: Place = {
-            layer: 1, across: 0.5, next: [], exitTo: null, fight: fightOf(BATTLE, GOBLIN), halt: null,
+    /** The categories of the pools that play, after a space on a floor is opened. */
+    function openedOn(seed: number, over: Partial<Context>): string[] {
+        const effects = runAmbient(seededRandom(seed), error => { throw error })
+        expect(effects.open(contextOf([fightAt(10, 10), fightAt(200, 100)], over, seed))).toBe(true)
+        return effects.pools.filter(pool => pool.playing > 0).map(pool => pool.effects[0].category)
+    }
+
+    test("a floor with a backdrop → it opens with its backdrop and a signature or traffic", () => {
+        for(let seed = 0; seed < 30; seed++){
+            const opened = openedOn(seed, { floor: () => SWAMP_FLOOR })
+            expect(opened).toHaveLength(2)
+            expect(opened).toContain("backdrop")
+            expect(opened.some(category => category === "signature" || category === "traffic")).toBe(true)
         }
-        run.travel.jump(place)
-        run.travel.journey.link(place, place)
-        run.travel.go(place)
-        run.travel.enter()
-        const link = new RunParticleLink(run, new Forwarded(error => { throw error }), () => null)
-        link.context = {} as NonNullable<RunParticleLink["context"]>
-        expect(() => link.ambientNow([effectOf("bird-flock")])).toThrow()
+    })
+
+    test("a floor without a theme → it opens with traffic alone, never weather nor a surprise", () => {
+        for(let seed = 0; seed < 30; seed++) expect(openedOn(seed, {})).toEqual(["traffic"])
+    })
+})
+
+describe("the theme of a space", () => {
+
+    test("closed edges → no trip by an edge, the trips between places still play", () => {
+        const context = contextOf([fightAt(10, 10), fightAt(200, 100)], {
+            openEdges: () => false, floor: () => MINE_FLOOR,
+        })
+        for(const id of ["edge-to-edge", "leave-enemy", "enter-enemy", "mine-cart"]){
+            expect(effectOf(id).isPlayable(context), id).toBe(false)
+        }
+        expect(effectOf("swap-enemy").isPlayable(context)).toBe(true)
+    })
+
+    test("the map of an indoor floor → no sky, but its edges are open", () => {
+        const unused = null as never
+        const travel = (): Travel => ({ floor: { type: MINE_FLOOR } }) as unknown as Travel
+        const map = new TravelAmbientContext(unused, unused, unused, travel, unused, unused, unused, unused)
+        expect(map.outdoors()).toBe(false)
+        expect(map.openEdges()).toBe(true)
+    })
+
+    test("indoors → neither weather nor sky", () => {
+        const context = contextOf([], { outdoors: () => false, floor: () => SWAMP_FLOOR })
+        for(const id of ["rain", "shooting-star", "lightning", "fog", "whirl", "gust"]){
+            expect(effectOf(id).isPlayable(context), id).toBe(false)
+        }
+    })
+
+    test("a workshop with the look of the cave → indoors", () => {
+        expect(isIndoors(UPGRADE_FLOOR)).toBe(true)
+        expect(isIndoors(SWAMP_FLOOR)).toBe(false)
+    })
+})
+
+describe("the scale of a space", () => {
+
+    test("a scale between two half steps → drawn at the nearest", () => {
+        expect(roundedScale(0.97)).toBe(1)
+        expect(roundedScale(2.6)).toBe(2.5)
+        expect(roundedScale(0.1)).toBe(0.5)
+    })
+
+    test("twice as large → the effects see a space half as large", () => {
+        const view = scaledContext(contextOf([fightAt(40, 80)], { scale: 2 }))
+        expect(view.size()).toEqual({ width: 160, height: 120 })
+        expect(view.places()[0].position).toEqual({ x: 20, y: 40 })
+        expect(view.area()).toEqual({ x: 5, y: 10, width: 150, height: 100 })
+    })
+
+    test("seen from far → more things born, up to a limit; seen close → much fewer", () => {
+        expect(densityAt(0.5, 2)).toBe(MAX_DENSITY)
+        expect(densityAt(2, 2)).toBeCloseTo(0.25)
+        expect(densityAt(2, 1)).toBeCloseTo(0.5)
+        expect(densityAt(2, 0)).toBe(1)
+    })
+
+    test("snow seen close → fewer flakes", () => {
+        const count = (scale: number): number => {
+            const context = contextOf([], { scale })
+            const animation = startedAnimation("snowfall", context)!
+            for(let frame = 0; frame < 40; frame++) animation.update(0.05)
+            return context.alpha.count
+        }
+        expect(count(2)).toBeLessThan(count(1))
+    })
+
+    test("snow seen from far → the flakes live long enough to cross the larger space", () => {
+        const alive = (scale: number): number => {
+            const context = contextOf([], { scale })
+            const animation = startedAnimation("snowfall", context)!
+            animation.update(0.05)
+            for(let frame = 0; frame < 40; frame++) animation.update(0.05)
+            const born = context.alpha.count
+            // A little more than the longest life at scale 1.
+            for(let frame = 0; frame < 320; frame++) context.alpha.update(0.05)
+            return born > 0 ? context.alpha.count : -1
+        }
+        expect(alive(1)).toBe(0)
+        expect(alive(0.5)).toBeGreaterThan(0)
     })
 })

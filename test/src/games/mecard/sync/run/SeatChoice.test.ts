@@ -1,10 +1,21 @@
-import { SWORDSMAN_KIT } from "@game/core/mecard"
-import type { Fault } from "@game/core"
+import { SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import type { Fault } from "@game/core-src/engine/net/Fault"
 import {
-    COOP_SEATS, DeniedFault, ENEMY_SEATS, FIRST_COME, FIXED_SEATS, HostApproves, NO_PICK, NotCandidateFault,
-    NotHeldFault, RunSeatContext, SeatChoice, SeatPicker, SeatTakenFault,
-} from "@game/core/mecard/sync"
-import type { SeatArbiter, SeatMode, SeatPolicy } from "@game/core/mecard/sync"
+    DeniedFault,
+    NotCandidateFault,
+    NotHeldFault,
+    SeatTakenFault,
+} from "@game/core-src/games/mecard/sync/faults"
+import {
+    FIRST_COME,
+    HostApproves,
+    RunSeatContext,
+    SeatChoice,
+} from "@game/core-src/games/mecard/sync/run/SeatChoice"
+import { SeatPicker } from "@game/core-src/games/mecard/sync/run/SeatPicker"
+import { COOP_SEATS, ENEMY_SEATS, FIXED_SEATS, NO_PICK } from "@game/core-src/games/mecard/sync/run/Seats"
+import type { SeatArbiter } from "@game/core-src/games/mecard/sync/run/SeatChoice"
+import type { SeatMode, SeatPolicy } from "@game/core-src/games/mecard/sync/run/Seats"
 import { describe, expect, test } from "vitest"
 
 import { connected, fight, hosted } from "../fixtures"

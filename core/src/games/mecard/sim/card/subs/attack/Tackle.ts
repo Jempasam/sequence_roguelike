@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -34,7 +33,7 @@ export class TackleCard extends BlowCard {
         public readonly cosHalf: number,
     ){
         super("Tacle", [
-            "Fauche en arc devant, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : chaque ", UNIT,
+            "Fauche en arc devant, à ", range, "×", ALLONGE, " ", DISTANCE, " : chaque ", UNIT,
             " touchée ", TURN.as("te tourne le dos"), " et prend ", TACKLE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, ".",
         ], Rarity.RARE, TACKLE_DAMAGE)
     }

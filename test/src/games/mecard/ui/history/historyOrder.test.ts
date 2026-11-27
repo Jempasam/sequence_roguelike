@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { HISTORY_VERSION } from "@game/core/mecard"
-import type { HistoryEntry } from "@game/core/mecard"
+import { HISTORY_VERSION } from "@game/core-src/games/mecard/sim/save/historySave"
+import type { HistoryEntry } from "@game/core-src/games/mecard/sim/save/historySave"
 import { deckOfCard, epitaph, formatStep } from "@game/core/mecard/history-format"
 import { medalsOf, sortedAndFiltered } from "@game/core/mecard/history-order"
 

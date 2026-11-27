@@ -1,5 +1,14 @@
-import { BodyElement, convert, KINDS, NoResultError, profileRows, TARGETS } from "@game/core/mecard"
-import type { BeastCard, Card, CardMeasure, ElementCard, Kind, Range, Sizes, Target } from "@game/core/mecard"
+import { convert, KINDS } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { NoResultError } from "@game/core-src/games/mecard/sim/analysis/NoResult"
+import { profileRows } from "@game/core-src/games/mecard/sim/analysis/profileRows"
+import { TARGETS } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { BodyElement } from "@game/core-src/games/mecard/sim/element/subs/BodyElement"
+import type { CardMeasure } from "@game/core-src/games/mecard/sim/analysis/CardProbe"
+import type { Kind, Target } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import type { Range, Sizes } from "@game/core-src/games/mecard/sim/analysis/Sizes"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { BeastCard } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastCard"
+import type { ElementCard } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
 
 import { normalize, UsageError, unknownName } from "./sim/errors"
 

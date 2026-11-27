@@ -1,9 +1,21 @@
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { NetError } from "@game/core-src/engine/net/NetError"
 import {
-    BadSecretFault, ConnectionLostFault, Fault, HostLostServerFault, NetError, NotHostFault, OutboxFullFault,
-    RefusedFault, RoomFullFault, RoomNotFoundFault, RoomTakenFault, SessionExpiredFault, UnreachableFault,
-    VersionMismatchFault, faultOf,
-} from "@game/core"
-import type { NetErrorReason } from "@game/core"
+    BadSecretFault,
+    ConnectionLostFault,
+    HostLostServerFault,
+    NotHostFault,
+    OutboxFullFault,
+    RefusedFault,
+    RoomFullFault,
+    RoomNotFoundFault,
+    RoomTakenFault,
+    SessionExpiredFault,
+    UnreachableFault,
+    VersionMismatchFault,
+    faultOf,
+} from "@game/core-src/engine/net/NetFaults"
+import type { NetErrorReason } from "@game/core-src/engine/net/NetError"
 import { describe, expect, test } from "vitest"
 
 describe("faultOf", () => {

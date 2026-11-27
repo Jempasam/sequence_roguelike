@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { svgContours } from "@game/core"
+import { svgContours } from "@game/core-src/semantic/svgContours"
 
 // --- Tests ---
 

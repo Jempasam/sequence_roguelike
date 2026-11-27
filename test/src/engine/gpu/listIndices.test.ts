@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { listIndices, Primitive } from "@game/core"
+import { listIndices } from "@game/core-src/engine/gpu/listIndices"
+import { Primitive } from "@game/core-src/engine/gpu/Primitive"
 
 // --- Tests ---
 

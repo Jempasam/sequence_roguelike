@@ -51,6 +51,11 @@ export function tintOf(visual: Visual): Color|null {
     return coloration ? new Color(...coloration) : null
 }
 
+/** The color of a place, for what is drawn in its hue: its coloration, its own color where it has none. */
+export function placeColorOf(visual: Visual): Color {
+    return new Color(...(visual.coloration ?? visual.color))
+}
+
 /** Where the feet of the character of a halt stand along the width: a little left of the middle. */
 const PNJ_CENTER = 0.42
 

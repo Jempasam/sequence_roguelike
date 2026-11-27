@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Gpu, ParticleSpec, ParticleSystem, Painter, ScreenSurface, Sprite, Texture } from "@game/core"
+import { Gpu } from "@game/core-src/engine/gpu/Gpu"
+import { Painter } from "@game/core-src/engine/gpu/Painter"
+import { ScreenSurface } from "@game/core-src/engine/gpu/ScreenSurface"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
+import { ParticleSpec } from "@game/core-src/engine/particles/ParticleSpec"
+import { ParticleSystem } from "@game/core-src/engine/particles/ParticleSystem"
 
 import { fakeGfx, fakeGl, lastVertices } from "../../fixtures/fakeGl"
 
@@ -101,6 +107,26 @@ describe("update", () => {
         expect(system.count).toBe(2)
         expect(system.bounds.left).toBeGreaterThan(90)
         expect(system.bounds.right).toBeLessThan(210)
+    })
+})
+
+describe("the order of the particles", () => {
+    test("a particle dies -> the others keep their order", () => {
+        const system = make()
+        system.emit(spec(s => { s.life = 0.01; s.x = 1 }))
+        for(const x of [2, 3, 4]) system.emit(spec(s => { s.life = 5; s.x = x }))
+        system.update(0.05)
+        expect([0, 1, 2].map(index => positionAfter(system, index).x)).toEqual([2, 3, 4])
+    })
+
+    test("a mirrored sprite -> its texels from right to left", () => {
+        const { fake, gpu, painter } = drawSetup()
+        const sprite = new Sprite(new Texture(gpu, 32, 32), 4, 0, 8, 4)
+        const system = make()
+        system.emit(spec(s => { s.sprite = sprite; s.mirrored = true; s.sizeStart = 8; s.sizeEnd = 8 }))
+        system.draw(painter)
+        gpu.flush()
+        expect(lastVertices(fake).map(vertex => vertex.uv[0])).toEqual([12, 4, 4, 12])
     })
 })
 

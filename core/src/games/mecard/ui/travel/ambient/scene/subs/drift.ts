@@ -6,6 +6,7 @@ import type { ParticleSpec, Random } from "../../../../../../../engine/particles
 import { between, colorOf, pictureOf, systemOf } from "../Grain"
 import type { Grain, Range } from "../Grain"
 import type { Scene } from "../Scene"
+import { densityAt } from "../Spot"
 import type { Spot } from "../Spot"
 
 /** One sort of thing a drift emits, and how it moves. Speeds are in pixels per second. */
@@ -76,8 +77,15 @@ function paint(color: ParticleSpec["colorStart"], hex: number, alpha: number): v
     color.set((hex >> 16 & 255) / 255, (hex >> 8 & 255) / 255, (hex & 255) / 255, alpha)
 }
 
-/** Give a particle born at a point the motion and the look of its layer. */
-function dress(spec: ParticleSpec, random: Random, layer: Layer, sprite: Sprite|null, width: number): void {
+/**
+ * Give a particle born at a point the motion and the look of its layer.
+ *
+ * @param width - The width of the screen at scale 1, which a layer crossing it is timed on.
+ * @param lasting - How many times its life it lives.
+ */
+function dress(
+    spec: ParticleSpec, random: Random, layer: Layer, sprite: Sprite|null, width: number, lasting: number,
+): void {
     const { grain } = layer
     const scatter = layer.scatter ?? { x: 0, y: 0 }
     spec.x += (layer.offset?.x ?? 0) + between(random, [-scatter.x, scatter.x])
@@ -88,7 +96,7 @@ function dress(spec: ParticleSpec, random: Random, layer: Layer, sprite: Sprite|
     spec.ay = between(random, layer.ay ?? [0, 0])
     spec.drag = layer.drag ?? 0
     const spread = layer.lifeSpread ?? 0
-    spec.life = layer.life * (1 + between(random, [-spread, spread]))
+    spec.life = layer.life * lasting * (1 + between(random, [-spread, spread]))
     spec.sizeStart = between(random, grain.size)
     spec.sizeEnd = layer.grows ?? spec.sizeStart
     spec.spin = between(random, layer.spin ?? [0, 0])
@@ -117,12 +125,16 @@ export function drift(spec: DriftSpec): Scene {
             return timed(duration, (dt, age) => {
                 const swelling = Math.min(1, age / swell, (duration - age) / swell)
                 const strength = swell > 0 ? Math.max(0, swelling) : 1
+                const { scale } = context
+                const density = densityAt(scale, spot.dimensions)
+                // What comes from an edge goes across the space: seen from far, it lives longer to get there.
+                const lasting = spot.dimensions === 1 ? Math.max(1, 1 / scale) : 1
                 layers.forEach((layer, index) => {
-                    const count = rates[index].take(layer.rate * strength, dt)
+                    const count = rates[index].take(layer.rate * strength * density, dt)
                     for(let n = 0; n < count; n++){
                         const born = point()
                         burst(systemOf(context, layer.grain), random, born.x, born.y, 1, particle => {
-                            dress(particle, random, layer, pictures[index] ?? null, width)
+                            dress(particle, random, layer, pictures[index] ?? null, width * scale, lasting)
                             if(!flipped) return
                             particle.x = width - particle.x
                             particle.vx = -particle.vx

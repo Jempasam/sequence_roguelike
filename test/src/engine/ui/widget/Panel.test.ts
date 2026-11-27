@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { NineSlice, Panel, Scroll, Sprite } from "@game/core"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Scroll } from "@game/core-src/engine/ui/layout/Scroll"
+import { NineSlice } from "@game/core-src/engine/ui/NineSlice"
+import { Panel } from "@game/core-src/engine/ui/widget/Panel"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 

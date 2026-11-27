@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Vector2 } from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import * as Walk from "../../../../../../../../core/src/games/mecard/sim/battle/mecanic/walk"
 import { battle, unit } from "../../../fixtures"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Toggle } from "@game/core"
+import { Toggle } from "@game/core-src/engine/ui/widget/Toggle"
 import type { EntryFilter } from "@game/core/mecard/entries"
 import { CatalogBrowser } from "@game/core/mecard/catalog-browser"
 import type { CatalogBrowserOptions } from "@game/core/mecard/catalog-browser"

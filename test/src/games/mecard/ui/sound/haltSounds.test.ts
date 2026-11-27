@@ -1,17 +1,13 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import * as mecard from "@game/core/mecard"
-import type { HaltType } from "@game/core/mecard"
+import { allHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
 import { HALT_CUES, soundOfHalt, soundOfImpact } from "@game/core/mecard/halt-sounds"
 
 const GENERATED = join(__dirname, "../../../../../../generated_assets")
 
 /** Every sort of halt of the game. */
-const HALT_TYPES: HaltType[] = Object.values(mecard).filter((value): value is HaltType => (
-    typeof value === "object" && value !== null && "id" in value && "icon" in value && !("category" in value)
-    && "create" in value && typeof value.create === "function"
-))
+const HALT_TYPES = allHalts()
 
 describe("soundOfHalt", () => {
     test("every sort of halt → a sound of its own, not the fallback", () => {

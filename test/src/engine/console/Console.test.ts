@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Console, expandLine, tokensOf } from "@game/core"
-import type { Command, CommandContext } from "@game/core"
+import { Console, tokensOf } from "@game/core-src/engine/console/Console"
+import { expandLine } from "@game/core-src/engine/console/expand"
+import type { Command, CommandContext } from "@game/core-src/engine/console/Command"
 
 // --- Fixture builders ---
 

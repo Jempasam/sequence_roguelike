@@ -25,7 +25,7 @@ export class WitchHalt extends AbstractHalt {
     constructor(run: Run){
         super(WITCH_HALT, run,
             ["Trois ", USABLE.as("utilisables"), " mijotent ici. Prends-en un."],
-            sceneLook(20, 31, 15, "witch"),
+            sceneLook(22, 15, 31, "witch"),
             {
                 hat: "witchHat",
                 clothes: rgba(0.6, 0.3, 0.8),

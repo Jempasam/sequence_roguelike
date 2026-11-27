@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { AssetError, Assets, MemoryAssets } from "@game/core"
-import type { AssetPath, ImagePath } from "@game/core"
+import { AssetError } from "@game/core-src/engine/assets/AssetError"
+import { Assets } from "@game/core-src/engine/assets/Assets"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
+import type { AssetPath } from "@game/core-src/engine/assets/AssetPath"
+import type { ImagePath } from "@game/core-src/engine/assets/Assets"
 
 import { GREY, png, RGB } from "../../fixtures/png"
 

@@ -18,7 +18,7 @@ export class RemovalHalt extends DeckHalt {
     constructor(run: Run){
         super(REMOVAL_HALT, run,
             ["Trois fois, confie-moi de une à trois ", CARTE.as("cartes"), ", je te les fais oublier."],
-            sceneLook(26, 28, 33, "removal"),
+            sceneLook(23, 23, 33, "removal"),
             {
                 hat: "hood",
                 clothes: rgba(0.6, 0.6, 0.65),

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import type { Container } from "@game/core"
+import type { Container } from "@game/core-src/engine/ui/Container"
 import { QuitPopup } from "@game/core/mecard/quit-popup"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"

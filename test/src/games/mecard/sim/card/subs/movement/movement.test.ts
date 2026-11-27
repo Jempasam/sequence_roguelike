@@ -1,8 +1,16 @@
 import { describe, expect, test } from "vitest"
-import {
-    Arena, ASSASSIN_STEP, Battle, EXPLOSIVE_DASH, GRAPPLE, HAZARD_COLOR, Heart, LASSO, RANDOM_AIM,
-    RANGE_COLOR, RED_HEART, ROOTED, STURDY_AIM, SWAP, Vector2, VINE,
-} from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { HAZARD_COLOR, RANGE_COLOR } from "@game/core-src/games/mecard/sim/battle/previewColors"
+import { RANDOM_AIM, STURDY_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { ASSASSIN_STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/AssassinStep"
+import { EXPLOSIVE_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/ExplosiveDash"
+import { GRAPPLE, LASSO, VINE } from "@game/core-src/games/mecard/sim/card/subs/movement/HookCard"
+import { SWAP } from "@game/core-src/games/mecard/sim/card/subs/movement/Swap"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../../fixtures"
 

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Areas, Box, Disk, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { Box } from "@game/core-src/games/mecard/sim/battle/hitbox/Box"
+import { Disk } from "@game/core-src/games/mecard/sim/battle/hitbox/Disk"
 import { MIN_SPREAD, PROFILE_RAYS, placeStrike } from "@game/core/mecard/place-strike"
 
 // --- Fixture builders ---

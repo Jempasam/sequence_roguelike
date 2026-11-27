@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { AnimationChain, FrameClock } from "@game/core"
+import { AnimationChain } from "@game/core-src/engine/ui/AnimationChain"
+import { FrameClock } from "@game/core-src/engine/ui/FrameClock"
 
 // --- Fixture builders ---
 

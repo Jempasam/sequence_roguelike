@@ -1,13 +1,44 @@
 import { describe, expect, test } from "vitest"
+import { THRUST_CHARGE } from "@game/core-src/games/mecard/sim/card/subs/attack/Charges"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { SUCTION } from "@game/core-src/games/mecard/sim/card/subs/combat/Shoves"
+import { BOW_MODULE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { TURRET } from "@game/core-src/games/mecard/sim/card/subs/summon/ChainSummons"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { GLASS_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GlassHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
 import {
-    BACK_EYES, BLOOD_PACT, BLUE_HEART, CELL, CHIPPED_BLADE, DEMON_FANG, DEMONIC, ECHO_ITEM, FISHER_GLOVE, GEAR,
-    GLASS_CORE, GLASS_HEART, Heart, HOURGLASS, BLEEDING, IMPROVISED_ROBOT, BOW_MODULE, LEASH, MAGNET, RED_HEART,
-    ROSARY, SCARY_MASK, STICKY_SOLES, SUCTION, SUMMON_HEART, THRUST, TORERO_CAPE, UNSTABLE_REACTOR, WAIT,
-    CONCENTRATED, THRUST_CHARGE, SHIELD_HEART, STEP, TURRET,
-} from "@game/core/mecard"
+    BACK_EYES,
+    CHIPPED_BLADE,
+    DEMON_FANG,
+    MAGNET,
+    ROSARY,
+    SCARY_MASK,
+    STICKY_SOLES,
+    TORERO_CAPE,
+} from "@game/core-src/games/mecard/sim/item/subs/combat/Reflexes"
+import {
+    BLOOD_PACT,
+    ECHO_ITEM,
+    FISHER_GLOVE,
+    GLASS_CORE,
+    HOURGLASS,
+    UNSTABLE_REACTOR,
+} from "@game/core-src/games/mecard/sim/item/subs/combat/Vigor"
+import { CELL, GEAR, LEASH, SUMMON_HEART } from "@game/core-src/games/mecard/sim/item/subs/summon/SummonItems"
+import { CONCENTRATED } from "@game/core-src/games/mecard/sim/status/subs/Calm"
+import { DEMONIC } from "@game/core-src/games/mecard/sim/status/subs/DemonEnergy"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import { BLEEDING } from "@game/core-src/games/mecard/sim/status/subs/Wounds"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
-import { Areas, DamageType } from "@game/core/mecard"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Tests ---
 
@@ -47,15 +78,8 @@ describe("TORERO_CAPE", () => {
         const charger = unit(on, 3.5, 6)
         const holder = unit(on, 3.5, 5, { team: MONSTERS })
         on.equip(holder, TORERO_CAPE)
-        let stuns = 0
-        on.events.push = new Proxy(on.events.push, {
-            apply: (target, self, args: unknown[]) => {
-                if((args[0] as { text?: unknown }).text === "étourdi") stuns++
-                return Reflect.apply(target, self, args)
-            },
-        })
         play(on, [[charger, chain(THRUST_CHARGE)]])
-        expect(stuns).toBe(1)
+        expect(charger.statusOf(STUNNED)?.level).toBe(1)
     })
 })
 

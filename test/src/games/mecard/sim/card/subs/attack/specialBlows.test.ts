@@ -1,10 +1,24 @@
 import { describe, expect, test } from "vitest"
-import {
-    Add, Arena, ModifierKey, ASSASSIN_BLOW, ASSASSINATION, Battle, BLOOD_AXE, BOUNCING_BOW, CROSSBOW, HARPOON, Heart,
-    MEGA_SLASH,
-    RED_HEART, SCYTHE, SKULL_BREAK, STEP, TACKLE, THRUST, Vector2,
-} from "@game/core/mecard"
-import type { Unit } from "@game/core/mecard"
+import { Add, ModifierKey } from "@game/core-src/games/mecard/sim/base/Attribute"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { ASSASSINATION } from "@game/core-src/games/mecard/sim/card/subs/attack/Assassination"
+import { ASSASSIN_BLOW } from "@game/core-src/games/mecard/sim/card/subs/attack/AssassinBlow"
+import { BLOOD_AXE } from "@game/core-src/games/mecard/sim/card/subs/attack/BloodAxe"
+import { HARPOON } from "@game/core-src/games/mecard/sim/card/subs/attack/Harpoon"
+import { MEGA_SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/MegaSlash"
+import { BOUNCING_BOW } from "@game/core-src/games/mecard/sim/card/subs/attack/Ricochet"
+import { SCYTHE } from "@game/core-src/games/mecard/sim/card/subs/attack/Scythe"
+import { CROSSBOW } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { SKULL_BREAK } from "@game/core-src/games/mecard/sim/card/subs/attack/SkullBreak"
+import { TACKLE } from "@game/core-src/games/mecard/sim/card/subs/attack/Tackle"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
 
@@ -47,30 +61,20 @@ describe("SKULL_BREAK", () => {
         const hero = unit(on, 3, 3)
         const left = unit(on, 2, 3, { team: MONSTERS, hearts: sturdy() })
         const right = unit(on, 4, 3, { team: MONSTERS, hearts: sturdy() })
-        on.startRound()
-        hero.hand.push(SKULL_BREAK)
-        on.commit(hero, chain(SKULL_BREAK))
-        on.endPreparation()
-        const stunned: string[] = []
-        for(let tick = 0; tick < 200 && on.executing; tick++){
-            on.playStep()
-            if(left.steps.length > 0) stunned.push("gauche")
-            if(right.steps.length > 0) stunned.push("droite")
-        }
+        play(on, [[hero, chain(SKULL_BREAK)]])
         expect(lost(left)).toBe(2)
         expect(lost(right)).toBe(2)
-        expect(stunned).toContain("gauche")
-        expect(stunned).toContain("droite")
+        expect(left.statusOf(STUNNED)?.level).toBe(1)
+        expect(right.statusOf(STUNNED)?.level).toBe(1)
     })
 
     test("a unit on one side only → wounded, not stunned", () => {
         const on = battle()
         const hero = unit(on, 3, 3)
         const right = unit(on, 4, 3, { team: MONSTERS, hearts: sturdy() })
-        const events = on.events
         play(on, [[hero, chain(SKULL_BREAK)]])
         expect(lost(right)).toBe(2)
-        expect(events.some(event => event.type === "status" && event.text === "étourdi")).toBe(false)
+        expect(right.statusOf(STUNNED)).toBeUndefined()
     })
 
     test("a unit ahead → out of reach", () => {

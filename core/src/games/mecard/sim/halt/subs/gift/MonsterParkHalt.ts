@@ -18,7 +18,7 @@ export class MonsterParkHalt extends AbstractHalt {
     constructor(run: Run){
         super(MONSTER_PARK_HALT, run,
             "Choisis une bête du parc, elle te suivra, et se battra seule.",
-            sceneLook(34, 40, 20, "monster-park"),
+            sceneLook(28, 40, 20, "monster-park"),
             {
                 hat: "huntingHat",
                 clothes: rgba(0.55, 0.75, 0.3),

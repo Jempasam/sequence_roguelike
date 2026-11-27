@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest"
-import {
-    ASSASSIN_BLOW, ASSASSINATION, BOUNCING_BOW, DAGGER, DEMONIC_STRIKE, RICOCHET, SHOT, THRUST,
-} from "@game/core/mecard"
+import { ASSASSINATION } from "@game/core-src/games/mecard/sim/card/subs/attack/Assassination"
+import { ASSASSIN_BLOW } from "@game/core-src/games/mecard/sim/card/subs/attack/AssassinBlow"
+import { DAGGER } from "@game/core-src/games/mecard/sim/card/subs/attack/Dagger"
+import { BOUNCING_BOW, RICOCHET } from "@game/core-src/games/mecard/sim/card/subs/attack/Ricochet"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { DEMONIC_STRIKE } from "@game/core-src/games/mecard/sim/card/subs/attack/Smashes"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
 import { DEMON_SWEEP_LOOK, SHADOW_THRUST_LOOK, THRUST_LOOK } from "@game/core/mecard/blow-looks"
 
 // --- Tests ---

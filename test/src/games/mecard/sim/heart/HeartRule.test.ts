@@ -1,14 +1,26 @@
 import { describe, expect, test } from "vitest"
-import { plainText, spansOf } from "@game/core"
-import {
-    BLACK_HEART, BLUE_HEART, DODGE, EXPLOSIVE_HEART, GLASS_HEART, Heart, KEPT_LOOT_HEARTS,
-    PINK_HEART, QUICK_HEART, RED_HEART, SHIELD_HEART, SOLID_HEART, SPENT_LOOT_HEARTS, THORN_HEART, TIME_HEART,
-    VITAL_HEART,
-} from "@game/core/mecard"
-import type { Battle, HeartKind, Unit } from "@game/core/mecard"
+import { plainText, spansOf } from "@game/core-src/semantic/Text"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLACK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlackHeartKind"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { EXPLOSIVE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ExplosiveHeartKind"
+import { GLASS_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GlassHeartKind"
+import { PINK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/PinkHeartKind"
+import { QUICK_HEART } from "@game/core-src/games/mecard/sim/heart/subs/QuickHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { SOLID_HEART } from "@game/core-src/games/mecard/sim/heart/subs/SolidHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
+import { TIME_HEART } from "@game/core-src/games/mecard/sim/heart/subs/TimeHeartKind"
+import { VITAL_HEART } from "@game/core-src/games/mecard/sim/heart/subs/VitalHeartKind"
+import { KEPT_LOOT_HEARTS, SPENT_LOOT_HEARTS } from "@game/core-src/games/mecard/sim/run/heartLoot"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { HeartKind } from "@game/core-src/games/mecard/sim/heart/HeartKind"
 
 import { battle, MONSTERS, rgbaOf, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Fixture builders ---
 

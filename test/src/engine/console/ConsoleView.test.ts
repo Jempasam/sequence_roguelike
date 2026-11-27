@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { Box, Console, ConsoleView, Label } from "@game/core"
-import type { Command, CommandContext } from "@game/core"
+import { Console } from "@game/core-src/engine/console/Console"
+import { ConsoleView } from "@game/core-src/engine/console/ConsoleView"
+import { Box } from "@game/core-src/engine/ui/layout/Box"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import type { Command, CommandContext } from "@game/core-src/engine/console/Command"
 
 import { ADVANCE, uiSetup } from "../../fixtures/uiFixtures"
 import type { UiSetup } from "../../fixtures/uiFixtures"

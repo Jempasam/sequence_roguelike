@@ -3,7 +3,7 @@
 # Description
 Une scène d'ambiance est un effet purement visuel de la carte fait de particules et de petits êtres : de la météo, de la fumée, une nuée, un vol d'oiseaux, un geyser. Elle ne touche jamais la simulation et ne tire que dans le hasard de l'affichage. C'est le pendant du [trajet d'ambiance](AMBIENT.md).
 
-Chaque scène est la configuration d'une brique : où elle naît (point de naissance ou lieux), de quoi elle est faite (grain) et comment cela bouge (la brique). Ajouter un effet à un étage, c'est ajouter une entrée à la table de sa brique, puis la mettre dans la liste exportée par cette table.
+Chaque scène est la configuration d'une brique : où elle naît (point de naissance ou lieux), de quoi elle est faite (grain) et comment cela bouge (la brique). Ajouter un effet à un étage, c'est ajouter une entrée à la table de sa brique, avec sa [catégorie](AMBIENT.md#catégories-et-rythmes), puis la mettre dans la liste exportée par cette table. Sans `spacing`, elle prend celui de sa catégorie.
 
 # Exemple
 - snowfall : des flocons naissent au-dessus de l'écran et tombent sur la toundra.

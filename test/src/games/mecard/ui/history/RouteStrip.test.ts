@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { savedRoute } from "@game/core/mecard"
+import { savedRoute } from "@game/core-src/games/mecard/sim/save/historySave"
 import { routeStrip } from "@game/core/mecard/route-strip"
 import { UnitSprites } from "@game/core/mecard/unit-sprites"
 

@@ -1,9 +1,23 @@
 import { describe, expect, test } from "vitest"
-import {
-    Add, Areas, BLINK, BURN, DamageType, Heart, ModifierKey, RED_HEART, SLASH, STEP, THORN_HEART,
-    Vector2, visual, WAIT,
-} from "@game/core/mecard"
-import type { Battle, StrikeSignal, Unit, Visual } from "@game/core/mecard"
+import { Add, ModifierKey } from "@game/core-src/games/mecard/sim/base/Attribute"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { BLINK } from "@game/core-src/games/mecard/sim/card/subs/movement/Blink"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import * as Blink from "@game/core-src/games/mecard/sim/battle/mecanic/blink"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import type { Visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { StrikeSignal } from "@game/core-src/games/mecard/sim/battle/signals"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, MONSTERS, play, unit } from "../fixtures"
 
@@ -55,7 +69,7 @@ describe("Battle signals", () => {
         const walker = unit(on, 3, 5)
         unit(on, 0, 0, { team: MONSTERS })
         const moves: { from: Vector2, to: Vector2, duration: number }[] = []
-        on.signals.moved.add(({ unit: who, from, to, duration }) => {
+        on.observers.of(Walk.WALKED).add(({ unit: who, from, to, duration }) => {
             if(who === walker) moves.push({ from: from.position, to: to.position, duration })
         })
         play(on, [[walker, chain(STEP)]])
@@ -70,7 +84,7 @@ describe("Battle signals", () => {
         const blinker = unit(on, 3, 5)
         unit(on, 0, 0, { team: MONSTERS })
         const blinks: Vector2[] = []
-        on.signals.blinked.add(({ from, to }) => blinks.push(from.position, to.position))
+        on.observers.of(Blink.BLINKED).add(({ from, to }) => blinks.push(from.position, to.position))
         play(on, [[blinker, chain(BLINK)]])
         expect(blinks[0]).toEqual(new Vector2(3, 5))
         expect(blinks[1].y).toBeLessThan(5)
@@ -196,7 +210,7 @@ describe("Battle signals", () => {
         const walker = unit(on, 3, 5)
         unit(on, 0, 0, { team: MONSTERS })
         const durations: number[] = []
-        on.signals.moved.add(({ duration }) => durations.push(duration))
+        on.observers.of(Walk.WALKED).add(({ duration }) => durations.push(duration))
         play(on, [[walker, chain(STEP)]])
         expect(durations).toHaveLength(1)
         expect(durations[0]).toBeCloseTo(0.5)

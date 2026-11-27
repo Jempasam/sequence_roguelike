@@ -1,10 +1,11 @@
-import { Fault } from "@game/core"
-import {
-    forward, LAST_STATE, LocalRoom, LocalSync, NOTHING, Relay, RelayedSource, signal, SyncTopic,
-    UnreadableFault,
-} from "@game/core/mecard/sync"
-import type { Observable } from "@game/core/mecard"
-import type { RelayMemory, SyncLink } from "@game/core/mecard/sync"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { forward, UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { LAST_STATE, NOTHING, Relay, RelayedSource } from "@game/core-src/games/mecard/sync/Relay"
+import { LocalRoom, LocalSync, SyncTopic } from "@game/core-src/games/mecard/sync/SyncChannel"
+import { signal } from "@game/core-src/lifetime/Observable"
+import type { Observable } from "@game/core-src/lifetime/Observable"
+import type { RelayMemory } from "@game/core-src/games/mecard/sync/Relay"
+import type { SyncLink } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

@@ -1,4 +1,4 @@
-import { visual } from "../../../../../sim"
+import { visual } from "../../../../../sim/base/Visual"
 import { SPARK } from "../../../../particles/recipes"
 import type { AmbientEffect } from "../../AmbientEffect"
 import type { Jet } from "../../scene/Jet"
@@ -10,6 +10,9 @@ import {
     SNOW_FLOORS, STEAM_FLOORS,
 } from "../../themes"
 import { fightsWhere, unwonWhere } from "../../trip/places"
+
+/** Seconds to wait before another play of a loud eruption, which tires when it comes back often. */
+const LOUD_SPACING = 20
 
 // JETS //
 
@@ -119,7 +122,7 @@ const FOAM_JETS: readonly Jet[] = [
 
 /** Lava jets out of the ground by a fight, three times, and falls back. */
 const LAVA_GEYSER = sceneEffect({
-    id: "lava-geyser", floors: LAVA_FLOORS, weight: 4,
+    id: "lava-geyser", category: "signature", floors: LAVA_FLOORS, weight: 4,
     scene: eruption({
         spot: atPlace(fightsWhere(), { x: 14, y: 6, eitherSide: true }), jets: LAVA_JETS, times: 3, gap: 0.7,
     }),
@@ -127,13 +130,13 @@ const LAVA_GEYSER = sceneEffect({
 
 /** A fight not yet won blows up: a fireball, flying debris, smoke. */
 const EXPLOSION = sceneEffect({
-    id: "explosion", floors: BLAST_FLOORS, weight: 2, spacing: 25,
+    id: "explosion", category: "signature", floors: BLAST_FLOORS, weight: 2, spacing: LOUD_SPACING,
     scene: eruption({ spot: atPlace(unwonWhere(fightsWhere())), jets: BLAST_JETS }),
 })
 
 /** Rocks fall beside a fight and raise dust. */
 const ROCKFALL = sceneEffect({
-    id: "rockfall", floors: ROCK_FLOORS, weight: 3, spacing: 25,
+    id: "rockfall", category: "signature", floors: ROCK_FLOORS, weight: 3, spacing: LOUD_SPACING,
     scene: eruption({
         spot: atPlace(fightsWhere(), { x: 18, y: 8, eitherSide: true }), jets: RUBBLE_JETS,
         drop: {
@@ -145,7 +148,8 @@ const ROCKFALL = sceneEffect({
 
 /** Snow slides down in three waves and bursts into a white cloud. */
 const AVALANCHE = sceneEffect({
-    id: "avalanche", floors: SNOW_FLOORS, weight: 3, spacing: 30,
+    id: "avalanche", category: "signature", floors: SNOW_FLOORS, outdoors: true, weight: 3,
+    spacing: LOUD_SPACING,
     scene: eruption({
         spot: band(0.55, 0.85), jets: SNOW_JETS, times: 3, gap: 0.6,
         drop: {
@@ -157,7 +161,7 @@ const AVALANCHE = sceneEffect({
 
 /** Steam hisses out of the ground beside a fight. */
 const STEAM_VENT = sceneEffect({
-    id: "steam-vent", floors: STEAM_FLOORS, weight: 3,
+    id: "steam-vent", category: "signature", floors: STEAM_FLOORS, weight: 3,
     scene: eruption({
         spot: atPlace(fightsWhere(), { x: 16, y: 8, eitherSide: true }), jets: STEAM_JETS, times: 3, gap: 0.8,
     }),
@@ -165,7 +169,7 @@ const STEAM_VENT = sceneEffect({
 
 /** A fat bubble swells out of the marsh and bursts. */
 const MARSH_BURST = sceneEffect({
-    id: "marsh-burst", floors: MARSH_FLOORS, weight: 3,
+    id: "marsh-burst", category: "signature", floors: MARSH_FLOORS, weight: 3,
     scene: eruption({
         spot: band(0.7, 0.92), jets: MARSH_JETS,
         drop: {
@@ -177,7 +181,7 @@ const MARSH_BURST = sceneEffect({
 
 /** A spectre rises out of a fight in a pale halo. */
 const SPECTRE_RISE = sceneEffect({
-    id: "spectre-rise", floors: GRAVE_FLOORS, weight: 3, spacing: 25,
+    id: "spectre-rise", category: "signature", floors: GRAVE_FLOORS, weight: 3, spacing: LOUD_SPACING,
     scene: eruption({
         spot: atPlace(fightsWhere()), jets: SOUL_JETS,
         drop: {
@@ -189,7 +193,7 @@ const SPECTRE_RISE = sceneEffect({
 
 /** A column of fire pulses beside a fight. */
 const FLAME_PILLAR = sceneEffect({
-    id: "flame-pillar", floors: HELL_FLOORS, weight: 3, spacing: 25,
+    id: "flame-pillar", category: "signature", floors: HELL_FLOORS, weight: 3, spacing: LOUD_SPACING,
     scene: eruption({
         spot: atPlace(fightsWhere(), { x: 18, y: 8, eitherSide: true }), jets: FIRE_JETS, times: 5, gap: 0.25,
     }),
@@ -197,7 +201,7 @@ const FLAME_PILLAR = sceneEffect({
 
 /** The sea spouts a column of foam, twice. */
 const SEA_SPOUT = sceneEffect({
-    id: "sea-spout", floors: HARBOR_FLOORS, weight: 2, spacing: 25,
+    id: "sea-spout", category: "signature", floors: HARBOR_FLOORS, outdoors: true, weight: 2,
     scene: eruption({ spot: band(0.78, 0.9), jets: FOAM_JETS, times: 2, gap: 0.7 }),
 })
 

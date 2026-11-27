@@ -1,4 +1,5 @@
-import { LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
 
 /** What a run takes after its seed. */
 type AfterSeed = ConstructorParameters<typeof Run> extends [number, ...infer Rest] ? Rest : never

@@ -1,4 +1,6 @@
-import { ALL_MONSTERS, FISHER_KIT, visual } from "../../../../../sim"
+import { visual } from "../../../../../sim/base/Visual"
+import { FISHER_KIT } from "../../../../../sim/catalog/kits"
+import { ALL_MONSTERS } from "../../../../../sim/catalog/monsters"
 import type { AmbientEffect } from "../../AmbientEffect"
 import { HARBOR_FLOORS } from "../../themes"
 import { fixed, manyOf, party } from "../../trip/Cast"
@@ -10,6 +12,7 @@ import { tripEffect } from "../../trip/tripEffect"
 /** A creature of the monsters crosses the screen from an edge to another one. */
 export const EDGE_TO_EDGE: AmbientEffect = tripEffect({
     id: "edge-to-edge",
+    category: "traffic",
     itinerary: crossing(),
     cast: manyOf(ALL_MONSTERS.map(each => each.sprite), 1),
     traveler: WALKER,
@@ -20,21 +23,25 @@ export const EDGE_TO_EDGE: AmbientEffect = tripEffect({
 /** A boat comes into the screen by any edge and goes out by another, rocking on the sea. */
 export const BOAT_CROSSING: AmbientEffect = tripEffect({
     id: "boat",
+    category: "signature",
     itinerary: crossing({ route: straight }),
     cast: fixed(visual("units/ship")),
     traveler: BOAT,
-    spacing: 30,
+    spacing: 8,
     weight: 3,
     floors: HARBOR_FLOORS,
+    outdoors: true,
 })
 
 /** The same boat, a fisher standing on it. */
 export const FISHER_BOAT_CROSSING: AmbientEffect = tripEffect({
     id: "boat-fisher",
+    category: "signature",
     itinerary: crossing({ route: straight }),
     cast: party(fixed(visual("units/ship")), fixed(FISHER_KIT.sprite)),
     traveler: CREWED_BOAT,
-    spacing: 30,
+    spacing: 8,
     weight: 2,
     floors: HARBOR_FLOORS,
+    outdoors: true,
 })

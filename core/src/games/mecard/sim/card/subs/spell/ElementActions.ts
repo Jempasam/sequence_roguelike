@@ -2,7 +2,6 @@ import type { Text } from "../../../../../../semantic"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber } from "../../../battle/words"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -98,7 +97,7 @@ export const SMALL_SPELL = new ElementActionCard("Petit sort", [
 
 /** What the element calls, a little ahead. */
 export const CONJURATION = new ElementActionCard("Conjuration", [
-    "Invoque l'élément à ", frenchNumber(CONJURATION_AHEAD), " ", DISTANCE, " devant.",
+    "Invoque l'élément à ", CONJURATION_AHEAD, " ", DISTANCE, " devant.",
 ], Rarity.RARE, element => ({
     use: function (ctx){
         const { position, direction } = conjured(ctx.battle, ctx.unit)

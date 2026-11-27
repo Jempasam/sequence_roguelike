@@ -1,15 +1,40 @@
 import { describe, expect, test } from "vitest"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard, UNSTABLE_THRUST } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { RandomCard } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { BARREL, PUDDLE } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { POISON, SLOWNESS } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { SECRET_CARD } from "@game/core-src/games/mecard/sim/card/subs/SecretCard"
+import { FIRE, WATER } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { COIN } from "@game/core-src/games/mecard/sim/card/subs/summon/summons"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { WHETSTONE } from "@game/core-src/games/mecard/sim/item/subs/stat/Whetstone"
+import { POTIONS } from "@game/core-src/games/mecard/sim/potion/subs/potions"
 import {
-    ALL_CARDS, BARREL, BATTLE_SAVE_VERSION, BURN, Carried, CardChain, COIN, FIRE, FusionCard, HEALING_POTION,
-    HEART_KINDS, ALL_ITEMS, loadBattle, MergedCard, DeckAi, POISON, POISONED, POTIONS, PUDDLE, RandomCard,
-    REPEAT_2, saveBattle, savedCard, SECRET_CARD, SLOWNESS, STATUS_TYPES, STEP, THRUST, UNSTABLE_THRUST,
-    ALL_USABLES,
-    Vector2, VULNERABLE, WATER, WHETSTONE,
-} from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
+    BATTLE_SAVE_VERSION,
+    loadBattle,
+    saveBattle,
+    savedCard,
+} from "@game/core-src/games/mecard/sim/save/battleSave"
+import { HEART_KINDS } from "@game/core-src/games/mecard/sim/save/catalogNames"
+import { STATUS_TYPES } from "@game/core-src/games/mecard/sim/status/statusTypes"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { VULNERABLE } from "@game/core-src/games/mecard/sim/status/subs/Vulnerability"
+import { HEALING_POTION } from "@game/core-src/games/mecard/sim/usable/subs/HealingPotion"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
 import { started } from "../fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Fixture builders ---
 
@@ -136,7 +161,7 @@ describe("saveBattle, fusions and usables", () => {
         play(original)
         play(copy)
         expect(textOf(copy)).toBe(textOf(original))
-        expect(copy.units[0].usables.map(each => each.usable)).toEqual([HEALING_POTION])
+        expect(copy.units[0].usables.map(each => each.usable)).toEqual([HEALING_POTION, HEALING_POTION])
     })
 })
 

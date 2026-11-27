@@ -1,8 +1,19 @@
-import {
-    ALL_CARDS, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_USABLES, HEART_KINDS, KIT_HEARTS, monster, RED_HEART,
-    visual,
-} from "@game/core/mecard"
-import type { Card, HeartGroup, HeartKind, Item, Kit, Monster, Usable } from "@game/core/mecard"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { ALL_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_KITS, KIT_HEARTS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_MONSTERS, monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { HEART_KINDS } from "@game/core-src/games/mecard/sim/save/catalogNames"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Kit } from "@game/core-src/games/mecard/sim/catalog/kits"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { HeartGroup } from "@game/core-src/games/mecard/sim/heart/Heart"
+import type { HeartKind } from "@game/core-src/games/mecard/sim/heart/HeartKind"
+import type { Item } from "@game/core-src/games/mecard/sim/item/Item"
+import type { Usable } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { normalize, UsageError, unknownName } from "./errors"
 

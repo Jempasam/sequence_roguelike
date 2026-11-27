@@ -1,6 +1,7 @@
-import type { Run } from "@game/core/mecard"
-import { NoAnswerFault } from "@game/core/mecard/sync"
-import type { GameMember, GameModeContext, RunHandle } from "@game/core/mecard/sync"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { NoAnswerFault } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameModeContext, RunHandle } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
 import { describe, expect, test } from "vitest"
 
 import { game, settle } from "./toys"

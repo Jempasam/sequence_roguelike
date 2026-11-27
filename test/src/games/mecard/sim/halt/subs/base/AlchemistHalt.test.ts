@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest"
-import {
-    AIM, FIRE, isFusion, LOOT_CARDS, REACTION, readsWhole, Rng, SLASH, upgradeOf, upgradesFor,
-} from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { isFusion } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { REACTION } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementRewrites"
+import { LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { upgradesFor } from "@game/core-src/games/mecard/sim/catalog/upgrades"
+import { upgradeOf } from "@game/core-src/games/mecard/sim/halt/subs/deck/AlchemistHalt"
 
 // --- Tests ---
 

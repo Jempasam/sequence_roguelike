@@ -37,6 +37,7 @@ const DEFEATED_GHOST_EFFECT: Effect<AmbientContext> = {
 /** The monster of a fight already won rises, drifts to the party and circles it, pale. */
 export const DEFEATED_GHOST = new AmbientEffect({
     id: "defeated-ghost",
+    category: "surprise",
     spacing: 30,
     stackable: false,
     isPlayable: context => context.heroPosition() !== null && fightsOf(context).some(fight => fight.visited),

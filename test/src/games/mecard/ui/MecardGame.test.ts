@@ -1,13 +1,23 @@
 import { describe, expect, test } from "vitest"
-import { AssetError, ManualScheduler, MemoryStorage, SaveSlot, UnreachableFault } from "@game/core"
-import type { Assets, Fault } from "@game/core"
-import { HISTORY_FORMAT, HISTORY_SLOT_KEY, RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
+import { AssetError } from "@game/core-src/engine/assets/AssetError"
+import { UnreachableFault } from "@game/core-src/engine/net/NetFaults"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { MemoryStorage } from "@game/core-src/engine/save/MemoryStorage"
+import { SaveSlot } from "@game/core-src/engine/save/SaveSlot"
+import type { Assets } from "@game/core-src/engine/assets/Assets"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { HISTORY_FORMAT, HISTORY_SLOT_KEY } from "@game/core-src/games/mecard/sim/save/historySave"
+import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core-src/games/mecard/sim/save/runSlot"
 import { MecardGame } from "@game/core/mecard/game"
 import type { MecardNetwork } from "@game/core/mecard/game"
-import { COOP_SEATS, FIXED_SEATS, LobbyGuest, LocalRoom, LocalSync, RunGuest, RunReceiver } from "@game/core/mecard/sync"
-import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core/mecard"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { RunGuest } from "@game/core-src/games/mecard/sync/run/RunGuest"
+import { RunReceiver } from "@game/core-src/games/mecard/sync/run/RunReceiver"
+import { COOP_SEATS, FIXED_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
 
-import { uiSetup } from "../../../fixtures/uiFixtures"
+import { bareUiSetup } from "../../../fixtures/uiFixtures"
 import { startedRun } from "../../../fixtures/startedRun"
 
 // --- Fixture builders ---
@@ -19,7 +29,7 @@ const NO_ASSETS = new Proxy({}, {
 
 /** A game with a network within the program, the rooms it opened and the games it left for. */
 function playing(ready: Promise<string|Fault> = Promise.resolve("K7QX2M")) {
-    const setup = uiSetup({}, 620, 348)
+    const setup = bareUiSetup(620, 348)
     const channel = new LocalSync()
     const room = new LocalRoom()
     const connections: (readonly [string, boolean])[] = []
@@ -49,7 +59,7 @@ function playing(ready: Promise<string|Fault> = Promise.resolve("K7QX2M")) {
 
 /** A game keeping its run in a slot of memory, and the slot. */
 async function keeping(seed = 3) {
-    const setup = uiSetup({}, 620, 348)
+    const setup = bareUiSetup(620, 348)
     const toWorld = (x: number, y: number) => [x, y] as const
     const game = new MecardGame(setup.theme, setup.ui, NO_ASSETS, seed, toWorld, toWorld)
     const storage = await new MemoryStorage().open()
@@ -112,6 +122,7 @@ describe("MecardGame, its menu and its saves", () => {
         const { game } = await keeping()
         const storage = await new MemoryStorage().open()
         game.keepHistory(new SaveSlot(storage!, HISTORY_SLOT_KEY, HISTORY_FORMAT))
+        game.run.hire(LANCER_KIT)
         game.run.defeated.notify(game.run)
         await settle()
         await game.restart()
@@ -151,6 +162,7 @@ describe("MecardGame, its menu and its saves", () => {
         expect(game.menu.confirming).toBe(true)
         expect(game.run).toBe(before)
         game.menu.yesButton?.activate()
+        await settle()
         expect(game.run).not.toBe(before)
         expect(game.menu.visible).toBe(false)
     })
@@ -196,7 +208,7 @@ describe("MecardGame, its lobby", () => {
     })
 
     test("no network → Multiplayer greyed out", () => {
-        const setup = uiSetup({}, 620, 348)
+        const setup = bareUiSetup(620, 348)
         const toWorld = (x: number, y: number) => [x, y] as const
         const game = new MecardGame(setup.theme, setup.ui, NO_ASSETS, 3, toWorld, toWorld)
         game.menu.frame()
@@ -206,7 +218,7 @@ describe("MecardGame, its lobby", () => {
 
 describe("MecardGame.hostGame", () => {
     test("no network → refused", () => {
-        const setup = uiSetup({}, 620, 348)
+        const setup = bareUiSetup(620, 348)
         const toWorld = (x: number, y: number) => [x, y] as const
         const game = new MecardGame(setup.theme, setup.ui, NO_ASSETS, 3, toWorld, toWorld)
         expect(() => game.hostGame(null, FIXED_SEATS)).toThrow()

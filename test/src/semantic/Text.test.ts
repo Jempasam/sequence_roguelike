@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { isGroup, Keyword, KeywordWord, plainText, spansOf } from "@game/core"
-import type { Semantic, Text } from "@game/core"
+import { Keyword, KeywordWord } from "@game/core-src/semantic/Keyword"
+import { isGroup, plainText, spansOf } from "@game/core-src/semantic/Text"
+import type { Semantic, Text } from "@game/core-src/semantic/Text"
 
 // --- Fixture builders ---
 
@@ -48,7 +49,7 @@ describe("plainText", () => {
 
     test("a picture shown by a display → its alt, in the color and link around it", () => {
         const link = {}
-        const display = (value: object) => value instanceof Potion
+        const display = (value: object|number) => value instanceof Potion
             ? { link, text: { color: RED, text: ["a", { picture: "potion", alt: "fiole" }] } }
             : undefined
         expect(plainText(new Potion(), display)).toBe("afiole")
@@ -59,6 +60,11 @@ describe("plainText", () => {
 
     test("display → in place of the text of the object", () => {
         expect(plainText([new Potion()], value => value instanceof Potion ? "fiole" : undefined)).toBe("fiole")
+    })
+
+    test("display of a number → in place of the number, the number alone without one", () => {
+        expect(plainText(["a ", 1.5], value => typeof value === "number" ? "un et demi" : undefined)).toBe("a un et demi")
+        expect(plainText(["a ", 1.5])).toBe("a 1.5")
     })
 
     test("an object telling itself in its own text → an error, not a hang", () => {
@@ -75,7 +81,7 @@ describe("Keyword", () => {
     })
 
     test("a form → its keyword found back by a reader, however it is written", () => {
-        const display = (value: object) => {
+        const display = (value: object|number) => {
             if(!(value instanceof KeywordWord) || value.keyword !== COLLAGE) return undefined
             return value.form.toUpperCase()
         }
@@ -106,7 +112,7 @@ describe("spansOf", () => {
 
     test("display giving a link → the object found back on its piece", () => {
         const potion = new Potion()
-        const display = (value: object) => value === potion ? { link: value, text: "fiole" } : undefined
+        const display = (value: object|number) => value === potion ? { link: value, text: "fiole" } : undefined
         expect(spansOf(potion, display)).toEqual([{ kind: "string", text: "fiole", color: null, link: potion }])
     })
 })

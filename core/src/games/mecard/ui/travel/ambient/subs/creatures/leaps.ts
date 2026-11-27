@@ -1,4 +1,4 @@
-import { visual } from "../../../../../sim"
+import { visual } from "../../../../../sim/base/Visual"
 import type { AmbientEffect } from "../../AmbientEffect"
 import type { Jet } from "../../scene/Jet"
 import { sceneEffect } from "../../scene/sceneEffect"
@@ -25,7 +25,7 @@ const MUD_SPLASH: readonly Jet[] = [
 
 /** Fish jump out of the water of the harbor. */
 const LEAPING_FISH = sceneEffect({
-    id: "leaping-fish", floors: HARBOR_FLOORS, weight: 3,
+    id: "leaping-fish", category: "signature", floors: HARBOR_FLOORS, weight: 3,
     scene: leap({
         grain: { sprite: visual("ambient/fish"), colors: [0xffffff], size: [9, 11] },
         spot: band(0.8, 0.92), height: [18, 32], span: [20, 34], times: [1, 3], duration: 1.1, gap: 0.8,
@@ -35,7 +35,7 @@ const LEAPING_FISH = sceneEffect({
 
 /** A toad hops about beside a fight. */
 const LEAPING_FROGS = sceneEffect({
-    id: "leaping-frogs", floors: MARSH_FLOORS, weight: 2,
+    id: "leaping-frogs", category: "signature", floors: MARSH_FLOORS, weight: 2,
     scene: leap({
         grain: { sprite: visual("units/frog"), colors: [0xffffff], size: [9, 9] },
         spot: atPlace(fightsWhere(), { x: 16, y: 10, eitherSide: true }), height: [8, 14], span: [12, 18],

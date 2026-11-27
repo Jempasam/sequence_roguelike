@@ -1,6 +1,18 @@
 import { describe, expect, test } from "vitest"
-import { COUNTER, DISARM, DODGE, SLASH, SLIDING_PARRY, Vector2, WAIT, WOODEN_SHIELD } from "@game/core/mecard"
-import type { Battle, StatusType, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import {
+    COUNTER,
+    DISARM,
+    DODGE,
+    SLIDING_PARRY,
+    WOODEN_SHIELD,
+} from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { StatusType } from "@game/core-src/games/mecard/sim/status/Status"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
 
@@ -40,7 +52,7 @@ describe("Guards", () => {
         const { on, attacker, guard } = facing(COUNTER)
         play(on, [[attacker, chain(SLASH)]])
         expect(guard.life).toBe(4)
-        expect(on.events.some(event => event.type === "status" && event.unit === attacker && event.text === "étourdi")).toBe(true)
+        expect(attacker.statusOf(STUNNED)?.level).toBe(1)
     })
 
     test("a wooden shield → pushed away from the attacker", () => {

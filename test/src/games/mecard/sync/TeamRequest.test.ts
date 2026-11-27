@@ -1,11 +1,18 @@
-import { BATTLE_SAVE_VERSION, saveBattle } from "@game/core/mecard"
-import type { SavedUnit } from "@game/core/mecard"
-import { Fault, ManualScheduler } from "@game/core"
+import { BATTLE_SAVE_VERSION, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { SavedUnit } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Answerer, Asker } from "@game/core-src/games/mecard/sync/Asker"
+import { InvalidTeamFault, TimeoutFault, UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { LocalRoom, TEAM_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
 import {
-    Answerer, Asker, InvalidTeamFault, LocalRoom, TEAM_QUESTION, TEAM_TOPIC, TeamRequest, TimeoutFault,
-    UnreadableFault, readTeamMessage, teamFault, writeTeamMessage,
-} from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+    TEAM_QUESTION,
+    TeamRequest,
+    readTeamMessage,
+    teamFault,
+    writeTeamMessage,
+} from "@game/core-src/games/mecard/sync/TeamRequest"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 import { startedRun } from "../../../fixtures/startedRun"

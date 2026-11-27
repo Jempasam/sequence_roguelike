@@ -1,9 +1,15 @@
 import { describe, expect, test } from "vitest"
-import type { PixelData } from "@game/core"
+import type { PixelData } from "@game/core-src/engine/image/PixelData"
+import { PixelArtActor } from "@game/core-src/games/mecard/ui/pnj/PixelArtActor"
 import {
-    PNJ_ANIMATIONS, PixelArtActor, PixelArtPnj, bodyZoneOf, cutParts, itemSpotOf, pixelArtLayoutOf,
-} from "@game/core/mecard/pnj"
-import type { PixelArtTextures } from "@game/core/mecard/pnj"
+    bodyZoneOf,
+    cutParts,
+    itemSpotOf,
+    pixelArtLayoutOf,
+} from "@game/core-src/games/mecard/ui/pnj/PixelArtLayout"
+import { PixelArtPnj } from "@game/core-src/games/mecard/ui/pnj/PixelArtPnj"
+import { PNJ_ANIMATIONS } from "@game/core-src/games/mecard/ui/pnj/PnjAnimation"
+import type { PixelArtTextures } from "@game/core-src/games/mecard/ui/pnj/PixelArtPnj"
 
 // --- Fixture builders ---
 

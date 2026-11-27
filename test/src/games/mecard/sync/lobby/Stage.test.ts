@@ -1,7 +1,8 @@
-import {
-    Gathering, GuestStage, HostStage, JOIN_TOPIC, LobbyRoom, LocalRoom, LocalSync, MANUAL, SyncTopic,
-} from "@game/core/mecard/sync"
-import type { SyncPeer } from "@game/core/mecard/sync"
+import { Gathering, MANUAL } from "@game/core-src/games/mecard/sync/Gathering"
+import { LobbyRoom } from "@game/core-src/games/mecard/sync/lobby/LobbyRoom"
+import { GuestStage, HostStage } from "@game/core-src/games/mecard/sync/lobby/Stage"
+import { JOIN_TOPIC, LocalRoom, LocalSync, SyncTopic } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { SyncPeer } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

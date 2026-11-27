@@ -1,12 +1,28 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { AIM, STURDY_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { BARREL } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { POISON } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { SUBSTITUTION } from "@game/core-src/games/mecard/sim/card/subs/summon/Substitution"
 import {
-    AIM, BARREL, COIN, FLEETING, Heart, POISON, POISONED, RED_HEART, SHOT, STONE_WALL, STURDY_AIM,
-    SUBSTITUTION, THORN_HEART, THORN_SHIELD, THRUST, TOTEM, Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
+    COIN,
+    STONE_WALL,
+    THORN_SHIELD,
+    TOTEM,
+} from "@game/core-src/games/mecard/sim/card/subs/summon/summons"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
+import { FLEETING } from "@game/core-src/games/mecard/sim/status/subs/Fleeting"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../../../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** The summoned bodies of a battle still standing. */
 function bodies(on: Battle): Unit[] {

@@ -1,7 +1,7 @@
 import { Vector2 } from "../../../base/Vector2"
 import { DISTANCE, HEAL, PORTEE, BATTLE_ROUND } from "../../../base/keywords"
 import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
-import { frenchNumber, HeartCount, SummonedHearts } from "../../../battle/words"
+import { HeartCount, SummonedHearts } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
@@ -43,7 +43,7 @@ function ahead(unit: Unit, pose: Pose, forward: number, side = 0): Vector2 {
 
 /** A coin thrown ahead, which stands there: a body that blocks and draws the aim. */
 export const COIN = new SummonCard("Pièce", [
-    INVOCATION.as("Lance"), " une pièce à ", frenchNumber(COIN_THROW), "×", PORTEE, " ", DISTANCE, " devant : une alliée de ", new SummonedHearts(COIN_HALVES),
+    INVOCATION.as("Lance"), " une pièce à ", COIN_THROW, "×", PORTEE, " ", DISTANCE, " devant : une alliée de ", new SummonedHearts(COIN_HALVES),
     ", qui bloque les coups et attire les visées. Perd ", new HeartCount(1), " à chaque fin de ", BATTLE_ROUND, ".",
 ], Rarity.COMMON, {
     sprite: visual("units/coin"), name: "Pièce", halves: COIN_HALVES, thrown: true,
@@ -70,7 +70,7 @@ export const THORN_SHIELD = new SummonCard("Bouclier de ronces", [
 /** A totem ahead, healing the allies around it at the end of each round. */
 export const TOTEM = new SummonCard("Totem", [
     INVOCATION.as("Plante"), " un totem de ", new SummonedHearts(TOTEM_HALVES), " à ", AHEAD, " ", DISTANCE, " devant. En fin de ", BATTLE_ROUND, ", ",
-    "il soigne de ", new HeartCount(TOTEM_HEAL), " + ", HEAL, " chaque allié à ", frenchNumber(TOTEM_RADIUS), " ", DISTANCE, ".",
+    "il soigne de ", new HeartCount(TOTEM_HEAL), " + ", HEAL, " chaque allié à ", TOTEM_RADIUS, " ", DISTANCE, ".",
 ], Rarity.EPIC, {
     sprite: visual("units/totem"), name: "Totem", halves: TOTEM_HALVES,
     spots: (unit, pose) => [ahead(unit, pose, AHEAD)],

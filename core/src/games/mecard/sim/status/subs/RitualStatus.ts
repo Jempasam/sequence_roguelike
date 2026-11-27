@@ -1,4 +1,4 @@
-import { concat } from "../../../../../semantic"
+import { concat, plainText } from "../../../../../semantic"
 import type { Text } from "../../../../../semantic"
 import type { Observer } from "../../base/Observable"
 import type { UnitContext } from "../../battle/Action"
@@ -50,10 +50,10 @@ export class RitualStatus extends RoundStatus {
     /** The element it keeps. */
     public get element(): Element { return this.type.element }
 
-    public override toString(): string { return `${this.type} ${counted(this.level, "round")}` }
+    public override toString(): string { return `${this.type} ${plainText(counted(this.level, "round"))}` }
 
     public override toSemString(): Text {
-        return concat(RITUAL_STATUS, " de ", this.element, ` ${counted(this.level, "round")}`)
+        return concat(RITUAL_STATUS, " de ", this.element, " ", counted(this.level, "round"))
     }
 
     protected plug({ battle, unit }: UnitContext): Observer[] {

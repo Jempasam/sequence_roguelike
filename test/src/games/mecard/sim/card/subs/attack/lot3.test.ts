@@ -1,11 +1,19 @@
 import { describe, expect, test } from "vitest"
+import { POTENTIAL_COLOR } from "@game/core-src/games/mecard/sim/battle/previewColors"
+import { DEMON_SLASH, THRUST_CHARGE } from "@game/core-src/games/mecard/sim/card/subs/attack/Charges"
+import { CROSS_CUT, DEATH_SCYTHE, FISHING } from "@game/core-src/games/mecard/sim/card/subs/attack/Crosses"
 import {
-    CHARGED_SHOT, CROSS_CUT, DEATH_SCYTHE, DEMON_SLASH, DEMONIC, DEMONIC_STRIKE, FISHING, GREAT_THRUST,
-    MACHINE_GUN, POTENTIAL_COLOR, QUAKE, SACRIFICE, SUPLEX, THRUST_CHARGE,
-} from "@game/core/mecard"
+    DEMONIC_STRIKE,
+    GREAT_THRUST,
+    QUAKE,
+    SACRIFICE,
+    SUPLEX,
+} from "@game/core-src/games/mecard/sim/card/subs/attack/Smashes"
+import { CHARGED_SHOT, MACHINE_GUN } from "@game/core-src/games/mecard/sim/card/subs/attack/Volleys"
+import { DEMONIC } from "@game/core-src/games/mecard/sim/status/subs/DemonEnergy"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Tests ---
 

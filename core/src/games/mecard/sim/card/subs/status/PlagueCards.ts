@@ -1,7 +1,7 @@
 import { DISTANCE, HEAL, UNIT, BATTLE_ROUND } from "../../../base/keywords"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { BLUE_HEART } from "../../../heart/subs/BlueHeartKind"
 import { SHIELD_HEART } from "../../../heart/subs/ShieldHeartKind"
@@ -45,16 +45,16 @@ export const INOCULATION = new ActionCard("Inoculation", [
 }, "inoculation"))
 
 export const AGGRAVATION = new ActionCard("Aggravation", [
-    "Double le niveau de chaque statut négatif de la première ", UNIT, " touchée sur ", frenchNumber(AGGRAVATION_LENGTH),
+    "Double le niveau de chaque statut négatif de la première ", UNIT, " touchée sur ", AGGRAVATION_LENGTH,
     " ", DISTANCE, ".",
 ], Rarity.RARE, onFirstAhead(AGGRAVATION_LENGTH, AGGRAVATION_WIDTH, (battle, _unit, target) => {
     for(const [type, status] of negatives(target)) battle.applyStatus(target, type, status.level)
 }, "aggravation"))
 
 export const PLAGUE_MASK = new ActionCard("Masque à bec", [
-    "Gagne ", new HeartCount(1), " ", SHIELD_HEART, " par statut négatif que tu portes, au moins un.",
+    "Gagne ", new HeartCount(1), " ", SHIELD_HEART, " par niveau de statut négatif que tu portes, au moins un.",
 ], Rarity.RARE, onSelf((_battle, unit) => {
-    const shields = Math.max(1, negatives(unit).length)
+    const shields = Math.max(1, negatives(unit).reduce((X,x)=>X + x[1].level, 0))
     for(let each = 0; each < shields; each++) unit.hearts.give(new Heart(SHIELD_HEART))
 }, "masque à bec"))
 

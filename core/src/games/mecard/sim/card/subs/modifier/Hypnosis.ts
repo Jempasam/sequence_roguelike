@@ -14,6 +14,7 @@ import { Rarity } from "../../Rarity"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
+import * as Steps from "../../../battle/mecanic/step"
 
 /** How far the hypnosis of the catalog reaches, in meters: as far as a spell. */
 const HYPNOSIS_RANGE = 4 - UNIT_RADIUS
@@ -76,7 +77,7 @@ export class HypnosisCard extends ModifierCard {
                 const target = targetOf(battle, unit, unit)
                 if(!target) battle.events.push({ type: "skipped", unit, reason: NOBODY })
                 hold(battle, SHORT_TIME, aimed(unit, unit, target))
-                if(target) battle.inject(target, action, tree)
+                if(target) Steps.insert(battle, target, [action], { cards: tree, word: "hypnotisé" })
             },
             // The action is shown from where the target stands, played by it.
             preview: ctx => {

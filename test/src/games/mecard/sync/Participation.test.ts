@@ -1,10 +1,21 @@
-import { ManualScheduler } from "@game/core"
-import type { Fault } from "@game/core"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { Placements, Participation } from "@game/core-src/games/mecard/sync/participation/Participation"
 import {
-    Placements, JOIN_RETRY_MS, JOIN_TRIES, LocalRoom, NotAdmittedFault, Participation, ParticipationReceiver,
-    PARTICIPATE_TOPIC,
-} from "@game/core/mecard/sync"
-import type { Placement, Arrival, ParticipationMessage, ParticipationPolicy } from "@game/core/mecard/sync"
+    JOIN_RETRY_MS,
+    JOIN_TRIES,
+    NotAdmittedFault,
+    ParticipationReceiver,
+} from "@game/core-src/games/mecard/sync/participation/ParticipationReceiver"
+import { LocalRoom, PARTICIPATE_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type {
+    Placement,
+    Arrival,
+    ParticipationPolicy,
+} from "@game/core-src/games/mecard/sync/participation/Participation"
+import type {
+    ParticipationMessage,
+} from "@game/core-src/games/mecard/sync/participation/ParticipationMessage"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

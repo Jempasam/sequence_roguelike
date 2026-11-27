@@ -1,9 +1,28 @@
 import { describe, expect, test } from "vitest"
+import { everyDrawReads } from "@game/core-src/games/mecard/sim/analysis/draws"
 import {
-    BACK_DASH, BEAST_KIND, convert, DAGGER, everyDrawReads, KINDS, monster, MODULE_KIND, MONSTER_KIND,
-    PET_KIND, readsWhole, STEP, THRUST, visual, WOLF,
-} from "@game/core/mecard"
-import type { BeastCard, Booster, Card, Kind, Kit, ModuleCard, Monster } from "@game/core/mecard"
+    BEAST_KIND,
+    convert,
+    KINDS,
+    MODULE_KIND,
+    MONSTER_KIND,
+    PET_KIND,
+} from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { DAGGER } from "@game/core-src/games/mecard/sim/card/subs/attack/Dagger"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BACK_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BackDash"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { WOLF } from "@game/core-src/games/mecard/sim/catalog/pets"
+import type { Kind } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { BeastCard } from "@game/core-src/games/mecard/sim/card/subs/beast/BeastCard"
+import type { ModuleCard } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import type { Booster } from "@game/core-src/games/mecard/sim/catalog/boosters"
+import type { Kit } from "@game/core-src/games/mecard/sim/catalog/kits"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
 
 // --- Fixture builders ---
 

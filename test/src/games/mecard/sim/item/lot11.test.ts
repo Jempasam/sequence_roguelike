@@ -1,9 +1,25 @@
 import { describe, expect, test } from "vitest"
-import {
-    ANCHOR, BLUE_HEART, METAL_DETECTOR, PIGGY_BANK, BREATHALYZER, CHALK, CHEWING_GUM, CONCENTRATED, DODGE, EXPIRED_PILLBOX, FRAGILE, Heart, PILLBOX,
-    PLUMB_LINE, RED_HEART, ROOTED, SHIELD_HEART, SLOWED, SWIFT, URN, Vector2,
-} from "@game/core/mecard"
-import type { Battle, Item, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import * as Push from "@game/core-src/games/mecard/sim/battle/mecanic/push"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { ANCHOR, CHALK, CHEWING_GUM } from "@game/core-src/games/mecard/sim/item/subs/combat/Gadgets"
+import { URN } from "@game/core-src/games/mecard/sim/item/subs/death/DeathItems"
+import { METAL_DETECTOR, PIGGY_BANK } from "@game/core-src/games/mecard/sim/item/subs/gold/GoldItems"
+import { PLUMB_LINE } from "@game/core-src/games/mecard/sim/item/subs/heal/HeartCharms"
+import { BREATHALYZER } from "@game/core-src/games/mecard/sim/item/subs/status/Breathalyzer"
+import { EXPIRED_PILLBOX, PILLBOX } from "@game/core-src/games/mecard/sim/item/subs/status/Pillbox"
+import { CONCENTRATED } from "@game/core-src/games/mecard/sim/status/subs/Calm"
+import { DODGE } from "@game/core-src/games/mecard/sim/status/subs/Dodge"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import { SWIFT } from "@game/core-src/games/mecard/sim/status/subs/Swiftness"
+import { FRAGILE } from "@game/core-src/games/mecard/sim/status/subs/Wounds"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Item } from "@game/core-src/games/mecard/sim/item/Item"
 
 import { battle, HEROES, MONSTERS, unit } from "../fixtures"
 
@@ -118,7 +134,7 @@ describe("the anchor", () => {
         const move = hero.stats.move.value
         expect(move).toBeCloseTo(0.75)
         const incoming = { target: hero, by: enemy, direction: Vector2.UP, distance: 2 }
-        hero.incomingShove.notify(incoming)
+        hero.observers.of(Push.INCOMING_SHOVE).notify(incoming)
         expect(incoming.distance).toBe(1)
     })
 })

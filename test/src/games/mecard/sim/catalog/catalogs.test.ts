@@ -1,9 +1,18 @@
 import { describe, expect, test } from "vitest"
+import { ALL_BOOSTERS, LOOT_BOOSTERS } from "@game/core-src/games/mecard/sim/catalog/boosters"
 import {
-    ALL_BOOSTERS, ALL_CARDS, ALL_FIGHT_CATEGORIES, ALL_ITEMS, ALL_KITS, ALL_MONSTERS, ALL_PETS, ALL_UPGRADES, ALL_USABLES,
-    BOSS_MONSTERS, LEGENDARY_CARDS, LOOT_BOOSTERS, LOOT_CARDS, LOOT_ITEMS, LOOT_KITS, LOOT_MONSTERS, LOOT_PETS,
-    LOOT_UPGRADES, LOOT_USABLES, POTION_CARDS, STARTING_KITS,
-} from "@game/core/mecard"
+    ALL_CARDS,
+    LEGENDARY_CARDS,
+    LOOT_CARDS,
+    POTION_CARDS,
+} from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_ITEMS, LOOT_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_KITS, LOOT_KITS, STARTING_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_MONSTERS, BOSS_MONSTERS, LOOT_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS, LOOT_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
+import { ALL_UPGRADES, LOOT_UPGRADES } from "@game/core-src/games/mecard/sim/catalog/upgrades"
+import { ALL_USABLES, LOOT_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { ALL_FIGHT_CATEGORIES } from "@game/core-src/games/mecard/sim/fight/fights"
 
 // --- Tests ---
 

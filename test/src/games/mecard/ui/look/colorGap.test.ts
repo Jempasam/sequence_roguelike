@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { BASE_ELEMENTS, COMPOUNDS } from "@game/core/mecard"
+import { BASE_ELEMENTS, COMPOUNDS } from "@game/core-src/games/mecard/sim/element/reactions"
 import { colorGap, colorsDistinct, MIN_COLOR_GAP } from "@game/core/mecard/color-gap"
-import type { TextColor } from "@game/core"
+import type { TextColor } from "@game/core-src/semantic/Text"
 
 // --- Fixture builders ---
 

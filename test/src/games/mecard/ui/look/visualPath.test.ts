@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Assets, MemoryAssets } from "@game/core"
-import { BACK_VISUAL, Visual } from "@game/core/mecard"
-import { allPlaceTypes } from "@game/core/mecard"
+import { Assets } from "@game/core-src/engine/assets/Assets"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
+import { Visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { BACK_VISUAL } from "@game/core-src/games/mecard/sim/run/PlaceType"
+import { allPlaceTypes } from "@game/core-src/games/mecard/sim/catalog/places"
 import { dataPathOf, distinctPictures, loadPictures, pathOf, shippedPictures, shippedTransitions, transitionPath, transitionTintOf } from "@game/core/mecard/visual-path"
-import { ASSET_PATHS } from "@game/core"
+import { ASSET_PATHS } from "@game/core-src/engine/assets/AssetPath"
 
 import { png, RGB } from "../../../../fixtures/png"
 

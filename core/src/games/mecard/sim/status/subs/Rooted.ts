@@ -1,3 +1,4 @@
+import { plainText } from "../../../../../semantic"
 import type { Text } from "../../../../../semantic"
 import { ModifierKey, Multiply } from "../../base/Attribute"
 import { counted } from "../../battle/words"
@@ -14,9 +15,9 @@ export class Rooted extends BaseStatus {
 
     public readonly type: StatusType = ROOTED
 
-    public override toString(): string { return `${ROOTED} ${counted(this.level, "étape")}` }
+    public override toString(): string { return `${ROOTED} ${plainText(counted(this.level, "étape"))}` }
 
-    public override toSemString(): Text { return [ROOTED, ` ${counted(this.level, "étape")}`] }
+    public override toSemString(): Text { return [ROOTED, " ", counted(this.level, "étape")] }
 
     public init({ battle, unit }: UnitContext): void {
         unit.stats.mobility.add(this.#key, new Multiply(0))

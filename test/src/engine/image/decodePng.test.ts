@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { decodePng, PngError } from "@game/core"
-import type { PixelData } from "@game/core"
+import { decodePng } from "@game/core-src/engine/image/decodePng"
+import { PngError } from "@game/core-src/engine/image/PngError"
+import type { PixelData } from "@game/core-src/engine/image/PixelData"
 
 import { GREY, GREY_ALPHA, INDEXED, png, RGB, RGBA } from "../../fixtures/png"
 

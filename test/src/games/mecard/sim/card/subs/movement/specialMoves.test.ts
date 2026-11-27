@@ -1,8 +1,17 @@
 import { describe, expect, test } from "vitest"
-import {
-    ANGEL_FLIGHT, Arena, Battle, BOUNCE_DASH, HEAD_JUMP, Heart, HUNT, KNIGHT_MOVE, LEAP, RED_HEART, ROOTED,
-    SHADOW_STEP, Vector2,
-} from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { ANGEL_FLIGHT } from "@game/core-src/games/mecard/sim/card/subs/movement/AngelFlight"
+import { BOUNCE_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BounceDash"
+import { HEAD_JUMP } from "@game/core-src/games/mecard/sim/card/subs/movement/HeadJump"
+import { HUNT } from "@game/core-src/games/mecard/sim/card/subs/movement/Hunt"
+import { KNIGHT_MOVE } from "@game/core-src/games/mecard/sim/card/subs/movement/KnightMove"
+import { LEAP } from "@game/core-src/games/mecard/sim/card/subs/movement/Leap"
+import { SHADOW_STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/ShadowStep"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../../fixtures"
 

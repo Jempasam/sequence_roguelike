@@ -1,5 +1,10 @@
-import { BATTLE, BOSS, ELITE, Journey, Rng } from "@game/core/mecard"
-import type { FightCategory, FloorType, Monster, Place } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { BATTLE, BOSS, ELITE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
 
 import { normalize, UsageError } from "./errors"
 import type { Fighter, FighterKind, Roster } from "./fighters"

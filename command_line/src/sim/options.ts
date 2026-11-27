@@ -1,7 +1,7 @@
 import { existsSync, statSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 
-import { allFightTypes } from "@game/core/mecard"
+import { allFightTypes } from "@game/core-src/games/mecard/sim/catalog/fightTypes"
 
 import { choiceOf, integerOf, isSet, listOf, parseArgs, valueOf, valuesOf } from "./args"
 import type { OptionSpec } from "./args"

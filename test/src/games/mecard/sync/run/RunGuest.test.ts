@@ -1,9 +1,13 @@
-import { Fault, ManualScheduler, NetSync } from "@game/core"
+import { Fault } from "@game/core-src/engine/net/Fault"
+import { NetSync } from "@game/core-src/engine/net/NetSync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
-import { DeckAi } from "@game/core/mecard"
-import {
-    COOP_SEATS, FIXED_SEATS, RunBroadcaster, RunGuest, RunHost, RunReceiver,
-} from "@game/core/mecard/sync"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { RunBroadcaster } from "@game/core-src/games/mecard/sync/run/RunBroadcaster"
+import { RunGuest } from "@game/core-src/games/mecard/sync/run/RunGuest"
+import { RunHost } from "@game/core-src/games/mecard/sync/run/RunHost"
+import { RunReceiver } from "@game/core-src/games/mecard/sync/run/RunReceiver"
+import { COOP_SEATS, FIXED_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
 
 import { nodeNet, signalingOf, startNetServer } from "../../../../fixtures/netServer"
 import type { NetServer } from "../../../../fixtures/netServer"

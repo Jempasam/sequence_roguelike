@@ -6,8 +6,8 @@ import { HAZARD_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Pose } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
-import { frenchNumber } from "../../../battle/words"
 import { BURN, Burn } from "../../../status/subs/Burn"
+import { STUNNED } from "../../../status/subs/Stunned"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
@@ -61,7 +61,7 @@ export function groundOf(unit: Unit, pose: Pose): Area {
 
 /** Blow up: every unit around takes the damage, then the unit is gone, a bomb as a goblin. */
 export const KAMIKAZE = new ActionCard("Kamikaze", [
-    "Explose : ", BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", frenchNumber(KAMIKAZE_RADIUS), " ",
+    "Explose : ", BOMB_DAMAGE, " ", DamageType.PHYSICAL, " à chaque ", UNIT, " à ", KAMIKAZE_RADIUS, " ",
     DISTANCE, " autour. Puis meurt.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
@@ -74,12 +74,12 @@ export const KAMIKAZE = new ActionCard("Kamikaze", [
 
 /** Flash: every unit around is stunned, then the unit is gone. */
 export const FLASH = new ActionCard("Flash", [
-    "Étourdit chaque ", UNIT, " à ", frenchNumber(FLASH_REACH), " ", DISTANCE, " autour. Puis meurt.",
+    "Chaque ", UNIT, " à ", FLASH_REACH, " ", DISTANCE, " autour gagne ", STUNNED, " ", 1, ". Puis meurt.",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const flash = unit.around(FLASH_REACH)
         battle.post(fading(FLASH_TIME, [polygonOf(flash, FLASH_COLOR)]))
-        for(const target of battle.fetch(flash, unit)) battle.stun(target)
+        for(const target of battle.fetch(flash, unit)) battle.applyStatus(target, STUNNED, 1)
         unit.hearts.slay(null)
         hold(battle, SHORT_TIME)
     },

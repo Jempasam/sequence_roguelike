@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { Observable } from "@game/core/mecard"
-import type { DuelFighting, DuelRacePlayer, RosterEntry } from "@game/core/mecard/sync"
+import { Observable } from "@game/core-src/lifetime/Observable"
+import type {
+    DuelRacePlayer,
+} from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/DuelRacePlayer"
+import type { DuelFighting } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/players/HubPort"
+import type { RosterEntry } from "@game/core-src/games/mecard/sync/lobby/RosterMessage"
 import { RaceTab } from "@game/core/mecard/duel-ui"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"

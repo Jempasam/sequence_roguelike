@@ -1,11 +1,15 @@
-import { LANCER_KIT, Run, SWORDSMAN_KIT } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
-import type { Seatable } from "@game/core/mecard/sync"
-import {
-    gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, ParticipantChoices, runTableMode,
-} from "@game/core/mecard/sync"
-import type { ClientRuns } from "@game/core/mecard/sync"
-import { ManualScheduler } from "@game/core"
+import { LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Seatable } from "@game/core-src/games/mecard/sync/run/Seats"
+import { runTableMode } from "@game/core-src/games/mecard/sim/mode/subs/runTable/RunTableMode"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { ParticipantChoices } from "@game/core-src/games/mecard/sync/lobby/ParticipantChoices"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { ClientRuns } from "@game/core-src/games/mecard/sim/mode/subs/runTable/TableOwner"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
 import { fight } from "../fixtures"
 import { describe, expect, test } from "vitest"
 

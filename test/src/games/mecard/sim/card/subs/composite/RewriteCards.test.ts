@@ -1,10 +1,33 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { CardChain, resolve } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
 import {
-    BOTTLE, CardChain, CHAOS, DOUBLE_DIAGONAL, DRAW, FIRE, FusionCard, Heart, INSTINCT, POISON,
-    POTION_POUCH, PRAYER, PREPARATION, RECOVERY, RED_HEART, REPEAT_2, REPETITION, resolve, SLASH, SPELL, STEP,
-    SUPER_REPETITION, THRUST, TORNADO, Vector2, REACTION, RITUAL, WATER, AURA,
-} from "@game/core/mecard"
-import type { RewriteContext } from "@game/core/mecard"
+    INSTINCT,
+    POTION_POUCH,
+    RECOVERY,
+    REPETITION,
+    SUPER_REPETITION,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/RewriteCards"
+import { DOUBLE_DIAGONAL } from "@game/core-src/games/mecard/sim/card/subs/modifier/DoubleDiagonal"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { TORNADO } from "@game/core-src/games/mecard/sim/card/subs/modifier/Tornado"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { BOTTLE } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { POISON } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { DRAW } from "@game/core-src/games/mecard/sim/card/subs/preparation/Draw"
+import { PRAYER } from "@game/core-src/games/mecard/sim/card/subs/preparation/Prayer"
+import { AURA } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { FIRE, WATER } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { REACTION, RITUAL } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementRewrites"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import { CHAOS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import type { RewriteContext } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, play, unit } from "../../../fixtures"
 

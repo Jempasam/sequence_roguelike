@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Camera, Mat4 } from "@game/core"
+import { Camera } from "@game/core-src/engine/gpu/Camera"
+import { Mat4 } from "@game/core-src/engine/math/Mat4"
 
 // --- Fixture builders ---
 

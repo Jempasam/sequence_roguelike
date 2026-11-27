@@ -1,5 +1,7 @@
-import { ALL_KITS, ALL_MONSTERS, TAVERN_HALT } from "../../../../../sim"
-import type { HaltType } from "../../../../../sim"
+import { ALL_KITS } from "../../../../../sim/catalog/kits"
+import { ALL_MONSTERS } from "../../../../../sim/catalog/monsters"
+import { TAVERN_HALT } from "../../../../../sim/halt/subs/gift/TavernHalt"
+import type { HaltType } from "../../../../../sim/halt/HaltType"
 import type { AmbientContext } from "../../AmbientContext"
 import type { AmbientEffect } from "../../AmbientEffect"
 import { MONSTER_HALTS } from "../../themes"
@@ -24,7 +26,7 @@ function partyEffects(name: string, halts: readonly HaltType[], cast: Cast): Amb
         ["out", oneOf(leave(places), swap(places, everywhere))],
     ]
     return itineraries.map(([way, itinerary]) => tripEffect({
-        id: `${name}-${way}`, itinerary, cast, traveler: COMPANY, spacing: 20, weight: 3,
+        id: `${name}-${way}`, category: "traffic", itinerary, cast, traveler: COMPANY, spacing: 20, weight: 3,
     }))
 }
 
@@ -38,6 +40,7 @@ function queueEffects(): AmbientEffect[] {
     ]
     return itineraries.map(([way, itinerary]) => tripEffect({
         id: `enemy-queue-${way}`,
+        category: "traffic",
         itinerary: when(HAS_FIGHT, itinerary),
         cast: manyOfFights(3, 5),
         traveler: WALKER,

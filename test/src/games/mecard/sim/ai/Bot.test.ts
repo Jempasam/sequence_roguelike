@@ -1,6 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { AIM, FIRE, GAMBLE, Heart, DeckAi, RED_HEART, SLASH, STEP, TURNS, Vector2 } from "@game/core/mecard"
-import type { Card } from "@game/core/mecard"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { GAMBLE } from "@game/core-src/games/mecard/sim/card/subs/modifier/GambleCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, MONSTERS, unit } from "../fixtures"
 

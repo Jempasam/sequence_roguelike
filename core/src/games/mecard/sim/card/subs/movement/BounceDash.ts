@@ -1,7 +1,6 @@
 import type { Vector2 } from "../../../base/Vector2"
 import { MOVE_COLOR, MOVE_WIDTH } from "../../../battle/previewColors"
 import { AGILITE, DISTANCE } from "../../../base/keywords"
-import { frenchNumber } from "../../../battle/words"
 import type { Action } from "../../../battle/Action"
 
 import { ActionCard } from "../ActionCard"
@@ -38,9 +37,9 @@ export class BounceDashCard extends ActionCard {
         public readonly bounces: number,
     ){
         super("Bounce Dash", [
-            WALK.as("Fonce"), " de ", frenchNumber(length), "×", AGILITE, " ", DISTANCE, ". Arrêté en route, tu rebondis et ",
+            WALK.as("Fonce"), " de ", length, "×", AGILITE, " ", DISTANCE, ". Arrêté en route, tu rebondis et ",
             WALK.as("repars"), " de ",
-            frenchNumber(length), "×", AGILITE, " ", DISTANCE, ", ", bounces, " rebonds au plus.",
+            length, "×", AGILITE, " ", DISTANCE, ", ", bounces, " rebonds au plus.",
         ], Rarity.RARE, BounceDashCard.#dashing(length, bounces))
     }
 

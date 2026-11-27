@@ -7,6 +7,7 @@ import { aimedCone, closestInCone, LONG_CONE_RANGE, NARROW_COS_HALF } from "../t
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import * as Previews from "../../../battle/preview/Previews"
+import * as Steps from "../../../battle/mecanic/step"
 
 /** What a stutter finding nobody says. */
 const NOBODY = "personne à faire bégayer"
@@ -21,7 +22,8 @@ function stuttering(range: number, cosHalf: number): Action {
             const target = closestInCone(battle, unit, unit, range, cosHalf)
             if(!target) battle.events.push({ type: "skipped", unit, reason: NOBODY })
             hold(battle, SHORT_TIME, aimedCone(unit, unit, range, cosHalf, target, NOBODY))
-            if(target && !battle.repeatLast(target)) battle.events.push({ type: "skipped", unit, reason: NOTHING })
+            if(!target || Steps.repeat(battle, target)) return
+            battle.events.push({ type: "skipped", unit, reason: NOTHING })
         },
         preview: ({ battle, unit, pose }) => {
             const target = closestInCone(battle, unit, pose, range, cosHalf)

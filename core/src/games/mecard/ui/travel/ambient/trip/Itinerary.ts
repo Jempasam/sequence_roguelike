@@ -44,26 +44,26 @@ export function stroll(places: Places): Itinerary {
     }
 }
 
-/** Leave a place and go out of the map, fading at its border. */
+/** Leave a place and go out of the map, fading at its border. Only where the edges are open. */
 export function leave(places: Places): Itinerary {
     return {
-        playable: context => places(context).length > 0,
+        playable: context => context.openEdges() && places(context).length > 0,
         draw(context){
             const stops = places(context)
-            if(stops.length === 0) return null
+            if(!context.openEdges() || stops.length === 0) return null
             const from = pick(context.random, stops)
             return { from, to: edgeStop(context, from.position), route: wander }
         },
     }
 }
 
-/** Come into the screen and go into a place. */
+/** Come into the screen and go into a place. Only where the edges are open. */
 export function enter(places: Places): Itinerary {
     return {
-        playable: context => places(context).length > 0,
+        playable: context => context.openEdges() && places(context).length > 0,
         draw(context){
             const stops = places(context)
-            if(stops.length === 0) return null
+            if(!context.openEdges() || stops.length === 0) return null
             const to = pick(context.random, stops)
             return { from: edgeStop(context, to.position), to, route: wander }
         },
@@ -99,12 +99,13 @@ export interface CrossingOptions {
     readonly band?: readonly [number, number]
 }
 
-/** Come into the screen by an edge and go out by another, without any place. */
+/** Come into the screen by an edge and go out by another, without any place, where the edges are open. */
 export function crossing(options: CrossingOptions = {}): Itinerary {
     const route = options.route ?? wander
     return {
-        playable: () => true,
+        playable: context => context.openEdges(),
         draw(context){
+            if(!context.openEdges()) return null
             const { random } = context
             const { width, height } = context.size()
             const { band } = options

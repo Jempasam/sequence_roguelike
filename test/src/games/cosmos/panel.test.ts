@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { defaultLevels, panelModel, Space, World } from "@game/core/cosmos"
+import { defaultLevels } from "@game/core-src/games/cosmos/level/defaultLevels"
+import { World } from "@game/core-src/games/cosmos/level/World"
+import { Space } from "@game/core-src/games/cosmos/space/Space"
+import { panelModel } from "@game/core-src/games/cosmos/ui/LevelPanelModel"
 
 // --- Fixture builders ---
 

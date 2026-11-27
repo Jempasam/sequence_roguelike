@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Bubble, Color, Label, Paragraph } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Bubble } from "@game/core-src/engine/ui/widget/Bubble"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import { Paragraph } from "@game/core-src/engine/ui/widget/Paragraph"
 
 import { ADVANCE, LINE, Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

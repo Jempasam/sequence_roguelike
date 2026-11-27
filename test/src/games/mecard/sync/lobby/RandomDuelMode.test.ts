@@ -1,9 +1,12 @@
-import { ManualScheduler } from "@game/core"
-import type { Battle } from "@game/core/mecard"
-import {
-    gameModeAsLobbyMode, Lobby, LobbyGuest, LocalRoom, LocalSync, RANDOM_DUEL_PAUSE_MS, randomDuelMode,
-} from "@game/core/mecard/sync"
-import type { DuelBench } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { RANDOM_DUEL_PAUSE_MS } from "@game/core-src/games/mecard/sim/mode/subs/randomDuel/RandomDuelManager"
+import { randomDuelMode } from "@game/core-src/games/mecard/sim/mode/subs/randomDuel/RandomDuelMode"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { DuelBench } from "@game/core-src/games/mecard/sim/mode/subs/duel/DuelClient"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */
@@ -55,7 +58,7 @@ class Screen implements DuelBench {
 }
 
 describe("the random duel", () => {
-    test("three players → two fight a duel they plan, the third watches it, and all are back once it is over", async() => {
+    test("three players → two fight a duel they plan, the third watches it, and another follows once it is over", async() => {
         const timer = new ManualScheduler()
         const screens = [new Screen(timer), new Screen(timer), new Screen(timer)]
         const [host, ana, bob] = screens.map(screen => [gameModeAsLobbyMode(randomDuelMode(screen), screen, screen.timer)])
@@ -77,10 +80,11 @@ describe("the random duel", () => {
         const players = screens.filter(screen => screen.shown[0].units.length > 0)
         expect(players).toHaveLength(2)
         expect(screens[0].shown[0].battle.phase).toBe("over")
-        // Once the players read who won, the duel is taken off every screen.
+        // Once the players read who won, another duel is shown to every screen.
+        await settle()
         timer.advance(RANDOM_DUEL_PAUSE_MS + 1)
         await settle()
-        expect(screens.every(screen => screen.hidden >= 1)).toBe(true)
+        expect(screens.every(screen => screen.shown.length >= 2)).toBe(true)
         lobby.stop()
     })
 

@@ -1,6 +1,13 @@
-import { Placements, GameSession, LocalRoom, ParticipationReceiver } from "@game/core/mecard/sync"
-import type { Placement, Arrival, ParticipationPolicy } from "@game/core/mecard/sync"
-import { ManualScheduler } from "@game/core"
+import { Placements } from "@game/core-src/games/mecard/sync/participation/Participation"
+import { ParticipationReceiver } from "@game/core-src/games/mecard/sync/participation/ParticipationReceiver"
+import { GameSession } from "@game/core-src/games/mecard/sync/session/GameSession"
+import { LocalRoom } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type {
+    Placement,
+    Arrival,
+    ParticipationPolicy,
+} from "@game/core-src/games/mecard/sync/participation/Participation"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

@@ -1,9 +1,20 @@
 import { describe, expect, test } from "vitest"
-import {
-    AIM, Arena, BACK_DASH, Battle, CardChain, Heart, loadBattle, RED_HEART, saveBattle, SLASH, STEP,
-    THRUST, TURNS, Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { BACK_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/BackDash"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { loadBattle, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 import { HEROES, MONSTERS, unit } from "../fixtures"
 
 // --- Fixture builders ---

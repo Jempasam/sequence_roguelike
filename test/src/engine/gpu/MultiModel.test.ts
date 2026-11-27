@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest"
-import {
-    Color, Gpu, Mat4, Model, ModelSurface, MultiModel, Painter, ScreenSurface, Sprite, Texture,
-} from "@game/core"
+import { Gpu } from "@game/core-src/engine/gpu/Gpu"
+import { Model } from "@game/core-src/engine/gpu/Model"
+import { ModelSurface } from "@game/core-src/engine/gpu/ModelSurface"
+import { MultiModel } from "@game/core-src/engine/gpu/MultiModel"
+import { Painter } from "@game/core-src/engine/gpu/Painter"
+import { ScreenSurface } from "@game/core-src/engine/gpu/ScreenSurface"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Mat4 } from "@game/core-src/engine/math/Mat4"
 
 import { fakeGfx, fakeGl } from "../../fixtures/fakeGl"
 import type { FakeGl } from "../../fixtures/fakeGl"

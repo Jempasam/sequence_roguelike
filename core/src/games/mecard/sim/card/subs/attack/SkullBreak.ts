@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -10,6 +9,7 @@ import { BLOW_DAMAGE, BlowCard } from "./BlowCard"
 import { DAGGER_RANGE, DAGGER_WIDTH } from "./Dagger"
 import { ALLONGE, DISTANCE, FORCE, UNIT } from "../../../base/keywords"
 import * as Areas from "../../../battle/area/Areas"
+import { STUNNED } from "../../../status/subs/Stunned"
 
 /** Blows to the left and to the right at once: hit on both sides, whoever is hit is stunned. */
 export class SkullBreakCard extends BlowCard {
@@ -23,9 +23,9 @@ export class SkullBreakCard extends BlowCard {
         public readonly width: number,
     ){
         super("Brisage de crâne", [
-            "Frappe à gauche et à droite, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
+            "Frappe à gauche et à droite, à ", range, "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
             DamageType.PHYSICAL, " à chaque ", UNIT, ". ",
-            "Si les deux côtés touchent, toutes les ", UNIT.as("unités"), " touchées sont étourdies.",
+            "Si les deux côtés touchent, chaque ", UNIT, " touchée gagne ", STUNNED, " ", 1, ".",
         ], Rarity.RARE, BLOW_DAMAGE)
     }
 
@@ -44,7 +44,7 @@ export class SkullBreakCard extends BlowCard {
             return unit.direction.right.dot(target.position.minus(unit.position)) > 0
         }
         const bothSides = hit.some(onTheRight) && hit.some(target => !onTheRight(target))
-        if(bothSides) for(const target of hit) battle.stun(target)
+        if(bothSides) for(const target of hit) battle.applyStatus(target, STUNNED, 1)
         return hit
     }
 }

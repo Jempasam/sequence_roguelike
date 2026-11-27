@@ -1,13 +1,20 @@
-import { ManualScheduler } from "@game/core"
-import { Rng } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
-import {
-    ArrivalWatch, Deadline, Epoch, lastOne, LAST_ONE_LINGER_MS, LocalGame, LocalSync, randomDuelMode, Settle,
-    tournamentMode,
-} from "@game/core/mecard/sync"
-import type {
-    GameMember, GameModeContext, GameModeManager, GameMode, Progress, TournamentBench,
-} from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Epoch } from "@game/core-src/games/mecard/sim/mode/Epoch"
+import { lastOne, LAST_ONE_LINGER_MS } from "@game/core-src/games/mecard/sim/mode/lastOne"
+import { LocalGame } from "@game/core-src/games/mecard/sim/mode/local/LocalGame"
+import { Settle } from "@game/core-src/games/mecard/sim/mode/Settle"
+import { ArrivalWatch } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/ArrivalWatch"
+import { randomDuelMode } from "@game/core-src/games/mecard/sim/mode/subs/randomDuel/RandomDuelMode"
+import { tournamentMode } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentMode"
+import { Deadline } from "@game/core-src/games/mecard/sync/Deadline"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameModeManager, GameMode } from "@game/core-src/games/mecard/sim/mode/GameMode"
+import type { GameModeContext } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { TournamentBench } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentOwner"
+import type { Progress } from "@game/core-src/games/mecard/sync/progress/ProgressMessage"
 import { describe, expect, test } from "vitest"
 
 async function settle(): Promise<void> {

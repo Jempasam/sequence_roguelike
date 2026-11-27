@@ -6,7 +6,6 @@ import type { Area } from "../../../battle/Area"
 import { UNIT_RADIUS } from "../../../battle/Unit"
 import type { Unit } from "../../../battle/Unit"
 import { NOTE_COLOR, PHYSICAL_COLOR } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
@@ -69,7 +68,7 @@ function fishingCenter(pose: Pose, unit: Unit) {
  * gold, and bring another one in the hand.
  */
 export const FISHING: ActionCard = new ActionCard("Pêche", [
-    "Frappe en croix à ", frenchNumber(FISHING_AHEAD), "×", ALLONGE, " ", DISTANCE, " devant : ", 1, "+", FORCE, " ",
+    "Frappe en croix à ", FISHING_AHEAD, "×", ALLONGE, " ", DISTANCE, " devant : ", 1, "+", FORCE, " ",
     DamageType.PHYSICAL, ", le double sur une ", UNIT, " ", FEBRILE, ". Si une ", UNIT, " meurt : ",
     TELEPORT.as("se téléporte"), " au centre, gagne ", FISHING_GOLD,
     " or par mort, et reprend une Pêche en main.",

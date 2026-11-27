@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
@@ -23,6 +22,6 @@ export class AssassinBlowCard extends DaggerCard {
 }
 
 export const ASSASSIN_BLOW = new AssassinBlowCard("Coup d'assassin", [
-    "Poignarde sur ", frenchNumber(DAGGER_RANGE), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+    "Poignarde sur ", DAGGER_RANGE, "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, " à chaque ", UNIT, ", ×", BACKSTAB, " dans le dos, ×", FEVERISH_FACTOR, " sur une ", UNIT, " ", FEBRILE, ". Les deux se cumulent.",
 ], Rarity.RARE, DAGGER_RANGE, DAGGER_WIDTH, BACKSTAB)

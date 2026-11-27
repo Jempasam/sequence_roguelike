@@ -1,7 +1,9 @@
-import {
-    ChatGuest, ChatHost, CHAT_TOPIC, LocalRoom, LocalSync, readChatMessage, UnreadableFault, writeChatMessage,
-} from "@game/core/mecard/sync"
-import type { ChatAuthor, ChatLine } from "@game/core/mecard/sync"
+import { ChatGuest } from "@game/core-src/games/mecard/sync/chat/ChatGuest"
+import { ChatHost } from "@game/core-src/games/mecard/sync/chat/ChatHost"
+import { readChatMessage, writeChatMessage } from "@game/core-src/games/mecard/sync/chat/ChatMessage"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { CHAT_TOPIC, LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { ChatAuthor, ChatLine } from "@game/core-src/games/mecard/sync/chat/ChatMessage"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

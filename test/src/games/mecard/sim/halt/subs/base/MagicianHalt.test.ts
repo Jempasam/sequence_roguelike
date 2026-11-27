@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { ALL_BOOSTERS, openBooster, Rng } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { ALL_BOOSTERS, openBooster } from "@game/core-src/games/mecard/sim/catalog/boosters"
 
 // --- Tests ---
 

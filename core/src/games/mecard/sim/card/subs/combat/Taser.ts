@@ -9,7 +9,8 @@ import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
 import { Rarity } from "../../Rarity"
 import { TOUCH_RANGE, touchZone } from "./touch"
-import { DISTANCE, UNIT, BATTLE_TURN } from "../../../base/keywords"
+import { DISTANCE, UNIT } from "../../../base/keywords"
+import { ELECTROCUTED } from "../../../status/subs/Electrocuted"
 import { DamageType } from "../../../battle/DamageType"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
@@ -39,7 +40,7 @@ export class TaserCard extends ActionCard {
     ){
         super("Taser", [
             "Électrocute l'", UNIT, " juste devant, à ", TOUCH_RANGE, " ", DISTANCE, " : ", damage, " ", DamageType.PHYSICAL,
-            ", et sa prochaine ", BATTLE_TURN.as("étape"), " est perdue.",
+            ", et elle gagne ", ELECTROCUTED, " ", 1, ".",
         ], Rarity.RARE, TaserCard.#shocking(damage))
     }
 
@@ -49,14 +50,15 @@ export class TaserCard extends ActionCard {
             use: function ({ battle, unit }){
                 const area = zap(battle, unit, unit)
                 const struck = battle.strike(unit, area, amount, DamageType.PHYSICAL, () => 1, LIGHTNING_LOOK)
-                for(const target of struck) battle.shock(target)
+                for(const target of struck) battle.applyStatus(target, ELECTROCUTED, 1)
                 hold(battle, SHORT_TIME, [Previews.polygon(area, CONTROL_COLOR)])
             },
             preview: ({ battle, unit, pose }) => {
                 const { unit: target } = battle.ray(unit, TOUCH_RANGE, pose)
                 const shown = Previews.polygon(zap(battle, unit, pose), CONTROL_COLOR)
                 if(!target) return Previews.still(pose, touchZone(unit, pose), shown)
-                return Previews.still(pose, touchZone(unit, pose), shown, Previews.label(target.position, "électrocuté", NOTE_COLOR))
+                const word = Previews.label(target.position, ELECTROCUTED.name, NOTE_COLOR)
+                return Previews.still(pose, touchZone(unit, pose), shown, word)
             },
         }
     }

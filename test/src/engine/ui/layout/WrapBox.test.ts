@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { WrapBox } from "@game/core"
+import { WrapBox } from "@game/core-src/engine/ui/layout/WrapBox"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 

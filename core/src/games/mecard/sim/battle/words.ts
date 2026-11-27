@@ -1,3 +1,4 @@
+import { deferred } from "../../../../semantic"
 import type { Keyword, KeywordWord, Semantic, Text } from "../../../../semantic"
 import { GOLD, HEART, SUMMON_STAT } from "../base/keywords"
 import { colored, rgba } from "../base/Rgba"
@@ -10,11 +11,6 @@ import { numberText } from "../base/text"
 /** The color a number of hearts is named in: the one of the red hearts. */
 const HEARTS_COLOR = rgba(0.9, 0.15, 0.2)
 
-/** A number as the texts of the game write it: rounded, its decimals after a comma, `1,3`. */
-export function frenchNumber(value: number): string {
-    return numberText(value).replace(".", ",")
-}
-
 /** Hearts, lost or healed: a number and a red heart. */
 export class HeartCount implements Semantic {
 
@@ -24,11 +20,11 @@ export class HeartCount implements Semantic {
     ){}
 
 
-    public toString(): string { return `${frenchNumber(this.amount)} cœur${this.amount > 1 ? "s" : ""}` }
+    public toString(): string { return `${numberText(this.amount)} cœur${this.amount > 1 ? "s" : ""}` }
 
     public toSemString(): Text {
         const word = this.amount > 1 ? "cœurs" : "cœur"
-        return colored(HEARTS_COLOR, [frenchNumber(this.amount), " ", HEART.as(word)])
+        return colored(HEARTS_COLOR, [this.amount, " ", HEART.as(word)])
     }
 }
 
@@ -47,11 +43,11 @@ export class SummonedHearts implements Semantic {
     ){}
 
 
-    public toString(): string { return `${frenchNumber(this.amount)} + invocation` }
+    public toString(): string { return `${numberText(this.amount)} + invocation` }
 
     public toSemString(): Text {
         const word = this.amount > 1 ? "cœurs" : "cœur"
-        const number = colored(HEARTS_COLOR, [frenchNumber(this.amount), " + ", SUMMON_STAT])
+        const number = colored(HEARTS_COLOR, [this.amount, " + ", SUMMON_STAT])
         return this.kind ? [number, " ", HEART.as(word), " ", this.kind] : [number, " ", HEART.as(word)]
     }
 }
@@ -65,14 +61,14 @@ export class GoldCount implements Semantic {
     ){}
 
 
-    public toString(): string { return `${frenchNumber(this.amount)} or` }
+    public toString(): string { return `${numberText(this.amount)} or` }
 
-    public toSemString(): Text { return [frenchNumber(this.amount), " ", GOLD] }
+    public toSemString(): Text { return [this.amount, " ", GOLD] }
 }
 
 /** A count of something, its word made plural past one: `2 rounds`, `1 étape`. */
-export function counted(count: number, word: string, plural = `${word}s`): string {
-    return `${frenchNumber(count)} ${count > 1 ? plural : word}`
+export function counted(count: number, word: string, plural = `${word}s`): Semantic {
+    return deferred(() => [count, ` ${count > 1 ? plural : word}`])
 }
 
 /** A keyword made plural past one, in a text: `CARTE` written `carte` or `cartes`. */
@@ -82,5 +78,5 @@ export function keywordOf(count: number, keyword: Keyword): KeywordWord {
 
 /** A count of a keyword, in a text: `3 cartes`. */
 export function countedWord(count: number, keyword: Keyword): Text {
-    return [`${frenchNumber(count)} `, keywordOf(count, keyword)]
+    return [count, " ", keywordOf(count, keyword)]
 }

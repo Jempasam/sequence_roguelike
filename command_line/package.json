@@ -8,7 +8,7 @@
         "./sim": "./src/sim/index.ts"
     },
     "scripts": {
-        "build": "esbuild src/main.ts src/sim/worker.ts --bundle --platform=node --format=esm --target=node20 --outdir=dist --entry-names=[name] --out-extension:.js=.mjs --log-level=warning",
+        "build": "esbuild src/main.ts src/sim/worker.ts --bundle --alias:@game/core-src=../core/src --platform=node --format=esm --target=node20 --outdir=dist --entry-names=[name] --out-extension:.js=.mjs --log-level=warning",
         "start": "npm run build --silent && node dist/main.mjs",
         "start:tsx": "tsx src/main.ts",
         "typecheck": "tsc -p ."

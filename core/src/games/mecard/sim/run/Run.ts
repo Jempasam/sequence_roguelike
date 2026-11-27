@@ -1,6 +1,3 @@
-import { concat } from "../../../../semantic"
-import type { Text } from "../../../../semantic"
-import { HEART } from "../base/keywords"
 import { Observable } from "../base/Observable"
 import { rgba } from "../base/Rgba"
 import { Rng } from "../base/Rng"
@@ -25,16 +22,6 @@ import type { Kit } from "../catalog/kits"
 import type { Monster } from "../catalog/monsters"
 import { Heart, insertHeart } from "../heart/Heart"
 import type { HeartKind } from "../heart/HeartKind"
-import { BLACK_HEART } from "../heart/subs/BlackHeartKind"
-import { BLUE_HEART } from "../heart/subs/BlueHeartKind"
-import { EXPLOSIVE_HEART } from "../heart/subs/ExplosiveHeartKind"
-import { GLASS_HEART } from "../heart/subs/GlassHeartKind"
-import { PINK_HEART } from "../heart/subs/PinkHeartKind"
-import { QUICK_HEART } from "../heart/subs/QuickHeartKind"
-import { RED_HEART } from "../heart/subs/RedHeartKind"
-import { SHIELD_HEART } from "../heart/subs/ShieldHeartKind"
-import { THORN_HEART } from "../heart/subs/ThornHeartKind"
-import { VITAL_HEART } from "../heart/subs/VitalHeartKind"
 import type { Item } from "../item/Item"
 import { loadBattle } from "../save/battleSave"
 import type { BattleSave } from "../save/battleSave"
@@ -46,12 +33,7 @@ import type { Usable } from "../usable/Usable"
 
 import { allyOf, HERO_COLOR, heroOf, merged, recruitOf } from "./Hero"
 import type { Hero } from "./Hero"
-
-/** Hearts found as loot: a kind, and how many of it, which balances the kind. */
-export interface HeartLoot {
-    readonly heart: HeartKind
-    readonly count: number
-}
+import type { HeartLoot } from "./heartLoot"
 
 /** Something a character of the party was given. */
 export interface Gain<T> {
@@ -62,28 +44,11 @@ export interface Gain<T> {
 /** Where a run stands: on its journey, in a battle, or over, the party fallen. */
 export type RunPhase = "travel"|"battle"|"over"
 
-/** What hearts found as loot are, for the player: their kind, how many, and what they do. */
-export function heartLootText({ heart, count }: HeartLoot): Text {
-    return concat(HEART, " ", heart, " ×", String(count), " : ", heart.description)
-}
-
 /** The color the name of the team of the monsters is written in. */
 const MONSTERS_COLOR: Rgba = rgba(0.95, 0.35, 0.3)
 
 /** How much gold a run starts with. */
 const STARTING_GOLD = 30
-
-/** The hearts won at the end of a fight: those that come back, so they last the whole run. */
-export const KEPT_LOOT_HEARTS: readonly HeartLoot[] = [
-    { heart: RED_HEART, count: 2 }, { heart: PINK_HEART, count: 1 }, { heart: BLACK_HEART, count: 3 },
-]
-
-/** The hearts given at the hospital: those used once, gone for good once lost. */
-export const SPENT_LOOT_HEARTS: readonly HeartLoot[] = [
-    { heart: SHIELD_HEART, count: 2 }, { heart: THORN_HEART, count: 1 }, { heart: GLASS_HEART, count: 4 },
-    { heart: EXPLOSIVE_HEART, count: 1 }, { heart: VITAL_HEART, count: 1 }, { heart: QUICK_HEART, count: 1 },
-    { heart: BLUE_HEART, count: 3 },
-]
 
 /**
  * A run: a journey floor after floor, down layers of places, with the same party, who keep their wounds and

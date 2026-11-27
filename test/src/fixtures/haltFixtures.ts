@@ -1,9 +1,25 @@
-import { plainText } from "@game/core"
-import type { Text } from "@game/core"
-import { deckNameOf, forge, GOBLIN, Run, SLASH, STEP, THRUST } from "@game/core/mecard"
+import { plainText } from "@game/core-src/semantic/Text"
+import type { Text } from "@game/core-src/semantic/Text"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { deckNameOf } from "@game/core-src/games/mecard/sim/run/deckName"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { forge } from "@game/core-src/games/mecard/sim/run/visits"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Fight } from "@game/core-src/games/mecard/sim/fight/Fight"
 import type {
-    Card, CatalogChoosing, CatalogPick, Choosing, Count, Fight, HaltContext, HaltMoment, Hero, Shown, Way,
-} from "@game/core/mecard"
+    CatalogChoosing,
+    CatalogPick,
+    Choosing,
+    Count,
+    HaltContext,
+    Shown,
+    Way,
+} from "@game/core-src/games/mecard/sim/halt/HaltContext"
+import type { HaltMoment } from "@game/core-src/games/mecard/sim/halt/SceneLook"
+import type { Hero } from "@game/core-src/games/mecard/sim/run/Hero"
 import { startedRun } from "./startedRun"
 
 /** How many answers a play gives at most, so a shop that can always be asked again ends. */

@@ -1,11 +1,19 @@
 import { describe, expect, test } from "vitest"
-import {
-    BOTTLE, BOTTLE_BAG, DODGE_CARD, DODGE_SCEPTER, FANG, POISON, POTION_BAG, STEP, WHETSTONE,
-} from "@game/core/mecard"
-import type { Battle, Card, Unit } from "@game/core/mecard"
+import { DODGE_CARD } from "@game/core-src/games/mecard/sim/card/subs/combat/DodgeCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { BOTTLE } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { POISON } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { BOTTLE_BAG } from "@game/core-src/games/mecard/sim/item/subs/hand/BottleBag"
+import { POTION_BAG } from "@game/core-src/games/mecard/sim/item/subs/hand/CardBag"
+import { DODGE_SCEPTER } from "@game/core-src/games/mecard/sim/item/subs/hand/CardScepter"
+import { FANG } from "@game/core-src/games/mecard/sim/item/subs/heal/Fang"
+import { WHETSTONE } from "@game/core-src/games/mecard/sim/item/subs/stat/Whetstone"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, MONSTERS, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Fixture builders ---
 

@@ -1,10 +1,22 @@
 import { readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { Assets, MemoryAssets, SoundPlayer, SoundSettings } from "@game/core"
-import type { TimerPort } from "@game/core"
-import { BATTLE, BOSS, CHEST_HALT, ELITE, GOBLIN, Rng } from "@game/core/mecard"
-import type { FightCategory, HaltType, Observable, Place, PlaceType, Run } from "@game/core/mecard"
+import { Assets } from "@game/core-src/engine/assets/Assets"
+import { BLINKED } from "@game/core-src/games/mecard/sim/battle/mecanic/blink/signals"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
+import { SoundPlayer } from "@game/core-src/engine/audio/SoundPlayer"
+import { SoundSettings } from "@game/core-src/engine/audio/SoundSettings"
+import type { TimerPort } from "@game/core-src/platform/TimerPort"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE, BOSS, ELITE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Observable } from "@game/core-src/lifetime/Observable"
 import { RunSoundLink } from "@game/core/mecard/run-sound-link"
 import { Forwarded } from "@game/core/mecard/forwarded"
 import {
@@ -171,7 +183,7 @@ describe("RunSoundLink, the battle", () => {
         const { audio, forwarded } = linkOf(run)
         run.startBattle()
         await settle()
-        const { blinked } = run.battle!.signals
+        const blinked = run.battle!.observers.of(BLINKED)
         forwarded.forward(blinked, {} as never, "start")
         await settle()
         expect(heard(audio)).toEqual(["fights/battle.ogg", "blink.ogg"])

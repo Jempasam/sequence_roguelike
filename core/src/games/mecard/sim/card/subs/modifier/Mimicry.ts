@@ -12,6 +12,7 @@ import { hold, SHORT_TIME } from "../tools/playing"
 import * as Previews from "../../../battle/preview/Previews"
 import { TURN } from "../../../battle/mecanic/turn/keyword"
 import * as Turn from "../../../battle/mecanic/turn"
+import * as Steps from "../../../battle/mecanic/step"
 
 /** How far around the unit the enemies copy its last action, in meters. */
 const REFLECTION_RADIUS = 3 - UNIT_RADIUS
@@ -35,8 +36,7 @@ const reflecting: Action = {
         }
         const around = battle.enemiesOf(unit).filter(enemy => unit.hitbox.gap(unit, enemy.hitbox, enemy) <= REFLECTION_RADIUS)
         for(const enemy of around){
-            enemy.steps.unshift(echoOf(copied))
-            battle.events.push({ type: "status", unit: enemy, text: "reflet" })
+            Steps.insert(battle, enemy, [echoOf(copied)], { word: "reflet" })
         }
         hold(battle, SHORT_TIME, around.map(enemy => Previews.arrow([unit.position, enemy.position], MOVE_WIDTH / 2, MOVE_COLOR)))
     },

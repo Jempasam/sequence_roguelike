@@ -1,14 +1,54 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
 import {
-    AURA, BRAMBLES, BURN, CONJURATION, CROSSED_SPELL, FIRE, FIRE_ELEMENT, FusionCard, GRAND_RITUAL_CARD,
-    Heart,
-    LAVA, LIGHTNING, LIGHTNING_ELEMENT, loadBattle, MUD, PLANT, PLANT_ELEMENT, POISONED, reaction, REACTION, RED_HEART,
-    RITUAL, ritualType, ROOTED,
-    saveBattle, SHIELD_HEART, SLOWED, SMALL_SPELL, SPELL, STEAM, STEP, STONE, STONE_ELEMENT, STORM, WAIT,
-    WATER, WATER_ELEMENT,
-    WIND, WIND_ELEMENT, Vector2,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+    AURA,
+    CONJURATION,
+    SMALL_SPELL,
+} from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import {
+    FIRE,
+    LIGHTNING,
+    PLANT,
+    STONE,
+    WATER,
+    WIND,
+} from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import {
+    CROSSED_SPELL,
+    GRAND_RITUAL_CARD,
+    REACTION,
+    RITUAL,
+} from "@game/core-src/games/mecard/sim/card/subs/spell/ElementRewrites"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import {
+    BRAMBLES,
+    LAVA,
+    MUD,
+    reaction,
+    STEAM,
+    STORM,
+} from "@game/core-src/games/mecard/sim/element/reactions"
+import { FIRE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Fire"
+import { LIGHTNING_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Lightning"
+import { PLANT_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Plant"
+import { STONE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Stone"
+import { WATER_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Water"
+import { WIND_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Wind"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { loadBattle, saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ritualType } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
+import { ROOTED } from "@game/core-src/games/mecard/sim/status/subs/Rooted"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, expectAt, MONSTERS, play, unit } from "../fixtures"
 
@@ -230,15 +270,9 @@ describe("CONJURATION", () => {
         const first = unit(on, 3, 4.5, { team: MONSTERS, hearts: sturdy() })
         const second = unit(on, 3, 2.5, { team: MONSTERS, hearts: sturdy() })
         const out = unit(on, 6.5, 1, { team: MONSTERS, hearts: sturdy() })
-        const stunned: Unit[] = []
-        const stun = on.stun.bind(on)
-        on.stun = target => {
-            stunned.push(target)
-            stun(target)
-        }
         play(on, [[hero, chain(CONJURATION, LIGHTNING)]])
-        expect(stunned).toEqual([first, second])
-        expect(stunned).not.toContain(out)
+        expect([first, second].map(each => each.statusOf(STUNNED)?.level)).toEqual([1, 1])
+        expect(out.statusOf(STUNNED)).toBeUndefined()
     })
 
     test("a body the caller left comes back from a save with its element", () => {

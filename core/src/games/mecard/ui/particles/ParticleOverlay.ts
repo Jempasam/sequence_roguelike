@@ -4,9 +4,8 @@ import type { SizeHint } from "../../../../engine/ui"
 import type { RunParticleLink } from "./RunParticleLink"
 
 /**
- * The particles of a run laid over the whole interface: it moves them on at each tick, and draws them
- * again while some are alive, and once more when the last one is gone. On the map it ticks even when none
- * is alive, for the ambient to count its waits, but draws nothing until one is.
+ * The particles of a run laid over the whole interface: it moves them on at each tick while some are alive,
+ * and draws them again, and once more when the last one is gone.
  */
 export class ParticleOverlay extends Component {
 
@@ -33,10 +32,10 @@ export class ParticleOverlay extends Component {
 
     protected override tick(dt: number): void {
         const visible = this.link.active || this.#drawn
-        if(!visible && !this.link.onMap) return
+        if(!visible) return
         this.link.update(dt)
         this.#drawn = this.link.active
-        if(visible || this.#drawn) this.invalidate()
+        this.invalidate()
     }
 
 

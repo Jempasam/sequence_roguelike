@@ -18,7 +18,7 @@ export class InventorHalt extends CardGiftHalt {
     constructor(run: Run){
         super(INVENTOR_HALT, run,
             ["Trois ", FUSION.as("collages"), " sortent de l'atelier. Choisis le tien."],
-            sceneLook(28, 26, 23, "inventor"),
+            sceneLook(28, 24, 20, "inventor"),
             {
                 hat: "goggles",
                 clothes: rgba(0.8, 0.7, 0.5),

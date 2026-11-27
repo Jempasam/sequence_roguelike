@@ -1,13 +1,28 @@
 import { describe, expect, test } from "vitest"
-import {
-    ARCHER_KIT, BATTLE, BATTLE_REWARD_HALT, BOSS, CaveFloor, CHEST_HALT, ELITE, EXIT_HALT, SHOP_HALT, CAVE_FLOOR,
-    FOREST_FLOOR, GOBLIN, GOLEM, HELL_FLOOR, LAYERS, MINE_FLOOR, DeckAi, Run, TROLL,
-} from "@game/core/mecard"
-import type { Battle, FightCategory, FightType, HaltType, Place, PlaceType } from "@game/core/mecard"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { ARCHER_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN, GOLEM, TROLL } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE, BOSS, ELITE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { LAYERS } from "@game/core-src/games/mecard/sim/floor/subs/AbstractFloor"
+import { CaveFloor, CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { FOREST_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/ForestFloor"
+import { HARBOR_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/HarborFloor"
+import { MINE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/MineFloor"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { SHOP_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ShopHalt"
+import { BATTLE_REWARD_HALT } from "@game/core-src/games/mecard/sim/halt/subs/reward/BattleRewardHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { FightType } from "@game/core-src/games/mecard/sim/fight/FightType"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 import { ScriptedPlayer } from "../../../../fixtures/haltFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Fixture builders ---
 
@@ -149,9 +164,9 @@ describe("Run.travel", () => {
         expect(run.travel.place).toBeNull()
     })
 
-    test("the exit of hell → the cave again, a level harder", () => {
+    test("the exit of the harbor → the cave again, a level harder", () => {
         const run = startedRun(1)
-        run.travel.enterFloor(HELL_FLOOR.create(3))
+        run.travel.enterFloor(HARBOR_FLOOR.create(3))
         toBoss(run)
         const [exit] = run.travel.next
         expect(run.travel.next).toHaveLength(1)

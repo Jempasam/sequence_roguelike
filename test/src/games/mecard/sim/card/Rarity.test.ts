@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Rarity } from "@game/core/mecard"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
 
 // --- Tests ---
 

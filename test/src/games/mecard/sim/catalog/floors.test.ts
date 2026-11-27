@@ -1,9 +1,21 @@
 import { describe, expect, test } from "vitest"
-import {
-    BATTLE, BOSS, BOSS_MONSTERS, CaveFloor, CHEST_HALT, EXIT_HALT, FORGE_HALT, HOSPITAL_HALT, TAVERN_HALT, exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS,
-    Journey, LAYERS, Rng,
-} from "@game/core/mecard"
-import type { Floor, FloorType, Monster, Place, PlaceSort, PlaceType, PlaceWeights } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { exitsOf, FIRST_FLOOR, FLOOR_LINKS, ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { BOSS_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE, BOSS } from "@game/core-src/games/mecard/sim/fight/fights"
+import { LAYERS } from "@game/core-src/games/mecard/sim/floor/subs/AbstractFloor"
+import { CaveFloor } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { FORGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/ForgeHalt"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { HOSPITAL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/party/HospitalHalt"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { Floor, FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
+import type { PlaceSort, PlaceWeights } from "@game/core-src/games/mecard/sim/floor/subs/AbstractFloor"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
 
 /** The sort of fight or of halt a place holds: floors only lay a fight or a halt, not both. */
 function typeOf(place: Place): PlaceType {

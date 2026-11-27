@@ -1,6 +1,16 @@
 import { describe, expect, test } from "vitest"
-import { AIM, Battle, FIRE, Heart, RED_HEART, SECRET_CARD, SLASH, STEP, Vector2, savedCard, secretizeSave } from "@game/core/mecard"
-import type { Card, Team } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { SECRET_CARD } from "@game/core-src/games/mecard/sim/card/subs/SecretCard"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { savedCard, secretizeSave } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Team } from "@game/core-src/games/mecard/sim/battle/Team"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, HEROES, MONSTERS } from "../fixtures"
 

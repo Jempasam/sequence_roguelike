@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { ALL_KITS, Rng, Run, tavernKits } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { tavernKits } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
 
 // --- Tests ---
 

@@ -17,6 +17,9 @@ export const ADDED_EDGE = new Color(0.65, 1, 0.7)
 /** The edge around what is about to be taken away: pale red. */
 export const REMOVED_EDGE = new Color(1, 0.6, 0.6)
 
+/** The edge around the cards of a step disabled, never to play: grey. */
+export const DISABLED_EDGE = new Color(0.6, 0.6, 0.65)
+
 /** The edge around what is notified, a status or a heart about to act: pale blue. */
 export const NOTICE_EDGE = new Color(0.6, 0.8, 1)
 

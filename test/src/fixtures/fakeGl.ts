@@ -1,4 +1,4 @@
-import type { GfxPort } from "@game/core"
+import type { GfxPort } from "@game/core-src/platform/GfxPort"
 
 /** A call core made on the fake context. */
 export interface GlCall {

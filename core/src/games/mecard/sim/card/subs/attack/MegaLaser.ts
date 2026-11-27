@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -27,7 +26,7 @@ export class MegaLaserCard extends BlowCard {
         public readonly width: number,
     ){
         super("Mégalaser", [
-            "Tire un rayon de ", frenchNumber(width), " ", DISTANCE, " de large droit devant, jusqu'à ", range, "×",
+            "Tire un rayon de ", width, " ", DISTANCE, " de large droit devant, jusqu'à ", range, "×",
             PORTEE, " ", DISTANCE, ", à travers tout : ", SHOT_DAMAGE, "+", PRECISION, " ", DamageType.PHYSICAL,
             " à chaque ", UNIT, ".",
         ], Rarity.EPIC, SHOT_DAMAGE)

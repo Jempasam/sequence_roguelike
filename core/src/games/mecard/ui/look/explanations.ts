@@ -7,8 +7,11 @@ import {
     USABLE,
 } from "../../sim/base/keywords"
 import { BLINKING } from "../../sim/battle/mecanic/blink/keyword"
+import { FAMILY, KINSHIP } from "../../sim/battle/mecanic/family/keyword"
+import { INFLICTED } from "../../sim/battle/mecanic/inflict/keyword"
 import { LEAPING } from "../../sim/battle/mecanic/leap/keyword"
 import { VIOLENT_PUSH } from "../../sim/battle/mecanic/push/keyword"
+import { DISABLE, SKIP_TURN } from "../../sim/battle/mecanic/step/keyword"
 import { INVOCATION } from "../../sim/battle/mecanic/summon/keyword"
 import { SWAPPING } from "../../sim/battle/mecanic/swap/keyword"
 import { TELEPORT } from "../../sim/battle/mecanic/teleport/keyword"
@@ -106,6 +109,18 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
         " la place est prise, jamais derrière. Elle joue juste après lui dans l'ordre de tour, est contrôlée par",
         " un bot, et frappe ou se fait frapper comme toute ", UNIT, ". Sans place, rien n'apparaît.",
     ]],
+    [INFLICTED, [
+        "Un effet est ", INFLICTED, " par une action quand il arrive pendant qu'elle se joue : de son fait, ou par ce",
+        " qui y réagit. Une ", UNIT, " ", INFLICTED.as("inflige"), " les effets de ses actions : les ",
+        CARTE.as("cartes"), " qu'elle joue et ses ", USABLE.as("utilisables"), ".",
+    ]],
+    [FAMILY, [
+        "Une ", CARTE, " est d'une ", FAMILY, " quand sa description, ou celle d'une ", CARTE, " qu'elle contient,",
+        " nomme chacun des mots-clés de la ", FAMILY, ".",
+    ]],
+    [KINSHIP, [
+        "Deux ", CARTE.as("cartes"), " sont de ", KINSHIP, " N quand elles nomment au moins N mots-clés en commun.",
+    ]],
     [WALK, [
         "Se déplacer pas à pas dans une direction, jusqu'au premier obstacle. Foncer, c'est ", WALK, " plus vite.",
     ]],
@@ -123,6 +138,14 @@ const KEYWORD_HELP: ReadonlyMap<Keyword, Text> = new Map<Keyword, Text>([
         "Apparaître à un point, ou juste à côté s'il est pris. Sans place, la ", TELEPORT, " rate.",
     ]],
     [SWAPPING, ["Deux ", UNIT.as("unités"), " prennent la place l'une de l'autre."]],
+    [SKIP_TURN, [
+        "Une ", UNIT, " qui doit ", SKIP_TURN, " ne joue rien : ce qu'elle avait à jouer attend son",
+        " tour suivant.",
+    ]],
+    [DISABLE, [
+        "Une ", BATTLE_TURN.as("étape"), " ", DISABLE.as("grisée"), " ne sera pas jouée : ses ",
+        CARTE.as("cartes"), " ne font rien ce ", BATTLE_ROUND, ".",
+    ]],
     [VIOLENT_PUSH, [
         "Arrêtée en route, l'", UNIT, " prend les dégâts du choc. Celle qu'elle heurte les prend aussi, puis est",
         " ", VIOLENT_PUSH.as("poussée violemment"), " à son tour, de la même distance, dans l'axe du choc, et ainsi",

@@ -1,8 +1,20 @@
 import { describe, expect, test } from "vitest"
-import {
-    Carried, ENERGIZER, gives, HEALING_POTION, MIXER, PLANT_BAG, POTION, STEP, THRUST, THRUST_BOTTLE, WAIT,
-} from "@game/core/mecard"
-import type { Battle, Card, Unit, Usable } from "@game/core/mecard"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { gives } from "@game/core-src/games/mecard/sim/card/Card"
+import { POTION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { CardBottle } from "@game/core-src/games/mecard/sim/usable/subs/hand/CardBottle"
+import { ENERGIZER } from "@game/core-src/games/mecard/sim/usable/subs/hand/Energizer"
+import { MIXER } from "@game/core-src/games/mecard/sim/usable/subs/hand/Mixer"
+import { PLANT_BAG } from "@game/core-src/games/mecard/sim/usable/subs/hand/PlantBag"
+import { HealingPotion } from "@game/core-src/games/mecard/sim/usable/subs/HealingPotion"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Usable } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
 
@@ -33,13 +45,13 @@ function useIn(on: Battle, carrier: Unit, carried: Carried, played: readonly Car
 
 describe("Usable, charges", () => {
     test("a usable of one charge → out of the belt once used", () => {
-        const { on, carrier, carried } = carrying(HEALING_POTION)
+        const { on, carrier, carried } = carrying(new HealingPotion(2))
         useIn(on, carrier, carried)
         expect(carrier.usables).toEqual([])
     })
 
     test("a bottle of a card → a copy in hand at each use, broken after its third", () => {
-        const { on, carrier, carried } = carrying(THRUST_BOTTLE)
+        const { on, carrier, carried } = carrying(new CardBottle("Bouteille d'estoc", visual("usables/thrust_bottle"), THRUST, 3))
         for(let use = 1; use <= 3; use++){
             useIn(on, carrier, carried)
             expect(carrier.hand.filter(card => card === THRUST)).toHaveLength(use)

@@ -3,6 +3,8 @@ import type { Action, Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import { DamageType } from "../../../battle/DamageType"
+import { INFLICTED } from "../../../battle/mecanic/inflict/keyword"
+import * as Inflict from "../../../battle/mecanic/inflict"
 import type { Unit } from "../../../battle/Unit"
 import { Rarity } from "../../Rarity"
 
@@ -27,7 +29,8 @@ export class GlassKnifeCard extends BlowCard {
         super("Couteau de verre", [
             "Frappe devant : ", GLASS_KNIFE_DAMAGE, "+", FORCE, " ", DamageType.PHYSICAL, " à chaque ", UNIT,
             " jusqu'à ", THRUST_RANGE, " ", DISTANCE, ". Contrecoup : tu subis ensuite autant de ", DamageType.PHYSICAL,
-            " que de ", HEART.as("cœurs"), " perdus par les ennemis pendant cette action, moins ta ", FORCE, ".",
+            " que de ", HEART.as("cœurs"), " perdus par les ennemis sous les dégâts ", INFLICTED.as("infligés"),
+            " pendant cette action, moins ta ", FORCE, ".",
         ], Rarity.RARE, GLASS_KNIFE_DAMAGE)
     }
 
@@ -43,15 +46,9 @@ export class GlassKnifeCard extends BlowCard {
         return {
             use: ctx => {
                 const { battle, unit } = ctx
-                let lost = 0
-                const watching = battle.signals.damaged.add(({ unit: hurt, amount }) => {
-                    if(hurt.team !== unit.team) lost += amount
-                })
-                try {
-                    blow.use(ctx)
-                } finally {
-                    watching.remove()
-                }
+                const lost = Inflict.collectFrom(ctx, blow, battle.signals.damaged,
+                    ({ unit: hurt }) => hurt.team !== unit.team)
+                    .reduce((sum, { amount }) => sum + amount, 0)
                 const back = Math.max(0, Math.floor(lost) - unit.stats.strength.value)
                 if(back > 0 && unit.alive) unit.hearts.damage(back, DamageType.PHYSICAL, null)
             },

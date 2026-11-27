@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { ParticleSpec, ParticleSystem } from "@game/core"
+import { ParticleSpec } from "@game/core-src/engine/particles/ParticleSpec"
+import { ParticleSystem } from "@game/core-src/engine/particles/ParticleSystem"
 
 function lived(life: number): ParticleSpec {
     const spec = new ParticleSpec()

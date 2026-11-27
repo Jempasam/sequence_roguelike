@@ -19,7 +19,7 @@ export class GreatWitchHalt extends AbstractHalt {
     constructor(run: Run){
         super(GREAT_WITCH_HALT, run,
             ["Trois ", USABLE.as("utilisables"), " mijotent ici. Prends-en un : tu en auras trois."],
-            sceneLook(20, 31, 15, "witch", { coloration: [1, 0.88, 0.62] }),
+            sceneLook(22, 15, 31, "witch", { coloration: [1, 0.88, 0.62] }),
             {
                 hat: GREAT_HAT,
                 clothes: rgba(0.6, 0.3, 0.8),

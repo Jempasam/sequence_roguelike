@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Color, Fade } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Fade } from "@game/core-src/engine/ui/widget/Fade"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

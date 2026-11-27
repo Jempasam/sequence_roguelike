@@ -1,6 +1,16 @@
 import { expect } from "vitest"
-import { Arena, Battle, CardChain, Heart, RED_HEART, Team, Vector2 } from "@game/core/mecard"
-import type { Card, Pillar, Rgba, Run, Unit } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Team } from "@game/core-src/games/mecard/sim/battle/Team"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import type { Rgba } from "@game/core-src/games/mecard/sim/base/Rgba"
+import type { Pillar } from "@game/core-src/games/mecard/sim/battle/Arena"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Run } from "@game/core-src/games/mecard/sim/run/Run"
 
 // The fixture builders shared by the tests of the simulation of Dungeon of the Mecard.
 

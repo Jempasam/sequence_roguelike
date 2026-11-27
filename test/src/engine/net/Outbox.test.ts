@@ -1,4 +1,4 @@
-import { Outbox } from "@game/core"
+import { Outbox } from "@game/core-src/engine/net/Outbox"
 import { describe, expect, test } from "vitest"
 
 describe("Outbox", () => {

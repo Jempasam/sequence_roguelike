@@ -1,6 +1,7 @@
 import type { Visual } from "../../sim/base/Visual"
 import type { Painter, Sprite } from "../../../../engine/gpu"
 import { Color } from "../../../../engine/math"
+import type { Area, Point } from "../../../../engine/math"
 import { TextLayout } from "../../../../engine/text"
 import type { BitmapFont } from "../../../../engine/text"
 import * as Areas from "../../sim/battle/area/Areas"
@@ -174,8 +175,24 @@ export class BoardView {
             (room.right - room.left) / width, (room.bottom - room.top) / tall,
         )))
         this.#meter = meter
+        this.#size = { width, height }
         this.#left = Math.round((room.left + room.right - width * meter) / 2)
         this.#top = Math.round((room.top + room.bottom - tall * meter) / 2 + SPRITE_HEADROOM * meter)
+    }
+
+    /** How many pixels a meter takes, as last fitted. */
+    public get meter(): number { return this.#meter }
+
+    /** The ground of the arena, its grid, in pixels of the world, as last fitted. */
+    public get terrain(): Area {
+        const { width, height } = this.#size
+        return { x: this.#left, y: this.#top, width: width * this.#meter, height: height * this.#meter }
+    }
+
+    /** Where a unit stands on the ground, in pixels of the world. */
+    public positionOf(unit: Unit): Point {
+        const [x, y] = this.#pixels(this.scene.of(unit)?.position ?? unit.position)
+        return { x, y }
     }
 
     /**
@@ -269,6 +286,9 @@ export class BoardView {
     /** Where the top left corner of the arena lies, in pixels of the world. */
     #left = 0
     #top = 0
+
+    /** The size of the arena fitted, in meters. */
+    #size = { width: 0, height: 0 }
 
     /**
      * What lies under a unit: its shade, then its hitbox, the exact shape it is hit and clicked by, seen through,

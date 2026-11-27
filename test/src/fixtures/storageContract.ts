@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import type { PlayerStorage, StoragePort } from "@game/core"
+import type { PlayerStorage, StoragePort } from "@game/core-src/platform/StoragePort"
 
 /**
  * The behavior every {@link StoragePort} shares, run on each implementation: in memory, on the file

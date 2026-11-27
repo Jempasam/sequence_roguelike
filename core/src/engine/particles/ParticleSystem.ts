@@ -3,7 +3,7 @@ import { MAX_VERTICES, Primitive, RAW_VERTEX_SIZE } from "../gpu"
 import { ParticleSpec } from "./ParticleSpec"
 
 /** The longest step `update` simulates at once, in seconds: a long pause does not throw the particles far. */
-const MAX_STEP = 0.05
+export const MAX_STEP = 0.05
 
 /** The most particles one draw holds, so a draw stays under the vertex limit. */
 const CHUNK = Math.min(4096, Math.floor(MAX_VERTICES / 4))
@@ -49,16 +49,18 @@ const A1 = 18
 const ROTATION = 19
 const SPIN = 20
 const FACE = 21
-const STRIDE = 22
+const MIRROR = 22
+const STRIDE = 23
 
 /**
  * Simulates and draws particles: small squares or sprites that move under a force, slow down, shrink or
  * fade, and die. It is only a display: nothing here feeds the simulation of the game.
  *
  * @remarks
- * Everything is allocated by the constructor. The particles live in one array of numbers, a dead one is
- * replaced by the last living one, and a draw fills a vertex buffer reused every frame, so a frame
- * allocates nothing. At `maxParticles`, a new particle is dropped.
+ * Everything is allocated by the constructor. The particles live in one array of numbers, in the order they
+ * were emitted, which the living ones keep as the dead ones leave: those of a same texture are drawn in that
+ * order, the last emitted on top. A draw fills a vertex buffer reused every frame, so a frame allocates
+ * nothing. At `maxParticles`, a new particle is dropped.
  *
  * It is sized for a few hundred particles: measured with a fake context, 512 particles take about 0.4 ms
  * to update and draw, 4096 take about 8 ms, most of it in `Painter.draw` validating and copying vertices.
@@ -158,6 +160,7 @@ export class ParticleSystem {
         d[o + ROTATION] = spec.rotation
         d[o + SPIN] = spec.spin
         d[o + FACE] = spec.faceMotion ? 1 : 0
+        d[o + MIRROR] = spec.mirrored ? 1 : 0
         this.#sprites[this.#count] = spec.sprite
         const id = this.#nextId++ & 0x7fffffff || 1
         this.#ids[this.#count] = id
@@ -221,16 +224,14 @@ export class ParticleSystem {
         const step = Math.min(Math.max(dt, 0), MAX_STEP)
         const d = this.#data
         this.#resetBounds()
-        let i = 0
+        let living = 0
 
         // PARTICLES //
-        while(i < this.#count){
-            const o = i * STRIDE
-            d[o + AGE] += step
-            if(d[o + AGE] >= d[o + LIFE]){
-                this.#removeAt(i)
-                continue
-            }
+        for(let i = 0; i < this.#count; i++){
+            d[i * STRIDE + AGE] += step
+            if(d[i * STRIDE + AGE] >= d[i * STRIDE + LIFE]) continue
+            if(living !== i) this.#move(i, living)
+            const o = living * STRIDE
             const keep = Math.exp(-d[o + DRAG] * step)
             const vx = (d[o + VX] + d[o + AX] * step) * keep
             const vy = (d[o + VY] + d[o + AY] * step) * keep
@@ -241,9 +242,13 @@ export class ParticleSystem {
             d[o + X] = x
             d[o + Y] = y
 
-            this.#grow(i)
-            i++
+            this.#grow(living)
+            living++
         }
+
+        // DEAD //
+        this.#sprites.fill(null, living, this.#count)
+        this.#count = living
     }
 
     /** Extend the bounds with what a particle can reach, a turned quad included. */
@@ -352,6 +357,10 @@ export class ParticleSystem {
                 v0 = source.y
                 u1 = u0 + source.width
                 v1 = v0 + source.height
+                if(d[o + MIRROR] === 1){
+                    u1 = u0
+                    u0 += source.width
+                }
             }
 
             // COLOR //
@@ -402,16 +411,11 @@ export class ParticleSystem {
         return -1
     }
 
-    /** Replace a particle by the last living one. */
-    #removeAt(index: number): void {
-        const last = this.#count - 1
-        if(index !== last){
-            this.#data.copyWithin(index * STRIDE, last * STRIDE, last * STRIDE + STRIDE)
-            this.#sprites[index] = this.#sprites[last]
-            this.#ids[index] = this.#ids[last]
-        }
-        this.#sprites[last] = null
-        this.#count = last
+    /** Move a particle to an earlier place of the arrays, over a dead one. */
+    #move(from: number, to: number): void {
+        this.#data.copyWithin(to * STRIDE, from * STRIDE, from * STRIDE + STRIDE)
+        this.#sprites[to] = this.#sprites[from]
+        this.#ids[to] = this.#ids[from]
     }
 
     #resetBounds(): void {

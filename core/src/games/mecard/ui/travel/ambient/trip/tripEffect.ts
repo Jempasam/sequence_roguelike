@@ -1,6 +1,7 @@
 import type { FloorType } from "../../../../sim/floor/Floor"
 import type { AmbientContext } from "../AmbientContext"
 import { AmbientEffect } from "../AmbientEffect"
+import type { AmbientCategory } from "../AmbientEffect"
 import type { Cast } from "./Cast"
 import type { Itinerary } from "./Itinerary"
 import { lengthOf } from "./Route"
@@ -13,6 +14,8 @@ const MOST = 16
 /** What makes an effect of a trip. */
 export interface TripSpec {
     readonly id: string
+
+    readonly category: AmbientCategory
 
     /** Where the trip starts and ends. */
     readonly itinerary: Itinerary
@@ -31,6 +34,9 @@ export interface TripSpec {
 
     /** The floors it plays on, any by default. */
     readonly floors?: readonly FloorType[]
+
+    /** Does it need the open air? */
+    readonly outdoors?: boolean
 }
 
 /** The effect of a trip: a traveler goes along the way an itinerary draws, led by the cast. */
@@ -38,10 +44,12 @@ export function tripEffect(spec: TripSpec): AmbientEffect {
     const { itinerary, cast, traveler } = spec
     return new AmbientEffect({
         id: spec.id,
+        category: spec.category,
         spacing: spec.spacing,
         stackable: false,
         isPlayable: context => {
             if(spec.floors && !spec.floors.includes(context.floor())) return false
+            if(spec.outdoors && !context.outdoors()) return false
             return itinerary.playable(context)
         },
         weight: context => typeof spec.weight === "number" ? spec.weight : spec.weight(context),

@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { ABOUT_FACE, ALLY_AIM, ENERGETIC_AIM, ORIENTATION, SHOUT, TAUNT } from "@game/core/mecard"
+import {
+    ABOUT_FACE,
+    ALLY_AIM,
+    ENERGETIC_AIM,
+    ORIENTATION,
+    SHOUT,
+    TAUNT,
+} from "@game/core-src/games/mecard/sim/card/subs/movement/Orientation"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../../../fixtures"
 

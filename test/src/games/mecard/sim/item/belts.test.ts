@@ -1,8 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { BLUE_HEART, DEATH_BELT, Heart, RED_HEART, SHIELD_HEART, STRENGTH_BELT } from "@game/core/mecard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { DEATH_BELT, STRENGTH_BELT } from "@game/core-src/games/mecard/sim/item/subs/heal/Belts"
 
 import { battle, MONSTERS, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 // --- Tests ---
 

@@ -7,7 +7,6 @@ import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
 import type { Unit } from "../../../battle/Unit"
 import { CONTROL_COLOR, MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR, TURN_LENGTH } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
 import { DISTANCE, UNIT } from "../../../base/keywords"
 
 import { ActionCard } from "../ActionCard"
@@ -17,6 +16,7 @@ import * as Turn from "../../../battle/mecanic/turn"
 import { Rarity } from "../../Rarity"
 import * as Areas from "../../../battle/area/Areas"
 import * as Previews from "../../../battle/preview/Previews"
+import { STUNNED } from "../../../status/subs/Stunned"
 
 /** How far the shout and the taunt reach, in meters. */
 const SHOUT_RADIUS = 1.5 - UNIT_RADIUS
@@ -68,12 +68,12 @@ function shouting(directionOf: (center: Vector2) => (unit: Unit) => Vector2|null
 
 /** Every unit around, but the one that shouts, turns its back to it. */
 export const SHOUT = new ActionCard("Cri", [
-    TURN.as("Tourne le dos"), " à l'", UNIT, " de chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour. Aucun dégât.",
+    TURN.as("Tourne le dos"), " à l'", UNIT, " de chaque ", UNIT, " à ", SHOUT_RADIUS, " ", DISTANCE, " autour. Aucun dégât.",
 ], Rarity.COMMON, shouting(by => awayFrom(by)))
 
 /** Every unit around turns to face the one that taunts. */
 export const TAUNT = new ActionCard("Provocation", [
-    TURN.as("Tourne"), " chaque ", UNIT, " à ", frenchNumber(SHOUT_RADIUS), " ", DISTANCE, " autour vers l'", UNIT, " qui provoque.",
+    TURN.as("Tourne"), " chaque ", UNIT, " à ", SHOUT_RADIUS, " ", DISTANCE, " autour vers l'", UNIT, " qui provoque.",
 ], Rarity.COMMON, shouting(by => towards(by)))
 
 
@@ -163,7 +163,7 @@ function aiming(
             }
             const stun = startled({ battle, unit, pose: unit }, found)
             Turn.turnToward(ctx, found.way)
-            if(stun) battle.stun(found.target)
+            if(stun) battle.applyStatus(found.target, STUNNED, 1)
         },
         preview: ctx => {
             const { pose, unit } = ctx
@@ -175,7 +175,8 @@ function aiming(
             if(!found) return Previews.still(pose, ...circles, Previews.label(pose.position, nobody, NOTE_COLOR))
             const tip = pose.position.plus(found.way.times(TURN_LENGTH))
             const shown: Indicator[] = [...circles, Previews.arrow([pose.position, tip], MOVE_WIDTH, MOVE_COLOR)]
-            if(startled(ctx, found)) shown.push(Previews.label(found.target.position, "étourdi", NOTE_COLOR))
+            const { position } = found.target
+            if(startled(ctx, found)) shown.push(Previews.label(position, STUNNED.name, NOTE_COLOR))
             return Previews.still({ ...pose, direction: found.way }, ...shown)
         },
     }
@@ -186,8 +187,8 @@ const ENERGETIC_RANGE = 2 - UNIT_RADIUS
 
 /** An aim at the nearest enemy within a short reach of the edge of the body, stunning an enemy it had to turn far to reach. */
 export const ENERGETIC_AIM = new ActionCard("Visée énergique", [
-    TURN.as("Se tourne"), " vers l'ennemi le plus proche, jusqu'à ", frenchNumber(ENERGETIC_RANGE), " ", DISTANCE, ". Si cela demande plus d'un quart ",
-    "de tour, il est étourdi.",
+    TURN.as("Se tourne"), " vers l'ennemi le plus proche, jusqu'à ", ENERGETIC_RANGE, " ", DISTANCE, ". Si cela demande plus d'un quart ",
+    "de tour, il gagne ", STUNNED, " ", 1, ".",
 ], Rarity.RARE, aiming(
     ({ battle, unit, pose }, range) => {
         const near = battle.enemiesOf(unit).filter(enemy => unit.hitbox.gap(pose, enemy.hitbox, enemy) <= range)
@@ -217,20 +218,21 @@ function behind(unit: Unit, pose: Pose): Area {
 
 /** A half turn, stunning the nearest unit behind. */
 export const ABOUT_FACE = new ActionCard("Volte-face", [
-    TURN.as("Fait demi-tour"), ". L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", est étourdie.",
+    TURN.as("Fait demi-tour"), ". L'", UNIT, " la plus proche derrière, à ", ABOUT_FACE_LENGTH, " ", DISTANCE, ", gagne ",
+    STUNNED, " ", 1, ".",
 ], Rarity.COMMON, {
     use: function (ctx){
         const { battle, unit } = ctx
         const hit = closest(battle.fetch(behind(unit, unit), unit), unit.position)
         Turn.turnToward(ctx, unit.direction.opposite)
-        if(hit) battle.stun(hit)
+        if(hit) battle.applyStatus(hit, STUNNED, 1)
     },
     preview: ({ battle, unit, pose }) => {
         const zone = Previews.polygon(behind(unit, pose), RANGE_COLOR)
         const away = pose.direction.opposite
         const half = Previews.arrow([pose.position, pose.position.plus(away.times(TURN_LENGTH))], MOVE_WIDTH, MOVE_COLOR)
         const hit = closest(battle.fetch(behind(unit, pose), unit), pose.position)
-        const stunned = hit ? [Previews.label(hit.position, "étourdi", NOTE_COLOR)] : []
+        const stunned = hit ? [Previews.label(hit.position, STUNNED.name, NOTE_COLOR)] : []
         return Previews.still({ ...pose, direction: away }, zone, half, ...stunned)
     },
 })
@@ -247,17 +249,18 @@ function glared(battle: Battle, unit: Unit, pose: Pose): Unit[] {
 
 /** A stare freezing whoever looks back. */
 export const ICY_GLARE = new ActionCard("Regard glaçant", [
-    "Étourdit chaque ", UNIT, " qui regarde vers elle, à ", GLARE_RADIUS, " ", DISTANCE, " devant dans un quart de tour.",
+    "Chaque ", UNIT, " qui regarde vers elle, à ", GLARE_RADIUS, " ", DISTANCE, " devant dans un quart de tour, gagne ",
+    STUNNED, " ", 1, ".",
 ], Rarity.RARE, {
     use: function ({ battle, unit }){
         const frozen = glared(battle, unit, unit)
-        for(const other of frozen) battle.stun(other)
+        for(const other of frozen) battle.applyStatus(other, STUNNED, 1)
         hold(battle, WORD_TIME, [Previews.polygon(Areas.arc(unit.muzzle(), unit.direction, GLARE_RADIUS, GLARE_COS_HALF), CONTROL_COLOR)])
     },
     preview: ({ battle, unit, pose }) => {
         const zone = Previews.polygon(Areas.arc(unit.muzzle(pose), pose.direction, GLARE_RADIUS, GLARE_COS_HALF), RANGE_COLOR)
         return Previews.still(pose, zone, ...glared(battle, unit, pose).map(other => {
-            return Previews.label(other.position, "étourdi", NOTE_COLOR)
+            return Previews.label(other.position, STUNNED.name, NOTE_COLOR)
         }))
     },
 })

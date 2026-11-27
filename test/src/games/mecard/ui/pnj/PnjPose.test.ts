@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { PnjPose } from "@game/core/mecard/pnj"
-import type { HatPlace, PnjLayout } from "@game/core/mecard/pnj"
+import { PnjPose } from "@game/core-src/games/mecard/ui/pnj/PnjPose"
+import type { PnjLayout } from "@game/core-src/games/mecard/ui/pnj/PnjLayout"
+import type { HatPlace } from "@game/core-src/games/mecard/ui/pnj/PnjPose"
 
 // --- Fixture builders ---
 

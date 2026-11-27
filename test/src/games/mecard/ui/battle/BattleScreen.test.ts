@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { CardChain } from "@game/core/mecard"
-import type { Battle, Unit } from "@game/core/mecard"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 import { ALL_BATTLE_LOCKS, BattleScreen, NO_BATTLE_LOCKS } from "@game/core/mecard/battle-screen"
 import type { BattleLocks, BattleScreenOptions } from "@game/core/mecard/battle-screen"
 import { DEFAULT_LOOK } from "@game/core/mecard/sprite-look"
-import type { Painter } from "@game/core"
+import type { Painter } from "@game/core-src/engine/gpu/Painter"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"
 import { settled } from "./replay"
@@ -59,6 +60,52 @@ function playersOf(battle: Battle): Unit[] {
 }
 
 // --- Tests ---
+
+describe("what a battle screen tells it shows", () => {
+
+    /** Let the screen lay its arena out, then fit it. */
+    function laidOut({ setup, screen }: ReturnType<typeof shown>): void {
+        for(let frame = 0; frame < 2; frame++){
+            screen.frame(setup.frame(), NO_WORLD, 1 / 60)
+            setup.ui.render()
+        }
+    }
+
+    test("not laid out yet → the battle, but no settled arena", () => {
+        const { battle, screen } = shown()
+        expect(screen.shownBattle).toBe(battle)
+        expect(screen.arenaSettled).toBe(false)
+        expect(screen.terrain).toBeNull()
+        expect(screen.shownUnits).toEqual([])
+    })
+
+    test("the arena laid out → its ground in the interface, its units standing on it", async() => {
+        const game = shown()
+        await played(game)
+        laidOut(game)
+        const { screen, setup } = game
+        const terrain = screen.terrain!
+        expect(screen.arenaSettled).toBe(true)
+        expect(terrain.width).toBeGreaterThan(0)
+        expect(terrain.x + terrain.width).toBeLessThanOrEqual(setup.ui.width)
+        expect(screen.shownUnits.length).toBeGreaterThan(0)
+        for(const { position } of screen.shownUnits){
+            expect(position.x).toBeGreaterThanOrEqual(terrain.x)
+            expect(position.x).toBeLessThanOrEqual(terrain.x + terrain.width)
+            expect(position.y).toBeGreaterThanOrEqual(terrain.y)
+            expect(position.y).toBeLessThanOrEqual(terrain.y + terrain.height)
+        }
+    })
+
+    test("the screen hidden → no battle", async() => {
+        const game = shown()
+        await played(game)
+        laidOut(game)
+        game.screen.visible = false
+        expect(game.screen.shownBattle).toBeNull()
+        expect(game.screen.arenaSettled).toBe(false)
+    })
+})
 
 describe("BattleScreen", () => {
     test("nothing locked → it starts the first round, a draft for each unit of the players", async() => {

@@ -31,9 +31,10 @@ const SHOOTING_STAR_EFFECT: Effect<AmbientContext> = {
 /** A streak of light crosses the top of the map. */
 export const SHOOTING_STAR = new AmbientEffect({
     id: "shooting-star",
+    category: "surprise",
     spacing: 40,
     stackable: false,
-    isPlayable: () => true,
+    isPlayable: context => context.outdoors(),
     weight: () => 1,
     effect: SHOOTING_STAR_EFFECT,
 })

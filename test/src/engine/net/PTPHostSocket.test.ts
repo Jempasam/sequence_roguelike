@@ -1,5 +1,7 @@
-import { NetError, PTPClientSocket, PTPHostSocket } from "@game/core"
-import type { Peer } from "@game/core"
+import { NetError } from "@game/core-src/engine/net/NetError"
+import { PTPClientSocket } from "@game/core-src/engine/net/PTPClientSocket"
+import { PTPHostSocket } from "@game/core-src/engine/net/PTPHostSocket"
+import type { Peer } from "@game/core-src/engine/net/Room"
 import { afterEach, beforeEach, describe, expect, test } from "vitest"
 
 import { nextMessage, nextOnChannel, nodeNet, once, signalingOf, startNetServer } from "../../fixtures/netServer"

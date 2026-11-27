@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { Box, Stack } from "@game/core"
-import type { Component } from "@game/core"
+import { Box } from "@game/core-src/engine/ui/layout/Box"
+import { Stack } from "@game/core-src/engine/ui/layout/Stack"
+import type { Component } from "@game/core-src/engine/ui/Component"
 import { Detail } from "@game/core/mecard/detail"
 import { detailsOfParts } from "@game/core/mecard/detail-parts"
 

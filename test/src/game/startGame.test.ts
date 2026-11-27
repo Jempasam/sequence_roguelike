@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { MemoryAssets, MemoryStorage, startGame } from "@game/core"
-import type { GfxPort, LoopPort, Platform } from "@game/core"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
+import { MemoryStorage } from "@game/core-src/engine/save/MemoryStorage"
+import { startGame } from "@game/core-src/game/startGame"
+import type { GfxPort } from "@game/core-src/platform/GfxPort"
+import type { LoopPort } from "@game/core-src/platform/LoopPort"
+import type { Platform } from "@game/core-src/platform/Platform"
 
 import { fakeGfx, fakeGl } from "../fixtures/fakeGl"
 import { FakeInput } from "../fixtures/fakeInput"

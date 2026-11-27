@@ -1,9 +1,17 @@
 import { describe, expect, test } from "vitest"
-import {
-    ActionCard, ELEMENT, ELEMENT_ON_BLADE, FIRE, mergeable, MergedCard, Rarity, REPEAT_2, resolve, SPELL, STEP, TURN_STEPS, TURNS,
-    Vector2,
-} from "@game/core/mecard"
-import type { Action } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { resolve } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { ELEMENT } from "@game/core-src/games/mecard/sim/card/CardType"
+import { Rarity } from "@game/core-src/games/mecard/sim/card/Rarity"
+import { ActionCard } from "@game/core-src/games/mecard/sim/card/subs/ActionCard"
+import { mergeable, MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURN_STEPS, TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { ELEMENT_ON_BLADE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { FIRE } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { Action } from "@game/core-src/games/mecard/sim/battle/Action"
 
 import { battle, unit } from "../../../fixtures"
 

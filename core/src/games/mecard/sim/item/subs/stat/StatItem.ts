@@ -5,7 +5,6 @@ import { Add, ModifierKey } from "../../../base/Attribute"
 import type { Attribute } from "../../../base/Attribute"
 import type { PlugContext } from "../../../battle/Action"
 import type { UnitStats } from "../../../battle/Unit"
-import { frenchNumber } from "../../../battle/words"
 
 import { AbstractItem } from "../AbstractItem"
 
@@ -36,7 +35,7 @@ export class StatItem extends AbstractItem {
         public readonly changes: readonly StatChange[],
     ){
         super(name, icon, joinText(
-            changes.map(change => concat("+", change.shown ?? frenchNumber(change.amount), " ", change.text)),
+            changes.map(change => concat("+", change.shown ?? change.amount, " ", change.text)),
             ", ",
         ))
     }

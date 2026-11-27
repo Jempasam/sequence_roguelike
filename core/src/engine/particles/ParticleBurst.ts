@@ -95,10 +95,12 @@ export class ParticleBurst {
 
             // TEXTURE //
             const isWhite = spec.sprite === null
-            const u0 = isWhite ? source.x + (source.width >> 1) : source.x
+            const left = isWhite ? source.x + (source.width >> 1) : source.x
             const v0 = isWhite ? source.y + (source.height >> 1) : source.y
-            const u1 = isWhite ? u0 : source.x + source.width
+            const right = isWhite ? left : source.x + source.width
             const v1 = isWhite ? v0 : source.y + source.height
+            const u0 = spec.mirrored ? right : left
+            const u1 = spec.mirrored ? left : right
 
             // VERTICES //
             for(let corner = 0; corner < 4; corner++){

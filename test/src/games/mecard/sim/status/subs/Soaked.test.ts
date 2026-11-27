@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Heart, POISON_POTION, POISONED, RED_HEART, soakOf, THRUST, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { POISON_POTION } from "@game/core-src/games/mecard/sim/potion/subs/potions"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { soakOf } from "@game/core-src/games/mecard/sim/status/subs/Soaked"
 
 import { battle, chain, MONSTERS, play, unit } from "../../fixtures"
 

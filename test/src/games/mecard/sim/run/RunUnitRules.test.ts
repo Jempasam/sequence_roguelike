@@ -1,10 +1,30 @@
 import { describe, expect, test } from "vitest"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { aiNamed } from "@game/core-src/games/mecard/sim/ai/catalog"
+import { LookaheadAi } from "@game/core-src/games/mecard/sim/ai/LookaheadAi"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { PURSUIT } from "@game/core-src/games/mecard/sim/card/subs/composite/fusions"
+import { PATH_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/PathAim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { UNLIMITED_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { RunUnitRules } from "@game/core-src/games/mecard/sim/run/RunUnitRules"
 import {
-    aiNamed, allRules, DeckAi, Heart, LookaheadAi, MOVES_RULE, PATH_AIM, PURSUIT, RED_HEART, Rng, Run,
-    RunUnitRules, SHUFFLE_RULE, SLASH, smartRule, STEP, STRIP_PATH_RULE, STRIP_STEP_RULE, UNLIMITED_CARDS,
-    Vector2,
-} from "@game/core/mecard"
-import type { Battle, Card, Controller, Unit, UnitRule } from "@game/core/mecard"
+    allRules,
+    MOVES_RULE,
+    SHUFFLE_RULE,
+    smartRule,
+    STRIP_PATH_RULE,
+    STRIP_STEP_RULE,
+} from "@game/core-src/games/mecard/sim/run/unitRules"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Controller, Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { UnitRule } from "@game/core-src/games/mecard/sim/run/unitRules"
 
 import { battle, HEROES, MONSTERS } from "../fixtures"
 

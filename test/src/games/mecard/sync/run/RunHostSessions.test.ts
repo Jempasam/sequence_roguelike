@@ -1,8 +1,11 @@
-import { DeckAi } from "@game/core/mecard"
-import {
-    COOP_SEATS, readBattleMessage, readPlanMessage, readRunMessage, readSeatMessage, readTravelMessage,
-    UnreadableFault,
-} from "@game/core/mecard/sync"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { readBattleMessage } from "@game/core-src/games/mecard/sync/battle/BattleMessage"
+import { readPlanMessage } from "@game/core-src/games/mecard/sync/battle/PlanMessage"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { readRunMessage } from "@game/core-src/games/mecard/sync/run/RunMessage"
+import { readSeatMessage } from "@game/core-src/games/mecard/sync/run/SeatMessage"
+import { COOP_SEATS } from "@game/core-src/games/mecard/sync/run/Seats"
+import { readTravelMessage } from "@game/core-src/games/mecard/sync/travel/TravelMessage"
 import { describe, expect, test } from "vitest"
 
 import { connected, fight, hosted, unitOf } from "../fixtures"

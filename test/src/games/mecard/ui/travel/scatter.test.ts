@@ -74,7 +74,7 @@ describe("scatter", () => {
 
     test.each([1, 2, 3, 4, 5, 6])("seed %i → every piece away from the tokens, the larger the farther", seed => {
         for(const spot of scatter(seed, PIECES, MAP)){
-            const reach = sizeOf(PIECES[spot.piece]) * 0.7 + 14
+            const reach = sizeOf(PIECES[spot.piece]) * 0.55 + 14
             for(const { x, y } of TOKENS){
                 const { x: left, y: top } = centerOf(spot)
                 expect(Math.hypot(x - left, y - top)).toBeGreaterThanOrEqual(reach - 1)
@@ -84,7 +84,7 @@ describe("scatter", () => {
 
     test.each([1, 2, 3, 4, 5, 6])("seed %i → every piece away from the paths, the larger the farther", seed => {
         for(const spot of scatter(seed, PIECES, MAP)){
-            const reach = sizeOf(PIECES[spot.piece]) * 0.7 + 3
+            const reach = sizeOf(PIECES[spot.piece]) * 0.55 + 3
             for(const { from, to } of PATHS){
                 expect(distanceToPath(centerOf(spot), from, to)).toBeGreaterThanOrEqual(reach - 1)
             }

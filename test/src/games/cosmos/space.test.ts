@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest"
-import { Vec3 } from "@game/core"
-import { defaultLevels, Pose, Space, World } from "@game/core/cosmos"
+import { Vec3 } from "@game/core-src/engine/math/Vec3"
+import { defaultLevels } from "@game/core-src/games/cosmos/level/defaultLevels"
+import { Pose } from "@game/core-src/games/cosmos/level/Pose"
+import { World } from "@game/core-src/games/cosmos/level/World"
+import { Space } from "@game/core-src/games/cosmos/space/Space"
 
 // --- Fixture builders ---
 

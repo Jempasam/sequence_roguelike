@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Packer } from "@game/core"
-import type { PackedRect, PackerOptions, PackerSize } from "@game/core"
+import { Packer } from "@game/core-src/engine/atlas/Packer"
+import type { PackedRect, PackerOptions, PackerSize } from "@game/core-src/engine/atlas/Packer"
 
 // --- Fixture builders ---
 

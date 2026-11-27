@@ -1,4 +1,4 @@
-import { concat } from "../../../../semantic"
+import { concat, plainText } from "../../../../semantic"
 import type { Text } from "../../../../semantic"
 import { BATTLE_ROUND } from "../base/keywords"
 import type { Observer } from "../base/Observable"
@@ -14,7 +14,7 @@ import { BaseStatus } from "./BaseStatus"
 export abstract class RoundStatus extends BaseStatus {
 
 
-    public override toString(): string { return `${this.type} ${counted(this.level, "round")}` }
+    public override toString(): string { return `${this.type} ${plainText(counted(this.level, "round"))}` }
 
     public override toSemString(): Text { return concat(this.type, " ", countedWord(this.level, BATTLE_ROUND)) }
 

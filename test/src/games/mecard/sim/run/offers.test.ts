@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { inventedFusion, readsWhole, Rng } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { readsWhole } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { inventedFusion } from "@game/core-src/games/mecard/sim/run/offers"
 
 // --- Tests ---
 

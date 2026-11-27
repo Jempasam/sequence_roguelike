@@ -1,10 +1,18 @@
-import { ManualScheduler } from "@game/core"
-import type { Battle } from "@game/core/mecard"
-import { LOOT_MONSTERS, threatOf, unitsOfMonsters } from "@game/core/mecard"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { LOOT_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { threatOf, unitsOfMonsters } from "@game/core-src/games/mecard/sim/duel/monsterTeam"
 import {
-    dungeonMasterMode, gameModeAsLobbyMode, LAUNCH, Lobby, LobbyGuest, LocalRoom, LocalSync, MASTER_PAUSE_MS,
-} from "@game/core/mecard/sync"
-import type { MasterBench, Prompt } from "@game/core/mecard/sync"
+    LAUNCH,
+    MASTER_PAUSE_MS,
+} from "@game/core-src/games/mecard/sim/mode/subs/dungeonMaster/DungeonMasterManager"
+import { dungeonMasterMode } from "@game/core-src/games/mecard/sim/mode/subs/dungeonMaster/DungeonMasterMode"
+import { Lobby } from "@game/core-src/games/mecard/sync/lobby/Lobby"
+import { LobbyGuest } from "@game/core-src/games/mecard/sync/lobby/LobbyGuest"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { Prompt } from "@game/core-src/games/mecard/sim/mode/subs/choose/Picker"
+import type { MasterBench } from "@game/core-src/games/mecard/sim/mode/subs/dungeonMaster/DungeonMasterOwner"
 import { describe, expect, test } from "vitest"
 
 /** Let what was deferred to the end of the current task happen. */

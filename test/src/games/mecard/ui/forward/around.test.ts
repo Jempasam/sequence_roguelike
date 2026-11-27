@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { AnimationChain } from "@game/core"
-import { Observable } from "@game/core/mecard"
+import { AnimationChain } from "@game/core-src/engine/ui/AnimationChain"
+import { Observable } from "@game/core-src/lifetime/Observable"
 import { forwardAround } from "@game/core/mecard/around"
 import { Forwarded } from "@game/core/mecard/forwarded"
 

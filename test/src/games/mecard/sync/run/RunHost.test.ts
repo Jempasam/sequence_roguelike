@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { DeckAi, POSSESSED, Rng } from "@game/core/mecard"
-import { ENEMY_SEATS, FIXED_SEATS, COOP_SEATS, randomSeats } from "@game/core/mecard/sync"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { POSSESSED } from "@game/core-src/games/mecard/sim/status/subs/Possessed"
+import { ENEMY_SEATS, FIXED_SEATS, COOP_SEATS, randomSeats } from "@game/core-src/games/mecard/sync/run/Seats"
 
 import { connected, fight, hosted, unitOf } from "../fixtures"
 

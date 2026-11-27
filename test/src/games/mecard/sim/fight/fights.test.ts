@@ -1,10 +1,30 @@
 import { describe, expect, test } from "vitest"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { allFightTypes, fightTypeById } from "@game/core-src/games/mecard/sim/catalog/fightTypes"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { ARCHER_KIT, LANCER_KIT, SWORDSMAN_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { BOSS_MONSTERS, GOBLIN, GOLEM } from "@game/core-src/games/mecard/sim/catalog/monsters"
 import {
-    AGGRESSION, ALL_FIGHT_CATEGORIES, ALL_FLOORS, allFightTypes, AMBUSH, ARCHER_KIT, BATTLE, BOSS, BOSS_MONSTERS, ELITE, EMPTY_FIGHT, GHOST_AMBUSH, GHOST_FIGHT, isGhostFight, historyEntry, ghostOfEntry,
-    fightType, fightTypeById, GOBLIN, GOLEM, Journey, KitFightType, LANCER_KIT, monsterStart, Rng, Run, SWORDSMAN_KIT, Vector2,
-    baseOf, POWER,
-} from "@game/core/mecard"
-import type { FightType, Ghost, Visual } from "@game/core/mecard"
+    AGGRESSION,
+    ALL_FIGHT_CATEGORIES,
+    AMBUSH,
+    BATTLE,
+    BOSS,
+    ELITE,
+    EMPTY_FIGHT,
+} from "@game/core-src/games/mecard/sim/fight/fights"
+import { fightType } from "@game/core-src/games/mecard/sim/fight/FightType"
+import { GHOST_AMBUSH, GHOST_FIGHT, isGhostFight } from "@game/core-src/games/mecard/sim/fight/GhostFightType"
+import { KitFightType } from "@game/core-src/games/mecard/sim/fight/KitFightType"
+import { POWER } from "@game/core-src/games/mecard/sim/item/subs/stat/Power"
+import { monsterStart } from "@game/core-src/games/mecard/sim/run/formation"
+import { baseOf } from "@game/core-src/games/mecard/sim/run/Hero"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { historyEntry, ghostOfEntry } from "@game/core-src/games/mecard/sim/save/historySave"
+import type { Visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import type { FightType, Ghost } from "@game/core-src/games/mecard/sim/fight/FightType"
 import { startedRun } from "../../../../fixtures/startedRun"
 import { visual } from "../../../../../../core/src/games/mecard/sim/base/Visual"
 import { laidIn } from "../../../../../../core/src/games/mecard/sim/floor/fights/designed"
@@ -150,7 +170,9 @@ describe("the fights of the floors", () => {
             addKit: (_kit, pose) => {
                 stood.push({ at: pose?.position ?? monsterStart(stood.length), radius: RADIUS })
             },
-            addHero: () => {},
+            addHero: (_hero, pose) => {
+                stood.push({ at: pose?.position ?? monsterStart(stood.length), radius: RADIUS })
+            },
             add: (monster, pose) => {
                 stood.push({ at: pose?.position ?? monsterStart(stood.length), radius: RADIUS * (monster.size ?? 1) })
             },
@@ -254,7 +276,7 @@ describe("the picture of a fight of a floor", () => {
                 rng: new Rng(1), level: 1, layer: 0,
                 add: monster => { sprites.push(monster.sprite) },
                 addKit: kit => { sprites.push(kit.sprite) },
-                addHero: () => {},
+                addHero: hero => { if(hero.sprite) sprites.push(hero.sprite) },
             })
             expect(sprites).toContainEqual(type.icon)
         },

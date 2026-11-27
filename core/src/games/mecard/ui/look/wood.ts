@@ -1,6 +1,7 @@
 import type { Assets, ImagePath } from "../../../../engine/assets"
 import { Atlas } from "../../../../engine/atlas"
 import type { Gpu } from "../../../../engine/gpu"
+import type { Color } from "../../../../engine/math"
 import { NineSlice } from "../../../../engine/ui"
 
 /** The pictures of the wood. */
@@ -37,6 +38,9 @@ export interface Wood {
 
     /** Wood to lay behind a screen, repeated. */
     readonly block: NineSlice
+
+    /** The same boards, their frames in the hue of a color: the wood of a place. */
+    tinted(color: Color): Wood
 }
 
 /**
@@ -53,15 +57,30 @@ export async function loadWood(gpu: Gpu, assets: Assets): Promise<Wood> {
         { pixels: frame }, { pixels: plank }, { pixels: block }, { pixels: active }, { pixels: transparent },
     ])
     const margins = (size: number) => ({ left: size, top: size, right: size, bottom: size })
-    const cut = (index: number, corner: number, border: number, opaqueCenter = true) => new NineSlice(
-        atlas.sprite(entries[index]), margins(corner * RENDER_SCALE),
-        { opaqueCenter, tiling: {}, border: margins(border) },
-    )
-    return {
-        frame: cut(0, FRAME_CORNER, FRAME_BORDER),
-        frameActive: cut(3, FRAME_CORNER, FRAME_BORDER),
-        frameTransparent: cut(4, FRAME_CORNER, FRAME_BORDER, false),
-        plank: cut(1, PLANK_BORDER, PLANK_BORDER),
-        block: NineSlice.withPeriod(atlas.sprite(entries[2]), margins(0), 16, { opaqueCenter: true }),
+    const cut = (index: number, corner: number, border: number, opaqueCenter = true, color?: Color) => {
+        return new NineSlice(
+            atlas.sprite(entries[index]), margins(corner * RENDER_SCALE),
+            { opaqueCenter, tiling: {}, border: margins(border), ...color && { color, colorMode: "hue" as const } },
+        )
     }
+    const nailed = cut(1, PLANK_BORDER, PLANK_BORDER)
+    const tile = NineSlice.withPeriod(atlas.sprite(entries[2]), margins(0), 16, { opaqueCenter: true })
+    const tinted = new Map<string, Wood>()
+    const woodOf = (color?: Color): Wood => ({
+        frame: cut(0, FRAME_CORNER, FRAME_BORDER, true, color),
+        frameActive: cut(3, FRAME_CORNER, FRAME_BORDER, true, color),
+        frameTransparent: cut(4, FRAME_CORNER, FRAME_BORDER, false, color),
+        plank: nailed,
+        block: tile,
+        tinted: other => {
+            const key = `${other.r},${other.g},${other.b}`
+            let wood = tinted.get(key)
+            if(!wood){
+                wood = woodOf(other)
+                tinted.set(key, wood)
+            }
+            return wood
+        },
+    })
+    return woodOf()
 }

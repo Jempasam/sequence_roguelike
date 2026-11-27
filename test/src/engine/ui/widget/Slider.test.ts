@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { ActionMap, key, mouse, Slider } from "@game/core"
-import type { InputFrame } from "@game/core"
+import { ActionMap } from "@game/core-src/engine/input/ActionMap"
+import { key, mouse } from "@game/core-src/engine/input/Binding"
+import { Slider } from "@game/core-src/engine/ui/widget/Slider"
+import type { InputFrame } from "@game/core-src/engine/input/InputFrame"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

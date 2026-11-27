@@ -1,10 +1,12 @@
-import { ManualScheduler } from "@game/core"
-import type { Fault } from "@game/core"
-import {
-    Placements, AlreadyStartedFault, Attendee, Deadline, DeadlineReceiver, GatheringFullFault, Gathering, LocalRoom,
-    LocalSync, MANUAL, whenCount,
-} from "@game/core/mecard/sync"
-import type { GatheringOptions, Member, StartRule, SyncLink } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import type { Fault } from "@game/core-src/engine/net/Fault"
+import { Deadline, DeadlineReceiver } from "@game/core-src/games/mecard/sync/Deadline"
+import { AlreadyStartedFault, GatheringFullFault } from "@game/core-src/games/mecard/sync/faults"
+import { Attendee, Gathering, MANUAL, whenCount } from "@game/core-src/games/mecard/sync/Gathering"
+import { Placements } from "@game/core-src/games/mecard/sync/participation/Participation"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { GatheringOptions, Member, StartRule } from "@game/core-src/games/mecard/sync/Gathering"
+import type { SyncLink } from "@game/core-src/platform/SyncPort"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

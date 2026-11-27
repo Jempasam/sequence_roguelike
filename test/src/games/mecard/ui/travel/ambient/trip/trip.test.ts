@@ -1,8 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { seededRandom } from "@game/core"
-import {
-    CHEST_HALT, DARK_TAVERN_HALT, HARBOR_FLOOR, MAGICIAN_HALT, MINE_FLOOR, MONSTER_SHAMAN_HALT, TAVERN_HALT,
-} from "@game/core/mecard"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import { HARBOR_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/HarborFloor"
+import { MINE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/MineFloor"
+import { DARK_TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/dark/DarkTavernHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { MAGICIAN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/MagicianHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { MONSTER_SHAMAN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/monster/MonsterShamanHalt"
 import { AMBIENT_EFFECTS } from "@game/core/mecard/ambient-effects"
 import { lengthOf, loop, straight, wander } from "@game/core/mecard/ambient-route"
 import { contextOf, effectOf, fightAt, haltAt, playOut, SPRITE } from "../../../../../../fixtures/ambientFixtures"

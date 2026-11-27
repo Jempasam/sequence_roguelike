@@ -1,12 +1,33 @@
 import { describe, expect, test } from "vitest"
+import { SUCTION } from "@game/core-src/games/mecard/sim/card/subs/combat/Shoves"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
 import {
-    BLEED, BLOCK, BLEEDING, BLUE_HEART, Concentration, CONCENTRATED, CONCENTRATION, COOL_HEAD,
-    EXPLOSIVE_HEART, EXPLOSIVE_SHELL, FRAGILE, FRAGILITY_CARD, GRUDGE, HEMORRHAGE, MARK_CARD, POISONED, RAMPART, SOUL_LINKED,
-    SOUL_SHIELDED, SUCTION, WAIT, WEAKENING_BLOWS, DEMONIC,
-} from "@game/core/mecard"
+    BLEED,
+    BLOCK,
+    CONCENTRATION,
+    COOL_HEAD,
+    EXPLOSIVE_SHELL,
+    FRAGILITY_CARD,
+    GRUDGE,
+    HEMORRHAGE,
+    MARK_CARD,
+    RAMPART,
+    WEAKENING_BLOWS,
+} from "@game/core-src/games/mecard/sim/card/subs/status/StatusCards"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { EXPLOSIVE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ExplosiveHeartKind"
+import { Concentration, CONCENTRATED } from "@game/core-src/games/mecard/sim/status/subs/Calm"
+import { DEMONIC } from "@game/core-src/games/mecard/sim/status/subs/DemonEnergy"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import {
+    BLEEDING,
+    FRAGILE,
+    SOUL_LINKED,
+    SOUL_SHIELDED,
+} from "@game/core-src/games/mecard/sim/status/subs/Wounds"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../../../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** The kinds of status a battle gave, in order: a status of a round is gone with it. */
 function statusesGiven(on: ReturnType<typeof battle>): unknown[] {

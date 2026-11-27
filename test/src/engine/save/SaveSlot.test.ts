@@ -1,7 +1,10 @@
 import { crc32 } from "node:zlib"
 import { describe, expect, test } from "vitest"
-import { MemoryStorage, SaveError, SaveSlot } from "@game/core"
-import type { PlayerStorage, SaveFormat } from "@game/core"
+import { MemoryStorage } from "@game/core-src/engine/save/MemoryStorage"
+import { SaveError } from "@game/core-src/engine/save/SaveError"
+import { SaveSlot } from "@game/core-src/engine/save/SaveSlot"
+import type { SaveFormat } from "@game/core-src/engine/save/SaveFormat"
+import type { PlayerStorage } from "@game/core-src/platform/StoragePort"
 
 // --- Fixture builders ---
 

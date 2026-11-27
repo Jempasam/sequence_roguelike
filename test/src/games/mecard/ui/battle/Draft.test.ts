@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { type Card, Heart, RED_HEART, STEP, TURNS, Vector2, WAIT, WALKS } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { WALKS } from "@game/core-src/games/mecard/sim/card/subs/movement/WalkCard"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
 import { Draft } from "@game/core/mecard/draft"
 
 import { battle, HEROES, MONSTERS, unit } from "../../sim/fixtures"

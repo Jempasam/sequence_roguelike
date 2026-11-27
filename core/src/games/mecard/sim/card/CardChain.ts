@@ -205,16 +205,19 @@ export class CardChain {
      * @returns What the tree gives, none at the end of the row.
      */
     public next<T>(type: CardType<T>): T|null {
-        while(this.cursor < this.cards.length){
-            const first = this.cursor
-            const built = this.cards[first].output === type ? this.get(first) : null
-            if(built) this.watcher?.activated(first, built.last)
-            else if(this.cards[first].output === type) this.watcher?.invalid(first)
-            this.cursor = built ? built.last + 1 : first + 1
-            this.watcher?.changed()
-            if(built) return built.value as T
-        }
-        return null
+        const found = this.#advance(type, (first, last) => this.watcher?.activated(first, last))
+        return found ? found.built.value as T : null
+    }
+
+    /**
+     * Read on as {@link CardChain.next} does, past the next tree giving a type, which is not told activated:
+     * it is not to be played.
+     *
+     * @returns Where the tree stands, none at the end of the row.
+     */
+    public skip(type: CardType<unknown>): { readonly first: number, readonly last: number }|null {
+        const found = this.#advance(type, () => {})
+        return found ? { first: found.first, last: found.built.last } : null
     }
 
     /** The actions it has left to give, one for each tree, one after the other. It touches nothing. */
@@ -423,6 +426,26 @@ export class CardChain {
     /** Is it ready to be played by a unit whose chain holds a number of cards at most? */
     public isValid(maxCards: number): boolean {
         return this.problems(maxCards).length === 0
+    }
+
+    /**
+     * Move past the next tree whose first card gives a type, telling the cards that cannot be built on the way.
+     *
+     * @param found - Told where the tree stands, before the reading moves past it.
+     */
+    #advance(
+        type: CardType<unknown>, found: (first: number, last: number) => void,
+    ): { readonly first: number, readonly built: Built }|null {
+        while(this.cursor < this.cards.length){
+            const first = this.cursor
+            const built = this.cards[first].output === type ? this.get(first) : null
+            if(built) found(first, built.last)
+            else if(this.cards[first].output === type) this.watcher?.invalid(first)
+            this.cursor = built ? built.last + 1 : first + 1
+            this.watcher?.changed()
+            if(built) return { first, built }
+        }
+        return null
     }
 
     /**

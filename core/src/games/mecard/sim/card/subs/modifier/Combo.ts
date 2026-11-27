@@ -1,4 +1,6 @@
-import { HEART, UNIT, BATTLE_TURN } from "../../../base/keywords"
+import { UNIT, BATTLE_TURN } from "../../../base/keywords"
+import { INFLICTED } from "../../../battle/mecanic/inflict/keyword"
+import * as Inflict from "../../../battle/mecanic/inflict"
 import type { Action, UnitContext } from "../../../battle/Action"
 import { NOTE_COLOR } from "../../../battle/previewColors"
 import { Rarity } from "../../Rarity"
@@ -8,22 +10,14 @@ import * as Previews from "../../../battle/preview/Previews"
 /** How many times a combo plays its action at most, the first included. */
 const COMBO_MAX = 4
 
-/** Play an action: did an enemy lose a heart to the unit meanwhile? */
+/** Play an action: was an enemy hurt meanwhile? */
 function landing(action: Action, ctx: UnitContext): boolean {
-    let landed = false
-    const { unit } = ctx
-    const listening = unit.hitting.add(({ target, amount }) => {
-        if(amount > 0 && target.team !== unit.team) landed = true
-    })
-    try {
-        action.use(ctx)
-    } finally {
-        listening.remove()
-    }
-    return landed
+    const wounds = Inflict.collectFrom(ctx, action, ctx.battle.signals.damaged,
+        ({ unit, amount }) => amount > 0 && unit.team !== ctx.unit.team)
+    return wounds.length > 0
 }
 
-/** An action played again as long as it takes a heart from an enemy, up to a number of times, as one step. */
+/** An action played again as long as it inflicts damage on an enemy, up to a number of times, as one step. */
 function combo(action: Action): Action {
     return {
         use: ctx => {
@@ -39,6 +33,6 @@ function combo(action: Action): Action {
 }
 
 export const COMBO = new ModifierCard("Combo", [
-    "Joue l'action ; tant qu'une ", UNIT, " ennemie y perd au moins un ", HEART, ", la rejoue, jusqu'à ", COMBO_MAX,
-    " fois en tout, en une seule ", BATTLE_TURN.as("étape"), ".",
+    "Joue l'action ; tant qu'elle ", INFLICTED.as("inflige"), " des dégâts à une ", UNIT, " ennemie, la rejoue, ",
+    "jusqu'à ", COMBO_MAX, " fois en tout, en une seule ", BATTLE_TURN.as("étape"), ".",
 ], Rarity.EPIC, combo)

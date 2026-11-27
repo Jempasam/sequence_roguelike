@@ -1,6 +1,9 @@
 import {
-    readParticipateMessage, readParticipationMessage, writeParticipateMessage, writeParticipationMessage,
-} from "@game/core/mecard/sync"
+    readParticipateMessage,
+    readParticipationMessage,
+    writeParticipateMessage,
+    writeParticipationMessage,
+} from "@game/core-src/games/mecard/sync/participation/ParticipationMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

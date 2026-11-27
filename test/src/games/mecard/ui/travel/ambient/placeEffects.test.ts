@@ -1,10 +1,17 @@
 import { describe, expect, test } from "vitest"
-import { outsidePoint, seededRandom } from "@game/core"
-import {
-    ALL_FLOORS, CAVE_FLOOR, DOJO_FLOOR, HELL_FLOOR, MERCHANT_HALT, MINE_FLOOR, SWAMP_FLOOR, TAVERN_HALT,
-    WEAVER_HALT,
-} from "@game/core/mecard"
-import type { FloorType } from "@game/core/mecard"
+import { outsidePoint } from "@game/core-src/engine/math/points"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { DOJO_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/DojoFloor"
+import { HELL_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/HellFloor"
+import { MINE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/MineFloor"
+import { SWAMP_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/SwampFloor"
+import { WEAVER_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/WeaverHalt"
+import { MERCHANT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/MerchantHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { HOSPITAL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/party/HospitalHalt"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 import { AMBIENT_EFFECTS } from "@game/core/mecard/ambient-effects"
 import { contextOf, effectOf, fightAt, haltAt, playOut, startedAnimation } from "../../../../../fixtures/ambientFixtures"
 
@@ -15,15 +22,26 @@ describe("the ids of the effects", () => {
         expect(new Set(ids).size).toBe(ids.length)
     })
 
-    test("all the effects → a spacing above 0", () => {
-        for(const effect of AMBIENT_EFFECTS) expect(effect.spacing, effect.id).toBeGreaterThan(0)
+    test("all the effects but the backdrops → a spacing above 0", () => {
+        for(const effect of AMBIENT_EFFECTS){
+            if(effect.category !== "backdrop") expect(effect.spacing, effect.id).toBeGreaterThan(0)
+        }
+    })
+})
+
+describe("the signature effects", () => {
+
+    test("a floor without a theme → none can play", () => {
+        const context = contextOf([fightAt(10, 10), haltAt(TAVERN_HALT, 200, 100)])
+        const playable = AMBIENT_EFFECTS.filter(each => each.category === "signature" && each.isPlayable(context))
+        expect(playable.map(each => each.id)).toEqual([])
     })
 })
 
 describe("the effects tied to a halt", () => {
 
     test("no halt that a cart serves → the cart cannot play", () => {
-        const context = contextOf([haltAt(TAVERN_HALT, 10, 10)], { floor: () => CAVE_FLOOR })
+        const context = contextOf([haltAt(HOSPITAL_HALT, 10, 10)], { floor: () => CAVE_FLOOR })
         expect(effectOf("leave-cart").isPlayable(context)).toBe(false)
     })
 
@@ -62,13 +80,17 @@ describe("the effects tied to a halt", () => {
 describe("the effects tied to the monsters", () => {
 
     test("no fight → no monster passes", () => {
-        expect(effectOf("monster-passing").isPlayable(contextOf([], { floor: () => CAVE_FLOOR }))).toBe(false)
+        for(const id of ["leave-enemy", "enter-enemy"]){
+            expect(effectOf(id).isPlayable(contextOf([], { floor: () => CAVE_FLOOR })), id).toBe(false)
+        }
     })
 
     test("a fight → a monster passes, in or out of the screen", () => {
-        const context = contextOf([fightAt(100, 100)], { floor: () => CAVE_FLOOR })
-        expect(effectOf("monster-passing").isPlayable(context)).toBe(true)
-        expect(playOut("monster-passing", context)).toBeLessThan(500)
+        for(const id of ["leave-enemy", "enter-enemy"]){
+            const context = contextOf([fightAt(100, 100)], { floor: () => CAVE_FLOOR })
+            expect(effectOf(id).isPlayable(context), id).toBe(true)
+            expect(playOut(id, context), id).toBeLessThan(500)
+        }
     })
 
     test("sprites not loaded → the line does not start", () => {
@@ -76,12 +98,12 @@ describe("the effects tied to the monsters", () => {
             floor: () => CAVE_FLOOR,
             sprite: () => null,
         })
-        expect(effectOf("monster-line").effect.create(context)).toBeNull()
+        expect(effectOf("enemy-queue-between").effect.create(context)).toBeNull()
     })
 
     test("two fights → a line of monsters walks, one particle each, until all are done", () => {
         const context = contextOf([fightAt(1, 1), fightAt(200, 100)], { floor: () => CAVE_FLOOR })
-        const animation = startedAnimation("monster-line", context)!
+        const animation = startedAnimation("enemy-queue-between", context)!
         animation.update(0.05)
         expect(context.alpha.count).toBe(1)
         for(let frame = 0; frame < 40; frame++){

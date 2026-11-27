@@ -1,10 +1,16 @@
-import { BATTLE_SAVE_VERSION, RUN_SAVE_VERSION } from "@game/core/mecard"
+import { BATTLE_SAVE_VERSION } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { RUN_SAVE_VERSION } from "@game/core-src/games/mecard/sim/save/runSave"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import { readRunMessage, writeRunMessage } from "@game/core-src/games/mecard/sync/run/RunMessage"
+import { readSeatMessage, writeSeatMessage } from "@game/core-src/games/mecard/sync/run/SeatMessage"
 import {
-    SEAT_RELEASE_TOPIC, SEAT_TAKE_TOPIC, UnreadableFault, readRunMessage, readSeatMessage,
-    readSeatOfferMessage, readSeatWishMessage, writeRunMessage, writeSeatMessage, writeSeatOfferMessage,
+    readSeatOfferMessage,
+    readSeatWishMessage,
+    writeSeatOfferMessage,
     writeSeatWishMessage,
-} from "@game/core/mecard/sync"
-import type { RunMessage } from "@game/core/mecard/sync"
+} from "@game/core-src/games/mecard/sync/run/SeatOfferMessage"
+import { SEAT_RELEASE_TOPIC, SEAT_TAKE_TOPIC } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { RunMessage } from "@game/core-src/games/mecard/sync/run/RunMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

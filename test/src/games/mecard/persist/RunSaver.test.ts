@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { MemoryStorage, SaveSlot } from "@game/core"
-import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core/mecard"
-import { RunSaver } from "@game/core/mecard/persist"
+import { MemoryStorage } from "@game/core-src/engine/save/MemoryStorage"
+import { SaveSlot } from "@game/core-src/engine/save/SaveSlot"
+import { RUN_SAVE_FORMAT, RUN_SLOT_KEY } from "@game/core-src/games/mecard/sim/save/runSlot"
+import { RunSaver } from "@game/core-src/games/mecard/persist/RunSaver"
 
 import { startedRun } from "../../../fixtures/startedRun"
 

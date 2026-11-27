@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Animator } from "@game/core"
-import type { Animation } from "@game/core"
+import { Animator } from "@game/core-src/engine/animation/Animator"
+import type { Animation } from "@game/core-src/engine/animation/Animation"
 
 /** An animation that lasts a number of updates and writes what it lives through. */
 function counted(updates: number, log: string[], name = "a"): Animation {

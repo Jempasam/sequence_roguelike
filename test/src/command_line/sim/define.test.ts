@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { ALL_KITS, GOBLIN, KIT_HEARTS } from "@game/core/mecard"
+import { ALL_KITS, KIT_HEARTS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
 import { parseDefinition, UsageError } from "@game/command_line/sim"
 import type { DefinedKit, DefinedMonster } from "@game/command_line/sim"
 

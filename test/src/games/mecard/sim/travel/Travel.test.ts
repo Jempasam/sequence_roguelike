@@ -1,6 +1,27 @@
 import { describe, expect, test } from "vitest"
-import { BATTLE, BOSS, BUTCHER_HALT, DUEL_HALT, ELITE, GOBLIN, CHEST_HALT, FORGE_HALT, GREAT_FORGE_HALT, LAYERS, REMOVAL_HALT, STEP } from "@game/core/mecard"
-import type { CardsDialog, ConfirmDialog, Dialog, DuelHalt, FightCategory, HaltType, HeroDialog, OfferDialog, Place, PlaceType, Travel } from "@game/core/mecard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { BATTLE, BOSS, ELITE } from "@game/core-src/games/mecard/sim/fight/fights"
+import { LAYERS } from "@game/core-src/games/mecard/sim/floor/subs/AbstractFloor"
+import { BUTCHER_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/ButcherHalt"
+import { FORGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/ForgeHalt"
+import { REMOVAL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/deck/RemovalHalt"
+import { DUEL_HALT } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { GREAT_FORGE_HALT } from "@game/core-src/games/mecard/sim/halt/subs/great/GreatForgeHalt"
+import type { FightCategory } from "@game/core-src/games/mecard/sim/fight/FightCategory"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
+import type { DuelHalt } from "@game/core-src/games/mecard/sim/halt/subs/duel/DuelHalt"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
+import type {
+    CardsDialog,
+    ConfirmDialog,
+    Dialog,
+    HeroDialog,
+    OfferDialog,
+} from "@game/core-src/games/mecard/sim/travel/dialogs"
+import type { Travel } from "@game/core-src/games/mecard/sim/travel/Travel"
 import { fightOf } from "../../../../fixtures/fightFixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 

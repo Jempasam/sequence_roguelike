@@ -1,7 +1,9 @@
 import { test } from "vitest"
 import { scatter } from "@game/core/mecard/scatter"
-import { CAVE_FLOOR, EXIT_HALT, Journey } from "@game/core/mecard"
-import { Rng } from "@game/core/mecard"
+import { CAVE_FLOOR } from "@game/core-src/games/mecard/sim/floor/subs/CaveFloor"
+import { EXIT_HALT } from "@game/core-src/games/mecard/sim/halt/subs/ExitHalt"
+import { Journey } from "@game/core-src/games/mecard/sim/run/Journey"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
 const P=[{width:14,height:10},{width:48,height:40},{width:24,height:30},{width:24,height:14},{width:24,height:16}]
 test("s",()=>{ for(const W of [240,320,420,560]){ const H=28+13*34+14; let t=[0,0,0,0,0],noLarge=0,ms=0; const N=40
  for(let s=1;s<=N;s++){ const j=new Journey(new Rng(s)); CAVE_FLOOR.create(1).fillMap(j); j.addExits([{} as never,{} as never], EXIT_HALT)

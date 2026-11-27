@@ -1,7 +1,11 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { ALL_KITS, ALL_MONSTERS, ALL_PETS, BOSS_MONSTERS, Rng, visual } from "@game/core/mecard"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { ALL_MONSTERS, BOSS_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
 import {
     BOSS_HEARTS_RATIO, OWN_VOICE_KEYS, UNIT_CUES, voiceOf, voiceOfBattle,
 } from "@game/core/mecard/unit-sounds"

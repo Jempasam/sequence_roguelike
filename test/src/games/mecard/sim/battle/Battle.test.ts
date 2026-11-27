@@ -1,13 +1,45 @@
 import { describe, expect, test } from "vitest"
-import {
-    Add, AIM, Arena, Battle, BLINK, BURN, Carried, CLONE, DODGE_CARD, FIRE_FLASK, FusionCard, GLASS_HEART,
-    HEALING_POTION, Heart, HYPNOSIS, ModifierKey, PRAYER, RED_HEART, REPEAT_2, SHIELD_HEART, SHOT, SLASH, STEP,
-    STUNNING_DASH, SWEEP, TASER, THORN_HEART, THRUST, TURNS, UNIT_RADIUS, Vector2, WAIT,
-} from "@game/core/mecard"
-import type { Unit } from "@game/core/mecard"
+import { Add, ModifierKey } from "@game/core-src/games/mecard/sim/base/Attribute"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { UNIT_RADIUS } from "@game/core-src/games/mecard/sim/battle/Unit"
+import { SHOT } from "@game/core-src/games/mecard/sim/card/subs/attack/Shot"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { SWEEP } from "@game/core-src/games/mecard/sim/card/subs/attack/Sweep"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { CLONE } from "@game/core-src/games/mecard/sim/card/subs/combat/Clone"
+import { DODGE_CARD } from "@game/core-src/games/mecard/sim/card/subs/combat/DodgeCard"
+import { TASER } from "@game/core-src/games/mecard/sim/card/subs/combat/Taser"
+import { FusionCard } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { HYPNOSIS } from "@game/core-src/games/mecard/sim/card/subs/modifier/Hypnosis"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { BLINK } from "@game/core-src/games/mecard/sim/card/subs/movement/Blink"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { STUNNING_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/StunningDash"
+import { TURNS } from "@game/core-src/games/mecard/sim/card/subs/movement/TurnCard"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { PRAYER } from "@game/core-src/games/mecard/sim/card/subs/preparation/Prayer"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { GLASS_HEART } from "@game/core-src/games/mecard/sim/heart/subs/GlassHeartKind"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { THORN_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ThornHeartKind"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { STUNNED } from "@game/core-src/games/mecard/sim/status/subs/Stunned"
+import { FIRE_FLASK } from "@game/core-src/games/mecard/sim/usable/subs/flask/FireFlask"
+import { HEALING_POTION, HealingPotion } from "@game/core-src/games/mecard/sim/usable/subs/HealingPotion"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import * as Walk from "@game/core-src/games/mecard/sim/battle/mecanic/walk"
+import * as Push from "@game/core-src/games/mecard/sim/battle/mecanic/push"
+import * as Leap from "@game/core-src/games/mecard/sim/battle/mecanic/leap"
+import * as Blink from "@game/core-src/games/mecard/sim/battle/mecanic/blink"
+import * as Teleport from "@game/core-src/games/mecard/sim/battle/mecanic/teleport"
 
 // --- Tests ---
 
@@ -135,14 +167,14 @@ describe("Collisions", () => {
         const on = pillared()
         // Its path passes 0.8 m from the pillar: 0.05 m inside the true circles, within the slack.
         const walker = unit(on, 4.3, 5)
-        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 4)
+        const gone = Walk.spot(on, walker, walker.position, Vector2.UP, 4)
         expect(gone.distance).toBeCloseTo(4)
     })
 
     test("straight into a pillar → stops at the true contact", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 5)
-        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
+        const gone = Walk.spot(on, walker, walker.position, Vector2.UP, 3)
         const gap = gone.to.distance(new Vector2(3.5, 3))
         expect(gap).toBeGreaterThanOrEqual(0.5 + walker.radius)
         expect(gap).toBeLessThan(0.5 + walker.radius + 0.06)
@@ -151,14 +183,14 @@ describe("Collisions", () => {
     test("a little inside a pillar, going further in → backs out to the true contact", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 3.82)
-        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 1)
+        const gone = Walk.spot(on, walker, walker.position, Vector2.UP, 1)
         expect(gone.to.distance(new Vector2(3.5, 3))).toBeGreaterThanOrEqual(0.5 + walker.radius)
     })
 
     test("against a pillar, leaving along it → moves", () => {
         const on = pillared()
         const walker = unit(on, 3.5, 3.82)
-        const gone = on.moveSpot(walker, walker.position, new Vector2(1, 0), 1)
+        const gone = Walk.spot(on, walker, walker.position, new Vector2(1, 0), 1)
         expect(gone.distance).toBeCloseTo(1)
     })
 
@@ -188,14 +220,14 @@ describe("Collisions", () => {
         const on = pillared()
         const pusher = unit(on, 1, 5)
         const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
-        on.push(pillar, Vector2.RIGHT, 1, pusher)
+        Push.shove({ battle: on, by: pusher, target: pillar, direction: Vector2.RIGHT, distance: 1 })
         expect(pillar.position.equals(new Vector2(3.5, 3))).toBe(true)
     })
 
     test("a pillar playing a step itself → moves", () => {
         const on = pillared()
         const pillar = on.units.find(each => each.sprite?.visual === "units/pillar") as Unit
-        expect(on.move(pillar, Vector2.RIGHT, 1).distance).toBeGreaterThan(0)
+        expect(Walk.move(on, pillar, Vector2.RIGHT, 1).distance).toBeGreaterThan(0)
     })
 
     test("a pillar → saved and loaded back, once", () => {
@@ -209,7 +241,7 @@ describe("Collisions", () => {
         const on = battle()
         const walker = unit(on, 3, 5)
         const target = unit(on, 3, 3, { team: MONSTERS })
-        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
+        const gone = Walk.spot(on, walker, walker.position, Vector2.UP, 3)
         expect(gone.struck).toBe(target)
         expect(gone.to.distance(target.position)).toBeGreaterThanOrEqual(walker.radius + target.radius)
     })
@@ -217,7 +249,7 @@ describe("Collisions", () => {
     test("a move against a wall → the wall stays exact", () => {
         const on = battle()
         const walker = unit(on, 3, 1)
-        const gone = on.moveSpot(walker, walker.position, Vector2.UP, 3)
+        const gone = Walk.spot(on, walker, walker.position, Vector2.UP, 3)
         expect(gone.to.y).toBeGreaterThanOrEqual(walker.radius)
     })
 })
@@ -242,7 +274,7 @@ describe("Free positions", () => {
         play(on, [[dasher, chain(STUNNING_DASH)]])
         expect(target.position.distance(dasher.position)).toBeGreaterThanOrEqual(2 * UNIT_RADIUS)
         expect(target.position.distance(dasher.position)).toBeLessThan(2 * UNIT_RADIUS + 0.1)
-        expect(on.events.some(event => event.type === "status" && event.text === "étourdi")).toBe(true)
+        expect(target.statusOf(STUNNED)?.level).toBe(1)
     })
 
     test("a move factor of ×1.5 → a step goes 3 m instead of 2", () => {
@@ -485,7 +517,7 @@ describe("Battle.playStep", () => {
         on.commit(walker, chain(STEP))
         on.endPreparation()
         const moves: { to: number, duration: number }[] = []
-        on.signals.moved.add(({ to, duration }) => moves.push({ to: to.position.y, duration }))
+        on.observers.of(Walk.WALKED).add(({ to, duration }) => moves.push({ to: to.position.y, duration }))
         on.playStep()
         expectAt(walker, 3, 3)
         expect(moves).toHaveLength(1)
@@ -539,7 +571,7 @@ describe("Battle.activate", () => {
         const on = battle()
         const drinker = unit(on, 3, 3)
         unit(on, 0, 0, { team: MONSTERS })
-        const potion = new Carried(HEALING_POTION)
+        const potion = new Carried(new HealingPotion(3))
         drinker.usables.push(potion)
         on.startRound()
         drinker.hearts.damage(3, DamageType.PHYSICAL, null)
@@ -590,7 +622,7 @@ describe("Battle.unblock", () => {
     test("leaves a unit with room alone", () => {
         const on = battle()
         const free = unit(on, 3, 3)
-        on.unblock(free)
+        Leap.unblock(on, free)
         expectAt(free, 3, 3)
         expect(free.life).toBe(4)
     })
@@ -599,7 +631,7 @@ describe("Battle.unblock", () => {
         const on = battle()
         const stuck = unit(on, 3, 3)
         unit(on, 3.1, 3, { team: MONSTERS })
-        on.unblock(stuck)
+        Leap.unblock(on, stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)
         expect(stuck.life).toBe(4)
     })
@@ -607,7 +639,7 @@ describe("Battle.unblock", () => {
     test("throws a unit off a pillar", () => {
         const on = withPillars(new Battle(new Arena(7, 7), 1), { center: new Vector2(3, 3), radius: 0.45 })
         const stuck = unit(on, 3, 3)
-        on.unblock(stuck)
+        Leap.unblock(on, stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)
     })
 
@@ -617,7 +649,7 @@ describe("Battle.unblock", () => {
         for(let x = 1.6; x < 4.5; x += 0.7){
             for(let y = 1.6; y < 4.5; y += 0.7) unit(on, x, y, { team: MONSTERS })
         }
-        on.unblock(stuck)
+        Leap.unblock(on, stuck)
         expect(on.free(stuck.position, stuck)).toBe(true)
         expect(stuck.life).toBe(20)
     })
@@ -628,8 +660,8 @@ describe("Battle.leap", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
         unit(on, 6, 6, { team: MONSTERS })
-        on.leap(hero, new Vector2(3, -2))
-        on.unblock(hero)
+        Leap.leap(on, hero, new Vector2(3, -2))
+        Leap.unblock(on, hero)
         expect(hero.life).toBe(4)
         expect(on.free(hero.position, hero)).toBe(true)
     })
@@ -640,7 +672,7 @@ describe("Battle.blink", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
         unit(on, 3, 3, { team: MONSTERS })
-        on.blink(hero, new Vector2(3, 3))
+        Blink.blink(on, hero, new Vector2(3, 3))
         expect(on.free(hero.position, hero)).toBe(true)
         expect(hero.position.distance(new Vector2(3, 1))).toBeGreaterThan(0)
     })
@@ -648,14 +680,14 @@ describe("Battle.blink", () => {
     test("a point past a wall → the farthest free spot toward it", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
-        on.blink(hero, new Vector2(3, -5))
+        Blink.blink(on, hero, new Vector2(3, -5))
         expect(on.free(hero.position, hero)).toBe(true)
     })
 
     test("a free point → on it", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
-        on.blink(hero, new Vector2(3, 4))
+        Blink.blink(on, hero, new Vector2(3, 4))
         expectAt(hero, 3, 4)
     })
 })
@@ -664,7 +696,7 @@ describe("Battle.teleport", () => {
     test("a free point → on it", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
-        expect(on.teleport(hero, new Vector2(3, 4))).toBe(true)
+        expect(Teleport.teleport(on, hero, new Vector2(3, 4))).toBe(true)
         expectAt(hero, 3, 4)
     })
 
@@ -672,7 +704,7 @@ describe("Battle.teleport", () => {
         const on = battle()
         const hero = unit(on, 3, 1)
         unit(on, 3, 4, { team: MONSTERS })
-        expect(on.teleport(hero, new Vector2(3, 4))).toBe(true)
+        expect(Teleport.teleport(on, hero, new Vector2(3, 4))).toBe(true)
         expect(on.free(hero.position, hero)).toBe(true)
     })
 
@@ -682,7 +714,7 @@ describe("Battle.teleport", () => {
         for(let x = 1.6; x < 4.5; x += 0.5){
             for(let y = 2.6; y < 5.5; y += 0.5) unit(on, x, y, { team: MONSTERS })
         }
-        expect(on.teleport(hero, new Vector2(3, 4))).toBe(false)
+        expect(Teleport.teleport(on, hero, new Vector2(3, 4))).toBe(false)
         expectAt(hero, 3, 1)
     })
 })

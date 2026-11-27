@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Button } from "@game/core"
+import { Button } from "@game/core-src/engine/ui/widget/Button"
 import { SectionTabs } from "@game/core/mecard/section-tabs"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"

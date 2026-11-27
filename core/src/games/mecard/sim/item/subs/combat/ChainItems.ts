@@ -1,6 +1,8 @@
 import { FUSION, UNIT } from "../../../base/keywords"
 import { visual } from "../../../base/Visual"
 import type { PlugContext } from "../../../battle/Action"
+import { INFLICTED } from "../../../battle/mecanic/inflict/keyword"
+import * as Inflict from "../../../battle/mecanic/inflict"
 import type { Card } from "../../../card/Card"
 import { beastBodyOf } from "../../../card/subs/beast/BeastRewrites"
 import { collageOf } from "../../../card/subs/composite/ChainRewrites"
@@ -43,21 +45,21 @@ export class Wings extends AbstractItem {
 
 export const WINGS = new Wings()
 
-/** A soul lantern: an enemy dying during the turn of its unit leaves it what it had yet to play. */
+/** A soul lantern: an enemy dying of what its unit inflicts leaves it what it had yet to play. */
 export class SoulLantern extends AbstractItem {
 
 
     constructor(){
         super("Lanterne à âme", visual("items/soul_lantern"), [
-            "Quand une ", UNIT, " ennemie meurt pendant ton tour, reçois un ", FUSION.as("collage"),
-            " temporaire des cartes qu'elle n'avait pas encore jouées.",
+            "Quand une ", UNIT, " ennemie meurt sous un effet que tu ", INFLICTED.as("infliges"), ", reçois un ",
+            FUSION.as("collage"), " temporaire des cartes qu'elle n'avait pas encore jouées.",
         ])
     }
 
 
     public init({ battle, unit, hold }: PlugContext): void {
         hold(battle.unitDied.add(({ unit: dead }) => {
-            if(battle.phase !== "execution" || battle.actor !== unit || dead.team === unit.team) return
+            if(!Inflict.isInflictedBy(battle, unit) || dead.team === unit.team) return
             const collage = collageOf(dead.unplayed())
             if(collage) battle.giveFleetingCard(unit, collage)
         }))

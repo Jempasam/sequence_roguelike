@@ -44,7 +44,7 @@ export class AntiquarianHalt extends DeckHalt {
     constructor(run: Run){
         super(ANTIQUARIAN_HALT, run,
             ["Vends-moi une ", CARTE, " : plus elle en tient, plus je paie."],
-            sceneLook(31, 26, 23, "antiquarian"),
+            sceneLook(31, 29, 22, "antiquarian"),
             {
                 hat: "velvetToque",
                 clothes: rgba(0.7, 0.6, 0.5),

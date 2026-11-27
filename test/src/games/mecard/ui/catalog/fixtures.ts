@@ -1,5 +1,7 @@
-import { Label, WrapBox } from "@game/core"
-import type { Component, Theme } from "@game/core"
+import { WrapBox } from "@game/core-src/engine/ui/layout/WrapBox"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import type { Component } from "@game/core-src/engine/ui/Component"
+import type { Theme } from "@game/core-src/engine/ui/Theme"
 import type { Entry, EntryFilter, Section } from "@game/core/mecard/entries"
 
 // The fixture builders shared by the tests of the catalogue components.

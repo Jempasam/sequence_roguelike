@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Color, Dial } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Dial } from "@game/core-src/engine/ui/widget/Dial"
 
 // --- Fixtures ---
 

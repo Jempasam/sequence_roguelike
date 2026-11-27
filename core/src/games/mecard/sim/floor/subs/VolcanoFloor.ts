@@ -38,7 +38,7 @@ export const VOLCANO_FLOOR: FloorType = {
     decorations: [
         { picture: visual("floors/volcano/lava"), size: 2 },
         { picture: visual("floors/volcano/rock"), size: 2 },
-        { picture: visual("floors/volcano/geyser"), size: 1.5 },
+        { picture: visual("floors/volcano/geyser"), size: 1 },
         { picture: visual("floors/volcano/obsidian"), size: 2 },
         { picture: visual("floors/volcano/bones"), size: 2 },
     ],

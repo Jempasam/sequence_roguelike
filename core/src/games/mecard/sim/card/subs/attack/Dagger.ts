@@ -1,5 +1,4 @@
 import type { Text } from "../../../../../../semantic"
-import { frenchNumber } from "../../../battle/words"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
 import type { Battle } from "../../../battle/Battle"
@@ -72,6 +71,6 @@ export class DaggerCard extends BlowCard {
 }
 
 export const DAGGER = new DaggerCard("Dague", [
-    "Poignarde sur ", frenchNumber(DAGGER_RANGE), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+    "Poignarde sur ", DAGGER_RANGE, "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
     DamageType.PHYSICAL, " à chaque ", UNIT, ", ×", BACKSTAB, " dans le dos.",
 ], Rarity.COMMON, DAGGER_RANGE, DAGGER_WIDTH, BACKSTAB)

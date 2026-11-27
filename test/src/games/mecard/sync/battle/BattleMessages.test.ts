@@ -1,6 +1,8 @@
-import { BATTLE_SAVE_VERSION } from "@game/core/mecard"
-import { UnreadableFault, readBattleMessage, readPlanMessage, writeBattleMessage, writePlanMessage } from "@game/core/mecard/sync"
-import type { BattleMessage } from "@game/core/mecard/sync"
+import { BATTLE_SAVE_VERSION } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { readBattleMessage, writeBattleMessage } from "@game/core-src/games/mecard/sync/battle/BattleMessage"
+import { readPlanMessage, writePlanMessage } from "@game/core-src/games/mecard/sync/battle/PlanMessage"
+import { UnreadableFault } from "@game/core-src/games/mecard/sync/faults"
+import type { BattleMessage } from "@game/core-src/games/mecard/sync/battle/BattleMessage"
 import { describe, expect, test } from "vitest"
 
 import { expectNoneOf } from "../messageFixtures"

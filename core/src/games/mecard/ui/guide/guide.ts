@@ -182,7 +182,7 @@ export const GUIDE: readonly GuideBlock[] = [
     paragraph(
         "Il y a deux grandes sortes de cartes : celles qui se jouent pendant l'exécution (les actions et ce qui les "
         + "modifie), et les cartes de préparation, qui n'agissent pas elles-mêmes : elles changent la chaîne avant "
-        + "qu'elle se joue. La couleur du bandeau et le mot en bas de la carte te disent à quelle famille elle appartient.",
+        + "qu'elle se joue. La couleur du bandeau et le mot en bas de la carte te disent de quel type elle est.",
     ),
     terms([
         { head: "Action", text: concat("Fait quelque chose, rien à brancher : ", AVANCER, ", ", COUP_EPEE, ", ", TIR, ".") },

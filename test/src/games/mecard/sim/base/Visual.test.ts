@@ -1,11 +1,25 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import {
-    allPlaceTypes, BOSS_MONSTERS, BURNING_GROUND, BURNING_GROUNDS, FIRE_ELEMENT, RITUAL_STATUS, RITUAL_STATUSES, ALL_FIGHT_CATEGORIES, ALL_FLOORS, Haste, ALL_ITEMS, ALL_KITS, loadedVisual, ALL_MONSTERS, ALL_PETS,
-    PNJ_HATS, PNJ_ITEMS, PNJ_MASKS, Riding, savedVisual, ShadowLink, STATUS_FAMILIES, STATUS_TYPES, Strength,
-    ALL_USABLES, defaultVisual, Vanishing, Visual,
-} from "@game/core/mecard"
+import { loadedVisual, savedVisual, defaultVisual, Visual } from "@game/core-src/games/mecard/sim/base/Visual"
+import { ALL_FLOORS } from "@game/core-src/games/mecard/sim/catalog/floors"
+import { ALL_ITEMS } from "@game/core-src/games/mecard/sim/catalog/items"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { BOSS_MONSTERS, ALL_MONSTERS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { ALL_PETS } from "@game/core-src/games/mecard/sim/catalog/pets"
+import { allPlaceTypes } from "@game/core-src/games/mecard/sim/catalog/places"
+import { ALL_USABLES } from "@game/core-src/games/mecard/sim/catalog/usables"
+import { FIRE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Fire"
+import { ALL_FIGHT_CATEGORIES } from "@game/core-src/games/mecard/sim/fight/fights"
+import { PNJ_HATS, PNJ_ITEMS, PNJ_MASKS } from "@game/core-src/games/mecard/sim/halt/PnjHats"
+import { BURNING_GROUND, BURNING_GROUNDS } from "@game/core-src/games/mecard/sim/hazard/subs/BurningGround"
+import { Haste } from "@game/core-src/games/mecard/sim/process/subs/Haste"
+import { Riding } from "@game/core-src/games/mecard/sim/process/subs/Riding"
+import { ShadowLink } from "@game/core-src/games/mecard/sim/process/subs/ShadowLink"
+import { Strength } from "@game/core-src/games/mecard/sim/process/subs/Strength"
+import { Vanishing } from "@game/core-src/games/mecard/sim/process/subs/Vanishing"
+import { STATUS_FAMILIES, STATUS_TYPES } from "@game/core-src/games/mecard/sim/status/statusTypes"
+import { RITUAL_STATUS, RITUAL_STATUSES } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
 
 // --- Fixture builders ---
 

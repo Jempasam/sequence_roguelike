@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { AssetError } from "@game/core"
-import type { Assets } from "@game/core"
+import { AssetError } from "@game/core-src/engine/assets/AssetError"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import type { Assets } from "@game/core-src/engine/assets/Assets"
+import { Ambient } from "@game/core/mecard/ambient-system"
 
 import { ALL_RUN_LOCKS, RunScreen } from "@game/core/mecard/run-screen"
 import type { RunLocks, RunScreenOptions } from "@game/core/mecard/run-screen"
@@ -28,11 +30,11 @@ const NO_SPRITES = {
 } as unknown as RunScreenOptions["sprites"]
 
 /** A screen on a new run, shown. */
-function shown(locks?: RunLocks) {
+function shown(locks?: RunLocks, ambient: Ambient|null = null) {
     const setup = uiSetup({}, 620, 348)
     const run = startedRun(3)
     const screen = new RunScreen(setup.ui, run, {
-        theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES, locks,
+        theme: setup.theme, assets: NO_ASSETS, sprites: NO_SPRITES, locks, ambient,
         toWorld: (x, y) => [x, y], toUi: (x, y) => [x, y],
         restart: () => {},
         report: () => {},
@@ -48,6 +50,27 @@ async function crossed(setup: ReturnType<typeof uiSetup>): Promise<void> {
 }
 
 // --- Tests ---
+
+describe("the ambient of a run screen", () => {
+
+    /** The places among the spaces of the ambient of those enabled: the map first, then the arena. */
+    const enabled = (ambient: Ambient): number[] => {
+        return ambient.contexts.flatMap((context, index) => context.enabled() ? [index] : [])
+    }
+
+    test("the map shown, a battle, then the screen hidden → the map, the arena, then no space", async() => {
+        const ambient = new Ambient(seededRandom(1), error => { throw error })
+        const { run, screen, setup } = shown(undefined, ambient)
+        await settled()
+        setup.ui.render()
+        expect(enabled(ambient)).toEqual([0])
+        run.startBattle()
+        await crossed(setup)
+        expect(enabled(ambient)).toEqual([1])
+        screen.visible = false
+        expect(enabled(ambient)).toEqual([])
+    })
+})
 
 describe("RunScreen", () => {
     test("a battle told by the run → shown, from the observable alone", async() => {

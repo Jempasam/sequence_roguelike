@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vitest"
-import {
-    ActionMap, buttons, gamepad, InputSystem, key, KEYBOARD, keys, mouse, MOUSE, pad, REPEAT_DELAY,
-    REPEAT_INTERVAL, stick, STICK_DEADZONE,
-} from "@game/core"
-import type { ActionBindings } from "@game/core"
+import { ActionMap } from "@game/core-src/engine/input/ActionMap"
+import { buttons, key, keys, mouse, pad, stick, STICK_DEADZONE } from "@game/core-src/engine/input/Binding"
+import { gamepad, KEYBOARD, MOUSE } from "@game/core-src/engine/input/InputEvent"
+import { InputSystem } from "@game/core-src/engine/input/InputSystem"
+import { REPEAT_DELAY, REPEAT_INTERVAL } from "@game/core-src/engine/input/Repeat"
+import type { ActionBindings } from "@game/core-src/engine/input/ActionMap"
 
 import { FakeInput } from "../../fixtures/fakeInput"
 

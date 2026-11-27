@@ -1,4 +1,4 @@
-import { keywordsOf } from "../../describe"
+import * as Family from "../../../battle/mecanic/family"
 import { CONTROL_COLOR, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
@@ -18,29 +18,23 @@ import * as Previews from "../../../battle/preview/Previews"
 /** How far the one mind of the catalog reaches around its caster, in meters. */
 const ONE_MIND_RANGE = 4 - UNIT_RADIUS
 
-/** How many keywords two cards have to share for one to be changed into the other. */
-const SHARED_KEYWORDS = 2
-
-/** How many keywords two cards share, each counted once. */
-function sharedKeywords(first: Card, second: Card): number {
-    const others = keywordsOf(second)
-    return [...keywordsOf(first)].filter(keyword => others.has(keyword)).length
-}
+/** How akin two cards have to be for one to be changed into the other. */
+const ONE_MIND_KINSHIP = 2
 
 /**
- * Can a card be changed into another: it takes and gives the same types, and shares enough keywords with
- * it? A card is never changed into itself, which is nothing to change.
+ * Can a card be changed into another: it takes and gives the same types, and is akin enough to it? A card is
+ * never changed into itself, which is nothing to change.
  */
 function resembles(card: Card, into: Card, shared: number): boolean {
     if(card === into) return false
     if(card.input !== into.input || card.output !== into.output) return false
-    return sharedKeywords(card, into) >= shared
+    return Family.isKin(card, into, shared)
 }
 
 /**
  * Around the caster, in a circle: in the chain of each other unit, every card it has not read yet that takes
- * and gives the same as the card on the right of this one, and names as many of the same notions, becomes
- * that card. The caster plays it as it would.
+ * and gives the same as the card on the right of this one, and is akin enough to it, becomes that card. The
+ * caster plays it as it would.
  */
 export class OneMindCard extends ModifierCard {
 
@@ -49,15 +43,15 @@ export class OneMindCard extends ModifierCard {
         /** How far it reaches around the caster, in meters. */
         public readonly range: number,
 
-        /** How many keywords a card shares with the one given for it to be changed. */
+        /** The kinship a card has with the one given for it to be changed. */
         public readonly shared: number,
     ){
         super(
             "Pensée unique",
             [
                 "Toute ", UNIT, " à ", range, " ", DISTANCE, " autour de toi, alliée ou ennemie, voit ses cartes pas encore lues ",
-                "qui prennent et donnent la même chose que la carte donnée et partagent au moins ", shared,
-                " mots-clés avec elle devenir cette carte.",
+                "qui prennent et donnent la même chose que la carte donnée et sont ", ...Family.kinText(shared),
+                " avec elle devenir cette carte.",
             ],
             Rarity.EPIC, (action, tree) => inOrder([OneMindCard.#convincing(range, shared, tree[0] ?? null), action]),
         )
@@ -90,4 +84,4 @@ export class OneMindCard extends ModifierCard {
     }
 }
 
-export const ONE_MIND = new OneMindCard(ONE_MIND_RANGE, SHARED_KEYWORDS)
+export const ONE_MIND = new OneMindCard(ONE_MIND_RANGE, ONE_MIND_KINSHIP)

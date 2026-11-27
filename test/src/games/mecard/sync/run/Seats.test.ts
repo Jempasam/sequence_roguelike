@@ -1,5 +1,6 @@
-import { FIXED_SEATS, FORMER_FIRST, NO_PICK, SeatTakenFault, Seats } from "@game/core/mecard/sync"
-import type { SeatMode, SeatPolicy } from "@game/core/mecard/sync"
+import { SeatTakenFault } from "@game/core-src/games/mecard/sync/faults"
+import { FIXED_SEATS, FORMER_FIRST, NO_PICK, Seats } from "@game/core-src/games/mecard/sync/run/Seats"
+import type { SeatMode, SeatPolicy } from "@game/core-src/games/mecard/sync/run/Seats"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Rect, Stack } from "@game/core"
+import { Stack } from "@game/core-src/engine/ui/layout/Stack"
+import { Rect } from "@game/core-src/engine/ui/Rect"
 import { Detail } from "@game/core/mecard/detail"
 import type { DetailShown } from "@game/core/mecard/detail"
 

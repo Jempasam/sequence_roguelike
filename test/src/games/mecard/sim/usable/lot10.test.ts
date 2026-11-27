@@ -1,15 +1,55 @@
 import { describe, expect, test } from "vitest"
+import { FISHING } from "@game/core-src/games/mecard/sim/card/subs/attack/Crosses"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { BOW_MODULE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { THRUSTERS } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleModifiers"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { MUD_CARD, WATER, PLANT } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { TURRET } from "@game/core-src/games/mecard/sim/card/subs/summon/ChainSummons"
+import { PLANT_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Plant"
+import { STONE_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Stone"
+import { WATER_ELEMENT } from "@game/core-src/games/mecard/sim/element/subs/Water"
+import { BLUE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/BlueHeartKind"
+import { EXPLOSIVE_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ExplosiveHeartKind"
+import { CONCENTRATED, FURIOUS } from "@game/core-src/games/mecard/sim/status/subs/Calm"
+import { DEMONIC } from "@game/core-src/games/mecard/sim/status/subs/DemonEnergy"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { ritualType } from "@game/core-src/games/mecard/sim/status/subs/RitualStatus"
+import { BLEEDING, FRAGILE } from "@game/core-src/games/mecard/sim/status/subs/Wounds"
 import {
-    BATTERY, BLOOD_FLASK, BLUE_BRACELET, BLUE_FLASK, BLUE_HEART, BOW_MODULE, BLEEDING, Carried, CALM_INFUSION,
-    CONCENTRATED, COOL_SYRUP, DEMON_ELIXIR, DEMONIC, ENGINE_OIL, EXPLOSIVE_CORE, EXPLOSIVE_HEART, FISHING, FISHING_CARD,
-    FOLDING_TURRET, FRAGILE, FRAGILITY_FLASK, FURIOUS, FURY_ELIXIR, IMPROVISED_ROBOT, INFLATABLE_DECOY, LEATHER_BAG,
-    MAGIC_WATCH, MUD_CARD, POISONED, ritualType, SHARPENING_STONE, STONE_ELEMENT, THRUST, THRUSTERS, TURRET,
-    WATER, WATER_ELEMENT, WHISTLE, PLANT, PLANT_ELEMENT, WIZARD_STAFF, WRENCH, STEP,
-} from "@game/core/mecard"
-import type { Card, Unit, Usable } from "@game/core/mecard"
+    CALM_INFUSION,
+    COOL_SYRUP,
+    DEMON_ELIXIR,
+    FURY_ELIXIR,
+    SHARPENING_STONE,
+} from "@game/core-src/games/mecard/sim/usable/subs/elixir/StatusElixirs"
+import { BLOOD_FLASK, FRAGILITY_FLASK } from "@game/core-src/games/mecard/sim/usable/subs/flask/AreaFlasks"
+import {
+    BATTERY,
+    ENGINE_OIL,
+    FISHING_CARD,
+    FOLDING_TURRET,
+    INFLATABLE_DECOY,
+    LEATHER_BAG,
+    MAGIC_WATCH,
+    WHISTLE,
+    WRENCH,
+} from "@game/core-src/games/mecard/sim/usable/subs/hand/ChainUsables"
+import { WIZARD_STAFF } from "@game/core-src/games/mecard/sim/usable/subs/hand/WizardStaff"
+import {
+    BLUE_BRACELET,
+    BLUE_FLASK,
+    EXPLOSIVE_CORE,
+} from "@game/core-src/games/mecard/sim/usable/subs/HeartUsables"
+import { Carried } from "@game/core-src/games/mecard/sim/usable/Usable"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import type { Usable } from "@game/core-src/games/mecard/sim/usable/Usable"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
+import * as Summon from "@game/core-src/games/mecard/sim/battle/mecanic/summon"
 
 // --- Fixture builders ---
 
@@ -72,7 +112,7 @@ describe("flasks", () => {
 describe("hearts", () => {
     test("blue flask, bracelet and explosive core give their hearts", () => {
         for(const [usable, kind, count] of [
-            [BLUE_FLASK, BLUE_HEART, 1], [BLUE_BRACELET, BLUE_HEART, 1], [EXPLOSIVE_CORE, EXPLOSIVE_HEART, 2],
+            [BLUE_FLASK, BLUE_HEART, 1], [BLUE_BRACELET, BLUE_HEART, 1], [EXPLOSIVE_CORE, EXPLOSIVE_HEART, 1],
         ] as const){
             const { on, hero, carried } = carrying(usable)
             const given: unknown[] = []
@@ -181,7 +221,7 @@ describe("whistle and summons", () => {
         for(const usable of [FOLDING_TURRET, INFLATABLE_DECOY]){
             const { on, hero, carried } = carrying(usable)
             used(on, hero, carried)
-            const bodies = on.summonsOf(hero)
+            const bodies = Summon.summonsOf(on, hero)
             expect(bodies).toHaveLength(1)
             expect(bodies[0].position.y).toBeCloseTo(4, 1)
         }
@@ -198,7 +238,7 @@ describe("whistle and summons", () => {
         on.commit(hero, chain(TURRET))
         on.endPreparation()
         on.playRound()
-        const [turret] = on.summonsOf(hero)
+        const [turret] = Summon.summonsOf(on, hero)
         const before = turret.hearts.maxHearts
         on.startRound()
         used(on, hero, battery)

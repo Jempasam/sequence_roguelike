@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { ALL_KITS } from "@game/core/mecard"
+import { ALL_KITS } from "@game/core-src/games/mecard/sim/catalog/kits"
 import { mergeTallies, planOf, run, sim, UsageError } from "@game/command_line/sim"
 import type { Console, Matrix } from "@game/command_line/sim"
 
@@ -152,7 +152,7 @@ describe("sim command line", () => {
         expect(await refused("--match", "kit:Mage/kit:Mage", "--gmaes", "5")).toBe("Option inconnue --gmaes, vouliez-vous --games ?")
         expect(await refused("--match", "kit:Mage/kit:Mage", "--games", "abc")).toBe("--games : entier attendu, reçu « abc ».")
         expect(await refused("--match", "kit:Mage/kit:Mage", "--layer", "3-1")).toBe("--layer : « 3-1 » : a doit être ≤ b.")
-        expect(await refused("--match", "kit:Mage/kit:Mage", "--fight", "war")).toContain("Valeurs permises : battle, elite, boss.")
+        expect(await refused("--match", "kit:Mage/kit:Mage", "--fight", "war")).toContain("Valeurs permises : battle, elite, boss, ou l'id d'un combat précis")
         expect(await refused("--match", "kit:Mage/kit:Mage", "--format", "xml")).toContain("Valeurs permises : table, csv, json.")
         expect(await refused("--match", "kit:Mage/kit:Mage", "--out", "victories")).toContain("Colonnes : winrate, n, ci")
         expect(await refused("--match", "kit:Mage/kit:Mage", "--ai", "smart9")).toContain("IA disponibles : deck")

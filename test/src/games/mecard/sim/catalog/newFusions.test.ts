@@ -1,8 +1,19 @@
 import { describe, expect, test } from "vitest"
 import {
-    ALLY_LASSO, BIG_SHOTGUN, BLOODY_COMBO, BLUE_VENGEANCE, BULLET_RAIN, COVERING_FIRE, DEMONIC_COMBO,
-    HUNTER_FUSION, JOURNEY, MEGA_THRUST, QUAKE_SEISM, SUPLEX_SURPRISE, SURPRISE_THRUST,
-} from "@game/core/mecard"
+    ALLY_LASSO,
+    BIG_SHOTGUN,
+    BLOODY_COMBO,
+    BLUE_VENGEANCE,
+    BULLET_RAIN,
+    COVERING_FIRE,
+    DEMONIC_COMBO,
+    HUNTER_FUSION,
+    JOURNEY,
+    MEGA_THRUST,
+    QUAKE_SEISM,
+    SUPLEX_SURPRISE,
+    SURPRISE_THRUST,
+} from "@game/core-src/games/mecard/sim/catalog/cards"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../fixtures"
 

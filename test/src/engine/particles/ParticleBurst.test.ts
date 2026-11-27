@@ -1,9 +1,16 @@
 import { describe, expect, test } from "vitest"
-import {
-    Gpu, motionAt, ParticleBurst, ParticleSpec, ParticleSystem, Painter, reachOf, ScreenSurface,
-    seededRandom, Sprite, Texture,
-} from "@game/core"
-import type { Fill, Motion } from "@game/core"
+import { Gpu } from "@game/core-src/engine/gpu/Gpu"
+import { Painter } from "@game/core-src/engine/gpu/Painter"
+import { ScreenSurface } from "@game/core-src/engine/gpu/ScreenSurface"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
+import { ParticleBurst } from "@game/core-src/engine/particles/ParticleBurst"
+import { motionAt, reachOf } from "@game/core-src/engine/particles/particleMath"
+import { ParticleSpec } from "@game/core-src/engine/particles/ParticleSpec"
+import { ParticleSystem } from "@game/core-src/engine/particles/ParticleSystem"
+import { seededRandom } from "@game/core-src/engine/particles/random"
+import type { Fill } from "@game/core-src/engine/particles/emitters"
+import type { Motion } from "@game/core-src/engine/particles/particleMath"
 
 import { fakeGfx, fakeGl } from "../../fixtures/fakeGl"
 

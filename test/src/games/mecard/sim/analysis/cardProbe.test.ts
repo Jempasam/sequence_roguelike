@@ -1,8 +1,22 @@
 import { describe, expect, test } from "vitest"
+import { probeCard, probeEffects } from "@game/core-src/games/mecard/sim/analysis/CardProbe"
 import {
-    AIM, AIM_PROFILE, BITE_PROFILE, BOTTLE, ELEMENT_CARDS, FILLER_PROFILE, IMPROVISED_ROBOT, POISON, POISONED,
-    probeCard, probeEffects, profileOf, RUN_PROFILE, STEP, THRUST, VIGOR, VIGOROUS, WAIT,
-} from "@game/core/mecard"
+    AIM_PROFILE,
+    BITE_PROFILE,
+    FILLER_PROFILE,
+    profileOf,
+    RUN_PROFILE,
+} from "@game/core-src/games/mecard/sim/analysis/Profile"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/Aim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { WAIT } from "@game/core-src/games/mecard/sim/card/subs/movement/Wait"
+import { BOTTLE } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionActions"
+import { POISON, VIGOR } from "@game/core-src/games/mecard/sim/card/subs/potion/PotionCard"
+import { ELEMENT_CARDS } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { VIGOROUS } from "@game/core-src/games/mecard/sim/status/subs/Vigor"
 
 // --- Tests ---
 

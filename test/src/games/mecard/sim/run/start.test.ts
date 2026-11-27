@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { freeHalts, lootHalts, Run, SHOP_HALT, TAVERN_HALT } from "@game/core/mecard"
-import type { Place, PlaceType } from "@game/core/mecard"
+import { freeHalts, lootHalts } from "@game/core-src/games/mecard/sim/catalog/halts"
+import { SHOP_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ShopHalt"
+import { TAVERN_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/TavernHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Place } from "@game/core-src/games/mecard/sim/run/Journey"
+import type { PlaceType } from "@game/core-src/games/mecard/sim/run/PlaceType"
 
 /** The sort of fight or of halt a place holds, the fight first. */
 function typeOf(place: Place): PlaceType {

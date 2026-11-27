@@ -1,4 +1,4 @@
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -33,7 +33,7 @@ export class BloodAxeCard extends BlowCard {
         public readonly heal: number,
     ){
         super("Hache buveuse de sang", [
-            "Frappe tout autour, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
+            "Frappe tout autour, à ", range, "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
             DamageType.PHYSICAL, " à chaque ", UNIT, ". Remplit ",
             new HeartCount(heal), " par ", UNIT, " touchée.",
         ], Rarity.EPIC, BLOW_DAMAGE)

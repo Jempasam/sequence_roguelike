@@ -1,10 +1,23 @@
 import { describe, expect, test } from "vitest"
-import {
-    CHAIN_SIZE, DOUBLE_DIAGONAL, FIRE, FusionCard, GAMBLE, MergedCard, PRAYER, RandomCard, REPEAT_2,
-    PREPARATION, resolve, signatureOf, SLASH, SPELL, STEP, STUNNING_DASH, SWEEP, THRUST, UNSTABLE_THRUST,
-    Vector2, WATER,
-} from "@game/core/mecard"
-import type { RewriteContext } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { CHAIN_SIZE } from "@game/core-src/games/mecard/sim/battle/Unit"
+import { resolve, signatureOf } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { PREPARATION } from "@game/core-src/games/mecard/sim/card/CardType"
+import { SLASH } from "@game/core-src/games/mecard/sim/card/subs/attack/Slash"
+import { SWEEP } from "@game/core-src/games/mecard/sim/card/subs/attack/Sweep"
+import { THRUST } from "@game/core-src/games/mecard/sim/card/subs/attack/Thrust"
+import { FusionCard, UNSTABLE_THRUST } from "@game/core-src/games/mecard/sim/card/subs/composite/FusionCard"
+import { MergedCard } from "@game/core-src/games/mecard/sim/card/subs/composite/MergedCard"
+import { RandomCard } from "@game/core-src/games/mecard/sim/card/subs/composite/RandomCard"
+import { DOUBLE_DIAGONAL } from "@game/core-src/games/mecard/sim/card/subs/modifier/DoubleDiagonal"
+import { GAMBLE } from "@game/core-src/games/mecard/sim/card/subs/modifier/GambleCard"
+import { REPEAT_2 } from "@game/core-src/games/mecard/sim/card/subs/modifier/RepeatCard"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { STUNNING_DASH } from "@game/core-src/games/mecard/sim/card/subs/movement/StunningDash"
+import { PRAYER } from "@game/core-src/games/mecard/sim/card/subs/preparation/Prayer"
+import { FIRE, WATER } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { SPELL } from "@game/core-src/games/mecard/sim/card/subs/spell/SpellCard"
+import type { RewriteContext } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, MONSTERS, unit } from "../fixtures"
 

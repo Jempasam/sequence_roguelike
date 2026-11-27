@@ -1,13 +1,20 @@
 import type { FloorType } from "../../../../sim/floor/Floor"
 import { AmbientEffect } from "../AmbientEffect"
+import type { AmbientCategory } from "../AmbientEffect"
 import type { Scene } from "./Scene"
 
-/** The seconds to wait before another play of a scene when nothing says otherwise. */
-const SPACING = 20
+/**
+ * The seconds to wait before another play of a scene when nothing says otherwise. A backdrop comes back at
+ * once, so a floor that has only one is never bare.
+ */
+const SPACINGS: Readonly<Record<AmbientCategory, number>> = {
+    backdrop: 0, signature: 8, traffic: 20, weather: 20, surprise: 20, unit: 10,
+}
 
 /** What makes an effect of a scene. */
 export interface SceneSpec {
     readonly id: string
+    readonly category: AmbientCategory
     readonly scene: Scene
 
     /** How likely it is, relative to the other playable ones. */
@@ -16,7 +23,10 @@ export interface SceneSpec {
     /** The floors it plays on, any by default. */
     readonly floors?: readonly FloorType[]
 
-    /** Seconds to wait after its end before another of it. */
+    /** Does it need the open air: weather, a sky? */
+    readonly outdoors?: boolean
+
+    /** Seconds to wait after its end before another of it, those of its category by default. */
     readonly spacing?: number
 }
 
@@ -25,10 +35,12 @@ export function sceneEffect(spec: SceneSpec): AmbientEffect {
     const { scene, floors } = spec
     return new AmbientEffect({
         id: spec.id,
-        spacing: spec.spacing ?? SPACING,
+        category: spec.category,
+        spacing: spec.spacing ?? SPACINGS[spec.category],
         stackable: false,
         isPlayable: context => {
             if(floors && !floors.includes(context.floor())) return false
+            if(spec.outdoors && !context.outdoors()) return false
             return scene.playable(context)
         },
         weight: () => spec.weight,

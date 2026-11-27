@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -27,7 +26,7 @@ export class SweepCard extends BlowCard {
         super(
             "Coup circulaire",
             [
-                "Frappe tout autour, à ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
+                "Frappe tout autour, à ", range, "×", ALLONGE, " ", DISTANCE, " : ", BLOW_DAMAGE, "+", FORCE, " ",
                 DamageType.PHYSICAL, " à chaque ", UNIT, ".",
             ],
             Rarity.RARE, BLOW_DAMAGE,

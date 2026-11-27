@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest"
-import { CHEST_HALT, DeckAi, Run } from "@game/core/mecard"
-import { LocalSync, RunBroadcaster, RunReceiver } from "@game/core/mecard/sync"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { RunBroadcaster } from "@game/core-src/games/mecard/sync/run/RunBroadcaster"
+import { RunReceiver } from "@game/core-src/games/mecard/sync/run/RunReceiver"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
 import { startedRun } from "../../../../fixtures/startedRun"
 
 // --- Fixture builders ---

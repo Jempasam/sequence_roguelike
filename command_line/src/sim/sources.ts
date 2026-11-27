@@ -1,4 +1,6 @@
-import type { FloorType, Monster, Rng } from "@game/core/mecard"
+import type { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import type { Monster } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import type { FloorType } from "@game/core-src/games/mecard/sim/floor/Floor"
 
 import type { Fighter, Roster } from "./fighters"
 import { monsterFighter } from "./fighters"

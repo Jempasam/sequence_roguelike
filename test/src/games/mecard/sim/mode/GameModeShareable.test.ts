@@ -1,5 +1,11 @@
-import { decodeShareable, encodeShareable, isGameMember, shareable } from "@game/core/mecard/sync"
-import type { GameMember, GameModeShareable } from "@game/core/mecard/sync"
+import {
+    decodeShareable,
+    encodeShareable,
+    isGameMember,
+    shareable,
+} from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
 import { describe, expect, test } from "vitest"
 
 const ana: GameMember = { id: "a", name: "Ana", connected: true, options: {} }

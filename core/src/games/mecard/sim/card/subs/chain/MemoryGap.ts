@@ -1,7 +1,9 @@
 import { CONTROL_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
 import type { Action } from "../../../battle/Action"
 import { UNIT_RADIUS } from "../../../battle/Unit"
-import { DISTANCE, UNIT } from "../../../base/keywords"
+import { BATTLE_TURN, CARTE, DISTANCE, UNIT } from "../../../base/keywords"
+import { DISABLE } from "../../../battle/mecanic/step/keyword"
+import * as Steps from "../../../battle/mecanic/step"
 
 import { ActionCard } from "../ActionCard"
 import { hold, SHORT_TIME } from "../tools/playing"
@@ -28,7 +30,7 @@ function forgetting(range: number, trees: number): Action {
                 return
             }
             hold(battle, SHORT_TIME, [Previews.arrow([unit.position, target.position], MOVE_WIDTH, CONTROL_COLOR)])
-            battle.skipCards(target, trees)
+            Steps.disable(battle, target, trees, "trou de mémoire")
         },
         preview: ({ battle, unit, pose }) => {
             const { unit: target } = battle.ray(unit, range, pose)
@@ -42,6 +44,6 @@ function forgetting(range: number, trees: number): Action {
 }
 
 export const MEMORY_GAP = new ActionCard("Trou de mémoire", [
-    "L'", UNIT, " en face, jusqu'à ", GAP_RANGE, " ", DISTANCE, ", oublie ses prochaines cartes : elle perd son prochain tour, ",
-    "sans le jouer.",
+    "L'", UNIT, " en face, jusqu'à ", GAP_RANGE, " ", DISTANCE, ", oublie sa prochaine ", BATTLE_TURN.as("étape"), " : ses ",
+    CARTE.as("cartes"), " sont ", DISABLE.as("grisées"), ", elle ne la jouera pas.",
 ], Rarity.RARE, forgetting(GAP_RANGE, GAP_TREES))

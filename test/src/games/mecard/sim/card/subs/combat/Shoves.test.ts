@@ -1,7 +1,13 @@
 import { describe, expect, test } from "vitest"
 import {
-    BATTERING_RAM, CATCH, PROJECTION, SHOCK_WAVE, SLING_CARD, SUCTION, TIDE,
-} from "@game/core/mecard"
+    BATTERING_RAM,
+    CATCH,
+    PROJECTION,
+    SHOCK_WAVE,
+    SLING_CARD,
+    SUCTION,
+    TIDE,
+} from "@game/core-src/games/mecard/sim/card/subs/combat/Shoves"
 
 import { battle, chain, HEROES, MONSTERS, play, unit } from "../../../fixtures"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Tilt } from "@game/core"
+import { Tilt } from "@game/core-src/engine/ui/layout/Tilt"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

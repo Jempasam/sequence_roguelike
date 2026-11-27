@@ -1,5 +1,5 @@
-import { Rng } from "@game/core/mecard"
-import { fixed, randomTeams, shrinking } from "@game/core/mecard/sync"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import { fixed, randomTeams, shrinking } from "@game/core-src/games/mecard/sim/mode/subs/duelRace/Matching"
 import { describe, expect, test } from "vitest"
 
 // --- Fixture builders ---

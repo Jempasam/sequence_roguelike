@@ -1,8 +1,10 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, test } from "vitest"
-import { ASSET_PATHS, Assets, MemoryAssets } from "@game/core"
-import type { PixelData } from "@game/core"
+import { ASSET_PATHS } from "@game/core-src/engine/assets/AssetPath"
+import { Assets } from "@game/core-src/engine/assets/Assets"
+import { MemoryAssets } from "@game/core-src/engine/assets/MemoryAssets"
+import type { PixelData } from "@game/core-src/engine/image/PixelData"
 import { loadParallaxPictures } from "@game/core/mecard/parallax-pictures"
 
 const ROOT = join(__dirname, "../../../../../..")

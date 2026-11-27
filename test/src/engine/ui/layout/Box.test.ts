@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Box, Rect } from "@game/core"
+import { Box } from "@game/core-src/engine/ui/layout/Box"
+import { Rect } from "@game/core-src/engine/ui/Rect"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { ArrowScroll } from "@game/core"
+import { ArrowScroll } from "@game/core-src/engine/ui/layout/ArrowScroll"
 
 import { Probe, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

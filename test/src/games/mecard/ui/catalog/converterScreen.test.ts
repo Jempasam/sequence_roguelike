@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Button, Dropdown, Label, Paragraph, plainText, Tabs } from "@game/core"
-import type { Component } from "@game/core"
+import { Button } from "@game/core-src/engine/ui/widget/Button"
+import { Dropdown } from "@game/core-src/engine/ui/widget/Dropdown"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import { Paragraph } from "@game/core-src/engine/ui/widget/Paragraph"
+import { Tabs } from "@game/core-src/engine/ui/widget/Tabs"
+import { plainText } from "@game/core-src/semantic/Text"
+import type { Component } from "@game/core-src/engine/ui/Component"
 import { ConverterScreen } from "@game/core/mecard/converter-screen"
 
 import { uiSetup } from "../../../../fixtures/uiFixtures"

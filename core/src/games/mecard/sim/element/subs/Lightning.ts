@@ -3,11 +3,11 @@ import type { Vector2 } from "../../base/Vector2"
 import type { UnitContext } from "../../battle/Action"
 import { lineEffect, polygonEffect } from "../../battle/effects"
 import type { Unit } from "../../battle/Unit"
-import { DISTANCE, BATTLE_ROUND, BATTLE_TURN } from "../../base/keywords"
+import { DISTANCE, BATTLE_ROUND } from "../../base/keywords"
+import { STUNNED } from "../../status/subs/Stunned"
 import { Haste } from "../../process/subs/Haste"
 import { AbstractElement } from "../AbstractElement"
 import type { Element } from "../Element"
-import { frenchNumber } from "../../battle/words"
 import * as Areas from "../../battle/area/Areas"
 
 /** The factor the lightning puts on the agility of a unit, for the round. */
@@ -32,18 +32,18 @@ export class Lightning extends AbstractElement {
     constructor(){
         super(
             "Électricité", rgba(1, 0.95, 0.3), "étourdi",
-            ["étourdit, sa prochaine ", BATTLE_TURN.as("étape"), " est repoussée"],
+            [STUNNED, " ", 1],
             ["+", (LIGHTNING_HASTE - 1) * 100, " % d'agilité ce ", BATTLE_ROUND],
             [
-                "un arc : le négatif à ", frenchNumber(ARC_RADIUS), " ", DISTANCE, " autour, puis il saute de corps en corps, à ",
-                frenchNumber(ARC_JUMP), " ", DISTANCE, ", sans jamais retoucher le même",
+                "un arc : le négatif à ", ARC_RADIUS, " ", DISTANCE, " autour, puis il saute de corps en corps, à ",
+                ARC_JUMP, " ", DISTANCE, ", sans jamais retoucher le même",
             ],
         )
     }
 
 
     public applyNegative({ battle }: UnitContext, target: Unit): void {
-        battle.stun(target)
+        battle.applyStatus(target, STUNNED, 1)
     }
 
     public applyPositive({ battle }: UnitContext, target: Unit): void {

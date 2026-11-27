@@ -9,7 +9,7 @@ import type { Battle } from "../../../battle/Battle"
 import { Disk } from "../../../battle/hitbox/Disk"
 import type { Unit } from "../../../battle/Unit"
 import { RANGE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { TIME_HEART } from "../../../heart/subs/TimeHeartKind"
 import type { Card } from "../../Card"
@@ -136,7 +136,7 @@ export const BLACK_HOLE = new ChainSummonCard("Trou noir", [
 
 export const TURRET = new ChainSummonCard("Tourelle", [
     INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant une tourelle de ", new HeartCount(TURRET_ROUNDS),
-    " de ", TIME_HEART, " : Viser puis Tir, tir ", frenchNumber(SHOT_RANGE), " ", DISTANCE, ".",
+    " de ", TIME_HEART, " : Viser puis Tir, tir ", SHOT_RANGE, " ", DISTANCE, ".",
 ], Rarity.RARE, {
     sprite: visual("units/robot"), name: "Tourelle", hearts: () => timed(TURRET_ROUNDS), cards: [AIM, SHOT],
     radius: TURRET_RADIUS, targets: (battle, owner, at) => nearestEnemy(battle, owner, at, TURRET_RADIUS),
@@ -144,7 +144,7 @@ export const TURRET = new ChainSummonCard("Tourelle", [
 
 export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
     INVOCATION.as("Plante"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un totem de ", new HeartCount(SHOUT_TOTEM_ROUNDS),
-    " de ", TIME_HEART, " : Cri puis Attendre, ", frenchNumber(TOTEM_SHOUT_RADIUS), " ", DISTANCE, " autour de lui.",
+    " de ", TIME_HEART, " : Cri puis Attendre, ", TOTEM_SHOUT_RADIUS, " ", DISTANCE, " autour de lui.",
 ], Rarity.RARE, {
     sprite: visual("units/totem"), name: "Totem de cri", hearts: () => timed(SHOUT_TOTEM_ROUNDS), cards: [SHOUT, WAIT],
     radius: TOTEM_SHOUT_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, TOTEM_SHOUT_RADIUS),
@@ -152,7 +152,7 @@ export const SHOUT_TOTEM = new ChainSummonCard("Totem de cri", [
 
 export const DECOY = new ChainSummonCard("Leurre", [
     INVOCATION.as("Invoque"), " à ", SUMMON_AHEAD, " ", DISTANCE, " devant un leurre d'", new HeartCount(1), " : Provocation, ", TURN.as("tourne"), " chaque ", UNIT, " à ",
-    frenchNumber(DECOY_RADIUS), " ", DISTANCE, " vers lui.",
+    DECOY_RADIUS, " ", DISTANCE, " vers lui.",
 ], Rarity.COMMON, {
     sprite: visual("units/puppeteer"), name: "Leurre", hearts: owner => Summons.summonedHearts(owner, 1), cards: [TAUNT],
     radius: DECOY_RADIUS, targets: (battle, owner, at) => around(battle, owner, at, DECOY_RADIUS),

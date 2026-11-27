@@ -1,12 +1,31 @@
 import { describe, expect, test } from "vitest"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { MEGA_LASER } from "@game/core-src/games/mecard/sim/card/subs/attack/MegaLaser"
+import { SPIT } from "@game/core-src/games/mecard/sim/card/subs/attack/Spit"
+import { DIVISION } from "@game/core-src/games/mecard/sim/card/subs/combat/Division"
 import {
-    Arena, Battle, CardChain, DIVISION, DRIZZLE, FLEE, Heart, LOOT_CARDS, MEGA_LASER,
-    ALL_MONSTERS as KINDS,
-    PURSUIT, RED_HEART, RETREAT_SHOT, SHADOW_AIM, SHADOW_STEP, SHADOW_WAY, SHIELD_HEART, SIDESTEP,
-    SLOWED, SPARK, SPIT,
-    STEP, Vector2,
-} from "@game/core/mecard"
-import type { Card, Unit } from "@game/core/mecard"
+    DRIZZLE,
+    PURSUIT,
+    RETREAT_SHOT,
+    SHADOW_WAY,
+    SPARK,
+} from "@game/core-src/games/mecard/sim/card/subs/composite/fusions"
+import { FLEE } from "@game/core-src/games/mecard/sim/card/subs/movement/Flee"
+import { SHADOW_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/ShadowAim"
+import { SHADOW_STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/ShadowStep"
+import { SIDESTEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Sidestep"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import { LOOT_CARDS } from "@game/core-src/games/mecard/sim/catalog/cards"
+import { ALL_MONSTERS as KINDS } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { Heart } from "@game/core-src/games/mecard/sim/heart/Heart"
+import { RED_HEART } from "@game/core-src/games/mecard/sim/heart/subs/RedHeartKind"
+import { SHIELD_HEART } from "@game/core-src/games/mecard/sim/heart/subs/ShieldHeartKind"
+import { SLOWED } from "@game/core-src/games/mecard/sim/status/subs/Slowness"
+import type { Unit } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
 
 import { battle, chain, expectAt, MONSTERS, play, unit, withPillars } from "../../fixtures"
 

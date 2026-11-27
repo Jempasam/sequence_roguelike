@@ -36,6 +36,8 @@ import { SLOWED } from "../../sim/status/subs/Slowness"
 import { SOAKED } from "../../sim/status/subs/Soaked"
 import { SPLASHING } from "../../sim/status/subs/Splashing"
 import { STINKING } from "../../sim/status/subs/Stench"
+import { STUNNED } from "../../sim/status/subs/Stunned"
+import { ELECTROCUTED } from "../../sim/status/subs/Electrocuted"
 import { SWALLOWED } from "../../sim/status/subs/Swallow"
 import { SWIFT } from "../../sim/status/subs/Swiftness"
 import { VIGOROUS } from "../../sim/status/subs/Vigor"
@@ -100,6 +102,8 @@ const STATUS_SOUNDS: ReadonlyMap<StatusType, Cue> = new Map([
     [ROOTED, statusCue("rooted")],
     [SLOWED, statusCue("slowed")],
     [STINKING, statusCue("stinking")],
+    [STUNNED, statusCue("stunned")],
+    [ELECTROCUTED, statusCue("electrocuted")],
     [VULNERABLE, statusCue("vulnerable")],
     [WEAKENED, statusCue("weakened")],
     [MINE_HAZARD, statusCue("mine")],

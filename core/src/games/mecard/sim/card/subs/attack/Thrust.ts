@@ -1,4 +1,3 @@
-import { frenchNumber } from "../../../battle/words"
 import { DamageType } from "../../../battle/DamageType"
 import type { Pose } from "../../../battle/Action"
 import type { Area } from "../../../battle/Area"
@@ -34,7 +33,7 @@ export class ThrustCard extends BlowCard {
         super(
             "Estoc",
             [
-                "Transperce tout sur ", frenchNumber(range), "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
+                "Transperce tout sur ", range, "×", ALLONGE, " ", DISTANCE, " devant : ", BLOW_DAMAGE, "+", FORCE, " ",
                 DamageType.PHYSICAL, " à chaque ", UNIT, ".",
             ],
             Rarity.COMMON, BLOW_DAMAGE,

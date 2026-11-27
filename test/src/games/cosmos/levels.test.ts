@@ -1,7 +1,15 @@
 import { describe, expect, test } from "vitest"
-import { fractalNoise3, hash32, hashUnit, valueNoise3, Vec3 } from "@game/core"
-import type { ChildKind, ElementData, Info } from "@game/core/cosmos"
-import { defaultLevels, ElementLevel, galaxyDensity, Pose, Space, staticMotion, World } from "@game/core/cosmos"
+import { hash32, hashUnit } from "@game/core-src/engine/math/noise/hash"
+import { fractalNoise3, valueNoise3 } from "@game/core-src/engine/math/noise/valueNoise"
+import { Vec3 } from "@game/core-src/engine/math/Vec3"
+import type { ChildKind, ElementData, Info } from "@game/core-src/games/cosmos/level/Level"
+import { defaultLevels } from "@game/core-src/games/cosmos/level/defaultLevels"
+import { ElementLevel } from "@game/core-src/games/cosmos/level/ElementLevel"
+import { Pose } from "@game/core-src/games/cosmos/level/Pose"
+import { galaxyDensity } from "@game/core-src/games/cosmos/level/subs/space/UniverseLevel"
+import { World } from "@game/core-src/games/cosmos/level/World"
+import { staticMotion } from "@game/core-src/games/cosmos/space/Motion"
+import { Space } from "@game/core-src/games/cosmos/space/Space"
 
 // --- Fixture builders ---
 

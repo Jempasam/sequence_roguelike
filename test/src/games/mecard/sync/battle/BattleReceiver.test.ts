@@ -1,14 +1,25 @@
 import { describe, expect, test } from "vitest"
-import {
-    BOW_MODULE, CardChain, CONJURATION, FIRE, IMPROVISED_ROBOT, DeckAi, Run, saveBattle, SECRET_CARD, SHADOW,
-    splitDeck, STONE, WATER, WIND,
-} from "@game/core/mecard"
-import type { Battle, Card } from "@game/core/mecard"
-import { BattleBroadcaster, BattleReceiver, LocalSync, writeBattleMessage } from "@game/core/mecard/sync"
-import type { BattleDesync } from "@game/core/mecard/sync"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { SHADOW } from "@game/core-src/games/mecard/sim/card/subs/combat/Shadow"
+import { BOW_MODULE } from "@game/core-src/games/mecard/sim/card/subs/mechanic/ModuleCard"
+import { IMPROVISED_ROBOT } from "@game/core-src/games/mecard/sim/card/subs/mechanic/RobotCard"
+import { SECRET_CARD } from "@game/core-src/games/mecard/sim/card/subs/SecretCard"
+import { CONJURATION } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementActions"
+import { FIRE, STONE, WATER, WIND } from "@game/core-src/games/mecard/sim/card/subs/spell/ElementCard"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { splitDeck } from "@game/core-src/games/mecard/sim/run/visits"
+import { saveBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import type { Card } from "@game/core-src/games/mecard/sim/card/Card"
+import { BattleBroadcaster } from "@game/core-src/games/mecard/sync/battle/BattleBroadcaster"
+import { writeBattleMessage } from "@game/core-src/games/mecard/sync/battle/BattleMessage"
+import { BattleReceiver } from "@game/core-src/games/mecard/sync/battle/BattleReceiver"
+import { LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { BattleDesync } from "@game/core-src/games/mecard/sync/battle/BattleReceiver"
 import { started } from "../../sim/fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
-import { DamageType } from "@game/core/mecard"
+import { DamageType } from "@game/core-src/games/mecard/sim/battle/DamageType"
 
 /** How many rounds a battle played to its end may last at most, before it is taken as stuck. */
 const SAFETY_ROUNDS = 1000

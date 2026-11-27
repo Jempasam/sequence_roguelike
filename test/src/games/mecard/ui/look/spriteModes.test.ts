@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Box, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Box } from "@game/core-src/games/mecard/sim/battle/hitbox/Box"
 import { hitboxMetrics } from "@game/core/mecard/hitbox-metrics"
 import { wallFaces } from "@game/core/mecard/sprite-modes"
 import type { WallFace } from "@game/core/mecard/sprite-modes"

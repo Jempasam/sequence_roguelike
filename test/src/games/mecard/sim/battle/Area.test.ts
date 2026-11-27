@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest"
-import { Areas, UNIT_RADIUS, Vector2 } from "@game/core/mecard"
-import type { Area } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import * as Areas from "@game/core-src/games/mecard/sim/battle/area/Areas"
+import { UNIT_RADIUS } from "@game/core-src/games/mecard/sim/battle/Unit"
+import type { Area } from "@game/core-src/games/mecard/sim/battle/Area"
 
 // --- Fixture builders ---
 

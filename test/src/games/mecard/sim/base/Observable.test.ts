@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Observable } from "@game/core/mecard"
+import { Observable } from "@game/core-src/lifetime/Observable"
 
 // --- Tests ---
 

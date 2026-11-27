@@ -1,8 +1,12 @@
-import { ManualScheduler } from "@game/core"
-import { Rng } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
-import { draftMode, LocalGame, TOURNAMENT_PAUSE_MS } from "@game/core/mecard/sync"
-import type { BracketView, DraftBench, Prompt } from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Rng } from "@game/core-src/games/mecard/sim/base/Rng"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { LocalGame } from "@game/core-src/games/mecard/sim/mode/local/LocalGame"
+import { draftMode } from "@game/core-src/games/mecard/sim/mode/subs/draft/DraftMode"
+import { TOURNAMENT_PAUSE_MS } from "@game/core-src/games/mecard/sim/mode/subs/tournament/TournamentManager"
+import type { Prompt } from "@game/core-src/games/mecard/sim/mode/subs/choose/Picker"
+import type { DraftBench } from "@game/core-src/games/mecard/sim/mode/subs/draft/DraftMode"
+import type { BracketView } from "@game/core-src/games/mecard/sim/mode/subs/tournament/Bracket"
 import { describe, expect, test } from "vitest"
 
 async function settle(): Promise<void> {

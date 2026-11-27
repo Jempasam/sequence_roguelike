@@ -3,9 +3,31 @@
 # Description
 Un trajet d'ambiance est un effet purement visuel de la carte : un personnage, un groupe, un chariot ou un bateau sort d'une halte, entre dans l'écran, va d'une halte à une autre ou le traverse, en zigzaguant. Il ne touche jamais la simulation et ne tire que dans le hasard de l'affichage.
 
-Les effets de particules et de petits êtres (météo, nuées, vols, éruptions) sont des [scènes d'ambiance](AMBIENT_SCENE.md).
+Les effets de particules et de petits êtres (météo, nuées, vols, éruptions) sont des [scènes d'ambiance](AMBIENT_SCENE.md). Ceux qui jouent sur les personnages affichés, carte comme combat, sont des [ambiances d'unité](AMBIENT_UNIT.md).
 
 Chaque trajet est une configuration de quatre briques indépendantes : où il va (itinéraire), par quel chemin (route), qui le fait (distribution) et comment cela se déplace (voyageur). Ajouter un personnage à une halte, c'est ajouter une ligne à la table des familles.
+
+# Catégories et rythmes
+Chaque effet d'ambiance, trajet ou scène, déclare sa catégorie (`category`). Chaque catégorie a son pool, avec son attente et son nombre d'animations à la fois ([ui/travel/ambient/pools.ts](../core/src/games/mecard/ui/travel/ambient/pools.ts)). On ne reste que quelques secondes sur un écran : même les catégories rares attendent peu.
+
+| Catégorie | Code | Ce que c'est | Attente (s) | Max à la fois | Spacing (s) |
+|---|---|---|---|---|---|
+| Fond | `backdrop` | flotte en continu, se fait oublier | 5-6 | 2 | 0 |
+| Signature | `signature` | propre à certains étages | 5-9 | 1 | 8, bruyants 20 |
+| Passants | `traffic` | personnages et attelages, sur tout étage | 5-8 | 2 | 20-30 |
+| Météo | `weather` | balaie l'écran, change l'atmosphère | 8-12 | 1 | 20 |
+| Surprise | `surprise` | ponctuel, sur tout étage | 10-15 | 1 | 20-40 |
+| Unités | `unit` | joue sur ou autour des personnages affichés | 4-6 | 2 | 10, magpie 20, pas 1 |
+
+Pour classer un effet, la première règle qui s'applique :
+0. Il joue sur ou autour des unités affichées : Unités.
+1. Des personnages ou des attelages (ou leurs traces) en chemin, sur tout étage : Passants.
+2. Vent, pluie, tempête ou nuage qui balaie l'écran : Météo.
+3. Particules ou nappe continues, étalées sur l'écran, propres à un étage : Fond.
+4. Autre chose propre à un étage : Signature.
+5. Le reste : Surprise.
+
+À l'ouverture d'un écran, trois effets partent tout de suite quand ils le peuvent : un Fond, une Signature ou des Passants, et un effet d'Unités. Les attentes et les spacings ne s'écoulent que quand un écran est affiché, et sont gardés d'un écran à l'autre.
 
 # Exemple
 - stroll-magician : un prestidigitateur sort d'une halte de magicien, se balade et y rentre.
@@ -39,4 +61,5 @@ Chaque trajet est une configuration de quatre briques indépendantes : où il va
 - Les files de la carte : `enemy-queue-between`, `enemy-queue-edge-to-edge`, `enemy-queue-enter`, `enemy-queue-leave`.
 - Les groupes : `tavern-party-*` (kits, taverne) et `all-monster-party-*` (monstres du catalogue, haltes de monstres).
 - Les objets jetés : `item-eject`, `usable-eject`.
-- Les trajets à part : `edge-to-edge`, `boat`, `boat-fisher`, et `mine-cart`, `footprints`, `traveling-monster`, `monster-passing`, `monster-line` qui gardent leur nom d'avant.
+- Les trajets à part : `edge-to-edge`, `footprints` (Passants), `boat`, `boat-fisher`, `mine-cart` (Signature).
+- Les familles, les files et les groupes sont des Passants ; les objets jetés sont des Surprises.

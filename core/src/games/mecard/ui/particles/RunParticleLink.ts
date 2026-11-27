@@ -14,12 +14,6 @@ import { BUMPED, WALKED } from "../../sim/battle/mecanic/walk/signals"
 import type { Hero } from "../../sim/run/Hero"
 import type { Run } from "../../sim/run/Run"
 import type { ForwardPhase, Forwarded } from "../forward/Forwarded"
-import type { Visual } from "../../sim/base/Visual"
-import type { AmbientEffect } from "../travel/ambient/AmbientEffect"
-import type { AmbientOutcome } from "../travel/ambient/AmbientPool"
-import { ambientPools } from "../travel/ambient/pools"
-import { RunAmbient } from "../travel/ambient/RunAmbient"
-import { TravelAmbientContext } from "../travel/ambient/TravelAmbientContext"
 import type { ParticleContext, ParticlePoint } from "./ParticleContext"
 import type { Look } from "./recipes"
 import {
@@ -67,12 +61,6 @@ export class RunParticleLink {
     /** The particles that glow: they add up. */
     public readonly additive = new ParticleSystem(MAX_PARTICLES, { blend: "additive" })
 
-    /** The particles of the ambient that blend normally: apart, so leaving the map removes them alone. */
-    public readonly ambientAlpha = new ParticleSystem(MAX_PARTICLES)
-
-    /** The particles of the ambient that glow. */
-    public readonly ambientAdditive = new ParticleSystem(MAX_PARTICLES, { blend: "additive" })
-
     constructor(
         engine: Run,
 
@@ -84,81 +72,37 @@ export class RunParticleLink {
 
         /** The randomness of the display, apart from the run. */
         public readonly random: Random = seededRandom(engine.rng.state),
-
-        /** The sprite of what the sim names by a visual, none before it is loaded. */
-        sprites: (visual: Visual|null) => Sprite|null = () => null,
     ){
         this.#engine = engine
         this.#follow(engine)
-        this.#ambient = new RunAmbient(ambientPools(random, error => forwarded.report(error)))
-        this.#ambientContext = new TravelAmbientContext(
-            this.ambientAlpha, this.ambientAdditive, random, () => this.#engine.travel, () => this.context,
-            sprites, coin,
-        )
     }
 
 
     /** Are there particles alive or waiting? */
     public get active(): boolean {
-        return this.alpha.count > 0 || this.additive.count > 0 || this.ambientAlpha.count > 0
-            || this.ambientAdditive.count > 0 || this.#pending.length > 0
-    }
-
-    /** Is the map shown? The ambient then needs the time to pass, whether or not a particle is alive. */
-    public get onMap(): boolean {
-        return this.#onMap()
+        return this.alpha.count > 0 || this.additive.count > 0 || this.#pending.length > 0
     }
 
     /** Move the particles on, and start the ones that waited for it. */
     public update(dt: number): void {
-
-        // AMBIENCE //
-        if(this.#onMap()){
-            this.#ambient.update(dt, this.#ambientContext)
-            this.#ambienting = true
-        }
-        else if(this.#ambienting){
-            this.#ambient.stop()
-            this.ambientAlpha.clear()
-            this.ambientAdditive.clear()
-            this.#ambienting = false
-        }
-
-        // WAITING //
         for(const pending of [...this.#pending]){
             pending.left -= dt
             if(pending.left > 0) continue
             this.#pending.splice(this.#pending.indexOf(pending), 1)
             pending.run()
         }
-        this.ambientAlpha.update(dt)
-        this.ambientAdditive.update(dt)
         this.alpha.update(dt)
         this.additive.update(dt)
     }
 
-    /**
-     * Start ambient effects of the map now, for a try, whatever the wait.
-     *
-     * @throws {@link Error} When the map is not shown.
-     */
-    public ambientNow(effects: readonly AmbientEffect[]): AmbientOutcome[] {
-        if(!this.#onMap()) throw new Error("La carte n'est pas affichée : reviens-y avec travel show.")
-        return this.#ambient.trigger(this.#ambientContext, effects)
-    }
-
     /** Draw the particles, in the interface. */
     public draw(painter: Painter): void {
-        this.ambientAlpha.draw(painter)
         this.alpha.draw(painter)
-        this.ambientAdditive.draw(painter)
         this.additive.draw(painter)
     }
 
     /** Remove every particle, alive or waiting. */
     public clear(): void {
-        this.ambientAlpha.clear()
-        this.ambientAdditive.clear()
         this.alpha.clear()
         this.additive.clear()
         this.#pending.length = 0
@@ -172,20 +116,12 @@ export class RunParticleLink {
 
 
     #engine: Run
-    readonly #ambient: RunAmbient
-    readonly #ambientContext: TravelAmbientContext
-    #ambienting = false
     #observers = new Scope()
     #battleObservers: Observer[] = []
     readonly #pending: Pending[] = []
 
     /** The gold the party held when the screen last showed a change of it. */
     #gold = 0
-
-    /** Is the map shown, and placed by a screen? */
-    #onMap(): boolean {
-        return this.context !== null && this.#engine.travel.phase === "map"
-    }
 
     #follow(run: Run): void {
         this.#engine = run

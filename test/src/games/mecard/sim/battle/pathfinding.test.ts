@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { Arena, Battle, PATH_AIM, pathTo, STEP, Vector2 } from "@game/core/mecard"
-import type { Pillar } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { pathTo } from "@game/core-src/games/mecard/sim/battle/pathfinding"
+import { PATH_AIM } from "@game/core-src/games/mecard/sim/card/subs/movement/PathAim"
+import { STEP } from "@game/core-src/games/mecard/sim/card/subs/movement/Step"
+import type { Pillar } from "@game/core-src/games/mecard/sim/battle/Arena"
 
 import { chain, MONSTERS, play, unit, withPillars } from "../fixtures"
 

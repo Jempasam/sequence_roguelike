@@ -1,4 +1,4 @@
-import { Observable, signal } from "@game/core"
+import { Observable, signal } from "@game/core-src/lifetime/Observable"
 import { describe, expect, test, vi } from "vitest"
 
 describe("Observable", () => {

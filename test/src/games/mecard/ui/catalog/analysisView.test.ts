@@ -1,9 +1,14 @@
 import { describe, expect, test } from "vitest"
-import { Label, Panel, Paragraph, plainText } from "@game/core"
-import type { Component } from "@game/core"
-import {
-    ALL_MONSTERS, BEAST_KIND, ELEMENT_TARGET, explain, FUSION_TARGET, GOBLIN, MONSTER_KIND, PET_KIND, WOLF,
-} from "@game/core/mecard"
+import { Label } from "@game/core-src/engine/ui/widget/Label"
+import { Panel } from "@game/core-src/engine/ui/widget/Panel"
+import { Paragraph } from "@game/core-src/engine/ui/widget/Paragraph"
+import { plainText } from "@game/core-src/semantic/Text"
+import type { Component } from "@game/core-src/engine/ui/Component"
+import { explain } from "@game/core-src/games/mecard/sim/analysis/explain"
+import { BEAST_KIND, MONSTER_KIND, PET_KIND } from "@game/core-src/games/mecard/sim/analysis/Kinds"
+import { ELEMENT_TARGET, FUSION_TARGET } from "@game/core-src/games/mecard/sim/analysis/Targets"
+import { ALL_MONSTERS, GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { WOLF } from "@game/core-src/games/mecard/sim/catalog/pets"
 import { CardView } from "@game/core/mecard/card-view"
 import { analysisView } from "@game/core/mecard/analysis-view"
 

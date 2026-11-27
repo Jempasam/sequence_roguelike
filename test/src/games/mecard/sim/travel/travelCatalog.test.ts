@@ -1,8 +1,13 @@
 import { describe, expect, test } from "vitest"
-import { CHEST_HALT } from "@game/core/mecard"
+import { CHEST_HALT } from "@game/core-src/games/mecard/sim/halt/subs/gift/ChestHalt"
 import type {
-    CatalogChoosing, CatalogDialog, CatalogPick, Dialog, HaltContext, HaltType, Travel,
-} from "@game/core/mecard"
+    CatalogChoosing,
+    CatalogPick,
+    HaltContext,
+} from "@game/core-src/games/mecard/sim/halt/HaltContext"
+import type { HaltType } from "@game/core-src/games/mecard/sim/halt/HaltType"
+import type { CatalogDialog, Dialog } from "@game/core-src/games/mecard/sim/travel/dialogs"
+import type { Travel } from "@game/core-src/games/mecard/sim/travel/Travel"
 
 import { startedRun } from "../../../../fixtures/startedRun"
 

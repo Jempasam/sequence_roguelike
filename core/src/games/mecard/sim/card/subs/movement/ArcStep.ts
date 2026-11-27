@@ -3,7 +3,6 @@ import { Vector2 } from "../../../base/Vector2"
 import type { Action, Pose } from "../../../battle/Action"
 import type { Indicator } from "../../../battle/preview/Preview"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber } from "../../../battle/words"
 import { Rarity } from "../../Rarity"
 
 import { ActionCard } from "../ActionCard"
@@ -75,7 +74,7 @@ const ARC: Action = {
 }
 
 export const ARC_STEP = new ActionCard("Avancer en arc", [
-    WALK.as("Avance"), " de ", frenchNumber(ARC_DISTANCE), "×", AGILITE, " ", DISTANCE,
+    WALK.as("Avance"), " de ", ARC_DISTANCE, "×", AGILITE, " ", DISTANCE,
     " droit devant, en demi-cercle : part vers la gauche, sans tourner. S'arrête au premier obstacle.",
 ], Rarity.RARE, ARC)
 

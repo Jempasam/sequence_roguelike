@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest"
-import { BLOOD_FLASK, LaserLink } from "@game/core/mecard"
-import type { Indicator } from "@game/core/mecard"
+import { LaserLink } from "@game/core-src/games/mecard/sim/process/subs/Links"
+import { BLOOD_FLASK } from "@game/core-src/games/mecard/sim/usable/subs/flask/AreaFlasks"
+import type { Indicator } from "@game/core-src/games/mecard/sim/battle/preview/Preview"
 
 import { battle, MONSTERS, unit } from "../fixtures"
 

@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { BURN, CardChain, loadBattle, DeckAi, POISONED, Run } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
+import { DeckAi } from "@game/core-src/games/mecard/sim/ai/Bot"
+import { CardChain } from "@game/core-src/games/mecard/sim/card/CardChain"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import { loadBattle } from "@game/core-src/games/mecard/sim/save/battleSave"
+import { BURN } from "@game/core-src/games/mecard/sim/status/subs/Burn"
+import { POISONED } from "@game/core-src/games/mecard/sim/status/subs/Poison"
+import { RELOCATED } from "@game/core-src/games/mecard/sim/battle/mecanic/relocation"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
 import { started } from "../fixtures"
 import { startedRun } from "../../../../fixtures/startedRun"
 
@@ -55,7 +61,7 @@ describe("Battle.load", () => {
         const battle = burning()
         battle.load(save)
         expect(battle.roundEnded.size).toBe(fresh.roundEnded.size)
-        expect(battle.unitMoved.size).toBe(fresh.unitMoved.size)
+        expect(battle.observers.of(RELOCATED).size).toBe(fresh.observers.of(RELOCATED).size)
         expect(battle.unitStepping.size).toBe(fresh.unitStepping.size)
     })
 

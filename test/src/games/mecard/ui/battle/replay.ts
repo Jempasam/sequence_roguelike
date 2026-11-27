@@ -1,7 +1,8 @@
-import { AnimationChain, FrameClock } from "@game/core"
-import type { Battle } from "@game/core/mecard"
-import { BattleAnimations } from "@game/core/mecard/battle-ui"
-import type { BattleScene } from "@game/core/mecard/battle-ui"
+import { AnimationChain } from "@game/core-src/engine/ui/AnimationChain"
+import { FrameClock } from "@game/core-src/engine/ui/FrameClock"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { BattleAnimations } from "@game/core-src/games/mecard/ui/battle/BattleAnimations"
+import type { BattleScene } from "@game/core-src/games/mecard/ui/battle/BattleScene"
 import { PlayControl, POLL_TIME, SPEED_TIME } from "@game/core/mecard/play-control"
 
 /** Let what plays go on, each thing started once the one before is done, however many wait. */

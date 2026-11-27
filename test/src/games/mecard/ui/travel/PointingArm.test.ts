@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Sprite, Texture } from "@game/core"
+import { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import { Texture } from "@game/core-src/engine/gpu/Texture"
 import { ARM_POINTS, ARM_SETTINGS, PointingArm, armPose } from "@game/core/mecard/arm"
 import type { ArmPose } from "@game/core/mecard/arm"
 

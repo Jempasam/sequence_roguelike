@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest"
-import { Rect, placeBubble } from "@game/core"
+import { Rect } from "@game/core-src/engine/ui/Rect"
+import { placeBubble } from "@game/core-src/engine/ui/widget/bubblePlacement"
 
 // --- Fixture builders ---
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { RangeSlider } from "@game/core"
+import { RangeSlider } from "@game/core-src/engine/ui/widget/RangeSlider"
 
 import { uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

@@ -1,16 +1,26 @@
-import { ManualScheduler } from "@game/core"
-import { Run } from "@game/core/mecard"
-import type { Battle } from "@game/core/mecard"
-import {
-    Admissions, gameModeAsLobbyMode, GuestStage, HostStage, LobbyRoom, LocalRoom, LocalSync, reacting,
-} from "@game/core/mecard/sync"
+import { ManualScheduler } from "@game/core-src/engine/net/Scheduler"
+import { Run } from "@game/core-src/games/mecard/sim/run/Run"
+import type { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Admissions } from "@game/core-src/games/mecard/sim/mode/Admission"
+import { reacting } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import { LobbyRoom } from "@game/core-src/games/mecard/sync/lobby/LobbyRoom"
+import { GuestStage, HostStage } from "@game/core-src/games/mecard/sync/lobby/Stage"
+import { gameModeAsLobbyMode } from "@game/core-src/games/mecard/sync/mode/gameModeAsLobbyMode"
+import { LocalRoom, LocalSync } from "@game/core-src/games/mecard/sync/SyncChannel"
+import type { GameMember } from "@game/core-src/games/mecard/sim/mode/GameMember"
 import type {
-    GameMember, GameMode, GameModeContext, GameModeManager, GameModeOwner, GameModeShareable, HandleChannel,
-    HeardChannel, Heard, InstanceView, ModeRun,
-} from "@game/core/mecard/sync"
+    GameMode,
+    GameModeManager,
+    GameModeOwner,
+    InstanceView,
+} from "@game/core-src/games/mecard/sim/mode/GameMode"
+import type { GameModeContext } from "@game/core-src/games/mecard/sim/mode/GameModeContext"
+import type { GameModeShareable } from "@game/core-src/games/mecard/sim/mode/GameModeShareable"
+import type { HandleChannel, HeardChannel, Heard } from "@game/core-src/games/mecard/sim/mode/HandleChannel"
+import type { ModeRun } from "@game/core-src/games/mecard/sync/lobby/LobbyMode"
 
 import { startedRun } from "../../../../fixtures/startedRun"
-import type { Removable } from "@game/core"
+import type { Removable } from "@game/core-src/lifetime/Removable"
 
 /** Let what was deferred to the end of the current task happen. */
 export async function settle(): Promise<void> {

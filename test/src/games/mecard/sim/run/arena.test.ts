@@ -1,5 +1,12 @@
 import { describe, expect, test } from "vitest"
-import { Arena, Battle, enterBattle, foeOf, GOBLIN, heroOf, LANCER_KIT, Team, Vector2 } from "@game/core/mecard"
+import { Vector2 } from "@game/core-src/games/mecard/sim/base/Vector2"
+import { Arena } from "@game/core-src/games/mecard/sim/battle/Arena"
+import { Battle } from "@game/core-src/games/mecard/sim/battle/Battle"
+import { Team } from "@game/core-src/games/mecard/sim/battle/Team"
+import { LANCER_KIT } from "@game/core-src/games/mecard/sim/catalog/kits"
+import { GOBLIN } from "@game/core-src/games/mecard/sim/catalog/monsters"
+import { enterBattle } from "@game/core-src/games/mecard/sim/run/arena"
+import { foeOf, heroOf } from "@game/core-src/games/mecard/sim/run/Hero"
 
 // --- Tests ---
 

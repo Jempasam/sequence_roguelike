@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { Primitive } from "@game/core"
+import { Primitive } from "@game/core-src/engine/gpu/Primitive"
 
 // --- Tests ---
 

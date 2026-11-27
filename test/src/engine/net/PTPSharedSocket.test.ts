@@ -1,5 +1,6 @@
-import { PTPHostSocket, PTPSharedSocket } from "@game/core"
-import type { SharedOptions } from "@game/core"
+import { PTPHostSocket } from "@game/core-src/engine/net/PTPHostSocket"
+import { PTPSharedSocket } from "@game/core-src/engine/net/PTPSharedSocket"
+import type { SharedOptions } from "@game/core-src/engine/net/PTPSharedSocket"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
 import { nodeNet, signalingOf, startNetServer } from "../../fixtures/netServer"

@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest"
-import { ARENA_SIZE, hazardSpot, monsterSpot, monsterStart, partyStarts } from "@game/core/mecard"
+import {
+    ARENA_SIZE,
+    hazardSpot,
+    monsterSpot,
+    monsterStart,
+    partyStarts,
+} from "@game/core-src/games/mecard/sim/run/formation"
 
 // --- Tests ---
 

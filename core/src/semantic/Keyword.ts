@@ -55,6 +55,28 @@ export function keywordsIn(text: Text): Keyword[] {
     return [...new Set(found)]
 }
 
+/** How deep the texts of the things a text names are read for more of them. */
+const MAX_NOTION_DEPTH = 16
+
+/**
+ * Everything a text names, at every depth, each once: the objects it talks about, a word of a keyword as its
+ * keyword, then what each of them names in its own text, as a count of hearts names the heart.
+ */
+export function notionsIn(text: Text): Set<object> {
+    const found = new Set<object>()
+    const read = (each: Text, depth: number): void => {
+        for(const part of partsOf(each)){
+            const notion = part instanceof KeywordWord ? part.keyword : part
+            if(found.has(notion)) continue
+            found.add(notion)
+            const told = (notion as Partial<Semantic>).toSemString
+            if(depth < MAX_NOTION_DEPTH && told) read(told.call(notion), depth + 1)
+        }
+    }
+    read(text, 0)
+    return found
+}
+
 /** Does a text name an object: by reference, or for a notion, in any of the ways it is written? */
 export function mentions(text: Text, part: object): boolean {
     return partsOf(text).some(each => each === part || (each instanceof KeywordWord && each.keyword === part))

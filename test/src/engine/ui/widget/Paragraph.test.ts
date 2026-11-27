@@ -1,6 +1,8 @@
 import { describe, expect, test, vi } from "vitest"
-import { Color, Paragraph } from "@game/core"
-import type { Sprite, Text } from "@game/core"
+import { Color } from "@game/core-src/engine/math/Color"
+import { Paragraph } from "@game/core-src/engine/ui/widget/Paragraph"
+import type { Sprite } from "@game/core-src/engine/gpu/Sprite"
+import type { Text } from "@game/core-src/semantic/Text"
 
 import { ADVANCE, LINE, uiSetup } from "../../../fixtures/uiFixtures"
 import type { UiSetup } from "../../../fixtures/uiFixtures"

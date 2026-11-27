@@ -1,4 +1,4 @@
-import { frenchNumber, HeartCount } from "../../battle/words"
+import { HeartCount } from "../../battle/words"
 import { CONFUSED, CONFUSION_CHANCE } from "../../status/subs/Confusion"
 import { FRENZIED } from "../../status/subs/Frenzy"
 import { POISONED } from "../../status/subs/Poison"
@@ -22,11 +22,11 @@ export const POISON_POTION = new StatusPotion("poison", [
 ], POISONED)
 
 export const SLOWNESS_POTION = new StatusPotion("lenteur", [
-    "Agilité × ", frenchNumber(SLOWNESS_FACTOR), " : chaque déplacement va moins loin.",
+    "Agilité × ", SLOWNESS_FACTOR, " : chaque déplacement va moins loin.",
 ], SLOWED)
 
 export const WEAKNESS_POTION = new StatusPotion("faiblesse", [
-    "Force −", frenchNumber(WEAKNESS_MALUS), " : chaque coup fait moins mal.",
+    "Force −", WEAKNESS_MALUS, " : chaque coup fait moins mal.",
 ], WEAKENED)
 
 export const RAGE_POTION = new StatusPotion("rage", [
@@ -34,7 +34,7 @@ export const RAGE_POTION = new StatusPotion("rage", [
 ], ENRAGED)
 
 export const CONFUSION_POTION = new StatusPotion("confusion", [
-    "Avant chaque ", BATTLE_TURN.as("étape"), ", ", frenchNumber(CONFUSION_CHANCE * 100), " % de chances de ",
+    "Avant chaque ", BATTLE_TURN.as("étape"), ", ", CONFUSION_CHANCE * 100, " % de chances de ",
     TURN.as("se tourner"), " n'importe où.",
 ], CONFUSED)
 
@@ -55,11 +55,11 @@ export const SOUL_SHIELD_POTION = new StatusPotion("bouclier d'âme", [
 ], SOUL_SHIELDED)
 
 export const VIGOR_POTION = new StatusPotion("vigueur", [
-    "Force +", frenchNumber(VIGOR_BONUS), " : chaque coup fait plus mal.",
+    "Force +", VIGOR_BONUS, " : chaque coup fait plus mal.",
 ], VIGOROUS)
 
 export const SWIFTNESS_POTION = new StatusPotion("célérité", [
-    "Agilité × ", frenchNumber(SWIFTNESS_FACTOR), " : chaque déplacement va plus loin.",
+    "Agilité × ", SWIFTNESS_FACTOR, " : chaque déplacement va plus loin.",
 ], SWIFT)
 
 export const SWALLOW_POTION = new StatusPotion("hirondelle", [

@@ -2,6 +2,7 @@ import type { PlugContext } from "../../battle/Action"
 import type { Unit } from "../../battle/Unit"
 import { AbstractProcess } from "../AbstractProcess"
 import { visual } from "../../base/Visual"
+import * as Steps from "../../battle/mecanic/step"
 
 import { echoOf, isEcho } from "./echo"
 import { tieTo } from "./Links"
@@ -31,8 +32,7 @@ export class Mimicking extends AbstractProcess {
             // The action starting is the last the unit played, put there before it is told.
             const action = unit.stepsPlayed[unit.stepsPlayed.length - 1]
             if(!action || isEcho(action) || !target.alive) return
-            target.steps.unshift(echoOf(action))
-            battle.events.push({ type: "status", unit: target, text: "exo-nerf" })
+            Steps.insert(battle, target, [echoOf(action)], { word: "exo-nerf" })
         }))
     }
 }

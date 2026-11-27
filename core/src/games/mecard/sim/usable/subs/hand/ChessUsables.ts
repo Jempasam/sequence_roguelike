@@ -1,4 +1,5 @@
-import { AGILITE, DISTANCE, UNIT, BATTLE_ROUND, BATTLE_TURN } from "../../../base/keywords"
+import { AGILITE, DISTANCE, UNIT, BATTLE_ROUND } from "../../../base/keywords"
+import { STUNNED } from "../../../status/subs/Stunned"
 import { BLINKING } from "../../../battle/mecanic/blink/keyword"
 import { INVOCATION } from "../../../battle/mecanic/summon/keyword"
 import { WALK } from "../../../battle/mecanic/walk/keyword"
@@ -11,7 +12,7 @@ import type { Preview } from "../../../battle/preview/Preview"
 import type { PreviewContext } from "../../../battle/preview/PreviewContext"
 import * as Previews from "../../../battle/preview/Previews"
 import { MOVE_COLOR, MOVE_WIDTH, NOTE_COLOR, RANGE_COLOR } from "../../../battle/previewColors"
-import { frenchNumber, HeartCount } from "../../../battle/words"
+import { HeartCount } from "../../../battle/words"
 import { Heart } from "../../../heart/Heart"
 import { GLASS_HEART } from "../../../heart/subs/GlassHeartKind"
 import { CHESS_PIECE } from "../../../status/subs/ChessPieces"
@@ -67,21 +68,21 @@ export class Spring extends AbstractUsable {
 
 export const SPRING = new Spring()
 
-/** A silence jar: the nearest enemy loses its next step. */
+/** A silence jar: the nearest enemy is stunned. */
 export class SilenceJar extends AbstractUsable {
 
 
     constructor(){
         super("Bocal de silence", visual("usables/silence_jar"), [
-            "L'", UNIT, " ennemie la plus proche à ", frenchNumber(SILENCE_RANGE), " ", DISTANCE,
-            " perd sa prochaine ", BATTLE_TURN.as("étape"), ". 2 utilisations, rechargées à chaque combat.",
+            "L'", UNIT, " ennemie la plus proche à ", SILENCE_RANGE, " ", DISTANCE,
+            " gagne ", STUNNED, " ", 1, ". 2 utilisations, rechargées à chaque combat.",
         ], { charges: 2, refill: "battle" })
     }
 
 
     protected act({ battle, unit }: UnitContext): void {
         const enemy = battle.nearestEnemy(unit, SILENCE_RANGE)
-        if(enemy) battle.stun(enemy)
+        if(enemy) battle.applyStatus(enemy, STUNNED, 1)
     }
 
     public preview({ battle, unit, pose }: PreviewContext): Preview {
@@ -90,7 +91,7 @@ export class SilenceJar extends AbstractUsable {
         return Previews.still(
             pose,
             ...Previews.strike([], [enemy]),
-            Previews.label(enemy.position, "étourdi", NOTE_COLOR),
+            Previews.label(enemy.position, STUNNED.name, NOTE_COLOR),
         )
     }
 }

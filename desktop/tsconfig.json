@@ -3,7 +3,8 @@
     "compilerOptions": {
         "lib": ["ES2022", "DOM"],
         "types": ["node", "vite/client"],
-        "allowImportingTsExtensions": true
+        "allowImportingTsExtensions": true,
+        "paths": { "@game/core-src/*": ["../core/src/*"] }
     },
     "include": ["src", "build/*.ts", "vite.config.ts"]
 }
